@@ -1,0 +1,8 @@
+<Project>
+  <!-- Shared Package Versions -->
+  <PropertyGroup>
+    <!-- Test related packages -->
+    <FsCheckPackageVersion>2.10.8</FsCheckPackageVersion>
+    <FsCheckXunitPackageVersion>2.10.8</FsCheckXunitPackageVersion>
+  </PropertyGroup>
+</Project>
