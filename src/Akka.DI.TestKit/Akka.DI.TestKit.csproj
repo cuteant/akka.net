@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net452</TargetFrameworks>
+    <RootNamespace>Akka.DI.TestKit</RootNamespace>
+    <AssemblyName>Akka.DI.TestKit</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+    <DefineConstants>$(DefineConstants);APPDOMAIN</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.DI.TestKit.Unofficial</PackageId>
+    <Title>Akka.DI.TestKit (Unofficial)</Title>
+    <Description>Dependency Injection (DI) TestKit support for Akka.NET</Description>
+    <PackageTags>$(AkkaPackageTags);dependency injection;testkit</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.DI.Core\Akka.DI.Core.csproj" />
+    <ProjectReference Include="..\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,40 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\common.props" />
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <AssemblyTitle>Akka.Remote.TestKit</AssemblyTitle>
+    <TargetFrameworks>netstandard2.0;net471;net452</TargetFrameworks>
+    <RootNamespace>Akka.Remote.TestKit</RootNamespace>
+    <AssemblyName>Akka.Remote.TestKit</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Remote.TestKit.Unofficial</PackageId>
+    <Title>Akka.Remote.TestKit (Unofficial)</Title>
     <Description>TestKit for Testing Distributed Akka.NET Applications</Description>
-    <TargetFrameworks>net452;netstandard1.6</TargetFrameworks>
     <PackageTags>$(AkkaPackageTags);network;testkit</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Internals\Reference.conf" />
     <ProjectReference Include="..\Akka.Remote\Akka.Remote.csproj" />
-    <ProjectReference Include="..\..\contrib\testkits\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
+    <ProjectReference Include="..\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.3.0" />
+    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufPackageVersion)" />
   </ItemGroup>
-  
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="System.Collections.Specialized" Version="4.3.0" />
-  </ItemGroup>
-  
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
-    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <DefineConstants>$(DefineConstants);CORECLR</DefineConstants>
-    <NetStandardImplicitPackageVersion>1.6.1</NetStandardImplicitPackageVersion>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
 
 </Project>

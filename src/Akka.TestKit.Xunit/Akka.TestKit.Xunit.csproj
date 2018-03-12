@@ -1,25 +1,24 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\common.props" />
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <AssemblyTitle>Akka.TestKit.Xunit</AssemblyTitle>
+    <TargetFrameworks>netstandard2.0;net471;net452</TargetFrameworks>
+    <RootNamespace>Akka.TestKit.Xunit</RootNamespace>
+    <AssemblyName>Akka.TestKit.Xunit</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.TestKit.Xunit.Unofficial</PackageId>
+    <Title>Akka.TestKit.Xunit (Unofficial)</Title>
     <Description>TestKit for writing tests for Akka.NET using xUnit.</Description>
-    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
     <PackageTags>$(AkkaPackageTags);testkit;xunit</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.6' ">1.6.1</NetStandardImplicitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Akka.TestKit\Akka.TestKit.csproj" />
-    <PackageReference Include="xunit" Version="$(XunitVersion)" />
+    <ProjectReference Include="..\Akka.TestKit\Akka.TestKit.csproj" />
+    <PackageReference Include="xunit" Version="$(xUnitPackageVersion)" />
   </ItemGroup>
 
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup>
-    <!-- WORKAROUND: for some reason starting at Akka.NET 1.3.2 this package was determined as "unpackable" by default via DOTNET CLI -->
-    <IsPackable>true</IsPackable> 
-  </PropertyGroup>
 </Project>

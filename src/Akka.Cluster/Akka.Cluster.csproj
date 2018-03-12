@@ -1,30 +1,27 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\common.props" />
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <AssemblyTitle>Akka.Cluster</AssemblyTitle>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Cluster</RootNamespace>
+    <AssemblyName>Akka.Cluster</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Cluster.Unofficial</PackageId>
+    <Title>Akka.Cluster (Unofficial)</Title>
     <Description>Cluster support for Akka.NET</Description>
-    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
     <PackageTags>$(AkkaPackageTags);network;cluster</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.6' ">1.6.1</NetStandardImplicitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\Cluster.conf" />
     <ProjectReference Include="..\Akka.Remote\Akka.Remote.csproj" />
   </ItemGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <DefineConstants>$(DefineConstants);CORECLR</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
 
 </Project>

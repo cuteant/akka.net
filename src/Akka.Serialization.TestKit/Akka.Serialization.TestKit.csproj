@@ -1,25 +1,26 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\..\common.props" />
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <AssemblyTitle>Akka.Serialization.TestKit</AssemblyTitle>
+    <TargetFrameworks>netstandard2.0;net471;net452</TargetFrameworks>
+    <RootNamespace>Akka.Serialization.TestKit</RootNamespace>
+    <AssemblyName>Akka.Serialization.TestKit</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Serialization.TestKit.Unofficial</PackageId>
+    <Title>Akka.Serialization.TestKit (Unofficial)</Title>
     <Description>Serialization TestKit for Akka.NET</Description>
-    <VersionSuffix>beta</VersionSuffix>
-    <TargetFrameworks>net452;netstandard1.6</TargetFrameworks>
     <PackageTags>$(AkkaPackageTags);hyperion;serializer;serialize;testkit</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\..\core\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+    <ProjectReference Include="..\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
   </ItemGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net452' ">
-    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
 
 </Project>

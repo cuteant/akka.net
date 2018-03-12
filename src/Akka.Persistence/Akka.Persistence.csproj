@@ -1,27 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\common.props" />
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
   <PropertyGroup>
-    <AssemblyTitle>Akka.Persistence</AssemblyTitle>
-    <Description>Persistence actor support for Akka.NET</Description>
-    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
-    <PackageTags>$(AkkaPackageTags);persistence;eventsource</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.6' ">1.6.1</NetStandardImplicitPackageVersion>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Persistence</RootNamespace>
+    <AssemblyName>Akka.Persistence</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Persistence.Unofficial</PackageId>
+    <Title>Akka.Persistence (Unofficial)</Title>
+    <Description>Persistence actor support for Akka.NET</Description>
+    <PackageTags>$(AkkaPackageTags);persistence;eventsource</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufPackageVersion)" />
+  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="persistence.conf" />
     <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="3.3.0" />
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <DefineConstants>$(DefineConstants);CORECLR</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
 </Project>

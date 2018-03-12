@@ -1,31 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\common.props" />
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
   <PropertyGroup>
-    <AssemblyTitle>Akka.Remote</AssemblyTitle>
-    <Description>Remote actor support for Akka.NET</Description>
-    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
-    <PackageTags>$(AkkaPackageTags);network</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.6' ">1.6.1</NetStandardImplicitPackageVersion>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Remote</RootNamespace>
+    <AssemblyName>Akka.Remote</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Remote.Unofficial</PackageId>
+    <Title>Akka.Remote (Unofficial)</Title>
+    <Description>Remote actor support for Akka.NET</Description>
+    <PackageTags>$(AkkaPackageTags);network</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="DotNetty.Handlers.Unofficial" Version="$(DotNettyHandlersUnofficialPackageVersion)" />
+    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufPackageVersion)" />
+  </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="Configuration\Remote.conf" />
     <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="DotNetty.Handlers" Version="0.4.6" />
-    <PackageReference Include="Google.Protobuf" Version="3.3.0" />
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <DefineConstants>$(DefineConstants);CORECLR</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup>
-    <AllowUnsafeBlocks>True</AllowUnsafeBlocks>
-  </PropertyGroup>
+
 </Project>

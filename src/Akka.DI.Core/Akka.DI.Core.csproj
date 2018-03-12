@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.DI.Core</RootNamespace>
+    <AssemblyName>Akka.DI.Core</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+    <DefineConstants>$(DefineConstants);APPDOMAIN</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.DI.Core.Unofficial</PackageId>
+    <Title>Akka.DI.Core (Unofficial)</Title>
+    <Description>Dependency injection support for Akka.NET</Description>
+    <PackageTags>$(AkkaPackageTags);dependency injection</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka\Akka.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -245,7 +245,7 @@ namespace Akka.Remote.Transport.DotNetty
                 var all = Task.WhenAll(tasks);
                 await all.ConfigureAwait(false);
 
-                var server = ServerChannel?.CloseAsync() ?? TaskEx.Completed;
+                var server = ServerChannel?.CloseAsync() ?? TaskUtil.Completed;
                 await server.ConfigureAwait(false);
 
                 return all.IsCompleted && server.IsCompleted;

@@ -1,19 +1,30 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\common.props" />
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
   <PropertyGroup>
-    <AssemblyTitle>Akka.Streams</AssemblyTitle>
-    <Description>Reactive stream support for Akka.NET</Description>
-    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
-    <PackageTags>$(AkkaPackageTags);reactive;stream</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.6' ">1.6.1</NetStandardImplicitPackageVersion>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Streams</RootNamespace>
+    <AssemblyName>Akka.Streams</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION;CLONEABLE</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Streams.Unofficial</PackageId>
+    <Title>Akka.Streams (Unofficial)</Title>
+    <Description>Reactive stream support for Akka.NET</Description>
+    <PackageTags>$(AkkaPackageTags);reactive;stream</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Reactive.Streams" Version="$(ReactiveStreamsPackageVersion)" />
+  </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="reference.conf" />
     <ProjectReference Include="..\Akka\Akka.csproj" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <PackageReference Include="System.Reflection.TypeExtensions" Version="4.3.0" />
   </ItemGroup>
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
@@ -65,16 +76,4 @@
       <DependentUpon>FanOutShape.tt</DependentUpon>
     </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <PackageReference Include="Reactive.Streams" Version="1.0.2" />
-  </ItemGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <DefineConstants>$(DefineConstants);SERIALIZATION;CLONEABLE;AKKAIO</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <DefineConstants>$(DefineConstants);CORECLR</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
 </Project>

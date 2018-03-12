@@ -1,13 +1,22 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\common.props" />
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <AssemblyTitle>Akka.TestKit</AssemblyTitle>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.TestKit</RootNamespace>
+    <AssemblyName>Akka.TestKit</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+    <DefineConstants>$(DefineConstants);UNSAFE_THREADING</DefineConstants>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.TestKit.Unofficial</PackageId>
+    <Title>Akka.TestKit (Unofficial)</Title>
     <Description>You need a Akka.TestKit.* package! Add the one appropriate for the test framework you use instead. For example: Akka.TestKit.Xunit or Akka.TestKit.VsTest. This package only contains base functionality for writing tests for the Akka.NET framework.</Description>
-    <TargetFrameworks>net45;netstandard1.6</TargetFrameworks>
     <PackageTags>$(AkkaPackageTags)</PackageTags>
-    <GenerateDocumentationFile>true</GenerateDocumentationFile>
-    <NetStandardImplicitPackageVersion Condition=" '$(TargetFramework)' == 'netstandard1.6' ">1.6.1</NetStandardImplicitPackageVersion>
   </PropertyGroup>
 
   <ItemGroup>
@@ -30,17 +39,5 @@
       <DependentUpon>EventFilterFactory_Generated.tt</DependentUpon>
     </Compile>
   </ItemGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net45' ">
-    <DefineConstants>$(DefineConstants);UNSAFE_THREADING</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'netstandard1.6' ">
-    <DefineConstants>$(DefineConstants);CORECLR</DefineConstants>
-  </PropertyGroup>
-
-  <PropertyGroup Condition=" '$(Configuration)' == 'Release' ">
-    <DefineConstants>$(DefineConstants);RELEASE</DefineConstants>
-  </PropertyGroup>
 
 </Project>
