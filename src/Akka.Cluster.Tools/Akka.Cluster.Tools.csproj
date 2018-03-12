@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Cluster.Tools</RootNamespace>
+    <AssemblyName>Akka.Cluster.Tools</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION;</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Cluster.Tools.Unofficial</PackageId>
+    <Title>Akka.Cluster.Tools (Unofficial)</Title>
+    <Description>Distributed publish/subscribe, client and singleton support for Akka.NET cluster</Description>
+    <PackageTags>$(AkkaPackageTags);network;cluster</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Client\reference.conf;PublishSubscribe\reference.conf;Singleton\reference.conf" />
+    <ProjectReference Include="..\Akka.Cluster\Akka.Cluster.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,20 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.DistributedData.Tests.MultiNode</RootNamespace>
+    <AssemblyName>Akka.DistributedData.Tests.MultiNode</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+ 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.DistributedData\Akka.DistributedData.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Cluster.TestKit\Akka.Cluster.TestKit.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
+
+</Project>

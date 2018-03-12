@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.Sqlite</RootNamespace>
+    <AssemblyName>Akka.Persistence.Sqlite</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Persistence.Sqlite.Unofficial</PackageId>
+    <Title>Akka.Persistence.Sqlite (Unofficial)</Title>
+    <Description>Akka.NET Persistence journal and snapshot store backed by SQLite.</Description>
+    <PackageTags>$(AkkaPackageTags);persistence;eventsource;sql;sqlite</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="sqlite.conf" />
+    <ProjectReference Include="..\Akka.Persistence\Akka.Persistence.csproj" />
+    <ProjectReference Include="..\Akka.Persistence.Sql.Common\Akka.Persistence.Sql.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net451' ">
+    <PackageReference Include="Microsoft.Data.SQLite" Version="1.1.1" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net451' ">
+    <PackageReference Include="Microsoft.Data.SQLite" Version="$(MicrosoftDataSQLitePackageVersion)" />
+  </ItemGroup>
+
+</Project>

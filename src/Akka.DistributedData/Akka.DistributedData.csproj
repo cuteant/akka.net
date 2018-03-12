@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.DistributedData</RootNamespace>
+    <AssemblyName>Akka.DistributedData</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION;CLONABLE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.DistributedData.Unofficial</PackageId>
+    <Title>Akka.DistributedData (Unofficial)</Title>
+    <Description>Replicated data using CRDT structures</Description>
+    <PackageTags>$(AkkaPackageTags);network;cluster;crdt;replication</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="reference.conf" />
+    <ProjectReference Include="..\Akka.Cluster\Akka.Cluster.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Hyperion.Unofficial" Version="$(HyperionUnofficialPackageVersion)" />
+  </ItemGroup>
+
+</Project>

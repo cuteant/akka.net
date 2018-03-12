@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.Sqlite.Tests</RootNamespace>
+    <AssemblyName>Akka.Persistence.Sqlite.Tests</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZABLE</DefineConstants>
+  </PropertyGroup>
+ 
+   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(ImportLibs)'=='netcore' ">
+    <PackageReference Include="System.ObjectModel" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Xml" Version="4.3.0" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="4.3.0" />
+    <PackageReference Include="System.Xml.XmlSerializer" Version="4.3.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Persistence.Sqlite\Akka.Persistence.Sqlite.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.Query.Sql\Akka.Persistence.Query.Sql.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.Sql.Common\Akka.Persistence.Sql.Common.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.Sql.TestKit\Akka.Persistence.Sql.TestKit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="AssemblyVersioning\samples\**\*" CopyToOutputDirectory="Always" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
+
+</Project>

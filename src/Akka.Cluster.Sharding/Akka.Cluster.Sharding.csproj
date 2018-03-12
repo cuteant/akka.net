@@ -1,0 +1,35 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Cluster.Sharding</RootNamespace>
+    <AssemblyName>Akka.Cluster.Sharding</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Cluster.Sharding.Unofficial</PackageId>
+    <Title>Akka.Cluster.Sharding (Unofficial)</Title>
+    <Description>Sharded actors with managed lifecycle for Akka.NET cluster</Description>
+    <PackageTags>$(AkkaPackageTags);network;cluster;sharding</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="reference.conf" />
+    <ProjectReference Include="..\Akka.Persistence\Akka.Persistence.csproj" />
+    <ProjectReference Include="..\Akka.Cluster.Tools\Akka.Cluster.Tools.csproj" />
+    <ProjectReference Include="..\Akka.DistributedData\Akka.DistributedData.csproj" />
+  </ItemGroup>
+
+</Project>

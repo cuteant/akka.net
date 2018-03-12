@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.Sql.Common</RootNamespace>
+    <AssemblyName>Akka.Persistence.Sql.Common</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION;CONFIGURATION</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Persistence.Sql.Common.Unofficial</PackageId>
+    <Title>Akka.Persistence.Sql.Common (Unofficial)</Title>
+    <Description>Akka.NET Persistence ADO.NET middleware</Description>
+    <PackageTags>$(AkkaPackageTags);persistence;eventsource;sql</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Data" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Persistence\Akka.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>
