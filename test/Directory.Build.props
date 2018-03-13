@@ -23,7 +23,6 @@
     <PackageReference Include="xunit" Version="$(xUnitPackageVersion)" />
     <PackageReference Include="xunit.analyzers" Version="$(xUnitAnalyzersPackageVersion)" />
     <PackageReference Include="xunit.runner.visualstudio" Version="$(xUnitRunnerVsPackageVersion)" />
-    <DotNetCliToolReference Include="dotnet-xunit" Version="$(xUnitDotNetPackageVersion)" />
     <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsPackageVersion)" />
   </ItemGroup>
 

@@ -40,7 +40,7 @@ namespace Akka.Actor
 
         private ActorBase _actor;
         private bool _actorHasBeenCleared;
-        private volatile Mailbox _mailboxDoNotCallMeDirectly;
+        private Mailbox _mailboxDoNotCallMeDirectly;
         private readonly ActorSystemImpl _systemImpl;
         private ActorTaskScheduler _taskScheduler;
 
