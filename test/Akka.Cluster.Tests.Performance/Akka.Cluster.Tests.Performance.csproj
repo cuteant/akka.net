@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net471</TargetFrameworks>
+    <RootNamespace>Akka.Cluster.Tests.Performance</RootNamespace>
+    <AssemblyName>Akka.Cluster.Tests.Performance</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="App.config" />
+    <ProjectReference Include="..\..\src\Akka.Cluster\Akka.Cluster.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NBench" Version="$(NBenchPackageVersion)" />
+  </ItemGroup>
+
+</Project>

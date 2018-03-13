@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net471</TargetFrameworks>
+    <RootNamespace>Akka.Tests.Performance</RootNamespace>
+    <AssemblyName>Akka.Tests.Performance</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NBench" Version="$(NBenchPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="App.config" />
+    <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
+    <ProjectReference Include="..\..\src\Akka.TestKit\Akka.TestKit.csproj" />
+  </ItemGroup>
+
+</Project>
