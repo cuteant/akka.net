@@ -2,15 +2,15 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
-    <RootNamespace>Akka.TestKit.Tests</RootNamespace>
-    <AssemblyName>Akka.TestKit.Tests</AssemblyName>
+    <RootNamespace>Akka.Persistence.Tests</RootNamespace>
+    <AssemblyName>Akka.Persistence.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
-    <ProjectReference Include="..\..\src\Akka.TestKit\Akka.TestKit.csproj" />
-    <ProjectReference Include="..\..\src\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Serialization.Hyperion\Akka.Serialization.Hyperion.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence\Akka.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
     <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
   </ItemGroup>
 

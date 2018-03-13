@@ -2,14 +2,13 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
-    <RootNamespace>Akka.Cluster.Tools.Tests</RootNamespace>
-    <AssemblyName>Akka.Cluster.Tools.Tests</AssemblyName>
+    <RootNamespace>Akka.Persistence.TCK.Tests</RootNamespace>
+    <AssemblyName>Akka.Persistence.TCK.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
-
+ 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Akka.Cluster.Tools\Akka.Cluster.Tools.csproj" />
-    <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.TCK\Akka.Persistence.TCK.csproj" />
   </ItemGroup>
 
   <ItemGroup>

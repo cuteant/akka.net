@@ -5,7 +5,6 @@
     <RootNamespace>Akka.Cluster.Sharding.Tests</RootNamespace>
     <AssemblyName>Akka.Cluster.Sharding.Tests.MultiNode</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);SERIALIZABLE</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

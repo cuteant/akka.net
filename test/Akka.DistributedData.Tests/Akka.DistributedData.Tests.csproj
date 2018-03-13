@@ -5,7 +5,6 @@
     <RootNamespace>Akka.DistributedData.Tests</RootNamespace>
     <AssemblyName>Akka.DistributedData.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);SERIALIZABLE</DefineConstants>
   </PropertyGroup>
  
   <ItemGroup>

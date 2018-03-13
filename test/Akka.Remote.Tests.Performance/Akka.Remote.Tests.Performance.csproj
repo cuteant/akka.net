@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>net471</TargetFrameworks>
+    <RootNamespace>Akka.Remote.Tests.Performance</RootNamespace>
+    <AssemblyName>Akka.Remote.Tests.Performance</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Content Include="App.config" />
+    <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NBench" Version="$(NBenchPackageVersion)" />
+  </ItemGroup>
+
+</Project>

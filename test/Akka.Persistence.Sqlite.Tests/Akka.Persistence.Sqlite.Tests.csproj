@@ -5,7 +5,6 @@
     <RootNamespace>Akka.Persistence.Sqlite.Tests</RootNamespace>
     <AssemblyName>Akka.Persistence.Sqlite.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);SERIALIZABLE</DefineConstants>
   </PropertyGroup>
  
    <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
