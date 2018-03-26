@@ -227,6 +227,21 @@ namespace Akka.Remote.Transport.DotNetty
 
                 throw new InvalidAssociationException(cause.Message);
             }
+            catch (ConnectException exc) // ## 苦竹 添加 ##
+            {
+                var socketException = exc.InnerException as SocketException;
+
+                if (socketException?.SocketErrorCode == SocketError.ConnectionRefused)
+                {
+                    throw new InvalidAssociationException($"{socketException.Message} {remoteAddress}");
+                }
+
+                throw new InvalidAssociationException($"Failed to associate with {remoteAddress}", exc);
+            }
+            catch (ConnectTimeoutException exc) // ## 苦竹 添加 ##
+            {
+                throw new InvalidAssociationException(exc.Message);
+            }
         }
 
         private async Task<IPEndPoint> MapEndpointAsync(EndPoint socketAddress)
