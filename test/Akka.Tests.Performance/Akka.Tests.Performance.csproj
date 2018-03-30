@@ -6,6 +6,7 @@
     <AssemblyName>Akka.Tests.Performance</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <ServerGarbageCollection>true</ServerGarbageCollection>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
@@ -15,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="NBench" Version="$(NBenchPackageVersion)" />
+    <PackageReference Include="NBench.Runner" Version="$(NBenchRunnerPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

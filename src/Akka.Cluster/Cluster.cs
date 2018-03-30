@@ -239,7 +239,7 @@ namespace Akka.Cluster
         /// <param name="address">The address of the node we want to join.</param>
         /// <param name="token">An optional cancellation token used to cancel returned task before it completes.</param>
         /// <returns>Task which completes, once current cluster node reaches <see cref="MemberStatus.Up"/> state.</returns>
-        public Task JoinAsync(Address address, CancellationToken token = default(CancellationToken))
+        public Task JoinAsync(Address address, CancellationToken token = default)
         {
             var completion = new TaskCompletionSource<NotUsed>();
             this.RegisterOnMemberUp(() => completion.TrySetResult(NotUsed.Instance));
@@ -296,7 +296,8 @@ namespace Akka.Cluster
         /// actor system is manually restarted.
         /// </summary>
         /// <param name="seedNodes">TBD</param>
-        public Task JoinSeedNodesAsync(IEnumerable<Address> seedNodes, CancellationToken token = default(CancellationToken))
+        /// <param name="token"></param>
+        public Task JoinSeedNodesAsync(IEnumerable<Address> seedNodes, CancellationToken token = default)
         {
             var completion = new TaskCompletionSource<NotUsed>();
             this.RegisterOnMemberUp(() => completion.TrySetResult(NotUsed.Instance));
@@ -424,7 +425,7 @@ namespace Akka.Cluster
         /// ActorRef with the cluster's <see cref="SelfAddress"/>, unless address' host is already defined
         /// </summary>
         /// <param name="actorRef">An <see cref="IActorRef"/> belonging to the current node.</param>
-        /// <returns>The absolute remote <see cref="ActorPath"/> of <see cref="actorRef"/>.</returns>
+        /// <returns>The absolute remote <see cref="ActorPath"/> of <paramref name="actorRef"/>.</returns>
         public ActorPath RemotePathOf(IActorRef actorRef)
         {
             var path = actorRef.Path;

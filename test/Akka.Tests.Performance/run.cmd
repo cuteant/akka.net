@@ -1,0 +1,1 @@
+bin\Release\net471\win-x64\NBench.Runner.exe bin\Release\net471\win-x64\Akka.Tests.Performance.dll output-directory="Perf"

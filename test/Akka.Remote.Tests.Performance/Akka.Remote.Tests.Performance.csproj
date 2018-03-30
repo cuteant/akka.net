@@ -16,6 +16,7 @@
 
   <ItemGroup>
     <PackageReference Include="NBench" Version="$(NBenchPackageVersion)" />
+    <PackageReference Include="NBench.Runner" Version="$(NBenchRunnerPackageVersion)" />
   </ItemGroup>
 
 </Project>

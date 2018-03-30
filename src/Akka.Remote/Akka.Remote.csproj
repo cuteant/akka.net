@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="DotNetty.Handlers.Unofficial" Version="$(DotNettyHandlersUnofficialPackageVersion)" />
+    <PackageReference Include="DotNetty.Transport.Libuv.Unofficial" Version="$(DotNettyTransportLibuvUnofficialPackageVersion)" />
     <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufPackageVersion)" />
   </ItemGroup>
 

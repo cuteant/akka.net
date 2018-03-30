@@ -89,6 +89,7 @@ namespace Akka.Actor
         /// <param name="result">TBD</param>
         /// <param name="unregister">TBD</param>
         /// <param name="path">TBD</param>
+        /// <param name="tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable"></param>
         public FutureActorRef(TaskCompletionSource<object> result, Action unregister, ActorPath path, bool tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable)
         {
             if (ActorCell.Current != null)
@@ -181,7 +182,7 @@ namespace Akka.Actor
     /// If you receive a reference to an actor, that actor is guaranteed to have existed at some point
     /// in the past. However, an actor can always be terminated in the future.
     /// 
-    /// If you want to be notified about an actor terminating, call <see cref="IActorContext.Watch"/>
+    /// If you want to be notified about an actor terminating, call <see cref="ICanWatch.Watch"/>
     /// on this actor and you'll receive a <see cref="Terminated"/> message when the actor dies or if it
     /// is already dead.
     /// </summary>
@@ -734,8 +735,7 @@ namespace Akka.Actor
         /// <param name="name">TBD</param>
         public void RemoveChild(string name)
         {
-            IInternalActorRef tmp;
-            if (!_children.TryRemove(name, out tmp))
+            if (!_children.TryRemove(name, out var tmp))
             {
                 Log.Warning("{0} trying to remove non-child {1}", Path, name);
             }
@@ -748,10 +748,9 @@ namespace Akka.Actor
         /// <param name="child">TBD</param>
         public void RemoveChild(string name,IActorRef child)
         {
-            IInternalActorRef tmp;
-            if (!_children.TryRemove(name, out tmp))
+            if (!_children.TryRemove(name, out var tmp))
             {
-                Log.Warning("{0} trying to remove non-child {1}",Path,name);
+                Log.Warning("{0} trying to remove non-child {1}", Path, name);
             }
         }
 

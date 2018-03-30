@@ -264,17 +264,17 @@ namespace Akka.Streams.Implementation.Fusing
             switch (e)
             {
                 case ActorGraphInterpreter.OnNext onNext:
-                    if (IsDebug) Console.WriteLine($"{Interpreter.Name}  OnNext {onNext.Event} id={onNext.Id}");
+                    //if (IsDebug) Console.WriteLine($"{Interpreter.Name}  OnNext {onNext.Event} id={onNext.Id}");
                     _inputs[onNext.Id].OnNext(onNext.Event);
                     return RunBatch(eventLimit);
 
                 case ActorGraphInterpreter.RequestMore requestMore:
-                    if (IsDebug) Console.WriteLine($"{Interpreter.Name}  Request {requestMore.Demand} id={requestMore.Id}");
+                    //if (IsDebug) Console.WriteLine($"{Interpreter.Name}  Request {requestMore.Demand} id={requestMore.Id}");
                     _outputs[requestMore.Id].RequestMore(requestMore.Demand);
                     return RunBatch(eventLimit);
 
                 case ActorGraphInterpreter.Resume _:
-                    if (IsDebug) Console.WriteLine($"{Interpreter.Name}  Resume");
+                    //if (IsDebug) Console.WriteLine($"{Interpreter.Name}  Resume");
                     if (Interpreter.IsSuspended)
                         return RunBatch(eventLimit);
                     return eventLimit;
@@ -289,23 +289,23 @@ namespace Akka.Streams.Implementation.Fusing
                     return RunBatch(eventLimit - 1);
 
                 case ActorGraphInterpreter.OnError onError:
-                    if (IsDebug) Console.WriteLine($"{Interpreter.Name}  OnError id={onError.Id}");
+                    //if (IsDebug) Console.WriteLine($"{Interpreter.Name}  OnError id={onError.Id}");
                     _inputs[onError.Id].OnError(onError.Cause);
                     return RunBatch(eventLimit);
 
                 case ActorGraphInterpreter.OnComplete onComplete:
-                    if (IsDebug) Console.WriteLine($"{Interpreter.Name}  OnComplete id={onComplete.Id}");
+                    //if (IsDebug) Console.WriteLine($"{Interpreter.Name}  OnComplete id={onComplete.Id}");
                     _inputs[onComplete.Id].OnComplete();
                     return RunBatch(eventLimit);
 
                 case ActorGraphInterpreter.OnSubscribe onSubscribe:
-                    if (IsDebug) Console.WriteLine($"{Interpreter.Name}  OnSubscribe id={onSubscribe.Id}");
+                    //if (IsDebug) Console.WriteLine($"{Interpreter.Name}  OnSubscribe id={onSubscribe.Id}");
                     _subscribersPending--;
                     _inputs[onSubscribe.Id].OnSubscribe(onSubscribe.Subscription);
                     return RunBatch(eventLimit);
 
                 case ActorGraphInterpreter.Cancel cancel:
-                    if (IsDebug) Console.WriteLine($"{Interpreter.Name}  Cancel id={cancel.Id}");
+                    //if (IsDebug) Console.WriteLine($"{Interpreter.Name}  Cancel id={cancel.Id}");
                     _outputs[cancel.Id].Cancel();
                     return RunBatch(eventLimit);
 
@@ -1229,8 +1229,7 @@ namespace Akka.Streams.Implementation.Fusing
                     {
                         _subscriber = subscriber;
                         ReactiveStreamsCompliance.TryOnSubscribe(_subscriber, new BoundarySubscription(_actor, _shell, _id));
-                        if (IsDebug)
-                            Console.WriteLine($"{Interpreter.Name} Subscribe subscriber={subscriber}");
+                        //if (IsDebug) Console.WriteLine($"{Interpreter.Name} Subscribe subscriber={subscriber}");
                     }
                     else ReactiveStreamsCompliance.RejectAdditionalSubscriber(subscriber, GetType().FullName);
                 }
@@ -1355,8 +1354,7 @@ namespace Akka.Streams.Implementation.Fusing
             try
             {
                 _currentLimit = shell.Init(Self, _subFusingMaterializerImpl, EnqueueToShortCircuit, _currentLimit);
-                if (IsDebug)
-                    Console.WriteLine($"registering new shell in {_initial}\n  {shell.ToString().Replace("\n", "\n  ")}");
+                //if (IsDebug) Console.WriteLine($"registering new shell in {_initial}\n  {shell.ToString().Replace("\n", "\n  ")}");
                 if (shell.IsTerminated)
                     return false;
                 _activeInterpreters.Add(shell);

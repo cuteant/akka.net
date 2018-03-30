@@ -319,3 +319,25 @@ ASALocalRun/
 # MSBuild Binary and Structured Log
 *.binlog
 
+
+# =========================
+# Windows detritus
+# =========================
+
+# Windows image file caches
+Thumbs.db
+ehthumbs.db
+
+# Folder config file
+Desktop.ini
+
+# Recycle Bin used on file shares
+$RECYCLE.BIN/
+/Deploy
+TODO.txt
+*.GhostDoc.xml
+*.project.lock.json
+/test/Akka.Cluster.Tests.Performance/Perf
+/test/Akka.Remote.Tests.Performance/Perf
+/test/Akka.Streams.Tests.Performance/Perf
+/test/Akka.Tests.Performance/Perf
