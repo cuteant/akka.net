@@ -85,8 +85,8 @@ namespace Akka.Dispatch
          * stay as it is.
          */
         private volatile ActorCell _actor = null;
-        private volatile SystemMessage _systemQueueDoNotCallMeDirectly = null; // null by default
-        private volatile int _statusDotNotCallMeDirectly; //0 by default
+        private /*volatile*/ SystemMessage _systemQueueDoNotCallMeDirectly = null; // null by default
+        private /*volatile*/ int _statusDotNotCallMeDirectly; //0 by default
 
         /// <summary>
         /// The queue used for user-defined messages inside this mailbox
