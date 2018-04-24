@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>    
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.MongoDb.Tests</RootNamespace>
+    <AssemblyName>Akka.Persistence.MongoDb.Tests</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Persistence.MongoDb\Akka.Persistence.MongoDb.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.TCK\Akka.Persistence.TCK.csproj" />
+  </ItemGroup>
+
+</Project>

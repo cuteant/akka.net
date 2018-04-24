@@ -105,6 +105,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Logger.NLog", "src\Akk
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Logger.Serilog", "src\Akka.Logger.Serilog\Akka.Logger.Serilog.csproj", "{D4352BC4-5DD6-4ECD-81F2-036E7F01E0A6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.MongoDb", "src\Akka.Persistence.MongoDB\Akka.Persistence.MongoDb.csproj", "{622799DC-2C21-4897-A4DA-406F381EABED}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -223,6 +225,10 @@ Global
 		{D4352BC4-5DD6-4ECD-81F2-036E7F01E0A6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D4352BC4-5DD6-4ECD-81F2-036E7F01E0A6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D4352BC4-5DD6-4ECD-81F2-036E7F01E0A6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{622799DC-2C21-4897-A4DA-406F381EABED}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{622799DC-2C21-4897-A4DA-406F381EABED}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{622799DC-2C21-4897-A4DA-406F381EABED}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{622799DC-2C21-4897-A4DA-406F381EABED}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -264,6 +270,7 @@ Global
 		{C2D1973E-760C-467B-835D-1236CFC04908} = {48845655-5E60-40AB-A798-F118CC1CF510}
 		{E92F79BA-3471-40E9-8368-BDAFD75DE046} = {E29F1764-48F7-4A31-A12F-BC30C81B82AF}
 		{D4352BC4-5DD6-4ECD-81F2-036E7F01E0A6} = {E29F1764-48F7-4A31-A12F-BC30C81B82AF}
+		{622799DC-2C21-4897-A4DA-406F381EABED} = {264C22A4-CAFC-41F6-B82C-4DDC5C196767}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}
