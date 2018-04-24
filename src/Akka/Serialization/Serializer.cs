@@ -11,6 +11,7 @@ using System.Reflection;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Util;
+using CuteAnt.Reflection;
 
 namespace Akka.Serialization
 {
@@ -168,7 +169,7 @@ namespace Akka.Serialization
         {
             var config = system.Settings.Config.GetConfig(SerializationIdentifiers);
             var identifiers = config.AsEnumerable()
-                .ToDictionary(pair => Type.GetType(pair.Key, true), pair => pair.Value.GetInt());
+                .ToDictionary(pair => TypeUtils.ResolveType(pair.Key), pair => pair.Value.GetInt()); // Type.GetType(pair.Key, true)
 
             if (!identifiers.TryGetValue(type, out int value))
                 throw new ArgumentException($"Couldn't find serializer id for [{type}] under [{SerializationIdentifiers}] HOCON path", nameof(type));

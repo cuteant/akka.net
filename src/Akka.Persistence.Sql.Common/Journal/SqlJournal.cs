@@ -507,7 +507,7 @@ namespace Akka.Persistence.Sql.Common.Journal
         /// <returns>TBD</returns>
         protected ITimestampProvider GetTimestampProvider(string typeName)
         {
-            var type = Type.GetType(typeName, true);
+            var type = TypeUtils.ResolveType(typeName);//, true);
             try
             {
                 return (ITimestampProvider)Activator.CreateInstance(type, Context.System);

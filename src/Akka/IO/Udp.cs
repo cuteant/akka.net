@@ -15,6 +15,7 @@ using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.IO.Buffers;
+using CuteAnt.Reflection;
 
 namespace Akka.IO
 {
@@ -532,7 +533,7 @@ namespace Akka.IO
 
         private IBufferPool CreateBufferPool(ExtendedActorSystem system, Config config)
         {
-            var type = Type.GetType(config.GetString("class"), true);
+            var type = TypeUtils.ResolveType(config.GetString("class"));//, true);
 
             if (!typeof(IBufferPool).IsAssignableFrom(type))
                 throw new ArgumentException($"Buffer pool of type {type} doesn't implement {nameof(IBufferPool)} interface");

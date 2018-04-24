@@ -11,6 +11,7 @@ using System.Reflection;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
+using CuteAnt.Reflection;
 
 namespace Akka.Persistence.Query
 {
@@ -48,7 +49,7 @@ namespace Akka.Persistence.Query
 
             var pluginConfig = _system.Settings.Config.GetConfig(configPath);
             var pluginTypeName = pluginConfig.GetString("class");
-            var pluginType = Type.GetType(pluginTypeName, true);
+            var pluginType = TypeUtils.ResolveType(pluginTypeName); //, true);
 
             return CreateType(pluginType, new object[] { _system, pluginConfig });
         }

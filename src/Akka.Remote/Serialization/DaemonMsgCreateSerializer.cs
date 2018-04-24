@@ -12,6 +12,7 @@ using Akka.Routing;
 using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt.Reflection;
 using Google.Protobuf;
 
 namespace Akka.Remote.Serialization
@@ -85,7 +86,7 @@ namespace Akka.Remote.Serialization
 
         private Props PropsFromProto(Proto.Msg.PropsData protoProps)
         {
-            var actorClass = Type.GetType(protoProps.Clazz);
+            var actorClass = TypeUtils.ResolveType(protoProps.Clazz);
             var args = new object[protoProps.Args.Count];
             for (int i = 0; i < args.Length; i++)
             {

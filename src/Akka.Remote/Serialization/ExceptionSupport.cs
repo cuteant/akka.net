@@ -11,6 +11,7 @@ using System.Reflection;
 using Akka.Actor;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt.Reflection;
 using Google.Protobuf;
 #if SERIALIZATION
 using System.Runtime.Serialization;
@@ -112,7 +113,7 @@ namespace Akka.Remote.Serialization
             if (string.IsNullOrEmpty(proto.TypeName))
                 return null;
 
-            Type exceptionType = Type.GetType(proto.TypeName);
+            Type exceptionType = TypeUtils.ResolveType(proto.TypeName);
 
             var serializationInfo = new SerializationInfo(exceptionType, DefaultFormatterConverter);
 
@@ -191,7 +192,7 @@ namespace Akka.Remote.Serialization
             if (string.IsNullOrEmpty(proto.TypeName))
                 return null;
 
-            Type exceptionType = Type.GetType(proto.TypeName);
+            Type exceptionType = TypeUtils.ResolveType(proto.TypeName);
 
             var obj = GetUninitializedObjectDelegate(exceptionType);
 

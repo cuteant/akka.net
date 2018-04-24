@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Reflection;
 using Akka.Actor;
+using CuteAnt.Reflection;
 //#if CORECLR 
 //using Microsoft.Extensions.DependencyModel;
 //#endif
@@ -64,42 +65,43 @@ namespace Akka.DI.Core
         /// <returns>The <see cref="Type"/> with the given name.</returns>
         public static Type GetTypeValue(this string typeName)
         {
-            var firstTry = Type.GetType(typeName);
-            Func<Type> searchForType = () =>
-                GetLoadedAssemblies()
-                    .SelectMany(x => x.GetTypes())
-                    .FirstOrDefault(t => string.Equals(t.Name, typeName, StringComparison.Ordinal));
-            return firstTry ?? searchForType();
+            return TypeUtils.TryResolveType(typeName, out var type) ? type : null;
+            //var firstTry = TypeUtils.ResolveType(typeName);
+            //Func<Type> searchForType = () =>
+            //    GetLoadedAssemblies()
+            //        .SelectMany(x => x.GetTypes())
+            //        .FirstOrDefault(t => string.Equals(t.Name, typeName, StringComparison.Ordinal));
+            //return firstTry ?? searchForType();
         }
 
-        /// <summary>
-        /// Gets the list of loaded assemblies
-        /// </summary>
-        /// <returns>The list of loaded assemblies</returns>
-        private static IEnumerable<Assembly> GetLoadedAssemblies()
-        {
-//#if APPDOMAIN
-            return AppDomain.CurrentDomain.GetAssemblies();
-//#elif CORECLR 
-//            var assemblies = new List<Assembly>();
-//            var dependencies = DependencyContext.Default.RuntimeLibraries;
-//            foreach (var library in dependencies)
-//            {
-//                try
-//                {
-//                    var assembly = Assembly.Load(new AssemblyName(library.Name));
-//                    assemblies.Add(assembly);
-//                }
-//                catch
-//                {
-//                    //do nothing can't if can't load assembly
-//                }
-//            }
-//            return assemblies;
-//#else
-//#warning Method not implemented
-//            throw new NotImplementedException();
-//#endif
-        }
+        //        /// <summary>
+        //        /// Gets the list of loaded assemblies
+        //        /// </summary>
+        //        /// <returns>The list of loaded assemblies</returns>
+        //        private static IEnumerable<Assembly> GetLoadedAssemblies()
+        //        {
+        //#if APPDOMAIN
+        //            return AppDomain.CurrentDomain.GetAssemblies();
+        //#elif CORECLR 
+        //            var assemblies = new List<Assembly>();
+        //            var dependencies = DependencyContext.Default.RuntimeLibraries;
+        //            foreach (var library in dependencies)
+        //            {
+        //                try
+        //                {
+        //                    var assembly = Assembly.Load(new AssemblyName(library.Name));
+        //                    assemblies.Add(assembly);
+        //                }
+        //                catch
+        //                {
+        //                    //do nothing can't if can't load assembly
+        //                }
+        //            }
+        //            return assemblies;
+        //#else
+        //#warning Method not implemented
+        //            throw new NotImplementedException();
+        //#endif
+        //        }
     }
 }

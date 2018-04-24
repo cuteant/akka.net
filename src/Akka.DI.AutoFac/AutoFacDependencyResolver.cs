@@ -36,8 +36,8 @@ namespace Akka.DI.AutoFac
         /// </exception>
         public AutoFacDependencyResolver(ILifetimeScope container, ActorSystem system)
         {
-            if (system == null) throw new ArgumentNullException("system");
-            if (container == null) throw new ArgumentNullException("container");
+            if (system == null) throw new ArgumentNullException(nameof(system));
+            if (container == null) throw new ArgumentNullException(nameof(container));
             this.container = container;
             typeCache = new ConcurrentDictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
             this.system = system;

@@ -11,6 +11,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
+using CuteAnt.Reflection;
 using Helios.Concurrency;
 
 namespace Akka.Dispatch
@@ -419,7 +420,7 @@ namespace Akka.Dispatch
                 case null:
                     throw new ConfigurationException($"Could not resolve dispatcher for path {id}. type is null");
                 default:
-                    Type dispatcherType = Type.GetType(type);
+                    Type dispatcherType = TypeUtils.ResolveType(type);
                     if (dispatcherType == null)
                     {
                         throw new ConfigurationException($"Could not resolve dispatcher type {type} for path {id}");

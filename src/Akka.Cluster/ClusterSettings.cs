@@ -11,6 +11,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch;
+using CuteAnt.Reflection;
 
 namespace Akka.Cluster
 {
@@ -74,7 +75,7 @@ namespace Akka.Cluster
 
             var downingProviderClassName = cc.GetString("downing-provider-class");
             if (!string.IsNullOrEmpty(downingProviderClassName))
-                DowningProviderType = Type.GetType(downingProviderClassName, true);
+                DowningProviderType = TypeUtils.ResolveType(downingProviderClassName);//, true);
             else if (AutoDownUnreachableAfter.HasValue)
                 DowningProviderType = typeof(AutoDowning);
             else

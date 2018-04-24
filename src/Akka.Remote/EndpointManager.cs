@@ -18,6 +18,7 @@ using Akka.Dispatch;
 using Akka.Event;
 using Akka.Remote.Transport;
 using Akka.Util.Internal;
+using CuteAnt.Reflection;
 
 namespace Akka.Remote
 {
@@ -1096,7 +1097,7 @@ namespace Akka.Remote
                         Transport.Transport driver;
                         try
                         {
-                            var driverType = Type.GetType(transportSettings.TransportClass);
+                            var driverType = TypeUtils.ResolveType(transportSettings.TransportClass);
                             if (driverType == null)
                                 throw new TypeLoadException(
                                     $"Cannot instantiate transport [{transportSettings.TransportClass}]. Cannot find the type.");

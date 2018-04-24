@@ -21,6 +21,7 @@ using Akka.Pattern;
 using Akka.Persistence.Journal;
 using Akka.Serialization;
 using Akka.Util;
+using CuteAnt.Reflection;
 
 namespace Akka.Persistence.Sql.Common.Journal
 {
@@ -1206,7 +1207,7 @@ namespace Akka.Persistence.Sql.Common.Journal
             if (reader.IsDBNull(SerializerIdIndex))
             {
                 // Support old writes that did not set the serializer id
-                var type = Type.GetType(manifest, true);
+                var type = TypeUtils.ResolveType(manifest);//, true);
                 var deserializer = _serialization.FindSerializerForType(type, Setup.DefaultSerializer);
                 deserialized = deserializer.FromBinary((byte[])payload, type);
             }

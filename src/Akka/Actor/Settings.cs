@@ -11,6 +11,7 @@ using System.Reflection;
 using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Routing;
+using CuteAnt.Reflection;
 
 namespace Akka.Actor
 {
@@ -64,7 +65,7 @@ namespace Akka.Actor
             
             ConfigVersion = Config.GetString("akka.version");
             ProviderClass = GetProviderClass(Config.GetString("akka.actor.provider"));
-            var providerType = Type.GetType(ProviderClass);
+            var providerType = TypeUtils.ResolveType(ProviderClass);
             if (providerType == null)
                 throw new ConfigurationException($"'akka.actor.provider' is not a valid type name : '{ProviderClass}'");
             if (!typeof(IActorRefProvider).IsAssignableFrom(providerType))

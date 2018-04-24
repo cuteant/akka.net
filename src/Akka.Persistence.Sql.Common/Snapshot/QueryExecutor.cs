@@ -12,6 +12,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Akka.Serialization;
 using Akka.Util;
+using CuteAnt.Reflection;
 
 namespace Akka.Persistence.Sql.Common.Snapshot
 {
@@ -564,7 +565,7 @@ namespace Akka.Persistence.Sql.Common.Snapshot
             object obj;
             if (reader.IsDBNull(5))
             {
-                var type = Type.GetType(manifest, true);
+                var type = TypeUtils.ResolveType(manifest);//, true);
                 var serializer = Serialization.FindSerializerForType(type, Configuration.DefaultSerializer);
                 obj = serializer.FromBinary(binary, type);
             }

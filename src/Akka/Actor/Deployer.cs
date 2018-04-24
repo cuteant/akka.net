@@ -13,6 +13,7 @@ using Akka.Configuration;
 using Akka.Routing;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt.Reflection;
 
 namespace Akka.Actor
 {
@@ -143,7 +144,7 @@ namespace Akka.Actor
 
             var path = string.Format("akka.actor.router.type-mapping.{0}", routerTypeAlias);
             var routerTypeName = _settings.Config.GetString(path);
-            var routerType = Type.GetType(routerTypeName);
+            var routerType = TypeUtils.ResolveType(routerTypeName);
             Debug.Assert(routerType != null, "routerType != null");
             var routerConfig = (RouterConfig)Activator.CreateInstance(routerType, deployment);
 

@@ -161,7 +161,7 @@ namespace Akka.Serialization
             if (config == null) throw new ArgumentNullException(nameof(config), "HyperionSerializerSettings require a config, default path: `akka.serializers.hyperion`");
 
             var typeName = config.GetString("known-types-provider");
-            var type = !string.IsNullOrEmpty(typeName) ? Type.GetType(typeName, true) : null;
+            var type = !string.IsNullOrEmpty(typeName) ? TypeUtils.ResolveType(typeName) : null; // Type.GetType(typeName, true)
 
             return new HyperionSerializerSettings(
                 preserveObjectReferences: config.GetBoolean("preserve-object-references", true),

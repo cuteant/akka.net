@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Configuration;
+using CuteAnt.Reflection;
 
 namespace Akka.Event
 {
@@ -95,7 +96,7 @@ namespace Akka.Event
 
             foreach (var strLoggerType in loggerTypes)
             {
-                var loggerType = Type.GetType(strLoggerType);
+                var loggerType = TypeUtils.ResolveType(strLoggerType);
                 if (loggerType == null)
                 {
                     throw new ConfigurationException($@"Logger specified in config cannot be found: ""{strLoggerType}""");

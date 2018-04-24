@@ -93,7 +93,7 @@ namespace Akka.Remote.Transport
             {
                 try
                 {
-                    var adapterTypeName = Type.GetType(adapter.Value);
+                    var adapterTypeName = TypeUtils.ResolveType(adapter.Value);
                     // ReSharper disable once AssignNullToNotNullAttribute
                     var newAdapter = ActivatorUtils.FastCreateInstance<ITransportAdapterProvider>(adapterTypeName);
                     _adaptersTable.Add(adapter.Key, newAdapter);

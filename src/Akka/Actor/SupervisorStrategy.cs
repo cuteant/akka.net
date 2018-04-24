@@ -1087,7 +1087,7 @@ namespace Akka.Actor
                 case null:
                     throw new ConfigurationException("Could not resolve SupervisorStrategyConfigurator. typeName is null");
                 default:
-                    Type configuratorType = Type.GetType(typeName);
+                    Type configuratorType = TypeUtils.ResolveType(typeName);
 
                     if (configuratorType == null)
                         throw new ConfigurationException($"Could not resolve SupervisorStrategyConfigurator type {typeName}");

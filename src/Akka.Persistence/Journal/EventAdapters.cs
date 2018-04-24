@@ -300,7 +300,7 @@ namespace Akka.Persistence.Journal
             // It is primarily ordered by the most specific classes first, and secondly in the configured order.
             var bindings = Sort(adapterBindings.Select(kv =>
             {
-                var type = Type.GetType(kv.Key);
+                var type = TypeUtils.ResolveType(kv.Key);
                 var adapter = kv.Value.Length == 1
                     ? handlers[kv.Value[0]]
                     : new NoopWriteEventAdapter(new CombinedReadEventAdapter(kv.Value.Select(h => handlers[h])));
@@ -384,7 +384,7 @@ namespace Akka.Persistence.Journal
 
         private static IEventAdapter InstantiateAdapter(string qualifiedName, ExtendedActorSystem system)
         {
-            var type = Type.GetType(qualifiedName, true);
+            var type = TypeUtils.ResolveType(qualifiedName);//, true);
             if (typeof(IEventAdapter).IsAssignableFrom(type))
                 return Instantiate<IEventAdapter>(qualifiedName, system);
             if (typeof (IWriteEventAdapter).IsAssignableFrom(type))
@@ -396,7 +396,7 @@ namespace Akka.Persistence.Journal
 
         private static T Instantiate<T>(string qualifiedName, ExtendedActorSystem system)
         {
-            var type = Type.GetType(qualifiedName);
+            var type = TypeUtils.ResolveType(qualifiedName);
             if (!typeof(T).IsAssignableFrom(type))
                 throw new ArgumentException(string.Format("Couldn't create instance of [{0}] from provided qualified type name [{1}], because it's not assignable from it",
                     typeof(T), qualifiedName));

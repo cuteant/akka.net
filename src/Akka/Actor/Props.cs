@@ -15,6 +15,7 @@ using Akka.Util.Internal;
 using Akka.Util.Reflection;
 using Akka.Routing;
 using Akka.Util;
+using CuteAnt.Reflection;
 using Newtonsoft.Json;
 
 namespace Akka.Actor
@@ -344,7 +345,7 @@ namespace Akka.Actor
         {
             get { return inputType.AssemblyQualifiedName; }
             //for serialization
-            private set { inputType = Type.GetType(value); }
+            private set { inputType = TypeUtils.ResolveType(value); }
         }
 
         /// <summary>

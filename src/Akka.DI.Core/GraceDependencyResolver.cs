@@ -4,6 +4,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.DI.Core;
+using CuteAnt.Reflection;
 using Grace.DependencyInjection;
 
 namespace Akka.DI.Grace
@@ -15,7 +16,7 @@ namespace Akka.DI.Grace
     public class GraceDependencyResolver : IDependencyResolver
     {
         private IInjectionScope container;
-        private ConcurrentDictionary<string, Type> typeCache;
+        //private ConcurrentDictionary<string, Type> typeCache;
         private ActorSystem system;
         private ConditionalWeakTable<ActorBase, IInjectionScope> references;
 
@@ -35,7 +36,7 @@ namespace Akka.DI.Grace
 //#if NET45
 //            typeCache = new ConcurrentDictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
 //#else
-            typeCache = new ConcurrentDictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+//            typeCache = new ConcurrentDictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
 //#endif
             this.system = system;
             this.system.AddDependencyResolver(this);
@@ -49,10 +50,10 @@ namespace Akka.DI.Grace
         /// <returns>The type with the specified actor name</returns>
         public Type GetType(string actorName)
         {
-            typeCache.TryAdd(actorName, actorName.GetTypeValue());
+            //typeCache.TryAdd(actorName, actorName.GetTypeValue());
 
-            return typeCache[actorName];
-
+            //return typeCache[actorName];
+            return TypeUtils.ResolveType(actorName);
         }
 
         /// <summary>

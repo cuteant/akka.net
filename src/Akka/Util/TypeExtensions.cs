@@ -9,6 +9,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Reflection;
 using Akka.Annotations;
+using CuteAnt.Reflection;
 
 namespace Akka.Util
 {
@@ -41,8 +42,8 @@ namespace Akka.Util
             return moreGeneralType.IsAssignableFrom(type);
         }
 
-        private static readonly ConcurrentDictionary<Type, string> ShortenedTypeNames = new ConcurrentDictionary<Type, string>();
-        private static readonly string CoreAssemblyName = typeof(object).GetTypeInfo().Assembly.GetName().Name;
+        //private static readonly ConcurrentDictionary<Type, string> ShortenedTypeNames = new ConcurrentDictionary<Type, string>();
+        //private static readonly string CoreAssemblyName = typeof(object).GetTypeInfo().Assembly.GetName().Name;
 
         /// <summary>
         /// INTERNAL API
@@ -54,20 +55,21 @@ namespace Akka.Util
         [InternalApi]
         public static string TypeQualifiedName(this Type type)
         {
-            string shortened;
-            if (ShortenedTypeNames.TryGetValue(type, out shortened))
-            {
-                return shortened;
-            }
-            else
-            {
-                var assemblyName = type.GetTypeInfo().Assembly.GetName().Name;
-                shortened = string.Equals(assemblyName, CoreAssemblyName, StringComparison.Ordinal)
-                    ? type.GetTypeInfo().FullName
-                    : $"{type.GetTypeInfo().FullName}, {assemblyName}";
-                ShortenedTypeNames.TryAdd(type, shortened);
-                return shortened;
-            }
+            return RuntimeTypeNameFormatter.Format(type);
+            //string shortened;
+            //if (ShortenedTypeNames.TryGetValue(type, out shortened))
+            //{
+            //    return shortened;
+            //}
+            //else
+            //{
+            //    var assemblyName = type.GetTypeInfo().Assembly.GetName().Name;
+            //    shortened = string.Equals(assemblyName, CoreAssemblyName, StringComparison.Ordinal)
+            //        ? type.GetTypeInfo().FullName
+            //        : $"{type.GetTypeInfo().FullName}, {assemblyName}";
+            //    ShortenedTypeNames.TryAdd(type, shortened);
+            //    return shortened;
+            //}
         }
     }
 }

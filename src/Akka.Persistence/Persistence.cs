@@ -99,7 +99,7 @@ namespace Akka.Persistence
             _defaultInternalStashOverflowStrategy = new Lazy<IStashOverflowStrategy>(() =>
             {
                 var configuratorTypeName = _config.GetString("internal-stash-overflow-strategy");
-                var configuratorType = Type.GetType(configuratorTypeName);
+                var configuratorType = TypeUtils.ResolveType(configuratorTypeName);
                 return (ActivatorUtils.FastCreateInstance<IStashOverflowStrategyConfigurator>(configuratorType)).Create(_system.Settings.Config);
             });
 
@@ -272,7 +272,7 @@ namespace Akka.Persistence
             var pluginTypeName = pluginConfig.GetString("class");
             if (string.IsNullOrEmpty(pluginTypeName))
                 throw new ArgumentException($"Plugin class name must be defined in config property [{configPath}.class]");
-            var pluginType = Type.GetType(pluginTypeName, true);
+            var pluginType = TypeUtils.ResolveType(pluginTypeName);//, true);
             var pluginDispatcherId = pluginConfig.GetString("plugin-dispatcher");
             object[] pluginActorArgs = pluginType.GetConstructor(new[] { typeof(Config) }) != null ? new object[] { pluginConfig } : null;
             var pluginActorProps = new Props(pluginType, pluginActorArgs).WithDispatcher(pluginDispatcherId);

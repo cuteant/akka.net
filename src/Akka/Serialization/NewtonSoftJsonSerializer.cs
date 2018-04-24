@@ -64,7 +64,7 @@ namespace Akka.Serialization
             if (converterNames != null)
                 foreach (var converterName in converterNames)
                 {
-                    var type = Type.GetType(converterName, true);
+                    var type = TypeUtils.ResolveType(converterName);//, true);
                     if (!typeof(JsonConverter).IsAssignableFrom(type))
                         throw new ArgumentException($"Type {type} doesn't inherit from a {typeof(JsonConverter)}.");
 

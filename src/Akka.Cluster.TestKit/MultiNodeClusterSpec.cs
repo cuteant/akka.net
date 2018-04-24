@@ -20,6 +20,7 @@ using Akka.Remote.Transport;
 using Akka.TestKit;
 using Akka.TestKit.Xunit2;
 using Akka.Util.Internal;
+using CuteAnt.Reflection;
 using Xunit;
 
 namespace Akka.Cluster.TestKit
@@ -451,7 +452,7 @@ namespace Akka.Cluster.TestKit
 
         public bool IsFailureDetectorPuppet()
         {
-            return Type.GetType(Cluster.Settings.FailureDetectorImplementationClass) == typeof (FailureDetectorPuppet);
+            return TypeUtils.ResolveType(Cluster.Settings.FailureDetectorImplementationClass) == typeof (FailureDetectorPuppet);
         }
 
         public FailureDetectorPuppet FailureDetectorPuppet(Address address)
