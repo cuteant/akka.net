@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.DI.AutoFac</RootNamespace>
+    <AssemblyName>Akka.DI.AutoFac</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.DI.AutoFac.Unofficial</PackageId>
+    <Title>Akka.DI.AutoFac (Unofficial)</Title>
+    <Description>AutoFac Dependency Injection (DI) support for Akka.NET</Description>
+    <PackageTags>akka;actors;actor model;Akka;concurrency;autofac</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Autofac.Unofficial" Version="$(AutofacUnofficialPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.DI.Core\Akka.DI.Core.csproj" />
+  </ItemGroup>
+
+</Project>

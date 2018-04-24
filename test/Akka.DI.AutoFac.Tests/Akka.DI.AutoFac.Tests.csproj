@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+ 
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.DI.AutoFac.Tests</RootNamespace>
+    <AssemblyName>Akka.DI.AutoFac.Tests</AssemblyName>
+  </PropertyGroup>
+ 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.DI.AutoFac\Akka.DI.AutoFac.csproj" />
+    <ProjectReference Include="..\..\src\Akka.DI.TestKit\Akka.DI.TestKit.csproj" />
+    <ProjectReference Include="..\..\src\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
+  </ItemGroup>
+
+</Project>
