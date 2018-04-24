@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using Akka.Actor;
 using Akka.Serialization;
 using Akka.Util;
+using CuteAnt.Reflection;
 using Google.Protobuf;
 
 namespace Akka.Remote.Serialization
@@ -52,7 +53,7 @@ namespace Akka.Remote.Serialization
                 return parser.ParseFrom(bytes);
             }
             // MethodParser is not in the cache, look it up with reflection
-            IMessage msg = Activator.CreateInstance(type) as IMessage;
+            IMessage msg = ActivatorUtils.FastCreateInstance(type) as IMessage;
             if(msg == null) throw new ArgumentException($"Can't deserialize a non-protobuf message using protobuf [{type.TypeQualifiedName()}]");
             parser = msg.Descriptor.Parser;
             TypeLookup.TryAdd(type.FullName, parser);

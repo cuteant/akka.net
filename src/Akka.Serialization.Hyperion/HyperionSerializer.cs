@@ -12,6 +12,7 @@ using System.Reflection;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
+using CuteAnt.Reflection;
 using Hyperion;
 
 // ReSharper disable once CheckNamespace
@@ -124,7 +125,7 @@ namespace Akka.Serialization
             });
 
             return ctor == null
-                ? (IKnownTypesProvider) Activator.CreateInstance(type)
+                ? ActivatorUtils.FastCreateInstance<IKnownTypesProvider>(type)
                 : (IKnownTypesProvider) ctor.Invoke(new object[] {system});
         }
     }

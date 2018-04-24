@@ -14,6 +14,7 @@ using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
+using CuteAnt.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -180,7 +181,7 @@ namespace Akka.Serialization
                 });
 
             return ctor == null 
-                ? (JsonConverter)Activator.CreateInstance(converterType)
+                ? ActivatorUtils.FastCreateInstance<JsonConverter>(converterType)
                 : (JsonConverter)Activator.CreateInstance(converterType, actorSystem);
         }
 

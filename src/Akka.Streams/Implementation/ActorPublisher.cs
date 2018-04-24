@@ -9,13 +9,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
 using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Event;
 using Akka.Pattern;
 using Akka.Util;
+using CuteAnt.Reflection;
 using Reactive.Streams;
 
 namespace Akka.Streams.Implementation
@@ -297,7 +297,7 @@ namespace Akka.Streams.Implementation
         internal static IActorSubscription Create(IActorRef implementor, IUntypedSubscriber subscriber)
         {
             var subscribedType = subscriber.GetType().GetGenericArguments().First(); // assumes type is UntypedSubscriberWrapper
-            var subscriptionType = typeof(ActorSubscription<>).MakeGenericType(subscribedType);
+            var subscriptionType = typeof(ActorSubscription<>).GetCachedGenericType(subscribedType);
             return (IActorSubscription) Activator.CreateInstance(subscriptionType, implementor, UntypedSubscriber.ToTyped(subscriber));
         }
 

@@ -16,6 +16,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
 using Akka.Persistence.Journal;
+using CuteAnt.Reflection;
 
 namespace Akka.Persistence.Sql.Common.Journal
 {
@@ -513,7 +514,7 @@ namespace Akka.Persistence.Sql.Common.Journal
             }
             catch (Exception)
             {
-                return (ITimestampProvider)Activator.CreateInstance(type);
+                return ActivatorUtils.FastCreateInstance<ITimestampProvider>(type);
             }
         }
         #endregion

@@ -33,7 +33,7 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (config == null) throw new ArgumentNullException(nameof(config), "DotNetty HOCON config was not found (default path: `akka.remote.dot-netty`)");
 
-            var transportMode = config.GetString("transport-protocol", "tcp").ToLower();
+            var transportMode = config.GetString("transport-protocol", "tcp").ToLowerInvariant();
             var host = config.GetString("hostname");
             if (string.IsNullOrEmpty(host)) host = IPAddress.Any.ToString();
             var publicHost = config.GetString("public-hostname", null);

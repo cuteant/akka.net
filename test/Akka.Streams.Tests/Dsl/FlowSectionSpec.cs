@@ -97,13 +97,13 @@ namespace Akka.Streams.Tests.Dsl
         public void A_Flow_can_include_name_in_ToString()
         {
             var n = "Uppercase reverser";
-            var f1 = Flow.Create<string>().Select(c => c.ToLower());
+            var f1 = Flow.Create<string>().Select(c => c.ToLowerInvariant());
             var f2 =
                 Flow.Create<string>()
-                    .Select(c => c.ToUpper())
+                    .Select(c => c.ToUpperInvariant())
                     .Select(s => s.Reverse().Aggregate("", (agg, c) => agg + c))
                     .Named(n)
-                    .Select(c => c.ToLower());
+                    .Select(c => c.ToLowerInvariant());
 
             f1.Via(f2).ToString().Should().Contain(n);
         }

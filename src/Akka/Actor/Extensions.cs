@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using CuteAnt.Reflection;
 
 namespace Akka.Actor
 {
@@ -113,7 +114,7 @@ namespace Akka.Actor
                 return system.GetExtension<T>();
             else
             {
-                return (T) system.RegisterExtension((IExtensionId)Activator.CreateInstance(extensionId));
+                return (T)system.RegisterExtension(ActivatorUtils.FastCreateInstance<IExtensionId>(extensionId));
             }
         }
 
@@ -133,7 +134,7 @@ namespace Akka.Actor
                 return system.GetExtension<T>();
             else
             {
-                return (T)system.RegisterExtension((IExtensionId)Activator.CreateInstance(typeof(TI)));
+                return (T)system.RegisterExtension(ActivatorUtils.FastCreateInstance<IExtensionId>(typeof(TI)));
             }
             
         }

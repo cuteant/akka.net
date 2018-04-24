@@ -15,6 +15,7 @@ using Akka.Configuration;
 using Akka.Configuration.Hocon;
 using Akka.Event;
 using Akka.Pattern;
+using CuteAnt.Reflection;
 
 namespace Akka.Persistence.Journal
 {
@@ -406,7 +407,7 @@ namespace Akka.Persistence.Journal
             }
             catch (MissingMethodException)
             {
-                return (T)Activator.CreateInstance(type);
+                return ActivatorUtils.FastCreateInstance<T>(type);
             }
         }
 

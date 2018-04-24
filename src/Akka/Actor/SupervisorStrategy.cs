@@ -15,6 +15,7 @@ using Akka.Configuration;
 using Akka.Event;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt.Reflection;
 
 namespace Akka.Actor
 {
@@ -1091,7 +1092,7 @@ namespace Akka.Actor
                     if (configuratorType == null)
                         throw new ConfigurationException($"Could not resolve SupervisorStrategyConfigurator type {typeName}");
 
-                    return (SupervisorStrategyConfigurator)Activator.CreateInstance(configuratorType);
+                    return ActivatorUtils.FastCreateInstance<SupervisorStrategyConfigurator>(configuratorType);
             }
         }
     }

@@ -14,6 +14,7 @@ using Akka.Pattern;
 using Akka.Streams.Stage;
 using Akka.Streams.Util;
 using Akka.Util.Internal;
+using CuteAnt.Reflection;
 using Atomic = Akka.Streams.Implementation.StreamLayout.Atomic;
 using Combine = Akka.Streams.Implementation.StreamLayout.Combine;
 using IMaterializedValueNode = Akka.Streams.Implementation.StreamLayout.IMaterializedValueNode;
@@ -495,7 +496,7 @@ namespace Akka.Streams.Implementation.Fusing
                             mapped = matNodeMapping[ms.Computation];
 
                         var outputType = ms.Outlet.GetType().GetGenericArguments().First();
-                        var materializedValueSourceType = typeof(MaterializedValueSource<>).MakeGenericType(outputType);
+                        var materializedValueSourceType = typeof(MaterializedValueSource<>).GetCachedGenericType(outputType);
                         var newSrc = (IMaterializedValueSource) Activator.CreateInstance(materializedValueSourceType, mapped, ms.Outlet);
                         var replacement = new CopiedModule(c.Shape, c.Attributes, newSrc.Module);
                         structInfo.Replace(c, replacement, localGroup);

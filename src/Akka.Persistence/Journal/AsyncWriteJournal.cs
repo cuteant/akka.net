@@ -57,7 +57,7 @@ namespace Akka.Persistence.Journal
                 config.GetTimeSpan("circuit-breaker.call-timeout"),
                 config.GetTimeSpan("circuit-breaker.reset-timeout"));
 
-            var replayFilterMode = config.GetString("replay-filter.mode").ToLower();
+            var replayFilterMode = config.GetString("replay-filter.mode").ToLowerInvariant();
             switch (replayFilterMode)
             {
                 case "off":

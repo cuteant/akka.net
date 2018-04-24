@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using CuteAnt.Reflection;
 
 namespace Akka.Streams
 {
@@ -23,7 +24,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public static object Instantiate(this Type genericType, Type genericParam, params object[] constructorArgs)
         {
-            var gen = genericType.MakeGenericType(genericParam);
+            var gen = genericType.GetCachedGenericType(genericParam);
             return Activator.CreateInstance(gen, constructorArgs);
         }
 
@@ -36,7 +37,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public static object Instantiate(this Type genericType, Type[] genericParams, params object[] constructorArgs)
         {
-            var gen = genericType.MakeGenericType(genericParams);
+            var gen = genericType.GetCachedGenericType(genericParams);
             return Activator.CreateInstance(gen, constructorArgs);
         }
     }

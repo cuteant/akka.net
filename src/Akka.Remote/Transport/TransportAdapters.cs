@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Event;
-
+using CuteAnt.Reflection;
 
 namespace Akka.Remote.Transport
 {
@@ -95,7 +95,7 @@ namespace Akka.Remote.Transport
                 {
                     var adapterTypeName = Type.GetType(adapter.Value);
                     // ReSharper disable once AssignNullToNotNullAttribute
-                    var newAdapter = (ITransportAdapterProvider)Activator.CreateInstance(adapterTypeName);
+                    var newAdapter = ActivatorUtils.FastCreateInstance<ITransportAdapterProvider>(adapterTypeName);
                     _adaptersTable.Add(adapter.Key, newAdapter);
                 }
                 catch (Exception ex)

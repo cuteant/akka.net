@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -15,10 +16,9 @@ using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
-using System.Reflection;
 using Akka.Serialization;
 using Akka.Util;
-
+using CuteAnt.Reflection;
 
 namespace Akka.Actor.Internal
 {
@@ -280,7 +280,7 @@ namespace Akka.Actor.Internal
 
                 try
                 {
-                    var extension = (IExtensionId)Activator.CreateInstance(extensionType);
+                    var extension = ActivatorUtils.FastCreateInstance<IExtensionId>(extensionType);
                     extensions.Add(extension);
                 }
                 catch(Exception ex)

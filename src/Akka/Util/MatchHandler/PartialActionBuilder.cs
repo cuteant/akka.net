@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using CuteAnt.Reflection;
 
 namespace Akka.Tools.MatchHandler
 {
@@ -70,8 +71,8 @@ namespace Akka.Tools.MatchHandler
                 i++;
                 argumentTypes[i] = argumentType;
             }
-            var type = baseType.MakeGenericType(argumentTypes);
-            var argsCatcher = (IPartialHandlerArgumentsCapture<T>) Activator.CreateInstance(type);
+            var type = baseType.GetCachedGenericType(argumentTypes);
+            var argsCatcher = ActivatorUtils.FastCreateInstance<IPartialHandlerArgumentsCapture<T>>(type);
             argsCatcher.Initialize(handler, arguments);
             return argsCatcher.Handle;
         }

@@ -13,6 +13,7 @@ using System.Net.Sockets;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Routing;
+using CuteAnt.Reflection;
 
 namespace Akka.IO
 {
@@ -242,7 +243,7 @@ namespace Akka.IO
             _system = system;
             Settings = new DnsSettings(system.Settings.Config.GetConfig("akka.io.dns"));
             //TODO: system.dynamicAccess.getClassFor[DnsProvider](Settings.ProviderObjectName).get.newInstance()
-            Provider = (IDnsProvider) Activator.CreateInstance(Type.GetType(Settings.ProviderObjectName));
+            Provider = ActivatorUtils.FastCreateInstance<IDnsProvider>(TypeUtils.ResolveType(Settings.ProviderObjectName));
             Cache = Provider.Cache;
         }
 
