@@ -158,7 +158,7 @@ namespace Akka.Remote.Routing
         /// </summary>
         /// <param name="other">The group to compare.</param>
         /// <returns><c>true</c> if the specified router is equal to this instance; otherwise, <c>false</c>.</returns>
-        public bool Equals(RouterConfig other)
+        public new bool Equals(RouterConfig other)
         {
             if (!base.Equals(other)) return false;
             var otherRemote = other as RemoteRouterConfig;
