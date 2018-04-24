@@ -68,7 +68,7 @@ namespace Akka.DI.Core
             Func<Type> searchForType = () =>
                 GetLoadedAssemblies()
                     .SelectMany(x => x.GetTypes())
-                    .FirstOrDefault(t => t.Name.Equals(typeName));
+                    .FirstOrDefault(t => string.Equals(t.Name, typeName, StringComparison.Ordinal));
             return firstTry ?? searchForType();
         }
 

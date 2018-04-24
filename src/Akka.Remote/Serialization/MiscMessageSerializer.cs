@@ -186,7 +186,7 @@ namespace Akka.Remote.Serialization
         private IActorRef ActorRefFromProto(byte[] bytes)
         {
             var protoMessage = Proto.Msg.ActorRefData.Parser.ParseFrom(bytes);
-            if (protoMessage.Path.Equals("nobody"))
+            if (string.Equals(protoMessage.Path, "nobody", StringComparison.Ordinal))
                 return Nobody.Instance;
             return system.AsInstanceOf<ExtendedActorSystem>().Provider.ResolveActorRef(protoMessage.Path);
         }

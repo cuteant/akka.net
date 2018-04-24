@@ -109,7 +109,7 @@ namespace Akka.Persistence
             if (ReferenceEquals(other, null)) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            return string.Equals(PersistenceId, other.PersistenceId) && SequenceNr == other.SequenceNr && Timestamp.Equals(other.Timestamp);
+            return string.Equals(PersistenceId, other.PersistenceId, StringComparison.Ordinal) && SequenceNr == other.SequenceNr && Timestamp.Equals(other.Timestamp);
         }
 
         /// <inheritdoc/>

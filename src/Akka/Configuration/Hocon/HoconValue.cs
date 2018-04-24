@@ -420,7 +420,7 @@ namespace Akka.Configuration.Hocon
                 }
             }
 
-            if (allowInfinite && res.Equals("infinite", StringComparison.OrdinalIgnoreCase))  //Not in Hocon spec
+            if (allowInfinite && string.Equals(res, "infinite", StringComparison.OrdinalIgnoreCase))  //Not in Hocon spec
             {
                 return Timeout.InfiniteTimeSpan;
             }

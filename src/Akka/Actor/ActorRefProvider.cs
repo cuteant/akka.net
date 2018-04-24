@@ -149,7 +149,7 @@ namespace Akka.Actor
         private readonly AtomicCounterLong _tempNumber;
         private readonly ActorPath _tempNode;
         private ActorSystemImpl _system;
-        private readonly Dictionary<string, IInternalActorRef> _extraNames = new Dictionary<string, IInternalActorRef>();
+        private readonly Dictionary<string, IInternalActorRef> _extraNames = new Dictionary<string, IInternalActorRef>(StringComparer.Ordinal);
         private readonly TaskCompletionSource<Status> _terminationPromise = new TaskCompletionSource<Status>();
         private readonly SupervisorStrategy _systemGuardianStrategy;
         private readonly SupervisorStrategyConfigurator _userGuardianStrategyConfigurator;

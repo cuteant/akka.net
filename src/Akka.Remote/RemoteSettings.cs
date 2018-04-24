@@ -30,8 +30,8 @@ namespace Akka.Remote
             LogSend = config.GetBoolean("akka.remote.log-sent-messages");
 
             var bufferSizeLogKey = "akka.remote.log-buffer-size-exceeding";
-            if (config.GetString(bufferSizeLogKey).ToLowerInvariant().Equals("off") ||
-                config.GetString(bufferSizeLogKey).ToLowerInvariant().Equals("false"))
+            if (string.Equals(config.GetString(bufferSizeLogKey), "off", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(config.GetString(bufferSizeLogKey), "false", StringComparison.OrdinalIgnoreCase))
             {
                 LogBufferSizeExceeding = Int32.MaxValue;
             }
@@ -41,10 +41,10 @@ namespace Akka.Remote
             }
 
             UntrustedMode = config.GetBoolean("akka.remote.untrusted-mode");
-            TrustedSelectionPaths = new HashSet<string>(config.GetStringList("akka.remote.trusted-selection-paths"));
+            TrustedSelectionPaths = new HashSet<string>(config.GetStringList("akka.remote.trusted-selection-paths"), StringComparer.Ordinal);
             RemoteLifecycleEventsLogLevel = config.GetString("akka.remote.log-remote-lifecycle-events") ?? "DEBUG";
             Dispatcher = config.GetString("akka.remote.use-dispatcher");
-            if (RemoteLifecycleEventsLogLevel.Equals("on", StringComparison.OrdinalIgnoreCase)) RemoteLifecycleEventsLogLevel = "DEBUG";
+            if (string.Equals(RemoteLifecycleEventsLogLevel, "on", StringComparison.OrdinalIgnoreCase)) RemoteLifecycleEventsLogLevel = "DEBUG";
             FlushWait = config.GetTimeSpan("akka.remote.flush-wait-on-shutdown");
             ShutdownTimeout = config.GetTimeSpan("akka.remote.shutdown-timeout");
             TransportNames = config.GetStringList("akka.remote.enabled-transports");
@@ -263,7 +263,7 @@ namespace Akka.Remote
 
         private static IDictionary<string, string> ConfigToMap(Config cfg)
         {
-            if(cfg.IsEmpty) return new Dictionary<string, string>();
+            if (cfg.IsEmpty) return new Dictionary<string, string>(StringComparer.Ordinal);
             var unwrapped = cfg.Root.GetObject().Unwrapped;
             return unwrapped.ToDictionary(k => k.Key, v => v.Value != null? v.Value.ToString():null);
         }

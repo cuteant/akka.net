@@ -200,7 +200,7 @@ namespace Akka.Remote
 
                     IEnumerable<IGrouping<string, ProtocolTransportAddressPair>> tmp =
                         akkaProtocolTransports.GroupBy(t => t.ProtocolTransport.SchemeIdentifier);
-                    _transportMapping = new Dictionary<string, HashSet<ProtocolTransportAddressPair>>();
+                    _transportMapping = new Dictionary<string, HashSet<ProtocolTransportAddressPair>>(StringComparer.Ordinal);
                     foreach (var g in tmp)
                     {
                         var set = new HashSet<ProtocolTransportAddressPair>(g);

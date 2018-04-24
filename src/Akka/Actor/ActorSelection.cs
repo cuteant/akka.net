@@ -365,7 +365,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         protected bool Equals(SelectChildName other)
         {
-            return string.Equals(Name, other.Name);
+            return string.Equals(Name, other.Name, StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>
@@ -404,7 +404,7 @@ namespace Akka.Actor
         public string PatternStr { get; }
 
         /// <inheritdoc/>
-        protected bool Equals(SelectChildPattern other) => string.Equals(PatternStr, other.PatternStr);
+        protected bool Equals(SelectChildPattern other) => string.Equals(PatternStr, other.PatternStr, StringComparison.Ordinal);
 
         /// <inheritdoc/>
         public override bool Equals(object obj)

@@ -26,7 +26,7 @@ namespace Akka.Persistence.Fsm
         /// <summary>
         /// Map from state identifier to state instance
         /// </summary>
-        private Dictionary<string, TState> StatesMap => StateNames.ToDictionary(c => c.Identifier, c => c);
+        private Dictionary<string, TState> StatesMap => StateNames.ToDictionary(c => c.Identifier, c => c, StringComparer.Ordinal);
 
         /// <summary>
         /// Timeout set for the current state. Used when saving a snapshot
@@ -455,7 +455,7 @@ namespace Akka.Persistence.Fsm
 
         public SnapshotAfterExtension(Config config)
         {
-            if (config.GetString(Key).ToLowerInvariant().Equals("off"))
+            if (string.Equals(config.GetString(Key), "off", StringComparison.OrdinalIgnoreCase))
             {
                 SnapshotAfterValue = null;
             }

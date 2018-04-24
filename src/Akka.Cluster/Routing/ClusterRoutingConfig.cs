@@ -175,7 +175,7 @@ namespace Akka.Cluster.Routing
             return MaxInstancesPerNode == other.MaxInstancesPerNode
                 && TotalInstances == other.TotalInstances 
                 && AllowLocalRoutees == other.AllowLocalRoutees 
-                && string.Equals(UseRole, other.UseRole);
+                && string.Equals(UseRole, other.UseRole, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)

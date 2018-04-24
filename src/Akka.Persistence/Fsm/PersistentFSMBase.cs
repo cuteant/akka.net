@@ -360,7 +360,7 @@ namespace Akka.Persistence.Fsm
         private long _generation;
 
         // Timer handling
-        private readonly IDictionary<string, FSMBase.Timer> _timers = new Dictionary<string, FSMBase.Timer>();
+        private readonly IDictionary<string, FSMBase.Timer> _timers = new Dictionary<string, FSMBase.Timer>(StringComparer.Ordinal);
         private readonly AtomicCounter _timerGen = new AtomicCounter(0);
 
         // State definitions

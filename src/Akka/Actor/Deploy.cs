@@ -197,12 +197,12 @@ namespace Akka.Actor
         {
             if (other == null) return false;
             return ((string.IsNullOrEmpty(_mailbox) && string.IsNullOrEmpty(other._mailbox)) ||
-                    string.Equals(_mailbox, other._mailbox)) &&
-                   string.Equals(_dispatcher, other._dispatcher) &&
-                   string.Equals(_path, other._path) &&
+                    string.Equals(_mailbox, other._mailbox, StringComparison.Ordinal)) &&
+                   string.Equals(_dispatcher, other._dispatcher, StringComparison.Ordinal) &&
+                   string.Equals(_path, other._path, StringComparison.Ordinal) &&
                    _routerConfig.Equals(other._routerConfig) &&
                    ((_config.IsNullOrEmpty() && other._config.IsNullOrEmpty()) ||
-                    _config.ToString().Equals(other._config.ToString())) &&
+                    string.Equals(_config.ToString(), other._config.ToString(), StringComparison.Ordinal)) &&
                    (_scope == null && other._scope == null || (_scope != null && _scope.Equals(other._scope)));
         }
 

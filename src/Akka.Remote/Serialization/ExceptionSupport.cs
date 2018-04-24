@@ -22,7 +22,7 @@ namespace Akka.Remote.Serialization
     {
         private readonly WrappedPayloadSupport _wrappedPayloadSupport;
         private const BindingFlags All = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
-        private HashSet<string> DefaultProperties = new HashSet<string>
+        private HashSet<string> DefaultProperties = new HashSet<string>(StringComparer.Ordinal)
         {
             "ClassName",
             "Message",

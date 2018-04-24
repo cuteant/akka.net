@@ -88,7 +88,7 @@ namespace Akka.Remote.Transport
         private Dictionary<string, ITransportAdapterProvider> AdaptersTable()
         {
             if (_adaptersTable != null) return _adaptersTable;
-            _adaptersTable = new Dictionary<string, ITransportAdapterProvider>();
+            _adaptersTable = new Dictionary<string, ITransportAdapterProvider>(StringComparer.Ordinal);
             foreach (var adapter in Settings.Adapters)
             {
                 try

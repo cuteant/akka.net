@@ -62,7 +62,7 @@ namespace Akka.Util
             else
             {
                 var assemblyName = type.GetTypeInfo().Assembly.GetName().Name;
-                shortened = assemblyName.Equals(CoreAssemblyName)
+                shortened = string.Equals(assemblyName, CoreAssemblyName, StringComparison.Ordinal)
                     ? type.GetTypeInfo().FullName
                     : $"{type.GetTypeInfo().FullName}, {assemblyName}";
                 ShortenedTypeNames.TryAdd(type, shortened);

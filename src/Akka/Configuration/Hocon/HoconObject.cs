@@ -40,7 +40,7 @@ namespace Akka.Configuration.Hocon
         /// </summary>
         public HoconObject()
         {
-            Items = new Dictionary<string, HoconValue>();
+            Items = new Dictionary<string, HoconValue>(StringComparer.Ordinal);
         }
 
         /// <summary>
@@ -211,7 +211,7 @@ namespace Akka.Configuration.Hocon
         /// <param name="other">The object to merge into this instance.</param>
         internal HoconObject MergeImmutable(HoconObject other)
         {
-            var thisItems = new Dictionary<string, HoconValue>(Items);
+            var thisItems = new Dictionary<string, HoconValue>(Items, StringComparer.Ordinal);
             var otherItems = other.Items;
 
             foreach (var otherItem in otherItems)

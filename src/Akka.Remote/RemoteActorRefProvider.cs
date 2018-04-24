@@ -341,8 +341,8 @@ namespace Akka.Remote
             Deploy configDeploy = null;
             if (lookupDeploy)
             {
-                if (elements.Head().Equals("user")) configDeploy = Deployer.Lookup(elements.Drop(1));
-                else if (elements.Head().Equals("remote")) configDeploy = LookUpRemotes(elements);
+                if (string.Equals(elements.Head(), "user", StringComparison.Ordinal)) configDeploy = Deployer.Lookup(elements.Drop(1));
+                else if (string.Equals(elements.Head(), "remote", StringComparison.Ordinal)) configDeploy = LookUpRemotes(elements);
             }
 
             //merge all of the fallbacks together
@@ -408,8 +408,8 @@ namespace Akka.Remote
         public Deploy LookUpRemotes(IEnumerable<string> p)
         {
             if (p == null || !p.Any()) return Deploy.None;
-            if (p.Head().Equals("remote")) return LookUpRemotes(p.Drop(3));
-            if (p.Head().Equals("user")) return Deployer.Lookup(p.Drop(1));
+            if (string.Equals(p.Head(), "remote", StringComparison.Ordinal)) return LookUpRemotes(p.Drop(3));
+            if (string.Equals(p.Head(), "user", StringComparison.Ordinal)) return Deployer.Lookup(p.Drop(1));
             return Deploy.None;
         }
 
@@ -470,7 +470,7 @@ namespace Akka.Remote
                 if (HasAddress(actorPath.Address))
                 {
                     // HACK: needed to make ActorSelections work
-                    if (actorPath.ToStringWithoutAddress().Equals("/"))
+                    if (string.Equals(actorPath.ToStringWithoutAddress(), "/", StringComparison.Ordinal))
                         return RootGuardian;
                     return _local.ResolveActorRef(RootGuardian, actorPath.ElementsWithUid);
                 }

@@ -109,7 +109,7 @@ namespace Akka.IO
             {
                 var until = _clock() + ttl;
 
-                var cache = new Dictionary<string, CacheEntry>(_cache);
+                var cache = new Dictionary<string, CacheEntry>(_cache, StringComparer.Ordinal);
 
                 cache[answer.Name] = new CacheEntry(answer, until);
 
@@ -131,7 +131,7 @@ namespace Akka.IO
                     if (_cache.TryGetValue(name, out var cacheEntry) && !cacheEntry.IsValid(now))
                         _cache.Remove(name);
                 }
-                return new Cache(new SortedSet<ExpiryEntry>(), new Dictionary<string, CacheEntry>(_cache), _clock);
+                return new Cache(new SortedSet<ExpiryEntry>(), new Dictionary<string, CacheEntry>(_cache, StringComparer.Ordinal), _clock);
             }
         }
 

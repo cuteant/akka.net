@@ -104,9 +104,9 @@ namespace Akka.Persistence.Journal
         {
             _config = config;
             var pluginId = Self.Path.Name;
-            if (pluginId.Equals("akka.persistence.journal.proxy"))
+            if (string.Equals(pluginId, "akka.persistence.journal.proxy", StringComparison.Ordinal))
                 _pluginType = new Journal();
-            else if (pluginId.Equals("akka.persistence.snapshot-store.proxy"))
+            else if (string.Equals(pluginId, "akka.persistence.snapshot-store.proxy", StringComparison.Ordinal))
                 _pluginType = new SnapshotStore();
             else
                 throw new ArgumentException($"Unknown plugin type: {pluginId}.");

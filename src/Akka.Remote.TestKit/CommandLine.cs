@@ -32,7 +32,7 @@ namespace Akka.Remote.TestKit
             var dictionary = new StringDictionary();
             foreach (var arg in Environment.GetCommandLineArgs())
             {
-                if (!arg.StartsWith("-D")) continue;
+                if (!arg.StartsWith("-D", StringComparison.Ordinal)) continue;
                 var tokens = arg.Substring(2).Split('=');
 
                 if (tokens.Length == 2)

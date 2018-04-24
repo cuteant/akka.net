@@ -280,7 +280,7 @@ namespace Akka.Persistence.Journal
 
         private static EventAdapters Create(ExtendedActorSystem system, IDictionary<string, string> adapters, IDictionary<string, string[]> adapterBindings)
         {
-            var adapterNames = new HashSet<string>(adapters.Keys);
+            var adapterNames = new HashSet<string>(adapters.Keys, StringComparer.Ordinal);
             foreach (var kv in adapterBindings)
             {
                 foreach (var boundAdapter in kv.Value)
@@ -417,7 +417,7 @@ namespace Akka.Persistence.Journal
                 var hoconObject = config.GetConfig(path).Root.GetObject();
                 return hoconObject.Unwrapped.ToDictionary(kv => kv.Key, kv => kv.Value.ToString().Trim('"'));
             }
-            else return new Dictionary<string, string> { };
+            else return new Dictionary<string, string>(StringComparer.Ordinal) { };
         }
 
         private static IDictionary<string, string[]> ConfigToListMap(Config config, string path)
@@ -436,7 +436,7 @@ namespace Akka.Persistence.Journal
                     else return new[] { kv.Value.ToString().Trim('"') };
                 });
             }
-            else return new Dictionary<string, string[]> { };
+            else return new Dictionary<string, string[]>(StringComparer.Ordinal) { };
         }
     }
 }

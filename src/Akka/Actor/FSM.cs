@@ -1020,7 +1020,7 @@ namespace Akka.Actor
         /// <summary>
         /// Timer handling
         /// </summary>
-        private readonly IDictionary<string, Timer> _timers = new Dictionary<string, Timer>();
+        private readonly IDictionary<string, Timer> _timers = new Dictionary<string, Timer>(StringComparer.Ordinal);
         private readonly AtomicCounter _timerGen = new AtomicCounter(0);
 
         /// <summary>

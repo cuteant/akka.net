@@ -533,10 +533,10 @@ namespace Akka.Persistence.Sql.Common.Journal
             Setup = setup;
             CanPublish = Persistence.Instance.Apply(Context.System).Settings.Internal.PublishPluginCommands;
 
-            _persistenceIdSubscribers = new Dictionary<string, HashSet<IActorRef>>();
-            _tagSubscribers = new Dictionary<string, HashSet<IActorRef>>();
+            _persistenceIdSubscribers = new Dictionary<string, HashSet<IActorRef>>(StringComparer.Ordinal);
+            _tagSubscribers = new Dictionary<string, HashSet<IActorRef>>(StringComparer.Ordinal);
             _allIdsSubscribers = new HashSet<IActorRef>();
-            _allPersistenceIds = new HashSet<string>();
+            _allPersistenceIds = new HashSet<string>(StringComparer.Ordinal);
 
             _remainingOperations = Setup.MaxConcurrentOperations;
             Buffer = new Queue<IJournalRequest>(Setup.MaxBatchSize);
@@ -1046,8 +1046,8 @@ namespace Akka.Persistence.Sql.Common.Journal
         {
             IJournalResponse summary = null;
             var responses = new List<IJournalResponse>();
-            var tags = new HashSet<string>();
-            var persistenceIds = new HashSet<string>();
+            var tags = new HashSet<string>(StringComparer.Ordinal);
+            var persistenceIds = new HashSet<string>(StringComparer.Ordinal);
             var actorInstanceId = req.ActorInstanceId;
 
             try

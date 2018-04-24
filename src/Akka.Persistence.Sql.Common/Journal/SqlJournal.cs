@@ -24,11 +24,11 @@ namespace Akka.Persistence.Sql.Common.Journal
     /// </summary>
     public abstract class SqlJournal : AsyncWriteJournal, IWithUnboundedStash
     {
-        private readonly Dictionary<string, ISet<IActorRef>> _persistenceIdSubscribers = new Dictionary<string, ISet<IActorRef>>();
-        private readonly Dictionary<string, ISet<IActorRef>> _tagSubscribers = new Dictionary<string, ISet<IActorRef>>();
+        private readonly Dictionary<string, ISet<IActorRef>> _persistenceIdSubscribers = new Dictionary<string, ISet<IActorRef>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, ISet<IActorRef>> _tagSubscribers = new Dictionary<string, ISet<IActorRef>>(StringComparer.Ordinal);
         private readonly HashSet<IActorRef> _allPersistenceIdSubscribers = new HashSet<IActorRef>();
         private readonly ReaderWriterLockSlim _allPersistenceIdsLock = new ReaderWriterLockSlim();
-        private HashSet<string> _allPersistenceIds = new HashSet<string>();
+        private HashSet<string> _allPersistenceIds = new HashSet<string>(StringComparer.Ordinal);
         private IImmutableDictionary<string, long> _tagSequenceNr = ImmutableDictionary<string, long>.Empty;
 
         private readonly CancellationTokenSource _pendingRequestsCancellation;
@@ -134,8 +134,8 @@ namespace Akka.Persistence.Sql.Common.Journal
         /// <returns>TBD</returns>
         protected override async Task<IImmutableList<Exception>> WriteMessagesAsync(IEnumerable<AtomicWrite> messages)
         {
-            var persistenceIds = new HashSet<string>();
-            var allTags = new HashSet<string>();
+            var persistenceIds = new HashSet<string>(StringComparer.Ordinal);
+            var allTags = new HashSet<string>(StringComparer.Ordinal);
 
             var writeTasks = messages.Select(async message =>
             {
@@ -266,7 +266,7 @@ namespace Akka.Persistence.Sql.Common.Journal
             return message.Match()
                 .With<AllPersistenceIds>(all =>
                 {
-                    _allPersistenceIds = new HashSet<string>(all.Ids);
+                    _allPersistenceIds = new HashSet<string>(all.Ids, StringComparer.Ordinal);
                     UnbecomeStacked();
                     Stash.UnstashAll();
                 })

@@ -444,7 +444,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                 {
                     var key = kv.Key;
                     var value = kv.Value;
-                    if (key.StartsWith(topicPrefix))
+                    if (key.StartsWith(topicPrefix, StringComparison.Ordinal))
                     {
                         var topic = key.Substring(topicPrefix.Length + 1);
                         if (!topic.Contains("/"))

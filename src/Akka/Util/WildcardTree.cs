@@ -20,7 +20,7 @@ namespace Akka.Util
         /// <summary>
         /// TBD
         /// </summary>
-        public WildcardTree() : this(null, new Dictionary<string, WildcardTree<T>>()) { }
+        public WildcardTree() : this(null, new Dictionary<string, WildcardTree<T>>(System.StringComparer.Ordinal)) { }
 
         /// <summary>
         /// TBD

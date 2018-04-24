@@ -155,9 +155,9 @@ namespace Akka.Dispatch
             if (!_mailboxTypeConfigurators.TryGetValue(id, out var configurator))
             {
                 // It doesn't matter if we create a mailbox type configurator that isn't used due to concurrent lookup.
-                if (id.Equals("unbounded"))
+                if (string.Equals(id, "unbounded", StringComparison.Ordinal))
                     configurator = new UnboundedMailbox();
-                else if (id.Equals("bounded"))
+                else if (string.Equals(id, "bounded", StringComparison.Ordinal))
                     configurator = new BoundedMailbox(Settings, Config(id));
                 else
                 {

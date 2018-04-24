@@ -325,8 +325,8 @@ namespace Akka.DistributedData
         private long _statusCount = 0;
         private int _statusTotChunks = 0;
 
-        private readonly Dictionary<string, HashSet<IActorRef>> _subscribers = new Dictionary<string, HashSet<IActorRef>>();
-        private readonly Dictionary<string, HashSet<IActorRef>> _newSubscribers = new Dictionary<string, HashSet<IActorRef>>();
+        private readonly Dictionary<string, HashSet<IActorRef>> _subscribers = new Dictionary<string, HashSet<IActorRef>>(StringComparer.Ordinal);
+        private readonly Dictionary<string, HashSet<IActorRef>> _newSubscribers = new Dictionary<string, HashSet<IActorRef>>(StringComparer.Ordinal);
         private ImmutableDictionary<string, IKey> _subscriptionKeys = ImmutableDictionary<string, IKey>.Empty;
 
         private readonly ILoggingAdapter _log;
@@ -660,7 +660,7 @@ namespace Akka.DistributedData
             }
         }
         private bool IsDurable(string key) =>
-            _durableKeys.Contains(key) || (_durableWildcards.Count > 0 && _durableWildcards.Any(key.StartsWith));
+            _durableKeys.Contains(key) || (_durableWildcards.Count > 0 && _durableWildcards.Any(_ => key.StartsWith(_, StringComparison.Ordinal)));
 
         private bool IsLocalUpdate(IWriteConsistency consistency)
         {

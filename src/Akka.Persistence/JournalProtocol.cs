@@ -170,7 +170,7 @@ namespace Akka.Persistence
             if (ReferenceEquals(other, null)) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            return string.Equals(PersistenceId, other.PersistenceId) &&
+            return string.Equals(PersistenceId, other.PersistenceId, StringComparison.Ordinal) &&
                    ToSequenceNr == other.ToSequenceNr &&
                    Equals(PersistentActor, other.PersistentActor);
         }

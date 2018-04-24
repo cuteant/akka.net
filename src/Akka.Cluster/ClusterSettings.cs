@@ -49,7 +49,7 @@ namespace Akka.Cluster
             PublishStatsInterval = cc.GetTimeSpanWithOffSwitch("publish-stats-interval");
 
             var key = "down-removal-margin";
-            DownRemovalMargin = cc.GetString(key).ToLowerInvariant().Equals("off") 
+            DownRemovalMargin = string.Equals(cc.GetString(key), "off", StringComparison.OrdinalIgnoreCase) 
                 ? TimeSpan.Zero
                 : cc.GetTimeSpan("down-removal-margin");
 

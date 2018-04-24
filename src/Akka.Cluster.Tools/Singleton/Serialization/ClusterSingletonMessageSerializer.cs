@@ -31,7 +31,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         /// <param name="system">The actor system to associate with this serializer.</param>
         public ClusterSingletonMessageSerializer(ExtendedActorSystem system) : base(system)
         {
-            _fromBinaryMap = new Dictionary<string, Func<byte[], IClusterSingletonMessage>>
+            _fromBinaryMap = new Dictionary<string, Func<byte[], IClusterSingletonMessage>>(StringComparer.Ordinal)
             {
                 {HandOverToMeManifest, _ => HandOverToMe.Instance},
                 {HandOverInProgressManifest, _ => HandOverInProgress.Instance},

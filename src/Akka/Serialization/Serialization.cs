@@ -60,7 +60,7 @@ namespace Akka.Serialization
 
         private readonly ConcurrentDictionary<Type, Serializer> _serializerMap = new ConcurrentDictionary<Type, Serializer>();
         private readonly Dictionary<int, Serializer> _serializersById = new Dictionary<int, Serializer>();
-        private readonly Dictionary<string, Serializer> _serializersByName = new Dictionary<string, Serializer>();
+        private readonly Dictionary<string, Serializer> _serializersByName = new Dictionary<string, Serializer>(StringComparer.Ordinal);
 
         /// <summary>
         /// TBD

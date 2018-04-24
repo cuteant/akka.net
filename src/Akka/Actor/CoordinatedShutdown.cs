@@ -125,7 +125,7 @@ namespace Akka.Actor
             System = system;
             Phases = phases;
             Log = Logging.GetLogger(System, GetType());
-            _knownPhases = new HashSet<string>(Phases.Keys.Concat(Phases.Values.SelectMany(x => x.DependsOn)));
+            _knownPhases = new HashSet<string>(Phases.Keys.Concat(Phases.Values.SelectMany(x => x.DependsOn)), StringComparer.Ordinal);
             OrderedPhases = TopologicalSort(Phases);
         }
 
@@ -482,8 +482,8 @@ namespace Akka.Actor
         {
             var result = new List<string>();
             // in case dependent phase is not defined as key
-            var unmarked = new HashSet<string>(phases.Keys.Concat(phases.Values.SelectMany(x => x.DependsOn)));
-            var tempMark = new HashSet<string>(); // for detecting cycles
+            var unmarked = new HashSet<string>(phases.Keys.Concat(phases.Values.SelectMany(x => x.DependsOn)), StringComparer.Ordinal);
+            var tempMark = new HashSet<string>(StringComparer.Ordinal); // for detecting cycles
 
             void DepthFirstSearch(string u)
             {

@@ -226,7 +226,7 @@ namespace Akka.Cluster
 
             private bool Equals(Welcome other)
             {
-                return _from.Equals(other._from) && _gossip.ToString().Equals(other._gossip.ToString());
+                return _from.Equals(other._from) && string.Equals(_gossip.ToString(), other._gossip.ToString(), StringComparison.Ordinal);
             }
 
             /// <inheritdoc/>
@@ -1545,12 +1545,12 @@ namespace Akka.Cluster
         public void Joining(UniqueAddress node, ImmutableHashSet<string> roles)
         {
             var selfStatus = _latestGossip.GetMember(SelfUniqueAddress).Status;
-            if (!node.Address.Protocol.Equals(_cluster.SelfAddress.Protocol))
+            if (!string.Equals(node.Address.Protocol, _cluster.SelfAddress.Protocol, StringComparison.Ordinal))
             {
                 _log.Warning("Member with wrong protocol tried to join, but was ignored, expected [{0}] but was [{1}]",
                     _cluster.SelfAddress.Protocol, node.Address.Protocol);
             }
-            else if (!node.Address.System.Equals(_cluster.SelfAddress.System))
+            else if (!string.Equals(node.Address.System, _cluster.SelfAddress.System, StringComparison.Ordinal))
             {
                 _log.Warning("Member with wrong ActorSystem name tried to join, but was ignored, expected [{0}] but was [{1}]",
                     _cluster.SelfAddress.System, node.Address.System);

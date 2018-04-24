@@ -33,7 +33,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
         /// <param name="system">The actor system to associate with this serializer.</param>
         public ClusterClientMessageSerializer(ExtendedActorSystem system) : base(system)
         {
-            _fromBinaryMap = new Dictionary<string, Func<byte[], IClusterClientMessage>>
+            _fromBinaryMap = new Dictionary<string, Func<byte[], IClusterClientMessage>>(StringComparer.Ordinal)
             {
                 {ContactsManifest, ContactsFromBinary},
                 {GetContactsManifest, _ => ClusterReceptionist.GetContacts.Instance},

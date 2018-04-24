@@ -66,7 +66,7 @@ namespace Akka.Cluster.Sharding.Serialization
         /// <param name="system">The actor system to associate with this serializer.</param>
         public ClusterShardingMessageSerializer(ExtendedActorSystem system) : base(system)
         {
-            _fromBinaryMap = new Dictionary<string, Func<byte[], object>>
+            _fromBinaryMap = new Dictionary<string, Func<byte[], object>>(StringComparer.Ordinal)
             {
                 {EntityStateManifest, EntityStateFromBinary},
                 {EntityStartedManifest, EntityStartedFromBinary},

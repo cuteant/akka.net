@@ -42,7 +42,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         public DistributedPubSubMessageSerializer(ExtendedActorSystem system) : base(system)
         {
             _payloadSupport = new WrappedPayloadSupport(system);
-            _fromBinaryMap = new Dictionary<string, Func<byte[], object>>
+            _fromBinaryMap = new Dictionary<string, Func<byte[], object>>(StringComparer.Ordinal)
             {
                 {StatusManifest, StatusFrom},
                 {DeltaManifest, DeltaFrom},
@@ -172,7 +172,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             var buckets = new List<Bucket>();
             foreach (var protoBuckets in deltaProto.Buckets)
             {
-                var content = new Dictionary<string, ValueHolder>();
+                var content = new Dictionary<string, ValueHolder>(StringComparer.Ordinal);
 
                 foreach (var protoBucketContent in protoBuckets.Content)
                 {

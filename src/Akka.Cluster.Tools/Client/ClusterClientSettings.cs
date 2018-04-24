@@ -46,7 +46,7 @@ namespace Akka.Cluster.Tools.Client
         {
             var initialContacts = config.GetStringList("initial-contacts").Select(ActorPath.Parse).ToImmutableSortedSet();
 
-            TimeSpan? reconnectTimeout = config.GetString("reconnect-timeout").Equals("off")
+            TimeSpan? reconnectTimeout = string.Equals(config.GetString("reconnect-timeout"), "off", StringComparison.Ordinal)
                 ? null
                 : (TimeSpan?)config.GetTimeSpan("reconnect-timeout");
 

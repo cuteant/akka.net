@@ -150,11 +150,11 @@ namespace Akka.Actor
         {
             if (ReferenceEquals(null, other)) return false;
             if (ReferenceEquals(this, other)) return true;
-            return Port == other.Port && string.Equals(Host, other.Host) && string.Equals(System, other.System) && string.Equals(Protocol, other.Protocol);
+            return Port == other.Port && string.Equals(Host, other.Host, StringComparison.Ordinal) && string.Equals(System, other.System, StringComparison.Ordinal) && string.Equals(Protocol, other.Protocol, StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is Address && Equals((Address)obj);
+        public override bool Equals(object obj) => obj is Address addr && Equals(addr);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -374,7 +374,7 @@ namespace Akka.Actor
                 if (!isRelative) return null;
 
                 var finalAddr = addr;
-                if (!addr.StartsWith("/"))
+                if (!addr.StartsWith("/", StringComparison.Ordinal))
                 {
                     //hack to cause the URI not to explode when we're only given an actor name
                     finalAddr = "/" + addr;

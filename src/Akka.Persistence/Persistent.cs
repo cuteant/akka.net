@@ -170,7 +170,7 @@ namespace Akka.Persistence
             return Equals(Payload, other.Payload)
                    && Equals(Sender, other.Sender)
                    && Size == other.Size
-                   && string.Equals(PersistenceId, other.PersistenceId)
+                   && string.Equals(PersistenceId, other.PersistenceId, StringComparison.Ordinal)
                    && LowestSequenceNr == other.LowestSequenceNr
                    && HighestSequenceNr == other.HighestSequenceNr;
         }
@@ -354,12 +354,12 @@ namespace Akka.Persistence
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Payload, other.Payload)
-                   && string.Equals(Manifest, other.Manifest)
-                   && string.Equals(PersistenceId, other.PersistenceId)
+                   && string.Equals(Manifest, other.Manifest, StringComparison.Ordinal)
+                   && string.Equals(PersistenceId, other.PersistenceId, StringComparison.Ordinal)
                    && SequenceNr == other.SequenceNr
                    && IsDeleted == other.IsDeleted
                    && Equals(Sender, other.Sender)
-                   && string.Equals(WriterGuid, other.WriterGuid);
+                   && string.Equals(WriterGuid, other.WriterGuid, StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>
@@ -372,12 +372,12 @@ namespace Akka.Persistence
         public bool Equals(Persistent other)
         {
             return Equals(Payload, other.Payload)
-                   && string.Equals(Manifest, other.Manifest)
-                   && string.Equals(PersistenceId, other.PersistenceId)
+                   && string.Equals(Manifest, other.Manifest, StringComparison.Ordinal)
+                   && string.Equals(PersistenceId, other.PersistenceId, StringComparison.Ordinal)
                    && SequenceNr == other.SequenceNr
                    && IsDeleted == other.IsDeleted
                    && Equals(Sender, other.Sender)
-                   && string.Equals(WriterGuid, other.WriterGuid);
+                   && string.Equals(WriterGuid, other.WriterGuid, StringComparison.Ordinal);
         }
 
         /// <inheritdoc/>

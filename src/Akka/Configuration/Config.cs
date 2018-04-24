@@ -499,7 +499,7 @@ namespace Akka.Configuration
         /// <returns>The current configuration represented as an enumerable key value pair.</returns>
         public virtual IEnumerable<KeyValuePair<string, HoconValue>> AsEnumerable()
         {
-            var used = new HashSet<string>();
+            var used = new HashSet<string>(StringComparer.Ordinal);
             Config current = this;
             while (current != null)
             {

@@ -75,7 +75,7 @@ namespace Akka.Actor
             {
                 if (ReferenceEquals(null, other)) return false;
                 if (ReferenceEquals(this, other)) return true;
-                return string.Equals(Path, other.Path);
+                return string.Equals(Path, other.Path, StringComparison.Ordinal);
             }
 
             /// <inheritdoc/>
@@ -122,7 +122,7 @@ namespace Akka.Actor
             {
                 return false;
             }
-            return !s.StartsWith("$") && Validate(s.ToCharArray(), s.Length);
+            return !s.StartsWith("$", StringComparison.Ordinal) && Validate(s.ToCharArray(), s.Length);
         }
 
         private static bool IsValidChar(char c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
@@ -319,7 +319,7 @@ namespace Akka.Actor
             if (!TryParseAddress(path, out address, out uri)) return false;
             var pathElements = uri.AbsolutePath.Split('/');
             actorPath = new RootActorPath(address) / pathElements.Skip(1);
-            if (uri.Fragment.StartsWith("#"))
+            if (uri.Fragment.StartsWith("#", StringComparison.Ordinal))
             {
                 var uid = int.Parse(uri.Fragment.Substring(1));
                 actorPath = actorPath.WithUid(uid);
