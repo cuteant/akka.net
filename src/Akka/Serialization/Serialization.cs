@@ -13,6 +13,7 @@ using System.Runtime.CompilerServices;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Akka.Actor;
+using Akka.Util;
 using Akka.Util.Internal;
 using Akka.Util.Reflection;
 using CuteAnt.Reflection;
@@ -81,7 +82,7 @@ namespace Akka.Serialization
             foreach (var kvp in serializersConfig)
             {
                 var serializerTypeName = kvp.Value.GetString();
-                var serializerType = TypeUtils.ResolveType(serializerTypeName);
+                var serializerType = TypeUtil.ResolveType(serializerTypeName);
                 if (serializerType == null)
                 {
                     system.Log.Warning("The type name for serializer '{0}' did not resolve to an actual Type: '{1}'", kvp.Key, serializerTypeName);
@@ -101,7 +102,7 @@ namespace Akka.Serialization
             {
                 var typename = kvp.Key;
                 var serializerName = kvp.Value.GetString();
-                var messageType = TypeUtils.ResolveType(typename);
+                var messageType = TypeUtil.ResolveType(typename);
 
                 if (messageType == null)
                 {

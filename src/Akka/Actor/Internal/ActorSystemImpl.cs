@@ -271,7 +271,7 @@ namespace Akka.Actor.Internal
             var extensions = new List<IExtensionId>();
             foreach(var extensionFqn in _settings.Config.GetStringList("akka.extensions"))
             {
-                var extensionType = TypeUtils.ResolveType(extensionFqn);
+                var extensionType = TypeUtil.ResolveType(extensionFqn);
                 if(extensionType == null || !typeof(IExtensionId).IsAssignableFrom(extensionType) || extensionType.GetTypeInfo().IsAbstract || !extensionType.GetTypeInfo().IsClass)
                 {
                     _log.Error("[{0}] is not an 'ExtensionId', skipping...", extensionFqn);
@@ -419,7 +419,7 @@ namespace Akka.Actor.Internal
         {
             try
             {
-                Type providerType = TypeUtils.ResolveType(_settings.ProviderClass);
+                Type providerType = TypeUtil.ResolveType(_settings.ProviderClass);
                 global::System.Diagnostics.Debug.Assert(providerType != null, "providerType != null");
                 var provider =
                     (IActorRefProvider) Activator.CreateInstance(providerType, _name, _settings, _eventStream);

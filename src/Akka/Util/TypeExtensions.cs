@@ -72,5 +72,19 @@ namespace Akka.Util
             //}
         }
     }
+
+    public static class TypeUtil
+    {
+        public static Type ResolveType(string qualifiedTypeName, bool throwOnError = false)
+        {
+            if (TypeUtils.TryResolveType(qualifiedTypeName, out var result)) { return result; }
+
+            if (throwOnError)
+            {
+                throw new TypeLoadException($"Unable to find a type named {qualifiedTypeName}");
+            }
+            return null;
+        }
+    }
 }
 

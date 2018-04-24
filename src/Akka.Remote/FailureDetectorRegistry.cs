@@ -10,7 +10,7 @@ using Akka.Actor;
 using Akka.Annotations;
 using Akka.Configuration;
 using Akka.Event;
-using CuteAnt.Reflection;
+using Akka.Util;
 
 namespace Akka.Remote
 {
@@ -78,7 +78,7 @@ namespace Akka.Remote
         /// <returns>A configured instance of the given <see cref="FailureDetector"/> implementation.</returns>
         public static FailureDetector Load(string fqcn, Config config, ActorSystem system)
         {
-            var failureDetectorClass = TypeUtils.ResolveType(fqcn);
+            var failureDetectorClass = TypeUtil.ResolveType(fqcn);
             if (failureDetectorClass == null)
             {
                 throw new ConfigurationException($"Could not create custom FailureDetector {fqcn}");

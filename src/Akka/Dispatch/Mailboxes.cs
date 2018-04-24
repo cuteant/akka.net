@@ -12,7 +12,7 @@ using System.Linq;
 using System.Reflection;
 using Akka.Actor;
 using Akka.Configuration;
-using Akka.Util.Reflection;
+using Akka.Util;
 using Akka.Dispatch.MessageQueues;
 using Akka.Event;
 using CuteAnt.Reflection;
@@ -59,7 +59,7 @@ namespace Akka.Dispatch
             _mailboxBindings = new Dictionary<Type, string>();
             foreach (var kvp in requirements)
             {
-                var type = TypeUtils.ResolveType(kvp.Key);
+                var type = TypeUtil.ResolveType(kvp.Key);
                 if (type == null)
                 {
                     Warn($"Mailbox Requirement mapping [{kvp.Key}] is not an actual type");
@@ -168,7 +168,7 @@ namespace Akka.Dispatch
                     var mailboxTypeName = conf.GetString("mailbox-type");
                     if (string.IsNullOrEmpty(mailboxTypeName))
                         throw new ConfigurationException($"The setting mailbox-type defined in [{id}] is empty");
-                    var type = TypeUtils.ResolveType(mailboxTypeName);
+                    var type = TypeUtil.ResolveType(mailboxTypeName);
                     if (type == null)
                         throw new ConfigurationException($"Found mailbox-type [{mailboxTypeName}] in configuration for [{id}], but could not find that type in any loaded assemblies.");
                     var args = new object[] {Settings, conf};
@@ -326,7 +326,7 @@ namespace Akka.Dispatch
             var config = _system.Settings.Config.GetConfig(path);
             var type = config.GetString("mailbox-type");
 
-            var mailboxType = TypeUtils.ResolveType(type);
+            var mailboxType = TypeUtil.ResolveType(type);
             return mailboxType;
             /*
 mailbox-capacity = 1000

@@ -10,7 +10,7 @@ using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch;
-using CuteAnt.Reflection;
+using Akka.Util;
 
 namespace Akka.DistributedData
 {
@@ -46,7 +46,7 @@ namespace Akka.DistributedData
             if (durableKeys.Count != 0)
             {
                 Type durableStoreType;
-                if (!isDurableStoreConfigured || (durableStoreType = TypeUtils.ResolveType(durableStoreTypeName)) == null)
+                if (!isDurableStoreConfigured || (durableStoreType = TypeUtil.ResolveType(durableStoreTypeName)) == null)
                 {
                     throw new ArgumentException($"`akka.cluster.distributed-data.durable.store-actor-class` must be set when `akka.cluster.distributed-data.durable.keys` have been configured.");
                 }
