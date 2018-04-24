@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Logger.Serilog</RootNamespace>
+    <AssemblyName>Akka.Logger.Serilog</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Logger.Serilog.Unofficial</PackageId>
+    <Title>Akka.Logger.Serilog (Unofficial)</Title>
+    <Description>Serilog logging adapter for Akka.NET</Description>
+    <PackageTags>akka;actors;actor model;Akka;concurrency;serilog</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Serilog" Version="$(SerilogPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka\Akka.csproj" />
+  </ItemGroup>
+
+</Project>
