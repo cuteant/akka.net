@@ -420,7 +420,7 @@ namespace Akka.Dispatch
                 case null:
                     throw new ConfigurationException($"Could not resolve dispatcher for path {id}. type is null");
                 default:
-                    Type dispatcherType = TypeUtils.ResolveType(type);
+                    TypeUtils.TryResolveType(type, out var dispatcherType);
                     if (dispatcherType == null)
                     {
                         throw new ConfigurationException($"Could not resolve dispatcher type {type} for path {id}");
