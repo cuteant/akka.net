@@ -20,9 +20,9 @@
 
   <ItemGroup>
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="$(MicrosoftNetTestSdkPackageVersion)" />
-    <PackageReference Include="xunit" Version="$(xUnitDevPackageVersion)" />
-    <PackageReference Include="xunit.analyzers" Version="$(xUnitAnalyzersDevPackageVersion)" />
-    <PackageReference Include="xunit.runner.visualstudio" Version="$(xUnitRunnerVsDevPackageVersion)" />
+    <PackageReference Include="xunit" Version="$(xUnitPackageVersion)" />
+    <PackageReference Include="xunit.analyzers" Version="$(xUnitAnalyzersPackageVersion)" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="$(xUnitRunnerVsPackageVersion)" />
     <PackageReference Include="FluentAssertions" Version="$(FluentAssertionsPackageVersion)" />
   </ItemGroup>
 

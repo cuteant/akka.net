@@ -5,5 +5,6 @@
     <FsCheckPackageVersion>2.10.8</FsCheckPackageVersion>
     <FsCheckXunitPackageVersion>2.10.8</FsCheckXunitPackageVersion>
     <Mongo2GoPackageVersion>2.2.1</Mongo2GoPackageVersion>
+    <TeamCityServiceMessagesPackageVersion>3.0.10</TeamCityServiceMessagesPackageVersion>
   </PropertyGroup>
 </Project>

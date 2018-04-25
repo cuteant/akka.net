@@ -1,0 +1,44 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net452</TargetFrameworks>
+    <RootNamespace>Akka.MultiNodeTestRunner.Shared</RootNamespace>
+    <AssemblyName>Akka.MultiNodeTestRunner.Shared</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TeamCity.ServiceMessages" Version="$(TeamCityServiceMessagesPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Remove="Persistence\VisualizerRuntimeTemplate.cs" />
+    <Compile Include="Persistence\VisualizerRuntimeTemplate.cs">
+      <AutoGen>True</AutoGen>
+      <DesignTime>True</DesignTime>
+      <DependentUpon>VisualizerRuntimeTemplate.tt</DependentUpon>
+    </Compile>
+    <Content Include="Persistence\VisualizerRuntimeTemplate.tt">
+      <Generator>TextTemplatingFilePreprocessor</Generator>
+      <LastGenOutput>VisualizerRuntimeTemplate.cs</LastGenOutput>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Remote.TestKit\Akka.Remote.TestKit.csproj" />
+    <ProjectReference Include="..\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Persistence\VisualizerRuntimeTemplate.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+    </None>
+  </ItemGroup>
+
+</Project>

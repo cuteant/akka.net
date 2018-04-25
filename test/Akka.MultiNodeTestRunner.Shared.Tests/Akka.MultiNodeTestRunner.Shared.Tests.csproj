@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1;net471;net452</TargetFrameworks>
+    <RootNamespace>Akka.MultiNodeTestRunner.Shared.Tests</RootNamespace>
+    <AssemblyName>Akka.MultiNodeTestRunner.Shared.Tests</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.MultiNodeTestRunner\Akka.MultiNodeTestRunner.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+  </ItemGroup>
+
+</Project>
