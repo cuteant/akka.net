@@ -229,7 +229,7 @@ namespace Akka.Remote.Tests
             ExpectMsg(76);
         }
 
-        [Fact] // TODO4ME 单独执行没问题，执行 dotnet test，netcoreapp2.1或netcoreapp2.0 则不会通过
+        [Fact]
         public void Remoting_must_lookup_actors_across_node_boundaries()
         {
             Action<IActorDsl> act = dsl =>
