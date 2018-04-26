@@ -247,30 +247,7 @@ namespace Akka.Serialization
             //byte[] bytes = Encoding.UTF8.GetBytes(data);
             //return bytes;
 
-            //return _jsonFormatter.SerializeObject(obj);
-
-            //using (var pooledStream = BufferManagerOutputStreamManager.Create())
-            //{
-            //    var outputStream = pooledStream.Object;
-            //    outputStream.Reinitialize(1024 * 64);
-
-            //    _jsonFormatter.WriteToStream(null, obj, outputStream);
-            //    return outputStream.ToByteArray();
-            //}
-            using (var writeStream = new System.IO.MemoryStream())
-            {
-                using (JsonWriter jsonWriter = CreateJsonWriter(writeStream, null, JsonConvertX.GlobalCharacterArrayPool, null))
-                {
-                    //jsonWriter.CloseOutput = false;
-
-                    //if (null == serializerSettings) { serializerSettings = _defaultSerializerSettings; }
-                    //var jsonSerializer = CreateJsonSerializerInternal(serializerSettings);
-                    var jsonSerializer = JsonSerializer.Create(Settings);
-                        jsonSerializer.Serialize(jsonWriter, obj, null);
-                        jsonWriter.Flush();
-                }
-                return writeStream.ToArray();
-            }
+            return _jsonFormatter.SerializeObject(obj);
         }
 
         private static JsonWriter CreateJsonWriter(Stream writeStream, Encoding effectiveEncoding, IArrayPool<char> charPool, Formatting? jsonFormatting)
@@ -294,10 +271,10 @@ namespace Akka.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, Type type)
         {
-            string data = Encoding.UTF8.GetString(bytes);
-            object res = JsonConvert.DeserializeObject(data, Settings);
+            //string data = Encoding.UTF8.GetString(bytes);
+            //object res = JsonConvert.DeserializeObject(data, Settings);
 
-            //object res = _jsonFormatter.Deserialize(null, bytes);
+            object res = _jsonFormatter.Deserialize(null, bytes);
 
             return TranslateSurrogate(res, this, type);
         }
