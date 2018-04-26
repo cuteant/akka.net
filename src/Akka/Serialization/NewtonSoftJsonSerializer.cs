@@ -14,6 +14,11 @@ using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
+using System.IO;
+using CuteAnt.Text;
+using CuteAnt.Buffers;
+using CuteAnt.Collections;
+using CuteAnt.Extensions.Serialization;
 using CuteAnt.Reflection;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
@@ -115,6 +120,7 @@ namespace Akka.Serialization
     public class NewtonSoftJsonSerializer : Serializer
     {
         private readonly JsonSerializer _serializer;
+        private readonly JsonMessageFormatter _jsonFormatter;
 
         /// <summary>
         /// TBD
@@ -151,22 +157,42 @@ namespace Akka.Serialization
             converters.Add(new SurrogateConverter(this));
             converters.Add(new DiscriminatedUnionConverter());
 
-            Settings = new JsonSerializerSettings
+            #region ## 苦竹 修改 ##
+            //Settings = new JsonSerializerSettings
+            //{
+            //    PreserveReferencesHandling = settings.PreserveObjectReferences
+            //        ? PreserveReferencesHandling.Objects
+            //        : PreserveReferencesHandling.None,
+            //    Converters = converters,
+            //    NullValueHandling = NullValueHandling.Ignore,
+            //    DefaultValueHandling = DefaultValueHandling.Ignore,
+            //    MissingMemberHandling = MissingMemberHandling.Ignore,
+            //    ObjectCreationHandling = ObjectCreationHandling.Replace, //important: if reuse, the serializer will overwrite properties in default references, e.g. Props.DefaultDeploy or Props.noArgs
+            //    ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+            //    TypeNameHandling = settings.EncodeTypeNames
+            //        ? TypeNameHandling.All
+            //        : TypeNameHandling.None,
+            //    ContractResolver = new AkkaContractResolver()
+            //};
+            var jsonSettings = JsonConvertX.CreateDefaultSerializerSettings();
+            jsonSettings.PreserveReferencesHandling = settings.PreserveObjectReferences
+                    ? PreserveReferencesHandling.Objects
+                    : PreserveReferencesHandling.None;
+            jsonSettings.TypeNameHandling = settings.EncodeTypeNames
+                    ? TypeNameHandling.All
+                    : TypeNameHandling.None;
+            jsonSettings.ContractResolver = new AkkaContractResolver();
+            jsonSettings.Converters = jsonSettings.Converters.Concat(converters).ToList();
+            jsonSettings.FloatParseHandling = FloatParseHandling.Double;
+            Settings = jsonSettings;
+
+            _jsonFormatter = new JsonMessageFormatter()
             {
-                PreserveReferencesHandling = settings.PreserveObjectReferences 
-                    ? PreserveReferencesHandling.Objects 
-                    : PreserveReferencesHandling.None,
-                Converters = converters,
-                NullValueHandling = NullValueHandling.Ignore,
-                DefaultValueHandling = DefaultValueHandling.Ignore,
-                MissingMemberHandling = MissingMemberHandling.Ignore,
-                ObjectCreationHandling = ObjectCreationHandling.Replace, //important: if reuse, the serializer will overwrite properties in default references, e.g. Props.DefaultDeploy or Props.noArgs
-                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-                TypeNameHandling = settings.EncodeTypeNames
-                    ? TypeNameHandling.All 
-                    : TypeNameHandling.None,
-                ContractResolver = new AkkaContractResolver()
+                DefaultSerializerSettings = jsonSettings,
+                DefaultDeserializerSettings = jsonSettings
             };
+
+            #endregion
 
             _serializer = JsonSerializer.Create(Settings);
         }
@@ -180,12 +206,12 @@ namespace Akka.Serialization
                     return parameters.Length == 1 && parameters[0].ParameterType == typeof(ExtendedActorSystem);
                 });
 
-            return ctor == null 
+            return ctor == null
                 ? ActivatorUtils.FastCreateInstance<JsonConverter>(converterType)
                 : (JsonConverter)Activator.CreateInstance(converterType, actorSystem);
         }
 
-        internal class AkkaContractResolver : DefaultContractResolver
+        internal class AkkaContractResolver : JsonContractResolver //DefaultContractResolver
         {
             protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
             {
@@ -217,9 +243,47 @@ namespace Akka.Serialization
         /// <returns>A byte array containing the serialized object</returns>
         public override byte[] ToBinary(object obj)
         {
-            string data = JsonConvert.SerializeObject(obj, Formatting.None, Settings);
-            byte[] bytes = Encoding.UTF8.GetBytes(data);
-            return bytes;
+            //string data = JsonConvert.SerializeObject(obj, Formatting.None, Settings);
+            //byte[] bytes = Encoding.UTF8.GetBytes(data);
+            //return bytes;
+
+            //return _jsonFormatter.SerializeObject(obj);
+
+            //using (var pooledStream = BufferManagerOutputStreamManager.Create())
+            //{
+            //    var outputStream = pooledStream.Object;
+            //    outputStream.Reinitialize(1024 * 64);
+
+            //    _jsonFormatter.WriteToStream(null, obj, outputStream);
+            //    return outputStream.ToByteArray();
+            //}
+            using (var writeStream = new System.IO.MemoryStream())
+            {
+                using (JsonWriter jsonWriter = CreateJsonWriter(writeStream, null, JsonConvertX.GlobalCharacterArrayPool, null))
+                {
+                    //jsonWriter.CloseOutput = false;
+
+                    //if (null == serializerSettings) { serializerSettings = _defaultSerializerSettings; }
+                    //var jsonSerializer = CreateJsonSerializerInternal(serializerSettings);
+                    var jsonSerializer = JsonSerializer.Create(Settings);
+                        jsonSerializer.Serialize(jsonWriter, obj, null);
+                        jsonWriter.Flush();
+                }
+                return writeStream.ToArray();
+            }
+        }
+
+        private static JsonWriter CreateJsonWriter(Stream writeStream, Encoding effectiveEncoding, IArrayPool<char> charPool, Formatting? jsonFormatting)
+        {
+            if (null == effectiveEncoding) { effectiveEncoding = StringHelper.SecureUTF8NoBOM; }
+
+            var jsonWriter = new JsonTextWriter(new StreamWriter(writeStream, effectiveEncoding)) { ArrayPool = charPool };
+            if (Formatting.Indented == jsonFormatting.GetValueOrDefault())
+            {
+                jsonWriter.Formatting = Formatting.Indented;
+            }
+
+            return jsonWriter;
         }
 
         /// <summary>
@@ -232,13 +296,15 @@ namespace Akka.Serialization
         {
             string data = Encoding.UTF8.GetString(bytes);
             object res = JsonConvert.DeserializeObject(data, Settings);
+
+            //object res = _jsonFormatter.Deserialize(null, bytes);
+
             return TranslateSurrogate(res, this, type);
         }
 
         private static object TranslateSurrogate(object deserializedValue, NewtonSoftJsonSerializer parent, Type type)
         {
-            var j = deserializedValue as JObject;
-            if (j != null)
+            if (deserializedValue is JObject j)
             {
                 //The JObject represents a special akka.net wrapper for primitives (int,float,decimal) to preserve correct type when deserializing
                 if (j["$"] != null)
@@ -250,10 +316,9 @@ namespace Akka.Serialization
                 //The JObject is not of our concern, let Json.NET deserialize it.
                 return j.ToObject(type, parent._serializer);
             }
-            var surrogate = deserializedValue as ISurrogate;
 
             //The deserialized object is a surrogate, unwrap it
-            if (surrogate != null)
+            if (deserializedValue is ISurrogate surrogate)
             {
                 return surrogate.FromSurrogate(parent.system);
             }
@@ -264,14 +329,17 @@ namespace Akka.Serialization
         {
             var t = V.Substring(0, 1);
             var v = V.Substring(1);
-            if (t == "I")
-                return int.Parse(v, NumberFormatInfo.InvariantInfo);
-            if (t == "F")
-                return float.Parse(v, NumberFormatInfo.InvariantInfo);
-            if (t == "M")
-                return decimal.Parse(v, NumberFormatInfo.InvariantInfo);
-
-            throw new NotSupportedException();
+            switch (t)
+            {
+                case "I":
+                    return int.Parse(v, NumberFormatInfo.InvariantInfo);
+                case "F":
+                    return float.Parse(v, NumberFormatInfo.InvariantInfo);
+                case "M":
+                    return decimal.Parse(v, NumberFormatInfo.InvariantInfo);
+                default:
+                    throw new NotSupportedException();
+            }
         }
 
         /// <summary>
@@ -280,6 +348,7 @@ namespace Akka.Serialization
         internal class SurrogateConverter : JsonConverter
         {
             private readonly NewtonSoftJsonSerializer _parent;
+
             /// <summary>
             /// TBD
             /// </summary>
@@ -288,12 +357,22 @@ namespace Akka.Serialization
             {
                 _parent = parent;
             }
+
+            private static readonly HashSet<Type> s_primitiveTypes = new HashSet<Type>(new[] { typeof(int), typeof(float), typeof(decimal) });
+            private static readonly CachedReadConcurrentDictionary<Type, bool> s_canConvertedTypes =
+                new CachedReadConcurrentDictionary<Type, bool>(DictionaryCacheConstants.SIZE_SMALL);
+            private static readonly Func<Type, bool> s_canConvertFunc = CanConvertInternal;
+
             /// <summary>
-            ///     Determines whether this instance can convert the specified object type.
+            /// Determines whether this instance can convert the specified object type.
             /// </summary>
             /// <param name="objectType">Type of the object.</param>
             /// <returns><c>true</c> if this instance can convert the specified object type; otherwise, <c>false</c>.</returns>
             public override bool CanConvert(Type objectType)
+            {
+                return s_canConvertedTypes.GetOrAdd(objectType, s_canConvertFunc);
+            }
+            private static bool CanConvertInternal(Type objectType)
             {
                 if (objectType == typeof(int) || objectType == typeof(float) || objectType == typeof(decimal))
                     return true;
@@ -344,8 +423,7 @@ namespace Akka.Serialization
                 }
                 else
                 {
-                    var value1 = value as ISurrogated;
-                    if (value1 != null)
+                    if (value is ISurrogated value1)
                     {
                         var surrogated = value1;
                         var surrogate = surrogated.ToSurrogate(_parent.system);
@@ -360,12 +438,12 @@ namespace Akka.Serialization
 
             private object GetString(object value)
             {
-                if (value is int)
-                    return "I" + ((int)value).ToString(NumberFormatInfo.InvariantInfo);
-                if (value is float)
-                    return "F" + ((float)value).ToString(NumberFormatInfo.InvariantInfo);
-                if (value is decimal)
-                    return "M" + ((decimal)value).ToString(NumberFormatInfo.InvariantInfo);
+                if (value is int intValue)
+                    return "I" + intValue.ToString(NumberFormatInfo.InvariantInfo);
+                if (value is float floatValue)
+                    return "F" + floatValue.ToString(NumberFormatInfo.InvariantInfo);
+                if (value is decimal decimalValue)
+                    return "M" + decimalValue.ToString(NumberFormatInfo.InvariantInfo);
                 throw new NotSupportedException();
             }
         }

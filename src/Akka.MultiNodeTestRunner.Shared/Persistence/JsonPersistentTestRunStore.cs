@@ -41,7 +41,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
             }
         }
 
-        public static JsonSerializerSettings Settings = new JsonSerializerSettings
+        public static readonly JsonSerializerSettings Settings = new JsonSerializerSettings
         {
             PreserveReferencesHandling = PreserveReferencesHandling.Objects,
             DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -60,7 +60,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
 
         public bool SaveTestRun(string filePath, TestRunTree data)
         {
-            if (data == null) throw new ArgumentNullException("data");
+            if (data == null) throw new ArgumentNullException(nameof(data));
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("filePath must not be null or empty");
 
 

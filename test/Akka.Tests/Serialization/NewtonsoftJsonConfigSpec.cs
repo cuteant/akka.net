@@ -26,9 +26,9 @@ namespace Akka.Tests.Serialization
                 var serializer = (NewtonSoftJsonSerializer)system.Serialization.FindSerializerForType(typeof(object));
                 Assert.Equal(TypeNameHandling.All, serializer.Settings.TypeNameHandling);
                 Assert.Equal(PreserveReferencesHandling.Objects, serializer.Settings.PreserveReferencesHandling);
-                Assert.Equal(2, serializer.Settings.Converters.Count);
-                Assert.Equal(true, serializer.Settings.Converters.Any(x => x is DiscriminatedUnionConverter));
-                Assert.Equal(true, serializer.Settings.Converters.Any(x => x is NewtonSoftJsonSerializer.SurrogateConverter));
+                Assert.Equal(5, serializer.Settings.Converters.Count);
+                Assert.Contains(serializer.Settings.Converters, x => x is DiscriminatedUnionConverter);
+                Assert.Contains(serializer.Settings.Converters, x => x is NewtonSoftJsonSerializer.SurrogateConverter);
             }
         }
 
@@ -48,9 +48,9 @@ namespace Akka.Tests.Serialization
                 var serializer = (NewtonSoftJsonSerializer)system.Serialization.FindSerializerForType(typeof(object));
                 Assert.Equal(TypeNameHandling.None, serializer.Settings.TypeNameHandling);
                 Assert.Equal(PreserveReferencesHandling.None, serializer.Settings.PreserveReferencesHandling);
-                Assert.Equal(2, serializer.Settings.Converters.Count);
-                Assert.Equal(true, serializer.Settings.Converters.Any(x => x is DiscriminatedUnionConverter));
-                Assert.Equal(true, serializer.Settings.Converters.Any(x => x is NewtonSoftJsonSerializer.SurrogateConverter));
+                Assert.Equal(5, serializer.Settings.Converters.Count);
+                Assert.Contains(serializer.Settings.Converters, x => x is DiscriminatedUnionConverter);
+                Assert.Contains(serializer.Settings.Converters, x => x is NewtonSoftJsonSerializer.SurrogateConverter);
             }
         }
 
@@ -72,11 +72,11 @@ namespace Akka.Tests.Serialization
                 var serializer = (NewtonSoftJsonSerializer)system.Serialization.FindSerializerForType(typeof(object));
                 Assert.Equal(TypeNameHandling.All, serializer.Settings.TypeNameHandling);
                 Assert.Equal(PreserveReferencesHandling.Objects, serializer.Settings.PreserveReferencesHandling);
-                Assert.Equal(4, serializer.Settings.Converters.Count);
-                Assert.Equal(true, serializer.Settings.Converters.Any(x => x is DiscriminatedUnionConverter));
-                Assert.Equal(true, serializer.Settings.Converters.Any(x => x is NewtonSoftJsonSerializer.SurrogateConverter));
-                Assert.Equal(true, serializer.Settings.Converters.Any(x => x is DummyConverter));
-                Assert.Equal(true, serializer.Settings.Converters.Any(x => x is DummyConverter2));
+                Assert.Equal(7, serializer.Settings.Converters.Count);
+                Assert.Contains(serializer.Settings.Converters, x => x is DiscriminatedUnionConverter);
+                Assert.Contains(serializer.Settings.Converters, x => x is NewtonSoftJsonSerializer.SurrogateConverter);
+                Assert.Contains(serializer.Settings.Converters, x => x is DummyConverter);
+                Assert.Contains(serializer.Settings.Converters, x => x is DummyConverter2);
             }
         }
     }

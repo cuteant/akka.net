@@ -20,10 +20,7 @@ namespace Akka.Serialization
         /// Initializes a new instance of the <see cref="ByteArraySerializer" /> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer. </param>
-        public ByteArraySerializer(ExtendedActorSystem system)
-            : base(system)
-        {
-        }
+        public ByteArraySerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <summary>
         /// Returns whether this serializer needs a manifest in the fromBinary method
@@ -40,10 +37,8 @@ namespace Akka.Serialization
         /// <returns>A byte array containing the serialized object</returns>
         public override byte[] ToBinary(object obj)
         {
-            if (obj == null)
-                return null;
-            if (obj is byte[])
-                return (byte[]) obj;
+            if (obj == null) { return null; }
+            if (obj is byte[] bts) { return bts; }
             throw new NotSupportedException("The object to convert is not a byte array.");
         }
 
@@ -53,9 +48,6 @@ namespace Akka.Serialization
         /// <param name="bytes">The array containing the serialized object</param>
         /// <param name="type">The type of object contained in the array</param>
         /// <returns>The object contained in the array</returns>
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            return bytes;
-        }
+        public override object FromBinary(byte[] bytes, Type type) => bytes;
     }
 }
