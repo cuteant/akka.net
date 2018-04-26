@@ -596,7 +596,7 @@ namespace Akka.Actor
                     {
                         if (!system.WhenTerminated.IsCompleted)
                         {
-                            coord.Log.Info("Starting coordinated shutdown from CLR termination hook.");
+                            if (coord.Log.IsInfoEnabled) coord.Log.Info("Starting coordinated shutdown from CLR termination hook.");
                             try
                             {
                                 coord.Run().Wait(coord.TotalTimeout);

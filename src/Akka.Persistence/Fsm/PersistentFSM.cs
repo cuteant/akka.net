@@ -136,7 +136,7 @@ namespace Akka.Persistence.Fsm
                         nextState.AfterTransitionDo?.Invoke(nextState.StateData);
                         if (doSnapshot)
                         {
-                            Log.Info($"Saving snapshot, sequence number [{SnapshotSequenceNr}]");
+                            if (Log.IsInfoEnabled) Log.Info($"Saving snapshot, sequence number [{SnapshotSequenceNr}]");
                             SaveStateSnapshot();
                         }
                     }

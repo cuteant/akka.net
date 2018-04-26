@@ -158,7 +158,7 @@ namespace Akka.Cluster.Sharding
         {
             RestartRememberedEntities();
             this.Initialized();
-            Log.Debug("DDataShard recovery completed shard [{0}] with [{1}] entities", ShardId, State.Entries.Count);
+            if (Log.IsDebugEnabled) Log.Debug("DDataShard recovery completed shard [{0}] with [{1}] entities", ShardId, State.Entries.Count);
             Stash.UnstashAll();
             Context.Become(this.HandleCommand);
         }
@@ -188,7 +188,7 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case UpdateSuccess success when Equals(((Tuple<Shard.StateChange, int>)success.Request).Item1, e):
-                    Log.Debug("The DDataShard state was successfully updated with {0}", e);
+                    if (Log.IsDebugEnabled) Log.Debug("The DDataShard state was successfully updated with {0}", e);
                     Context.UnbecomeStacked();
                     afterUpdateCallback(e);
                     Stash.UnstashAll();

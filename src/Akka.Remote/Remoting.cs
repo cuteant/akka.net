@@ -178,7 +178,7 @@ namespace Akka.Remote
         {
             if (_endpointManager == null)
             {
-                _log.Info("Starting remoting");
+                if (_log.IsInfoEnabled) _log.Info("Starting remoting");
                 _endpointManager =
                 System.SystemActorOf(RARP.For(System).ConfigureDispatcher(
                     Props.Create(() => new EndpointManager(System.Settings.Config, _log)).WithDeploy(Deploy.Local)),
@@ -210,7 +210,7 @@ namespace Akka.Remote
                     _defaultAddress = akkaProtocolTransports.Head().Address;
                     _addresses = new HashSet<Address>(akkaProtocolTransports.Select(x => x.Address));
 
-                    _log.Info("Remoting started; listening on addresses : [{0}]", string.Join(",", _addresses.Select(x => x.ToString())));
+                    if (_log.IsInfoEnabled) _log.Info("Remoting started; listening on addresses : [{0}]", string.Join(",", _addresses.Select(x => x.ToString())));
 
                     _endpointManager.Tell(new EndpointManager.StartupFinished());
                     _eventPublisher.NotifyListeners(new RemotingListenEvent(_addresses.ToList()));

@@ -115,7 +115,7 @@ namespace Akka.Cluster.Tools.Singleton
                     {
                         // if the new singleton is defined, deliver all buffered messages
                         var subject = identity.Subject;
-                        Log.Info("Singleton identified at [{0}]", subject.Path);
+                        if (Log.IsInfoEnabled) Log.Info("Singleton identified at [{0}]", subject.Path);
                         _singleton = subject;
                         Context.Watch(subject);
                         CancelTimer();
@@ -247,23 +247,25 @@ namespace Akka.Cluster.Tools.Singleton
         private void Buffer(object message)
         {
             if (_settings.BufferSize == 0)
-                Log.Debug("Singleton not available and buffering is disabled, dropping message [{0}]", message.GetType());
+            {
+                if (Log.IsDebugEnabled) Log.Debug("Singleton not available and buffering is disabled, dropping message [{0}]", message.GetType());
+            }
             else if (_buffer.Count == _settings.BufferSize)
             {
                 var first = _buffer.Dequeue();
-                Log.Debug("Singleton not available, buffer is full, dropping first message [{0}]", first.Key.GetType());
+                if (Log.IsDebugEnabled) Log.Debug("Singleton not available, buffer is full, dropping first message [{0}]", first.Key.GetType());
                 _buffer.Enqueue(new KeyValuePair<object, IActorRef>(message, Sender));
             }
             else
             {
-                Log.Debug("Singleton not available, buffering message type [{0}]", message.GetType());
+                if (Log.IsDebugEnabled) Log.Debug("Singleton not available, buffering message type [{0}]", message.GetType());
                 _buffer.Enqueue(new KeyValuePair<object, IActorRef>(message, Sender));
             }
         }
 
         private void SendBuffered()
         {
-            Log.Debug("Sending buffered messages to current singleton instance");
+            if (Log.IsDebugEnabled) Log.Debug("Sending buffered messages to current singleton instance");
             while (_buffer.Count != 0)
             {
                 var pair = _buffer.Dequeue();

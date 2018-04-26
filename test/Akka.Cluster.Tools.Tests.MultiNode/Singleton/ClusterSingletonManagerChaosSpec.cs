@@ -183,9 +183,10 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
         {
             RunOn(() =>
             {
+                var infoEnabled = Log.IsInfoEnabled;
                 foreach (var roleName in roles)
                 {
-                    Log.Info("Shutdown [{0}]", GetAddress(roleName));
+                    if (infoEnabled) Log.Info("Shutdown [{0}]", GetAddress(roleName));
                     TestConductor.Exit(roleName, 0).Wait(TimeSpan.FromSeconds(10));
                 }
             }, _config.Controller);

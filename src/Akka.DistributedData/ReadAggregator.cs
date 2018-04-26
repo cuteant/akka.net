@@ -23,7 +23,7 @@ namespace Akka.DistributedData
         private readonly object _req;
         private readonly IActorRef _replyTo;
         private readonly Read _read;
-        
+
         private DataEnvelope _result;
 
         public ReadAggregator(IKey key, IReadConsistency consistency, object req, IImmutableSet<Address> nodes, IImmutableSet<Address> unreachable, DataEnvelope localValue, IActorRef replyTo)
@@ -41,12 +41,12 @@ namespace Akka.DistributedData
 
         private int GetDoneWhenRemainingSize()
         {
-            if (_consistency is ReadFrom) return Nodes.Count - (((ReadFrom) _consistency).N - 1);
+            if (_consistency is ReadFrom) return Nodes.Count - (((ReadFrom)_consistency).N - 1);
             else if (_consistency is ReadAll) return 0;
             else if (_consistency is ReadMajority)
             {
                 var ncount = Nodes.Count + 1;
-                var w = CalculateMajorityWithMinCapacity(((ReadMajority) _consistency).MinCapacity, ncount);
+                var w = CalculateMajorityWithMinCapacity(((ReadMajority)_consistency).MinCapacity, ncount);
                 return ncount - w;
             }
             else if (_consistency is ReadLocal) throw new ArgumentException("ReadAggregator does not support ReadLocal");
@@ -55,10 +55,11 @@ namespace Akka.DistributedData
 
         protected override void PreStart()
         {
+            var debugEnabled = Log.IsDebugEnabled;
             foreach (var n in PrimaryNodes)
             {
                 var replica = Replica(n);
-                Log.Debug("Sending {0} to primary replica {1}", _read, replica);
+                if (debugEnabled) Log.Debug("Sending {0} to primary replica {1}", _read, replica);
                 replica.Tell(_read);
             }
 
@@ -78,7 +79,7 @@ namespace Akka.DistributedData
 
                 Remaining = Remaining.Remove(Sender.Path.Address);
                 var done = DoneWhenRemainingSize;
-                Log.Debug("remaining: {0}, done when: {1}, current state: {2}", Remaining.Count, done, _result);
+                if (Log.IsDebugEnabled) Log.Debug("remaining: {0}, done when: {1}, current state: {2}", Remaining.Count, done, _result);
                 if (Remaining.Count == done) Reply(true);
             })
             .With<SendToSecondary>(x =>
@@ -158,7 +159,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is ReadFrom && Equals((ReadFrom) obj);
+        public override bool Equals(object obj) => obj is ReadFrom && Equals((ReadFrom)obj);
 
         /// <inheritdoc/>
         public bool Equals(ReadFrom other)
@@ -195,7 +196,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            return obj is ReadMajority && Equals((ReadMajority) obj);
+            return obj is ReadMajority && Equals((ReadMajority)obj);
         }
 
         /// <inheritdoc/>
@@ -231,7 +232,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            return obj is ReadAll && Equals((ReadAll) obj);
+            return obj is ReadAll && Equals((ReadAll)obj);
         }
 
         /// <inheritdoc/>

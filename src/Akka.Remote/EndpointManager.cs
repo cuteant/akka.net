@@ -561,7 +561,7 @@ namespace Akka.Remote
             var uid = _endpoints.RefuseUid(remoteAddress);
             if (uid.HasValue)
             {
-                _log.Info(
+                if (_log.IsInfoEnabled) _log.Info(
                     "Quarantined address [{0}] is still unreachable or has not been restarted. Keeping it quarantined.",
                     remoteAddress);
                 // Restoring Quarantine marker overwritten by a Pass(endpoint, refuseUid) pair while probing remote system.

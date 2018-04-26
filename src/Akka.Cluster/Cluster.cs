@@ -562,7 +562,7 @@ namespace Akka.Cluster
         /// <param name="message">The message being logged.</param>
         internal void LogInfo(string message)
         {
-            _log.Info("Cluster Node [{0}] - {1}", SelfAddress, message);
+            if (_log.IsInfoEnabled) _log.Info("Cluster Node [{0}] - {1}", SelfAddress, message);
         }
 
         /// <summary>
@@ -572,7 +572,7 @@ namespace Akka.Cluster
         /// <param name="arg1">The argument that fills in the template placeholder.</param>
         internal void LogInfo(string template, object arg1)
         {
-            _log.Info("Cluster Node [{0}] - " + template, SelfAddress, arg1);
+            if (_log.IsInfoEnabled) _log.Info("Cluster Node [{0}] - " + template, SelfAddress, arg1);
         }
 
         /// <summary>
@@ -583,7 +583,7 @@ namespace Akka.Cluster
         /// <param name="arg2">The second argument that fills in the corresponding template placeholder.</param>
         internal void LogInfo(string template, object arg1, object arg2)
         {
-            _log.Info("Cluster Node [{0}] - " + template, SelfAddress, arg1, arg2);
+            if (_log.IsInfoEnabled) _log.Info("Cluster Node [{0}] - " + template, SelfAddress, arg1, arg2);
         }
     }
 

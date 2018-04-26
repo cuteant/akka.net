@@ -1326,7 +1326,7 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case IDomainEvent evt:
-                    Log.Debug("ReceiveRecover {0}", evt);
+                    if (Log.IsDebugEnabled) Log.Debug("ReceiveRecover {0}", evt);
 
                     switch (evt)
                     {
@@ -1338,9 +1338,14 @@ namespace Akka.Cluster.Sharding
                             return true;
                         case ShardRegionTerminated regionTerminated:
                             if (CurrentState.Regions.ContainsKey(regionTerminated.Region))
+                            {
                                 CurrentState = CurrentState.Updated(evt);
+                            }
                             else
-                                Log.Debug("ShardRegionTerminated but region {0} was not registered", regionTerminated.Region);
+                            {
+                                if (Log.IsDebugEnabled) Log.Debug("ShardRegionTerminated but region {0} was not registered", regionTerminated.Region);
+                            }
+
                             return true;
                         case ShardRegionProxyTerminated proxyTerminated:
                             if (CurrentState.RegionProxies.Contains(proxyTerminated.RegionProxy))
@@ -1356,7 +1361,7 @@ namespace Akka.Cluster.Sharding
                     return false;
                 case SnapshotOffer offer when offer.Snapshot is State:
                     var state = offer.Snapshot as State;
-                    Log.Debug("ReceiveRecover SnapshotOffer {0}", state);
+                    if (Log.IsDebugEnabled) Log.Debug("ReceiveRecover SnapshotOffer {0}", state);
                     CurrentState = state.WithRememberEntities(Settings.RememberEntities);
                     // Old versions of the state object may not have unallocatedShard set,
                     // thus it will be null.
@@ -1413,7 +1418,7 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case SaveSnapshotSuccess m:
-                    Log.Debug("Persistent snapshot saved successfully");
+                    if (Log.IsDebugEnabled) Log.Debug("Persistent snapshot saved successfully");
                     /*
                      * delete old events but keep the latest around because
                      *
@@ -1434,14 +1439,14 @@ namespace Akka.Cluster.Sharding
                     Log.Warning("Persistent snapshot failure: {0}", m.Cause.Message);
                     break;
                 case DeleteMessagesSuccess m:
-                    Log.Debug("Persistent messages to {0} deleted successfully", m.ToSequenceNr);
+                    if (Log.IsDebugEnabled) Log.Debug("Persistent messages to {0} deleted successfully", m.ToSequenceNr);
                     DeleteSnapshots(new SnapshotSelectionCriteria(m.ToSequenceNr - 1));
                     break;
                 case DeleteMessagesFailure m:
                     Log.Warning("Persistent messages to {0} deletion failure: {1}", m.ToSequenceNr, m.Cause.Message);
                     break;
                 case DeleteSnapshotsSuccess m:
-                    Log.Debug("Persistent snapshots matching {0} deleted successfully", m.Criteria);
+                    if (Log.IsDebugEnabled) Log.Debug("Persistent snapshots matching {0} deleted successfully", m.Criteria);
                     break;
                 case DeleteSnapshotsFailure m:
                     Log.Warning("Persistent snapshots matching {0} deletion failure: {1}", m.Criteria, m.Cause.Message);
@@ -1472,7 +1477,7 @@ namespace Akka.Cluster.Sharding
         {
             if (LastSequenceNr % Settings.TunningParameters.SnapshotAfter == 0 && LastSequenceNr != 0)
             {
-                Log.Debug("Saving snapshot, sequence number [{0}]", SnapshotSequenceNr);
+                if (Log.IsDebugEnabled) Log.Debug("Saving snapshot, sequence number [{0}]", SnapshotSequenceNr);
                 SaveSnapshot(CurrentState);
             }
         }

@@ -96,7 +96,7 @@ namespace Akka.Cluster.Sharding
                     // shard. This receive handles the "response" from that message. i.e. Ignores it.
                     return true;
                 case ClusterEvent.ClusterShuttingDown msg:
-                    coordinator.Log.Debug("Shutting down shard coordinator");
+                    if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Shutting down shard coordinator");
                     // can't stop because supervisor will start it again,
                     // it will soon be stopped when singleton is stopped
                     coordinator.Context.Become(ShuttingDown);
@@ -214,7 +214,7 @@ namespace Akka.Cluster.Sharding
             {
                 if (coordinator.CurrentState.Regions.TryGetValue(request.ShardRegion, out var shards))
                 {
-                    coordinator.Log.Debug("Graceful shutdown of region [{0}] with shards [{1}]", request.ShardRegion, string.Join(", ", shards));
+                    if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Graceful shutdown of region [{0}] with shards [{1}]", request.ShardRegion, string.Join(", ", shards));
                     coordinator.GracefullShutdownInProgress = coordinator.GracefullShutdownInProgress.Add(request.ShardRegion);
                     ContinueRebalance(coordinator, shards.ToImmutableHashSet());
                 }
@@ -224,7 +224,7 @@ namespace Akka.Cluster.Sharding
         private static void HandleRebalanceDone<TCoordinator>(this TCoordinator coordinator, string shard, bool ok) where TCoordinator : IShardCoordinator
         {
             coordinator.RebalanceInProgress = coordinator.RebalanceInProgress.Remove(shard);
-            coordinator.Log.Debug("Rebalance shard [{0}] done [{1}]", shard, ok);
+            if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Rebalance shard [{0}] done [{1}]", shard, ok);
 
             // The shard could have been removed by ShardRegionTerminated
             if (coordinator.CurrentState.Shards.TryGetValue(shard, out var region))
@@ -264,7 +264,7 @@ namespace Akka.Cluster.Sharding
 
         private static void DeferGetShardHomeRequest<TCoordinator>(this TCoordinator coordinator, string shard, IActorRef from) where TCoordinator : IShardCoordinator
         {
-            coordinator.Log.Debug("GetShardHome [{1}] request from [{2}] deferred, because rebalance is in progress for this shard. It will be handled when rebalance is done.", shard, from);
+            if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("GetShardHome [{1}] request from [{2}] deferred, because rebalance is in progress for this shard. It will be handled when rebalance is done.", shard, from);
             var pending = coordinator.RebalanceInProgress.TryGetValue(shard, out var prev)
                 ? prev
                 : ImmutableHashSet<IActorRef>.Empty;
@@ -305,9 +305,13 @@ namespace Akka.Cluster.Sharding
         private static void HandleAllocateShardResult<TCoordinator>(this TCoordinator coordinator, PersistentShardCoordinator.AllocateShardResult allocateResult) where TCoordinator : IShardCoordinator
         {
             if (allocateResult.ShardRegion == null)
-                coordinator.Log.Debug("Shard [{0}] allocation failed. It will be retried", allocateResult.Shard);
+            {
+                if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Shard [{0}] allocation failed. It will be retried", allocateResult.Shard);
+            }
             else
+            {
                 ContinueGetShardHome(coordinator, allocateResult.Shard, allocateResult.ShardRegion, allocateResult.GetShardHomeSender);
+            }
         }
 
         internal static bool HandleGetShardHome<TCoordinator>(this TCoordinator coordinator, PersistentShardCoordinator.GetShardHome getShardHome) where TCoordinator : IShardCoordinator
@@ -321,7 +325,7 @@ namespace Akka.Cluster.Sharding
             }
             else if (!coordinator.HasAllRegionsRegistered())
             {
-                coordinator.Log.Debug("GetShardHome [{0}] request ignored, because not all regions have registered yet.", shard);
+                if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("GetShardHome [{0}] request ignored, because not all regions have registered yet.", shard);
                 return true;
             }
             else
@@ -329,9 +333,13 @@ namespace Akka.Cluster.Sharding
                 if (coordinator.CurrentState.Shards.TryGetValue(shard, out var region))
                 {
                     if (coordinator.RegionTerminationInProgress.Contains(region))
-                        coordinator.Log.Debug("GetShardHome [{0}] request ignored, due to region [{1}] termination in progress.", shard, region);
+                    {
+                        if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("GetShardHome [{0}] request ignored, due to region [{1}] termination in progress.", shard, region);
+                    }
                     else
+                    {
                         coordinator.Sender.Tell(new PersistentShardCoordinator.ShardHome(shard, region));
+                    }
 
                     return true;
                 }
@@ -346,7 +354,7 @@ namespace Akka.Cluster.Sharding
         {
             if (coordinator.CurrentState.Regions.TryGetValue(terminatedRef, out var shards))
             {
-                coordinator.Log.Debug("ShardRegion terminated: [{0}]", terminatedRef);
+                if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("ShardRegion terminated: [{0}]", terminatedRef);
                 coordinator.RegionTerminationInProgress = coordinator.RegionTerminationInProgress.Add(terminatedRef);
 
                 foreach (var shard in shards)
@@ -367,7 +375,7 @@ namespace Akka.Cluster.Sharding
         {
             if (coordinator.CurrentState.RegionProxies.Contains(proxyRef))
             {
-                coordinator.Log.Debug("ShardRegion proxy terminated: [{0}]", proxyRef);
+                if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("ShardRegion proxy terminated: [{0}]", proxyRef);
                 coordinator.Update(new PersistentShardCoordinator.ShardRegionProxyTerminated(proxyRef), e => coordinator.CurrentState = coordinator.CurrentState.Updated(e));
             }
         }
@@ -375,7 +383,7 @@ namespace Akka.Cluster.Sharding
         private static void HandleRegisterProxy<TCoordinator>(this TCoordinator coordinator, PersistentShardCoordinator.RegisterProxy registerProxy) where TCoordinator : IShardCoordinator
         {
             var proxy = registerProxy.ShardRegionProxy;
-            coordinator.Log.Debug("ShardRegion proxy registered: [{0}]", proxy);
+            if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("ShardRegion proxy registered: [{0}]", proxy);
             if (coordinator.CurrentState.RegionProxies.Contains(proxy))
                 proxy.Tell(new PersistentShardCoordinator.RegisterAck(coordinator.Self));
             else
@@ -396,7 +404,7 @@ namespace Akka.Cluster.Sharding
             var region = message.ShardRegion;
             if (IsMember(coordinator, region))
             {
-                coordinator.Log.Debug("ShardRegion registered: [{0}]", region);
+                if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("ShardRegion registered: [{0}]", region);
                 coordinator.AliveRegions = coordinator.AliveRegions.Add(region);
 
                 if (coordinator.CurrentState.Regions.ContainsKey(region))
@@ -420,7 +428,10 @@ namespace Akka.Cluster.Sharding
                     });
                 }
             }
-            else coordinator.Log.Debug("ShardRegion [{0}] was not registered since the coordinator currently does not know about a node of that region", region);
+            else
+            {
+                if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("ShardRegion [{0}] was not registered since the coordinator currently does not know about a node of that region", region);
+            }
         }
 
         private static void HandleGetClusterShardingStats<TCoordinator>(this TCoordinator coordinator, GetClusterShardingStats message) where TCoordinator : IShardCoordinator
@@ -462,14 +473,16 @@ namespace Akka.Cluster.Sharding
                     if (coordinator.CurrentState.Shards.TryGetValue(shard, out var rebalanceFromRegion))
                     {
                         coordinator.RebalanceInProgress = coordinator.RebalanceInProgress.SetItem(shard, ImmutableHashSet<IActorRef>.Empty);
-                        coordinator.Log.Debug("Rebalance shard [{0}] from [{1}]", shard, rebalanceFromRegion);
+                        if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Rebalance shard [{0}] from [{1}]", shard, rebalanceFromRegion);
 
                         var regions = coordinator.CurrentState.Regions.Keys.Union(coordinator.CurrentState.RegionProxies);
                         coordinator.Context.ActorOf(RebalanceWorker.Props(shard, rebalanceFromRegion, coordinator.Settings.TunningParameters.HandOffTimeout, regions)
                             .WithDispatcher(coordinator.Context.Props.Dispatcher));
                     }
                     else
-                        coordinator.Log.Debug("Rebalance of non-existing shard [{0}] is ignored", shard);
+                    {
+                        if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Rebalance of non-existing shard [{0}] is ignored", shard);
+                    }
                 }
             }
         }
@@ -489,14 +502,16 @@ namespace Akka.Cluster.Sharding
                         coordinator.Update(new PersistentShardCoordinator.ShardHomeAllocated(shard, region), e =>
                         {
                             coordinator.CurrentState = coordinator.CurrentState.Updated(e);
-                            coordinator.Log.Debug("Shard [{0}] allocated at [{1}]", e.Shard, e.Region);
+                            if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Shard [{0}] allocated at [{1}]", e.Shard, e.Region);
 
                             SendHostShardMessage(coordinator, e.Shard, e.Region);
                             getShardHomeSender.Tell(new PersistentShardCoordinator.ShardHome(e.Shard, e.Region));
                         });
                     }
                     else
-                        coordinator.Log.Debug("Allocated region {0} for shard [{1}] is not (any longer) one of the registered regions", region, shard);
+                    {
+                        if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Allocated region {0} for shard [{1}] is not (any longer) one of the registered regions", region, shard);
+                    }
                 }
             }
             else

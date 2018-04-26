@@ -73,14 +73,14 @@ namespace Akka.Remote.Transport.DotNetty
 
             if (se?.SocketErrorCode == SocketError.OperationAborted)
             {
-                Log.Info("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
+                if (Log.IsInfoEnabled) Log.Info("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
                     context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
 
                 NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
             }
             else if (se?.SocketErrorCode == SocketError.ConnectionReset)
             {
-                Log.Info("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
+                if (Log.IsInfoEnabled) Log.Info("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
                     context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
 
                 NotifyListener(new Disassociated(DisassociateInfo.Shutdown));

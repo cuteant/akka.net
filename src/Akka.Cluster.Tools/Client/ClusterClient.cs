@@ -285,167 +285,136 @@ namespace Akka.Cluster.Tools.Client
                     Self);
             }
 
-            if (message is ClusterReceptionist.Contacts)
+            switch (message)
             {
-                var contacts = (ClusterReceptionist.Contacts)message;
+                case ClusterReceptionist.Contacts contacts:
+                    if (contacts.ContactPoints.Count > 0)
+                    {
+                        _contactPaths = contacts.ContactPoints.Select(ActorPath.Parse).ToImmutableHashSet();
+                        _contacts = _contactPaths.Select(Context.ActorSelection).ToArray();
+                        _contacts.ForEach(c => c.Tell(new Identify(null)));
+                    }
 
-                if (contacts.ContactPoints.Count > 0)
-                {
-                    _contactPaths = contacts.ContactPoints.Select(ActorPath.Parse).ToImmutableHashSet();
-                    _contacts = _contactPaths.Select(Context.ActorSelection).ToArray();
-                    _contacts.ForEach(c => c.Tell(new Identify(null)));
-                }
+                    PublishContactPoints();
+                    return true;
+                case ActorIdentity actorIdentify:
+                    var receptionist = actorIdentify.Subject;
 
-                PublishContactPoints();
-            }
-            else if (message is ActorIdentity)
-            {
-                var actorIdentify = (ActorIdentity)message;
-                var receptionist = actorIdentify.Subject;
-
-                if (receptionist != null)
-                {
-                    _log.Info("Connected to [{0}]", receptionist.Path);
-                    ScheduleRefreshContactsTick(_settings.RefreshContactsInterval);
-                    SendBuffered(receptionist);
-                    Context.Become(Active(receptionist));
-                    connectTimerCancelable?.Cancel();
+                    if (receptionist != null)
+                    {
+                        if (_log.IsInfoEnabled) _log.Info("Connected to [{0}]", receptionist.Path);
+                        ScheduleRefreshContactsTick(_settings.RefreshContactsInterval);
+                        SendBuffered(receptionist);
+                        Context.Become(Active(receptionist));
+                        connectTimerCancelable?.Cancel();
+                        _failureDetector.HeartBeat();
+                    }
+                    else
+                    {
+                        // ok, use another instead
+                    }
+                    return true;
+                case HeartbeatTick heartbeatTick:
                     _failureDetector.HeartBeat();
-                }
-                else
-                {
-                    // ok, use another instead
-                }
+                    return true;
+                case RefreshContactsTick refreshContactsTick:
+                    SendGetContacts();
+                    return true;
+                case Send send:
+                    Buffer(new PublishSubscribe.Send(send.Path, send.Message, send.LocalAffinity));
+                    return true;
+                case SendToAll sendToAll:
+                    Buffer(new PublishSubscribe.SendToAll(sendToAll.Path, sendToAll.Message));
+                    return true;
+                case Publish publish:
+                    Buffer(new PublishSubscribe.Publish(publish.Topic, publish.Message));
+                    return true;
+                case ReconnectTimeout reconnectTimeout:
+                    _log.Warning("Receptionist reconnect not successful within {0} stopping cluster client", _settings.ReconnectTimeout);
+                    Context.Stop(Self);
+                    return true;
+                default:
+                    return ContactPointMessages(message);
             }
-            else if (message is HeartbeatTick)
-            {
-                _failureDetector.HeartBeat();
-            }
-            else if (message is RefreshContactsTick)
-            {
-                SendGetContacts();
-            }
-            else if (message is Send)
-            {
-                var send = (Send)message;
-                Buffer(new PublishSubscribe.Send(send.Path, send.Message, send.LocalAffinity));
-            }
-            else if (message is SendToAll)
-            {
-                var sendToAll = (SendToAll)message;
-                Buffer(new PublishSubscribe.SendToAll(sendToAll.Path, sendToAll.Message));
-            }
-            else if (message is Publish)
-            {
-                var publish = (Publish)message;
-                Buffer(new PublishSubscribe.Publish(publish.Topic, publish.Message));
-            }
-            else if (message is ReconnectTimeout)
-            {
-                _log.Warning("Receptionist reconnect not successful within {0} stopping cluster client", _settings.ReconnectTimeout);
-                Context.Stop(Self);
-            }
-            else
-            {
-                return ContactPointMessages(message);
-            }
-
-            return true;
         }
 
         private Receive Active(IActorRef receptionist)
         {
             return message =>
             {
-                if (message is Send)
+                switch (message)
                 {
-                    var send = (Send)message;
-                    receptionist.Forward(new PublishSubscribe.Send(send.Path, send.Message, send.LocalAffinity));
-                }
-                else if (message is SendToAll)
-                {
-                    var sendToAll = (SendToAll)message;
-                    receptionist.Forward(new PublishSubscribe.SendToAll(sendToAll.Path, sendToAll.Message));
-                }
-                else if (message is Publish)
-                {
-                    var publish = (Publish)message;
-                    receptionist.Forward(new PublishSubscribe.Publish(publish.Topic, publish.Message));
-                }
-                else if (message is HeartbeatTick)
-                {
-                    if (!_failureDetector.IsAvailable)
-                    {
-                        _log.Info("Lost contact with [{0}], reestablishing connection", receptionist);
-                        SendGetContacts();
-                        ScheduleRefreshContactsTick(_settings.EstablishingGetContactsInterval);
-                        Context.Become(Establishing);
+                    case Send send:
+                        receptionist.Forward(new PublishSubscribe.Send(send.Path, send.Message, send.LocalAffinity));
+                        return true;
+                    case SendToAll sendToAll:
+                        receptionist.Forward(new PublishSubscribe.SendToAll(sendToAll.Path, sendToAll.Message));
+                        return true;
+                    case Publish publish:
+                        receptionist.Forward(new PublishSubscribe.Publish(publish.Topic, publish.Message));
+                        return true;
+                    case HeartbeatTick heartbeatTick:
+                        if (!_failureDetector.IsAvailable)
+                        {
+                            if (_log.IsInfoEnabled) _log.Info("Lost contact with [{0}], reestablishing connection", receptionist);
+                            SendGetContacts();
+                            ScheduleRefreshContactsTick(_settings.EstablishingGetContactsInterval);
+                            Context.Become(Establishing);
+                            _failureDetector.HeartBeat();
+                        }
+                        else
+                        {
+                            receptionist.Tell(ClusterReceptionist.Heartbeat.Instance);
+                        }
+                        return true;
+                    case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
                         _failureDetector.HeartBeat();
-                    }
-                    else
-                    {
-                        receptionist.Tell(ClusterReceptionist.Heartbeat.Instance);
-                    }
-                }
-                else if (message is ClusterReceptionist.HeartbeatRsp)
-                {
-                    _failureDetector.HeartBeat();
-                }
-                else if (message is RefreshContactsTick)
-                {
-                    receptionist.Tell(ClusterReceptionist.GetContacts.Instance);
-                }
-                else if (message is ClusterReceptionist.Contacts)
-                {
-                    var contacts = (ClusterReceptionist.Contacts)message;
+                        return true;
+                    case RefreshContactsTick refreshContactsTick:
+                        receptionist.Tell(ClusterReceptionist.GetContacts.Instance);
+                        return true;
+                    case ClusterReceptionist.Contacts contacts:
+                        // refresh of contacts
+                        if (contacts.ContactPoints.Count > 0)
+                        {
+                            _contactPaths = contacts.ContactPoints.Select(ActorPath.Parse).ToImmutableHashSet();
+                            _contacts = _contactPaths.Select(Context.ActorSelection).ToArray();
+                        }
+                        PublishContactPoints();
+                        return true;
+                    case ActorIdentity actorIdentity:
+                        // ok, from previous establish, already handled
+                        return true;
 
-                    // refresh of contacts
-                    if (contacts.ContactPoints.Count > 0)
-                    {
-                        _contactPaths = contacts.ContactPoints.Select(ActorPath.Parse).ToImmutableHashSet();
-                        _contacts = _contactPaths.Select(Context.ActorSelection).ToArray();
-                    }
-                    PublishContactPoints();
+                    default:
+                        return ContactPointMessages(message);
                 }
-                else if (message is ActorIdentity)
-                {
-                    // ok, from previous establish, already handled
-                }
-                else
-                {
-                    return ContactPointMessages(message);
-                }
-
-                return true;
             };
         }
 
         private bool ContactPointMessages(object message)
         {
-            if (message is SubscribeContactPoints)
+            switch (message)
             {
-                var subscriber = Sender;
-                subscriber.Tell(new ContactPoints(_contactPaths));
-                _subscribers = _subscribers.Add(subscriber);
-                Context.Watch(subscriber);
+                case SubscribeContactPoints scp:
+                    var subscriber = Sender;
+                    subscriber.Tell(new ContactPoints(_contactPaths));
+                    _subscribers = _subscribers.Add(subscriber);
+                    Context.Watch(subscriber);
+                    return true;
+                case UnsubscribeContactPoints uscp:
+                    var subscriber1 = Sender;
+                    _subscribers = _subscribers.Where(c => !c.Equals(subscriber1)).ToImmutableList();
+                    return true;
+                case Terminated terminated:
+                    Self.Tell(UnsubscribeContactPoints.Instance, terminated.ActorRef);
+                    return true;
+                case GetContactPoints gcp:
+                    Sender.Tell(new ContactPoints(_contactPaths));
+                    return true;
+                default:
+                    return false;
             }
-            else if (message is UnsubscribeContactPoints)
-            {
-                var subscriber = Sender;
-                _subscribers = _subscribers.Where(c => !c.Equals(subscriber)).ToImmutableList();
-            }
-            else if (message is Terminated)
-            {
-                var terminated = (Terminated)message;
-                Self.Tell(UnsubscribeContactPoints.Instance, terminated.ActorRef);
-            }
-            else if (message is GetContactPoints)
-            {
-                Sender.Tell(new ContactPoints(_contactPaths));
-            }
-            else return false;
-
-            return true;
         }
 
         private void SendGetContacts()

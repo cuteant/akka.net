@@ -194,7 +194,7 @@ namespace Akka.Cluster.Sharding
                 switch (message)
                 {
                     case UpdateSuccess success when Equals(success.Key, _coordinatorStateKey) && Equals(success.Request, e):
-                        Log.Debug("The coordinator state was successfully updated with {0}", e);
+                        if (Log.IsDebugEnabled) Log.Debug("The coordinator state was successfully updated with {0}", e);
                         var newRemainingKeys = remainingKeys.Remove(_coordinatorStateKey);
                         if (newRemainingKeys.IsEmpty)
                             UnbecomeAfterUpdate(e, afterUpdateCallback);
@@ -208,7 +208,7 @@ namespace Akka.Cluster.Sharding
                         return true;
 
                     case UpdateSuccess success when Equals(success.Key, _allShardsKey) && success.Request is string newShard:
-                        Log.Debug("The coordinator shards state was successfully updated with {0}", newShard);
+                        if (Log.IsDebugEnabled) Log.Debug("The coordinator shards state was successfully updated with {0}", newShard);
                         var newRemaining = remainingKeys.Remove(_allShardsKey);
                         if (newRemaining.IsEmpty)
                             UnbecomeAfterUpdate(e, afterUpdateCallback);
@@ -247,7 +247,7 @@ namespace Akka.Cluster.Sharding
         private void Activate()
         {
             Context.Become(this.Active);
-            Log.Info("Sharding Coordinator was moved to the active state {0}", CurrentState);
+            if (Log.IsInfoEnabled) Log.Info("Sharding Coordinator was moved to the active state {0}", CurrentState);
         }
 
         private bool Active(object message)

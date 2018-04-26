@@ -631,7 +631,7 @@ namespace Akka.Cluster.Tools.Singleton
         private State<ClusterSingletonState, IClusterSingletonData> GoToOldest()
         {
             var singleton = Context.Watch(Context.ActorOf(_singletonProps, _settings.SingletonName));
-            Log.Info("Singleton manager started singleton actor [{0}] ", singleton.Path);
+            if (Log.IsInfoEnabled) Log.Info("Singleton manager started singleton actor [{0}] ", singleton.Path);
             return
                 GoTo(ClusterSingletonState.Oldest).Using(new OldestData(singleton, false));
         }
@@ -639,12 +639,12 @@ namespace Akka.Cluster.Tools.Singleton
         private State<ClusterSingletonState, IClusterSingletonData> HandleHandOverDone(IActorRef handOverTo)
         {
             var newOldest = handOverTo?.Path.Address;
-            Log.Info("Singleton terminated, hand-over done [{0} -> {1}]", _cluster.SelfAddress, newOldest);
+            if (Log.IsInfoEnabled) Log.Info("Singleton terminated, hand-over done [{0} -> {1}]", _cluster.SelfAddress, newOldest);
             handOverTo?.Tell(HandOverDone.Instance);
             _memberExitingProgress.TrySetResult(Done.Instance);
             if (_removed.ContainsKey(_cluster.SelfUniqueAddress))
             {
-                Log.Info("Self removed, stopping ClusterSingletonManager");
+                if (Log.IsInfoEnabled) Log.Info("Self removed, stopping ClusterSingletonManager");
                 return Stop();
             }
             else if (handOverTo == null)
@@ -708,7 +708,7 @@ namespace Akka.Cluster.Tools.Singleton
                     _oldestChangedReceived = true;
                     if (oldestChanged.Oldest.Equals(_selfUniqueAddress))
                     {
-                        Log.Info("Younger observed OldestChanged: [{0} -> myself]", youngerData.Oldest?.Address);
+                        if (Log.IsInfoEnabled) Log.Info("Younger observed OldestChanged: [{0} -> myself]", youngerData.Oldest?.Address);
 
                         switch (youngerData.Oldest)
                         {
@@ -723,7 +723,7 @@ namespace Akka.Cluster.Tools.Singleton
                     }
                     else
                     {
-                        Log.Info("Younger observed OldestChanged: [{0} -> {1}]", youngerData.Oldest?.Address, oldestChanged.Oldest?.Address);
+                        if (Log.IsInfoEnabled) Log.Info("Younger observed OldestChanged: [{0} -> {1}]", youngerData.Oldest?.Address, oldestChanged.Oldest?.Address);
                         GetNextOldestChange();
                         return Stay().Using(new YoungerData(oldestChanged.Oldest));
                     }
@@ -732,7 +732,7 @@ namespace Akka.Cluster.Tools.Singleton
                 {
                     if (memberRemoved.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
                     {
-                        Log.Info("Self removed, stopping ClusterSingletonManager");
+                        if (Log.IsInfoEnabled) Log.Info("Self removed, stopping ClusterSingletonManager");
                         return Stop();
                     }
                     else
@@ -746,12 +746,13 @@ namespace Akka.Cluster.Tools.Singleton
                     && data.Oldest != null
                     && removed.Member.UniqueAddress.Equals(data.Oldest))
                 {
-                    Log.Info("Previous oldest removed [{0}]", removed.Member.Address);
+                    if (Log.IsInfoEnabled) Log.Info("Previous oldest removed [{0}]", removed.Member.Address);
                     AddRemoved(removed.Member.UniqueAddress);
                     // transition when OldestChanged
                     return Stay().Using(new YoungerData(null));
                 }
-                else if (e.FsmEvent is HandOverToMe) {
+                else if (e.FsmEvent is HandOverToMe)
+                {
                     // this node was probably quickly restarted with same hostname:port,
                     // confirm that the old singleton instance has been stopped
                     Sender.Tell(HandOverDone.Instance);
@@ -766,7 +767,7 @@ namespace Akka.Cluster.Tools.Singleton
                 if (e.FsmEvent is HandOverInProgress)
                 {
                     // confirmation that the hand-over process has started
-                    Log.Info("Hand-over in progress at [{0}]", Sender.Path.Address);
+                    if (Log.IsInfoEnabled) Log.Info("Hand-over in progress at [{0}]", Sender.Path.Address);
                     CancelTimer(HandOverRetryTimer);
                     return Stay();
                 }
@@ -780,7 +781,7 @@ namespace Akka.Cluster.Tools.Singleton
                     }
                     else
                     {
-                        Log.Info("Ignoring HandOverDone in BecomingOldest from [{0}]. Expected previous oldest [{1}]",
+                        if (Log.IsInfoEnabled) Log.Info("Ignoring HandOverDone in BecomingOldest from [{0}]. Expected previous oldest [{1}]",
                             Sender.Path.Address, b.PreviousOldest.Address);
                         return Stay();
                     }
@@ -789,7 +790,7 @@ namespace Akka.Cluster.Tools.Singleton
                 {
                     if (memberRemoved.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
                     {
-                        Log.Info("Self removed, stopping ClusterSingletonManager");
+                        if (Log.IsInfoEnabled) Log.Info("Self removed, stopping ClusterSingletonManager");
                         return Stop();
                     }
                     else
@@ -803,7 +804,7 @@ namespace Akka.Cluster.Tools.Singleton
                         && becoming.PreviousOldest != null
                         && delayed.Member.UniqueAddress.Equals(becoming.PreviousOldest))
                 {
-                    Log.Info("Previous oldest [{0}] removed", becoming.PreviousOldest);
+                    if (Log.IsInfoEnabled) Log.Info("Previous oldest [{0}] removed", becoming.PreviousOldest);
                     AddRemoved(delayed.Member.UniqueAddress);
                     return GoToOldest();
                 }
@@ -821,16 +822,21 @@ namespace Akka.Cluster.Tools.Singleton
                     {
                         case null:
                             // from unknown node, ignore
-                            Log.Info("Ignoring TakeOver request from unknown node in BecomingOldest from [{0}]", senderAddress);
+                            if (Log.IsInfoEnabled) Log.Info("Ignoring TakeOver request from unknown node in BecomingOldest from [{0}]", senderAddress);
                             return Stay();
                         case UniqueAddress _:
                             switch (becomingOldestData.PreviousOldest)
                             {
                                 case UniqueAddress previousOldest:
                                     if (previousOldest.Equals(senderUniqueAddress))
+                                    {
                                         Sender.Tell(HandOverToMe.Instance);
+                                    }
                                     else
-                                        Log.Info("Ignoring TakeOver request in BecomingOldest from [{0}]. Expected previous oldest [{1}]", Sender.Path.Address, previousOldest.Address);
+                                    {
+                                        if (Log.IsInfoEnabled) Log.Info("Ignoring TakeOver request in BecomingOldest from [{0}]. Expected previous oldest [{1}]", Sender.Path.Address, previousOldest.Address);
+                                    }
+
                                     return Stay();
                                 case null:
                                     Sender.Tell(HandOverToMe.Instance);
@@ -843,7 +849,7 @@ namespace Akka.Cluster.Tools.Singleton
                 {
                     if (handOverRetry.Count <= _maxHandOverRetries)
                     {
-                        Log.Info("Retry [{0}], sending HandOverToMe to [{1}]", handOverRetry.Count, becomingOldest.PreviousOldest?.Address);
+                        if (Log.IsInfoEnabled) Log.Info("Retry [{0}], sending HandOverToMe to [{1}]", handOverRetry.Count, becomingOldest.PreviousOldest?.Address);
                         if (becomingOldest.PreviousOldest != null)
                             Peer(becomingOldest.PreviousOldest.Address).Tell(HandOverToMe.Instance);
 
@@ -854,7 +860,7 @@ namespace Akka.Cluster.Tools.Singleton
                     {
                         // can't send HandOverToMe, previousOldest unknown for new node (or restart)
                         // previous oldest might be down or removed, so no TakeOverFromMe message is received
-                        Log.Info("Timeout in BecomingOldest. Previous oldest unknown, removed and no TakeOver request.");
+                        if (Log.IsInfoEnabled) Log.Info("Timeout in BecomingOldest. Previous oldest unknown, removed and no TakeOver request.");
                         return GoToOldest();
                     }
                     else if (_cluster.IsTerminated)
@@ -875,7 +881,7 @@ namespace Akka.Cluster.Tools.Singleton
                 if (e.FsmEvent is OldestChangedBuffer.OldestChanged oldestChanged && e.StateData is OldestData oldestData)
                 {
                     _oldestChangedReceived = true;
-                    Log.Info("Oldest observed OldestChanged: [{0} -> {1}]", _cluster.SelfAddress, oldestChanged.Oldest?.Address);
+                    if (Log.IsInfoEnabled) Log.Info("Oldest observed OldestChanged: [{0} -> {1}]", _cluster.SelfAddress, oldestChanged.Oldest?.Address);
                     switch (oldestChanged.Oldest)
                     {
                         case UniqueAddress a when a.Equals(_cluster.SelfUniqueAddress):
@@ -929,7 +935,7 @@ namespace Akka.Cluster.Tools.Singleton
                     }
                     else if (takeOverRetry.Count <= _maxTakeOverRetries)
                     {
-                        Log.Info("Retry [{0}], sending TakeOverFromMe to [{1}]", takeOverRetry.Count, wasOldestData.NewOldest?.Address);
+                        if (Log.IsInfoEnabled) Log.Info("Retry [{0}], sending TakeOverFromMe to [{1}]", takeOverRetry.Count, wasOldestData.NewOldest?.Address);
 
                         if (wasOldestData.NewOldest != null)
                             Peer(wasOldestData.NewOldest.Address).Tell(TakeOverFromMe.Instance);
@@ -950,7 +956,7 @@ namespace Akka.Cluster.Tools.Singleton
                 {
                     if (removed.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress) && !_selfExited)
                     {
-                        Log.Info("Self removed, stopping ClusterSingletonManager");
+                        if (Log.IsInfoEnabled) Log.Info("Self removed, stopping ClusterSingletonManager");
                         return Stop();
                     }
                     else if (e.StateData is WasOldestData data
@@ -1023,7 +1029,7 @@ namespace Akka.Cluster.Tools.Singleton
                 if (e.FsmEvent is MemberRemoved removed
                     && removed.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
                 {
-                    Log.Info("Self removed, stopping ClusterSingletonManager");
+                    if (Log.IsInfoEnabled) Log.Info("Self removed, stopping ClusterSingletonManager");
                     return Stop();
                 }
 
@@ -1044,12 +1050,12 @@ namespace Akka.Cluster.Tools.Singleton
                 {
                     if (removed.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress) && !_selfExited)
                     {
-                        Log.Info("Self removed, stopping ClusterSingletonManager");
+                        if (Log.IsInfoEnabled) Log.Info("Self removed, stopping ClusterSingletonManager");
                         return Stop();
                     }
                     else
                     {
-                        if (!_selfExited)
+                        if (!_selfExited && Log.IsInfoEnabled)
                             Log.Info("Member removed [{0}]", removed.Member.Address);
 
                         AddRemoved(removed.Member.UniqueAddress);
@@ -1058,7 +1064,7 @@ namespace Akka.Cluster.Tools.Singleton
                 }
                 if (e.FsmEvent is DelayedMemberRemoved delayedMemberRemoved)
                 {
-                    if (!_selfExited)
+                    if (!_selfExited && Log.IsInfoEnabled)
                         Log.Info("Member removed [{0}]", delayedMemberRemoved.Member.Address);
 
                     AddRemoved(delayedMemberRemoved.Member.UniqueAddress);
@@ -1066,7 +1072,7 @@ namespace Akka.Cluster.Tools.Singleton
                 }
                 if (e.FsmEvent is TakeOverFromMe)
                 {
-                    Log.Info("Ignoring TakeOver request in [{0}] from [{1}].", StateName, Sender.Path.Address);
+                    if (Log.IsInfoEnabled) Log.Info("Ignoring TakeOver request in [{0}] from [{1}].", StateName, Sender.Path.Address);
                     return Stay();
                 }
                 if (e.FsmEvent is Cleanup)
@@ -1080,7 +1086,7 @@ namespace Akka.Cluster.Tools.Singleton
 
             OnTransition((from, to) =>
             {
-                Log.Info("ClusterSingletonManager state change [{0} -> {1}] {2}", from, to, StateData.ToString());
+                if (Log.IsInfoEnabled) Log.Info("ClusterSingletonManager state change [{0} -> {1}] {2}", from, to, StateData.ToString());
 
                 if (to == ClusterSingletonState.BecomingOldest) SetTimer(HandOverRetryTimer, new HandOverRetry(1), _settings.HandOverRetryInterval);
                 if (from == ClusterSingletonState.BecomingOldest) CancelTimer(HandOverRetryTimer);
@@ -1090,7 +1096,7 @@ namespace Akka.Cluster.Tools.Singleton
                 {
                     if (_removed.ContainsKey(_cluster.SelfUniqueAddress))
                     {
-                        Log.Info("Self removed, stopping ClusterSingletonManager");
+                        if (Log.IsInfoEnabled) Log.Info("Self removed, stopping ClusterSingletonManager");
                         Context.Stop(Self);
                     }
                 }

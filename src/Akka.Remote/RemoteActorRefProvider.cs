@@ -701,7 +701,7 @@ namespace Akka.Remote
                 {
                     if (@event.StateData != null && @event.FsmEvent is TerminationHook)
                     {
-                        _log.Info("Shutting down remote daemon.");
+                        if (_log.IsInfoEnabled) _log.Info("Shutting down remote daemon.");
                         @event.StateData.RemoteDaemon.Tell(TerminationHook.Instance);
                         return GoTo(TerminatorState.WaitDaemonShutdown);
                     }
@@ -713,7 +713,7 @@ namespace Akka.Remote
                 {
                     if (@event.StateData != null && @event.FsmEvent is TerminationHookDone)
                     {
-                        _log.Info("Remote daemon shut down; proceeding with flushing remote transports.");
+                        if (_log.IsInfoEnabled) _log.Info("Remote daemon shut down; proceeding with flushing remote transports.");
                         @event.StateData.Transport.Shutdown()
                             .ContinueWith(t => TransportShutdown.Instance,
                                 TaskContinuationOptions.ExecuteSynchronously)
@@ -726,7 +726,7 @@ namespace Akka.Remote
 
                 When(TerminatorState.WaitTransportShutdown, @event =>
                 {
-                    _log.Info("Remoting shut down.");
+                    if (_log.IsInfoEnabled) _log.Info("Remoting shut down.");
                     _systemGuardian.Tell(TerminationHookDone.Instance);
                     return Stop();
                 });
