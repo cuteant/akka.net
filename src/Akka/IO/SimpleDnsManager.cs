@@ -49,10 +49,9 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            var r = message as Dns.Resolve;
-            if (r != null)
+            if (message is Dns.Resolve r)
             {
-                _log.Debug("Resolution request for {0} from {1}", r.Name, Sender);
+                if (_log.IsDebugEnabled) _log.Debug("Resolution request for {0} from {1}", r.Name, Sender);
                 _resolver.Forward(r);
                 return true;
             }

@@ -17,7 +17,7 @@ using Akka.Util.Internal;
 namespace Akka.IO
 {
     using static Udp;
-    
+
     class UdpSender : WithUdpSend, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private readonly UdpExt _udp;
@@ -27,7 +27,7 @@ namespace Akka.IO
         private readonly Socket _socket;
 
         private readonly ILoggingAdapter _log = Context.GetLogger();
-        
+
         public UdpSender(UdpExt udp, IActorRef commander, IEnumerable<Inet.SocketOption> options)
         {
             _udp = udp;
@@ -73,7 +73,7 @@ namespace Akka.IO
         /// </summary>
         protected override void PostStop()
         {
-            _log.Debug("Closing Socket after being stopped");
+            if (_log.IsDebugEnabled) _log.Debug("Closing Socket after being stopped");
             try
             {
                 Socket.Dispose();

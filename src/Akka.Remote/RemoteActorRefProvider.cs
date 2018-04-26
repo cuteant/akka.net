@@ -477,11 +477,11 @@ namespace Akka.Remote
 
                 return CreateRemoteRef(new RootActorPath(actorPath.Address) / actorPath.ElementsWithUid, localAddress);
             }
-            _log.Debug("resolve of unknown path [{0}] failed", path);
+            if (_log.IsDebugEnabled) _log.Debug("resolve of unknown path [{0}] failed", path);
             return InternalDeadLetters;
         }
 
-        
+
         /// <summary>
         /// Used to create <see cref="RemoteActorRef"/> instances upon deserialiation inside the Akka.Remote pipeline.
         /// </summary>
@@ -520,11 +520,10 @@ namespace Akka.Remote
             if (path == String.Empty)
                 return ActorRefs.NoSender;
 
-            ActorPath actorPath;
-            if (ActorPath.TryParse(path, out actorPath))
+            if (ActorPath.TryParse(path, out ActorPath actorPath))
                 return ResolveActorRef(actorPath);
 
-            _log.Debug("resolve of unknown path [{0}] failed", path);
+            if (_log.IsDebugEnabled) _log.Debug("resolve of unknown path [{0}] failed", path);
             return DeadLetters;
         }
 
@@ -582,7 +581,7 @@ namespace Akka.Remote
         /// <param name="supervisor">TBD</param>
         public void UseActorOnNode(RemoteActorRef actor, Props props, Deploy deploy, IInternalActorRef supervisor)
         {
-            _log.Debug("[{0}] Instantiating Remote Actor [{1}]", RootPath, actor.Path);
+            if (_log.IsDebugEnabled) _log.Debug("[{0}] Instantiating Remote Actor [{1}]", RootPath, actor.Path);
             IActorRef remoteNode = ResolveActorRef(new RootActorPath(actor.Path.Address) / "remote");
             remoteNode.Tell(new DaemonMsgCreate(props, deploy, actor.Path.ToSerializationFormat(), supervisor));
             _remoteDeploymentWatcher.Tell(new RemoteDeploymentWatcher.WatchRemote(actor, supervisor));

@@ -38,7 +38,7 @@ namespace Akka.IO
             {
                 option.BeforeConnect(Socket);
             }
-            
+
             if (connect.LocalAddress != null)
                 Socket.Bind(connect.LocalAddress);
 
@@ -59,7 +59,7 @@ namespace Akka.IO
         {
             ReleaseConnectionSocketArgs();
 
-            StopWith(new CloseInformation(new HashSet<IActorRef>(new[] {_commander}), _connect.FailureMessage));
+            StopWith(new CloseInformation(new HashSet<IActorRef>(new[] { _commander }), _connect.FailureMessage));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -75,26 +75,25 @@ namespace Akka.IO
                 Stop();
             }
         }
-        
+
         protected override void PreStart()
         {
             ReportConnectFailure(() =>
             {
-                if (_connect.RemoteAddress is DnsEndPoint)
+                if (_connect.RemoteAddress is DnsEndPoint remoteAddress)
                 {
-                    var remoteAddress = (DnsEndPoint) _connect.RemoteAddress;
-                    Log.Debug("Resolving {0} before connecting", remoteAddress.Host);
+                    if (Log.IsDebugEnabled) Log.Debug("Resolving {0} before connecting", remoteAddress.Host);
                     var resolved = Dns.ResolveName(remoteAddress.Host, Context.System, Self);
                     if (resolved == null)
                         Become(Resolving(remoteAddress));
-                    else if(resolved.Ipv4.Any() && resolved.Ipv6.Any()) // one of both families
+                    else if (resolved.Ipv4.Any() && resolved.Ipv6.Any()) // one of both families
                         Register(new IPEndPoint(resolved.Ipv4.FirstOrDefault(), remoteAddress.Port), new IPEndPoint(resolved.Ipv6.FirstOrDefault(), remoteAddress.Port));
                     else // one or the other
                         Register(new IPEndPoint(resolved.Addr, remoteAddress.Port), null);
                 }
-                else if(_connect.RemoteAddress is IPEndPoint)
+                else if (_connect.RemoteAddress is IPEndPoint remoteEndPoint)
                 {
-                    Register((IPEndPoint)_connect.RemoteAddress, null);
+                    Register(remoteEndPoint, null);
                 }
                 else throw new NotSupportedException($"Couldn't connect to [{_connect.RemoteAddress}]: only IP and DNS-based endpoints are supported");
             });
@@ -117,8 +116,7 @@ namespace Akka.IO
         {
             return message =>
             {
-                var resolved = message as Dns.Resolved;
-                if (resolved != null)
+                if (message is Dns.Resolved resolved)
                 {
                     if (resolved.Ipv4.Any() && resolved.Ipv6.Any()) // multiple addresses
                     {
@@ -143,7 +141,7 @@ namespace Akka.IO
         {
             ReportConnectFailure(() =>
             {
-                Log.Debug("Attempting connection to [{0}]", address);
+                if (Log.IsDebugEnabled) Log.Debug("Attempting connection to [{0}]", address);
 
                 _connectArgs = Tcp.SocketEventArgsPool.Acquire(Self);
                 _connectArgs.RemoteEndPoint = address;
@@ -164,7 +162,7 @@ namespace Akka.IO
                     if (args.SocketError == SocketError.Success)
                     {
                         if (_connect.Timeout.HasValue) Context.SetReceiveTimeout(null);
-                        Log.Debug("Connection established to [{0}]", _connect.RemoteAddress);
+                        if (Log.IsDebugEnabled) Log.Debug("Connection established to [{0}]", _connect.RemoteAddress);
 
                         ReleaseConnectionSocketArgs();
                         AcquireSocketAsyncEventArgs();
@@ -195,7 +193,7 @@ namespace Akka.IO
                     }
                     else
                     {
-                        Log.Debug("Could not establish connection because finishConnect never returned true (consider increasing akka.io.tcp.finish-connect-retries)");
+                        if (Log.IsDebugEnabled) Log.Debug("Could not establish connection because finishConnect never returned true (consider increasing akka.io.tcp.finish-connect-retries)");
                         Stop();
                     }
                     return true;

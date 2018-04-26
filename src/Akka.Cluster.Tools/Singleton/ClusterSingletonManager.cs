@@ -1109,7 +1109,7 @@ namespace Akka.Cluster.Tools.Singleton
         {
             if (_removalMargin > TimeSpan.Zero)
             {
-                Log.Debug("Schedule DelayedMemberRemoved for {0}", member.Address);
+                if (_log.IsDebugEnabled) Log.Debug("Schedule DelayedMemberRemoved for {0}", member.Address);
                 Context.System.Scheduler.ScheduleTellOnce(_removalMargin, Self, new DelayedMemberRemoved(member), Self);
             }
             else Self.Tell(new DelayedMemberRemoved(member));

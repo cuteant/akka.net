@@ -60,7 +60,7 @@ namespace Akka.Persistence
                 Context.Watch(Sender);
                 if (_usedPermits >= MaxPermits)
                 {
-                    if (pending.Count == 0)
+                    if (pending.Count == 0 && Log.IsDebugEnabled)
                         Log.Debug("Exceeded max-concurrent-recoveries [{0}]. First pending {1}", MaxPermits, Sender);
                     pending.AddLast(Sender);
                     _maxPendingStats = Math.Max(_maxPendingStats, pending.Count);
@@ -98,7 +98,7 @@ namespace Akka.Persistence
             if (pending.Count != 0 || _maxPendingStats <= 0)
                 return;
 
-            Log.Debug("Drained pending recovery permit requests, max in progress was [{0}], still [{1}] in progress", _usedPermits + _maxPendingStats, _usedPermits);
+            if (Log.IsDebugEnabled) Log.Debug("Drained pending recovery permit requests, max in progress was [{0}], still [{1}] in progress", _usedPermits + _maxPendingStats, _usedPermits);
             _maxPendingStats = 0;
         }
 

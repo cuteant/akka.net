@@ -171,7 +171,7 @@ namespace Akka.Streams.Implementation.IO
                     {
                         //EOF
                         _eofReachedAtOffset = _chan.Position;
-                        _log.Debug($"No more bytes available to read (got 0 from read), marking final bytes of file @ {_eofReachedAtOffset}");
+                        if (_log.IsDebugEnabled) _log.Debug($"No more bytes available to read (got 0 from read), marking final bytes of file @ {_eofReachedAtOffset}");
                         return chunks;
                     }
 

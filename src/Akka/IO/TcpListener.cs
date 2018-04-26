@@ -26,7 +26,7 @@ namespace Akka.IO
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private int _acceptLimit;
         private SocketAsyncEventArgs[] _saeas;
-        
+
         private int acceptLimit;
 
         /// <summary>
@@ -47,7 +47,7 @@ namespace Akka.IO
             _socket = new Socket(_bind.LocalAddress.AddressFamily, SocketType.Stream, ProtocolType.Tcp) { Blocking = false };
 
             _acceptLimit = bind.PullMode ? 0 : _tcp.Settings.BatchAcceptLimit;
-            
+
             try
             {
                 bind.Options.ForEach(x => x.BeforeServerSocketBind(_socket));
@@ -64,10 +64,10 @@ namespace Akka.IO
 
             bindCommander.Tell(new Tcp.Bound(_socket.LocalEndPoint));
         }
-        
+
         private IEnumerable<SocketAsyncEventArgs> Accept(int limit)
         {
-            for(var i = 0; i < _acceptLimit; i++)
+            for (var i = 0; i < _acceptLimit; i++)
             {
                 var self = Self;
                 var saea = new SocketAsyncEventArgs();
@@ -96,8 +96,7 @@ namespace Akka.IO
                     Self.Tell(saea);
                 return true;
             }
-            var resumeAccepting = message as Tcp.ResumeAccepting;
-            if (resumeAccepting != null)
+            if (message is Tcp.ResumeAccepting resumeAccepting)
             {
                 _acceptLimit = resumeAccepting.BatchSize;
                 _saeas = Accept(_acceptLimit).ToArray();
@@ -105,10 +104,11 @@ namespace Akka.IO
             }
             if (message is Tcp.Unbind)
             {
-                _log.Debug("Unbinding endpoint {0}", _bind.LocalAddress);
-                 _socket.Dispose();
+                var debugEnabled = _log.IsDebugEnabled;
+                if (debugEnabled) _log.Debug("Unbinding endpoint {0}", _bind.LocalAddress);
+                _socket.Dispose();
                 Sender.Tell(Tcp.Unbound.Instance);
-                _log.Debug("Unbound endpoint {0}, stopping listener", _bind.LocalAddress);
+                if (debugEnabled) _log.Debug("Unbound endpoint {0}, stopping listener", _bind.LocalAddress);
                 Context.Stop(Self);
                 return true;
             }

@@ -383,7 +383,7 @@ namespace Akka.Actor
             ActorPath actorPath;
             if (ActorPath.TryParse(path, out actorPath) && actorPath.Address == _rootPath.Address)
                 return ResolveActorRef(_rootGuardian, actorPath.Elements);
-            _log.Debug("Resolve of unknown path [{0}] failed. Invalid format.", path);
+            if (_log.IsDebugEnabled) _log.Debug("Resolve of unknown path [{0}] failed. Invalid format.", path);
             return _deadLetters;
         }
 
@@ -396,7 +396,7 @@ namespace Akka.Actor
         {
             if (path.Root == _rootPath)
                 return ResolveActorRef(_rootGuardian, path.Elements);
-            _log.Debug("Resolve of foreign ActorPath [{0}] failed", path);
+            if (_log.IsDebugEnabled) _log.Debug("Resolve of foreign ActorPath [{0}] failed", path);
             return _deadLetters;
 
             //Used to be this, but the code above is what Akka has
@@ -429,13 +429,13 @@ namespace Akka.Actor
         {
             if (pathElements.Count == 0)
             {
-                _log.Debug("Resolve of empty path sequence fails (per definition)");
+                if (_log.IsDebugEnabled) _log.Debug("Resolve of empty path sequence fails (per definition)");
                 return _deadLetters;
             }
             var child = actorRef.GetChild(pathElements);
             if (child.IsNobody())
             {
-                _log.Debug("Resolve of path sequence [/{0}] failed", ActorPath.FormatPathElements(pathElements));
+                if (_log.IsDebugEnabled) _log.Debug("Resolve of path sequence [/{0}] failed", ActorPath.FormatPathElements(pathElements));
                 return new EmptyLocalActorRef(_system.Provider, actorRef.Path / pathElements, _eventStream);
             }
             return (IInternalActorRef)child;

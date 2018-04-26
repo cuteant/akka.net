@@ -553,7 +553,7 @@ namespace Akka.Cluster.Tools.Client
                 failureDetector = new DeadlineFailureDetector(_settings.AcceptableHeartbeatPause, _settings.HeartbeatInterval);
                 failureDetector.HeartBeat();
                 _clientInteractions = _clientInteractions.Add(client, failureDetector);
-                _log.Debug($"Received new contact from [{client.Path}]");
+                if (_log.IsDebugEnabled) _log.Debug($"Received new contact from [{client.Path}]");
                 var clusterClientUp = new ClusterClientUp(client);
                 _subscribers.ForEach(s => s.Tell(clusterClientUp));
                 _clientsPublished = _clientInteractions.Keys.ToImmutableHashSet();
@@ -567,7 +567,7 @@ namespace Akka.Cluster.Tools.Client
             {
                 if (!publishableClients.Contains(c))
                 {
-                    _log.Debug($"Lost contact with [{c.Path}]");
+                    if (_log.IsDebugEnabled) _log.Debug($"Lost contact with [{c.Path}]");
                     var clusterClientUnreachable = new ClusterClientUnreachable(c);
                     _subscribers.ForEach(s => s.Tell(clusterClientUnreachable));
                 }
@@ -609,7 +609,7 @@ namespace Akka.Cluster.Tools.Client
             }
             else if (message is ReceiveTimeout)
             {
-                _log.Debug("ClientResponseTunnel for client [{0}] stopped due to inactivity", _client.Path);
+                if (_log.IsDebugEnabled) _log.Debug("ClientResponseTunnel for client [{0}] stopped due to inactivity", _client.Path);
                 Context.Stop(Self);
             }
             else

@@ -62,7 +62,7 @@ namespace Akka.Streams.Implementation
         {
             BufferSize = bufferSize;
             OverflowStrategy = overflowStrategy;
-            Buffer = bufferSize != 0 ?  Implementation.Buffer.Create<T>(bufferSize, maxFixedBufferSize) : null;
+            Buffer = bufferSize != 0 ? Implementation.Buffer.Create<T>(bufferSize, maxFixedBufferSize) : null;
         }
 
         /// <summary>
@@ -76,7 +76,7 @@ namespace Akka.Streams.Implementation
         /// <param name="message">TBD</param>
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
-            => DefaultReceive(message) || RequestElement(message) || (message is T && ReceiveElement((T) message));
+            => DefaultReceive(message) || RequestElement(message) || (message is T && ReceiveElement((T)message));
 
         /// <summary>
         /// TBD
@@ -131,33 +131,39 @@ namespace Akka.Streams.Implementation
             if (IsActive)
             {
                 if (TotalDemand > 0L)
+                {
                     OnNext(message);
+                }
                 else if (BufferSize == 0)
-                    Log.Debug("Dropping element because there is no downstream demand: [{0}]", message);
+                {
+                    if (Log.IsDebugEnabled) Log.Debug("Dropping element because there is no downstream demand: [{0}]", message);
+                }
                 else if (!Buffer.IsFull)
+                {
                     Buffer.Enqueue(message);
+                }
                 else
                 {
                     switch (OverflowStrategy)
                     {
                         case OverflowStrategy.DropHead:
-                            Log.Debug("Dropping the head element because buffer is full and overflowStrategy is: [DropHead]");
+                            if (Log.IsDebugEnabled) Log.Debug("Dropping the head element because buffer is full and overflowStrategy is: [DropHead]");
                             Buffer.DropHead();
                             Buffer.Enqueue(message);
                             break;
                         case OverflowStrategy.DropTail:
-                            Log.Debug("Dropping the tail element because buffer is full and overflowStrategy is: [DropTail]");
+                            if (Log.IsDebugEnabled) Log.Debug("Dropping the tail element because buffer is full and overflowStrategy is: [DropTail]");
                             Buffer.DropTail();
                             Buffer.Enqueue(message);
                             break;
                         case OverflowStrategy.DropBuffer:
-                            Log.Debug("Dropping all the buffered elements because buffer is full and overflowStrategy is: [DropBuffer]");
+                            if (Log.IsDebugEnabled) Log.Debug("Dropping all the buffered elements because buffer is full and overflowStrategy is: [DropBuffer]");
                             Buffer.Clear();
                             Buffer.Enqueue(message);
                             break;
                         case OverflowStrategy.DropNew:
                             // do not enqueue new element if the buffer is full
-                            Log.Debug("Dropping the new element because buffer is full and overflowStrategy is: [DropNew]");
+                            if (Log.IsDebugEnabled) Log.Debug("Dropping the new element because buffer is full and overflowStrategy is: [DropNew]");
                             break;
                         case OverflowStrategy.Fail:
                             Log.Error("Failing because buffer is full and overflowStrategy is: [Fail]");
@@ -165,7 +171,7 @@ namespace Akka.Streams.Implementation
                             break;
                         case OverflowStrategy.Backpressure:
                             // there is a precondition check in Source.actorRefSource factory method
-                            Log.Debug("Backpressuring because buffer is full and overflowStrategy is: [Backpressure]");
+                            if (Log.IsDebugEnabled) Log.Debug("Backpressuring because buffer is full and overflowStrategy is: [Backpressure]");
                             break;
                     }
                 }
@@ -196,11 +202,15 @@ namespace Akka.Streams.Implementation
                     Context.Stop(Self); // will complete the stream successfully
             }
             else if (IsActive)
-                Log.Debug(
+            {
+                if (Log.IsDebugEnabled) Log.Debug(
                     "Dropping element because Status.Success received already, only draining already buffered elements: [{0}] (pending: [{1}])",
                     message, Buffer.Used);
+            }
             else
+            {
                 return false;
+            }
 
             return true;
         }

@@ -39,9 +39,9 @@ namespace Akka.Cluster
         {
             return new Props(typeof(ClusterRemoteWatcher), new object[]
             {
-                failureDetector, 
-                heartbeatInterval, 
-                unreachableReaperInterval, 
+                failureDetector,
+                heartbeatInterval,
+                unreachableReaperInterval,
                 heartbeatExpectedResponseAfter
             }).WithDeploy(Deploy.Local);
         }
@@ -60,7 +60,7 @@ namespace Akka.Cluster
             IFailureDetectorRegistry<Address> failureDetector,
             TimeSpan heartbeatInterval,
             TimeSpan unreachableReaperInterval,
-            TimeSpan heartbeatExpectedResponseAfter) :base(failureDetector, heartbeatInterval, unreachableReaperInterval, heartbeatExpectedResponseAfter)
+            TimeSpan heartbeatExpectedResponseAfter) : base(failureDetector, heartbeatInterval, unreachableReaperInterval, heartbeatExpectedResponseAfter)
         {
             _cluster = Cluster.Get(Context.System);
         }
@@ -71,7 +71,7 @@ namespace Akka.Cluster
         protected override void PreStart()
         {
             base.PreStart();
-            _cluster.Subscribe(Self, new []{typeof(ClusterEvent.IMemberEvent)});
+            _cluster.Subscribe(Self, new[] { typeof(ClusterEvent.IMemberEvent) });
         }
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace Akka.Cluster
         {
             if (WatchingNodes.Contains(address))
             {
-                Log.Debug("Cluster is taking over responsibility of node: {0}", address);
+                if (Log.IsDebugEnabled) Log.Debug("Cluster is taking over responsibility of node: {0}", address);
                 UnwatchNode(address);
             }
         }

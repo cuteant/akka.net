@@ -51,8 +51,8 @@ namespace Akka.IO
                 var ret = Socket.LocalEndPoint;
                 if (ret == null)
                     throw new ArgumentException($"bound to unknown SocketAddress [{Socket.LocalEndPoint}]");
-                
-                Log.Debug("Successfully bound to [{0}]", ret);
+
+                if (Log.IsDebugEnabled) Log.Debug("Successfully bound to [{0}]", ret);
                 bind.Options.OfType<Inet.SocketOptionV2>().ForEach(x => x.AfterBind(Socket));
 
                 ReceiveAsync();
@@ -97,12 +97,13 @@ namespace Akka.IO
                     DoReceive(received.EventArgs, _bind.Handler);
                     return true;
                 case Unbind _:
-                    Log.Debug("Unbinding endpoint [{0}]", _bind.LocalAddress);
+                    var debugEnabled = Log.IsDebugEnabled;
+                    if (debugEnabled) Log.Debug("Unbinding endpoint [{0}]", _bind.LocalAddress);
                     try
                     {
                         Socket.Dispose();
                         Sender.Tell(Unbound.Instance);
-                        Log.Debug("Unbound endpoint [{0}], stopping listener", _bind.LocalAddress);
+                        if (debugEnabled) Log.Debug("Unbound endpoint [{0}], stopping listener", _bind.LocalAddress);
                     }
                     finally
                     {
@@ -136,14 +137,15 @@ namespace Akka.IO
         {
             if (Socket.Connected)
             {
-                Log.Debug("Closing DatagramChannel after being stopped");
+                var debugEnabled = Log.IsDebugEnabled;
+                if (debugEnabled) Log.Debug("Closing DatagramChannel after being stopped");
                 try
                 {
                     Socket.Dispose();
                 }
                 catch (Exception e)
                 {
-                    Log.Debug("Error closing DatagramChannel: {0}", e);
+                    if (debugEnabled) Log.Debug("Error closing DatagramChannel: {0}", e);
                 }
             }
         }

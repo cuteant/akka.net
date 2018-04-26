@@ -468,24 +468,24 @@ namespace Akka.Cluster.Tools.Client
         {
             if (_settings.BufferSize == 0)
             {
-                _log.Debug("Receptionist not available and buffering is disabled, dropping message [{0}]", message.GetType().Name);
+                if (_log.IsDebugEnabled) _log.Debug("Receptionist not available and buffering is disabled, dropping message [{0}]", message.GetType().Name);
             }
             else if (_buffer.Count == _settings.BufferSize)
             {
                 var m = _buffer.Dequeue();
-                _log.Debug("Receptionist not available, buffer is full, dropping first message [{0}]", m.Item1.GetType().Name);
+                if (_log.IsDebugEnabled) _log.Debug("Receptionist not available, buffer is full, dropping first message [{0}]", m.Item1.GetType().Name);
                 _buffer.Enqueue(Tuple.Create(message, Sender));
             }
             else
             {
-                _log.Debug("Receptionist not available, buffering message type [{0}]", message.GetType().Name);
+                if (_log.IsDebugEnabled) _log.Debug("Receptionist not available, buffering message type [{0}]", message.GetType().Name);
                 _buffer.Enqueue(Tuple.Create(message, Sender));
             }
         }
 
         private void SendBuffered(IActorRef receptionist)
         {
-            _log.Debug("Sending buffered messages to receptionist");
+            if (_log.IsDebugEnabled) _log.Debug("Sending buffered messages to receptionist");
             while (_buffer.Count != 0)
             {
                 var t = _buffer.Dequeue();

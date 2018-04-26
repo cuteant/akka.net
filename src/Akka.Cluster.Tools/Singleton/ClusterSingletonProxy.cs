@@ -128,7 +128,7 @@ namespace Akka.Cluster.Tools.Singleton
                      if (oldest != null && _identityTimer != null)
                      {
                          var singletonAddress = new RootActorPath(oldest.Address) / _singletonPath;
-                         Log.Debug("Trying to identify singleton at [{0}]", singletonAddress);
+                         if (_log.IsDebugEnabled) Log.Debug("Trying to identify singleton at [{0}]", singletonAddress);
                          Context.ActorSelection(singletonAddress).Tell(new Identify(_identityId));
                      }
                  });
@@ -200,7 +200,7 @@ namespace Akka.Cluster.Tools.Singleton
         // Discard old singleton ActorRef and send a periodic message to self to identify the singleton.
         private void IdentifySingleton()
         {
-            Log.Debug("Creating singleton identification timer...");
+            if (Log.IsDebugEnabled) Log.Debug("Creating singleton identification timer...");
             _identityCounter++;
             _identityId = CreateIdentifyId(_identityCounter);
             _singleton = null;

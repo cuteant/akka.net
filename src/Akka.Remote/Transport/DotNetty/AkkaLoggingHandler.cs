@@ -32,25 +32,25 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override void ChannelRegistered(IChannelHandlerContext ctx)
         {
-            _log.Debug("Channel {0} registered", ctx.Channel);
+            if (_log.IsDebugEnabled) _log.Debug("Channel {0} registered", ctx.Channel);
             ctx.FireChannelRegistered();
         }
 
         public override void ChannelUnregistered(IChannelHandlerContext ctx)
         {
-            _log.Debug("Channel {0} unregistered", ctx.Channel);
+            if (_log.IsDebugEnabled) _log.Debug("Channel {0} unregistered", ctx.Channel);
             ctx.FireChannelUnregistered();
         }
 
         public override void ChannelActive(IChannelHandlerContext ctx)
         {
-            _log.Debug("Channel {0} active", ctx.Channel);
+            if (_log.IsDebugEnabled) _log.Debug("Channel {0} active", ctx.Channel);
             ctx.FireChannelActive();
         }
 
         public override void ChannelInactive(IChannelHandlerContext ctx)
         {
-            _log.Debug("Channel {0} inactive", ctx.Channel);
+            if (_log.IsDebugEnabled) _log.Debug("Channel {0} inactive", ctx.Channel);
             ctx.FireChannelInactive();
         }
 
@@ -62,37 +62,37 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override void UserEventTriggered(IChannelHandlerContext ctx, object evt)
         {
-            _log.Debug("Channel {0} triggered user event [{1}]", ctx.Channel, evt);
+            if (_log.IsDebugEnabled) _log.Debug("Channel {0} triggered user event [{1}]", ctx.Channel, evt);
             ctx.FireUserEventTriggered(evt);
         }
 
         public override Task BindAsync(IChannelHandlerContext ctx, EndPoint localAddress)
         {
-            _log.Info("Channel {0} bind to address {1}", ctx.Channel, localAddress);
+            if (_log.IsInfoEnabled) _log.Info("Channel {0} bind to address {1}", ctx.Channel, localAddress);
             return ctx.BindAsync(localAddress);
         }
 
         public override Task ConnectAsync(IChannelHandlerContext ctx, EndPoint remoteAddress, EndPoint localAddress)
         {
-            _log.Info("Channel {0} connect (remote: {1}, local: {2})", ctx.Channel, remoteAddress, localAddress);
+            if (_log.IsInfoEnabled) _log.Info("Channel {0} connect (remote: {1}, local: {2})", ctx.Channel, remoteAddress, localAddress);
             return ctx.ConnectAsync(remoteAddress, localAddress);
         }
 
         public override Task DisconnectAsync(IChannelHandlerContext ctx)
         {
-            _log.Info("Channel {0} disconnect", ctx.Channel);
+            if (_log.IsInfoEnabled) _log.Info("Channel {0} disconnect", ctx.Channel);
             return ctx.DisconnectAsync();
         }
 
         public override Task CloseAsync(IChannelHandlerContext ctx)
         {
-            _log.Info("Channel {0} close", ctx.Channel);
+            if (_log.IsInfoEnabled) _log.Info("Channel {0} close", ctx.Channel);
             return ctx.CloseAsync();
         }
 
         public override Task DeregisterAsync(IChannelHandlerContext ctx)
         {
-            _log.Debug("Channel {0} deregister", ctx.Channel);
+            if (_log.IsDebugEnabled) _log.Debug("Channel {0} deregister", ctx.Channel);
             return ctx.DeregisterAsync();
         }
 
@@ -116,7 +116,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override void Flush(IChannelHandlerContext ctx)
         {
-            _log.Debug("Channel {0} flushing", ctx.Channel);
+            if (_log.IsDebugEnabled) _log.Debug("Channel {0} flushing", ctx.Channel);
             ctx.Flush();
         }
         

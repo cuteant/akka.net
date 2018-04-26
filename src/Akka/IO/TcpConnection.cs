@@ -169,7 +169,7 @@ namespace Akka.IO
                     case ReceiveTimeout _:
                         // after sending `Register` user should watch this actor to make sure
                         // it didn't die because of the timeout
-                        Log.Debug("Configured registration timeout of [{0}] expired, stopping", Tcp.Settings.RegisterTimeout);
+                        if (Log.IsDebugEnabled) Log.Debug("Configured registration timeout of [{0}] expired, stopping", Tcp.Settings.RegisterTimeout);
                         Context.Stop(Self);
                         return true;
                     default: return false;
@@ -514,7 +514,7 @@ namespace Akka.IO
 
         private void HandleError(IActorRef handler, SocketException exception)
         {
-            Log.Debug("Closing connection due to IO error {0}", exception);
+            if (Log.IsDebugEnabled) Log.Debug("Closing connection due to IO error {0}", exception);
             StopWith(new CloseInformation(new HashSet<IActorRef>(new[] { handler }), new ErrorClosed(exception.Message)));
         }
 

@@ -608,8 +608,8 @@ namespace Akka.Remote
                     {
                         KeepQuarantinedOr(shutdown.RemoteAddress, () =>
                         {
-                            _log.Debug("Remote system with address [{0}] has shut down. Address is now gated for {1}ms, all messages to this address will be delivered to dead letters.",
-                                 shutdown.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds);
+                            if (_log.IsDebugEnabled) _log.Debug("Remote system with address [{0}] has shut down. Address is now gated for {1}ms, all messages to this address will be delivered to dead letters.",
+                                  shutdown.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds);
                             _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
                         });
                         directive = Directive.Stop;
@@ -923,7 +923,7 @@ namespace Akka.Remote
                 }
                 else if (policy is WasGated)
                 {
-                    var wg = (WasGated) policy;
+                    var wg = (WasGated)policy;
                     if (wg.RefuseUid == gotuid.Uid)
                     {
                         _endpoints.MarkAsQuarantined(gotuid.RemoteAddress, gotuid.Uid,
@@ -1104,13 +1104,13 @@ namespace Akka.Remote
 
                             if (!typeof(Transport.Transport).IsAssignableFrom(driverType))
                                 throw new TypeLoadException(
-                                    $"Cannot instantiate transport [{transportSettings.TransportClass}]. It does not implement [{typeof (Transport.Transport).FullName}].");
+                                    $"Cannot instantiate transport [{transportSettings.TransportClass}]. It does not implement [{typeof(Transport.Transport).FullName}].");
 
                             var constructorInfo = driverType.GetConstructor(new[] { typeof(ActorSystem), typeof(Config) });
                             if (constructorInfo == null)
                                 throw new TypeLoadException(
                                     $"Cannot instantiate transport [{transportSettings.TransportClass}]. " +
-                                    $"It has no public constructor with [{typeof (ActorSystem).FullName}] and [{typeof (Config).FullName}] parameters");
+                                    $"It has no public constructor with [{typeof(ActorSystem).FullName}] and [{typeof(Config).FullName}] parameters");
 
                             // ReSharper disable once AssignNullToNotNullAttribute
                             driver = (Transport.Transport)Activator.CreateInstance(driverType, args);

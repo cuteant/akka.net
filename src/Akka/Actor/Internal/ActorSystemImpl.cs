@@ -69,13 +69,13 @@ namespace Akka.Actor.Internal
         /// <exception cref="ArgumentNullException">This exception is thrown if the given <paramref name="config"/> is undefined.</exception>
         public ActorSystemImpl(string name, Config config)
         {
-            if(!Regex.Match(name, "^[a-zA-Z0-9][a-zA-Z0-9-]*$").Success)
+            if (!Regex.Match(name, "^[a-zA-Z0-9][a-zA-Z0-9-]*$").Success)
                 throw new ArgumentException(
                     $"Invalid ActorSystem name [{name}], must contain only word characters (i.e. [a-zA-Z0-9] plus non-leading '-')", nameof(name));
-            if(config == null)
+            if (config == null)
                 throw new ArgumentNullException(nameof(config), "Configuration must not be null.");
 
-            _name = name;            
+            _name = name;
             ConfigureSettings(config);
             ConfigureEventStream();
             ConfigureLoggers();
@@ -211,7 +211,7 @@ namespace Akka.Actor.Internal
                 }
                 catch (Exception)
                 {
-                    try { StopScheduler();}
+                    try { StopScheduler(); }
                     catch
                     {
                         // ignored
@@ -227,7 +227,7 @@ namespace Akka.Actor.Internal
             var showSerializerWarning = Settings.Config.HasPath(configPath) && !Settings.Config.GetBoolean(configPath);
 
             if (showSerializerWarning &&
-                Serialization.FindSerializerForType(typeof (object)) is NewtonSoftJsonSerializer)
+                Serialization.FindSerializerForType(typeof(object)) is NewtonSoftJsonSerializer)
             {
                 Log.Warning($"NewtonSoftJsonSerializer has been detected as a default serializer. " +
                             $"It will be obsoleted in Akka.NET starting from version 1.5 in the favor of Hyperion " +
@@ -257,7 +257,7 @@ namespace Akka.Actor.Internal
         private void ConfigureScheduler()
         {
             var schedulerType = TypeUtils.ResolveType(_settings.SchedulerClass);//, true);
-            _scheduler = (IScheduler) Activator.CreateInstance(schedulerType, _settings.Config, Log);
+            _scheduler = (IScheduler)Activator.CreateInstance(schedulerType, _settings.Config, Log);
         }
 
         private void StopScheduler()
@@ -269,10 +269,10 @@ namespace Akka.Actor.Internal
         private void LoadExtensions()
         {
             var extensions = new List<IExtensionId>();
-            foreach(var extensionFqn in _settings.Config.GetStringList("akka.extensions"))
+            foreach (var extensionFqn in _settings.Config.GetStringList("akka.extensions"))
             {
                 var extensionType = TypeUtil.ResolveType(extensionFqn);
-                if(extensionType == null || !typeof(IExtensionId).IsAssignableFrom(extensionType) || extensionType.GetTypeInfo().IsAbstract || !extensionType.GetTypeInfo().IsClass)
+                if (extensionType == null || !typeof(IExtensionId).IsAssignableFrom(extensionType) || extensionType.GetTypeInfo().IsAbstract || !extensionType.GetTypeInfo().IsClass)
                 {
                     _log.Error("[{0}] is not an 'ExtensionId', skipping...", extensionFqn);
                     continue;
@@ -283,7 +283,7 @@ namespace Akka.Actor.Internal
                     var extension = ActivatorUtils.FastCreateInstance<IExtensionId>(extensionType);
                     extensions.Add(extension);
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     _log.Error(ex, "While trying to load extension [{0}], skipping...", extensionFqn);
                 }
@@ -295,7 +295,7 @@ namespace Akka.Actor.Internal
 
         private void ConfigureExtensions(IEnumerable<IExtensionId> extensionIdProviders)
         {
-            foreach(var extensionId in extensionIdProviders)
+            foreach (var extensionId in extensionIdProviders)
             {
                 RegisterExtension(extensionId);
             }
@@ -405,8 +405,9 @@ namespace Akka.Actor.Internal
             _serialization = new Serialization.Serialization(this);
         }
 
-        void ISupportSerializationConfigReload.ReloadSerialization() {
-            if(_serialization != null)
+        void ISupportSerializationConfigReload.ReloadSerialization()
+        {
+            if (_serialization != null)
                 ConfigureSerialization();
         }
 
@@ -422,7 +423,7 @@ namespace Akka.Actor.Internal
                 Type providerType = TypeUtil.ResolveType(_settings.ProviderClass);
                 global::System.Diagnostics.Debug.Assert(providerType != null, "providerType != null");
                 var provider =
-                    (IActorRefProvider) Activator.CreateInstance(providerType, _name, _settings, _eventStream);
+                    (IActorRefProvider)Activator.CreateInstance(providerType, _name, _settings, _eventStream);
                 _provider = provider;
             }
             catch (Exception)
@@ -492,7 +493,7 @@ namespace Akka.Actor.Internal
         /// </returns>
         public override Task Terminate()
         {
-            Log.Debug("System shutdown initiated");
+            if (Log.IsDebugEnabled) Log.Debug("System shutdown initiated");
             _provider.Guardian.Stop();
             return WhenTerminated;
         }

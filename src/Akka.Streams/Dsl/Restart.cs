@@ -34,7 +34,7 @@ namespace Akka.Streams.Dsl
         /// <param name="minBackoff">Minimum (initial) duration until the child actor will started again, if it is terminated</param>
         /// <param name="maxBackoff">The exponential back-off is capped to this duration</param>
         /// <param name="randomFactor">After calculation of the exponential back-off an additional random delay based on this factor is added, e.g. `0.2` adds up to `20%` delay. In order to skip this additional delay pass in `0`.</param>
-        public static Source<T, NotUsed> WithBackoff<T, TMat>(Func<Source<T, TMat>> sourceFactory, TimeSpan minBackoff, TimeSpan maxBackoff, double randomFactor) 
+        public static Source<T, NotUsed> WithBackoff<T, TMat>(Func<Source<T, TMat>> sourceFactory, TimeSpan minBackoff, TimeSpan maxBackoff, double randomFactor)
             => Source.FromGraph(new RestartWithBackoffSource<T, TMat>(sourceFactory, minBackoff, maxBackoff, randomFactor));
     }
 
@@ -68,7 +68,7 @@ namespace Akka.Streams.Dsl
         {
             private readonly RestartWithBackoffSource<T, TMat> _stage;
 
-            public Logic(RestartWithBackoffSource<T, TMat> stage, string name) 
+            public Logic(RestartWithBackoffSource<T, TMat> stage, string name)
                 : base(name, stage.Shape, null, stage.Out, stage.MinBackoff, stage.MaxBackoff, stage.RandomFactor)
             {
                 _stage = stage;
@@ -115,7 +115,7 @@ namespace Akka.Streams.Dsl
         /// <param name="minBackoff">Minimum (initial) duration until the child actor will started again, if it is terminated</param>
         /// <param name="maxBackoff">The exponential back-off is capped to this duration</param>
         /// <param name="randomFactor">After calculation of the exponential back-off an additional random delay based on this factor is added, e.g. `0.2` adds up to `20%` delay. In order to skip this additional delay pass in `0`.</param>
-        public static Sink<T, NotUsed> WithBackoff<T, TMat>(Func<Sink<T, TMat>> sinkFactory, TimeSpan minBackoff, TimeSpan maxBackoff, double randomFactor) 
+        public static Sink<T, NotUsed> WithBackoff<T, TMat>(Func<Sink<T, TMat>> sinkFactory, TimeSpan minBackoff, TimeSpan maxBackoff, double randomFactor)
             => Sink.FromGraph(new RestartWithBackoffSink<T, TMat>(sinkFactory, minBackoff, maxBackoff, randomFactor));
     }
 
@@ -331,7 +331,7 @@ namespace Akka.Streams.Dsl
                         Complete(Out);
                     else
                     {
-                        Log.Debug("Graph out finished");
+                        if (Log.IsDebugEnabled) Log.Debug("Graph out finished");
                         OnCompleteOrFailure();
                     }
                 },
@@ -346,14 +346,14 @@ namespace Akka.Streams.Dsl
                     }
                 }));
 
-            SetHandler(Out, 
+            SetHandler(Out,
                 onPull: () => sinkIn.Pull(),
                 onDownstreamFinish: () =>
                 {
                     _finishing = true;
                     sinkIn.Cancel();
                 });
-            
+
             return sinkIn;
         }
 
@@ -377,13 +377,13 @@ namespace Akka.Streams.Dsl
                         Cancel(In);
                     else
                     {
-                        Log.Debug("Graph in finished");
+                        if (Log.IsDebugEnabled) Log.Debug("Graph in finished");
                         OnCompleteOrFailure();
                     }
                 }
             ));
 
-            SetHandler(In, 
+            SetHandler(In,
                 onPush: () =>
                 {
                     if (sourceOut.IsAvailable)
@@ -408,12 +408,12 @@ namespace Akka.Streams.Dsl
             // Check if the last start attempt was more than the minimum backoff
             if (_resetDeadline.IsOverdue)
             {
-                Log.Debug($"Last restart attempt was more than {_minBackoff} ago, resetting restart count");
+                if (Log.IsDebugEnabled) Log.Debug($"Last restart attempt was more than {_minBackoff} ago, resetting restart count");
                 _restartCount = 0;
             }
 
             var restartDelay = BackoffSupervisor.CalculateDelay(_restartCount, _minBackoff, _maxBackoff, _randomFactor);
-            Log.Debug($"Restarting graph in {restartDelay}");
+            if (Log.IsDebugEnabled) Log.Debug($"Restarting graph in {restartDelay}");
             ScheduleOnce("RestartTimer", restartDelay);
             _restartCount += 1;
             // And while we wait, we go into backoff mode

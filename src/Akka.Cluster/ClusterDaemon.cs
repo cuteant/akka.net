@@ -398,7 +398,7 @@ namespace Akka.Cluster
             {
                 if (ReferenceEquals(null, obj)) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return obj is ExitingConfirmed && Equals((ExitingConfirmed) obj);
+                return obj is ExitingConfirmed && Equals((ExitingConfirmed)obj);
             }
 
             /// <inheritdoc/>
@@ -1314,7 +1314,7 @@ namespace Akka.Cluster
             {
                 var ge = message as GossipEnvelope;
                 var receivedType = ReceiveGossip(ge);
-                if(_cluster.Settings.VerboseGossipReceivedLogging)
+                if (_cluster.Settings.VerboseGossipReceivedLogging)
                     _log.Debug("Cluster Node [{0}] - Received gossip from [{1}] which was {2}.", _cluster.SelfAddress, ge.From, receivedType);
             }
             else if (message is GossipStatus)
@@ -1388,7 +1388,7 @@ namespace Akka.Cluster
             }
             else if (message is InternalClusterAction.ExitingConfirmed)
             {
-                var c = (InternalClusterAction.ExitingConfirmed) message;
+                var c = (InternalClusterAction.ExitingConfirmed)message;
                 ReceiveExitingConfirmed(c.Address);
             }
             else if (ReceiveExitingCompleted(message)) { }
@@ -1823,31 +1823,32 @@ namespace Akka.Cluster
             var remoteGossip = envelope.Gossip;
             var localGossip = _latestGossip;
 
+            var debugEnabled = _log.IsDebugEnabled;
             if (remoteGossip.Equals(Gossip.Empty))
             {
-                _log.Debug("Cluster Node [{0}] - Ignoring received gossip from [{1}] to protect against overload",
-                    _cluster.SelfAddress, from);
+                if (debugEnabled) _log.Debug("Cluster Node [{0}] - Ignoring received gossip from [{1}] to protect against overload",
+                     _cluster.SelfAddress, from);
                 return ReceiveGossipType.Ignored;
             }
             if (!envelope.To.Equals(SelfUniqueAddress))
             {
-                _log.Info("Ignoring received gossip intended for someone else, from [{0}] to [{1}]",
-                    from.Address, envelope.To);
+                if (_logInfo) _log.Info("Ignoring received gossip intended for someone else, from [{0}] to [{1}]",
+                     from.Address, envelope.To);
                 return ReceiveGossipType.Ignored;
             }
             if (!localGossip.Overview.Reachability.IsReachable(SelfUniqueAddress, from))
             {
-                _log.Info("Ignoring received gossip from unreachable [{0}]", from);
+                if (_logInfo) _log.Info("Ignoring received gossip from unreachable [{0}]", from);
                 return ReceiveGossipType.Ignored;
             }
             if (localGossip.Members.All(m => !m.UniqueAddress.Equals(from)))
             {
-                _log.Debug("Cluster Node [{0}] - Ignoring received gossip from unknown [{1}]", _cluster.SelfAddress, from);
+                if (debugEnabled) _log.Debug("Cluster Node [{0}] - Ignoring received gossip from unknown [{1}]", _cluster.SelfAddress, from);
                 return ReceiveGossipType.Ignored;
             }
             if (remoteGossip.Members.All(m => !m.UniqueAddress.Equals(SelfUniqueAddress)))
             {
-                _log.Debug("Ignoring received gossip that does not contain myself, from [{0}]", from);
+                if (debugEnabled) _log.Debug("Ignoring received gossip that does not contain myself, from [{0}]", from);
                 return ReceiveGossipType.Ignored;
             }
 
@@ -1887,7 +1888,7 @@ namespace Akka.Cluster
                     {
                         if (Gossip.RemoveUnreachableWithMemberStatus.Contains(m.Status) && !remoteGossip.Members.Contains(m))
                         {
-                            _log.Debug("Cluster Node [{0}] - Pruned conflicting local gossip: {1}", _cluster.SelfAddress, m);
+                            if (_log.IsDebugEnabled) _log.Debug("Cluster Node [{0}] - Pruned conflicting local gossip: {1}", _cluster.SelfAddress, m);
                             return g.Prune(VectorClock.Node.Create(VclockName(m.UniqueAddress)));
                         }
                         return g;
@@ -1897,7 +1898,7 @@ namespace Akka.Cluster
                     {
                         if (Gossip.RemoveUnreachableWithMemberStatus.Contains(m.Status) && !localGossip.Members.Contains(m))
                         {
-                            _log.Debug("Cluster Node [{0}] - Pruned conflicting remote gossip: {1}", _cluster.SelfAddress, m);
+                            if (_log.IsDebugEnabled) _log.Debug("Cluster Node [{0}] - Pruned conflicting remote gossip: {1}", _cluster.SelfAddress, m);
                             return g.Prune(VectorClock.Node.Create(VclockName(m.UniqueAddress)));
                         }
                         return g;
@@ -1931,12 +1932,15 @@ namespace Akka.Cluster
                     _cluster.FailureDetector.Remove(node.Address);
             }
 
-            _log.Debug("Cluster Node [{0}] - Receiving gossip from [{1}]", _cluster.SelfAddress, from);
-
-            if (comparison == VectorClock.Ordering.Concurrent)
+            if (debugEnabled)
             {
-                _log.Debug(@"""Couldn't establish a causal relationship between ""remote"" gossip and ""local"" gossip - Remote[{0}] - Local[{1}] - merged them into [{2}]""",
-                    remoteGossip, localGossip, winningGossip);
+                _log.Debug("Cluster Node [{0}] - Receiving gossip from [{1}]", _cluster.SelfAddress, from);
+
+                if (comparison == VectorClock.Ordering.Concurrent)
+                {
+                    _log.Debug(@"""Couldn't establish a causal relationship between ""remote"" gossip and ""local"" gossip - Remote[{0}] - Local[{1}] - merged them into [{2}]""",
+                        remoteGossip, localGossip, winningGossip);
+                }
             }
 
             if (_statsEnabled)

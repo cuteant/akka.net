@@ -286,8 +286,9 @@ namespace Akka.Remote
             /// </summary>
             /// <param name="watching">TBD</param>
             /// <param name="watchingNodes">TBD</param>
-            public Stats(int watching, int watchingNodes) : this(watching, watchingNodes, 
-                ImmutableHashSet<Tuple<IActorRef, IActorRef>>.Empty, ImmutableHashSet<Address>.Empty) { }
+            public Stats(int watching, int watchingNodes) : this(watching, watchingNodes,
+                ImmutableHashSet<Tuple<IActorRef, IActorRef>>.Empty, ImmutableHashSet<Address>.Empty)
+            { }
 
             /// <summary>
             /// TBD
@@ -375,8 +376,7 @@ namespace Akka.Remote
         {
             _failureDetector = failureDetector;
             _heartbeatExpectedResponseAfter = heartbeatExpectedResponseAfter;
-            var systemProvider = Context.System.AsInstanceOf<ExtendedActorSystem>().Provider as IRemoteActorRefProvider;
-            if (systemProvider != null) _remoteProvider = systemProvider;
+            if (Context.System.AsInstanceOf<ExtendedActorSystem>().Provider is IRemoteActorRefProvider systemProvider) _remoteProvider = systemProvider;
             else throw new ConfigurationException(
                 $"ActorSystem {Context.System} needs to have a 'RemoteActorRefProvider' enabled in the configuration, current uses {Context.System.AsInstanceOf<ExtendedActorSystem>().Provider.GetType().FullName}");
 
@@ -389,11 +389,11 @@ namespace Akka.Remote
         private readonly IScheduler _scheduler = Context.System.Scheduler;
         private readonly IRemoteActorRefProvider _remoteProvider;
         private readonly HeartbeatRsp _selfHeartbeatRspMsg = new HeartbeatRsp(AddressUidExtension.Uid(Context.System));
-       
+
         /// <summary>
         ///  Actors that this node is watching, map of watchee --> Set(watchers)
         /// </summary>
-        protected readonly Dictionary<IInternalActorRef, HashSet<IInternalActorRef>>  Watching = new Dictionary<IInternalActorRef, HashSet<IInternalActorRef>>();
+        protected readonly Dictionary<IInternalActorRef, HashSet<IInternalActorRef>> Watching = new Dictionary<IInternalActorRef, HashSet<IInternalActorRef>>();
 
         /// <summary>
         /// Nodes that this node is watching, i.e. expecting heartbeats from these nodes. Map of address --> Set(watchee) on this address.
@@ -435,19 +435,16 @@ namespace Akka.Remote
             else if (message is HeartbeatRsp) ReceiveHeartbeatRsp(((HeartbeatRsp)message).AddressUid);
             else if (message is ReapUnreachableTick) ReapUnreachable();
             else if (message is ExpectedFirstHeartbeat) TriggerFirstHeartbeat(((ExpectedFirstHeartbeat)message).From);
-            else if (message is WatchRemote)
+            else if (message is WatchRemote watchRemote)
             {
-                var watchRemote = (WatchRemote)message;
                 AddWatching(watchRemote.Watchee, watchRemote.Watcher);
             }
-            else if (message is UnwatchRemote)
+            else if (message is UnwatchRemote unwatchRemote)
             {
-                var unwatchRemote = (UnwatchRemote)message;
                 RemoveWatch(unwatchRemote.Watchee, unwatchRemote.Watcher);
             }
-            else if (message is Terminated)
+            else if (message is Terminated t)
             {
-                var t = (Terminated)message;
                 ProcessTerminated(t.ActorRef.AsInstanceOf<IInternalActorRef>(), t.ExistenceConfirmed, t.AddressTerminated);
             }
             // test purpose
@@ -543,8 +540,8 @@ namespace Akka.Remote
         protected void AddWatching(IInternalActorRef watchee, IInternalActorRef watcher)
         {
             // TODO: replace with Code Contracts assertion
-            if(watcher.Equals(Self)) throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!");
-            Log.Debug("Watching: [{0} -> {1}]", watcher.Path, watchee.Path);
+            if (watcher.Equals(Self)) throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!");
+            if (Log.IsDebugEnabled) Log.Debug("Watching: [{0} -> {1}]", watcher.Path, watchee.Path);
 
             if (Watching.TryGetValue(watchee, out var watching))
                 watching.Add(watcher);
@@ -586,14 +583,14 @@ namespace Akka.Remote
         protected void RemoveWatch(IInternalActorRef watchee, IInternalActorRef watcher)
         {
             if (watcher.Equals(Self)) throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!");
-            Log.Debug($"Unwatching: [{watcher.Path} -> {watchee.Path}]");
+            if (Log.IsDebugEnabled) Log.Debug($"Unwatching: [{watcher.Path} -> {watchee.Path}]");
             if (Watching.TryGetValue(watchee, out var watchers))
             {
                 watchers.Remove(watcher);
                 if (!watchers.Any())
                 {
                     // clean up self watch when no more watchers of this watchee
-                    Log.Debug("Cleanup self watch of [{0}]", watchee.Path);
+                    if (Log.IsDebugEnabled) Log.Debug("Cleanup self watch of [{0}]", watchee.Path);
                     Context.Unwatch(watchee);
                     RemoveWatchee(watchee);
                 }
@@ -614,7 +611,7 @@ namespace Akka.Remote
                 if (!watchees.Any())
                 {
                     // unwatched last watchee on that node
-                    Log.Debug("Unwatched last watchee of node: [{0}]", watcheeAddress);
+                    if (Log.IsDebugEnabled) Log.Debug("Unwatched last watchee of node: [{0}]", watcheeAddress);
                     UnwatchNode(watcheeAddress);
                 }
             }
@@ -631,10 +628,10 @@ namespace Akka.Remote
             _failureDetector.Remove(watcheeAddress);
         }
 
-      
+
         private void ProcessTerminated(IInternalActorRef watchee, bool existenceConfirmed, bool addressTerminated)
         {
-            Log.Debug("Watchee terminated: [{0}]", watchee.Path);
+            if (Log.IsDebugEnabled) Log.Debug("Watchee terminated: [{0}]", watchee.Path);
 
             // When watchee is stopped it sends DeathWatchNotification to this RemoteWatcher,
             // which will propagate it to all watchers of this watchee.
@@ -660,11 +657,11 @@ namespace Akka.Remote
                 {
                     if (_failureDetector.IsMonitoring(a))
                     {
-                        Log.Debug("Sending Heartbeat to [{0}]", a);
+                        if (Log.IsDebugEnabled) Log.Debug("Sending Heartbeat to [{0}]", a);
                     }
                     else
                     {
-                        Log.Debug("Sending first Heartbeat to [{0}]", a);
+                        if (Log.IsDebugEnabled) Log.Debug("Sending first Heartbeat to [{0}]", a);
                         // schedule the expected first heartbeat for later, which will give the
                         // other side a chance to reply, and also trigger some resends if needed
                         _scheduler.ScheduleTellOnce(_heartbeatExpectedResponseAfter, Self, new ExpectedFirstHeartbeat(a), Self);
@@ -678,7 +675,7 @@ namespace Akka.Remote
         {
             if (WatcheeByNodes.ContainsKey(address) && !_failureDetector.IsMonitoring(address))
             {
-                Log.Debug("Trigger extra expected heartbeat from [{0}]", address);
+                if (Log.IsDebugEnabled) Log.Debug("Trigger extra expected heartbeat from [{0}]", address);
                 _failureDetector.Heartbeat(address);
             }
         }
@@ -696,7 +693,7 @@ namespace Akka.Remote
             var watcher = Self.AsInstanceOf<IInternalActorRef>();
             foreach (var watchee in WatcheeByNodes[address])
             {
-                Log.Debug("Re-watch [{0} -> {1}]", watcher.Path, watchee.Path);
+                if (Log.IsDebugEnabled) Log.Debug("Re-watch [{0} -> {1}]", watcher.Path, watchee.Path);
                 watchee.SendSystemMessage(new Watch(watchee, watcher)); // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
             }
         }

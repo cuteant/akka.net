@@ -95,7 +95,7 @@ namespace Akka.IO
                 ReceiveAsync();
                 Context.Become(Connected);
             });
-            Log.Debug("Successfully connected to [{0}]", _connect.RemoteAddress);
+            if (Log.IsDebugEnabled) Log.Debug("Successfully connected to [{0}]", _connect.RemoteAddress);
         }
 
         protected override bool Receive(object message) => throw new NotSupportedException();
@@ -119,12 +119,12 @@ namespace Akka.IO
                 case SocketReceived socketReceived: DoRead(socketReceived, _connect.Handler); return true;
                 case Disconnect _:
                     {
-                        Log.Debug("Closing UDP connection to [{0}]", _connect.RemoteAddress);
+                        if (Log.IsDebugEnabled) Log.Debug("Closing UDP connection to [{0}]", _connect.RemoteAddress);
 
                         _socket.Dispose();
 
                         Sender.Tell(Disconnected.Instance);
-                        Log.Debug("Connection closed to [{0}], stopping listener", _connect.RemoteAddress);
+                        if (Log.IsDebugEnabled) Log.Debug("Connection closed to [{0}], stopping listener", _connect.RemoteAddress);
                         Context.Stop(Self);
                         return true;
                     }
@@ -207,14 +207,14 @@ namespace Akka.IO
         /// </summary>
         protected override void PostStop()
         {
-            Log.Debug("Closing DatagramChannel after being stopped");
+            if (Log.IsDebugEnabled) Log.Debug("Closing DatagramChannel after being stopped");
             try
             {
                 _socket.Dispose();
             }
             catch (Exception ex)
             {
-                Log.Debug("Error closing DatagramChannel: {0}", ex);
+                if (Log.IsDebugEnabled) Log.Debug("Error closing DatagramChannel: {0}", ex);
             }
         }
 
