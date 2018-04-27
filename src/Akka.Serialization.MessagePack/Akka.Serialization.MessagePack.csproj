@@ -4,8 +4,8 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
-    <RootNamespace>Akka.Serialization.Hyperion</RootNamespace>
-    <AssemblyName>Akka.Serialization.Hyperion</AssemblyName>
+    <RootNamespace>Akka.Serialization.MessagePack</RootNamespace>
+    <AssemblyName>Akka.Serialization.MessagePack</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
   </PropertyGroup>
@@ -13,15 +13,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>Akka.Serialization.Hyperion.Unofficial</PackageId>
-    <Title>Akka.Serialization.Hyperion (Unofficial)</Title>
-    <Description>Hyperion serializer for Akka.NET</Description>
-    <PackageTags>$(AkkaPackageTags);hyperion;serializer;serialize</PackageTags>
+    <PackageId>Akka.Serialization.MessagePack.Unofficial</PackageId>
+    <Title>Akka.Serialization.MessagePack (Unofficial)</Title>
+    <Description>MessagePack serializer for Akka.NET</Description>
+    <PackageTags>akka;actors;actor model;Akka;concurrency;messagepack;serializer;serialization</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="reference.conf" />
-    <PackageReference Include="CuteAnt.Extensions.Serialization.Hyperion" Version="$(CuteAntExtensionsSerializationHyperionPackageVersion)" />
+    <PackageReference Include="CuteAnt.Extensions.Serialization.MessagePack" Version="$(CuteAntExtensionsSerializationMessagePackPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,0 +1,23 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.Wings</RootNamespace>
+    <AssemblyName>Akka.Persistence.Wings</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Persistence.Wings</PackageId>
+    <Title>Akka.Persistence.Wings</Title>
+    <Description>Akka.NET Persistence journal and snapshot store backed by Wings.</Description>
+    <PackageTags>$(AkkaPackageTags);persistence;eventsource;Wings</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Persistence\Akka.Persistence.csproj" />
+  </ItemGroup>
+
+</Project>

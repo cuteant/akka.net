@@ -13,6 +13,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
 using CuteAnt.Reflection;
+using CuteAnt.Extensions.Serialization;
 using Hyperion;
 
 // ReSharper disable once CheckNamespace
@@ -28,7 +29,7 @@ namespace Akka.Serialization
         /// </summary>
         public readonly HyperionSerializerSettings Settings;
 
-        private readonly Hyperion.Serializer _serializer;
+        private readonly HyperionMessageFormatter _serializer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="HyperionSerializer"/> class.
@@ -67,7 +68,7 @@ namespace Akka.Serialization
             var provider = CreateKnownTypesProvider(system, settings.KnownTypesProvider);
 
             _serializer =
-                new Hyperion.Serializer(new SerializerOptions(
+                new HyperionMessageFormatter(new SerializerOptions(
                     preserveObjectReferences: settings.PreserveObjectReferences,
                     versionTolerance: settings.VersionTolerance,
                     surrogates: new[] { akkaSurrogate },
@@ -92,11 +93,12 @@ namespace Akka.Serialization
         /// <returns>A byte array containing the serialized object </returns>
         public override byte[] ToBinary(object obj)
         {
-            using (var ms = new MemoryStream())
-            {
-                _serializer.Serialize(obj, ms);
-                return ms.ToArray();
-            }
+            //using (var ms = new MemoryStream())
+            //{
+            //    _serializer.Serialize(obj, ms);
+            //    return ms.ToArray();
+            //}
+            return _serializer.SerializeObject(obj);
         }
 
         /// <summary>
@@ -107,11 +109,12 @@ namespace Akka.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, Type type)
         {
-            using (var ms = new MemoryStream(bytes))
-            {
-                var res = _serializer.Deserialize<object>(ms);
-                return res;
-            }
+            //using (var ms = new MemoryStream(bytes))
+            //{
+            //    var res = _serializer.Deserialize<object>(ms);
+            //    return res;
+            //}
+            return _serializer.Deserialize(type, bytes);
         }
 
         private IKnownTypesProvider CreateKnownTypesProvider(ExtendedActorSystem system, Type type)

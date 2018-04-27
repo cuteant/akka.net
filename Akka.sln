@@ -186,6 +186,16 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.MultiNodeTestRunner", 
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.MultiNodeTestRunner.Shared.Tests", "test\Akka.MultiNodeTestRunner.Shared.Tests\Akka.MultiNodeTestRunner.Shared.Tests.csproj", "{18CBC5E5-7E45-44BC-908B-BD4487D9FA47}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.MessagePack", "src\Akka.Serialization.MessagePack\Akka.Serialization.MessagePack.csproj", "{81307693-1CFE-4D41-BD15-38B3F5A8CBE7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.MessagePack.Tests", "test\Akka.Serialization.MessagePack.Tests\Akka.Serialization.MessagePack.Tests.csproj", "{3582D9F4-B048-431E-8EA6-01BCE0ACF87A}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Transports", "Transports", "{29CCF3CA-93F9-4ACC-8672-2D74C35F7406}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Remote.Transport.Grpc", "src\Akka.Remote.Transport.Grpc\Akka.Remote.Transport.Grpc.csproj", "{4F631601-3F2A-42E5-AA23-26567AA82B28}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.Wings", "src\Akka.Persistence.Wings\Akka.Persistence.Wings.csproj", "{AF18182B-8FD3-40EC-8B36-FCB991F28931}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -444,6 +454,22 @@ Global
 		{18CBC5E5-7E45-44BC-908B-BD4487D9FA47}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{18CBC5E5-7E45-44BC-908B-BD4487D9FA47}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{18CBC5E5-7E45-44BC-908B-BD4487D9FA47}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81307693-1CFE-4D41-BD15-38B3F5A8CBE7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81307693-1CFE-4D41-BD15-38B3F5A8CBE7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81307693-1CFE-4D41-BD15-38B3F5A8CBE7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81307693-1CFE-4D41-BD15-38B3F5A8CBE7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{3582D9F4-B048-431E-8EA6-01BCE0ACF87A}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{3582D9F4-B048-431E-8EA6-01BCE0ACF87A}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{3582D9F4-B048-431E-8EA6-01BCE0ACF87A}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{3582D9F4-B048-431E-8EA6-01BCE0ACF87A}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4F631601-3F2A-42E5-AA23-26567AA82B28}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4F631601-3F2A-42E5-AA23-26567AA82B28}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4F631601-3F2A-42E5-AA23-26567AA82B28}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4F631601-3F2A-42E5-AA23-26567AA82B28}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AF18182B-8FD3-40EC-8B36-FCB991F28931}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AF18182B-8FD3-40EC-8B36-FCB991F28931}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AF18182B-8FD3-40EC-8B36-FCB991F28931}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AF18182B-8FD3-40EC-8B36-FCB991F28931}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -521,6 +547,11 @@ Global
 		{87A3761D-45B3-4269-9E9D-E274D469B22F} = {C6810336-4365-4413-A93E-A10DE0051170}
 		{C6B0DD26-595C-4DB5-964E-4999B99C0BD8} = {C6810336-4365-4413-A93E-A10DE0051170}
 		{18CBC5E5-7E45-44BC-908B-BD4487D9FA47} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+		{81307693-1CFE-4D41-BD15-38B3F5A8CBE7} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
+		{3582D9F4-B048-431E-8EA6-01BCE0ACF87A} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+		{29CCF3CA-93F9-4ACC-8672-2D74C35F7406} = {588C1513-FAB6-42C3-B6FC-3485F13620CF}
+		{4F631601-3F2A-42E5-AA23-26567AA82B28} = {29CCF3CA-93F9-4ACC-8672-2D74C35F7406}
+		{AF18182B-8FD3-40EC-8B36-FCB991F28931} = {264C22A4-CAFC-41F6-B82C-4DDC5C196767}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

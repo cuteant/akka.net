@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Serialization.MessagePack.Tests</RootNamespace>
+    <AssemblyName>Akka.Serialization.MessagePack.Tests</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+ 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Serialization.MessagePack\Akka.Serialization.MessagePack.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Serialization.TestKit\Akka.Serialization.TestKit.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+  </ItemGroup>
+
+</Project>
