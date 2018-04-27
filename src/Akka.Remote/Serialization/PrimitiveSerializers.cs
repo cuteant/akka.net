@@ -7,6 +7,7 @@
 
 using System;
 using System.Text;
+using CuteAnt;
 using Akka.Actor;
 using Akka.Serialization;
 using Akka.Util;
@@ -29,20 +30,26 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
-            var str = obj as string;
-            if (str != null) return Encoding.UTF8.GetBytes(str);
-            if (obj is int) return BitConverter.GetBytes((int)obj);
-            if (obj is long) return BitConverter.GetBytes((long)obj);
+            switch (obj)
+            {
+                case string str:
+                    return Encoding.UTF8.GetBytes(str);
+                case int intValue:
+                    return BitConverter.GetBytes((int)obj);
+                case long longValue:
+                    return BitConverter.GetBytes((long)obj);
+                default:
 
-            throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+                    throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+            }
         }
 
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (type == typeof(string)) return Encoding.UTF8.GetString(bytes);
-            if (type == typeof(int)) return BitConverter.ToInt32(bytes, 0);
-            if (type == typeof(long)) return BitConverter.ToInt64(bytes, 0);
+            if (type == TypeConstants.StringType) return Encoding.UTF8.GetString(bytes);
+            if (type == TypeConstants.IntType) return BitConverter.ToInt32(bytes, 0);
+            if (type == TypeConstants.LongType) return BitConverter.ToInt64(bytes, 0);
 
             throw new ArgumentException($"Unimplemented deserialization of message with manifest [{type.TypeQualifiedName()}] in [${nameof(PrimitiveSerializers)}]");
         }

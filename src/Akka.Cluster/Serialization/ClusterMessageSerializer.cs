@@ -85,7 +85,9 @@ namespace Akka.Cluster.Serialization
         public override object FromBinary(byte[] bytes, Type type)
         {
             if (_fromBinaryMap.TryGetValue(type, out var factory))
+            {
                 return factory(bytes);
+            }
 
             throw new ArgumentException($"{nameof(ClusterMessageSerializer)} cannot deserialize object of type {type}");
         }
@@ -95,8 +97,10 @@ namespace Akka.Cluster.Serialization
         //
         private static byte[] JoinToByteArray(InternalClusterAction.Join join)
         {
-            var message = new Proto.Msg.Join();
-            message.Node = UniqueAddressToProto(join.Node);
+            var message = new Proto.Msg.Join
+            {
+                Node = UniqueAddressToProto(join.Node)
+            };
             message.Roles.AddRange(join.Roles);
             return message.ToByteArray();
         }
@@ -109,9 +113,11 @@ namespace Akka.Cluster.Serialization
 
         private static byte[] WelcomeMessageBuilder(InternalClusterAction.Welcome welcome)
         {
-            var welcomeProto = new Proto.Msg.Welcome();
-            welcomeProto.From = UniqueAddressToProto(welcome.From);
-            welcomeProto.Gossip = GossipToProto(welcome.Gossip);
+            var welcomeProto = new Proto.Msg.Welcome
+            {
+                From = UniqueAddressToProto(welcome.From),
+                Gossip = GossipToProto(welcome.Gossip)
+            };
             return welcomeProto.ToByteArray();
         }
 
@@ -126,11 +132,12 @@ namespace Akka.Cluster.Serialization
         //
         private static byte[] GossipEnvelopeToProto(GossipEnvelope gossipEnvelope)
         {
-            var message = new Proto.Msg.GossipEnvelope();
-
-            message.From = UniqueAddressToProto(gossipEnvelope.From);
-            message.To = UniqueAddressToProto(gossipEnvelope.To);
-            message.SerializedGossip = ByteString.CopyFrom(GossipToProto(gossipEnvelope.Gossip).ToByteArray());
+            var message = new Proto.Msg.GossipEnvelope
+            {
+                From = UniqueAddressToProto(gossipEnvelope.From),
+                To = UniqueAddressToProto(gossipEnvelope.To),
+                SerializedGossip = ByteString.CopyFrom(GossipToProto(gossipEnvelope.Gossip).ToByteArray())
+            };
 
             return message.ToByteArray();
         }
@@ -150,8 +157,10 @@ namespace Akka.Cluster.Serialization
             var allHashes = gossipStatus.Version.Versions.Keys.Select(x => x.ToString()).ToList();
             var hashMapping = allHashes.ZipWithIndex();
 
-            var message = new Proto.Msg.GossipStatus();
-            message.From = UniqueAddressToProto(gossipStatus.From);
+            var message = new Proto.Msg.GossipStatus
+            {
+                From = UniqueAddressToProto(gossipStatus.From)
+            };
             message.AllHashes.AddRange(allHashes);
             message.Version = VectorClockToProto(gossipStatus.Version, hashMapping);
             return message.ToByteArray();
@@ -169,9 +178,11 @@ namespace Akka.Cluster.Serialization
 
         private byte[] ClusterRouterPoolToByteArray(ClusterRouterPool clusterRouterPool)
         {
-            var message = new Proto.Msg.ClusterRouterPool();
-            message.Pool = PoolToProto(clusterRouterPool.Local);
-            message.Settings = ClusterRouterPoolSettingsToProto(clusterRouterPool.Settings);
+            var message = new Proto.Msg.ClusterRouterPool
+            {
+                Pool = PoolToProto(clusterRouterPool.Local),
+                Settings = ClusterRouterPoolSettingsToProto(clusterRouterPool.Settings)
+            };
             return message.ToByteArray();
         }
 
@@ -198,11 +209,13 @@ namespace Akka.Cluster.Serialization
 
         private static Proto.Msg.ClusterRouterPoolSettings ClusterRouterPoolSettingsToProto(ClusterRouterPoolSettings clusterRouterPoolSettings)
         {
-            var message = new Proto.Msg.ClusterRouterPoolSettings();
-            message.TotalInstances = (uint)clusterRouterPoolSettings.TotalInstances;
-            message.MaxInstancesPerNode = (uint)clusterRouterPoolSettings.MaxInstancesPerNode;
-            message.AllowLocalRoutees = clusterRouterPoolSettings.AllowLocalRoutees;
-            message.UseRole = clusterRouterPoolSettings.UseRole ?? string.Empty;
+            var message = new Proto.Msg.ClusterRouterPoolSettings
+            {
+                TotalInstances = (uint)clusterRouterPoolSettings.TotalInstances,
+                MaxInstancesPerNode = (uint)clusterRouterPoolSettings.MaxInstancesPerNode,
+                AllowLocalRoutees = clusterRouterPoolSettings.AllowLocalRoutees,
+                UseRole = clusterRouterPoolSettings.UseRole ?? string.Empty
+            };
             return message;
         }
 
@@ -233,10 +246,12 @@ namespace Akka.Cluster.Serialization
 
             Proto.Msg.Member MemberToProto(Member m)
             {
-                var protoMember = new Proto.Msg.Member();
-                protoMember.AddressIndex = MapUniqueAddress(m.UniqueAddress);
-                protoMember.UpNumber = m.UpNumber;
-                protoMember.Status = (Proto.Msg.Member.Types.MemberStatus)m.Status;
+                var protoMember = new Proto.Msg.Member
+                {
+                    AddressIndex = MapUniqueAddress(m.UniqueAddress),
+                    UpNumber = m.UpNumber,
+                    Status = (Proto.Msg.Member.Types.MemberStatus)m.Status
+                };
                 protoMember.RolesIndexes.AddRange(m.Roles.Select(s => MapWithErrorMessage(roleMapping, s, "role")));
                 return protoMember;
             }
@@ -288,16 +303,20 @@ namespace Akka.Cluster.Serialization
                 var subjectReachability = reachability.RecordsFrom(version.Key).Select(
                     r =>
                     {
-                        var sr = new Proto.Msg.SubjectReachability();
-                        sr.AddressIndex = MapWithErrorMessage(addressMapping, r.Subject, "address");
-                        sr.Status = (Proto.Msg.SubjectReachability.Types.ReachabilityStatus)r.Status;
-                        sr.Version = r.Version;
+                        var sr = new Proto.Msg.SubjectReachability
+                        {
+                            AddressIndex = MapWithErrorMessage(addressMapping, r.Subject, "address"),
+                            Status = (Proto.Msg.SubjectReachability.Types.ReachabilityStatus)r.Status,
+                            Version = r.Version
+                        };
                         return sr;
                     });
 
-                var observerReachability = new Proto.Msg.ObserverReachability();
-                observerReachability.AddressIndex = MapWithErrorMessage(addressMapping, version.Key, "address");
-                observerReachability.Version = version.Value;
+                var observerReachability = new Proto.Msg.ObserverReachability
+                {
+                    AddressIndex = MapWithErrorMessage(addressMapping, version.Key, "address"),
+                    Version = version.Value
+                };
                 observerReachability.SubjectReachability.AddRange(subjectReachability);
                 builderList.Add(observerReachability);
             }
@@ -330,9 +349,11 @@ namespace Akka.Cluster.Serialization
 
             foreach (var clock in vectorClock.Versions)
             {
-                var version = new Proto.Msg.VectorClock.Types.Version();
-                version.HashIndex = MapWithErrorMessage(hashMapping, clock.Key.ToString(), "hash");
-                version.Timestamp = clock.Value;
+                var version = new Proto.Msg.VectorClock.Types.Version
+                {
+                    HashIndex = MapWithErrorMessage(hashMapping, clock.Key.ToString(), "hash"),
+                    Timestamp = clock.Value
+                };
                 message.Versions.Add(version);
             }
             message.Timestamp = 0L;
@@ -361,11 +382,13 @@ namespace Akka.Cluster.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static AddressData AddressToProto(Address address)
         {
-            var message = new AddressData();
-            message.System = address.System;
-            message.Hostname = address.Host;
-            message.Port = (uint)(address.Port ?? 0);
-            message.Protocol = address.Protocol;
+            var message = new AddressData
+            {
+                System = address.System,
+                Hostname = address.Host,
+                Port = (uint)(address.Port ?? 0),
+                Protocol = address.Protocol
+            };
             return message;
         }
 
@@ -382,9 +405,11 @@ namespace Akka.Cluster.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Proto.Msg.UniqueAddress UniqueAddressToProto(UniqueAddress uniqueAddress)
         {
-            var message = new Proto.Msg.UniqueAddress();
-            message.Address = AddressToProto(uniqueAddress.Address);
-            message.Uid = (uint)uniqueAddress.Uid;
+            var message = new Proto.Msg.UniqueAddress
+            {
+                Address = AddressToProto(uniqueAddress.Address),
+                Uid = (uint)uniqueAddress.Uid
+            };
             return message;
         }
 
@@ -397,8 +422,7 @@ namespace Akka.Cluster.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetObjectManifest(Serializer serializer, object obj)
         {
-            var manifestSerializer = serializer as SerializerWithStringManifest;
-            if (manifestSerializer != null)
+            if (serializer is SerializerWithStringManifest manifestSerializer)
             {
                 return manifestSerializer.Manifest(obj);
             }

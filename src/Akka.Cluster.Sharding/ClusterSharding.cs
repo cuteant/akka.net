@@ -227,7 +227,7 @@ namespace Akka.Cluster.Sharding
     public class ClusterSharding : IExtension
     {
         private readonly Lazy<IActorRef> _guardian;
-        private readonly ConcurrentDictionary<string, IActorRef> _regions = new ConcurrentDictionary<string, IActorRef>();
+        private readonly ConcurrentDictionary<string, IActorRef> _regions = new ConcurrentDictionary<string, IActorRef>(StringComparer.Ordinal);
         private readonly ExtendedActorSystem _system;
         private readonly Cluster _cluster;
 

@@ -142,7 +142,7 @@ namespace Akka.Dispatch
             else
             {
                 _config = config;
-                _entryMap = new ConcurrentDictionary<string, IPathEntry>();
+                _entryMap = new ConcurrentDictionary<string, IPathEntry>(StringComparer.Ordinal);
             }
         }
 

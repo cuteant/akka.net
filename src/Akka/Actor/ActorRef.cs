@@ -655,7 +655,7 @@ namespace Akka.Actor
         private readonly IActorRefProvider _provider;
         private readonly ActorPath _path;
 
-        private readonly ConcurrentDictionary<string, IInternalActorRef> _children = new ConcurrentDictionary<string, IInternalActorRef>();
+        private readonly ConcurrentDictionary<string, IInternalActorRef> _children = new ConcurrentDictionary<string, IInternalActorRef>(StringComparer.Ordinal);
 
         /// <summary>
         /// TBD

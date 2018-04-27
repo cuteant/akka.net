@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Reflection;
 using Akka.Actor;
 using Akka.Serialization;
 using Akka.Util;
@@ -20,7 +21,7 @@ namespace Akka.Remote.Serialization
     /// </summary>
     public class ProtobufSerializer : Serializer
     {
-        private static readonly ConcurrentDictionary<string, MessageParser> TypeLookup = new ConcurrentDictionary<string, MessageParser>();
+        private static readonly ConcurrentDictionary<RuntimeTypeHandle, MessageParser> TypeLookup = new ConcurrentDictionary<RuntimeTypeHandle, MessageParser>();
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ProtobufSerializer"/> class.
@@ -36,8 +37,7 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
-            var message = obj as IMessage;
-            if (message != null)
+            if (obj is IMessage message)
             {
                 return message.ToByteArray();
             }
@@ -48,16 +48,18 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (TypeLookup.TryGetValue(type.FullName, out var parser))
+            if (TypeLookup.TryGetValue(type.TypeHandle, out var parser))
             {
                 return parser.ParseFrom(bytes);
             }
             // MethodParser is not in the cache, look it up with reflection
-            IMessage msg = ActivatorUtils.FastCreateInstance(type) as IMessage;
-            if(msg == null) throw new ArgumentException($"Can't deserialize a non-protobuf message using protobuf [{type.TypeQualifiedName()}]");
-            parser = msg.Descriptor.Parser;
-            TypeLookup.TryAdd(type.FullName, parser);
-            return parser.ParseFrom(bytes);
+            if (ActivatorUtils.FastCreateInstance(type) is IMessage msg)
+            {
+                parser = msg.Descriptor.Parser;
+                TypeLookup.TryAdd(type.TypeHandle, parser);
+                return parser.ParseFrom(bytes);
+            }
+            throw new ArgumentException($"Can't deserialize a non-protobuf message using protobuf [{type.TypeQualifiedName()}]");
         }
     }
 }

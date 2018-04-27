@@ -175,7 +175,7 @@ namespace Akka.Actor
         internal readonly List<string> OrderedPhases;
 
         private readonly ConcurrentBag<Func<Task<Done>>> _clrShutdownTasks = new ConcurrentBag<Func<Task<Done>>>();
-        private readonly ConcurrentDictionary<string, ImmutableList<Tuple<string, Func<Task<Done>>>>> _tasks = new ConcurrentDictionary<string, ImmutableList<Tuple<string, Func<Task<Done>>>>>();
+        private readonly ConcurrentDictionary<string, ImmutableList<Tuple<string, Func<Task<Done>>>>> _tasks = new ConcurrentDictionary<string, ImmutableList<Tuple<string, Func<Task<Done>>>>>(StringComparer.Ordinal);
         private readonly AtomicBoolean _runStarted = new AtomicBoolean(false);
         private readonly AtomicBoolean _clrHooksStarted = new AtomicBoolean(false);
         private readonly TaskCompletionSource<Done> _runPromise = new TaskCompletionSource<Done>();

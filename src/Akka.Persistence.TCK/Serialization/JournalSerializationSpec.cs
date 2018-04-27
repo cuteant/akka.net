@@ -166,15 +166,28 @@ namespace Akka.Persistence.TCK.Serialization
 
             public override byte[] ToBinary(object obj)
             {
-                if (obj is MyPayload myPayload) return Encoding.UTF8.GetBytes("." + myPayload.Data);
-                if (obj is MyPayload3 myPayload3) return Encoding.UTF8.GetBytes("." + myPayload3.Data);
-                throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MyPayloadSerializer)}]");
+                switch (obj)
+                {
+                    case MyPayload myPayload:
+                        return Encoding.UTF8.GetBytes("." + myPayload.Data);
+                    case MyPayload3 myPayload3:
+                        return Encoding.UTF8.GetBytes("." + myPayload3.Data);
+                    default:
+                        throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MyPayloadSerializer)}]");
+                }
             }
 
+            private static readonly Dictionary<Type, Func<byte[], object>> s_FromBinaryMap = new Dictionary<Type, Func<byte[], object>>()
+            {
+                { typeof(MyPayload), bytes => new MyPayload($"{Encoding.UTF8.GetString(bytes)}.") },
+                { typeof(MyPayload3), bytes => new MyPayload3($"{Encoding.UTF8.GetString(bytes)}.") },
+            };
             public override object FromBinary(byte[] bytes, Type type)
             {
-                if (type == typeof(MyPayload)) return new MyPayload($"{Encoding.UTF8.GetString(bytes)}.");
-                if (type == typeof(MyPayload3)) return new MyPayload3($"{Encoding.UTF8.GetString(bytes)}.");
+                if (s_FromBinaryMap.TryGetValue(type, out var factory))
+                {
+                    return factory(bytes);
+                }
                 throw new ArgumentException($"Unimplemented deserialization of message with manifest [{type}] in serializer {nameof(MyPayloadSerializer)}");
             }
         }
@@ -192,8 +205,11 @@ namespace Akka.Persistence.TCK.Serialization
 
             public override byte[] ToBinary(object obj)
             {
-                if (obj is MyPayload2)
-                    return Encoding.UTF8.GetBytes(string.Format(".{0}:{1}", ((MyPayload2)obj).Data, ((MyPayload2)obj).N));
+                if (obj is MyPayload2 payload)
+                {
+                    return Encoding.UTF8.GetBytes($".{payload.Data}:{payload.N}");
+                }
+
                 return null;
             }
 
@@ -204,14 +220,17 @@ namespace Akka.Persistence.TCK.Serialization
 
             public override object FromBinary(byte[] bytes, string manifest)
             {
-                if (manifest.Equals(_manifestV2))
+                if (string.Equals(manifest, _manifestV2, StringComparison.Ordinal))
                 {
                     var parts = Encoding.UTF8.GetString(bytes).Split(':');
                     return new MyPayload2(parts[0] + ".", int.Parse(parts[1]));
                 }
-                if (manifest.Equals(_manifestV1))
+                if (string.Equals(manifest, _manifestV1, StringComparison.Ordinal))
+                {
                     return new MyPayload2(Encoding.UTF8.GetString(bytes) + ".", 0);
-                throw new ArgumentException("unexpected manifest " + manifest);
+                }
+
+                throw new ArgumentException($"unexpected manifest {manifest}");
             }
         }
 
@@ -221,13 +240,13 @@ namespace Akka.Persistence.TCK.Serialization
             {
                 switch (evt)
                 {
-                    case MyPayload3 p when p.Data.Equals("item1"):
+                    case MyPayload3 p when string.Equals(p.Data, "item1", StringComparison.Ordinal):
                         return "First-Manifest";
                     default:
                         return string.Empty;
                 }
             }
-            
+
             public object ToJournal(object evt)
             {
                 return evt;

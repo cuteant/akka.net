@@ -1,13 +1,13 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="MsgPackSerializerSettings.cs" company="Akka.NET Project">
-//     Copyright (C) 2017 Akka.NET Contrib <https://github.com/AkkaNetContrib/Akka.Serialization.MessagePack>
+//     Copyright (C) 2017 Akka.NET Contrib <https://github.com/AkkaNetContrib/Akka.Serialization>
 // </copyright>
 //-----------------------------------------------------------------------
 
 using System;
 using Akka.Configuration;
 
-namespace Akka.Serialization.MessagePack
+namespace Akka.Serialization
 {
     public class MsgPackSerializerSettings
     {

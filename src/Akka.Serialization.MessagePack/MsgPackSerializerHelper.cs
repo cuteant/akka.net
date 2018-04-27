@@ -3,7 +3,7 @@ using Akka.Actor;
 using CuteAnt.Extensions.Serialization;
 using MessagePack;
 
-namespace Akka.Serialization.MessagePack.Resolvers
+namespace Akka.Serialization.Resolvers
 {
     internal sealed class MsgPackSerializerHelper
     {

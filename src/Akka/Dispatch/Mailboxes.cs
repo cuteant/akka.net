@@ -42,7 +42,7 @@ namespace Akka.Dispatch
         private readonly Dictionary<Type, string> _mailboxBindings;
         private readonly Config _defaultMailboxConfig;
 
-        private readonly ConcurrentDictionary<string, MailboxType> _mailboxTypeConfigurators = new ConcurrentDictionary<string, MailboxType>();
+        private readonly ConcurrentDictionary<string, MailboxType> _mailboxTypeConfigurators = new ConcurrentDictionary<string, MailboxType>(StringComparer.Ordinal);
 
         private Settings Settings => _system.Settings;
 

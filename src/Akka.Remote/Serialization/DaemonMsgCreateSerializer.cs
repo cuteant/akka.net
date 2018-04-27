@@ -36,14 +36,15 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
-            var msg = obj as DaemonMsgCreate;
-            if (msg != null)
+            if (obj is DaemonMsgCreate msg)
             {
-                var message = new Proto.Msg.DaemonMsgCreateData();
-                message.Props = PropsToProto(msg.Props);
-                message.Deploy = DeployToProto(msg.Deploy);
-                message.Path = msg.Path;
-                message.Supervisor = SerializeActorRef(msg.Supervisor);
+                var message = new Proto.Msg.DaemonMsgCreateData
+                {
+                    Props = PropsToProto(msg.Props),
+                    Deploy = DeployToProto(msg.Deploy),
+                    Path = msg.Path,
+                    Supervisor = SerializeActorRef(msg.Supervisor)
+                };
 
                 return message.ToByteArray();
             }
@@ -68,9 +69,11 @@ namespace Akka.Remote.Serialization
         //
         private Proto.Msg.PropsData PropsToProto(Props props)
         {
-            var propsBuilder = new Proto.Msg.PropsData();
-            propsBuilder.Clazz = props.Type.TypeQualifiedName();
-            propsBuilder.Deploy = DeployToProto(props.Deploy);
+            var propsBuilder = new Proto.Msg.PropsData
+            {
+                Clazz = props.Type.TypeQualifiedName(),
+                Deploy = DeployToProto(props.Deploy)
+            };
             foreach (object arg in props.Arguments)
             {
                 var tuple = Serialize(arg);
@@ -105,8 +108,10 @@ namespace Akka.Remote.Serialization
         //
         private Proto.Msg.DeployData DeployToProto(Deploy deploy)
         {
-            var deployBuilder = new Proto.Msg.DeployData();
-            deployBuilder.Path = deploy.Path;
+            var deployBuilder = new Proto.Msg.DeployData
+            {
+                Path = deploy.Path
+            };
 
             {
                 var tuple = Serialize(deploy.Config);
@@ -211,8 +216,7 @@ namespace Akka.Remote.Serialization
             bool hasManifest;
             string manifest;
 
-            var serializerWithStringManifest = serializer as SerializerWithStringManifest;
-            if (serializerWithStringManifest != null)
+            if (serializer is SerializerWithStringManifest serializerWithStringManifest)
             {
                 var ser = serializerWithStringManifest;
                 hasManifest = true;

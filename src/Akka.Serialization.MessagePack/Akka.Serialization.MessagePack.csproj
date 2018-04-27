@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
-    <RootNamespace>Akka.Serialization.MessagePack</RootNamespace>
+    <RootNamespace>Akka.Serialization</RootNamespace>
     <AssemblyName>Akka.Serialization.MessagePack</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>

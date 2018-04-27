@@ -66,8 +66,8 @@ namespace Akka.Persistence.Journal
     /// </summary>
     public class MemoryJournal : AsyncWriteJournal
     {
-        private readonly ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> _messages = new ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>>();
-        private readonly ConcurrentDictionary<string, long> _meta = new ConcurrentDictionary<string, long>();
+        private readonly ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> _messages = new ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>>(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, long> _meta = new ConcurrentDictionary<string, long>(StringComparer.Ordinal);
 
         /// <summary>
         /// TBD
@@ -243,7 +243,7 @@ namespace Akka.Persistence.Journal
     /// </summary>
     public class SharedMemoryJournal : MemoryJournal
     {
-        private static readonly ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> SharedMessages = new ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>>();
+        private static readonly ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> SharedMessages = new ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>>(StringComparer.Ordinal);
 
         /// <summary>
         /// TBD

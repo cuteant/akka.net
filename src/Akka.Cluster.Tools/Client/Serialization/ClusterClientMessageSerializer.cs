@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Serialization;
+using CuteAnt;
 using Google.Protobuf;
 
 namespace Akka.Cluster.Tools.Client.Serialization
@@ -24,7 +25,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
         private const string HeartbeatManifest = "C";
         private const string HeartbeatRspManifest = "D";
 
-        private static readonly byte[] EmptyBytes = {};
+        private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
         private readonly IDictionary<string, Func<byte[], IClusterClientMessage>> _fromBinaryMap;
 
         /// <summary>
@@ -54,12 +55,17 @@ namespace Akka.Cluster.Tools.Client.Serialization
         /// <returns>A byte array containing the serialized object</returns>
         public override byte[] ToBinary(object obj)
         {
-            if (obj is ClusterReceptionist.Contacts) return ContactsToProto(obj as ClusterReceptionist.Contacts);
-            if (obj is ClusterReceptionist.GetContacts) return EmptyBytes;
-            if (obj is ClusterReceptionist.Heartbeat) return EmptyBytes;
-            if (obj is ClusterReceptionist.HeartbeatRsp) return EmptyBytes;
-
-            throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+            switch (obj)
+            {
+                case ClusterReceptionist.Contacts contacts:
+                    return ContactsToProto(obj as ClusterReceptionist.Contacts);
+                case ClusterReceptionist.GetContacts getContacts:
+                case ClusterReceptionist.Heartbeat heartbeat:
+                case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
+                    return EmptyBytes;
+                default:
+                    throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+            }
         }
 
         /// <summary>
@@ -74,7 +80,9 @@ namespace Akka.Cluster.Tools.Client.Serialization
         public override object FromBinary(byte[] bytes, string manifest)
         {
             if (_fromBinaryMap.TryGetValue(manifest, out var deserializer))
+            {
                 return deserializer(bytes);
+            }
 
             throw new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(ClusterClientMessageSerializer)}");
         }
@@ -92,12 +100,19 @@ namespace Akka.Cluster.Tools.Client.Serialization
         /// <returns>The manifest needed for the deserialization of the specified <paramref name="o" />.</returns>
         public override string Manifest(object o)
         {
-            if (o is ClusterReceptionist.Contacts) return ContactsManifest;
-            if (o is ClusterReceptionist.GetContacts) return GetContactsManifest;
-            if (o is ClusterReceptionist.Heartbeat) return HeartbeatManifest;
-            if (o is ClusterReceptionist.HeartbeatRsp) return HeartbeatRspManifest;
-
-            throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+            switch (o)
+            {
+                case ClusterReceptionist.Contacts contacts:
+                    return ContactsManifest;
+                case ClusterReceptionist.GetContacts getContacts:
+                    return GetContactsManifest;
+                case ClusterReceptionist.Heartbeat heartbeat:
+                    return HeartbeatManifest;
+                case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
+                    return HeartbeatRspManifest;
+                default:
+                    throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+            }
         }
 
         private byte[] ContactsToProto(ClusterReceptionist.Contacts message)

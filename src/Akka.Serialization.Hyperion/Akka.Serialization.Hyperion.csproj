@@ -4,7 +4,7 @@
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
-    <RootNamespace>Akka.Serialization.Hyperion</RootNamespace>
+    <RootNamespace>Akka.Serialization</RootNamespace>
     <AssemblyName>Akka.Serialization.Hyperion</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>

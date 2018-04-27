@@ -9,6 +9,7 @@ using System;
 using System.IO;
 using Akka.Actor;
 using Akka.Util;
+using CuteAnt.Buffers;
 using Hyperion;
 using Serializer = Akka.Serialization.Serializer;
 
@@ -41,6 +42,7 @@ namespace Akka.DistributedData.Serialization
         /// </summary>
         public override bool IncludeManifest => false;
 
+        private const int c_initialBufferSize = 1024 * 64;
         /// <summary>
         /// Serializes the given object into a byte array
         /// </summary>
@@ -48,10 +50,13 @@ namespace Akka.DistributedData.Serialization
         /// <returns>A byte array containing the serialized object </returns>
         public override byte[] ToBinary(object obj)
         {
-            using (var ms = new MemoryStream())
+            using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
-                _serializer.Serialize(obj, ms);
-                return ms.ToArray();
+                var outputStream = pooledStream.Object;
+                outputStream.Reinitialize(c_initialBufferSize);
+
+                _serializer.Serialize(obj, outputStream);
+                return outputStream.ToByteArray();
             }
         }
 

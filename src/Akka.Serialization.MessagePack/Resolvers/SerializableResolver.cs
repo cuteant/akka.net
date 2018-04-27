@@ -1,6 +1,6 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="SerializableResolver.cs" company="Akka.NET Project">
-//     Copyright (C) 2017 Akka.NET Contrib <https://github.com/AkkaNetContrib/Akka.Serialization.MessagePack>
+//     Copyright (C) 2017 Akka.NET Contrib <https://github.com/AkkaNetContrib/Akka.Serialization>
 // </copyright>
 //-----------------------------------------------------------------------
 #if SERIALIZATION
@@ -11,7 +11,7 @@ using Akka.Util.Internal;
 using MessagePack;
 using MessagePack.Formatters;
 
-namespace Akka.Serialization.MessagePack.Resolvers
+namespace Akka.Serialization.Resolvers
 {
     public class SerializableResolver : IFormatterResolver
     {

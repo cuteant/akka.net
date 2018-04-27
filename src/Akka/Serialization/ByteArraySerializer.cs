@@ -37,8 +37,8 @@ namespace Akka.Serialization
         /// <returns>A byte array containing the serialized object</returns>
         public override byte[] ToBinary(object obj)
         {
-            if (obj == null) { return null; }
             if (obj is byte[] bts) { return bts; }
+            if (obj == null) { return null; }
             throw new NotSupportedException("The object to convert is not a byte array.");
         }
 

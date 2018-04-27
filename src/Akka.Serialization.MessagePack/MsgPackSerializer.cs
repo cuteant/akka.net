@@ -1,16 +1,16 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="MsgPackSerializer.cs" company="Akka.NET Project">
-//     Copyright (C) 2017 Akka.NET Contrib <https://github.com/AkkaNetContrib/Akka.Serialization.MessagePack>
+//     Copyright (C) 2017 Akka.NET Contrib <https://github.com/AkkaNetContrib/Akka.Serialization>
 // </copyright>
 //-----------------------------------------------------------------------
 
 using System;
 using Akka.Actor;
 using Akka.Configuration;
-using Akka.Serialization.MessagePack.Resolvers;
+using Akka.Serialization.Resolvers;
 using CuteAnt.Extensions.Serialization;
 
-namespace Akka.Serialization.MessagePack
+namespace Akka.Serialization
 {
     public sealed class MsgPackSerializer : Serializer
     {

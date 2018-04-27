@@ -222,7 +222,7 @@ namespace Akka.Dispatch
         /// 
         /// Has to be thread-safe, as this collection can be accessed concurrently by many actors.
         /// </summary>
-        private readonly ConcurrentDictionary<string, MessageDispatcherConfigurator> _dispatcherConfigurators = new ConcurrentDictionary<string, MessageDispatcherConfigurator>();
+        private readonly ConcurrentDictionary<string, MessageDispatcherConfigurator> _dispatcherConfigurators = new ConcurrentDictionary<string, MessageDispatcherConfigurator>(StringComparer.Ordinal);
 
         /// <summary>Initializes a new instance of the <see cref="Dispatchers" /> class.</summary>
         /// <param name="system">The system.</param>

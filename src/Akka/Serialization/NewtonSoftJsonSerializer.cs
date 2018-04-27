@@ -104,12 +104,9 @@ namespace Akka.Serialization
         /// <param name="converters">A list of types implementing a <see cref="JsonConverter"/> to support custom types serialization.</param>
         public NewtonSoftJsonSerializerSettings(bool encodeTypeNames, bool preserveObjectReferences, IEnumerable<Type> converters)
         {
-            if (converters == null)
-                throw new ArgumentNullException(nameof(converters), $"{nameof(NewtonSoftJsonSerializerSettings)} requires a sequence of converters.");
-
             EncodeTypeNames = encodeTypeNames;
             PreserveObjectReferences = preserveObjectReferences;
-            Converters = converters;
+            Converters = converters ?? throw new ArgumentNullException(nameof(converters), $"{nameof(NewtonSoftJsonSerializerSettings)} requires a sequence of converters.");
         }
     }
 
@@ -243,10 +240,6 @@ namespace Akka.Serialization
         /// <returns>A byte array containing the serialized object</returns>
         public override byte[] ToBinary(object obj)
         {
-            //string data = JsonConvert.SerializeObject(obj, Formatting.None, Settings);
-            //byte[] bytes = Encoding.UTF8.GetBytes(data);
-            //return bytes;
-
             return _jsonFormatter.SerializeObject(obj);
         }
 
@@ -271,9 +264,6 @@ namespace Akka.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, Type type)
         {
-            //string data = Encoding.UTF8.GetString(bytes);
-            //object res = JsonConvert.DeserializeObject(data, Settings);
-
             object res = _jsonFormatter.Deserialize(null, bytes);
 
             return TranslateSurrogate(res, this, type);

@@ -566,7 +566,7 @@ namespace Akka.Remote.Transport
     public class AssociationRegistry
     {
         private static readonly ConcurrentDictionary<string, AssociationRegistry> registries =
-            new ConcurrentDictionary<string, AssociationRegistry>();
+            new ConcurrentDictionary<string, AssociationRegistry>(StringComparer.Ordinal);
 
         private readonly ConcurrentStack<Activity> _activityLog = new ConcurrentStack<Activity>();
 

@@ -93,11 +93,6 @@ namespace Akka.Serialization
         /// <returns>A byte array containing the serialized object </returns>
         public override byte[] ToBinary(object obj)
         {
-            //using (var ms = new MemoryStream())
-            //{
-            //    _serializer.Serialize(obj, ms);
-            //    return ms.ToArray();
-            //}
             return _serializer.SerializeObject(obj);
         }
 
@@ -109,11 +104,6 @@ namespace Akka.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, Type type)
         {
-            //using (var ms = new MemoryStream(bytes))
-            //{
-            //    var res = _serializer.Deserialize<object>(ms);
-            //    return res;
-            //}
             return _serializer.Deserialize(type, bytes);
         }
 

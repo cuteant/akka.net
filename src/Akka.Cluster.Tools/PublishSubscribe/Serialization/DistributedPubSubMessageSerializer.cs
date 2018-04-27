@@ -65,14 +65,23 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         /// <returns>A byte array containing the serialized object</returns>
         public override byte[] ToBinary(object obj)
         {
-            if (obj is Internal.Status) return StatusToProto(obj as Internal.Status);
-            if (obj is Internal.Delta) return DeltaToProto(obj as Internal.Delta);
-            if (obj is Send) return SendToProto(obj as Send);
-            if (obj is SendToAll) return SendToAllToProto(obj as SendToAll);
-            if (obj is Publish) return PublishToProto(obj as Publish);
-            if (obj is SendToOneSubscriber) return SendToOneSubscriberToProto(obj as SendToOneSubscriber);
-
-            throw new ArgumentException($"Can't serialize object of type {obj.GetType()} with {nameof(DistributedPubSubMessageSerializer)}");
+            switch (obj)
+            {
+                case Internal.Status status:
+                    return StatusToProto(status);
+                case Internal.Delta delta:
+                    return DeltaToProto(delta);
+                case Send send:
+                    return SendToProto(send);
+                case SendToAll sendToAll:
+                    return SendToAllToProto(sendToAll);
+                case Publish publish:
+                    return PublishToProto(publish);
+                case SendToOneSubscriber sub:
+                    return SendToOneSubscriberToProto(sub);
+                default:
+                    throw new ArgumentException($"Can't serialize object of type {obj.GetType()} with {nameof(DistributedPubSubMessageSerializer)}");
+            }
         }
 
         /// <summary>
@@ -87,7 +96,9 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         public override object FromBinary(byte[] bytes, string manifest)
         {
             if (_fromBinaryMap.TryGetValue(manifest, out var deserializer))
+            {
                 return deserializer(bytes);
+            }
 
             throw new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(DistributedPubSubMessageSerializer)}");
         }
@@ -105,25 +116,38 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         /// <returns>The manifest needed for the deserialization of the specified <paramref name="o" />.</returns>
         public override string Manifest(object o)
         {
-            if (o is Internal.Status) return StatusManifest;
-            if (o is Internal.Delta) return DeltaManifest;
-            if (o is Send) return SendManifest;
-            if (o is SendToAll) return SendToAllManifest;
-            if (o is Publish) return PublishManifest;
-            if (o is SendToOneSubscriber) return SendToOneSubscriberManifest;
-
-            throw new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
+            switch (o)
+            {
+                case Internal.Status status:
+                    return StatusManifest;
+                case Internal.Delta delta:
+                    return DeltaManifest;
+                case Send send:
+                    return SendManifest;
+                case SendToAll sendToAll:
+                    return SendToAllManifest;
+                case Publish publish:
+                    return PublishManifest;
+                case SendToOneSubscriber sub:
+                    return SendToOneSubscriberManifest;
+                default:
+                    throw new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
+            }
         }
 
         private byte[] StatusToProto(Internal.Status status)
         {
-            var message = new Proto.Msg.Status();
-            message.ReplyToStatus = status.IsReplyToStatus;
+            var message = new Proto.Msg.Status
+            {
+                ReplyToStatus = status.IsReplyToStatus
+            };
             foreach (var version in status.Versions)
             {
-                var protoVersion = new Proto.Msg.Status.Types.Version();
-                protoVersion.Timestamp = version.Value;
-                protoVersion.Address = AddressToProto(version.Key);
+                var protoVersion = new Proto.Msg.Status.Types.Version
+                {
+                    Timestamp = version.Value,
+                    Address = AddressToProto(version.Key)
+                };
                 message.Versions.Add(protoVersion);
             }
 
@@ -148,15 +172,19 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             var message = new Proto.Msg.Delta();
             foreach (var bucket in delta.Buckets)
             {
-                var protoBucket = new Proto.Msg.Delta.Types.Bucket();
-                protoBucket.Owner = AddressToProto(bucket.Owner);
-                protoBucket.Version = bucket.Version;
+                var protoBucket = new Proto.Msg.Delta.Types.Bucket
+                {
+                    Owner = AddressToProto(bucket.Owner),
+                    Version = bucket.Version
+                };
 
                 foreach (var bucketContent in bucket.Content)
                 {
-                    var valueHolder = new Proto.Msg.Delta.Types.ValueHolder();
-                    valueHolder.Ref = Akka.Serialization.Serialization.SerializedActorPath(bucketContent.Value.Ref); // TODO: reuse the method from the core serializer
-                    valueHolder.Version = bucketContent.Value.Version;
+                    var valueHolder = new Proto.Msg.Delta.Types.ValueHolder
+                    {
+                        Ref = Akka.Serialization.Serialization.SerializedActorPath(bucketContent.Value.Ref), // TODO: reuse the method from the core serializer
+                        Version = bucketContent.Value.Version
+                    };
                     protoBucket.Content.Add(bucketContent.Key, valueHolder);
                 }
 
@@ -189,10 +217,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 
         private byte[] SendToProto(Send send)
         {
-            var protoMessage = new Proto.Msg.Send();
-            protoMessage.Path = send.Path;
-            protoMessage.LocalAffinity = send.LocalAffinity;
-            protoMessage.Payload = _payloadSupport.PayloadToProto(send.Message);
+            var protoMessage = new Proto.Msg.Send
+            {
+                Path = send.Path,
+                LocalAffinity = send.LocalAffinity,
+                Payload = _payloadSupport.PayloadToProto(send.Message)
+            };
             return protoMessage.ToByteArray();
         }
 
@@ -204,10 +234,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 
         private byte[] SendToAllToProto(SendToAll sendToAll)
         {
-            var protoMessage = new Proto.Msg.SendToAll();
-            protoMessage.Path = sendToAll.Path;
-            protoMessage.AllButSelf = sendToAll.ExcludeSelf;
-            protoMessage.Payload = _payloadSupport.PayloadToProto(sendToAll.Message);
+            var protoMessage = new Proto.Msg.SendToAll
+            {
+                Path = sendToAll.Path,
+                AllButSelf = sendToAll.ExcludeSelf,
+                Payload = _payloadSupport.PayloadToProto(sendToAll.Message)
+            };
             return protoMessage.ToByteArray();
         }
 
@@ -219,9 +251,11 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 
         private byte[] PublishToProto(Publish publish)
         {
-            var protoMessage = new Proto.Msg.Publish();
-            protoMessage.Topic = publish.Topic;
-            protoMessage.Payload = _payloadSupport.PayloadToProto(publish.Message);
+            var protoMessage = new Proto.Msg.Publish
+            {
+                Topic = publish.Topic,
+                Payload = _payloadSupport.PayloadToProto(publish.Message)
+            };
             return protoMessage.ToByteArray();
         }
 
@@ -233,8 +267,10 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 
         private byte[] SendToOneSubscriberToProto(SendToOneSubscriber sendToOneSubscriber)
         {
-            var protoMessage = new Proto.Msg.SendToOneSubscriber();
-            protoMessage.Payload = _payloadSupport.PayloadToProto(sendToOneSubscriber.Message);
+            var protoMessage = new Proto.Msg.SendToOneSubscriber
+            {
+                Payload = _payloadSupport.PayloadToProto(sendToOneSubscriber.Message)
+            };
             return protoMessage.ToByteArray();
         }
 
@@ -251,11 +287,13 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static AddressData AddressToProto(Address address)
         {
-            var message = new AddressData();
-            message.System = address.System;
-            message.Hostname = address.Host;
-            message.Port = (uint)(address.Port ?? 0);
-            message.Protocol = address.Protocol;
+            var message = new AddressData
+            {
+                System = address.System,
+                Hostname = address.Host,
+                Port = (uint)(address.Port ?? 0),
+                Protocol = address.Protocol
+            };
             return message;
         }
 
@@ -271,8 +309,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 
         private IActorRef ResolveActorRef(string path)
         {
-            if (string.IsNullOrEmpty(path))
-                return null;
+            if (string.IsNullOrEmpty(path)) { return null; }
 
             return system.Provider.ResolveActorRef(path);
         }
@@ -280,8 +317,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static string GetObjectManifest(Serializer serializer, object obj)
         {
-            var manifestSerializer = serializer as SerializerWithStringManifest;
-            if (manifestSerializer != null)
+            if (serializer is SerializerWithStringManifest manifestSerializer)
             {
                 return manifestSerializer.Manifest(obj);
             }

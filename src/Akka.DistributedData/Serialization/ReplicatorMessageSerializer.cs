@@ -12,6 +12,7 @@ using Akka.Actor;
 using Akka.DistributedData.Internal;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt.Buffers;
 using Hyperion;
 using Serializer = Akka.Serialization.Serializer;
 
@@ -178,20 +179,29 @@ namespace Akka.DistributedData.Serialization
         public override bool IncludeManifest => false;
         public override byte[] ToBinary(object obj)
         {
-            if (obj is Write) return writeCache.GetOrAdd((Write) obj);
-            if (obj is Read) return readCache.GetOrAdd((Read)obj);
-            if (obj is WriteAck) return writeAckBytes;
-            
-            return Serialize(obj);
+            switch (obj)
+            {
+                case Write write:
+                    return writeCache.GetOrAdd(write);
+                case Read read:
+                    return readCache.GetOrAdd(read);
+                case WriteAck writeAck:
+                    return writeAckBytes;
+                default:
+                    return Serialize(obj);
+            }
         }
 
+        private const int c_initialBufferSize = 1024 * 64;
         private byte[] Serialize(object obj)
         {
-            using (var stream = new MemoryStream())
+            using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
-                serializer.Serialize(obj, stream);
-                stream.Position = 0;
-                return stream.ToArray();
+                var outputStream = pooledStream.Object;
+                outputStream.Reinitialize(c_initialBufferSize);
+
+                serializer.Serialize(obj, outputStream);
+                return outputStream.ToByteArray();
             }
         }
 

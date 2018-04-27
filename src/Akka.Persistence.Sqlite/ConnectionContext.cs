@@ -17,7 +17,7 @@ namespace Akka.Persistence.Sqlite
     /// </summary>
     internal static class ConnectionContext
     {
-        private static readonly ConcurrentDictionary<string, SqliteConnection> Remembered = new ConcurrentDictionary<string, SqliteConnection>();
+        private static readonly ConcurrentDictionary<string, SqliteConnection> Remembered = new ConcurrentDictionary<string, SqliteConnection>(StringComparer.Ordinal);
 
         /// <summary>
         /// TBD

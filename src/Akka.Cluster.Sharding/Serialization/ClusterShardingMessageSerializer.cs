@@ -210,9 +210,11 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private static Proto.Msg.ShardStats ShardStatsToProto(Shard.ShardStats shardStats)
         {
-            var message = new Proto.Msg.ShardStats();
-            message.Shard = shardStats.ShardId;
-            message.EntityCount = shardStats.EntityCount;
+            var message = new Proto.Msg.ShardStats
+            {
+                Shard = shardStats.ShardId,
+                EntityCount = shardStats.EntityCount
+            };
             return message;
         }
 
@@ -227,8 +229,10 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private static Proto.Msg.StartEntity StartEntityToProto(ShardRegion.StartEntity startEntity)
         {
-            var message = new Proto.Msg.StartEntity();
-            message.EntityId = startEntity.EntityId;
+            var message = new Proto.Msg.StartEntity
+            {
+                EntityId = startEntity.EntityId
+            };
             return message;
         }
 
@@ -243,9 +247,11 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private static Proto.Msg.StartEntityAck StartEntityAckToProto(ShardRegion.StartEntityAck startEntityAck)
         {
-            var message = new Proto.Msg.StartEntityAck();
-            message.EntityId = startEntityAck.EntityId;
-            message.ShardId = startEntityAck.ShardId;
+            var message = new Proto.Msg.StartEntityAck
+            {
+                EntityId = startEntityAck.EntityId,
+                ShardId = startEntityAck.ShardId
+            };
             return message;
         }
 
@@ -260,8 +266,10 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private static Proto.Msg.EntityStarted EntityStartedToProto(Shard.EntityStarted entityStarted)
         {
-            var message = new Proto.Msg.EntityStarted();
-            message.EntityId = entityStarted.EntityId;
+            var message = new Proto.Msg.EntityStarted
+            {
+                EntityId = entityStarted.EntityId
+            };
             return message;
         }
 
@@ -276,8 +284,10 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private static Proto.Msg.EntityStopped EntityStoppedToProto(Shard.EntityStopped entityStopped)
         {
-            var message = new Proto.Msg.EntityStopped();
-            message.EntityId = entityStopped.EntityId;
+            var message = new Proto.Msg.EntityStopped
+            {
+                EntityId = entityStopped.EntityId
+            };
             return message;
         }
 
@@ -295,9 +305,11 @@ namespace Akka.Cluster.Sharding.Serialization
             var message = new Proto.Msg.CoordinatorState();
             message.Shards.AddRange(state.Shards.Select(entry =>
             {
-                var coordinatorState = new Proto.Msg.CoordinatorState.Types.ShardEntry();
-                coordinatorState.ShardId = entry.Key;
-                coordinatorState.RegionRef = Akka.Serialization.Serialization.SerializedActorPath(entry.Value);
+                var coordinatorState = new Proto.Msg.CoordinatorState.Types.ShardEntry
+                {
+                    ShardId = entry.Key,
+                    RegionRef = Akka.Serialization.Serialization.SerializedActorPath(entry.Value)
+                };
                 return coordinatorState;
             }));
 
@@ -329,9 +341,11 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private static Proto.Msg.ShardHomeAllocated ShardHomeAllocatedToProto(PersistentShardCoordinator.ShardHomeAllocated shardHomeAllocated)
         {
-            var message = new Proto.Msg.ShardHomeAllocated();
-            message.Shard = shardHomeAllocated.Shard;
-            message.Region = Akka.Serialization.Serialization.SerializedActorPath(shardHomeAllocated.Region);
+            var message = new Proto.Msg.ShardHomeAllocated
+            {
+                Shard = shardHomeAllocated.Shard,
+                Region = Akka.Serialization.Serialization.SerializedActorPath(shardHomeAllocated.Region)
+            };
             return message;
         }
 
@@ -346,9 +360,11 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private static Proto.Msg.ShardHome ShardHomeToProto(PersistentShardCoordinator.ShardHome shardHome)
         {
-            var message = new Proto.Msg.ShardHome();
-            message.Shard = shardHome.Shard;
-            message.Region = Akka.Serialization.Serialization.SerializedActorPath(shardHome.Ref);
+            var message = new Proto.Msg.ShardHome
+            {
+                Shard = shardHome.Shard,
+                Region = Akka.Serialization.Serialization.SerializedActorPath(shardHome.Ref)
+            };
             return message;
         }
 
@@ -363,8 +379,10 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private ActorRefMessage ActorRefMessageToProto(IActorRef actorRef)
         {
-            var message = new ActorRefMessage();
-            message.Path = Akka.Serialization.Serialization.SerializedActorPath(actorRef);
+            var message = new ActorRefMessage
+            {
+                Path = Akka.Serialization.Serialization.SerializedActorPath(actorRef)
+            };
             return message;
         }
 
@@ -395,8 +413,10 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         private Proto.Msg.ShardIdMessage ShardIdMessageToProto(string shard)
         {
-            var message = new Proto.Msg.ShardIdMessage();
-            message.Shard = shard;
+            var message = new Proto.Msg.ShardIdMessage
+            {
+                Shard = shard
+            };
             return message;
         }
 
