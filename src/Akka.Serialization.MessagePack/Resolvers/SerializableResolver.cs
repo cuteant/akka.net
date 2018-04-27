@@ -67,7 +67,7 @@ namespace Akka.Serialization.MessagePack.Resolvers
             if (MessagePackBinary.IsNil(bytes, offset))
             {
                 readSize = 1;
-                return default(T);
+                return default;
             }
 
             int startOffset = offset;

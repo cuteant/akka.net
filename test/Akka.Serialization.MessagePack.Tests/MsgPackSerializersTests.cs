@@ -46,12 +46,12 @@ namespace Akka.Serialization.MessagePack.Tests
         }
     }
 
-    public class MsgPackPolymorphismTests : PolymorphismTests
-    {
-        public MsgPackPolymorphismTests() : base(typeof(MsgPackSerializer))
-        {
-        }
-    }
+    //public class MsgPackPolymorphismTests : PolymorphismTests
+    //{
+    //    public MsgPackPolymorphismTests() : base(typeof(MsgPackSerializer))
+    //    {
+    //    }
+    //}
 
     public class MsgPackIncapsulationTests : IncapsulationTests
     {

@@ -196,6 +196,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Remote.Transport.Grpc"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.Wings", "src\Akka.Persistence.Wings\Akka.Persistence.Wings.csproj", "{AF18182B-8FD3-40EC-8B36-FCB991F28931}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.Utf8Json", "src\Akka.Serialization.Utf8Json\Akka.Serialization.Utf8Json.csproj", "{76E72020-4B39-442C-9076-843B2BA062C2}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -470,6 +472,10 @@ Global
 		{AF18182B-8FD3-40EC-8B36-FCB991F28931}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{AF18182B-8FD3-40EC-8B36-FCB991F28931}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{AF18182B-8FD3-40EC-8B36-FCB991F28931}.Release|Any CPU.Build.0 = Release|Any CPU
+		{76E72020-4B39-442C-9076-843B2BA062C2}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{76E72020-4B39-442C-9076-843B2BA062C2}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{76E72020-4B39-442C-9076-843B2BA062C2}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{76E72020-4B39-442C-9076-843B2BA062C2}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -552,6 +558,7 @@ Global
 		{29CCF3CA-93F9-4ACC-8672-2D74C35F7406} = {588C1513-FAB6-42C3-B6FC-3485F13620CF}
 		{4F631601-3F2A-42E5-AA23-26567AA82B28} = {29CCF3CA-93F9-4ACC-8672-2D74C35F7406}
 		{AF18182B-8FD3-40EC-8B36-FCB991F28931} = {264C22A4-CAFC-41F6-B82C-4DDC5C196767}
+		{76E72020-4B39-442C-9076-843B2BA062C2} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

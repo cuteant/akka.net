@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="CuteAnt.Extensions.Serialization.MessagePack" Version="$(CuteAntExtensionsSerializationMessagePackPackageVersion)" />
+    <PackageReference Include="MessagePack.Hyperion" Version="$(MessagePackHyperionPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

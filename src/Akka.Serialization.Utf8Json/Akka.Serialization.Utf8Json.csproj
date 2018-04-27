@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka.Serialization.Utf8Json</RootNamespace>
+    <AssemblyName>Akka.Serialization.Utf8Json</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Serialization.Utf8Json</PackageId>
+    <Title>Akka.Serialization.Utf8Json</Title>
+    <Description>Utf8Json serializer for Akka.NET</Description>
+    <PackageTags>akka;actors;actor model;Akka;concurrency;Utf8Json;serializer;serialization</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CuteAnt.Extensions.Serialization.Utf8Json" Version="$(CuteAntExtensionsSerializationUtf8JsonPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka\Akka.csproj" />
+  </ItemGroup>
+
+</Project>

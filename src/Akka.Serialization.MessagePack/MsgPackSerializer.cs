@@ -5,73 +5,62 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Threading;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Serialization.MessagePack.Resolvers;
-using MessagePack;
-using MessagePack.ImmutableCollection;
-using MessagePack.Resolvers;
+using CuteAnt.Extensions.Serialization;
 
 namespace Akka.Serialization.MessagePack
 {
     public sealed class MsgPackSerializer : Serializer
     {
-#if NET451
-        internal static CuteAnt.AsyncLocalShim<ActorSystem> LocalSystem = new CuteAnt.AsyncLocalShim<ActorSystem>();
-#else
-        internal static AsyncLocal<ActorSystem> LocalSystem = new AsyncLocal<ActorSystem>();
-#endif
         private readonly MsgPackSerializerSettings _settings;
+        private static readonly MessagePackMessageFormatter s_formatter = MessagePackMessageFormatter.DefaultInstance;
 
         static MsgPackSerializer()
         {
-            CompositeResolver.RegisterAndSetAsDefault(
-#if SERIALIZATION
-                SerializableResolver.Instance,
-#endif
-                AkkaResolver.Instance,
-                ImmutableCollectionResolver.Instance,
-                TypelessContractlessStandardResolver.Instance);
+            MsgPackSerializerHelper.Register();
         }
 
         public MsgPackSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default)
         {
         }
 
-        public MsgPackSerializer(ExtendedActorSystem system, Config config) 
+        public MsgPackSerializer(ExtendedActorSystem system, Config config)
             : this(system, MsgPackSerializerSettings.Create(config))
         {
         }
 
         public MsgPackSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
         {
-            LocalSystem.Value = system;
+            MsgPackSerializerHelper.LocalSystem.Value = system;
             _settings = settings;
         }
 
         public override byte[] ToBinary(object obj)
         {
-            if (_settings.EnableLz4Compression)
-            {
-                return LZ4MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), obj);
-            }
-            else
-            {
-                return MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), obj);
-            }
+            //if (_settings.EnableLz4Compression)
+            //{
+            //    return LZ4MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), obj);
+            //}
+            //else
+            //{
+            //    return MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), obj);
+            //}
+            return s_formatter.SerializeObject(obj);
         }
 
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (_settings.EnableLz4Compression)
-            {
-                return LZ4MessagePackSerializer.NonGeneric.Deserialize(type, bytes);
-            }
-            else
-            {
-                return MessagePackSerializer.NonGeneric.Deserialize(type, bytes);
-            }
+            //if (_settings.EnableLz4Compression)
+            //{
+            //    return LZ4MessagePackSerializer.NonGeneric.Deserialize(type, bytes);
+            //}
+            //else
+            //{
+            //    return MessagePackSerializer.NonGeneric.Deserialize(type, bytes);
+            //}
+            return s_formatter.Deserialize(type, bytes);
         }
 
         public override int Identifier => 150;

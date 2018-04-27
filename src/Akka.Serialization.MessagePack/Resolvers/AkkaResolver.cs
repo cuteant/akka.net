@@ -68,7 +68,7 @@ namespace Akka.Serialization.MessagePack.Resolvers
 
             var path = MessagePackBinary.ReadString(bytes, offset, out readSize);
 
-            var system = MsgPackSerializer.LocalSystem.Value.AsInstanceOf<ExtendedActorSystem>();
+            var system = MsgPackSerializerHelper.LocalSystem.Value.AsInstanceOf<ExtendedActorSystem>();
             if (system == null)
                 return default;
 
