@@ -540,7 +540,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <param name="handler">TBD</param>
         public void SetHandler(Connection connection, IInHandler handler)
         {
-            if (IsDebug) Console.WriteLine($"{Name} SETHANDLER {OutOwnerName(connection)} (in) {handler}");
+            //if (IsDebug) Console.WriteLine($"{Name} SETHANDLER {OutOwnerName(connection)} (in) {handler}");
             connection.InHandler = handler;
         }
 
@@ -551,7 +551,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <param name="handler">TBD</param>
         public void SetHandler(Connection connection, IOutHandler handler)
         {
-            if (IsDebug) Console.WriteLine($"{Name} SETHANDLER {OutOwnerName(connection)} (out) {handler}");
+            //if (IsDebug) Console.WriteLine($"{Name} SETHANDLER {OutOwnerName(connection)} (out) {handler}");
             connection.OutHandler = handler;
         }
 
@@ -643,9 +643,9 @@ namespace Akka.Streams.Implementation.Fusing
         /// <returns>TBD</returns>
         public int Execute(int eventLimit)
         {
-            if (IsDebug)
-                Console.WriteLine(
-                    $"{Name} ---------------- EXECUTE {QueueStatus()} (running={RunningStagesCount}, shutdown={ShutdownCounters()})");
+            //if (IsDebug)
+            //    Console.WriteLine(
+            //        $"{Name} ---------------- EXECUTE {QueueStatus()} (running={RunningStagesCount}, shutdown={ShutdownCounters()})");
             var currentInterpreterHolder = CurrentInterpreter.Value;
             var previousInterpreter = currentInterpreterHolder[0];
             currentInterpreterHolder[0] = this;
@@ -745,7 +745,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 currentInterpreterHolder[0] = previousInterpreter;
             }
-            if (IsDebug) Console.WriteLine($"{Name} ---------------- {QueueStatus()} (running={RunningStagesCount}, shutdown={ShutdownCounters()})");
+            //if (IsDebug) Console.WriteLine($"{Name} ---------------- {QueueStatus()} (running={RunningStagesCount}, shutdown={ShutdownCounters()})");
             // TODO: deadlock detection
             return eventsRemaining;
         }
@@ -788,7 +788,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             if (!IsStageCompleted(logic))
             {
-                if (IsDebug) Console.WriteLine($"{Name} ASYNC {evt} ({handler}) [{logic}]");
+                //if (IsDebug) Console.WriteLine($"{Name} ASYNC {evt} ({handler}) [{logic}]");
                 var currentInterpreterHolder = CurrentInterpreter.Value;
                 var previousInterpreter = currentInterpreterHolder[0];
                 currentInterpreterHolder[0] = this;
@@ -837,7 +837,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 // CANCEL
                 ActiveStage = connection.OutOwner;
-                if (IsDebug) Console.WriteLine($"{Name} CANCEL {InOwnerName(connection)} -> {OutOwnerName(connection)} ({connection.OutHandler}) [{OutLogicName(connection)}]");
+                //if (IsDebug) Console.WriteLine($"{Name} CANCEL {InOwnerName(connection)} -> {OutOwnerName(connection)} ({connection.OutHandler}) [{OutLogicName(connection)}]");
                 connection.PortState |= OutClosed;
                 CompleteConnection(connection.OutOwnerId);
                 connection.OutHandler.OnDownstreamFinish();
@@ -848,7 +848,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if ((code & Pushing) == 0)
                 {
                     // Normal completion (no push pending)
-                    if (IsDebug) Console.WriteLine($"{Name} COMPLETE {OutOwnerName(connection)} -> {InOwnerName(connection)} ({connection.InHandler}) [{InLogicName(connection)}]");
+                    //if (IsDebug) Console.WriteLine($"{Name} COMPLETE {OutOwnerName(connection)} -> {InOwnerName(connection)} ({connection.InHandler}) [{InLogicName(connection)}]");
                     connection.PortState |= InClosed;
                     ActiveStage = connection.InOwner;
                     CompleteConnection(connection.InOwnerId);
@@ -1011,7 +1011,7 @@ namespace Akka.Streams.Implementation.Fusing
         internal void Complete(Connection connection)
         {
             var currentState = connection.PortState;
-            if (IsDebug) Console.WriteLine($"{Name}   Complete({connection}) [{currentState}]");
+            //if (IsDebug) Console.WriteLine($"{Name}   Complete({connection}) [{currentState}]");
             connection.PortState = currentState | OutClosed;
 
             // Push-Close needs special treatment, cannot be chased, convert back to ordinary event
@@ -1035,7 +1035,7 @@ namespace Akka.Streams.Implementation.Fusing
         internal void Fail(Connection connection, Exception reason)
         {
             var currentState = connection.PortState;
-            if (IsDebug) Console.WriteLine($"{Name}   Fail({connection}, {reason}) [{currentState}]");
+            //if (IsDebug) Console.WriteLine($"{Name}   Fail({connection}, {reason}) [{currentState}]");
             connection.PortState = currentState | OutClosed;
             if ((currentState & (InClosed | OutClosed)) == 0)
             {
@@ -1063,7 +1063,7 @@ namespace Akka.Streams.Implementation.Fusing
         internal void Cancel(Connection connection)
         {
             var currentState = connection.PortState;
-            if (IsDebug) Console.WriteLine($"{Name}   Cancel({connection}) [{currentState}]");
+            //if (IsDebug) Console.WriteLine($"{Name}   Cancel({connection}) [{currentState}]");
             connection.PortState = currentState | InClosed;
             if ((currentState & OutClosed) == 0)
             {

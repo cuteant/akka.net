@@ -15,6 +15,7 @@ using Akka.Actor.Internal;
 using Akka.Dispatch.SysMsg;
 using Akka.Util;
 using Akka.Util.Internal;
+using Microsoft.Extensions.Logging;
 
 namespace Akka.Actor
 {
@@ -225,6 +226,8 @@ namespace Akka.Actor
     /// </summary>
     internal sealed class PromiseActorRef : MinimalActorRef
     {
+        private static readonly ILogger s_logger = TraceLogger.GetLogger<PromiseActorRef>();
+
         /// <summary>
         /// Can't access constructor directly - use <see cref="Apply"/> instead.
         /// </summary>
@@ -485,18 +488,21 @@ namespace Akka.Actor
                     continue;
                 }
 
-                if (State is ActorPath)
-                    return State as ActorPath;
-                if (State is StoppedWithPath)
-                    return State.AsInstanceOf<StoppedWithPath>().Path;
-                if (State is Stopped)
+                switch (State)
                 {
-                    //even if we are already stopped we still need to produce a proper path
-                    UpdateState(Stopped.Instance, new StoppedWithPath(Provider.TempPath()));
-                    continue;
+                    case ActorPath actorPath:
+                        return actorPath;
+                    case StoppedWithPath _:
+                        return State.AsInstanceOf<StoppedWithPath>().Path;
+                    case Stopped _:
+                        //even if we are already stopped we still need to produce a proper path
+                        UpdateState(Stopped.Instance, new StoppedWithPath(Provider.TempPath()));
+                        continue;
+                    case Registering _:
+                        continue;
+                    default:
+                        break;
                 }
-                if (State is Registering)
-                    continue;
             }
         }
 
@@ -521,35 +527,42 @@ namespace Akka.Actor
         /// <inheritdoc cref="InternalActorRefBase.SendSystemMessage(ISystemMessage)"/>
         public override void SendSystemMessage(ISystemMessage message)
         {
-            if (message is Terminate) Stop();
-            else if (message is DeathWatchNotification)
+            switch (message)
             {
-                var dw = message as DeathWatchNotification;
-                Tell(new Terminated(dw.Actor, dw.ExistenceConfirmed, dw.AddressTerminated), this);
-            }
-            else if (message is Watch)
-            {
-                var watch = message as Watch;
-                if (Equals(watch.Watchee, this))
-                {
-                    if (!AddWatcher(watch.Watcher))
+                case Terminate _:
+                    Stop();
+                    break;
+                case DeathWatchNotification dw:
+                    Tell(new Terminated(dw.Actor, dw.ExistenceConfirmed, dw.AddressTerminated), this);
+                    break;
+                case Watch watch:
+                    if (Equals(watch.Watchee, this))
                     {
-                        // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
-                        watch.Watcher.SendSystemMessage(new DeathWatchNotification(watch.Watchee, existenceConfirmed: true,
-                            addressTerminated: false));
+                        if (!AddWatcher(watch.Watcher))
+                        {
+                            // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
+                            watch.Watcher.SendSystemMessage(new DeathWatchNotification(watch.Watchee, existenceConfirmed: true,
+                                addressTerminated: false));
+                        }
+                        else
+                        {
+                            //TODO: find a way to get access to logger?
+                            s_logger.LogWarning("BUG: illegal Watch({0},{1}) for {2}", watch.Watchee, watch.Watcher, this);
+                        }
+                    }
+                    break;
+                case Unwatch unwatch:
+                    if (Equals(unwatch.Watchee, this) && !Equals(unwatch.Watcher, this))
+                    {
+                        RemoveWatcher(unwatch.Watcher);
                     }
                     else
                     {
-                        //TODO: find a way to get access to logger?
-                        Console.WriteLine("BUG: illegal Watch({0},{1}) for {2}", watch.Watchee, watch.Watcher, this);
+                        s_logger.LogWarning("BUG: illegal Unwatch({0},{1}) for {2}", unwatch.Watchee, unwatch.Watcher, this);
                     }
-                }
-            }
-            else if (message is Unwatch)
-            {
-                var unwatch = message as Unwatch;
-                if (Equals(unwatch.Watchee, this) && !Equals(unwatch.Watcher, this)) RemoveWatcher(unwatch.Watcher);
-                else Console.WriteLine("BUG: illegal Unwatch({0},{1}) for {2}", unwatch.Watchee, unwatch.Watcher, this);
+                    break;
+                default:
+                    break;
             }
         }
 
@@ -567,9 +580,8 @@ namespace Akka.Actor
                     if (UpdateState(null, Stopped.Instance)) StopEnsureCompleted();
                     else continue;
                 }
-                else if (state is ActorPath)
+                else if (state is ActorPath p)
                 {
-                    var p = state as ActorPath;
                     if (UpdateState(p, new StoppedWithPath(p)))
                     {
                         try

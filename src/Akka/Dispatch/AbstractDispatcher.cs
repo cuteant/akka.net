@@ -335,23 +335,23 @@ namespace Akka.Dispatch
         /// </summary>
         internal static void PrintActors()
         {
-            if (DebugDispatcher)
-            {
-                foreach (var dispatcher in Actors.Value.Keys)
-                {
-                    var a = Actors.Value[dispatcher];
-                    Console.WriteLine("{0} inhabitants {1}", dispatcher, dispatcher.Inhabitants);
-                    foreach (var actor in a)
-                    {
-                        var status = actor.IsTerminated ? "(terminated)" : "(active)";
-                        var messages = actor is ActorRefWithCell
-                            ? " " + actor.AsInstanceOf<ActorRefWithCell>().Underlying.NumberOfMessages + " messages"
-                            : " " + actor.GetType();
-                        var parent = ", parent:" + actor.Parent;
-                        Console.WriteLine(" -> " + actor + status + messages + parent);
-                    }
-                }
-            }
+            //if (DebugDispatcher)
+            //{
+            //    foreach (var dispatcher in Actors.Value.Keys)
+            //    {
+            //        var a = Actors.Value[dispatcher];
+            //        Console.WriteLine("{0} inhabitants {1}", dispatcher, dispatcher.Inhabitants);
+            //        foreach (var actor in a)
+            //        {
+            //            var status = actor.IsTerminated ? "(terminated)" : "(active)";
+            //            var messages = actor is ActorRefWithCell
+            //                ? " " + actor.AsInstanceOf<ActorRefWithCell>().Underlying.NumberOfMessages + " messages"
+            //                : " " + actor.GetType();
+            //            var parent = ", parent:" + actor.Parent;
+            //            Console.WriteLine(" -> " + actor + status + messages + parent);
+            //        }
+            //    }
+            //}
         }
 
         /// <summary>
@@ -653,7 +653,7 @@ namespace Akka.Dispatch
         /// <param name="actor">The actor we're registering</param>
         internal virtual void Register(ActorCell actor)
         {
-            if (DebugDispatcher) Actors.Value.Put(this, (IInternalActorRef)actor.Self);
+            //if (DebugDispatcher) Actors.Value.Put(this, (IInternalActorRef)actor.Self);
             AddInhabitants(1);
         }
 
@@ -708,7 +708,7 @@ namespace Akka.Dispatch
         /// <param name="actor">The actor who is unregistering</param>
         internal virtual void Unregister(ActorCell actor)
         {
-            if (DebugDispatcher) Actors.Value.Remove(this, (IInternalActorRef)actor.Self);
+            //if (DebugDispatcher) Actors.Value.Remove(this, (IInternalActorRef)actor.Self);
             AddInhabitants(-1);
             var mailbox = actor.SwapMailbox(Mailboxes.DeadLetterMailbox);
             mailbox.BecomeClosed();

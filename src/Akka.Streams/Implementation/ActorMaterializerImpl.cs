@@ -123,8 +123,8 @@ namespace Akka.Streams.Implementation
             protected override object MaterializeAtomic(AtomicModule atomic, Attributes effectiveAttributes,
                 IDictionary<IModule, object> materializedValues)
             {
-                if(IsDebug)
-                    Console.WriteLine($"materializing {atomic}");
+                //if(IsDebug)
+                //    Console.WriteLine($"materializing {atomic}");
 
                 if (atomic is ISinkModule)
                 {

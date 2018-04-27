@@ -39,7 +39,7 @@ namespace Akka.DI.AutoFac
             if (system == null) throw new ArgumentNullException(nameof(system));
             if (container == null) throw new ArgumentNullException(nameof(container));
             this.container = container;
-            typeCache = new ConcurrentDictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
+            typeCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal); //OrdinalIgnoreCase
             this.system = system;
             this.system.AddDependencyResolver(this);
             this.references = new ConditionalWeakTable<ActorBase, ILifetimeScope>();

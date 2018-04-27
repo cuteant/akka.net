@@ -123,7 +123,14 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.MessageP
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.Wings", "src\Akka.Persistence.Wings\Akka.Persistence.Wings.csproj", "{64F6EDCA-8D0B-4CD5-AF46-C70BE9E541EF}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{F56F2926-46FD-4F02-A4A1-FB45C52C7571}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CuteAnt.Extensions.Logging.Sources", "..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.shproj", "{8DBB7DC8-2B90-4A8C-A60D-D41466174BDE}"
+EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.projitems*{8dbb7dc8-2b90-4a8c-a60d-d41466174bde}*SharedItemsImports = 13
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -319,6 +326,7 @@ Global
 		{29870073-E844-4608-BF5D-CC22821683CA} = {04FD930E-C003-4B24-89BC-B02D5368735C}
 		{B008F450-EB20-458B-BB3B-7CC21E52A5AB} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
 		{64F6EDCA-8D0B-4CD5-AF46-C70BE9E541EF} = {264C22A4-CAFC-41F6-B82C-4DDC5C196767}
+		{8DBB7DC8-2B90-4A8C-A60D-D41466174BDE} = {F56F2926-46FD-4F02-A4A1-FB45C52C7571}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

@@ -10,6 +10,7 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 using Akka.Util;
+using CuteAnt.Pool;
 using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
 using ILoggingAdapter = Akka.Event.ILoggingAdapter;
@@ -24,7 +25,7 @@ namespace Akka.Remote.Transport.DotNetty
     internal class AkkaLoggingHandler : ChannelHandlerAdapter
     {
         private readonly ILoggingAdapter _log;
-        
+
         public AkkaLoggingHandler(ILoggingAdapter log)
         {
             this._log = log;
@@ -119,33 +120,32 @@ namespace Akka.Remote.Transport.DotNetty
             if (_log.IsDebugEnabled) _log.Debug("Channel {0} flushing", ctx.Channel);
             ctx.Flush();
         }
-        
+
         protected string Format(IChannelHandlerContext ctx, string eventName)
         {
-            string chStr = ctx.Channel.ToString();
-            return new StringBuilder(chStr.Length + 1 + eventName.Length)
-                .Append(chStr)
-                .Append(' ')
-                .Append(eventName)
-                .ToString();
+            var chStr = ctx.Channel.ToString();
+            var sb = StringBuilderManager.Allocate(chStr.Length + 1 + eventName.Length);
+            sb.Append(chStr).Append(' ').Append(eventName);
+
+            return StringBuilderManager.ReturnAndFree(sb);
         }
-        
+
         protected string Format(IChannelHandlerContext ctx, string eventName, object arg)
         {
-            if (arg is IByteBuffer)
+            if (arg is IByteBuffer buffer)
             {
-                return this.FormatByteBuffer(ctx, eventName, (IByteBuffer)arg);
+                return this.FormatByteBuffer(ctx, eventName, buffer);
             }
-            else if (arg is IByteBufferHolder)
+            else if (arg is IByteBufferHolder bufferHolder)
             {
-                return this.FormatByteBufferHolder(ctx, eventName, (IByteBufferHolder)arg);
+                return this.FormatByteBufferHolder(ctx, eventName, bufferHolder);
             }
             else
             {
                 return this.FormatSimple(ctx, eventName, arg);
             }
         }
-        
+
         protected string Format(IChannelHandlerContext ctx, string eventName, object firstArg, object secondArg)
         {
             if (secondArg == null)
@@ -156,35 +156,34 @@ namespace Akka.Remote.Transport.DotNetty
             string arg1Str = firstArg.ToString();
             string arg2Str = secondArg.ToString();
 
-            var buf = new StringBuilder(
-                chStr.Length + 1 + eventName.Length + 2 + arg1Str.Length + 2 + arg2Str.Length);
+            var buf = StringBuilderManager.Allocate(chStr.Length + 1 + eventName.Length + 2 + arg1Str.Length + 2 + arg2Str.Length);
             buf.Append(chStr).Append(' ').Append(eventName).Append(": ")
-                .Append(arg1Str).Append(", ").Append(arg2Str);
-            return buf.ToString();
+               .Append(arg1Str).Append(", ").Append(arg2Str);
+            return StringBuilderManager.ReturnAndFree(buf);
         }
-        
+
         string FormatByteBuffer(IChannelHandlerContext ctx, string eventName, IByteBuffer msg)
         {
             string chStr = ctx.Channel.ToString();
             int length = msg.ReadableBytes;
             if (length == 0)
             {
-                var buf = new StringBuilder(chStr.Length + 1 + eventName.Length + 4);
+                var buf = StringBuilderManager.Allocate(chStr.Length + 1 + eventName.Length + 4);
                 buf.Append(chStr).Append(' ').Append(eventName).Append(": 0B");
-                return buf.ToString();
+                return StringBuilderManager.ReturnAndFree(buf);
             }
             else
             {
                 int rows = length / 16 + (length % 15 == 0 ? 0 : 1) + 4;
-                var buf = new StringBuilder(chStr.Length + 1 + eventName.Length + 2 + 10 + 1 + 2 + rows * 80);
+                var buf = StringBuilderManager.Allocate(chStr.Length + 1 + eventName.Length + 2 + 10 + 1 + 2 + rows * 80);
 
                 buf.Append(chStr).Append(' ').Append(eventName).Append(": ").Append(length).Append('B').Append('\n');
                 ByteBufferUtil.AppendPrettyHexDump(buf, msg);
 
-                return buf.ToString();
+                return StringBuilderManager.ReturnAndFree(buf);
             }
         }
-        
+
         string FormatByteBufferHolder(IChannelHandlerContext ctx, string eventName, IByteBufferHolder msg)
         {
             string chStr = ctx.Channel.ToString();
@@ -193,30 +192,29 @@ namespace Akka.Remote.Transport.DotNetty
             int length = content.ReadableBytes;
             if (length == 0)
             {
-                var buf = new StringBuilder(chStr.Length + 1 + eventName.Length + 2 + msgStr.Length + 4);
+                var buf = StringBuilderManager.Allocate(chStr.Length + 1 + eventName.Length + 2 + msgStr.Length + 4);
                 buf.Append(chStr).Append(' ').Append(eventName).Append(", ").Append(msgStr).Append(", 0B");
-                return buf.ToString();
+                return StringBuilderManager.ReturnAndFree(buf);
             }
             else
             {
                 int rows = length / 16 + (length % 15 == 0 ? 0 : 1) + 4;
-                var buf = new StringBuilder(
-                    chStr.Length + 1 + eventName.Length + 2 + msgStr.Length + 2 + 10 + 1 + 2 + rows * 80);
+                var buf = StringBuilderManager.Allocate(chStr.Length + 1 + eventName.Length + 2 + msgStr.Length + 2 + 10 + 1 + 2 + rows * 80);
 
                 buf.Append(chStr).Append(' ').Append(eventName).Append(": ")
-                    .Append(msgStr).Append(", ").Append(length).Append('B').Append('\n');
+                   .Append(msgStr).Append(", ").Append(length).Append('B').Append('\n');
                 ByteBufferUtil.AppendPrettyHexDump(buf, content);
 
-                return buf.ToString();
+                return StringBuilderManager.ReturnAndFree(buf);
             }
         }
-        
+
         string FormatSimple(IChannelHandlerContext ctx, string eventName, object msg)
         {
             string chStr = ctx.Channel.ToString();
             string msgStr = msg.ToString();
-            var buf = new StringBuilder(chStr.Length + 1 + eventName.Length + 2 + msgStr.Length);
-            return buf.Append(chStr).Append(' ').Append(eventName).Append(": ").Append(msgStr).ToString();
+            var buf = StringBuilderManager.Allocate(chStr.Length + 1 + eventName.Length + 2 + msgStr.Length);
+            return StringBuilderManager.ReturnAndFree(buf.Append(chStr).Append(' ').Append(eventName).Append(": ").Append(msgStr));
         }
     }
 }

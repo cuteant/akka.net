@@ -15,6 +15,7 @@ using Akka.Annotations;
 using Akka.Event;
 using Akka.Pattern;
 using Akka.Streams.Stage;
+using CuteAnt.Pool;
 using Reactive.Streams;
 using static Akka.Streams.Implementation.Fusing.GraphInterpreter;
 
@@ -215,9 +216,9 @@ namespace Akka.Streams.Implementation.Fusing
             for (int i = 0; i < _outputs.Length; i++)
             {
                 var outputType = _shape.Outlets[i].GetType().GetGenericArguments().First();
-                var output = (ActorGraphInterpreter.IActorOutputBoundary) typeof(ActorGraphInterpreter.ActorOutputBoundary<>).Instantiate(outputType, Self, this, i);
+                var output = (ActorGraphInterpreter.IActorOutputBoundary)typeof(ActorGraphInterpreter.ActorOutputBoundary<>).Instantiate(outputType, Self, this, i);
                 _outputs[i] = output;
-                Interpreter.AttachDownstreamBoundary(_connections[i + offset], (DownstreamBoundaryStageLogic) output);
+                Interpreter.AttachDownstreamBoundary(_connections[i + offset], (DownstreamBoundaryStageLogic)output);
             }
 
             Interpreter.Init(subMat);
@@ -959,7 +960,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _id = id;
                 _inputBuffer = new object[size];
                 _indexMask = size - 1;
-                _requestBatchSize = Math.Max(1, _inputBuffer.Length/2);
+                _requestBatchSize = Math.Max(1, _inputBuffer.Length / 2);
                 _batchRemaining = _requestBatchSize;
                 _outlet = new Outlet<object>("UpstreamBoundary" + id) { Id = 0 };
 
@@ -1205,7 +1206,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 if (elements < 1)
                 {
-                    Cancel((Inlet<T>) In);
+                    Cancel((Inlet<T>)In);
                     Fail(ReactiveStreamsCompliance.NumberOfElementsInRequestMustBePositiveException);
                 }
                 else
@@ -1235,7 +1236,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
             }
 
-            void IActorOutputBoundary.ExposedPublisher(IActorPublisher publisher) => ExposedPublisher((ActorPublisher<T>) publisher);
+            void IActorOutputBoundary.ExposedPublisher(IActorPublisher publisher) => ExposedPublisher((ActorPublisher<T>)publisher);
 
             /// <summary>
             /// TBD
@@ -1343,7 +1344,7 @@ namespace Akka.Streams.Implementation.Fusing
 
         private void EnqueueToShortCircuit(object input)
         {
-            if(_shortCircuitBuffer == null)
+            if (_shortCircuitBuffer == null)
                 _shortCircuitBuffer = new Queue<object>();
 
             _shortCircuitBuffer.Enqueue(input);
@@ -1428,7 +1429,7 @@ namespace Akka.Streams.Implementation.Fusing
                     FinishShellRegistration();
             }
 
-            if(_shortCircuitBuffer.Count != 0 && _currentLimit == 0)
+            if (_shortCircuitBuffer.Count != 0 && _currentLimit == 0)
                 Self.Tell(ShellRegistered.Instance);
         }
 
@@ -1449,7 +1450,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if (shell.IsTerminated)
                 {
                     _activeInterpreters.Remove(shell);
-                    if(_activeInterpreters.Count == 0 && _newShells.Count == 0)
+                    if (_activeInterpreters.Count == 0 && _newShells.Count == 0)
                         Context.Stop(Self);
                 }
             }
@@ -1476,23 +1477,26 @@ namespace Akka.Streams.Implementation.Fusing
                         ShortCircuitBatch();
                     return true;
                 case StreamSupervisor.PrintDebugDump _:
-                    var builder = new StringBuilder($"activeShells (actor: {Self}):\n");
-
-                    foreach (var shell in _activeInterpreters)
+                    if (_log.IsDebugEnabled)
                     {
-                        builder.Append("  " + shell.ToString().Replace("\n", "\n  "));
-                        builder.Append(shell.Interpreter);
+                        var builder = StringBuilderManager.Allocate().Append($"activeShells (actor: {Self}):\n");
+
+                        foreach (var shell in _activeInterpreters)
+                        {
+                            builder.Append("  " + shell.ToString().Replace("\n", "\n  "));
+                            builder.Append(shell.Interpreter);
+                        }
+
+                        builder.AppendLine("NewShells:\n");
+
+                        foreach (var shell in _newShells)
+                        {
+                            builder.Append("  " + shell.ToString().Replace("\n", "\n  "));
+                            builder.Append(shell.Interpreter);
+                        }
+
+                        _log.Debug(StringBuilderManager.ReturnAndFree(builder));
                     }
-
-                    builder.AppendLine("NewShells:\n");
-
-                    foreach (var shell in _newShells)
-                    {
-                        builder.Append("  " + shell.ToString().Replace("\n", "\n  "));
-                        builder.Append(shell.Interpreter);
-                    }
-
-                    Console.WriteLine(builder);
                     return true;
                 default: return false;
             }

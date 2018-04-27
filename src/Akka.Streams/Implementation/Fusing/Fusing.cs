@@ -15,6 +15,7 @@ using Akka.Streams.Stage;
 using Akka.Streams.Util;
 using Akka.Util.Internal;
 using CuteAnt.Reflection;
+using Microsoft.Extensions.Logging;
 using Atomic = Akka.Streams.Implementation.StreamLayout.Atomic;
 using Combine = Akka.Streams.Implementation.StreamLayout.Combine;
 using IMaterializedValueNode = Akka.Streams.Implementation.StreamLayout.IMaterializedValueNode;
@@ -30,7 +31,8 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// TBD
         /// </summary>
-        public static readonly bool IsDebug = false;
+        public const bool IsDebug = false;
+        private static readonly ILogger s_logger = TraceLogger.GetLogger(typeof(Fusing));
 
         /// <summary>
         /// Fuse everything that is not forbidden via AsyncBoundary attribute.
@@ -57,8 +59,8 @@ namespace Akka.Streams.Implementation.Fusing
             }
             catch
             {
-                if (IsDebug)
-                    structInfo.Dump();
+                //if (IsDebug)
+                //    structInfo.Dump();
                 throw;
             }
 
@@ -85,8 +87,8 @@ namespace Akka.Streams.Implementation.Fusing
                 Attributes.None,
                 info);
 
-            if (StreamLayout.IsDebug) StreamLayout.Validate(module);
-            if (IsDebug) Console.WriteLine(module.ToString());
+            //if (StreamLayout.IsDebug) StreamLayout.Validate(module);
+            //if (IsDebug) s_logger.LogDebug(module.ToString());
 
             return new Streams.Fusing.FusedGraph<TShape, TMat>(module, (TShape) shape);
         }
@@ -120,8 +122,8 @@ namespace Akka.Streams.Implementation.Fusing
             }
             catch (Exception)
             {
-                if(IsDebug)
-                    structuralInfo.Dump();
+                //if(IsDebug)
+                //    structuralInfo.Dump();
 
                 throw;
             }
@@ -187,9 +189,8 @@ namespace Akka.Streams.Implementation.Fusing
             var outGroup = info.OutGroups;
             while (enumerator.MoveNext())
             {
-                CopiedModule copy;
                 GraphStageModule graphStageModule;
-                if ((copy = enumerator.Current as CopiedModule) != null && (graphStageModule = copy.CopyOf as GraphStageModule) != null)
+                if (enumerator.Current is CopiedModule copy && (graphStageModule = copy.CopyOf as GraphStageModule) != null)
                 {
                     stages[pos] = graphStageModule.Stage;
                     materializedValueIds[pos] = copy;
@@ -201,8 +202,8 @@ namespace Akka.Streams.Implementation.Fusing
                     {
                         var copyInlet = copyInlets.Current;
                         var originalInlet = originalInlets.Current;
-                        var isInternal = ups.TryGetValue(copyInlet, out var outport) 
-                            && outGroup.TryGetValue(outport, out var g) 
+                        var isInternal = ups.TryGetValue(copyInlet, out var outport)
+                            && outGroup.TryGetValue(outport, out var g)
                             && g == group;
                         if (isInternal)
                         {
@@ -235,9 +236,8 @@ namespace Akka.Streams.Implementation.Fusing
             enumerator = group.GetEnumerator();
             while (enumerator.MoveNext())
             {
-                CopiedModule copy;
                 GraphStageModule graphStageModule;
-                if ((copy = enumerator.Current as CopiedModule) != null && (graphStageModule = copy.CopyOf as GraphStageModule) != null)
+                if (enumerator.Current is CopiedModule copy && (graphStageModule = copy.CopyOf as GraphStageModule) != null)
                 {
                     var copyOutlets = copy.Shape.Outlets.GetEnumerator();
                     var originalOutlets = graphStageModule.Shape.Outlets.GetEnumerator();
@@ -330,21 +330,20 @@ namespace Akka.Streams.Implementation.Fusing
             var isAsync = module is GraphStageModule || module is GraphModule
                 ? module.Attributes.Contains(Attributes.AsyncBoundary.Instance)
                 : module.IsAtomic || module.Attributes.Contains(Attributes.AsyncBoundary.Instance);
-            if (IsDebug)
-                Log(indent,
-                    $"entering {module.GetType().Name} (hash={module.GetHashCode()}, async={isAsync}, name={module.Attributes.GetNameLifted()}, dispatcher={GetDispatcher(module)})");
+            //if (IsDebug)
+            //    Log(indent,
+            //        $"entering {module.GetType().Name} (hash={module.GetHashCode()}, async={isAsync}, name={module.Attributes.GetNameLifted()}, dispatcher={GetDispatcher(module)})");
             var localGroup = isAsync ? structInfo.CreateGroup(indent) : openGroup;
 
             if (module.IsAtomic)
             {
-                GraphModule graphModule;
-                if ((graphModule = module as GraphModule) != null)
+                if (module is GraphModule graphModule)
                 {
                     if (!isAsync)
                     {
-                        if (IsDebug)
-                            Log(indent,
-                                $"dissolving graph module {module.ToString().Replace("\n", $"\n{string.Empty.PadLeft(indent*2)}")}");
+                        //if (IsDebug)
+                        //    Log(indent,
+                        //        $"dissolving graph module {module.ToString().Replace("\n", $"\n{string.Empty.PadLeft(indent*2)}")}");
                         // need to dissolve previously fused GraphStages to allow further fusion
                         var attributes = inheritedAttributes.And(module.Attributes);
                         return new LinkedList<KeyValuePair<IModule, IMaterializedValueNode>>(
@@ -362,9 +361,9 @@ namespace Akka.Streams.Implementation.Fusing
                          *  - we need to register the contained modules but take care to not include the internal
                          *    wirings into the final result, see also `struct.removeInternalWires()`
                          */
-                        if (IsDebug)
-                            Log(indent,
-                                $"graph module {module.ToString().Replace("\n", $"\n{string.Empty.PadLeft(indent*2)}")}");
+                        //if (IsDebug)
+                        //    Log(indent,
+                        //        $"graph module {module.ToString().Replace("\n", $"\n{string.Empty.PadLeft(indent*2)}")}");
 
                         var oldShape = graphModule.Shape;
                         var mvids = graphModule.MaterializedValueIds;
@@ -421,7 +420,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
                 else
                 {
-                    if (IsDebug) Log(indent, $"atomic module {module}");
+                    //if (IsDebug) Log(indent, $"atomic module {module}");
                     var result = new LinkedList<KeyValuePair<IModule, IMaterializedValueNode>>();
                     result.AddFirst(
                         new KeyValuePair<IModule, IMaterializedValueNode>(module,
@@ -462,9 +461,9 @@ namespace Akka.Streams.Implementation.Fusing
                         }
                     }
                     var subMat = subMatBuilder.ToImmutable();
-                    if (IsDebug)
-                        Log(indent,
-                            $"subMat\n  {string.Empty.PadLeft(indent*2)}{string.Join("\n  " + string.Empty.PadLeft(indent*2), subMat.Select(p => $"{p.Key.GetType().Name}[{p.Key.GetHashCode()}] -> {p.Value}"))}");
+                    //if (IsDebug)
+                    //    Log(indent,
+                    //        $"subMat\n  {string.Empty.PadLeft(indent*2)}{string.Join("\n  " + string.Empty.PadLeft(indent*2), subMat.Select(p => $"{p.Key.GetType().Name}[{p.Key.GetHashCode()}] -> {p.Value}"))}");
 
                     // we need to remove all wirings that this module copied from nested modules so that we donâ€™t do wirings twice
                     var oldDownstreams =
@@ -484,7 +483,7 @@ namespace Akka.Streams.Implementation.Fusing
                     var materializedSources = structInfo.ExitMaterializationContext();
                     foreach (var c in materializedSources)
                     {
-                        if (IsDebug) Log(indent, $"materialized value source: {structInfo.Hash(c)}");
+                        //if (IsDebug) Log(indent, $"materialized value source: {structInfo.Hash(c)}");
                         var ms = (IMaterializedValueSource) ((GraphStageModule) c.CopyOf).Stage;
 
                         IMaterializedValueNode mapped;
@@ -567,7 +566,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </summary>
         /// <param name="indent">TBD</param>
         /// <param name="msg">TBD</param>
-        internal static void Log(int indent, string msg) => Console.WriteLine("{0}{1}", string.Empty.PadLeft(indent*2), msg);
+        internal static void Log(int indent, string msg) => s_logger.LogDebug("{0}{1}", string.Empty.PadLeft(indent*2), msg);
     }
 
     /// <summary>
@@ -729,7 +728,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <param name="indent">TBD</param>
         public void RegisterInternals(Shape shape, int indent)
         {
-            if (Fusing.IsDebug) Fusing.Log(indent, $"registerInternals({string.Join(",", shape.Outlets.Select(Hash))}");
+            //if (Fusing.IsDebug) Fusing.Log(indent, $"registerInternals({string.Join(",", shape.Outlets.Select(Hash))}");
             foreach (var outlet in shape.Outlets)
                 InternalOuts.Add(outlet);
         }
@@ -759,7 +758,7 @@ namespace Akka.Streams.Implementation.Fusing
         public ISet<IModule> CreateGroup(int indent)
         {
             var group = new HashSet<IModule>();
-            if (Fusing.IsDebug) Fusing.Log(indent, $"creating new group {Hash(group)}");
+            //if (Fusing.IsDebug) Fusing.Log(indent, $"creating new group {Hash(group)}");
             Groups.AddLast(group);
             return group;
         }
@@ -779,7 +778,7 @@ namespace Akka.Streams.Implementation.Fusing
                 ? new CopiedModule(module.Shape.DeepCopy(), inheritedAttributes, GetRealModule(module))
                 : module;
             oldShape = oldShape ?? module.Shape;
-            if (Fusing.IsDebug) Fusing.Log(indent, $"adding copy {Hash(copy)} {PrintShape(copy.Shape)} of {PrintShape(oldShape)}");
+            //if (Fusing.IsDebug) Fusing.Log(indent, $"adding copy {Hash(copy)} {PrintShape(copy.Shape)} of {PrintShape(oldShape)}");
             group.Add(copy);
             Modules.Add(copy);
 
@@ -840,7 +839,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <exception cref="ArgumentException">TBD</exception>
         public void Wire(OutPort outPort, InPort inPort, int indent)
         {
-            if (Fusing.IsDebug) Fusing.Log(indent, $"wiring {outPort} ({Hash(outPort)}) -> {inPort} ({Hash(inPort)})");
+            //if (Fusing.IsDebug) Fusing.Log(indent, $"wiring {outPort} ({Hash(outPort)}) -> {inPort} ({Hash(inPort)})");
             var newOut = RemoveMapping(outPort, NewOutputs);
             if (!newOut.HasValue) throw new ArgumentException($"wiring {outPort} -> {inPort}", nameof(outPort));
             var newIn = RemoveMapping(inPort, NewInputs);
@@ -858,7 +857,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <exception cref="ArgumentException">TBD</exception>
         public void Rewire(Shape oldShape, Shape newShape, int indent)
         {
-            if (Fusing.IsDebug) Fusing.Log(indent, $"rewiring {PrintShape(oldShape)} -> {PrintShape(newShape)}");
+            //if (Fusing.IsDebug) Fusing.Log(indent, $"rewiring {PrintShape(oldShape)} -> {PrintShape(newShape)}");
             {
                 var oins = oldShape.Inlets.GetEnumerator();
                 var nins = newShape.Inlets.GetEnumerator();
@@ -942,16 +941,17 @@ namespace Akka.Streams.Implementation.Fusing
                 : module;
         }
 
+        private static readonly ILogger s_logger = TraceLogger.GetLogger<BuildStructuralInfo>();
         /// <summary>
         /// TBD
         /// </summary>
         internal void Dump()
         {
-            Console.WriteLine("StructuralInfo:");
-            Console.WriteLine("  newIns:");
-            NewInputs.ForEach(kvp => Console.WriteLine($"    {kvp.Key} ({Hash(kvp.Key)}) -> {string.Join(",", kvp.Value.Select(Hash))}"));
-            Console.WriteLine("  newOuts:");
-            NewInputs.ForEach(kvp => Console.WriteLine($"    {kvp.Key} ({Hash(kvp.Key)}) -> {string.Join(",", kvp.Value.Select(Hash))}"));
+            s_logger.LogDebug("StructuralInfo:");
+            s_logger.LogDebug("  newIns:");
+            NewInputs.ForEach(kvp => s_logger.LogDebug($"    {kvp.Key} ({Hash(kvp.Key)}) -> {string.Join(",", kvp.Value.Select(Hash))}"));
+            s_logger.LogDebug("  newOuts:");
+            NewInputs.ForEach(kvp => s_logger.LogDebug($"    {kvp.Key} ({Hash(kvp.Key)}) -> {string.Join(",", kvp.Value.Select(Hash))}"));
         }
 
         /// <summary>
