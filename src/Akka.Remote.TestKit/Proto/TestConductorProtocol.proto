@@ -5,7 +5,7 @@
 syntax = 'proto3';
 package Akka.Remote.TestKit.Proto.Msg;
 
-import "ContainerFormats.proto";
+import "Akka.Remote/Serialization/Proto/ContainerFormats.proto";
 
 message Wrapper {
   Hello hello = 1;
