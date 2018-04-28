@@ -2,10 +2,10 @@
   
   <PropertyGroup>
     <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
-    <DefineConstants>$(DefineConstants);SERIALIZATION;</DefineConstants>
+    <DefineConstants>$(DefineConstants);SERIALIZATION;UNSAFE_THREADING</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
-    <DefineConstants>$(DefineConstants);CONFIGURATION;UNSAFE_THREADING</DefineConstants>
+    <DefineConstants>$(DefineConstants);CONFIGURATION;</DefineConstants>
   </PropertyGroup>
 
   <ItemGroup>

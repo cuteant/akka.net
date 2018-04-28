@@ -4,14 +4,13 @@
   <Import Project="..\..\..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.projitems" Label="Shared" />
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <TargetFrameworks>netcoreapp2.1;netstandard2.0;net471;net451</TargetFrameworks>
     <RootNamespace>Akka</RootNamespace>
     <AssemblyName>Akka</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);CLONEABLE;CONFIGURATION;SERIALIZATION;</DefineConstants>
+    <DefineConstants>$(DefineConstants);CLONEABLE;CONFIGURATION;SERIALIZATION;UNSAFE_THREADING;APPDOMAIN</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
-    <DefineConstants>$(DefineConstants);UNSAFE_THREADING;APPDOMAIN</DefineConstants>
   </PropertyGroup>
 
   <PropertyGroup>
