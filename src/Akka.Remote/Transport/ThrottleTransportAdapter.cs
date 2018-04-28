@@ -95,7 +95,7 @@ namespace Akka.Remote.Transport
         {
             get
             {
-                return string.Format("throttlermanager.${0}${1}", WrappedTransport.SchemeIdentifier, UniqueId.GetAndIncrement());
+                return $"throttlermanager.${WrappedTransport.SchemeIdentifier}${UniqueId.GetAndIncrement()}";
             }
         }
 
@@ -118,21 +118,22 @@ namespace Akka.Remote.Transport
         /// <returns>TBD</returns>
         public override Task<bool> ManagementCommand(object message)
         {
-            if (message is SetThrottle)
+            switch (message)
             {
-                return manager.Ask(message, AskTimeout).ContinueWith(r =>
-                {
-                    return r.Result is SetThrottleAck;
-                });
-            }
+                case SetThrottle _:
+                    return manager.Ask(message, AskTimeout).ContinueWith(r =>
+                    {
+                        return r.Result is SetThrottleAck;
+                    });
 
-            if (message is ForceDisassociate || message is ForceDisassociateExplicitly)
-            {
-                return manager.Ask(message, AskTimeout).ContinueWith(r => r.Result is ForceDisassociateAck,
-                    TaskContinuationOptions.ExecuteSynchronously);
-            }
+                case ForceDisassociate _:
+                case ForceDisassociateExplicitly _:
+                    return manager.Ask(message, AskTimeout).ContinueWith(r => r.Result is ForceDisassociateAck,
+                        TaskContinuationOptions.ExecuteSynchronously);
 
-            return WrappedTransport.ManagementCommand(message);
+                default:
+                    return WrappedTransport.ManagementCommand(message);
+            }
         }
     }
 
@@ -358,129 +359,138 @@ namespace Akka.Remote.Transport
         /// <param name="message">TBD</param>
         protected override void Ready(object message)
         {
-            if (message is InboundAssociation)
+            switch (message)
             {
-                var ia = message as InboundAssociation;
-                var wrappedHandle = WrapHandle(ia.Association, AssociationListener, true);
-                wrappedHandle.ThrottlerActor.Tell(new Handle(wrappedHandle));
-            }
-            else if (message is AssociateUnderlying)
-            {
-                var ua = message as AssociateUnderlying;
-
-                // Slight modification of PipeTo, only success is sent, failure is propagated to a separate Task
-                var associateTask = WrappedTransport.Associate(ua.RemoteAddress);
-                var self = Self;
-                associateTask.ContinueWith(tr =>
-                {
-                    if (tr.IsFaulted)
+                case InboundAssociation ia:
                     {
-                        ua.StatusPromise.SetException(tr.Exception ?? new Exception("association failed"));
+                        var wrappedHandle = WrapHandle(ia.Association, AssociationListener, true);
+                        wrappedHandle.ThrottlerActor.Tell(new Handle(wrappedHandle));
                     }
-                    else
+                    break;
+
+                case AssociateUnderlying ua:
+                    // Slight modification of PipeTo, only success is sent, failure is propagated to a separate Task
+                    var associateTask = WrappedTransport.Associate(ua.RemoteAddress);
+                    var self = Self;
+                    associateTask.ContinueWith(tr =>
                     {
-                        self.Tell(new AssociateResult(tr.Result, ua.StatusPromise));
+                        if (tr.IsFaulted)
+                        {
+                            ua.StatusPromise.SetException(tr.Exception ?? new Exception("association failed"));
+                        }
+                        else
+                        {
+                            self.Tell(new AssociateResult(tr.Result, ua.StatusPromise));
+                        }
+
+                    }, TaskContinuationOptions.ExecuteSynchronously);
+                    break;
+
+                case AssociateResult ar:  // Finished outbound association and got back the handle
+                    {
+                        var wrappedHandle = WrapHandle(ar.AssociationHandle, AssociationListener, false);
+                        var naked = NakedAddress(ar.AssociationHandle.RemoteAddress);
+                        var inMode = GetInboundMode(naked);
+                        wrappedHandle.OutboundThrottleMode.Value = GetOutboundMode(naked);
+                        wrappedHandle.ReadHandlerSource.Task.ContinueWith(tr => new ListenerAndMode(tr.Result, inMode), TaskContinuationOptions.ExecuteSynchronously)
+                            .PipeTo(wrappedHandle.ThrottlerActor);
+                        _handleTable.Add(Tuple.Create(naked, wrappedHandle));
+                        ar.StatusPromise.SetResult(wrappedHandle);
                     }
+                    break;
 
-                }, TaskContinuationOptions.ExecuteSynchronously);
+                case SetThrottle st:
+                    {
+                        var naked = NakedAddress(st.Address);
+                        _throttlingModes[naked] = new Tuple<ThrottleMode, ThrottleTransportAdapter.Direction>(st.Mode, st.Direction);
+                        var ok = Task.FromResult(SetThrottleAck.Instance);
+                        var modes = new List<Task<SetThrottleAck>>() { ok };
+                        foreach (var handle in _handleTable)
+                        {
+                            if (handle.Item1 == naked)
+                            {
+                                modes.Add(SetMode(handle.Item2, st.Mode, st.Direction));
+                            }
+                        }
 
-            }
-            else if (message is AssociateResult) // Finished outbound association and got back the handle
-            {
-                var ar = message as AssociateResult;
-                var wrappedHandle = WrapHandle(ar.AssociationHandle, AssociationListener, false);
-                var naked = NakedAddress(ar.AssociationHandle.RemoteAddress);
-                var inMode = GetInboundMode(naked);
-                wrappedHandle.OutboundThrottleMode.Value = GetOutboundMode(naked);
-                wrappedHandle.ReadHandlerSource.Task.ContinueWith(tr => new ListenerAndMode(tr.Result, inMode), TaskContinuationOptions.ExecuteSynchronously)
-                    .PipeTo(wrappedHandle.ThrottlerActor);
-                _handleTable.Add(Tuple.Create(naked, wrappedHandle));
-                ar.StatusPromise.SetResult(wrappedHandle);
-            }
-            else if (message is SetThrottle)
-            {
-                var st = message as SetThrottle;
-                var naked = NakedAddress(st.Address);
-                _throttlingModes[naked] = new Tuple<ThrottleMode, ThrottleTransportAdapter.Direction>(st.Mode, st.Direction);
-                var ok = Task.FromResult(SetThrottleAck.Instance);
-                var modes = new List<Task<SetThrottleAck>>() { ok };
-                foreach (var handle in _handleTable)
-                {
-                    if (handle.Item1 == naked)
-                        modes.Add(SetMode(handle.Item2, st.Mode, st.Direction));
-                }
+                        var sender = Sender;
+                        Task.WhenAll(modes).ContinueWith(tr =>
+                        {
+                            return SetThrottleAck.Instance;
+                        }, TaskContinuationOptions.ExecuteSynchronously)
+                            .PipeTo(sender);
+                    }
+                    break;
 
-                var sender = Sender;
-                Task.WhenAll(modes).ContinueWith(tr =>
-                {
-                    return SetThrottleAck.Instance;
-                }, TaskContinuationOptions.ExecuteSynchronously)
-                    .PipeTo(sender);
-            }
-            else if (message is ForceDisassociate)
-            {
-                var fd = message as ForceDisassociate;
-                var naked = NakedAddress(fd.Address);
-                foreach (var handle in _handleTable)
-                {
-                    if (handle.Item1 == naked)
-                        handle.Item2.Disassociate();
-                }
+                case ForceDisassociate fd:
+                    {
+                        var naked = NakedAddress(fd.Address);
+                        foreach (var handle in _handleTable)
+                        {
+                            if (handle.Item1 == naked) { handle.Item2.Disassociate(); }
+                        }
 
-                /*
-                 * NOTE: Important difference between Akka.NET and Akka here.
-                 * In canonical Akka, ThrottleHandlers are never removed from
-                 * the _handleTable. The reason is because Ask-ing a terminated ActorRef
-                 * doesn't cause any exceptions to be thrown upstream - it just times out
-                 * and propagates a failed Future.
-                 * 
-                 * In the CLR, a CancellationException gets thrown and causes all
-                 * parent tasks chaining back to the EndPointManager to fail due
-                 * to an Ask timeout.
-                 * 
-                 * So in order to avoid this problem, we remove any disassociated handles
-                 * from the _handleTable.
-                 * 
-                 * Questions? Ask @Aaronontheweb
-                 */
-                _handleTable.RemoveAll(tuple => tuple.Item1 == naked);
-                Sender.Tell(ForceDisassociateAck.Instance);
-            }
-            else if (message is ForceDisassociateExplicitly)
-            {
-                var fde = message as ForceDisassociateExplicitly;
-                var naked = NakedAddress(fde.Address);
-                foreach (var handle in _handleTable)
-                {
-                    if (handle.Item1 == naked)
-                        handle.Item2.DisassociateWithFailure(fde.Reason);
-                }
+                        /*
+                         * NOTE: Important difference between Akka.NET and Akka here.
+                         * In canonical Akka, ThrottleHandlers are never removed from
+                         * the _handleTable. The reason is because Ask-ing a terminated ActorRef
+                         * doesn't cause any exceptions to be thrown upstream - it just times out
+                         * and propagates a failed Future.
+                         * 
+                         * In the CLR, a CancellationException gets thrown and causes all
+                         * parent tasks chaining back to the EndPointManager to fail due
+                         * to an Ask timeout.
+                         * 
+                         * So in order to avoid this problem, we remove any disassociated handles
+                         * from the _handleTable.
+                         * 
+                         * Questions? Ask @Aaronontheweb
+                         */
+                        _handleTable.RemoveAll(tuple => tuple.Item1 == naked);
+                        Sender.Tell(ForceDisassociateAck.Instance);
+                    }
+                    break;
 
-                /*
-                 * NOTE: Important difference between Akka.NET and Akka here.
-                 * In canonical Akka, ThrottleHandlers are never removed from
-                 * the _handleTable. The reason is because Ask-ing a terminated ActorRef
-                 * doesn't cause any exceptions to be thrown upstream - it just times out
-                 * and propagates a failed Future.
-                 * 
-                 * In the CLR, a CancellationException gets thrown and causes all
-                 * parent tasks chaining back to the EndPointManager to fail due
-                 * to an Ask timeout.
-                 * 
-                 * So in order to avoid this problem, we remove any disassociated handles
-                 * from the _handleTable.
-                 * 
-                 * Questions? Ask @Aaronontheweb
-                 */
-                _handleTable.RemoveAll(tuple => tuple.Item1 == naked);
-                Sender.Tell(ForceDisassociateAck.Instance);
-            }
-            else if (message is Checkin)
-            {
-                var chkin = message as Checkin;
-                var naked = NakedAddress(chkin.Origin);
-                _handleTable.Add(new Tuple<Address, ThrottlerHandle>(naked, chkin.ThrottlerHandle));
-                SetMode(naked, chkin.ThrottlerHandle);
+                case ForceDisassociateExplicitly fde:
+                    {
+                        var naked = NakedAddress(fde.Address);
+                        foreach (var handle in _handleTable)
+                        {
+                            if (handle.Item1 == naked)
+                                handle.Item2.DisassociateWithFailure(fde.Reason);
+                        }
+
+                        /*
+                         * NOTE: Important difference between Akka.NET and Akka here.
+                         * In canonical Akka, ThrottleHandlers are never removed from
+                         * the _handleTable. The reason is because Ask-ing a terminated ActorRef
+                         * doesn't cause any exceptions to be thrown upstream - it just times out
+                         * and propagates a failed Future.
+                         * 
+                         * In the CLR, a CancellationException gets thrown and causes all
+                         * parent tasks chaining back to the EndPointManager to fail due
+                         * to an Ask timeout.
+                         * 
+                         * So in order to avoid this problem, we remove any disassociated handles
+                         * from the _handleTable.
+                         * 
+                         * Questions? Ask @Aaronontheweb
+                         */
+                        _handleTable.RemoveAll(tuple => tuple.Item1 == naked);
+                        Sender.Tell(ForceDisassociateAck.Instance);
+                    }
+                    break;
+
+                case Checkin chkin:
+                    {
+                        var naked = NakedAddress(chkin.Origin);
+                        _handleTable.Add(new Tuple<Address, ThrottlerHandle>(naked, chkin.ThrottlerHandle));
+                        SetMode(naked, chkin.ThrottlerHandle);
+                    }
+                    break;
+
+                default:
+                    break;
             }
         }
 
@@ -495,8 +505,12 @@ namespace Akka.Remote.Transport
         private ThrottleMode GetInboundMode(Address nakedAddress)
         {
             if (_throttlingModes.TryGetValue(nakedAddress, out var mode))
+            {
                 if (mode.Item2 == ThrottleTransportAdapter.Direction.Both || mode.Item2 == ThrottleTransportAdapter.Direction.Receive)
+                {
                     return mode.Item1;
+                }
+            }
 
             return Unthrottled.Instance;
         }
@@ -504,8 +518,12 @@ namespace Akka.Remote.Transport
         private ThrottleMode GetOutboundMode(Address nakedAddress)
         {
             if (_throttlingModes.TryGetValue(nakedAddress, out var mode))
+            {
                 if (mode.Item2 == ThrottleTransportAdapter.Direction.Both || mode.Item2 == ThrottleTransportAdapter.Direction.Send)
+                {
                     return mode.Item1;
+                }
+            }
 
             return Unthrottled.Instance;
         }
@@ -513,7 +531,9 @@ namespace Akka.Remote.Transport
         private Task<SetThrottleAck> SetMode(Address nakedAddress, ThrottlerHandle handle)
         {
             if (_throttlingModes.TryGetValue(nakedAddress, out var mode))
+            {
                 return SetMode(handle, mode.Item1, mode.Item2);
+            }
 
             return SetMode(handle, Unthrottled.Instance, ThrottleTransportAdapter.Direction.Both);
         }
@@ -523,18 +543,24 @@ namespace Akka.Remote.Transport
         {
             if (direction == ThrottleTransportAdapter.Direction.Both ||
                 direction == ThrottleTransportAdapter.Direction.Send)
+            {
                 handle.OutboundThrottleMode.Value = mode;
+            }
+
             if (direction == ThrottleTransportAdapter.Direction.Both ||
                 direction == ThrottleTransportAdapter.Direction.Receive)
+            {
                 return AskModeWithDeathCompletion(handle.ThrottlerActor, mode, ActorTransportAdapter.AskTimeout);
+            }
             else
+            {
                 return Task.FromResult(SetThrottleAck.Instance);
+            }
         }
 
         private Task<SetThrottleAck> AskModeWithDeathCompletion(IActorRef target, ThrottleMode mode, TimeSpan timeout)
         {
-            if (target.IsNobody()) return Task.FromResult(SetThrottleAck.Instance);
-
+            if (target.IsNobody()) { return Task.FromResult(SetThrottleAck.Instance); }
 
             var internalTarget = target.AsInstanceOf<IInternalActorRef>();
             var promiseRef = PromiseActorRef.Apply(internalTarget.Provider, timeout, target, mode.GetType().Name);
@@ -542,17 +568,16 @@ namespace Akka.Remote.Transport
             target.Tell(mode, promiseRef);
             return promiseRef.Result.ContinueWith(tr =>
             {
-                var t = tr.Result as Terminated;
-                if (t != null && t.ActorRef.Path.Equals(target.Path))
+                if (tr.Result is Terminated t && t.ActorRef.Path.Equals(target.Path))
+                {
                     return SetThrottleAck.Instance;
+                }
                 internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
                 return SetThrottleAck.Instance;
-
             }, TaskContinuationOptions.ExecuteSynchronously);
         }
 
-        private ThrottlerHandle WrapHandle(AssociationHandle originalHandle, IAssociationEventListener listener,
-            bool inbound)
+        private ThrottlerHandle WrapHandle(AssociationHandle originalHandle, IAssociationEventListener listener, bool inbound)
         {
             var managerRef = Self;
             return new ThrottlerHandle(originalHandle, Context.ActorOf(
@@ -597,13 +622,7 @@ namespace Akka.Remote.Transport
         /// <summary>
         /// The singleton instance
         /// </summary>
-        public static Blackhole Instance
-        {
-            get
-            {
-                return _instance;
-            }
-        }
+        public static Blackhole Instance => _instance;
 
         /// <inheritdoc/>
         public override Tuple<ThrottleMode, bool> TryConsumeTokens(long nanoTimeOfSend, int tokens)
@@ -629,13 +648,7 @@ namespace Akka.Remote.Transport
         /// <summary>
         /// TBD
         /// </summary>
-        public static Unthrottled Instance
-        {
-            get
-            {
-                return _instance;
-            }
-        }
+        public static Unthrottled Instance => _instance;
 
         /// <inheritdoc/>
         public override Tuple<ThrottleMode, bool> TryConsumeTokens(long nanoTimeOfSend, int tokens)
@@ -678,7 +691,10 @@ namespace Akka.Remote.Transport
         bool IsAvailable(long nanoTimeOfSend, int tokens)
         {
             if (tokens > _capacity && _availableTokens > 0)
+            {
                 return true; // Allow messages larger than capacity through, it will be recorded as negative tokens
+            }
+
             return Math.Min(_availableTokens + TokensGenerated(nanoTimeOfSend), _capacity) >= tokens;
         }
 
@@ -865,10 +881,7 @@ namespace Akka.Remote.Transport
         /// <summary>
         /// TBD
         /// </summary>
-        public static SetThrottleAck Instance
-        {
-            get { return _instance; }
-        }
+        public static SetThrottleAck Instance => _instance;
     }
     /// <summary>
     /// INTERNAL API
@@ -1002,7 +1015,7 @@ namespace Akka.Remote.Transport
             /// <summary>
             /// TBD
             /// </summary>
-            public static Uninitialized Instance { get { return _instance; } }
+            public static Uninitialized Instance => _instance;
         }
 
         /// <summary>
@@ -1221,10 +1234,12 @@ namespace Akka.Remote.Transport
                 {
                     var mode = @event.FsmEvent.AsInstanceOf<ThrottleMode>();
                     InboundThrottleMode = mode;
-                    if (mode is Blackhole) ThrottledMessages = new Queue<ByteString>();
+                    if (mode is Blackhole) { ThrottledMessages = new Queue<ByteString>(); }
                     CancelTimer(DequeueTimerName);
                     if (ThrottledMessages.Any())
+                    {
                         ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), ThrottledMessages.Peek().Length));
+                    }
                     Sender.Tell(SetThrottleAck.Instance);
                     return Stay();
                 }
@@ -1312,8 +1327,14 @@ namespace Akka.Remote.Transport
 
         private void ScheduleDequeue(TimeSpan delay)
         {
-            if (InboundThrottleMode is Blackhole) return; //do nothing
-            if (delay <= TimeSpan.Zero) Self.Tell(new Dequeue());
+            if (InboundThrottleMode is Blackhole)
+            {
+                return; //do nothing
+            }
+            if (delay <= TimeSpan.Zero)
+            {
+                Self.Tell(new Dequeue());
+            }
             else
             {
                 SetTimer(DequeueTimerName, new Dequeue(), delay, repeat: false);

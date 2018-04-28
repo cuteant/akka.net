@@ -69,8 +69,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         protected abstract void RegisterListener(IChannel channel, IHandleEventListener listener, object msg, IPEndPoint remoteAddress);
 
-        protected void Init(IChannel channel, IPEndPoint remoteSocketAddress, Address remoteAddress, object msg,
-            out AssociationHandle op)
+        protected void Init(IChannel channel, IPEndPoint remoteSocketAddress, Address remoteAddress, object msg, out AssociationHandle op)
         {
             var localAddress = DotNettyTransport.MapSocketToAddress((IPEndPoint)channel.LocalAddress, Transport.SchemeIdentifier, Transport.System.Name, Transport.Settings.Hostname);
 
@@ -159,10 +158,11 @@ namespace Akka.Remote.Transport.DotNetty
         protected async Task<IChannel> NewServer(EndPoint listenAddress)
         {
             if (InternalTransport != TransportMode.Tcp)
+            {
                 throw new NotImplementedException("Haven't implemented UDP transport at this time");
+            }
 
-            var dns = listenAddress as DnsEndPoint;
-            if (dns != null)
+            if (listenAddress is DnsEndPoint dns)
             {
                 listenAddress = await DnsToIPEndpoint(dns).ConfigureAwait(false);
             }
@@ -173,11 +173,14 @@ namespace Akka.Remote.Transport.DotNetty
         public override async Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> Listen()
         {
             EndPoint listenAddress;
-            IPAddress ip;
-            if (IPAddress.TryParse(Settings.Hostname, out ip))
+            if (IPAddress.TryParse(Settings.Hostname, out IPAddress ip))
+            {
                 listenAddress = new IPEndPoint(ip, Settings.Port);
+            }
             else
+            {
                 listenAddress = new DnsEndPoint(Settings.Hostname, Settings.Port);
+            }
 
             try
             {
@@ -197,9 +200,8 @@ namespace Akka.Remote.Transport.DotNetty
                     hostName: Settings.PublicHostname,
                     publicPort: Settings.PublicPort);
 
-                if (addr == null) throw new ConfigurationException($"Unknown local address type {newServerChannel.LocalAddress}");
+                LocalAddress = addr ?? throw new ConfigurationException($"Unknown local address type {newServerChannel.LocalAddress}");
 
-                LocalAddress = addr;
                 // resume accepting incoming connections
 #pragma warning disable 4014 // we WANT this task to run without waiting
                 AssociationListenerPromise.Task.ContinueWith(result => newServerChannel.Configuration.AutoRead = true,
@@ -226,8 +228,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override async Task<AssociationHandle> Associate(Address remoteAddress)
         {
-            if (!ServerChannel.Open)
-                throw new ChannelException("Transport is not open");
+            if (!ServerChannel.Open) { throw new ChannelException("Transport is not open"); }
 
             return await AssociateInternal(remoteAddress).ConfigureAwait(false);
         }
@@ -432,8 +433,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         private static string SafeMapHostName(string hostName)
         {
-            IPAddress ip;
-            return !string.IsNullOrEmpty(hostName) && IPAddress.TryParse(hostName, out ip) ? SafeMapIPv6(ip) : hostName;
+            return !string.IsNullOrEmpty(hostName) && IPAddress.TryParse(hostName, out var ip) ? SafeMapIPv6(ip) : hostName;
         }
 
         private static string SafeMapIPv6(IPAddress ip) => ip.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + ip + "]" : ip.ToString();
@@ -442,8 +442,7 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (!address.Port.HasValue) throw new ArgumentNullException(nameof(address), $"Address port must not be null: {address}");
 
-            IPAddress ip;
-            return IPAddress.TryParse(address.Host, out ip)
+            return IPAddress.TryParse(address.Host, out var ip)
                 ? (EndPoint)new IPEndPoint(ip, address.Port.Value)
                 : new DnsEndPoint(address.Host, address.Port.Value);
         }
@@ -458,8 +457,7 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (address.Port == null) throw new ArgumentException($"address port must not be null: {address}");
             EndPoint listenAddress;
-            IPAddress ip;
-            if (IPAddress.TryParse(address.Host, out ip))
+            if (IPAddress.TryParse(address.Host, out var ip))
             {
                 listenAddress = new IPEndPoint(ip, (int)address.Port);
             }

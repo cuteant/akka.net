@@ -71,7 +71,7 @@ namespace Akka.Remote.Transport
     /// </summary>
     internal class FailureInjectorTransportAdapter : AbstractTransportAdapter, IAssociationEventListener
     {
-#region Internal message classes
+        #region Internal message classes
 
         /// <summary>
         /// TBD
@@ -141,7 +141,7 @@ namespace Akka.Remote.Transport
         public sealed class PassThru : IGremlinMode
         {
             private PassThru() { }
-// ReSharper disable once InconsistentNaming
+            // ReSharper disable once InconsistentNaming
             private static readonly PassThru _instance = new PassThru();
 
             /// <summary>
@@ -180,7 +180,7 @@ namespace Akka.Remote.Transport
             public double InboundDropP { get; private set; }
         }
 
-#endregion
+        #endregion
 
         /// <summary>
         /// TBD
@@ -207,7 +207,7 @@ namespace Akka.Remote.Transport
 
         private bool _shouldDebugLog;
         private volatile IAssociationEventListener _upstreamListener = null;
-        private readonly ConcurrentDictionary<Address,IGremlinMode> addressChaosTable = new ConcurrentDictionary<Address, IGremlinMode>();
+        private readonly ConcurrentDictionary<Address, IGremlinMode> addressChaosTable = new ConcurrentDictionary<Address, IGremlinMode>();
         private volatile IGremlinMode _allMode = PassThru.Instance;
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace Akka.Remote.Transport
         /// </summary>
         protected int MaximumOverhead = 0;
 
-#region AbstractTransportAdapter members
+        #region AbstractTransportAdapter members
 
         // ReSharper disable once InconsistentNaming
         private static readonly SchemeAugmenter _augmenter = new SchemeAugmenter(FailureInjectorSchemeIdentifier);
@@ -234,27 +234,23 @@ namespace Akka.Remote.Transport
         /// <returns>TBD</returns>
         public override Task<bool> ManagementCommand(object message)
         {
-            if (message is All)
+            switch (message)
             {
-                var all = message as All;
-                _allMode = all.Mode;
-                return Task.FromResult(true);
+                case All all:
+                    _allMode = all.Mode;
+                    return Task.FromResult(true);
+                case One one:
+                    //  don't care about the protocol part - we are injected in the stack anyway!
+                    addressChaosTable.AddOrUpdate(NakedAddress(one.RemoteAddress), address => one.Mode, (address, mode) => one.Mode);
+                    return Task.FromResult(true);
+                default:
+                    return WrappedTransport.ManagementCommand(message);
             }
-            
-            if (message is One)
-            {
-                var one = message as One;
-                //  don't care about the protocol part - we are injected in the stack anyway!
-                addressChaosTable.AddOrUpdate(NakedAddress(one.RemoteAddress), address => one.Mode, (address, mode) => one.Mode);
-                return Task.FromResult(true);
-            }
-
-            return WrappedTransport.ManagementCommand(message);
         }
 
-#endregion
+        #endregion
 
-#region IAssociationEventListener members
+        #region IAssociationEventListener members
 
         /// <summary>
         /// TBD
@@ -288,17 +284,17 @@ namespace Akka.Remote.Transport
                 ShouldDropOutbound(remoteAddress, new object(), "interceptAssociate"))
             {
                 statusPromise.SetException(
-                    new FailureInjectorException("Simulated failure of association to " + remoteAddress));
+                    new FailureInjectorException($"Simulated failure of association to {remoteAddress}"));
             }
             else
             {
-               WrappedTransport.Associate(remoteAddress).ContinueWith(tr =>
-               {
-                   var handle = tr.Result;
-                   addressChaosTable.AddOrUpdate(NakedAddress(handle.RemoteAddress), address => PassThru.Instance,
-                       (address, mode) => PassThru.Instance);
-                   statusPromise.SetResult(new FailureInjectorHandle(handle, this));
-               }, TaskContinuationOptions.ExecuteSynchronously);
+                WrappedTransport.Associate(remoteAddress).ContinueWith(tr =>
+                {
+                    var handle = tr.Result;
+                    addressChaosTable.AddOrUpdate(NakedAddress(handle.RemoteAddress), address => PassThru.Instance,
+                        (address, mode) => PassThru.Instance);
+                    statusPromise.SetResult(new FailureInjectorHandle(handle, this));
+                }, TaskContinuationOptions.ExecuteSynchronously);
             }
         }
 
@@ -324,9 +320,9 @@ namespace Akka.Remote.Transport
             }
         }
 
-#endregion
+        #endregion
 
-#region Internal methods
+        #region Internal methods
 
         /// <summary>
         /// TBD
@@ -338,14 +334,16 @@ namespace Akka.Remote.Transport
         public bool ShouldDropInbound(Address remoteAddress, object instance, string debugMessage)
         {
             var mode = ChaosMode(remoteAddress);
-            if (mode is PassThru) return false;
-            if (mode is Drop)
+            if (mode is PassThru) { return false; }
+            if (mode is Drop drop)
             {
-                var drop = mode as Drop;
                 if (Rng.NextDouble() <= drop.InboundDropP)
                 {
-                    if (_shouldDebugLog) _log.Debug("Dropping inbound [{0}] for [{1}] {2}", instance.GetType(),
-                         remoteAddress, debugMessage);
+                    if (_shouldDebugLog)
+                    {
+                        _log.Debug("Dropping inbound [{0}] for [{1}] {2}", instance.GetType(), remoteAddress, debugMessage);
+                    }
+
                     return true;
                 }
             }
@@ -363,14 +361,15 @@ namespace Akka.Remote.Transport
         public bool ShouldDropOutbound(Address remoteAddress, object instance, string debugMessage)
         {
             var mode = ChaosMode(remoteAddress);
-            if (mode is PassThru) return false;
-            if (mode is Drop)
+            if (mode is PassThru) { return false; }
+            if (mode is Drop drop)
             {
-                var drop = mode as Drop;
                 if (Rng.NextDouble() <= drop.OutboundDropP)
                 {
-                    if (_shouldDebugLog) 
+                    if (_shouldDebugLog)
+                    {
                         _log.Debug("Dropping outbound [{0}] for [{1}] {2}", instance.GetType(), remoteAddress, debugMessage);
+                    }
                     return true;
                 }
             }
@@ -380,7 +379,11 @@ namespace Akka.Remote.Transport
 
         private IAssociationEvent InterceptInboundAssociation(IAssociationEvent ev)
         {
-            if (ev is InboundAssociation) return new InboundAssociation(new FailureInjectorHandle(ev.AsInstanceOf<InboundAssociation>().Association, this));
+            if (ev is InboundAssociation)
+            {
+                return new InboundAssociation(new FailureInjectorHandle(ev.AsInstanceOf<InboundAssociation>().Association, this));
+            }
+
             return ev;
         }
 
@@ -393,12 +396,14 @@ namespace Akka.Remote.Transport
         private IGremlinMode ChaosMode(Address remoteAddress)
         {
             if (addressChaosTable.TryGetValue(NakedAddress(remoteAddress), out var mode))
+            {
                 return mode;
+            }
 
             return PassThru.Instance;
         }
 
-#endregion
+        #endregion
     }
 
     /// <summary>
@@ -433,7 +438,10 @@ namespace Akka.Remote.Transport
         public override bool Write(ByteString payload)
         {
             if (!_gremlinAdapter.ShouldDropOutbound(WrappedHandle.RemoteAddress, payload, "handler.write"))
+            {
                 return WrappedHandle.Write(payload);
+            }
+
             return true;
         }
 
@@ -445,7 +453,7 @@ namespace Akka.Remote.Transport
             WrappedHandle.Disassociate();
         }
 
-#region IHandleEventListener members
+        #region IHandleEventListener members
 
         /// <summary>
         /// TBD
@@ -459,7 +467,7 @@ namespace Akka.Remote.Transport
             }
         }
 
-#endregion
+        #endregion
     }
 }
 

@@ -437,7 +437,7 @@ namespace Akka.Remote.Transport
                     {
                         ActorPath.TryParseAddress(envelopeContainer.Recipient.Path, out recipientAddress);
                     }
-                    
+
                     var serializedMessage = envelopeContainer.Message;
                     IActorRef senderOption = null;
                     if (envelopeContainer.Sender != null)
@@ -503,7 +503,7 @@ namespace Akka.Remote.Transport
             return new AckAndEnvelopeContainer() { Ack = AckBuilder(ack) }.ToByteString();
         }
 
-#region Internal methods
+        #region Internal methods
         private IAkkaPdu DecodeControlPdu(AkkaControlMessage controlPdu)
         {
             switch (controlPdu.CommandType)
@@ -574,7 +574,10 @@ namespace Akka.Remote.Transport
         private static AddressData SerializeAddress(Address address)
         {
             if (string.IsNullOrEmpty(address.Host) || !address.Port.HasValue)
+            {
                 throw new ArgumentException($"Address {address} could not be serialized: host or port missing");
+            }
+
             return new AddressData()
             {
                 Hostname = address.Host,
@@ -584,7 +587,7 @@ namespace Akka.Remote.Transport
             };
         }
 
-#endregion
+        #endregion
 
         public AkkaPduProtobuffCodec(ActorSystem system) : base(system)
         {

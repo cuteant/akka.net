@@ -132,17 +132,14 @@ namespace Akka.Remote.Transport.DotNetty
 
         protected string Format(IChannelHandlerContext ctx, string eventName, object arg)
         {
-            if (arg is IByteBuffer buffer)
+            switch (arg)
             {
-                return this.FormatByteBuffer(ctx, eventName, buffer);
-            }
-            else if (arg is IByteBufferHolder bufferHolder)
-            {
-                return this.FormatByteBufferHolder(ctx, eventName, bufferHolder);
-            }
-            else
-            {
-                return this.FormatSimple(ctx, eventName, arg);
+                case IByteBuffer buffer:
+                    return this.FormatByteBuffer(ctx, eventName, buffer);
+                case IByteBufferHolder bufferHolder:
+                    return this.FormatByteBufferHolder(ctx, eventName, bufferHolder);
+                default:
+                    return this.FormatSimple(ctx, eventName, arg);
             }
         }
 

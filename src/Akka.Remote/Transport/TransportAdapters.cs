@@ -115,8 +115,7 @@ namespace Akka.Remote.Transport
         /// <returns>TBD</returns>
         public ITransportAdapterProvider GetAdapterProvider(string name)
         {
-            if (AdaptersTable().TryGetValue(name, out var provider))
-                return provider;
+            if (AdaptersTable().TryGetValue(name, out var provider)) { return provider; }
 
             throw new ArgumentException($"There is no registered transport adapter provider with name {name}");
         }
@@ -151,7 +150,7 @@ namespace Akka.Remote.Transport
         /// <returns>TBD</returns>
         public string AugmentScheme(string originalScheme)
         {
-            return string.Format("{0}.{1}", AddedSchemeIdentifier, originalScheme);
+            return $"{AddedSchemeIdentifier}.{originalScheme}";
         }
 
         /// <summary>
@@ -172,8 +171,11 @@ namespace Akka.Remote.Transport
         /// <returns>TBD</returns>
         public string RemoveScheme(string scheme)
         {
-            if (scheme.StartsWith(string.Format("{0}.", AddedSchemeIdentifier)))
+            if (scheme.StartsWith($"{AddedSchemeIdentifier}.", StringComparison.Ordinal))
+            {
                 return scheme.Remove(0, AddedSchemeIdentifier.Length + 1);
+            }
+
             return scheme;
         }
 
@@ -216,24 +218,12 @@ namespace Akka.Remote.Transport
         /// <summary>
         /// TBD
         /// </summary>
-        public override string SchemeIdentifier
-        {
-            get
-            {
-                return SchemeAugmenter.AugmentScheme(WrappedTransport.SchemeIdentifier);
-            }
-        }
+        public override string SchemeIdentifier => SchemeAugmenter.AugmentScheme(WrappedTransport.SchemeIdentifier);
 
         /// <summary>
         /// TBD
         /// </summary>
-        public override long MaximumPayloadBytes
-        {
-            get
-            {
-                return WrappedTransport.MaximumPayloadBytes;
-            }
-        }
+        public override long MaximumPayloadBytes => WrappedTransport.MaximumPayloadBytes;
 
         /// <summary>
         /// TBD
@@ -296,10 +286,7 @@ namespace Akka.Remote.Transport
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override Task<bool> Shutdown()
-        {
-            return WrappedTransport.Shutdown();
-        }
+        public override Task<bool> Shutdown() => WrappedTransport.Shutdown();
     }
 
     /// <summary>
@@ -404,10 +391,7 @@ namespace Akka.Remote.Transport
         /// TBD
         /// </summary>
         /// <param name="listener">TBD</param>
-        public ListenerRegistered(IAssociationEventListener listener)
-        {
-            Listener = listener;
-        }
+        public ListenerRegistered(IAssociationEventListener listener) => Listener = listener;
 
         /// <summary>
         /// TBD
@@ -478,10 +462,7 @@ namespace Akka.Remote.Transport
         /// TBD
         /// </summary>
         /// <param name="info">TBD</param>
-        public DisassociateUnderlying(DisassociateInfo info = DisassociateInfo.Unknown)
-        {
-            Info = info;
-        }
+        public DisassociateUnderlying(DisassociateInfo info = DisassociateInfo.Unknown) => Info = info;
 
         /// <summary>
         /// TBD

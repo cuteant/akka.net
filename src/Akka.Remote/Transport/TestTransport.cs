@@ -43,8 +43,7 @@ namespace Akka.Remote.Transport
         /// <summary>
         /// TBD
         /// </summary>
-        public readonly SwitchableLoggedBehavior<bool, Tuple<Address, TaskCompletionSource<IAssociationEventListener>>>
-            ListenBehavior;
+        public readonly SwitchableLoggedBehavior<bool, Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> ListenBehavior;
 
         /// <summary>
         /// TBD
@@ -190,7 +189,7 @@ namespace Akka.Remote.Transport
                     remoteHandle.Writeable = true;
                 }, TaskContinuationOptions.ExecuteSynchronously);
 
-                return (AssociationHandle) localHandle;
+                return (AssociationHandle)localHandle;
             }
 
             throw new InvalidAssociationException($"No registered transport: {remoteAddress}");
@@ -465,9 +464,7 @@ namespace Akka.Remote.Transport
         {
             get
             {
-                Func<TIn, Task<TOut>> behavior;
-                if (_behaviorStack.TryPeek(out behavior))
-                    return behavior;
+                if (_behaviorStack.TryPeek(out var behavior)) { return behavior; }
                 return DefaultBehavior; //otherwise, return the default behavior
             }
         }
@@ -532,8 +529,7 @@ namespace Akka.Remote.Transport
         {
             if (_behaviorStack.Count > 1)
             {
-                Func<TIn, Task<TOut>> behavior;
-                _behaviorStack.TryPop(out behavior);
+                _behaviorStack.TryPop(out var behavior);
             }
         }
 
@@ -700,8 +696,7 @@ namespace Akka.Remote.Transport
         /// <returns>The original entries, or null if the key wasn't found in the table.</returns>
         public Tuple<IHandleEventListener, IHandleEventListener> DeregisterAssociation(Tuple<Address, Address> key)
         {
-            Tuple<IHandleEventListener, IHandleEventListener> listeners;
-            _listenersTable.TryRemove(key, out listeners);
+            _listenersTable.TryRemove(key, out var listeners);
             return listeners;
         }
 
@@ -726,7 +721,9 @@ namespace Akka.Remote.Transport
         public IHandleEventListener GetRemoteReadHandlerFor(TestAssociationHandle localHandle)
         {
             if (_listenersTable.TryGetValue(localHandle.Key, out var listeners))
+            {
                 return RemoteListenerRelativeTo(localHandle, listeners);
+            }
 
             return null;
         }

@@ -73,15 +73,21 @@ namespace Akka.Remote.Transport.DotNetty
 
             if (se?.SocketErrorCode == SocketError.OperationAborted)
             {
-                if (Log.IsInfoEnabled) Log.Info("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
-                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                if (Log.IsInfoEnabled)
+                {
+                    Log.Info("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
+                        context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                }
 
                 NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
             }
             else if (se?.SocketErrorCode == SocketError.ConnectionReset)
             {
-                if (Log.IsInfoEnabled) Log.Info("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
-                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                if (Log.IsInfoEnabled)
+                {
+                    Log.Info("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
+                        context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                }
 
                 NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
             }
@@ -123,8 +129,7 @@ namespace Akka.Remote.Transport.DotNetty
                     socketAddress: socketAddress, 
                     schemeIdentifier: Transport.SchemeIdentifier,
                     systemName: Transport.System.Name);
-                AssociationHandle handle;
-                Init(channel, socketAddress, remoteAddress, msg, out handle);
+                Init(channel, socketAddress, remoteAddress, msg, out var handle);
                 listener.Notify(new InboundAssociation(handle));
             }, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
@@ -151,8 +156,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         private void InitOutbound(IChannel channel, IPEndPoint socketAddress, object msg)
         {
-            AssociationHandle handle;
-            Init(channel, socketAddress, _remoteAddress, msg, out handle);
+            Init(channel, socketAddress, _remoteAddress, msg, out var handle);
             _statusPromise.TrySetResult(handle);
         }
     }
@@ -209,9 +213,8 @@ namespace Akka.Remote.Transport.DotNetty
                 var handler = (TcpClientHandler)associate.Pipeline.Last();
                 return await handler.StatusFuture.ConfigureAwait(false);
             }
-            catch (AggregateException e) when (e.InnerException is ConnectException)
+            catch (AggregateException e) when (e.InnerException is ConnectException cause)
             {
-                var cause = (ConnectException)e.InnerException;
                 var socketException = cause?.InnerException as SocketException;
 
                 if (socketException?.SocketErrorCode == SocketError.ConnectionRefused)
@@ -221,10 +224,8 @@ namespace Akka.Remote.Transport.DotNetty
 
                 throw new InvalidAssociationException("Failed to associate with " + remoteAddress, e);
             }
-            catch (AggregateException e) when (e.InnerException is ConnectTimeoutException)
+            catch (AggregateException e) when (e.InnerException is ConnectTimeoutException cause)
             {
-                var cause = (ConnectTimeoutException)e.InnerException;
-
                 throw new InvalidAssociationException(cause.Message);
             }
             catch (ConnectException exc) // ## 苦竹 添加 ##
@@ -248,11 +249,14 @@ namespace Akka.Remote.Transport.DotNetty
         {
             IPEndPoint ipEndPoint;
 
-            var dns = socketAddress as DnsEndPoint;
-            if (dns != null)
+            if (socketAddress is DnsEndPoint dns)
+            {
                 ipEndPoint = await DnsToIPEndpoint(dns).ConfigureAwait(false);
+            }
             else
-                ipEndPoint = (IPEndPoint) socketAddress;
+            {
+                ipEndPoint = (IPEndPoint)socketAddress;
+            }
 
             if (ipEndPoint.Address.Equals(IPAddress.Any) || ipEndPoint.Address.Equals(IPAddress.IPv6Any))
             {
