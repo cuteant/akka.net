@@ -42,7 +42,7 @@ namespace Akka.Remote
     /// (used for forcing all /system level remoting actors onto a dedicated dispatcher)
     /// </summary>
 // ReSharper disable once InconsistentNaming
-    internal sealed class RARP : ExtensionIdProvider<RARP>,  IExtension
+    internal sealed class RARP : ExtensionIdProvider<RARP>, IExtension
     {
         //this is why this extension is called "RARP"
         private readonly IRemoteActorRefProvider _provider;
@@ -52,38 +52,26 @@ namespace Akka.Remote
         /// </summary>
         public RARP() { }
 
-        private RARP(IRemoteActorRefProvider provider)
-        {
-            _provider = provider;
-        }
+        private RARP(IRemoteActorRefProvider provider) => _provider = provider;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="props">TBD</param>
         /// <returns>TBD</returns>
-        public Props ConfigureDispatcher(Props props)
-        {
-            return _provider.RemoteSettings.ConfigureDispatcher(props);
-        }
+        public Props ConfigureDispatcher(Props props) => _provider.RemoteSettings.ConfigureDispatcher(props);
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="system">TBD</param>
         /// <returns>TBD</returns>
-        public override RARP CreateExtension(ExtendedActorSystem system)
-        {
-            return new RARP((IRemoteActorRefProvider)system.Provider);
-        }
+        public override RARP CreateExtension(ExtendedActorSystem system) => new RARP((IRemoteActorRefProvider)system.Provider);
 
         /// <summary>
         /// The underlying remote actor reference provider.
         /// </summary>
-        public IRemoteActorRefProvider Provider
-        {
-            get { return _provider; }
-        }
+        public IRemoteActorRefProvider Provider => _provider;
 
         #region Static methods
 
@@ -92,10 +80,7 @@ namespace Akka.Remote
         /// </summary>
         /// <param name="system">TBD</param>
         /// <returns>TBD</returns>
-        public static RARP For(ActorSystem system)
-        {
-            return system.WithExtension<RARP, RARP>();
-        }
+        public static RARP For(ActorSystem system) => system.WithExtension<RARP, RARP>();
 
         #endregion
     }
@@ -146,18 +131,12 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public override ISet<Address> Addresses
-        {
-            get { return _addresses; }
-        }
+        public override ISet<Address> Addresses => _addresses;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public override Address DefaultAddress
-        {
-            get { return _defaultAddress; }
-        }
+        public override Address DefaultAddress => _defaultAddress;
 
         /// <summary>
         /// Start assumes that it cannot be followed by another Start() without having a Shutdown() first
@@ -179,8 +158,7 @@ namespace Akka.Remote
             if (_endpointManager == null)
             {
                 if (_log.IsInfoEnabled) _log.Info("Starting remoting");
-                _endpointManager =
-                System.SystemActorOf(RARP.For(System).ConfigureDispatcher(
+                _endpointManager = System.SystemActorOf(RARP.For(System).ConfigureDispatcher(
                     Props.Create(() => new EndpointManager(System.Settings.Config, _log)).WithDeploy(Deploy.Local)),
                     EndpointManagerName);
 
@@ -190,16 +168,17 @@ namespace Akka.Remote
 
                     // tells the EndpointManager to start all transports and bind them to listenable addresses, and then set the results
                     // of this promise to include them.
-                    _endpointManager.Tell(new EndpointManager.Listen(addressPromise)); 
+                    _endpointManager.Tell(new EndpointManager.Listen(addressPromise));
 
                     addressPromise.Task.Wait(Provider.RemoteSettings.StartupTimeout);
                     var akkaProtocolTransports = addressPromise.Task.Result;
-                    if(akkaProtocolTransports.Count==0)
+                    if (akkaProtocolTransports.Count == 0)
+                    {
                         throw new ConfigurationException(@"No transports enabled under ""akka.remote.enabled-transports""");
+                    }
                     _addresses = new HashSet<Address>(akkaProtocolTransports.Select(a => a.Address));
 
-                    IEnumerable<IGrouping<string, ProtocolTransportAddressPair>> tmp =
-                        akkaProtocolTransports.GroupBy(t => t.ProtocolTransport.SchemeIdentifier);
+                    var tmp = akkaProtocolTransports.GroupBy(t => t.ProtocolTransport.SchemeIdentifier);
                     _transportMapping = new Dictionary<string, HashSet<ProtocolTransportAddressPair>>(StringComparer.Ordinal);
                     foreach (var g in tmp)
                     {
@@ -210,7 +189,10 @@ namespace Akka.Remote
                     _defaultAddress = akkaProtocolTransports.Head().Address;
                     _addresses = new HashSet<Address>(akkaProtocolTransports.Select(x => x.Address));
 
-                    if (_log.IsInfoEnabled) _log.Info("Remoting started; listening on addresses : [{0}]", string.Join(",", _addresses.Select(x => x.ToString())));
+                    if (_log.IsInfoEnabled)
+                    {
+                        _log.Info("Remoting started; listening on addresses : [{0}]", string.Join(",", _addresses.Select(x => x.ToString())));
+                    }
 
                     _endpointManager.Tell(new EndpointManager.StartupFinished());
                     _eventPublisher.NotifyListeners(new RemotingListenEvent(_addresses.ToList()));
@@ -252,11 +234,11 @@ namespace Akka.Remote
             else
             {
                 var timeout = Provider.RemoteSettings.ShutdownTimeout;
-                Action finalize = () =>
+                void finalize()
                 {
                     _eventPublisher.NotifyListeners(new RemotingShutdownEvent());
                     _endpointManager = null;
-                };
+                }
 
                 return _endpointManager.Ask<bool>(new EndpointManager.ShutdownAndFlush(), timeout).ContinueWith(result =>
                 {
@@ -313,8 +295,7 @@ namespace Akka.Remote
                     Provider.RemoteSettings.CommandAckTimeout)
                     .ContinueWith(result =>
                     {
-                        if (result.IsCanceled || result.IsFaulted)
-                            return false;
+                        if (result.IsCanceled || result.IsFaulted) { return false; }
                         return result.Result.Status;
                     }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
@@ -353,9 +334,7 @@ namespace Akka.Remote
         #region Internal methods
 
         private void NotifyError(string msg, Exception cause)
-        {
-            _eventPublisher.NotifyListeners(new RemotingErrorEvent(new RemoteTransportException(msg, cause)));
-        }
+            => _eventPublisher.NotifyListeners(new RemotingErrorEvent(new RemoteTransportException(msg, cause)));
 
         #endregion
 
@@ -378,17 +357,20 @@ namespace Akka.Remote
         {
             if (transportMapping.TryGetValue(remote.Protocol, out var transports))
             {
-                ProtocolTransportAddressPair[] responsibleTransports =
-                    transports.Where(t => t.ProtocolTransport.IsResponsibleFor(remote)).ToArray();
+                var responsibleTransports = transports.Where(t => t.ProtocolTransport.IsResponsibleFor(remote)).ToArray();
                 if (responsibleTransports.Length == 0)
+                {
                     throw new RemoteTransportException(
                         "No transport is responsible for address:[" + remote + "] although protocol [" + remote.Protocol +
                         "] is available." +
                         " Make sure at least one transport is configured to be responsible for the address.",
                         null);
+                }
 
                 if (responsibleTransports.Length == 1)
+                {
                     return responsibleTransports.First().Address;
+                }
 
                 throw new RemoteTransportException(
                     "Multiple transports are available for [" + remote + ": " +
@@ -443,10 +425,7 @@ namespace Akka.Remote
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        protected override SupervisorStrategy SupervisorStrategy()
-        {
-            return _strategy;
-        }
+        protected override SupervisorStrategy SupervisorStrategy() => _strategy;
 
         /// <summary>
         /// TBD

@@ -170,7 +170,7 @@ namespace Akka.Remote
         {
             if (ReferenceEquals(null, obj)) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is SeqNo && Equals((SeqNo) obj);
+            return obj is SeqNo && Equals((SeqNo)obj);
         }
 
         /// <inheritdoc/>
@@ -359,10 +359,11 @@ namespace Akka.Remote
         /// </summary>
         public ResendUnfulfillableException()
             : base("Unable to fulfill resend request since negatively acknowledged payload is no longer in buffer. " +
-                "The resend states between two systems are compromised and cannot be recovered") { }
+                "The resend states between two systems are compromised and cannot be recovered")
+        { }
     }
 
-#endregion
+    #endregion
 
     /// <summary>
     /// Implements an immutable resend buffer that buffers messages until they have been acknowledged. Properly removes messages
@@ -451,7 +452,7 @@ namespace Akka.Remote
             return $"[{nonAcked}]";
         }
 
-#region Copy methods
+        #region Copy methods
 
         /// <summary>
         /// TBD
@@ -465,14 +466,14 @@ namespace Akka.Remote
             return new AckedSendBuffer<T>(Capacity, maxSeq ?? MaxSeq) { Nacked = nacked ?? Nacked.ToArray().ToList(), NonAcked = nonAcked ?? NonAcked.ToArray().ToList() };
         }
 
-#endregion
+        #endregion
     }
 
     /// <summary>
     /// Helper class that makes it easier to work with <see cref="AckedReceiveBuffer{T}"/> deliverables.
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    sealed class AckReceiveDeliverable<T> where T:IHasSequenceNumber
+    sealed class AckReceiveDeliverable<T> where T : IHasSequenceNumber
     {
         /// <summary>
         /// TBD
@@ -561,8 +562,7 @@ namespace Akka.Remote
             {
                 Buf.Add(arrivedMsg);
             }
-            return Copy(cumulativeAck: SeqNo.Max(arrivedMsg.Seq, CumulativeAck),
-                buffer: Buf);
+            return Copy(cumulativeAck: SeqNo.Max(arrivedMsg.Seq, CumulativeAck), buffer: Buf);
         }
 
         /// <summary>
@@ -608,7 +608,7 @@ namespace Akka.Remote
                 Buf.ExceptWith(deliver);
                 return new AckReceiveDeliverable<T>(Copy(lastDelivered: updatedLastDelivered, buffer: Buf), deliver, ack);
             }
-            
+
         }
 
         /// <summary>
@@ -625,7 +625,7 @@ namespace Akka.Remote
             return Copy(mergedLastDelivered, SeqNo.Max(this.CumulativeAck, other.CumulativeAck), Buf);
         }
 
-#region Copy methods
+        #region Copy methods
 
         /// <summary>
         /// TBD
@@ -639,7 +639,7 @@ namespace Akka.Remote
             return new AckedReceiveBuffer<T>(lastDelivered ?? LastDelivered, cumulativeAck ?? CumulativeAck, buffer ?? new SortedSet<T>(Buf, Comparer));
         }
 
-#endregion
+        #endregion
     }
 }
 

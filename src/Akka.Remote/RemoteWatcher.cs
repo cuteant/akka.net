@@ -133,13 +133,7 @@ namespace Akka.Remote
             /// <summary>
             /// TBD
             /// </summary>
-            public static Heartbeat Instance
-            {
-                get
-                {
-                    return _instance;
-                }
-            }
+            public static Heartbeat Instance => _instance;
         }
 
         /// <summary>
@@ -153,18 +147,12 @@ namespace Akka.Remote
             /// TBD
             /// </summary>
             /// <param name="addressUid">TBD</param>
-            public HeartbeatRsp(int addressUid)
-            {
-                _addressUid = addressUid;
-            }
+            public HeartbeatRsp(int addressUid) => _addressUid = addressUid;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public int AddressUid
-            {
-                get { return _addressUid; }
-            }
+            public int AddressUid => _addressUid;
         }
 
         // sent to self only
@@ -179,13 +167,7 @@ namespace Akka.Remote
             /// <summary>
             /// TBD
             /// </summary>
-            public static HeartbeatTick Instance
-            {
-                get
-                {
-                    return _instance;
-                }
-            }
+            public static HeartbeatTick Instance => _instance;
         }
 
         /// <summary>
@@ -199,13 +181,7 @@ namespace Akka.Remote
             /// <summary>
             /// TBD
             /// </summary>
-            public static ReapUnreachableTick Instance
-            {
-                get
-                {
-                    return _instance;
-                }
-            }
+            public static ReapUnreachableTick Instance => _instance;
         }
 
         /// <summary>
@@ -219,18 +195,12 @@ namespace Akka.Remote
             /// TBD
             /// </summary>
             /// <param name="from">TBD</param>
-            public ExpectedFirstHeartbeat(Address @from)
-            {
-                _from = @from;
-            }
+            public ExpectedFirstHeartbeat(Address @from) => _from = @from;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Address From
-            {
-                get { return _from; }
-            }
+            public Address From => _from;
         }
 
         // test purpose
@@ -242,9 +212,11 @@ namespace Akka.Remote
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as Stats;
-                if (other == null) return false;
-                return _watching == other._watching && _watchingNodes == other._watchingNodes;
+                if (obj is Stats other)
+                {
+                    return _watching == other._watching && _watchingNodes == other._watchingNodes;
+                }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -430,39 +402,56 @@ namespace Akka.Remote
         /// <param name="message">TBD</param>
         protected override void OnReceive(object message)
         {
-            if (message is HeartbeatTick) SendHeartbeat();
-            else if (message is Heartbeat) ReceiveHeartbeat();
-            else if (message is HeartbeatRsp) ReceiveHeartbeatRsp(((HeartbeatRsp)message).AddressUid);
-            else if (message is ReapUnreachableTick) ReapUnreachable();
-            else if (message is ExpectedFirstHeartbeat) TriggerFirstHeartbeat(((ExpectedFirstHeartbeat)message).From);
-            else if (message is WatchRemote watchRemote)
+            switch (message)
             {
-                AddWatching(watchRemote.Watchee, watchRemote.Watcher);
-            }
-            else if (message is UnwatchRemote unwatchRemote)
-            {
-                RemoveWatch(unwatchRemote.Watchee, unwatchRemote.Watcher);
-            }
-            else if (message is Terminated t)
-            {
-                ProcessTerminated(t.ActorRef.AsInstanceOf<IInternalActorRef>(), t.ExistenceConfirmed, t.AddressTerminated);
-            }
-            // test purpose
-            else if (message is Stats)
-            {
-                var watchSet = ImmutableHashSet.Create(Watching.SelectMany(pair =>
-                {
-                    var list = new List<Tuple<IActorRef, IActorRef>>(pair.Value.Count);
-                    var wee = pair.Key;
-                    list.AddRange(pair.Value.Select(wer => Tuple.Create<IActorRef, IActorRef>(wee, wer)));
-                    return list;
-                }).ToArray());
-                Sender.Tell(new Stats(watchSet.Count(), WatchingNodes.Count, watchSet,
-                    ImmutableHashSet.Create(WatchingNodes.ToArray())));
-            }
-            else
-            {
-                Unhandled(message);
+                case HeartbeatTick _:
+                    SendHeartbeat();
+                    break;
+
+                case Heartbeat _:
+                    ReceiveHeartbeat();
+                    break;
+
+                case HeartbeatRsp heartbeatRsp:
+                    ReceiveHeartbeatRsp(heartbeatRsp.AddressUid);
+                    break;
+
+                case ReapUnreachableTick _:
+                    ReapUnreachable();
+                    break;
+
+                case ExpectedFirstHeartbeat expectedFirstHeartbeat:
+                    TriggerFirstHeartbeat(expectedFirstHeartbeat.From);
+                    break;
+
+                case WatchRemote watchRemote:
+                    AddWatching(watchRemote.Watchee, watchRemote.Watcher);
+                    break;
+
+                case UnwatchRemote unwatchRemote:
+                    RemoveWatch(unwatchRemote.Watchee, unwatchRemote.Watcher);
+                    break;
+
+                case Terminated t:
+                    ProcessTerminated(t.ActorRef.AsInstanceOf<IInternalActorRef>(), t.ExistenceConfirmed, t.AddressTerminated);
+                    break;
+
+                // test purpose
+                case Stats _:
+                    var watchSet = ImmutableHashSet.Create(Watching.SelectMany(pair =>
+                    {
+                        var list = new List<Tuple<IActorRef, IActorRef>>(pair.Value.Count);
+                        var wee = pair.Key;
+                        list.AddRange(pair.Value.Select(wer => Tuple.Create<IActorRef, IActorRef>(wee, wer)));
+                        return list;
+                    }).ToArray());
+                    Sender.Tell(new Stats(watchSet.Count(), WatchingNodes.Count, watchSet,
+                        ImmutableHashSet.Create(WatchingNodes.ToArray())));
+                    break;
+
+                default:
+                    Unhandled(message);
+                    break;
             }
         }
 
@@ -476,19 +465,24 @@ namespace Akka.Remote
             var from = Sender.Path.Address;
 
             if (_failureDetector.IsMonitoring(from))
+            {
                 Log.Debug("Received heartbeat rsp from [{0}]", from);
+            }
             else
+            {
                 Log.Debug("Received first heartbeat rsp from [{0}]", from);
+            }
 
             if (WatcheeByNodes.ContainsKey(from) && !Unreachable.Contains(from))
             {
                 if (_addressUids.TryGetValue(from, out int addressUid))
                 {
-                    if (addressUid != uid)
-                        ReWatch(from);
+                    if (addressUid != uid) { ReWatch(from); }
                 }
                 else
+                {
                     ReWatch(from);
+                }
 
                 _addressUids[from] = uid;
                 _failureDetector.Heartbeat(from);
@@ -517,9 +511,7 @@ namespace Akka.Remote
         /// </summary>
         /// <param name="address">TBD</param>
         protected virtual void PublishAddressTerminated(Address address)
-        {
-            AddressTerminatedTopic.Get(Context.System).Publish(new AddressTerminated(address));
-        }
+            => AddressTerminatedTopic.Get(Context.System).Publish(new AddressTerminated(address));
 
         /// <summary>
         /// TBD
@@ -527,9 +519,7 @@ namespace Akka.Remote
         /// <param name="address">TBD</param>
         /// <param name="addressUid">TBD</param>
         protected virtual void Quarantine(Address address, int? addressUid)
-        {
-            _remoteProvider.Quarantine(address, addressUid);
-        }
+            => _remoteProvider.Quarantine(address, addressUid);
 
         /// <summary>
         /// TBD
@@ -540,13 +530,18 @@ namespace Akka.Remote
         protected void AddWatching(IInternalActorRef watchee, IInternalActorRef watcher)
         {
             // TODO: replace with Code Contracts assertion
-            if (watcher.Equals(Self)) throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!");
-            if (Log.IsDebugEnabled) Log.Debug("Watching: [{0} -> {1}]", watcher.Path, watchee.Path);
+            if (watcher.Equals(Self)) { throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!"); }
+            if (Log.IsDebugEnabled) { Log.Debug("Watching: [{0} -> {1}]", watcher.Path, watchee.Path); }
 
             if (Watching.TryGetValue(watchee, out var watching))
+            {
                 watching.Add(watcher);
+            }
             else
+            {
                 Watching.Add(watchee, new HashSet<IInternalActorRef> { watcher });
+            }
+
             WatchNode(watchee);
 
             // add watch from self, this will actually send a Watch to the target when necessary
@@ -568,9 +563,13 @@ namespace Akka.Remote
             }
 
             if (WatcheeByNodes.TryGetValue(watcheeAddress, out var watchees))
+            {
                 watchees.Add(watchee);
+            }
             else
+            {
                 WatcheeByNodes.Add(watcheeAddress, new HashSet<IInternalActorRef> { watchee });
+            }
         }
 
 
@@ -582,15 +581,15 @@ namespace Akka.Remote
         /// <exception cref="InvalidOperationException">TBD</exception>
         protected void RemoveWatch(IInternalActorRef watchee, IInternalActorRef watcher)
         {
-            if (watcher.Equals(Self)) throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!");
-            if (Log.IsDebugEnabled) Log.Debug($"Unwatching: [{watcher.Path} -> {watchee.Path}]");
+            if (watcher.Equals(Self)) { throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!"); }
+            if (Log.IsDebugEnabled) { Log.Debug($"Unwatching: [{watcher.Path} -> {watchee.Path}]"); }
             if (Watching.TryGetValue(watchee, out var watchers))
             {
                 watchers.Remove(watcher);
                 if (!watchers.Any())
                 {
                     // clean up self watch when no more watchers of this watchee
-                    if (Log.IsDebugEnabled) Log.Debug("Cleanup self watch of [{0}]", watchee.Path);
+                    if (Log.IsDebugEnabled) { Log.Debug("Cleanup self watch of [{0}]", watchee.Path); }
                     Context.Unwatch(watchee);
                     RemoveWatchee(watchee);
                 }

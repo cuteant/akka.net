@@ -69,31 +69,25 @@ namespace Akka.Remote
         /// Gets the local address to use.
         /// </summary>
         /// <value>The local address to use.</value>
-        public Address LocalAddressToUse { get; private set; }
+        public Address LocalAddressToUse { get; }
 
         /// <summary>
         /// Gets the remote.
         /// </summary>
         /// <value>The remote.</value>
-        internal RemoteTransport Remote { get; private set; }
+        internal RemoteTransport Remote { get; }
 
         /// <summary>
         /// Gets the parent.
         /// </summary>
         /// <value>The parent.</value>
-        public override IInternalActorRef Parent
-        {
-            get { return _parent; }
-        }
+        public override IInternalActorRef Parent => _parent;
 
         /// <summary>
         /// Gets the provider.
         /// </summary>
         /// <value>The provider.</value>
-        public override IActorRefProvider Provider
-        {
-            get { return Remote.Provider; }
-        }
+        public override IActorRefProvider Provider => Remote.Provider;
 
         private IRemoteActorRefProvider RemoteProvider => Provider as IRemoteActorRefProvider;
 
@@ -110,65 +104,42 @@ namespace Akka.Remote
         /// <param name="name">The name.</param>
         /// <returns>ActorRef.</returns>
         /// <exception cref="System.NotImplementedException">TBD</exception>
-        public override IActorRef GetChild(IEnumerable<string> name)
-        {
-            throw new NotImplementedException();
-        }
+        public override IActorRef GetChild(IEnumerable<string> name) => throw new NotImplementedException();
 
         /// <summary>
         /// Resumes the specified caused by failure.
         /// </summary>
         /// <param name="causedByFailure">The caused by failure.</param>
-        public override void Resume(Exception causedByFailure = null)
-        {
-            SendSystemMessage(new Resume(causedByFailure));
-        }
+        public override void Resume(Exception causedByFailure = null) => SendSystemMessage(new Resume(causedByFailure));
 
         /// <summary>
         /// Stops this instance.
         /// </summary>
-        public override void Stop()
-        {
-            SendSystemMessage(new Terminate());
-        }
+        public override void Stop() => SendSystemMessage(new Terminate());
 
         /// <summary>
         /// Restarts the specified cause.
         /// </summary>
         /// <param name="cause">The cause.</param>
-        public override void Restart(Exception cause)
-        {
-            SendSystemMessage(new Recreate(cause));
-        }
+        public override void Restart(Exception cause) => SendSystemMessage(new Recreate(cause));
 
         /// <summary>
         /// Suspends this instance.
         /// </summary>
-        public override void Suspend()
-        {
-            SendSystemMessage(new Akka.Dispatch.SysMsg.Suspend());
-        }
+        public override void Suspend() => SendSystemMessage(new Akka.Dispatch.SysMsg.Suspend());
 
         /// <summary>
         /// TBD
         /// </summary>
-        public override bool IsLocal
-        {
-            get { return false; }
-        }
+        public override bool IsLocal => false;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public override ActorPath Path
-        {
-            get { return _path; }
-        }
+        public override ActorPath Path => _path;
 
         private void HandleException(Exception ex)
-        {
-            Remote.System.EventStream.Publish(new Error(ex, Path.ToString(), GetType(), "swallowing exception during message send"));
-        }
+            => Remote.System.EventStream.Publish(new Error(ex, Path.ToString(), GetType(), "swallowing exception during message send"));
 
         /// <summary>
         /// Sends the system message.
@@ -179,18 +150,15 @@ namespace Akka.Remote
             try
             {
                 //send to remote, unless watch message is intercepted by the remoteWatcher
-                var watch = message as Watch;
-                if (watch != null && IsWatchIntercepted(watch.Watchee, watch.Watcher))
+                if (message is Watch watch && IsWatchIntercepted(watch.Watchee, watch.Watcher))
                 {
                     RemoteProvider.RemoteWatcher.Tell(new RemoteWatcher.WatchRemote(watch.Watchee, watch.Watcher));
                 }
                 else
                 {
-                    var unwatch = message as Unwatch;
-                    if (unwatch != null && IsWatchIntercepted(unwatch.Watchee, unwatch.Watcher))
+                    if (message is Unwatch unwatch && IsWatchIntercepted(unwatch.Watchee, unwatch.Watcher))
                     {
-                        RemoteProvider.RemoteWatcher.Tell(new RemoteWatcher.UnwatchRemote(unwatch.Watchee,
-                            unwatch.Watcher));
+                        RemoteProvider.RemoteWatcher.Tell(new RemoteWatcher.UnwatchRemote(unwatch.Watchee, unwatch.Watcher));
                     }
                     else
                     {
@@ -212,8 +180,8 @@ namespace Akka.Remote
         /// <exception cref="InvalidMessageException">TBD</exception>
         protected override void TellInternal(object message, IActorRef sender)
         {
-            if(message == null) throw new InvalidMessageException("Message is null.");
-            try { Remote.Send(message, sender, this);}catch(Exception ex) {  HandleException(ex);}
+            if (message == null) { throw new InvalidMessageException("Message is null."); }
+            try { Remote.Send(message, sender, this); } catch (Exception ex) { HandleException(ex); }
         }
 
         /// <summary>
@@ -223,10 +191,8 @@ namespace Akka.Remote
         /// <param name="watchee">The actor being watched.</param>
         /// <param name="watcher">The actor watching.</param>
         /// <returns>TBD</returns>
-        public bool IsWatchIntercepted(IActorRef watchee, IActorRef watcher)
-        {
-            return !watcher.Equals(RemoteProvider.RemoteWatcher) && watchee.Equals(this);
-        }
+        public bool IsWatchIntercepted(IActorRef watchee, IActorRef watcher) 
+            => !watcher.Equals(RemoteProvider.RemoteWatcher) && watchee.Equals(this);
 
         /// <summary>
         /// Starts this instance.
@@ -234,7 +200,9 @@ namespace Akka.Remote
         public override void Start()
         {
             if (_props != null && _deploy != null)
+            {
                 Remote.Provider.UseActorOnNode(this, _props, _deploy, _parent);
+            }
         }
     }
 }

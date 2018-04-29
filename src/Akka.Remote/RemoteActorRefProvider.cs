@@ -162,57 +162,45 @@ namespace Akka.Remote
         /* these are only available after Init() is called */
 
         /// <inheritdoc/>
-        public ActorPath RootPath
-        {
-            get { return _local.RootPath; }
-        }
+        public ActorPath RootPath => _local.RootPath;
 
         /// <inheritdoc/>
-        public IInternalActorRef RootGuardian { get { return _local.RootGuardian; } }
+        public IInternalActorRef RootGuardian => _local.RootGuardian;
 
         /// <inheritdoc/>
-        public LocalActorRef Guardian { get { return _local.Guardian; } }
+        public LocalActorRef Guardian => _local.Guardian;
 
         /// <inheritdoc/>
-        public LocalActorRef SystemGuardian { get { return _local.SystemGuardian; } }
+        public LocalActorRef SystemGuardian => _local.SystemGuardian;
 
         /// <inheritdoc/>
-        public IInternalActorRef TempContainer { get { return _local.TempContainer; } }
+        public IInternalActorRef TempContainer => _local.TempContainer;
 
         /// <inheritdoc/>
-        public IActorRef DeadLetters { get { return _local.DeadLetters; } }
+        public IActorRef DeadLetters => _local.DeadLetters;
 
         /// <inheritdoc/>
         public Deployer Deployer { get; protected set; }
 
         /// <inheritdoc/>
-        public Address DefaultAddress { get { return Transport.DefaultAddress; } }
+        public Address DefaultAddress => Transport.DefaultAddress;
 
         /// <inheritdoc/>
-        public Settings Settings { get { return _local.Settings; } }
+        public Settings Settings => _local.Settings;
 
         /// <inheritdoc/>
-        public Task TerminationTask { get { return _local.TerminationTask; } }
+        public Task TerminationTask => _local.TerminationTask;
 
-        private IInternalActorRef InternalDeadLetters { get { return (IInternalActorRef)_local.DeadLetters; } }
-
-        /// <inheritdoc/>
-        public ActorPath TempPath()
-        {
-            return _local.TempPath();
-        }
+        private IInternalActorRef InternalDeadLetters => (IInternalActorRef)_local.DeadLetters;
 
         /// <inheritdoc/>
-        public void RegisterTempActor(IInternalActorRef actorRef, ActorPath path)
-        {
-            _local.RegisterTempActor(actorRef, path);
-        }
+        public ActorPath TempPath() => _local.TempPath();
 
         /// <inheritdoc/>
-        public void UnregisterTempActor(ActorPath path)
-        {
-            _local.UnregisterTempActor(path);
-        }
+        public void RegisterTempActor(IInternalActorRef actorRef, ActorPath path) => _local.RegisterTempActor(actorRef, path);
+
+        /// <inheritdoc/>
+        public void UnregisterTempActor(ActorPath path) => _local.UnregisterTempActor(path);
 
         private volatile IActorRef _remotingTerminator;
         private volatile IActorRef _remoteWatcher;
@@ -310,7 +298,7 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         public IInternalActorRef ActorOf(ActorSystemImpl system, Props props, IInternalActorRef supervisor, ActorPath path, bool systemService, Deploy deploy, bool lookupDeploy, bool async)
         {
-            if (systemService) return LocalActorOf(system, props, supervisor, path, true, deploy, lookupDeploy, async);
+            if (systemService) { return LocalActorOf(system, props, supervisor, path, true, deploy, lookupDeploy, async); }
 
             /*
             * This needs to deal with "mangled" paths, which are created by remote
@@ -341,8 +329,14 @@ namespace Akka.Remote
             Deploy configDeploy = null;
             if (lookupDeploy)
             {
-                if (string.Equals(elements.Head(), "user", StringComparison.Ordinal)) configDeploy = Deployer.Lookup(elements.Drop(1));
-                else if (string.Equals(elements.Head(), "remote", StringComparison.Ordinal)) configDeploy = LookUpRemotes(elements);
+                if (string.Equals(elements.Head(), "user", StringComparison.Ordinal))
+                {
+                    configDeploy = Deployer.Lookup(elements.Drop(1));
+                }
+                else if (string.Equals(elements.Head(), "remote", StringComparison.Ordinal))
+                {
+                    configDeploy = LookUpRemotes(elements);
+                }
             }
 
             //merge all of the fallbacks together
@@ -407,9 +401,9 @@ namespace Akka.Remote
         /// <returns></returns>
         public Deploy LookUpRemotes(IEnumerable<string> p)
         {
-            if (p == null || !p.Any()) return Deploy.None;
-            if (string.Equals(p.Head(), "remote", StringComparison.Ordinal)) return LookUpRemotes(p.Drop(3));
-            if (string.Equals(p.Head(), "user", StringComparison.Ordinal)) return Deployer.Lookup(p.Drop(1));
+            if (p == null || !p.Any()) { return Deploy.None; }
+            if (string.Equals(p.Head(), "remote", StringComparison.Ordinal)) { return LookUpRemotes(p.Drop(3)); }
+            if (string.Equals(p.Head(), "user", StringComparison.Ordinal)) { return Deployer.Lookup(p.Drop(1)); }
             return Deploy.None;
         }
 
@@ -425,10 +419,7 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         public IActorRef RootGuardianAt(Address address)
         {
-            if (HasAddress(address))
-            {
-                return RootGuardian;
-            }
+            if (HasAddress(address)) { return RootGuardian; }
             return CreateRemoteRef(new RootActorPath(address), Transport.LocalAddressForRemote(address));
         }
 
@@ -463,8 +454,7 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         public IInternalActorRef ResolveActorRefWithLocalAddress(string path, Address localAddress)
         {
-            ActorPath actorPath;
-            if (TryParseCachedPath(path, out actorPath))
+            if (TryParseCachedPath(path, out var actorPath))
             {
                 //the actor's local address was already included in the ActorPath
                 if (HasAddress(actorPath.Address))
@@ -489,9 +479,7 @@ namespace Akka.Remote
         /// <param name="localAddress">The local path of the actor.</param>
         /// <returns>An <see cref="IInternalActorRef"/> instance.</returns>
         protected virtual IInternalActorRef CreateRemoteRef(ActorPath actorPath, Address localAddress)
-        {
-            return new RemoteActorRef(Transport, localAddress, actorPath, ActorRefs.Nobody, Props.None, Deploy.None);
-        }
+            => new RemoteActorRef(Transport, localAddress, actorPath, ActorRefs.Nobody, Props.None, Deploy.None);
 
         /// <summary>
         /// Resolves a deserialized path into an <see cref="IActorRef"/>
@@ -517,11 +505,9 @@ namespace Akka.Remote
         /// <returns>An <see cref="IActorRef"/> if a match was found. Otherwise nobody.</returns>
         public IActorRef InternalResolveActorRef(string path)
         {
-            if (path == String.Empty)
-                return ActorRefs.NoSender;
+            if (path == String.Empty) { return ActorRefs.NoSender; }
 
-            if (ActorPath.TryParse(path, out ActorPath actorPath))
-                return ResolveActorRef(actorPath);
+            if (ActorPath.TryParse(path, out ActorPath actorPath)) { return ResolveActorRef(actorPath); }
 
             if (_log.IsDebugEnabled) _log.Debug("resolve of unknown path [{0}] failed", path);
             return DeadLetters;
@@ -688,8 +674,7 @@ namespace Akka.Remote
             {
                 When(TerminatorState.Uninitialized, @event =>
                 {
-                    var internals = @event.FsmEvent as Internals;
-                    if (internals != null)
+                    if (@event.FsmEvent is Internals internals)
                     {
                         _systemGuardian.Tell(RegisterTerminationHook.Instance);
                         return GoTo(TerminatorState.Idle).Using(internals);
@@ -738,18 +723,9 @@ namespace Akka.Remote
             {
                 private TransportShutdown() { }
                 private static readonly TransportShutdown _instance = new TransportShutdown();
-                public static TransportShutdown Instance
-                {
-                    get
-                    {
-                        return _instance;
-                    }
-                }
+                public static TransportShutdown Instance => _instance;
 
-                public override string ToString()
-                {
-                    return "<TransportShutdown>";
-                }
+                public override string ToString() => "<TransportShutdown>";
             }
         }
 
@@ -764,18 +740,15 @@ namespace Akka.Remote
 
             protected override void TellInternal(object message, IActorRef sender)
             {
-                var send = message as EndpointManager.Send;
-                var deadLetter = message as DeadLetter;
-                if (send != null)
+                if (message is EndpointManager.Send send)
                 {
                     if (send.Seq == null)
                     {
                         base.TellInternal(send.Message, send.SenderOption ?? ActorRefs.NoSender);
                     }
                 }
-                else if (deadLetter?.Message is EndpointManager.Send)
+                else if (message is DeadLetter deadLetter && deadLetter.Message is EndpointManager.Send deadSend)
                 {
-                    var deadSend = (EndpointManager.Send)deadLetter.Message;
                     if (deadSend.Seq == null)
                     {
                         base.TellInternal(deadSend.Message, deadSend.SenderOption ?? ActorRefs.NoSender);

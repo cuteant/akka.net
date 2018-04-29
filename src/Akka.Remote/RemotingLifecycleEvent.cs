@@ -71,10 +71,7 @@ namespace Akka.Remote
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override LogLevel LogLevel()
-        {
-            return Event.LogLevel.DebugLevel;
-        }
+        public override LogLevel LogLevel() => Event.LogLevel.DebugLevel;
 
         /// <summary>
         /// TBD
@@ -110,10 +107,7 @@ namespace Akka.Remote
     public sealed class DisassociatedEvent : AssociationEvent
     {
         /// <inheritdoc/>
-        public override LogLevel LogLevel()
-        {
-            return Event.LogLevel.DebugLevel;
-        }
+        public override LogLevel LogLevel() => Event.LogLevel.DebugLevel;
 
         /// <inheritdoc/>
         public override Address LocalAddress { get; protected set; }
@@ -165,17 +159,14 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public Exception Cause { get; private set; }
+        public Exception Cause { get; }
 
         private readonly LogLevel _level;
         /// <summary>
         /// TBD
         /// </summary>
-		/// <returns>TBD</returns>
-        public override LogLevel LogLevel()
-        {
-            return _level;
-        }
+        /// <returns>TBD</returns>
+        public override LogLevel LogLevel() => _level;
 
         /// <summary>
         /// TBD
@@ -194,10 +185,7 @@ namespace Akka.Remote
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override string ToString()
-        {
-            return string.Format("{0}: Error [{1}] [{2}]", base.ToString(), Cause.Message, Cause.StackTrace);
-        }
+        public override string ToString() => $"{base.ToString()}: Error [{Cause.Message}] [{Cause.StackTrace}]";
     }
 
     /// <summary>
@@ -217,26 +205,19 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public IList<Address> ListenAddresses { get; private set; }
+        public IList<Address> ListenAddresses { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override LogLevel LogLevel()
-        {
-            return Event.LogLevel.InfoLevel;
-        }
+        public override LogLevel LogLevel() => Event.LogLevel.InfoLevel;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override string ToString()
-        {
-            return string.Format("Remoting now listens on addresses: [{0}]",
-                ListenAddresses.Select(x => x.ToString()).Join(","));
-        }
+        public override string ToString() => $"Remoting now listens on addresses: [{ListenAddresses.Select(x => x.ToString()).Join(",")}]";
     }
 
     /// <summary>
@@ -245,16 +226,10 @@ namespace Akka.Remote
     public sealed class RemotingShutdownEvent : RemotingLifecycleEvent
     {
         /// <inheritdoc/>
-        public override LogLevel LogLevel()
-        {
-            return Event.LogLevel.InfoLevel;
-        }
+        public override LogLevel LogLevel() => Event.LogLevel.InfoLevel;
 
         /// <inheritdoc/>
-        public override string ToString()
-        {
-            return "Remoting shut down";
-        }
+        public override string ToString() => "Remoting shut down";
     }
 
     /// <summary>
@@ -274,25 +249,19 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public Exception Cause { get; private set; }
+        public Exception Cause { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override LogLevel LogLevel()
-        {
-            return Event.LogLevel.ErrorLevel;
-        }
+        public override LogLevel LogLevel() => Event.LogLevel.ErrorLevel;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override string ToString()
-        {
-            return string.Format("Remoting error: [{0}] [{1}]", Cause.Message, Cause.StackTrace);
-        }
+        public override string ToString() => $"Remoting error: [{Cause.Message}] [{Cause.StackTrace}]";
     }
 
     /// <summary>
@@ -314,21 +283,18 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public Address Address { get; private set; }
+        public Address Address { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public int Uid { get; private set; }
+        public int Uid { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override LogLevel LogLevel()
-        {
-            return Event.LogLevel.WarningLevel;
-        }
+        public override LogLevel LogLevel() => Event.LogLevel.WarningLevel;
 
         /// <summary>
         /// TBD
@@ -363,30 +329,24 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public Address LocalAddress { get; private set; }
+        public Address LocalAddress { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public Address RemoteAddress { get; private set; }
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <returns>TBD</returns>
-        public override LogLevel LogLevel()
-        {
-            return Event.LogLevel.WarningLevel;
-        }
+        public Address RemoteAddress { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override string ToString()
-        {
-            return string.Format("The remote system {0} has quarantined this system {1}.", RemoteAddress, LocalAddress);
-        }
+        public override LogLevel LogLevel() => Event.LogLevel.WarningLevel;
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <returns>TBD</returns>
+        public override string ToString() => $"The remote system {RemoteAddress} has quarantined this system {LocalAddress}.";
     }
 
     /// <summary>
@@ -399,12 +359,12 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public ActorSystem System { get; private set; }
+        public ActorSystem System { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public ILoggingAdapter Log { get; private set; }
+        public ILoggingAdapter Log { get; }
 
         /// <summary>
         /// TBD

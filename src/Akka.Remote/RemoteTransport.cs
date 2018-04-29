@@ -41,12 +41,12 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public ExtendedActorSystem System { get; private set; }
+        public ExtendedActorSystem System { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public RemoteActorRefProvider Provider { get; private set; }
+        public RemoteActorRefProvider Provider { get; }
 
         /// <summary>
         /// Addresses to be used in <see cref="RootActorPath"/> of refs generated for this transport.

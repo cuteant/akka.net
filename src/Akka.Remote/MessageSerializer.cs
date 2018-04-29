@@ -62,7 +62,9 @@ namespace Akka.Remote
             else
             {
                 if (serializer.IncludeManifest)
+                {
                     serializedMsg.MessageManifest = ByteString.CopyFromUtf8(objectType.TypeQualifiedName());
+                }
             }
 
             return serializedMsg;

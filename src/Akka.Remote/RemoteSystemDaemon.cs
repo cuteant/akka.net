@@ -118,36 +118,37 @@ namespace Akka.Remote
         /// <param name="sender">The sender.</param>
         protected override void TellInternal(object message, IActorRef sender)
         {
-            //note: RemoteDaemon does not handle ActorSelection messages - those are handled directly by the RemoteActorRefProvider.
-            if (message is IDaemonMsg)
+            switch (message)
             {
-                Log.Debug("Received command [{0}] to RemoteSystemDaemon on [{1}]", message, Path.Address);
-                if (message is DaemonMsgCreate) HandleDaemonMsgCreate((DaemonMsgCreate)message);
-            }
+                //note: RemoteDaemon does not handle ActorSelection messages - those are handled directly by the RemoteActorRefProvider.
+                case IDaemonMsg _:
+                    Log.Debug("Received command [{0}] to RemoteSystemDaemon on [{1}]", message, Path.Address);
+                    if (message is DaemonMsgCreate daemon) HandleDaemonMsgCreate(daemon);
+                    break;
 
-            //Remote ActorSystem on another process / machine has died. 
-            //Need to clean up any references to remote deployments here.
-            else if (message is AddressTerminated)
-            {
-                var addressTerminated = (AddressTerminated)message;
-                //stop any remote actors that belong to this address
-                ForEachChild(@ref =>
-                {
-                    if (@ref.Parent.Path.Address == addressTerminated.Address) _system.Stop(@ref);
-                });
-            }
-            else if (message is Identify)
-            {
-                var identify = message as Identify;
-                sender.Tell(new ActorIdentity(identify.MessageId, this));
-            }
-            else if (message is TerminationHook)
-            {
-                _terminating.SwitchOn(() =>
-                {
-                    TerminationHookDoneWhenNoChildren();
-                    ForEachChild(c => _system.Stop(c));
-                });
+                //Remote ActorSystem on another process / machine has died. 
+                //Need to clean up any references to remote deployments here.
+                case AddressTerminated addressTerminated:
+                    //stop any remote actors that belong to this address
+                    ForEachChild(@ref =>
+                    {
+                        if (@ref.Parent.Path.Address == addressTerminated.Address) _system.Stop(@ref);
+                    });
+                    break;
+
+                case Identify identify:
+                    sender.Tell(new ActorIdentity(identify.MessageId, this));
+                    break;
+                case TerminationHook _:
+                    _terminating.SwitchOn(() =>
+                    {
+                        TerminationHookDoneWhenNoChildren();
+                        ForEachChild(c => _system.Stop(c));
+                    });
+                    break;
+
+                default:
+                    break;
             }
         }
 
@@ -160,12 +161,10 @@ namespace Akka.Remote
             if (message is DeathWatchNotification)
             {
                 var deathWatchNotification = message as DeathWatchNotification;
-                var child = deathWatchNotification.Actor as ActorRefWithCell;
-                if (child != null)
+                if (deathWatchNotification.Actor is ActorRefWithCell child)
                 {
                     if (child.IsLocal)
                     {
-
                         _terminating.Locked(() =>
                         {
                             var name = child.Path.Elements.Drop(1).Join("/");
@@ -183,13 +182,11 @@ namespace Akka.Remote
                 else
                 {
                     var parent = deathWatchNotification.Actor;
-                    var parentWithScope = parent as IActorRefScope;
-                    if (parentWithScope != null && !parentWithScope.IsLocal)
+                    if (parent is IActorRefScope parentWithScope && !parentWithScope.IsLocal)
                     {
                         _terminating.Locked(() =>
                         {
-                            IImmutableSet<IActorRef> children;
-                            if (_parent2Children.TryRemove(parent, out children))
+                            if (_parent2Children.TryRemove(parent, out var children))
                             {
                                 foreach (var c in children)
                                 {
@@ -218,8 +215,7 @@ namespace Akka.Remote
             var supervisor = (IInternalActorRef) message.Supervisor;
             var parent = supervisor;
             Props props = message.Props;
-            ActorPath childPath;
-            if(ActorPath.TryParse(message.Path, out childPath))
+            if(ActorPath.TryParse(message.Path, out var childPath))
             {
                 IEnumerable<string> subPath = childPath.ElementsWithUid.Drop(1); //drop the /remote
                 ActorPath p = Path/subPath;
@@ -272,14 +268,12 @@ namespace Akka.Remote
                 if (child == null)
                 {
                     var last = path.LastIndexOf("/", StringComparison.Ordinal);
-                    if (last == -1)
-                        return Nobody.Instance;
+                    if (last == -1) { return Nobody.Instance; }
                     path = path.Substring(0, last);
                     n++;
                     continue;
                 }
-                if (nameAndUid.Uid != ActorCell.UndefinedUid && nameAndUid.Uid != child.Path.Uid)
-                    return Nobody.Instance;
+                if (nameAndUid.Uid != ActorCell.UndefinedUid && nameAndUid.Uid != child.Path.Uid) { return Nobody.Instance; }
 
                 return n == 0 ? child : child.GetChild(elements.TakeRight(n));
             }
@@ -289,8 +283,7 @@ namespace Akka.Remote
         private IInternalActorRef GetChild(string name)
         {
             var nameAndUid = ActorCell.SplitNameAndUid(name);
-            IInternalActorRef child;
-            if (TryGetChild(nameAndUid.Name, out child))
+            if (TryGetChild(nameAndUid.Name, out var child))
             {
                 if (nameAndUid.Uid != ActorCell.UndefinedUid && nameAndUid.Uid != child.Path.Uid)
                 {
@@ -307,11 +300,17 @@ namespace Akka.Remote
             while (weDontHaveTailRecursion)
             {
                 if (_parent2Children.TryAdd(parent, ImmutableHashSet<IActorRef>.Empty.Add(child)))
+                {
                     return true; //child was successfully added
+                }
 
                 if (_parent2Children.TryGetValue(parent, out var children))
+                {
                     if (_parent2Children.TryUpdate(parent, children.Add(child), children))
+                    {
                         return false; //child successfully added
+                    }
+                }
             }
         }
 
@@ -320,11 +319,15 @@ namespace Akka.Remote
             const bool weDontHaveTailRecursion = true;
             while (weDontHaveTailRecursion)
             {
-                if (!_parent2Children.TryGetValue(parent, out var children)) 
+                if (!_parent2Children.TryGetValue(parent, out var children))
+                {
                     return false; //parent is missing, so child does not need to be removed
+                }
 
                 if (_parent2Children.TryUpdate(parent, children.Remove(child), children))
+                {
                     return true; //child was removed
+                }
             }
         }
     }

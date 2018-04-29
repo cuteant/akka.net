@@ -45,16 +45,17 @@ namespace Akka.Remote
 
             var remote = deploy.Config.GetString("remote");
 
-            ActorPath actorPath;
-            if(ActorPath.TryParse(remote, out actorPath))
+            if (ActorPath.TryParse(remote, out var actorPath))
             {
                 var address = actorPath.Address;
                 //can have remotely deployed routers that remotely deploy routees
                 return CheckRemoteRouterConfig(deploy.WithScope(scope: new RemoteScope(address)));
             }
-            
+
             if (!string.IsNullOrWhiteSpace(remote))
+            {
                 throw new ConfigurationException($"unparseable remote node name [{remote}]");
+            }
 
             return CheckRemoteRouterConfig(deploy);
         }
@@ -65,8 +66,10 @@ namespace Akka.Remote
             if (nodes.Any() && deploy.RouterConfig != null)
             {
                 if (deploy.RouterConfig is Pool)
-                    return
-                        deploy.WithRouterConfig(new RemoteRouterConfig(deploy.RouterConfig.AsInstanceOf<Pool>(), nodes));
+                {
+                    return deploy.WithRouterConfig(new RemoteRouterConfig(deploy.RouterConfig.AsInstanceOf<Pool>(), nodes));
+                }
+
                 return deploy.WithScope(scope: Deploy.NoScopeGiven);
             }
             else

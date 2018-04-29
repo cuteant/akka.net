@@ -93,10 +93,7 @@ namespace Akka.Remote
         /// TBD
         /// </summary>
         /// <param name="clock">TBD</param>
-        protected PhiAccrualFailureDetector(Clock clock)
-        {
-            _clock = clock ?? DefaultClock;
-        }
+        protected PhiAccrualFailureDetector(Clock clock) => _clock = clock ?? DefaultClock;
 
         /// <summary>
         /// Guess statistics for first heartbeat,
@@ -132,37 +129,27 @@ namespace Akka.Remote
             /// <summary>
             /// TBD
             /// </summary>
-            public HeartbeatHistory History { get; private set; }
+            public HeartbeatHistory History { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public long? TimeStamp { get; private set; }
+            public long? TimeStamp { get; }
         }
 
         private AtomicReference<State> _state;
 
-        private State state
-        {
-            get { return _state; }
-            set { _state = value; }
-        }
+        private State state { get => _state; set => _state = value; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public override bool IsAvailable
-        {
-            get { return IsTimeStampAvailable(_clock()); }
-        }
+        public override bool IsAvailable => IsTimeStampAvailable(_clock());
 
         /// <summary>
         /// TBD
         /// </summary>
-        public override bool IsMonitoring
-        {
-            get { return state.TimeStamp.HasValue; }
-        }
+        public override bool IsMonitoring => state.TimeStamp.HasValue;
 
         /// <summary>
         /// TBD
@@ -190,23 +177,17 @@ namespace Akka.Remote
 
             var newState = new State(newHistory, timestamp);
             //if we won the race then update else try again
-            if(!_state.CompareAndSet(oldState, newState)) HeartBeat();
+            if (!_state.CompareAndSet(oldState, newState)) { HeartBeat(); }
         }
 
         #region Internal methods
 
-        private bool IsTimeStampAvailable(long timestamp)
-        {
-            return Phi(timestamp) < _threshold;
-        }
+        private bool IsTimeStampAvailable(long timestamp) => Phi(timestamp) < _threshold;
 
         /// <summary>
         /// TBD
         /// </summary>
-        internal double CurrentPhi
-        {
-            get { return Phi(_clock()); }
-        }
+        internal double CurrentPhi => Phi(_clock());
 
         /// <summary>
         /// TBD
@@ -219,7 +200,9 @@ namespace Akka.Remote
             var oldTimestamp = oldState.TimeStamp;
 
             if (!oldTimestamp.HasValue)
+            {
                 return 0.0d; //treat unmanaged connections, e.g. with zero heartbeats, as healthy connections
+            }
             else
             {
                 unchecked // in the extremely rare event of a clock roll-over
@@ -248,28 +231,23 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         internal double Phi(long timeDiff, double mean, double stdDeviation)
         {
-            var y = (timeDiff - mean)/stdDeviation;
-            var e = Math.Exp(-y*(1.5976 + 0.070566*y*y));
+            var y = (timeDiff - mean) / stdDeviation;
+            var e = Math.Exp(-y * (1.5976 + 0.070566 * y * y));
             if (timeDiff > mean)
-                return -Math.Log10(e/(1.0d + e));
+            {
+                return -Math.Log10(e / (1.0d + e));
+            }
             else
-                return -Math.Log10(1.0d - 1.0d/(1.0d + e));
+            {
+                return -Math.Log10(1.0d - 1.0d / (1.0d + e));
+            }
         }
 
-        private long MinStdDeviationMillis
-        {
-            get { return (long)_minStdDeviation.TotalMilliseconds; }
-        }
+        private long MinStdDeviationMillis => (long)_minStdDeviation.TotalMilliseconds;
 
-        private long AcceptableHeartbeatPauseMillis
-        {
-            get { return (long)_acceptableHeartbeatPause.TotalMilliseconds; }
-        }
+        private long AcceptableHeartbeatPauseMillis => (long)_acceptableHeartbeatPause.TotalMilliseconds;
 
-        private double EnsureValidStdDeviation(double stdDeviation)
-        {
-            return Math.Max(stdDeviation, MinStdDeviationMillis);
-        }
+        private double EnsureValidStdDeviation(double stdDeviation) => Math.Max(stdDeviation, MinStdDeviationMillis);
 
         #endregion
     }
@@ -321,26 +299,17 @@ namespace Akka.Remote
         /// <summary>
         /// TBD
         /// </summary>
-        public double Mean
-        {
-            get { return ((double)_intervalSum / _intervals.Count); }
-        }
+        public double Mean => ((double)_intervalSum / _intervals.Count);
 
         /// <summary>
         /// TBD
         /// </summary>
-        public double Variance
-        {
-            get { return ((double)_squaredIntervalSum / _intervals.Count) - (Mean * Mean); }
-        }
+        public double Variance => ((double)_squaredIntervalSum / _intervals.Count) - (Mean * Mean);
 
         /// <summary>
         /// TBD
         /// </summary>
-        public double StdDeviation
-        {
-            get { return Math.Sqrt(Variance); }
-        }
+        public double StdDeviation => Math.Sqrt(Variance);
 
         /// <summary>
         /// Increments the <see cref="HeartbeatHistory"/>.
@@ -362,14 +331,9 @@ namespace Akka.Remote
         }
 
         private static HeartbeatHistory DropOldest(HeartbeatHistory history)
-        {
-            return new HeartbeatHistory(history._maxSampleSize, history._intervals.Skip(1).ToList(), history._intervalSum - history._intervals.First(), history._squaredIntervalSum - Pow2(history._intervals.First()));
-        }
+            => new HeartbeatHistory(history._maxSampleSize, history._intervals.Skip(1).ToList(), history._intervalSum - history._intervals.First(), history._squaredIntervalSum - Pow2(history._intervals.First()));
 
-        private static long Pow2(long x)
-        {
-            return x * x;
-        }
+        private static long Pow2(long x) => x * x;
 
         #region Factory methods
 
@@ -381,10 +345,7 @@ namespace Akka.Remote
         /// </summary>
         /// <param name="maxSampleSize">TBD</param>
         /// <returns>TBD</returns>
-        public static HeartbeatHistory Apply(int maxSampleSize)
-        {
-            return new HeartbeatHistory(maxSampleSize, new List<long>(), 0L, 0L);
-        }
+        public static HeartbeatHistory Apply(int maxSampleSize) => new HeartbeatHistory(maxSampleSize, new List<long>(), 0L, 0L);
 
         #endregion
     }

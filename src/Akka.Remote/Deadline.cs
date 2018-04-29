@@ -59,20 +59,15 @@ namespace Akka.Remote
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            var deadlineObj = ((Deadline) obj);
-            if (deadlineObj == null)
+            if (obj is Deadline deadlineObj)
             {
-                return false;
+                return When.Equals(deadlineObj.When);
             }
-
-            return When.Equals(deadlineObj.When);
+            return false;
         }
 
         /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            return When.GetHashCode();
-        }
+        public override int GetHashCode() => When.GetHashCode();
 
         #endregion
 
@@ -82,13 +77,7 @@ namespace Akka.Remote
         /// <summary>
         /// A deadline that is due <see cref="DateTime.UtcNow"/>
         /// </summary>
-        public static Deadline Now
-        {
-            get
-            {
-                return new Deadline(DateTime.UtcNow);
-            }
-        }
+        public static Deadline Now => new Deadline(DateTime.UtcNow);
 
         /// <summary>
         /// Adds a given <see cref="TimeSpan"/> to the due time of this <see cref="Deadline"/>
@@ -97,9 +86,7 @@ namespace Akka.Remote
         /// <param name="duration">The amount of time being added to the deadline</param>
         /// <returns>A new deadline with the specified duration added to the due time</returns>
         public static Deadline operator +(Deadline deadline, TimeSpan duration)
-        {
-            return new Deadline(deadline.When.Add(duration));
-        }
+            => new Deadline(deadline.When.Add(duration));
 
         /// <summary>
         /// Adds a given <see cref="Nullable{TimeSpan}"/> to the due time of this <see cref="Deadline"/>
@@ -108,12 +95,7 @@ namespace Akka.Remote
         /// <param name="duration">The amount of time being added to the deadline</param>
         /// <returns>A new deadline with the specified duration added to the due time</returns>
         public static Deadline operator +(Deadline deadline, TimeSpan? duration)
-        {
-            if (duration.HasValue)
-                return new Deadline(deadline.When.Add(duration.Value));
-            else
-                return deadline;
-        }
+            => duration.HasValue ? new Deadline(deadline.When.Add(duration.Value)) : deadline;
 
         #endregion
     }

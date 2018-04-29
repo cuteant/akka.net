@@ -74,17 +74,17 @@ namespace Akka.Remote
             if (payloadBytes >= _logFrameSizeExceeding)
             {
                 Type type;
-                if (msg is ActorSelectionMessage)
+                switch (msg)
                 {
-                    type = ((ActorSelectionMessage) msg).Message.GetType();
-                }
-                else if (msg is RouterEnvelope)
-                {
-                    type = ((RouterEnvelope) msg).Message.GetType();
-                }
-                else
-                {
-                    type = msg.GetType();
+                    case ActorSelectionMessage actor:
+                        type = actor.Message.GetType();
+                        break;
+                    case RouterEnvelope router:
+                        type = router.Message.GetType();
+                        break;
+                    default:
+                        type = msg.GetType();
+                        break;
                 }
 
                 // 10% threshold until next log
