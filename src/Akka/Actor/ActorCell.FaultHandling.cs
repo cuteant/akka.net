@@ -64,7 +64,7 @@ namespace Akka.Actor
                 try
                 {
                     // if the actor fails in preRestart, we can do nothing but log it: it’s best-effort
-                    
+
                     failedActor.AroundPreRestart(cause, optionalMessage);
 
                     // run actor pre-incarnation plugin pipeline
@@ -178,7 +178,7 @@ namespace Akka.Actor
             {
                 HandleNonFatalOrInterruptedException(() => HandleInvokeFailure(e));
             }
-        }      
+        }
 
         /// <summary>Terminates this instance.</summary>
         private void Terminate()
@@ -197,7 +197,7 @@ namespace Akka.Actor
                 // separate iteration because this is a very rare case that should not penalize normal operation
                 foreach (var child in Children)
                 {
-                    if(!child.AsInstanceOf<IActorRefScope>().IsLocal) // send ourselves a deathwatch notification preemptively for non-local children
+                    if (!child.AsInstanceOf<IActorRefScope>().IsLocal) // send ourselves a deathwatch notification preemptively for non-local children
                         Self.AsInstanceOf<IInternalActorRef>().SendSystemMessage(new DeathWatchNotification(child, true, false));
                 }
             }
@@ -268,7 +268,7 @@ namespace Akka.Actor
         {
             foreach (var child in ChildrenContainer.Children)
             {
-                Stop(child); 
+                Stop(child);
             }
         }
 
@@ -298,7 +298,7 @@ namespace Akka.Actor
             }
             finally
             {
-                try{ Dispatcher.Detach(this); }
+                try { Dispatcher.Detach(this); }
                 finally
                 {
                     try { Parent.SendSystemMessage(new DeathWatchNotification(_self, existenceConfirmed: true, addressTerminated: false)); }
@@ -424,18 +424,22 @@ namespace Akka.Actor
 
             // if the removal changed the state of the (terminating) children container,
             // then we are continuing the previously suspended recreate/create/terminate action
-            var recreation = status as SuspendReason.Recreation;
-            if (recreation != null)
+            switch (status)
             {
-                FinishRecreate(recreation.Cause, _actor);
-            }
-            else if (status is SuspendReason.Creation)
-            {
-                FinishCreate();
-            }
-            else if (status is SuspendReason.Termination)
-            {
-                FinishTerminate();
+                case SuspendReason.Recreation recreation:
+                    FinishRecreate(recreation.Cause, _actor);
+                    break;
+
+                case SuspendReason.Creation _:
+                    FinishCreate();
+                    break;
+
+                case SuspendReason.Termination _:
+                    FinishTerminate();
+                    break;
+
+                default:
+                    break;
             }
         }
 

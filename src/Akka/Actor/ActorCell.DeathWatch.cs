@@ -46,7 +46,9 @@ namespace Akka.Actor
         public IActorRef WatchWith(IActorRef subject, object message)
         {
             if (message == null)
+            {
                 throw new ArgumentNullException(nameof(message), "message must not be null");
+            }
 
             var a = (IInternalActorRef)subject;
 
@@ -87,8 +89,7 @@ namespace Akka.Actor
         /// <param name="t">TBD</param>
         protected void ReceivedTerminated(Terminated t)
         {
-            if (!_state.ContainsTerminated(t.ActorRef))
-                return;
+            if (!_state.ContainsTerminated(t.ActorRef)) { return; }
 
             _state = _state.RemoveTerminated(t.ActorRef); // here we know that it is the SAME ref which was put in
             ReceiveMessage(t);
@@ -103,8 +104,8 @@ namespace Akka.Actor
         /// <param name="addressTerminated">TBD</param>
         protected void WatchedActorTerminated(IActorRef actor, bool existenceConfirmed, bool addressTerminated)
         {
-            object message; // The custom termination message that was requested
-            if (TryGetWatching(actor, out message))
+            // The custom termination message that was requested
+            if (TryGetWatching(actor, out var message))
             {
                 MaintainAddressTerminatedSubscription(() =>
                 {
@@ -126,20 +127,11 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         /// <param name="subject">TBD</param>
-        public void TerminatedQueuedFor(IActorRef subject)
-        {
-            _state = _state.AddTerminated(subject);
-        }
+        public void TerminatedQueuedFor(IActorRef subject) => _state = _state.AddTerminated(subject);
 
-        private bool WatchingContains(IActorRef subject)
-        {
-            return _state.ContainsWatching(subject);
-        }
+        private bool WatchingContains(IActorRef subject) => _state.ContainsWatching(subject);
 
-        private bool TryGetWatching(IActorRef subject, out object message)
-        {
-            return _state.TryGetWatching(subject, out message);
-        }
+        private bool TryGetWatching(IActorRef subject, out object message) => _state.TryGetWatching(subject, out message);
 
         /// <summary>
         /// TBD
@@ -179,7 +171,7 @@ namespace Akka.Actor
 
         private void SendTerminated(bool ifLocal, IInternalActorRef watcher)
         {
-            if (((IActorRefScope)watcher).IsLocal == ifLocal && !watcher.Equals(Parent))
+            if (watcher.IsLocal == ifLocal && !watcher.Equals(Parent))
             {
                 watcher.SendSystemMessage(new DeathWatchNotification(Self, true, false));
             }
@@ -280,7 +272,7 @@ namespace Akka.Actor
             // cleanup watchedBy since we know they are dead
             MaintainAddressTerminatedSubscription(() =>
             {
-                
+
                 foreach (var a in _state.GetWatchedBy().Where(a => a.Path.Address == address).ToList())
                 {
                     //_watchedBy.Remove(a);
@@ -329,11 +321,9 @@ namespace Akka.Actor
 
         private static bool IsNonLocal(IActorRef @ref)
         {
-            if (@ref == null)
-                return true;
+            if (@ref == null) { return true; }
 
-            var a = @ref as IInternalActorRef;
-            return a != null && !a.IsLocal;
+            return @ref is IInternalActorRef a && !a.IsLocal;
         }
 
         private bool HasNonLocalAddress()
@@ -343,14 +333,8 @@ namespace Akka.Actor
             return watching.Any(IsNonLocal) || watchedBy.Any(IsNonLocal);
         }
 
-        private void UnsubscribeAddressTerminated()
-        {
-            AddressTerminatedTopic.Get(System).Unsubscribe(Self);
-        }
+        private void UnsubscribeAddressTerminated() => AddressTerminatedTopic.Get(System).Unsubscribe(Self);
 
-        private void SubscribeAddressTerminated()
-        {
-            AddressTerminatedTopic.Get(System).Subscribe(Self);
-        }
+        private void SubscribeAddressTerminated() => AddressTerminatedTopic.Get(System).Subscribe(Self);
     }
 }

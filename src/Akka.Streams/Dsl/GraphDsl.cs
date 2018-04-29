@@ -57,8 +57,8 @@ namespace Akka.Streams.Dsl
             /// <returns>TBD</returns>
             internal TShape Add<TShape, TMat, TMat2>(IGraph<TShape, TMat> graph, Func<TMat, TMat2> transform) where TShape : Shape
             {
-                if (StreamLayout.IsDebug)
-                    StreamLayout.Validate(graph.Module);
+                //if (StreamLayout.IsDebug)
+                //    StreamLayout.Validate(graph.Module);
 
                 var copy = graph.Module.CarbonCopy();
                 _moduleInProgress = _moduleInProgress.Compose<TMat,TMat2,TMat2>(copy.TransformMaterializedValue(transform), Keep.Right);
@@ -79,8 +79,8 @@ namespace Akka.Streams.Dsl
             /// <returns>TBD</returns>
             internal TShape Add<TShape, TMat1, TMat2, TMat3>(IGraph<TShape> graph, Func<TMat1, TMat2, TMat3> combine) where TShape : Shape
             {
-                if (StreamLayout.IsDebug)
-                    StreamLayout.Validate(graph.Module);
+                //if (StreamLayout.IsDebug)
+                //    StreamLayout.Validate(graph.Module);
 
                 var copy = graph.Module.CarbonCopy();
                 _moduleInProgress = _moduleInProgress.Compose(copy, combine);
@@ -100,8 +100,8 @@ namespace Akka.Streams.Dsl
             public TShape Add<TShape, TMat>(IGraph<TShape, TMat> graph)
                 where TShape : Shape
             {
-                if (StreamLayout.IsDebug)
-                    StreamLayout.Validate(graph.Module);
+                //if (StreamLayout.IsDebug)
+                //    StreamLayout.Validate(graph.Module);
 
                 var copy = graph.Module.CarbonCopy();
                 _moduleInProgress = _moduleInProgress.Compose<object, TMat, object>(copy, Keep.Left);

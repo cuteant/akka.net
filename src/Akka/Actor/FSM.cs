@@ -1112,68 +1112,57 @@ namespace Akka.Actor
         /// <inheritdoc/>
         protected override bool Receive(object message)
         {
-            var timeoutMarker = message as TimeoutMarker;
-            if (timeoutMarker != null)
+            switch (message)
             {
-                if (_generation == timeoutMarker.Generation)
-                {
-                    ProcessMsg(StateTimeout.Instance, "state timeout");
-                }
-                return true;
-            }
-
-            if (message is Timer timer)
-            {
-                if (ReferenceEquals(timer.Owner, Self) && _timers.TryGetValue(timer.Name, out var oldTimer) && oldTimer.Generation == timer.Generation)
-                {
-                    if (_timeoutFuture != null)
+                case TimeoutMarker timeoutMarker:
+                    if (_generation == timeoutMarker.Generation)
                     {
-                        _timeoutFuture.Cancel(false);
-                        _timeoutFuture = null;
+                        ProcessMsg(StateTimeout.Instance, "state timeout");
                     }
-                    _generation++;
-                    if (!timer.Repeat)
+                    return true;
+
+                case Timer timer:
+                    if (ReferenceEquals(timer.Owner, Self) && _timers.TryGetValue(timer.Name, out var oldTimer) && oldTimer.Generation == timer.Generation)
                     {
-                        _timers.Remove(timer.Name);
+                        if (_timeoutFuture != null)
+                        {
+                            _timeoutFuture.Cancel(false);
+                            _timeoutFuture = null;
+                        }
+                        _generation++;
+                        if (!timer.Repeat)
+                        {
+                            _timers.Remove(timer.Name);
+                        }
+                        ProcessMsg(timer.Message, timer);
                     }
-                    ProcessMsg(timer.Message, timer);
-                }
-                return true;
-            }
+                    return true;
 
-            var subscribeTransitionCallBack = message as SubscribeTransitionCallBack;
-            if (subscribeTransitionCallBack != null)
-            {
-                Context.Watch(subscribeTransitionCallBack.ActorRef);
-                Listeners.Add(subscribeTransitionCallBack.ActorRef);
-                //send the current state back as a reference point
-                subscribeTransitionCallBack.ActorRef.Tell(new CurrentState<TState>(Self, _currentState.StateName));
-                return true;
-            }
+                case SubscribeTransitionCallBack subscribeTransitionCallBack:
+                    Context.Watch(subscribeTransitionCallBack.ActorRef);
+                    Listeners.Add(subscribeTransitionCallBack.ActorRef);
+                    //send the current state back as a reference point
+                    subscribeTransitionCallBack.ActorRef.Tell(new CurrentState<TState>(Self, _currentState.StateName));
+                    return true;
 
-            var listen = message as Listen;
-            if (listen != null)
-            {
-                Context.Watch(listen.Listener);
-                Listeners.Add(listen.Listener);
-                listen.Listener.Tell(new CurrentState<TState>(Self, _currentState.StateName));
-                return true;
-            }
+                case Listen listen:
+                    Context.Watch(listen.Listener);
+                    Listeners.Add(listen.Listener);
+                    listen.Listener.Tell(new CurrentState<TState>(Self, _currentState.StateName));
+                    return true;
 
-            var unsubscribeTransitionCallBack = message as UnsubscribeTransitionCallBack;
-            if (unsubscribeTransitionCallBack != null)
-            {
-                Context.Unwatch(unsubscribeTransitionCallBack.ActorRef);
-                Listeners.Remove(unsubscribeTransitionCallBack.ActorRef);
-                return true;
-            }
+                case UnsubscribeTransitionCallBack unsubscribeTransitionCallBack:
+                    Context.Unwatch(unsubscribeTransitionCallBack.ActorRef);
+                    Listeners.Remove(unsubscribeTransitionCallBack.ActorRef);
+                    return true;
 
-            var deafen = message as Deafen;
-            if (deafen != null)
-            {
-                Context.Unwatch(deafen.Listener);
-                Listeners.Remove(deafen.Listener);
-                return true;
+                case Deafen deafen:
+                    Context.Unwatch(deafen.Listener);
+                    Listeners.Remove(deafen.Listener);
+                    return true;
+
+                default:
+                    break;
             }
 
             if (_timeoutFuture != null)
@@ -1225,19 +1214,21 @@ namespace Akka.Actor
 
         private string GetSourceString(object source)
         {
-            var s = source as string;
-            if (s != null)
-                return s;
+            switch (source)
+            {
+                case string s:
+                    return s;
 
-            var timer = source as Timer;
-            if (timer != null)
-                return "timer '" + timer.Name + "'";
+                case Timer timer:
+                    return $"timer '{timer.Name}'";
 
-            var actorRef = source as IActorRef;
-            if (actorRef != null)
-                return actorRef.ToString();
+                case IActorRef actorRef:
+                    return actorRef.ToString();
 
-            return "unknown";
+                case null:
+                default:
+                    return "unknown";
+            }
         }
 
         //Internal API
@@ -1341,8 +1332,7 @@ namespace Akka.Actor
         /// <param name="reason">TBD</param>
         protected virtual void LogTermination(Reason reason)
         {
-            var failure = reason as Failure;
-            if (failure != null)
+            if (reason is Failure failure)
             {
                 if (failure.Cause is Exception)
                 {

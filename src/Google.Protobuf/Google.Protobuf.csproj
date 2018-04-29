@@ -1,0 +1,34 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <PropertyGroup>
+    <TargetFrameworks>net471</TargetFrameworks>
+    <IncludeBuildOutput>false</IncludeBuildOutput>
+    <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
+  </PropertyGroup>
+  <ItemGroup>
+    <Folder Include="Akka.Remote\" />
+    <Folder Include="Akka.Remote.TestKit\" />
+    <Folder Include="Akka.Persistence\" />
+    <Folder Include="Akka.Cluster.Tools\" />
+    <Folder Include="Akka.Cluster.Sharding\" />
+    <Folder Include="Akka.Cluster\" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="..\Akka.Cluster.Sharding\Serialization\Proto\ClusterShardingMessages.proto" Link="Akka.Cluster.Sharding\ClusterShardingMessages.proto" />
+    <None Include="..\Akka.Cluster.Sharding\Serialization\Proto\generate_protos.bat" Link="Akka.Cluster.Sharding\generate_protos.bat" />
+    <None Include="..\Akka.Cluster.Tools\Client\Serialization\Proto\ClusterClientMessages.proto" Link="Akka.Cluster.Tools\ClusterClientMessages.proto" />
+    <None Include="..\Akka.Cluster.Tools\generate_protos.bat" Link="Akka.Cluster.Tools\generate_protos.bat" />
+    <None Include="..\Akka.Cluster.Tools\PublishSubscribe\Serialization\Proto\DistributedPubSubMessages.proto" Link="Akka.Cluster.Tools\DistributedPubSubMessages.proto" />
+    <None Include="..\Akka.Cluster\generate_protos.bat" Link="Akka.Cluster\generate_protos.bat" />
+    <None Include="..\Akka.Cluster\Serialization\Proto\ClusterMessages.proto" Link="Akka.Cluster\ClusterMessages.proto" />
+    <None Include="..\Akka.Persistence\generate_protos.bat" Link="Akka.Persistence\generate_protos.bat" />
+    <None Include="..\Akka.Persistence\Serialization\Proto\Persistence.proto" Link="Akka.Persistence\Persistence.proto" />
+    <None Include="..\Akka.Remote.TestKit\generate_protos.bat" Link="Akka.Remote.TestKit\generate_protos.bat" />
+    <None Include="..\Akka.Remote.TestKit\Proto\TestConductorProtocol.proto" Link="Akka.Remote.TestKit\TestConductorProtocol.proto" />
+    <None Include="..\Akka.Remote\Serialization\Proto\ContainerFormats.proto" Link="Akka.Remote\ContainerFormats.proto" />
+    <None Include="..\Akka.Remote\Serialization\Proto\generate_protos.bat" Link="Akka.Remote\generate_protos.bat" />
+    <None Include="..\Akka.Remote\Serialization\Proto\SystemMessageFormats.proto" Link="Akka.Remote\SystemMessageFormats.proto" />
+    <None Include="..\Akka.Remote\Serialization\Proto\WireFormats.proto" Link="Akka.Remote\WireFormats.proto" />
+  </ItemGroup>
+
+</Project>

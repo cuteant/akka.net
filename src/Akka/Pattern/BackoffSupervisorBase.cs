@@ -43,61 +43,61 @@ namespace Akka.Pattern
 
         protected bool HandleBackoff(object message)
         {
-            if (message is BackoffSupervisor.StartChild)
+            switch (message)
             {
-                StartChild();
-                var backoffReset = Reset as AutoReset;
-                if (backoffReset != null)
-                {
-                    Context.System.Scheduler.ScheduleTellOnce(backoffReset.ResetBackoff, Self,
-                        new BackoffSupervisor.ResetRestartCount(RestartCountN), Self);
-                }
-            }
-            else if (message is BackoffSupervisor.Reset)
-            {
-                if (Reset is ManualReset)
-                {
-                    RestartCountN = 0;
-                }
-                else
-                {
-                    Unhandled(message);
-                }
-            }
-            else if (message is BackoffSupervisor.ResetRestartCount)
-            {
-                var restartCount = (BackoffSupervisor.ResetRestartCount)message;
-                if (restartCount.Current == RestartCountN)
-                {
-                    RestartCountN = 0;
-                }
-            }
-            else if (message is BackoffSupervisor.GetRestartCount)
-            {
-                Sender.Tell(new BackoffSupervisor.RestartCount(RestartCountN));
-            }
-            else if (message is BackoffSupervisor.GetCurrentChild)
-            {
-                Sender.Tell(new BackoffSupervisor.CurrentChild(Child));
-            }
-            else
-            {
-                if (Child != null)
-                {
-                    if (Child.Equals(Sender))
+                case BackoffSupervisor.StartChild _:
+                    StartChild();
+                    if (Reset is AutoReset backoffReset)
                     {
-                        // use the BackoffSupervisor as sender
-                        Context.Parent.Tell(message);
+                        Context.System.Scheduler.ScheduleTellOnce(backoffReset.ResetBackoff, Self,
+                            new BackoffSupervisor.ResetRestartCount(RestartCountN), Self);
+                    }
+                    break;
+
+                case BackoffSupervisor.Reset _:
+                    if (Reset is ManualReset)
+                    {
+                        RestartCountN = 0;
                     }
                     else
                     {
-                        Child.Forward(message);
+                        Unhandled(message);
                     }
-                }
-                else
-                {
-                    Context.System.DeadLetters.Forward(message);
-                }
+                    break;
+
+                case BackoffSupervisor.ResetRestartCount restartCount:
+                    if (restartCount.Current == RestartCountN)
+                    {
+                        RestartCountN = 0;
+                    }
+                    break;
+
+                case BackoffSupervisor.GetRestartCount _:
+                    Sender.Tell(new BackoffSupervisor.RestartCount(RestartCountN));
+                    break;
+
+                case BackoffSupervisor.GetCurrentChild _:
+                    Sender.Tell(new BackoffSupervisor.CurrentChild(Child));
+                    break;
+
+                default:
+                    if (Child != null)
+                    {
+                        if (Child.Equals(Sender))
+                        {
+                            // use the BackoffSupervisor as sender
+                            Context.Parent.Tell(message);
+                        }
+                        else
+                        {
+                            Child.Forward(message);
+                        }
+                    }
+                    else
+                    {
+                        Context.System.DeadLetters.Forward(message);
+                    }
+                    break;
             }
 
             return true;

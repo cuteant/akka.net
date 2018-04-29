@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Text;
 using CuteAnt;
 using Akka.Actor;
@@ -39,17 +40,24 @@ namespace Akka.Remote.Serialization
                 case long longValue:
                     return BitConverter.GetBytes((long)obj);
                 default:
-
                     throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
             }
         }
 
+        private static readonly Dictionary<Type, Func<byte[], object>> s_fromBinaryMap = new Dictionary<Type, Func<byte[], object>>()
+        {
+            { TypeConstants.StringType, bytes => Encoding.UTF8.GetString(bytes) },
+            { TypeConstants.IntType, bytes => BitConverter.ToInt32(bytes, 0) },
+            { TypeConstants.LongType, bytes => BitConverter.ToInt64(bytes, 0) },
+        };
+
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (type == TypeConstants.StringType) return Encoding.UTF8.GetString(bytes);
-            if (type == TypeConstants.IntType) return BitConverter.ToInt32(bytes, 0);
-            if (type == TypeConstants.LongType) return BitConverter.ToInt64(bytes, 0);
+            if (s_fromBinaryMap.TryGetValue(type, out var factory))
+            {
+                return factory(bytes);
+            }
 
             throw new ArgumentException($"Unimplemented deserialization of message with manifest [{type.TypeQualifiedName()}] in [${nameof(PrimitiveSerializers)}]");
         }

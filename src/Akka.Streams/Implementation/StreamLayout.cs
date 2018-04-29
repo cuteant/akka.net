@@ -1608,15 +1608,13 @@ namespace Akka.Streams.Implementation
 
         private void TrySubscribe(ISubscriber<T> subscriber)
         {
-            if (Value == null)
-            {
-                if (!CompareAndSet(null, subscriber))
-                    TrySubscribe(subscriber);
-                return;
-            }
-
             switch (Value)
             {
+                case null:
+                    if (!CompareAndSet(null, subscriber))
+                        TrySubscribe(subscriber);
+                    return;
+
                 case ISubscription subscription:
                     if (CompareAndSet(subscription, new Both(subscriber)))
                         EstablishSubscription(subscriber, subscription);
@@ -1731,15 +1729,13 @@ namespace Akka.Streams.Implementation
 
             while (true)
             {
-                if (Value == null)
-                {
-                    if (!CompareAndSet(null, new ErrorPublisher<T>(ex, "failed-VirtualProcessor"))) { continue; }
-                    if (cause == null) { throw ex; }
-                    return;
-                }
-
                 switch (Value)
                 {
+                    case null:
+                        if (!CompareAndSet(null, new ErrorPublisher<T>(ex, "failed-VirtualProcessor"))) { continue; }
+                        if (cause == null) { throw ex; }
+                        return;
+
                     case ISubscription subscription:
                         if (!CompareAndSet(subscription, new ErrorPublisher<T>(ex, "failed-VirtualProcessor"))) { continue; }
                         if (cause == null) { throw ex; }
@@ -1780,15 +1776,13 @@ namespace Akka.Streams.Implementation
         {
             while (true)
             {
-                if (Value == null)
-                {
-                    if (!CompareAndSet(null, EmptyPublisher<T>.Instance)) { continue; }
-
-                    return;
-                }
-
                 switch (Value)
                 {
+                    case null:
+                        if (!CompareAndSet(null, EmptyPublisher<T>.Instance)) { continue; }
+
+                        return;
+
                     case ISubscription subscription:
                         if (!CompareAndSet(subscription, EmptyPublisher<T>.Instance))
                             continue;

@@ -469,27 +469,25 @@ namespace Akka.Actor
         {
             while (true)
             {
-                if (State == null)
-                {
-                    if (UpdateState(null, Registering.Instance))
-                    {
-                        ActorPath p = null;
-                        try
-                        {
-                            p = Provider.TempPath();
-                            Provider.RegisterTempActor(this, p);
-                            return p;
-                        }
-                        finally
-                        {
-                            State = p;
-                        }
-                    }
-                    continue;
-                }
-
                 switch (State)
                 {
+                    case null:
+                        if (UpdateState(null, Registering.Instance))
+                        {
+                            ActorPath p = null;
+                            try
+                            {
+                                p = Provider.TempPath();
+                                Provider.RegisterTempActor(this, p);
+                                return p;
+                            }
+                            finally
+                            {
+                                State = p;
+                            }
+                        }
+                        continue;
+
                     case ActorPath actorPath:
                         return actorPath;
                     case StoppedWithPath _:
@@ -574,39 +572,49 @@ namespace Akka.Actor
             while (true)
             {
                 var state = State;
-                // if path was never queried nobody can possibly be watching us, so we don't have to publish termination either
-                if (state == null)
+                switch (state)
                 {
-                    if (UpdateState(null, Stopped.Instance)) StopEnsureCompleted();
-                    else continue;
-                }
-                else if (state is ActorPath p)
-                {
-                    if (UpdateState(p, new StoppedWithPath(p)))
-                    {
-                        try
+                    // if path was never queried nobody can possibly be watching us, so we don't have to publish termination either
+                    case null:
+                        if (UpdateState(null, Stopped.Instance))
                         {
                             StopEnsureCompleted();
                         }
-                        finally
+                        else
                         {
-                            Provider.UnregisterTempActor(p);
+                            continue;
                         }
-                    }
-                    else
-                    {
-                        continue;
-                    }
-                }
-                else if (state is Stopped || state is StoppedWithPath)
-                {
-                    //already stopped
-                }
-                else if (state is Registering)
-                {
+                        break;
+
+                    case ActorPath p:
+                        if (UpdateState(p, new StoppedWithPath(p)))
+                        {
+                            try
+                            {
+                                StopEnsureCompleted();
+                            }
+                            finally
+                            {
+                                Provider.UnregisterTempActor(p);
+                            }
+                        }
+                        else
+                        {
+                            continue;
+                        }
+                        break;
+
                     //spin until registration is completed before stopping
-                    continue;
+                    case Registering _:
+                        continue;
+
+                    //already stopped
+                    case Stopped _:
+                    case StoppedWithPath _:
+                    default:
+                        break;
                 }
+
                 break;
             }
         }

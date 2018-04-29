@@ -334,21 +334,25 @@ namespace Akka.Remote.Transport
         public bool ShouldDropInbound(Address remoteAddress, object instance, string debugMessage)
         {
             var mode = ChaosMode(remoteAddress);
-            if (mode is PassThru) { return false; }
-            if (mode is Drop drop)
+            switch (mode)
             {
-                if (Rng.NextDouble() <= drop.InboundDropP)
-                {
-                    if (_shouldDebugLog)
+                case PassThru _:
+                    return false;
+                case Drop drop:
+                    if (Rng.NextDouble() <= drop.InboundDropP)
                     {
-                        _log.Debug("Dropping inbound [{0}] for [{1}] {2}", instance.GetType(), remoteAddress, debugMessage);
+                        if (_shouldDebugLog)
+                        {
+                            _log.Debug("Dropping inbound [{0}] for [{1}] {2}", instance.GetType(), remoteAddress, debugMessage);
+                        }
+
+                        return true;
                     }
+                    return false;
 
-                    return true;
-                }
+                default:
+                    return false;
             }
-
-            return false;
         }
 
         /// <summary>
@@ -361,20 +365,23 @@ namespace Akka.Remote.Transport
         public bool ShouldDropOutbound(Address remoteAddress, object instance, string debugMessage)
         {
             var mode = ChaosMode(remoteAddress);
-            if (mode is PassThru) { return false; }
-            if (mode is Drop drop)
+            switch (mode)
             {
-                if (Rng.NextDouble() <= drop.OutboundDropP)
-                {
-                    if (_shouldDebugLog)
+                case PassThru _:
+                    return false;
+                case Drop drop:
+                    if (Rng.NextDouble() <= drop.OutboundDropP)
                     {
-                        _log.Debug("Dropping outbound [{0}] for [{1}] {2}", instance.GetType(), remoteAddress, debugMessage);
+                        if (_shouldDebugLog)
+                        {
+                            _log.Debug("Dropping outbound [{0}] for [{1}] {2}", instance.GetType(), remoteAddress, debugMessage);
+                        }
+                        return true;
                     }
-                    return true;
-                }
+                    return false;
+                default:
+                    return false;
             }
-
-            return false;
         }
 
         private IAssociationEvent InterceptInboundAssociation(IAssociationEvent ev)

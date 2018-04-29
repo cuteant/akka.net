@@ -165,8 +165,7 @@ namespace Akka.Actor.Internal
             if (InternalChildren.TryGetValue(actor.Path.Name, out var stats))
             {
                 //Since the actor exists, ChildRestartStats is the only valid ChildStats.
-                var crStats = stats as ChildRestartStats;
-                if (crStats != null && actor.Equals(crStats.Child))
+                if (stats is ChildRestartStats crStats && actor.Equals(crStats.Child))
                 {
                     childRestartStats = crStats;
                     return true;
@@ -197,8 +196,7 @@ namespace Akka.Actor.Internal
         {
             sb.Append('<');
             var childStats = kvp.Value;
-            var childRestartStats = childStats as ChildRestartStats;
-            if (childRestartStats != null)
+            if (childStats is ChildRestartStats childRestartStats)
             {
                 sb.Append(childRestartStats.Child.Path.ToStringWithUid()).Append(':');
                 sb.Append(childRestartStats.MaxNrOfRetriesCount).Append(" retries>");
