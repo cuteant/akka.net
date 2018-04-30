@@ -28,6 +28,8 @@ using DotNetty.Transport.Channels.Sockets;
 
 namespace Akka.Remote.Transport.DotNetty
 {
+    #region == class CommonHandlers ==
+
     internal abstract class CommonHandlers : ChannelHandlerAdapter
     {
         protected readonly DotNettyTransport Transport;
@@ -92,28 +94,32 @@ namespace Akka.Remote.Transport.DotNetty
         }
     }
 
-    internal class DotNettyTransportException : RemoteTransportException
+    #endregion
+
+    #region == class DotNettyTransportException ==
+
+    internal sealed class DotNettyTransportException : RemoteTransportException
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DotNettyTransportException"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="DotNettyTransportException"/> class.</summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="cause">The exception that is the cause of the current exception.</param>
-        public DotNettyTransportException(string message, Exception cause = null) : base(message, cause)
-        {
-        }
+        public DotNettyTransportException(string message, Exception cause = null)
+            : base(message, cause) { }
 
 #if SERIALIZATION
-        /// <summary>
-        /// Initializes a new instance of the <see cref="DotNettyTransportException"/> class.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
-        protected DotNettyTransportException(SerializationInfo info, StreamingContext context) : base(info, context)
-        {
-        }
+        /// <summary>Initializes a new instance of the <see cref="DotNettyTransportException"/> class.</summary>
+        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the
+        /// exception being thrown.</param>
+        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source
+        /// or destination.</param>
+        private DotNettyTransportException(SerializationInfo info, StreamingContext context)
+            : base(info, context) { }
 #endif
     }
+
+    #endregion
+
+    #region == class DotNettyTransport ==
 
     internal abstract class DotNettyTransport : Transport
     {
@@ -186,9 +192,9 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 var newServerChannel = await NewServer(listenAddress).ConfigureAwait(false);
 
-                // Block reads until a handler actor is registered
-                // no incoming connections will be accepted until this value is reset
-                // it's possible that the first incoming association might come in though
+                // Block reads until a handler actor is registered no incoming connections will be
+                // accepted until this value is reset it's possible that the first incoming
+                // association might come in though
                 newServerChannel.Configuration.AutoRead = false;
                 ConnectionGroup.TryAdd(newServerChannel);
                 ServerChannel = newServerChannel;
@@ -207,7 +213,6 @@ namespace Akka.Remote.Transport.DotNetty
                 AssociationListenerPromise.Task.ContinueWith(result => newServerChannel.Configuration.AutoRead = true,
                     TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
 #pragma warning restore 4014
-
 
                 return Tuple.Create(addr, AssociationListenerPromise);
             }
@@ -306,7 +311,7 @@ namespace Akka.Remote.Transport.DotNetty
             return endpoint;
         }
 
-        #region private methods 
+        #region private methods
 
         private void SetInitialChannelPipeline(IChannel channel)
         {
@@ -432,11 +437,10 @@ namespace Akka.Remote.Transport.DotNetty
         }
 
         private static string SafeMapHostName(string hostName)
-        {
-            return !string.IsNullOrEmpty(hostName) && IPAddress.TryParse(hostName, out var ip) ? SafeMapIPv6(ip) : hostName;
-        }
+            => !string.IsNullOrEmpty(hostName) && IPAddress.TryParse(hostName, out var ip) ? SafeMapIPv6(ip) : hostName;
 
-        private static string SafeMapIPv6(IPAddress ip) => ip.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + ip + "]" : ip.ToString();
+        private static string SafeMapIPv6(IPAddress ip)
+            => ip.AddressFamily == AddressFamily.InterNetworkV6 ? "[" + ip + "]" : ip.ToString();
 
         public static EndPoint ToEndpoint(Address address)
         {
@@ -447,12 +451,10 @@ namespace Akka.Remote.Transport.DotNetty
                 : new DnsEndPoint(address.Host, address.Port.Value);
         }
 
-        /// <summary>
-        /// Maps an Akka.NET address to correlated <see cref="EndPoint"/>.
-        /// </summary>
+        /// <summary>Maps an Akka.NET address to correlated <see cref="EndPoint"/>.</summary>
         /// <param name="address">Akka.NET fully qualified node address.</param>
         /// <exception cref="ArgumentException">Thrown if address port was not provided.</exception>
-        /// <returns><see cref="IPEndPoint"/> for IP-based addresses, <see cref="DnsEndPoint"/> for named addresses.</returns>
+        /// <returns> <see cref="IPEndPoint"/> for IP-based addresses, <see cref="DnsEndPoint"/> for named addresses.</returns>
         public static EndPoint AddressToSocketAddress(Address address)
         {
             if (address.Port == null) throw new ArgumentException($"address port must not be null: {address}");
@@ -472,14 +474,16 @@ namespace Akka.Remote.Transport.DotNetty
         #endregion
     }
 
-    internal class HeliosBackwardsCompatabilityLengthFramePrepender : LengthFieldPrepender
+    #endregion
+
+    #region == class HeliosBackwardsCompatabilityLengthFramePrepender ==
+
+    internal sealed class HeliosBackwardsCompatabilityLengthFramePrepender : LengthFieldPrepender
     {
         private readonly List<object> _temporaryOutput = new List<object>(2);
 
-        public HeliosBackwardsCompatabilityLengthFramePrepender(int lengthFieldLength,
-            bool lengthFieldIncludesLengthFieldLength) : base(ByteOrder.LittleEndian, lengthFieldLength, 0, lengthFieldIncludesLengthFieldLength)
-        {
-        }
+        public HeliosBackwardsCompatabilityLengthFramePrepender(int lengthFieldLength, bool lengthFieldIncludesLengthFieldLength)
+            : base(ByteOrder.LittleEndian, lengthFieldLength, 0, lengthFieldIncludesLengthFieldLength) { }
 
         protected override void Encode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
         {
@@ -491,4 +495,6 @@ namespace Akka.Remote.Transport.DotNetty
             _temporaryOutput.Clear();
         }
     }
+
+    #endregion
 }

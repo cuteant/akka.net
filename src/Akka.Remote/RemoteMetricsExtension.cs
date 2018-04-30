@@ -13,16 +13,11 @@ using Akka.Routing;
 
 namespace Akka.Remote
 {
-    /// <summary>
-    ///     INTERNAL API
-    ///     Extension that keeps track of remote metrics, such
-    ///     as max size of different message types.
-    /// </summary>
+    /// <summary>INTERNAL API Extension that keeps track of remote metrics, such as max size of different
+    /// message types.</summary>
     internal class RemoteMetricsExtension : ExtensionIdProvider<IRemoteMetrics>
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="system">TBD</param>
         /// <returns>TBD</returns>
         public override IRemoteMetrics CreateExtension(ExtendedActorSystem system)
@@ -34,29 +29,21 @@ namespace Akka.Remote
             return new RemoteMetricsOn(system);
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="system">TBD</param>
         /// <returns>TBD</returns>
         public static IRemoteMetrics Create(ExtendedActorSystem system)
-        {
-            return system.WithExtension<IRemoteMetrics, RemoteMetricsExtension>();
-        }
+            => system.WithExtension<IRemoteMetrics, RemoteMetricsExtension>();
     }
 
-    /// <summary>
-    ///     INTERNAL API
-    /// </summary>
+    /// <summary>INTERNAL API</summary>
     internal class RemoteMetricsOn : IRemoteMetrics
     {
         private readonly ILoggingAdapter _log;
         private readonly long? _logFrameSizeExceeding;
         private readonly ConcurrentDictionary<Type, long> _maxPayloadBytes = new ConcurrentDictionary<Type, long>();
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="system">TBD</param>
         public RemoteMetricsOn(ExtendedActorSystem system)
         {
@@ -64,9 +51,7 @@ namespace Akka.Remote
             _log = Logging.GetLogger(system, this);
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="msg">TBD</param>
         /// <param name="payloadBytes">TBD</param>
         public void LogPayloadBytes(object msg, long payloadBytes)
@@ -79,19 +64,22 @@ namespace Akka.Remote
                     case ActorSelectionMessage actor:
                         type = actor.Message.GetType();
                         break;
+
                     case RouterEnvelope router:
                         type = router.Message.GetType();
                         break;
+
                     default:
                         type = msg.GetType();
                         break;
                 }
 
                 // 10% threshold until next log
-                var newMax = Convert.ToInt64(payloadBytes*1.1);
+                var newMax = Convert.ToInt64(payloadBytes * 1.1);
                 Check(type, payloadBytes, newMax);
             }
         }
+
         private void Check(Type type, long payloadBytes, long newMax)
         {
             if (_maxPayloadBytes.TryGetValue(type, out long max))
@@ -122,14 +110,10 @@ namespace Akka.Remote
         }
     }
 
-    /// <summary>
-    ///     INTERNAL API
-    /// </summary>
+    /// <summary>INTERNAL API</summary>
     internal class RemoteMetricsOff : IRemoteMetrics
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="msg">TBD</param>
         /// <param name="payloadBytes">TBD</param>
         public void LogPayloadBytes(object msg, long payloadBytes)
@@ -138,16 +122,11 @@ namespace Akka.Remote
         }
     }
 
-    /// <summary>
-    ///     INTERNAL API
-    /// </summary>
+    /// <summary>INTERNAL API</summary>
     internal interface IRemoteMetrics : IExtension
     {
-        /// <summary>
-        ///     Logging of the size of different message types.
-        ///     Maximum detected size per message type is logged once, with
-        ///     and increase threshold of 10%.
-        /// </summary>
+        /// <summary>Logging of the size of different message types. Maximum detected size per message type is
+        /// logged once, with and increase threshold of 10%.</summary>
         /// <param name="msg">TBD</param>
         /// <param name="payloadBytes">TBD</param>
         void LogPayloadBytes(object msg, long payloadBytes);

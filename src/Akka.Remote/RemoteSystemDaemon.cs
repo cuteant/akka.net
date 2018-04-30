@@ -19,19 +19,13 @@ using Akka.Util.Internal;
 
 namespace Akka.Remote
 {
-    /// <summary>
-    /// INTERNAL API
-    /// </summary>
+    /// <summary>INTERNAL API</summary>
     internal interface IDaemonMsg { }
 
-    /// <summary>
-    ///  INTERNAL API
-    /// </summary>
+    /// <summary>INTERNAL API</summary>
     internal class DaemonMsgCreate : IDaemonMsg
     {
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="DaemonMsgCreate" /> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="DaemonMsgCreate"/> class.</summary>
         /// <param name="props">The props.</param>
         /// <param name="deploy">The deploy.</param>
         /// <param name="path">The path.</param>
@@ -44,37 +38,30 @@ namespace Akka.Remote
             Supervisor = supervisor;
         }
 
-        /// <summary>
-        ///     Gets the props.
-        /// </summary>
+        /// <summary>Gets the props.</summary>
         /// <value>The props.</value>
         public Props Props { get; private set; }
 
-        /// <summary>
-        ///     Gets the deploy.
-        /// </summary>
+        /// <summary>Gets the deploy.</summary>
         /// <value>The deploy.</value>
         public Deploy Deploy { get; private set; }
 
-        /// <summary>
-        ///     Gets the path.
-        /// </summary>
+        /// <summary>Gets the path.</summary>
         /// <value>The path.</value>
         public string Path { get; private set; }
 
-        /// <summary>
-        ///     Gets the supervisor.
-        /// </summary>
+        /// <summary>Gets the supervisor.</summary>
         /// <value>The supervisor.</value>
         public IActorRef Supervisor { get; private set; }
     }
 
     /// <summary>
-    ///  INTERNAL API
-    /// 
+    /// INTERNAL API
+    ///
     /// Internal system "daemon" actor for remote internal communication.
-    /// 
-    /// It acts as the brain of the remote that responds to system remote messages and executes actions accordingly.
+    ///
+    /// It acts as the brain of the remote that responds to system remote messages and executes
+    /// actions accordingly.
     /// </summary>
     internal class RemoteSystemDaemon : VirtualPathContainer
     {
@@ -83,15 +70,13 @@ namespace Akka.Remote
         private readonly ConcurrentDictionary<IActorRef, IImmutableSet<IActorRef>> _parent2Children = new ConcurrentDictionary<IActorRef, IImmutableSet<IActorRef>>();
         private readonly IActorRef _terminator;
 
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="RemoteSystemDaemon" /> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="RemoteSystemDaemon"/> class.</summary>
         /// <param name="system">The system.</param>
         /// <param name="path">The path.</param>
         /// <param name="parent">The parent.</param>
         /// <param name="terminator">TBD</param>
         /// <param name="log">TBD</param>
-        public RemoteSystemDaemon(ActorSystemImpl system, ActorPath path, IInternalActorRef parent,IActorRef terminator, ILoggingAdapter log)
+        public RemoteSystemDaemon(ActorSystemImpl system, ActorPath path, IInternalActorRef parent, IActorRef terminator, ILoggingAdapter log)
             : base(system.Provider, path, parent, log)
         {
             _terminator = terminator;
@@ -99,7 +84,6 @@ namespace Akka.Remote
             AddressTerminatedTopic.Get(system).Subscribe(this);
         }
 
-       
         private void TerminationHookDoneWhenNoChildren()
         {
             _terminating.WhileOn(() =>
@@ -111,9 +95,7 @@ namespace Akka.Remote
             });
         }
 
-        /// <summary>
-        ///     Tells the internal.
-        /// </summary>
+        /// <summary>Tells the internal.</summary>
         /// <param name="message">The message.</param>
         /// <param name="sender">The sender.</param>
         protected override void TellInternal(object message, IActorRef sender)
@@ -126,7 +108,7 @@ namespace Akka.Remote
                     if (message is DaemonMsgCreate daemon) HandleDaemonMsgCreate(daemon);
                     break;
 
-                //Remote ActorSystem on another process / machine has died. 
+                //Remote ActorSystem on another process / machine has died.
                 //Need to clean up any references to remote deployments here.
                 case AddressTerminated addressTerminated:
                     //stop any remote actors that belong to this address
@@ -139,6 +121,7 @@ namespace Akka.Remote
                 case Identify identify:
                     sender.Tell(new ActorIdentity(identify.MessageId, this));
                     break;
+
                 case TerminationHook _:
                     _terminating.SwitchOn(() =>
                     {
@@ -152,9 +135,7 @@ namespace Akka.Remote
             }
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="message">TBD</param>
         public override void SendSystemMessage(ISystemMessage message)
         {
@@ -175,7 +156,6 @@ namespace Akka.Remote
                                 parent.SendSystemMessage(new Unwatch(parent, this));
                             }
                             TerminationHookDoneWhenNoChildren();
-
                         });
                     }
                 }
@@ -206,19 +186,17 @@ namespace Akka.Remote
             }
         }
 
-        /// <summary>
-        ///     Handles the daemon MSG create.
-        /// </summary>
+        /// <summary>Handles the daemon MSG create.</summary>
         /// <param name="message">The message.</param>
         private void HandleDaemonMsgCreate(DaemonMsgCreate message)
         {
-            var supervisor = (IInternalActorRef) message.Supervisor;
+            var supervisor = (IInternalActorRef)message.Supervisor;
             var parent = supervisor;
             Props props = message.Props;
-            if(ActorPath.TryParse(message.Path, out var childPath))
+            if (ActorPath.TryParse(message.Path, out var childPath))
             {
                 IEnumerable<string> subPath = childPath.ElementsWithUid.Drop(1); //drop the /remote
-                ActorPath p = Path/subPath;
+                ActorPath p = Path / subPath;
                 var s = subPath.Join("/");
                 var i = s.IndexOf("#", StringComparison.Ordinal);
                 var childName = i < 0 ? s : s.Substring(0, i); // extract the name without the UID
@@ -228,7 +206,7 @@ namespace Akka.Remote
                 {
                     IInternalActorRef actor = _system.Provider.ActorOf(_system, localProps, supervisor, p, false,
                     message.Deploy, true, false);
-                   
+
                     AddChild(childName, actor);
                     actor.SendSystemMessage(new Watch(actor, this));
                     actor.Start();
@@ -242,7 +220,6 @@ namespace Akka.Remote
                 {
                     Log.Error("Skipping [{0}] to RemoteSystemDaemon on [{1}] while terminating", message, p.Address);
                 }
-                
             }
             else
             {
@@ -250,10 +227,9 @@ namespace Akka.Remote
             }
         }
 
-        /// <summary>
-        ///     Find the longest matching path which we know about and return that <see cref="IActorRef"/>
-        ///     (or ask that <see cref="IActorRef"/> to continue searching if elements are left).
-        /// </summary>
+        /// <summary>Find the longest matching path which we know about and return that <see
+        /// cref="IActorRef"/> (or ask that <see cref="IActorRef"/> to continue searching if elements
+        /// are left).</summary>
         /// <param name="name">The name.</param>
         /// <returns>ActorRef.</returns>
         public override IActorRef GetChild(IEnumerable<string> name)
@@ -279,7 +255,6 @@ namespace Akka.Remote
             }
         }
 
-
         private IInternalActorRef GetChild(string name)
         {
             var nameAndUid = ActorCell.SplitNameAndUid(name);
@@ -292,7 +267,6 @@ namespace Akka.Remote
             }
             return child;
         }
-
 
         private bool AddChildParentNeedsWatch(IActorRef parent, IActorRef child)
         {
@@ -332,4 +306,3 @@ namespace Akka.Remote
         }
     }
 }
-

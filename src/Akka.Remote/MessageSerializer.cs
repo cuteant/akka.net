@@ -5,7 +5,6 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
 using Akka.Actor;
 using Akka.Serialization;
 using Akka.Util;
@@ -14,14 +13,10 @@ using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
 
 namespace Akka.Remote
 {
-    /// <summary>
-    /// Class MessageSerializer.
-    /// </summary>
+    /// <summary>Class MessageSerializer.</summary>
     internal static class MessageSerializer
     {
-        /// <summary>
-        /// Deserializes the specified message.
-        /// </summary>
+        /// <summary>Deserializes the specified message.</summary>
         /// <param name="system">The system.</param>
         /// <param name="messageProtocol">The message protocol.</param>
         /// <returns>System.Object.</returns>
@@ -33,9 +28,7 @@ namespace Akka.Remote
                 !messageProtocol.MessageManifest.IsEmpty ? messageProtocol.MessageManifest.ToStringUtf8() : null);
         }
 
-        /// <summary>
-        /// Serializes the specified message.
-        /// </summary>
+        /// <summary>Serializes the specified message.</summary>
         /// <param name="system">The system.</param>
         /// <param name="address">TBD</param>
         /// <param name="message">The message.</param>

@@ -14,14 +14,12 @@ namespace Akka.Remote
 {
     /// <summary>
     /// Used primarily for Mono support for IP type mapping
-    /// 
+    ///
     /// INTERNAL API
     /// </summary>
     internal static class IpExtensions
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="type">TBD</param>
         /// <param name="instance">TBD</param>
         /// <param name="fieldName">TBD</param>
@@ -34,9 +32,7 @@ namespace Akka.Remote
             return field.GetValue(instance);
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="ipa">TBD</param>
         /// <returns>TBD</returns>
         public static IPAddress MapToIPv4(this IPAddress ipa)
@@ -61,9 +57,7 @@ namespace Akka.Remote
             return new IPAddress(address);
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="ipa">TBD</param>
         /// <returns>TBD</returns>
         public static IPAddress MapToIPv6(this IPAddress ipa)
@@ -83,4 +77,3 @@ namespace Akka.Remote
         }
     }
 }
-

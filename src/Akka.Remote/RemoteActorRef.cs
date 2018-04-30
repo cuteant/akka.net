@@ -7,8 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq.Expressions;
-using System.Runtime.InteropServices;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Dispatch.SysMsg;
@@ -16,38 +14,25 @@ using Akka.Event;
 
 namespace Akka.Remote
 {
-    /// <summary>
-    /// Marker interface for Actors that are deployed in a remote scope
-    /// </summary>
-// ReSharper disable once InconsistentNaming
+    /// <summary>Marker interface for Actors that are deployed in a remote scope</summary>
     [InternalApi]
     public interface IRemoteRef : IActorRefScope { }
 
-    /// <summary>
-    /// RemoteActorRef - used to provide a local handle to an actor
-    /// running in a remote process.
-    /// </summary>
+    /// <summary>RemoteActorRef - used to provide a local handle to an actor running in a remote process.</summary>
     public class RemoteActorRef : InternalActorRefBase, IRemoteRef
     {
-        /// <summary>
-        /// The deploy
-        /// </summary>
+        /// <summary>The deploy</summary>
         private readonly Deploy _deploy;
 
         private readonly ActorPath _path;
 
-        /// <summary>
-        /// The parent
-        /// </summary>
+        /// <summary>The parent</summary>
         private readonly IInternalActorRef _parent;
-        /// <summary>
-        /// The props
-        /// </summary>
+
+        /// <summary>The props</summary>
         private readonly Props _props;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RemoteActorRef"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="RemoteActorRef"/> class.</summary>
         /// <param name="remote">The remote.</param>
         /// <param name="localAddressToUse">The local address to use.</param>
         /// <param name="path">The path.</param>
@@ -65,85 +50,59 @@ namespace Akka.Remote
             _deploy = deploy;
         }
 
-        /// <summary>
-        /// Gets the local address to use.
-        /// </summary>
+        /// <summary>Gets the local address to use.</summary>
         /// <value>The local address to use.</value>
         public Address LocalAddressToUse { get; }
 
-        /// <summary>
-        /// Gets the remote.
-        /// </summary>
+        /// <summary>Gets the remote.</summary>
         /// <value>The remote.</value>
         internal RemoteTransport Remote { get; }
 
-        /// <summary>
-        /// Gets the parent.
-        /// </summary>
+        /// <summary>Gets the parent.</summary>
         /// <value>The parent.</value>
         public override IInternalActorRef Parent => _parent;
 
-        /// <summary>
-        /// Gets the provider.
-        /// </summary>
+        /// <summary>Gets the provider.</summary>
         /// <value>The provider.</value>
         public override IActorRefProvider Provider => Remote.Provider;
 
         private IRemoteActorRefProvider RemoteProvider => Provider as IRemoteActorRefProvider;
 
-        /// <summary>
-        /// Obsolete. Use <see cref="Watch"/> or <see cref="ReceiveActor.Receive{T}(Action{T}, Predicate{T})">Receive&lt;<see cref="Akka.Actor.Terminated"/>&gt;</see>
-        /// </summary>
+        /// <summary>Obsolete. Use <see cref="Watch"/> or <see cref="ReceiveActor.Receive{T}(Action{T},
+        /// Predicate{T})">Receive&lt; <see cref="Akka.Actor.Terminated"/>&gt;</see>.</summary>
         [Obsolete("Use Context.Watch and Receive<Terminated> [1.1.0]")]
         public override bool IsTerminated { get { return false; } }
 
-
-        /// <summary>
-        /// Gets the child.
-        /// </summary>
+        /// <summary>Gets the child.</summary>
         /// <param name="name">The name.</param>
         /// <returns>ActorRef.</returns>
         /// <exception cref="System.NotImplementedException">TBD</exception>
         public override IActorRef GetChild(IEnumerable<string> name) => throw new NotImplementedException();
 
-        /// <summary>
-        /// Resumes the specified caused by failure.
-        /// </summary>
+        /// <summary>Resumes the specified caused by failure.</summary>
         /// <param name="causedByFailure">The caused by failure.</param>
         public override void Resume(Exception causedByFailure = null) => SendSystemMessage(new Resume(causedByFailure));
 
-        /// <summary>
-        /// Stops this instance.
-        /// </summary>
+        /// <summary>Stops this instance.</summary>
         public override void Stop() => SendSystemMessage(new Terminate());
 
-        /// <summary>
-        /// Restarts the specified cause.
-        /// </summary>
+        /// <summary>Restarts the specified cause.</summary>
         /// <param name="cause">The cause.</param>
         public override void Restart(Exception cause) => SendSystemMessage(new Recreate(cause));
 
-        /// <summary>
-        /// Suspends this instance.
-        /// </summary>
+        /// <summary>Suspends this instance.</summary>
         public override void Suspend() => SendSystemMessage(new Akka.Dispatch.SysMsg.Suspend());
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         public override bool IsLocal => false;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         public override ActorPath Path => _path;
 
         private void HandleException(Exception ex)
             => Remote.System.EventStream.Publish(new Error(ex, Path.ToString(), GetType(), "swallowing exception during message send"));
 
-        /// <summary>
-        /// Sends the system message.
-        /// </summary>
+        /// <summary>Sends the system message.</summary>
         /// <param name="message">The message.</param>
         public override void SendSystemMessage(ISystemMessage message)
         {
@@ -172,9 +131,7 @@ namespace Akka.Remote
             }
         }
 
-        /// <summary>
-        /// Tells the internal.
-        /// </summary>
+        /// <summary>Tells the internal.</summary>
         /// <param name="message">The message.</param>
         /// <param name="sender">The sender.</param>
         /// <exception cref="InvalidMessageException">TBD</exception>
@@ -184,19 +141,15 @@ namespace Akka.Remote
             try { Remote.Send(message, sender, this); } catch (Exception ex) { HandleException(ex); }
         }
 
-        /// <summary>
-        /// Determine if a <see cref="Watch"/>/<see cref="Unwatch"/> message must be handled by the <see cref="RemoteWatcher"/>
-        /// actor, or sent to this <see cref="RemoteActorRef"/>.
-        /// </summary>
+        /// <summary>Determine if a <see cref="Watch"/>/ <see cref="Unwatch"/> message must be handled by the
+        /// <see cref="RemoteWatcher"/> actor, or sent to this <see cref="RemoteActorRef"/>.</summary>
         /// <param name="watchee">The actor being watched.</param>
         /// <param name="watcher">The actor watching.</param>
         /// <returns>TBD</returns>
-        public bool IsWatchIntercepted(IActorRef watchee, IActorRef watcher) 
+        public bool IsWatchIntercepted(IActorRef watchee, IActorRef watcher)
             => !watcher.Equals(RemoteProvider.RemoteWatcher) && watchee.Equals(this);
 
-        /// <summary>
-        /// Starts this instance.
-        /// </summary>
+        /// <summary>Starts this instance.</summary>
         public override void Start()
         {
             if (_props != null && _deploy != null)
@@ -206,4 +159,3 @@ namespace Akka.Remote
         }
     }
 }
-

@@ -19,35 +19,29 @@ using Google.Protobuf;
 
 namespace Akka.Remote.Transport.DotNetty
 {
+    #region == class TcpHandlers ==
+
     internal abstract class TcpHandlers : CommonHandlers
     {
         private IHandleEventListener _listener;
-        
-        protected void NotifyListener(IHandleEvent msg)
-        {
-            _listener?.Notify(msg);
-        }
-        
-        protected TcpHandlers(DotNettyTransport transport, ILoggingAdapter log) : base(transport, log)
-        {
-        }
-        
+
+        protected void NotifyListener(IHandleEvent msg) => _listener?.Notify(msg);
+
+        protected TcpHandlers(DotNettyTransport transport, ILoggingAdapter log)
+            : base(transport, log) { }
+
         protected override void RegisterListener(IChannel channel, IHandleEventListener listener, object msg, IPEndPoint remoteAddress)
-        {
-            this._listener = listener;
-        }
-        
+            => this._listener = listener;
+
         protected override AssociationHandle CreateHandle(IChannel channel, Address localAddress, Address remoteAddress)
-        {
-            return new TcpAssociationHandle(localAddress, remoteAddress, Transport, channel);
-        }
-        
+            => new TcpAssociationHandle(localAddress, remoteAddress, Transport, channel);
+
         public override void ChannelInactive(IChannelHandlerContext context)
         {
             NotifyListener(new Disassociated(DisassociateInfo.Unknown));
             base.ChannelInactive(context);
         }
-        
+
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
             var buf = ((IByteBuffer)message);
@@ -62,9 +56,7 @@ namespace Akka.Remote.Transport.DotNetty
             ReferenceCountUtil.SafeRelease(message);
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="context">TBD</param>
         /// <param name="exception">TBD</param>
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
@@ -101,23 +93,24 @@ namespace Akka.Remote.Transport.DotNetty
         }
     }
 
+    #endregion
+
+    #region == class TcpServerHandler ==
+
     internal sealed class TcpServerHandler : TcpHandlers
     {
         private readonly Task<IAssociationEventListener> _associationEventListener;
-        
-        public TcpServerHandler(DotNettyTransport transport, ILoggingAdapter log, Task<IAssociationEventListener> associationEventListener) 
-            : base(transport, log)
-        {
-            this._associationEventListener = associationEventListener;
-        }
-        
+
+        public TcpServerHandler(DotNettyTransport transport, ILoggingAdapter log, Task<IAssociationEventListener> associationEventListener)
+            : base(transport, log) => this._associationEventListener = associationEventListener;
+
         public override void ChannelActive(IChannelHandlerContext context)
         {
             InitInbound(context.Channel, (IPEndPoint)context.Channel.RemoteAddress, null);
             base.ChannelActive(context);
         }
 
-        void InitInbound(IChannel channel, IPEndPoint socketAddress, object msg)
+        private void InitInbound(IChannel channel, IPEndPoint socketAddress, object msg)
         {
             // disable automatic reads
             channel.Configuration.AutoRead = false;
@@ -126,7 +119,7 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 var listener = r.Result;
                 var remoteAddress = DotNettyTransport.MapSocketToAddress(
-                    socketAddress: socketAddress, 
+                    socketAddress: socketAddress,
                     schemeIdentifier: Transport.SchemeIdentifier,
                     systemName: Transport.System.Name);
                 Init(channel, socketAddress, remoteAddress, msg, out var handle);
@@ -135,19 +128,20 @@ namespace Akka.Remote.Transport.DotNetty
         }
     }
 
+    #endregion
+
+    #region == class TcpClientHandler ==
+
     internal sealed class TcpClientHandler : TcpHandlers
     {
         private readonly TaskCompletionSource<AssociationHandle> _statusPromise = new TaskCompletionSource<AssociationHandle>();
         private readonly Address _remoteAddress;
 
         public Task<AssociationHandle> StatusFuture => _statusPromise.Task;
-        
-        public TcpClientHandler(DotNettyTransport transport, ILoggingAdapter log, Address remoteAddress) 
-            : base(transport, log)
-        {
-            _remoteAddress = remoteAddress;
-        }
-        
+
+        public TcpClientHandler(DotNettyTransport transport, ILoggingAdapter log, Address remoteAddress)
+            : base(transport, log) => _remoteAddress = remoteAddress;
+
         public override void ChannelActive(IChannelHandlerContext context)
         {
             InitOutbound(context.Channel, (IPEndPoint)context.Channel.RemoteAddress, null);
@@ -161,15 +155,16 @@ namespace Akka.Remote.Transport.DotNetty
         }
     }
 
+    #endregion
+
+    #region == class TcpAssociationHandle ==
+
     internal sealed class TcpAssociationHandle : AssociationHandle
     {
         private readonly IChannel _channel;
 
         public TcpAssociationHandle(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
-            : base(localAddress, remoteAddress)
-        {
-            _channel = channel;
-        }
+            : base(localAddress, remoteAddress) => _channel = channel;
 
         public override bool Write(ByteString payload)
         {
@@ -184,23 +179,23 @@ namespace Akka.Remote.Transport.DotNetty
 
         private IByteBuffer ToByteBuffer(ByteString payload)
         {
-            //TODO: optimize DotNetty byte buffer usage 
+            //TODO: optimize DotNetty byte buffer usage
             // (maybe custom IByteBuffer working directly on ByteString?)
             var buffer = Unpooled.WrappedBuffer(payload.ToByteArray());
             return buffer;
         }
 
-        public override void Disassociate()
-        {
-            _channel.CloseAsync();
-        }
+        public override void Disassociate() => _channel.CloseAsync();
     }
-    
+
+    #endregion
+
+    #region == class TcpTransport ==
+
     internal sealed class TcpTransport : DotNettyTransport
     {
-        public TcpTransport(ActorSystem system, Config config) : base(system, config)
-        {
-        }
+        public TcpTransport(ActorSystem system, Config config)
+            : base(system, config) { }
 
         protected override async Task<AssociationHandle> AssociateInternal(Address remoteAddress)
         {
@@ -269,4 +264,5 @@ namespace Akka.Remote.Transport.DotNetty
         }
     }
 
+    #endregion
 }

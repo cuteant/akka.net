@@ -7,7 +7,6 @@
 
 using System;
 using System.Net;
-using System.Text;
 using System.Threading.Tasks;
 using Akka.Util;
 using CuteAnt.Pool;
@@ -17,12 +16,10 @@ using ILoggingAdapter = Akka.Event.ILoggingAdapter;
 
 namespace Akka.Remote.Transport.DotNetty
 {
-    /// <summary>
-    /// INTERNAL API
-    /// 
-    /// Used for adding additional debug logging to the DotNetty transport
-    /// </summary>
-    internal class AkkaLoggingHandler : ChannelHandlerAdapter
+    /// <summary>INTERNAL API
+    ///
+    /// Used for adding additional debug logging to the DotNetty transport.</summary>
+    internal sealed class AkkaLoggingHandler : ChannelHandlerAdapter
     {
         private readonly ILoggingAdapter _log;
 
@@ -121,7 +118,7 @@ namespace Akka.Remote.Transport.DotNetty
             ctx.Flush();
         }
 
-        protected string Format(IChannelHandlerContext ctx, string eventName)
+        internal static string Format(IChannelHandlerContext ctx, string eventName)
         {
             var chStr = ctx.Channel.ToString();
             var sb = StringBuilderManager.Allocate(chStr.Length + 1 + eventName.Length);
@@ -130,24 +127,26 @@ namespace Akka.Remote.Transport.DotNetty
             return StringBuilderManager.ReturnAndFree(sb);
         }
 
-        protected string Format(IChannelHandlerContext ctx, string eventName, object arg)
+        internal static string Format(IChannelHandlerContext ctx, string eventName, object arg)
         {
             switch (arg)
             {
                 case IByteBuffer buffer:
-                    return this.FormatByteBuffer(ctx, eventName, buffer);
+                    return FormatByteBuffer(ctx, eventName, buffer);
+
                 case IByteBufferHolder bufferHolder:
-                    return this.FormatByteBufferHolder(ctx, eventName, bufferHolder);
+                    return FormatByteBufferHolder(ctx, eventName, bufferHolder);
+
                 default:
-                    return this.FormatSimple(ctx, eventName, arg);
+                    return FormatSimple(ctx, eventName, arg);
             }
         }
 
-        protected string Format(IChannelHandlerContext ctx, string eventName, object firstArg, object secondArg)
+        internal static string Format(IChannelHandlerContext ctx, string eventName, object firstArg, object secondArg)
         {
             if (secondArg == null)
             {
-                return this.FormatSimple(ctx, eventName, firstArg);
+                return FormatSimple(ctx, eventName, firstArg);
             }
             string chStr = ctx.Channel.ToString();
             string arg1Str = firstArg.ToString();
@@ -159,7 +158,7 @@ namespace Akka.Remote.Transport.DotNetty
             return StringBuilderManager.ReturnAndFree(buf);
         }
 
-        string FormatByteBuffer(IChannelHandlerContext ctx, string eventName, IByteBuffer msg)
+        private static string FormatByteBuffer(IChannelHandlerContext ctx, string eventName, IByteBuffer msg)
         {
             string chStr = ctx.Channel.ToString();
             int length = msg.ReadableBytes;
@@ -181,7 +180,7 @@ namespace Akka.Remote.Transport.DotNetty
             }
         }
 
-        string FormatByteBufferHolder(IChannelHandlerContext ctx, string eventName, IByteBufferHolder msg)
+        private static string FormatByteBufferHolder(IChannelHandlerContext ctx, string eventName, IByteBufferHolder msg)
         {
             string chStr = ctx.Channel.ToString();
             string msgStr = msg.ToString();
@@ -206,7 +205,7 @@ namespace Akka.Remote.Transport.DotNetty
             }
         }
 
-        string FormatSimple(IChannelHandlerContext ctx, string eventName, object msg)
+        private static string FormatSimple(IChannelHandlerContext ctx, string eventName, object msg)
         {
             string chStr = ctx.Channel.ToString();
             string msgStr = msg.ToString();

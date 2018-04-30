@@ -10,29 +10,19 @@ using Akka.Configuration;
 
 namespace Akka.Remote
 {
-    /// <summary>
-    /// TBD
-    /// </summary>
+    /// <summary>TBD</summary>
     public class AkkaProtocolSettings
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public Config TransportFailureDetectorConfig { get; private set; }
+        /// <summary>TBD</summary>
+        public Config TransportFailureDetectorConfig { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public string TransportFailureDetectorImplementationClass { get; private set; }
+        /// <summary>TBD</summary>
+        public string TransportFailureDetectorImplementationClass { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public TimeSpan TransportHeartBeatInterval { get; private set; }
+        /// <summary>TBD</summary>
+        public TimeSpan TransportHeartBeatInterval { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="config">TBD</param>
         public AkkaProtocolSettings(Config config)
         {
@@ -42,4 +32,3 @@ namespace Akka.Remote
         }
     }
 }
-

@@ -11,9 +11,7 @@ using Akka.Util;
 
 namespace Akka.Remote
 {
-    /// <summary>
-    /// A lock-less, thread-safe implementation of <see cref="IFailureDetectorRegistry{T}"/>.
-    /// </summary>
+    /// <summary>A lock-less, thread-safe implementation of <see cref="IFailureDetectorRegistry{T}"/>.</summary>
     /// <typeparam name="T">TBD</typeparam>
     public class DefaultFailureDetectorRegistry<T> : IFailureDetectorRegistry<T>
     {
@@ -44,9 +42,7 @@ namespace Akka.Remote
 
         #region IFailureDetectorRegistry<T> members
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="resource">TBD</param>
         /// <returns>TBD</returns>
         public bool IsAvailable(T resource)
@@ -56,9 +52,7 @@ namespace Akka.Remote
             return true;
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="resource">TBD</param>
         /// <returns>TBD</returns>
         public bool IsMonitoring(T resource)
@@ -68,9 +62,7 @@ namespace Akka.Remote
             return false;
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="resource">TBD</param>
         public void Heartbeat(T resource)
         {
@@ -81,8 +73,9 @@ namespace Akka.Remote
                 //First one wins and creates the new FailureDetector
                 lock (_failureDetectorCreationLock)
                 {
-                    // First check for non-existing key wa outside the lock, and a second thread might just have released the lock
-                    // when this one acquired it, so the second check is needed (double-check locking pattern)
+                    // First check for non-existing key wa outside the lock, and a second thread
+                    // might just have released the lock when this one acquired it, so the second
+                    // check is needed (double-check locking pattern)
                     var oldTable = new Dictionary<T, FailureDetector>(ResourceToFailureDetector);
                     if (oldTable.TryGetValue(resource, out failureDetector))
                         failureDetector.HeartBeat();
@@ -97,9 +90,7 @@ namespace Akka.Remote
             }
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="resource">TBD</param>
         public void Remove(T resource)
         {
@@ -116,9 +107,7 @@ namespace Akka.Remote
             }
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         public void Reset()
         {
             while (true)
@@ -134,9 +123,7 @@ namespace Akka.Remote
 
         #region INTERNAL API
 
-        /// <summary>
-        /// Get the underlying <see cref="FailureDetector"/> for a resource.
-        /// </summary>
+        /// <summary>Get the underlying <see cref="FailureDetector"/> for a resource.</summary>
         /// <param name="resource">TBD</param>
         /// <returns>TBD</returns>
         internal FailureDetector GetFailureDetector(T resource)
@@ -148,4 +135,3 @@ namespace Akka.Remote
         #endregion
     }
 }
-

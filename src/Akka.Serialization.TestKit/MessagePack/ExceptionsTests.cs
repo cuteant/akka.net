@@ -106,7 +106,7 @@ namespace Akka.Serialization.Testkit
             {
             }
 
-            protected BasicException(SerializationInfo info, StreamingContext context) : base(info, context)
+            private BasicException(SerializationInfo info, StreamingContext context) : base(info, context)
             {
             }
         }

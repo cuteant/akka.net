@@ -12,19 +12,14 @@ using Akka.Dispatch.SysMsg;
 
 namespace Akka.Remote
 {
-    /// <summary>
-    /// Responsible for cleaning up child references of remote deployed actors when remote node
-    /// goes down (crash, network failure), i.e. triggered by Akka.Actor.Terminated.AddressTerminated
-    /// </summary>
+    /// <summary>Responsible for cleaning up child references of remote deployed actors when remote node goes
+    /// down (crash, network failure), i.e. triggered by Akka.Actor.Terminated.AddressTerminated.</summary>
     internal class RemoteDeploymentWatcher : ReceiveActor, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
-
         private readonly IDictionary<IActorRef, IInternalActorRef> _supervisors =
             new Dictionary<IActorRef, IInternalActorRef>();
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         public RemoteDeploymentWatcher()
         {
             Receive<WatchRemote>(w =>
@@ -45,14 +40,10 @@ namespace Akka.Remote
             });
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         internal class WatchRemote
         {
-            /// <summary>
-            /// TBD
-            /// </summary>
+            /// <summary>TBD</summary>
             /// <param name="actor">TBD</param>
             /// <param name="supervisor">TBD</param>
             public WatchRemote(IActorRef actor, IInternalActorRef supervisor)
@@ -61,13 +52,10 @@ namespace Akka.Remote
                 Supervisor = supervisor;
             }
 
-            /// <summary>
-            /// TBD
-            /// </summary>
+            /// <summary>TBD</summary>
             public IActorRef Actor { get; private set; }
-            /// <summary>
-            /// TBD
-            /// </summary>
+
+            /// <summary>TBD</summary>
             public IInternalActorRef Supervisor { get; private set; }
         }
     }

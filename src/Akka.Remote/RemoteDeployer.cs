@@ -16,27 +16,21 @@ namespace Akka.Remote
 {
     /// <summary>
     /// INTERNAL API
-    /// 
+    ///
     /// Used for deployment of actors on remote systems
     /// </summary>
     internal class RemoteDeployer : Deployer
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="RemoteDeployer"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="RemoteDeployer"/> class.</summary>
         /// <param name="settings">The settings used to configure the deployer.</param>
-        public RemoteDeployer(Settings settings) : base(settings)
-        {
-        }
+        public RemoteDeployer(Settings settings) : base(settings) { }
 
-        /// <summary>
-        /// Creates an actor deployment to the supplied path, <paramref name="key" />, using the supplied configuration, <paramref name="config" />.
-        /// </summary>
+        /// <summary>Creates an actor deployment to the supplied path, <paramref name="key"/>, using the
+        /// supplied configuration, <paramref name="config"/>.</summary>
         /// <param name="key">The path used to deploy the actor.</param>
         /// <param name="config">The configuration used to configure the deployed actor.</param>
-        /// <exception cref="ConfigurationException">
-        /// This exception is thrown when a remote node name in the specified <paramref name="config"/> is unparseable.
-        /// </exception>
+        /// <exception cref="ConfigurationException">This exception is thrown when a remote node name in the specified <paramref
+        /// name="config"/> is unparseable.</exception>
         /// <returns>A configured actor deployment to the given path.</returns>
         public override Deploy ParseConfig(string key, Config config)
         {

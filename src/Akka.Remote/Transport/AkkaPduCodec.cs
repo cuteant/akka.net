@@ -7,123 +7,113 @@
 
 using System;
 using System.Linq;
-using Akka.Actor;
-using Google.Protobuf;
 using System.Runtime.Serialization;
+using Akka.Actor;
 using Akka.Remote.Serialization;
 using Akka.Remote.Serialization.Proto.Msg;
+using Google.Protobuf;
 using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
 
 namespace Akka.Remote.Transport
 {
-    /// <summary>
-    /// INTERNAL API
-    /// </summary>
-    internal class PduCodecException : AkkaException
+    #region == class PduCodecException ==
+
+    /// <summary>INTERNAL API</summary>
+    internal sealed class PduCodecException : AkkaException
     {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PduCodecException"/> class.
-        /// </summary>
+        /// <summary>Initializes a new instance of the <see cref="PduCodecException"/> class.</summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="cause">The exception that is the cause of the current exception.</param>
         public PduCodecException(string message, Exception cause = null) : base(message, cause) { }
 
 #if SERIALIZATION
-        /// <summary>
-        /// Initializes a new instance of the <see cref="PduCodecException"/> class.
-        /// </summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the exception being thrown.</param>
-        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source or destination.</param>
-        protected PduCodecException(SerializationInfo info, StreamingContext context)
+        /// <summary>Initializes a new instance of the <see cref="PduCodecException"/> class.</summary>
+        /// <param name="info">
+        /// The <see cref="SerializationInfo"/> that holds the serialized object data about the
+        /// exception being thrown.
+        /// </param>
+        /// <param name="context">
+        /// The <see cref="StreamingContext"/> that contains contextual information about the source
+        /// or destination.
+        /// </param>
+        private PduCodecException(SerializationInfo info, StreamingContext context)
             : base(info, context)
         {
         }
 #endif
     }
 
-    /*
-     * Interface used to represent Akka PDUs (Protocol Data Unit)
-     */
-    /// <summary>
-    /// TBD
-    /// </summary>
+    #endregion
+
+
+    #region == interface IAkkaPdu ==
+
+    /// <summary>Interface used to represent Akka PDUs (Protocol Data Unit)</summary>
     internal interface IAkkaPdu { }
 
-    /// <summary>
-    /// TBD
-    /// </summary>
+    #endregion
+
+    #region == class Associate ==
+
+    /// <summary>TBD</summary>
     internal sealed class Associate : IAkkaPdu
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="info">TBD</param>
-        public Associate(HandshakeInfo info)
-        {
-            Info = info;
-        }
+        public Associate(HandshakeInfo info) => Info = info;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public HandshakeInfo Info { get; private set; }
+        /// <summary>TBD</summary>
+        public HandshakeInfo Info { get; }
     }
 
-    /// <summary>
-    /// TBD
-    /// </summary>
+    #endregion
+
+    #region == class Disassociate ==
+
+    /// <summary>TBD</summary>
     internal sealed class Disassociate : IAkkaPdu
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="reason">TBD</param>
-        public Disassociate(DisassociateInfo reason)
-        {
-            Reason = reason;
-        }
+        public Disassociate(DisassociateInfo reason) => Reason = reason;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public DisassociateInfo Reason { get; private set; }
+        /// <summary>TBD</summary>
+        public DisassociateInfo Reason { get; }
     }
 
-    /// <summary>
-    /// INTERNAL API.
-    /// 
+    #endregion
+
+    #region == class Heartbeat ==
+
+    /// <summary>INTERNAL API.
+    ///
     /// Represents a heartbeat on the wire.
     /// </summary>
     internal sealed class Heartbeat : IAkkaPdu { }
 
-    /// <summary>
-    /// TBD
-    /// </summary>
+    #endregion
+
+    #region == class Payload ==
+
+    /// <summary>TBD</summary>
     internal sealed class Payload : IAkkaPdu
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="bytes">TBD</param>
-        public Payload(ByteString bytes)
-        {
-            Bytes = bytes;
-        }
+        public Payload(ByteString bytes) => Bytes = bytes;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public ByteString Bytes { get; private set; }
+        /// <summary>TBD</summary>
+        public ByteString Bytes { get; }
     }
 
-    /// <summary>
-    /// TBD
-    /// </summary>
+    #endregion
+
+    #region == class Message ==
+
+    /// <summary>TBD</summary>
     internal sealed class Message : IAkkaPdu, IHasSequenceNumber
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="recipient">TBD</param>
         /// <param name="recipientAddress">TBD</param>
         /// <param name="serializedMessage">TBD</param>
@@ -138,45 +128,33 @@ namespace Akka.Remote.Transport
             Recipient = recipient;
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public IInternalActorRef Recipient { get; private set; }
+        /// <summary>TBD</summary>
+        public IInternalActorRef Recipient { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public Address RecipientAddress { get; private set; }
+        /// <summary>TBD</summary>
+        public Address RecipientAddress { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public SerializedMessage SerializedMessage { get; private set; }
+        /// <summary>TBD</summary>
+        public SerializedMessage SerializedMessage { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public IActorRef SenderOptional { get; private set; }
+        /// <summary>TBD</summary>
+        public IActorRef SenderOptional { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public bool ReliableDeliveryEnabled { get { return Seq != null; } }
+        /// <summary>TBD</summary>
+        public bool ReliableDeliveryEnabled => Seq != null;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public SeqNo Seq { get; private set; }
+        /// <summary>TBD</summary>
+        public SeqNo Seq { get; }
     }
 
-    /// <summary>
-    /// INTERNAL API
-    /// </summary>
+    #endregion
+
+    #region == class AckAndMessage ==
+
+    /// <summary>INTERNAL API</summary>
     internal sealed class AckAndMessage
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="ackOption">TBD</param>
         /// <param name="messageOption">TBD</param>
         public AckAndMessage(Ack ackOption, Message messageOption)
@@ -185,20 +163,20 @@ namespace Akka.Remote.Transport
             AckOption = ackOption;
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public Ack AckOption { get; private set; }
+        /// <summary>TBD</summary>
+        public Ack AckOption { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public Message MessageOption { get; private set; }
+        /// <summary>TBD</summary>
+        public Message MessageOption { get; }
     }
 
-    /// <summary>
-    /// INTERNAL API
-    /// 
+    #endregion
+
+
+    #region == class AkkaPduCodec ==
+
+    /// <summary>INTERNAL API
+    ///
     /// A codec that is able to convert Akka PDUs from and to <see cref="ByteString"/>
     /// </summary>
     internal abstract class AkkaPduCodec
@@ -212,18 +190,13 @@ namespace Akka.Remote.Transport
             AddressCache = AddressThreadLocalCache.For(system);
         }
 
-        /// <summary>
-        /// Return an <see cref="IAkkaPdu"/> instance that represents a PDU contained in the raw
-        /// <see cref="ByteString"/>.
-        /// </summary>
+        /// <summary>Return an <see cref="IAkkaPdu"/> instance that represents a PDU contained in the raw <see cref="ByteString"/>.</summary>
         /// <param name="raw">Encoded raw byte representation of an Akka PDU</param>
         /// <returns>Class representation of a PDU that can be used in a <see cref="PatternMatch"/>.</returns>
         public abstract IAkkaPdu DecodePdu(ByteString raw);
 
-        /// <summary>
-        /// Takes an <see cref="IAkkaPdu"/> representation of an Akka PDU and returns its encoded form
-        /// as a <see cref="ByteString"/>.
-        /// </summary>
+        /// <summary>Takes an <see cref="IAkkaPdu"/> representation of an Akka PDU and returns its encoded
+        /// form as a <see cref="ByteString"/>.</summary>
         /// <param name="pdu">TBD</param>
         /// <returns>TBD</returns>
         public virtual ByteString EncodePdu(IAkkaPdu pdu)
@@ -232,56 +205,48 @@ namespace Akka.Remote.Transport
             {
                 case Payload p:
                     return ConstructPayload(p.Bytes);
+
                 case Heartbeat h:
                     return ConstructHeartbeat();
+
                 case Associate a:
                     return ConstructAssociate(a.Info);
+
                 case Disassociate d:
                     return ConstructDisassociate(d.Reason);
+
                 default:
                     return null; // unsupported message type
             }
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
         public abstract ByteString ConstructPayload(ByteString payload);
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="info">TBD</param>
         /// <returns>TBD</returns>
         public abstract ByteString ConstructAssociate(HandshakeInfo info);
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="reason">TBD</param>
         /// <returns>TBD</returns>
         public abstract ByteString ConstructDisassociate(DisassociateInfo reason);
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         public abstract ByteString ConstructHeartbeat();
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="raw">TBD</param>
         /// <param name="provider">TBD</param>
         /// <param name="localAddress">TBD</param>
         /// <returns>TBD</returns>
         public abstract AckAndMessage DecodeMessage(ByteString raw, IRemoteActorRefProvider provider, Address localAddress);
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="localAddress">TBD</param>
         /// <param name="recipient">TBD</param>
         /// <param name="serializedMessage">TBD</param>
@@ -292,30 +257,25 @@ namespace Akka.Remote.Transport
         public abstract ByteString ConstructMessage(Address localAddress, IActorRef recipient,
             SerializedMessage serializedMessage, IActorRef senderOption = null, SeqNo seqOption = null, Ack ackOption = null);
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="ack">TBD</param>
         /// <returns>TBD</returns>
         public abstract ByteString ConstructPureAck(Ack ack);
     }
 
-    /// <summary>
-    /// TBD
-    /// </summary>
-    internal class AkkaPduProtobuffCodec : AkkaPduCodec
+    #endregion
+
+    #region == class AkkaPduProtobuffCodec ==
+
+    /// <summary>TBD</summary>
+    internal sealed class AkkaPduProtobuffCodec : AkkaPduCodec
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="raw">TBD</param>
         /// <exception cref="PduCodecException">
-        /// This exception is thrown when the Akka PDU in the specified byte string,
-        /// <paramref name="raw" />, meets one of the following conditions:
-        /// <ul>
-        /// <li>The PDU is neither a message or a control message.</li>
-        /// <li>The PDU is a control message with an invalid format. </li>
-        /// </ul>
+        /// This exception is thrown when the Akka PDU in the specified byte string, <paramref
+        /// name="raw"/>, meets one of the following conditions: <ul><li>The PDU is neither a message
+        /// or a control message.</li><li>The PDU is a control message with an invalid format.</li></ul>
         /// </exception>
         /// <returns>TBD</returns>
         public override IAkkaPdu DecodePdu(ByteString raw)
@@ -333,19 +293,12 @@ namespace Akka.Remote.Transport
             }
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override ByteString ConstructPayload(ByteString payload)
-        {
-            return new AkkaProtocolMessage() { Payload = payload }.ToByteString();
-        }
+        public override ByteString ConstructPayload(ByteString payload) => new AkkaProtocolMessage() { Payload = payload }.ToByteString();
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="info">TBD</param>
         /// <exception cref="ArgumentException">
         /// This exception is thrown when the specified <paramref name="info"/> contains an invalid address.
@@ -362,9 +315,7 @@ namespace Akka.Remote.Transport
             return ConstructControlMessagePdu(CommandType.Associate, handshakeInfo);
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="reason">TBD</param>
         /// <returns>TBD</returns>
         public override ByteString ConstructDisassociate(DisassociateInfo reason)
@@ -373,8 +324,10 @@ namespace Akka.Remote.Transport
             {
                 case DisassociateInfo.Quarantined:
                     return DISASSOCIATE_QUARANTINED;
+
                 case DisassociateInfo.Shutdown:
                     return DISASSOCIATE_SHUTTING_DOWN;
+
                 case DisassociateInfo.Unknown:
                 default:
                     return DISASSOCIATE;
@@ -388,23 +341,14 @@ namespace Akka.Remote.Transport
          */
         private static readonly ByteString HeartbeatPdu = ConstructControlMessagePdu(CommandType.Heartbeat);
 
-        /// <summary>
-        /// Creates a new Heartbeat message instance.
-        /// </summary>
+        /// <summary>Creates a new Heartbeat message instance.</summary>
         /// <returns>The Heartbeat message.</returns>
-        public override ByteString ConstructHeartbeat()
-        {
-            return HeartbeatPdu;
-        }
+        public override ByteString ConstructHeartbeat() => HeartbeatPdu;
 
-        /// <summary>
-        /// Indicated RemoteEnvelope.Seq is not defined (order is irrelevant)
-        /// </summary>
+        /// <summary>Indicated RemoteEnvelope.Seq is not defined (order is irrelevant)</summary>
         private const ulong SeqUndefined = ulong.MaxValue;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="raw">TBD</param>
         /// <param name="provider">TBD</param>
         /// <param name="localAddress">TBD</param>
@@ -456,7 +400,6 @@ namespace Akka.Remote.Transport
                 }
             }
 
-
             return new AckAndMessage(ackOption, messageOption);
         }
 
@@ -469,9 +412,7 @@ namespace Akka.Remote.Transport
             return acki;
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="localAddress">TBD</param>
         /// <param name="recipient">TBD</param>
         /// <param name="serializedMessage">TBD</param>
@@ -493,18 +434,15 @@ namespace Akka.Remote.Transport
             return ackAndEnvelope.ToByteString();
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="ack">TBD</param>
         /// <returns>TBD</returns>
         public override ByteString ConstructPureAck(Ack ack)
-        {
-            return new AckAndEnvelopeContainer() { Ack = AckBuilder(ack) }.ToByteString();
-        }
+            => new AckAndEnvelopeContainer() { Ack = AckBuilder(ack) }.ToByteString();
 
-        #region Internal methods
-        private IAkkaPdu DecodeControlPdu(AkkaControlMessage controlPdu)
+        #region * Internal methods *
+
+        private static IAkkaPdu DecodeControlPdu(AkkaControlMessage controlPdu)
         {
             switch (controlPdu.CommandType)
             {
@@ -515,12 +453,16 @@ namespace Akka.Remote.Transport
                         return new Associate(new HandshakeInfo(DecodeAddress(handshakeInfo.Origin), (int)handshakeInfo.Uid));
                     }
                     break;
+
                 case CommandType.Disassociate:
                     return new Disassociate(DisassociateInfo.Unknown);
+
                 case CommandType.DisassociateQuarantined:
                     return new Disassociate(DisassociateInfo.Quarantined);
+
                 case CommandType.DisassociateShuttingDown:
                     return new Disassociate(DisassociateInfo.Shutdown);
+
                 case CommandType.Heartbeat:
                     return new Heartbeat();
             }
@@ -528,22 +470,11 @@ namespace Akka.Remote.Transport
             throw new PduCodecException($"Decoding of control PDU failed, invalid format, unexpected {controlPdu}");
         }
 
+        private static ByteString DISASSOCIATE => ConstructControlMessagePdu(CommandType.Disassociate);
 
+        private static ByteString DISASSOCIATE_SHUTTING_DOWN => ConstructControlMessagePdu(CommandType.DisassociateShuttingDown);
 
-        private ByteString DISASSOCIATE
-        {
-            get { return ConstructControlMessagePdu(CommandType.Disassociate); }
-        }
-
-        private ByteString DISASSOCIATE_SHUTTING_DOWN
-        {
-            get { return ConstructControlMessagePdu(CommandType.DisassociateShuttingDown); }
-        }
-
-        private ByteString DISASSOCIATE_QUARANTINED
-        {
-            get { return ConstructControlMessagePdu(CommandType.DisassociateQuarantined); }
-        }
+        private static ByteString DISASSOCIATE_QUARANTINED => ConstructControlMessagePdu(CommandType.DisassociateQuarantined);
 
         private static ByteString ConstructControlMessagePdu(CommandType code, AkkaHandshakeInfo handshakeInfo = null)
         {
@@ -557,9 +488,7 @@ namespace Akka.Remote.Transport
         }
 
         private static Address DecodeAddress(AddressData origin)
-        {
-            return new Address(origin.Protocol, origin.System, origin.Hostname, (int)origin.Port);
-        }
+            => new Address(origin.Protocol, origin.System, origin.Hostname, (int)origin.Port);
 
         private static ActorRefData SerializeActorRef(Address defaultAddress, IActorRef actorRef)
         {
@@ -589,8 +518,8 @@ namespace Akka.Remote.Transport
 
         #endregion
 
-        public AkkaPduProtobuffCodec(ActorSystem system) : base(system)
-        {
-        }
+        public AkkaPduProtobuffCodec(ActorSystem system) : base(system) { }
     }
+
+    #endregion
 }
