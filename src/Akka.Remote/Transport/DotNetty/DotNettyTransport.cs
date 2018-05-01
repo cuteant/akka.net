@@ -159,7 +159,7 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 var dispatcher = new DispatcherEventLoopGroup();
                 _serverBossGroup = dispatcher;
-                _serverWorkerGroup = new WorkerEventLoopGroup(dispatcher);
+                _serverWorkerGroup = new WorkerEventLoopGroup(dispatcher, Settings.ServerSocketWorkerPoolSize);
                 _clientWorkerGroup = new MultithreadEventLoopGroup(Settings.ClientSocketWorkerPoolSize);
             }
             else
