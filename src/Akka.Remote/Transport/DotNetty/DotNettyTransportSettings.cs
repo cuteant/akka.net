@@ -40,7 +40,7 @@ namespace Akka.Remote.Transport.DotNetty
             var publicHost = config.GetString("public-hostname", null);
             var publicPort = config.GetInt("public-port", 0);
 
-            var order = ByteOrder.LittleEndian;
+            var order = ByteOrder.BigEndian;
             var byteOrderString = config.GetString("byte-order", "little-endian").ToLowerInvariant();
             switch (byteOrderString)
             {
@@ -51,6 +51,7 @@ namespace Akka.Remote.Transport.DotNetty
 
             return new DotNettyTransportSettings(
                 transportMode: transportMode == "tcp" ? TransportMode.Tcp : TransportMode.Udp,
+                enableLibuv: config.GetBoolean("enable-libuv", false),
                 enableSsl: config.GetBoolean("enable-ssl", false),
                 connectTimeout: config.GetTimeSpan("connection-timeout", TimeSpan.FromSeconds(15)),
                 hostname: host,
@@ -63,12 +64,14 @@ namespace Akka.Remote.Transport.DotNetty
                 ssl: config.HasPath("ssl") ? SslSettings.Create(config.GetConfig("ssl")) : SslSettings.Empty,
                 dnsUseIpv6: config.GetBoolean("dns-use-ipv6", false),
                 tcpReuseAddr: config.GetBoolean("tcp-reuse-addr", true),
+                tcpReusePort: config.GetBoolean("tcp-reuse-port", true),
                 tcpKeepAlive: config.GetBoolean("tcp-keepalive", true),
                 tcpNoDelay: config.GetBoolean("tcp-nodelay", true),
+                tcpLinger: config.GetInt("tcp-linger", 0),
                 backlog: config.GetInt("backlog", 4096),
                 enforceIpFamily: RuntimeDetector.IsMono || config.GetBoolean("enforce-ip-family", false),
-                receiveBufferSize: ToNullableInt(config.GetByteSize("receive-buffer-size") ?? 256000),
-                sendBufferSize: ToNullableInt(config.GetByteSize("send-buffer-size") ?? 256000),
+                receiveBufferSize: ToNullableInt(config.GetByteSize("receive-buffer-size") ?? 0L), // 256000
+                sendBufferSize: ToNullableInt(config.GetByteSize("send-buffer-size") ?? 0L), // 256000
                 writeBufferHighWaterMark: ToNullableInt(config.GetByteSize("write-buffer-high-water-mark")),
                 writeBufferLowWaterMark: ToNullableInt(config.GetByteSize("write-buffer-low-water-mark")),
                 backwardsCompatibilityModeEnabled: config.GetBoolean("enable-backwards-compatibility", false),
@@ -77,7 +80,7 @@ namespace Akka.Remote.Transport.DotNetty
                 enableBufferPooling: config.GetBoolean("enable-pooling", true));
         }
 
-        private static int? ToNullableInt(long? value) => value.HasValue && value.Value > 0 ? (int?)value.Value : null;
+        private static int? ToNullableInt(long? value) => value.HasValue && value.Value > 0L ? (int?)value.Value : null;
 
         private static int ComputeWorkerPoolSize(Config config)
         {
@@ -91,6 +94,8 @@ namespace Akka.Remote.Transport.DotNetty
 
         /// <summary>Transport mode used by underlying socket channel. Currently only TCP is supported.</summary>
         public readonly TransportMode TransportMode;
+
+        public readonly bool EnableLibuv;
 
         /// <summary>If set to true, a Secure Socket Layer will be established between remote endpoints. They
         /// need to share a X509 certificate which path is specified in `akka.remote.dot-netty.tcp.ssl.certificate.path` </summary>
@@ -130,12 +135,15 @@ namespace Akka.Remote.Transport.DotNetty
         /// <summary>Enables SO_REUSEADDR, which determines when an ActorSystem can open the specified listen
         /// port (the meaning differs between *nix and Windows).</summary>
         public readonly bool TcpReuseAddr;
+        public readonly bool TcpReusePort;
 
         /// <summary>Enables TCP Keepalive, subject to the O/S kernel's configuration.</summary>
         public readonly bool TcpKeepAlive;
 
         /// <summary>Enables the TCP_NODELAY flag, i.e. disables Nagle's algorithm</summary>
         public readonly bool TcpNoDelay;
+
+        public readonly int TcpLinger;
 
         /// <summary>If set to true, we will enforce usage of IPv4 or IPv6 addresses upon DNS resolution for
         /// host names. If true, we will use IPv6 enforcement. Otherwise, we will use IPv4.</summary>
@@ -169,14 +177,16 @@ namespace Akka.Remote.Transport.DotNetty
         /// setting to <c>false</c> to disable pooling and work-around this issue at the cost of some performance.</summary>
         public readonly bool EnableBufferPooling;
 
-        public DotNettyTransportSettings(TransportMode transportMode, bool enableSsl, TimeSpan connectTimeout, string hostname, string publicHostname,
+        public DotNettyTransportSettings(TransportMode transportMode, bool enableLibuv, bool enableSsl, TimeSpan connectTimeout, string hostname, string publicHostname,
             int port, int? publicPort, int serverSocketWorkerPoolSize, int clientSocketWorkerPoolSize, int maxFrameSize, SslSettings ssl,
-            bool dnsUseIpv6, bool tcpReuseAddr, bool tcpKeepAlive, bool tcpNoDelay, int backlog, bool enforceIpFamily,
-            int? receiveBufferSize, int? sendBufferSize, int? writeBufferHighWaterMark, int? writeBufferLowWaterMark, bool backwardsCompatibilityModeEnabled, bool logTransport, ByteOrder byteOrder, bool enableBufferPooling)
+            bool dnsUseIpv6, bool tcpReuseAddr, bool tcpReusePort, bool tcpKeepAlive, bool tcpNoDelay, int tcpLinger, int backlog, bool enforceIpFamily,
+            int? receiveBufferSize, int? sendBufferSize, int? writeBufferHighWaterMark, int? writeBufferLowWaterMark, bool backwardsCompatibilityModeEnabled, 
+            bool logTransport, ByteOrder byteOrder, bool enableBufferPooling)
         {
             if (maxFrameSize < 32000) throw new ArgumentException("maximum-frame-size must be at least 32000 bytes", nameof(maxFrameSize));
 
             TransportMode = transportMode;
+            EnableLibuv = enableLibuv;
             EnableSsl = enableSsl;
             ConnectTimeout = connectTimeout;
             Hostname = hostname;
@@ -189,8 +199,10 @@ namespace Akka.Remote.Transport.DotNetty
             Ssl = ssl;
             DnsUseIpv6 = dnsUseIpv6;
             TcpReuseAddr = tcpReuseAddr;
+            TcpReusePort = tcpReusePort;
             TcpKeepAlive = tcpKeepAlive;
             TcpNoDelay = tcpNoDelay;
+            TcpLinger = tcpLinger;
             Backlog = backlog;
             EnforceIpFamily = enforceIpFamily;
             ReceiveBufferSize = receiveBufferSize;

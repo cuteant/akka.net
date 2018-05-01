@@ -25,6 +25,7 @@ using DotNetty.Handlers.Tls;
 using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
+using DotNetty.Transport.Libuv;
 
 namespace Akka.Remote.Transport.DotNetty
 {
@@ -130,24 +131,36 @@ namespace Akka.Remote.Transport.DotNetty
         protected volatile Address LocalAddress;
         protected internal volatile IChannel ServerChannel;
 
-        private readonly IEventLoopGroup serverEventLoopGroup;
-        private readonly IEventLoopGroup clientEventLoopGroup;
+        private readonly IEventLoopGroup _serverBossGroup;
+        private readonly IEventLoopGroup _serverWorkerGroup;
+        private readonly IEventLoopGroup _clientWorkerGroup;
 
         protected DotNettyTransport(ActorSystem system, Config config)
         {
             System = system;
             Config = config;
 
-            if (system.Settings.Config.HasPath("akka.remote.helios.tcp"))
-            {
-                var heliosFallbackConfig = system.Settings.Config.GetConfig("akka.remote.helios.tcp");
-                config = heliosFallbackConfig.WithFallback(config);
-            }
+            //if (system.Settings.Config.HasPath("akka.remote.helios.tcp"))
+            //{
+            //    var heliosFallbackConfig = system.Settings.Config.GetConfig("akka.remote.helios.tcp");
+            //    config = heliosFallbackConfig.WithFallback(config);
+            //}
 
             Settings = DotNettyTransportSettings.Create(config);
             Log = Logging.GetLogger(System, GetType());
-            serverEventLoopGroup = new MultithreadEventLoopGroup(Settings.ServerSocketWorkerPoolSize);
-            clientEventLoopGroup = new MultithreadEventLoopGroup(Settings.ClientSocketWorkerPoolSize);
+            if (Settings.EnableLibuv)
+            {
+                var dispatcher = new DispatcherEventLoopGroup();
+                _serverBossGroup = dispatcher;
+                _serverWorkerGroup = new WorkerEventLoopGroup(dispatcher);
+                _clientWorkerGroup = new MultithreadEventLoopGroup(Settings.ClientSocketWorkerPoolSize);
+            }
+            else
+            {
+                _serverBossGroup = new MultithreadEventLoopGroup(1);
+                _serverWorkerGroup = new MultithreadEventLoopGroup(Settings.ServerSocketWorkerPoolSize);
+                _clientWorkerGroup = new MultithreadEventLoopGroup(Settings.ClientSocketWorkerPoolSize);
+            }
             ConnectionGroup = new ConcurrentSet<IChannel>();
             AssociationListenerPromise = new TaskCompletionSource<IAssociationEventListener>();
 
@@ -262,8 +275,9 @@ namespace Akka.Remote.Transport.DotNetty
                 // free all of the connection objects we were holding onto
                 ConnectionGroup.Clear();
 #pragma warning disable 4014 // shutting down the worker groups can take up to 10 seconds each. Let that happen asnychronously.
-                clientEventLoopGroup.ShutdownGracefullyAsync();
-                serverEventLoopGroup.ShutdownGracefullyAsync();
+                _clientWorkerGroup.ShutdownGracefullyAsync();
+                _serverBossGroup.ShutdownGracefullyAsync();
+                _serverWorkerGroup.ShutdownGracefullyAsync();
 #pragma warning restore 4014
             }
         }
@@ -276,10 +290,12 @@ namespace Akka.Remote.Transport.DotNetty
             var addressFamily = Settings.DnsUseIpv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
 
             var client = new Bootstrap()
-                .Group(clientEventLoopGroup)
+                .Group(_clientWorkerGroup)
                 .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
+                .Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
                 .Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
                 .Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
+                .Option(ChannelOption.SoLinger, Settings.TcpLinger)
                 .Option(ChannelOption.ConnectTimeout, Settings.ConnectTimeout)
                 .Option(ChannelOption.AutoRead, false)
                 .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)new PooledByteBufferAllocator() : new UnpooledByteBufferAllocator())
@@ -325,14 +341,14 @@ namespace Akka.Remote.Transport.DotNetty
             if (InternalTransport == TransportMode.Tcp)
             {
                 pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, (int)MaximumPayloadBytes, 0, 4, 0, 4, true));
-                if (Settings.BackwardsCompatibilityModeEnabled)
-                {
-                    pipeline.AddLast("FrameEncoder", new HeliosBackwardsCompatabilityLengthFramePrepender(4, false));
-                }
-                else
-                {
-                    pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
-                }
+                //if (Settings.BackwardsCompatibilityModeEnabled)
+                //{
+                //    pipeline.AddLast("FrameEncoder", new HeliosBackwardsCompatabilityLengthFramePrepender(4, false));
+                //}
+                //else
+                //{
+                pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
+                //}
             }
         }
 
@@ -344,7 +360,7 @@ namespace Akka.Remote.Transport.DotNetty
                 var host = certificate.GetNameInfo(X509NameType.DnsName, false);
 
                 var tlsHandler = Settings.Ssl.SuppressValidation
-                    ? new TlsHandler(stream => new SslStream(stream, true, (sender, cert, chain, errors) => true), new ClientTlsSettings(host))
+                    ? new TlsHandler(stream => new SslStream(stream, false, (sender, cert, chain, errors) => true), new ClientTlsSettings(host))
                     : TlsHandler.Client(host, certificate);
 
                 channel.Pipeline.AddFirst("TlsHandler", tlsHandler);
@@ -384,21 +400,37 @@ namespace Akka.Remote.Transport.DotNetty
 
             var addressFamily = Settings.DnsUseIpv6 ? AddressFamily.InterNetworkV6 : AddressFamily.InterNetwork;
 
-            var server = new ServerBootstrap()
-                .Group(serverEventLoopGroup)
-                .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
-                .Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
-                .Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
-                .Option(ChannelOption.AutoRead, false)
-                .Option(ChannelOption.SoBacklog, Settings.Backlog)
-                .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)new PooledByteBufferAllocator() : new UnpooledByteBufferAllocator())
-                .ChannelFactory(() => Settings.EnforceIpFamily
+            var server = new ServerBootstrap();
+            server.Group(_serverBossGroup, _serverWorkerGroup);
+            if (Settings.EnableLibuv)
+            {
+                server.Channel<TcpServerChannel>();
+            }
+            else
+            {
+                server.ChannelFactory(() => Settings.EnforceIpFamily
                     ? new TcpServerSocketChannel(addressFamily)
-                    : new TcpServerSocketChannel())
-                .ChildHandler(new ActionChannelInitializer<TcpSocketChannel>(SetServerPipeline));
+                    : new TcpServerSocketChannel());
+            }
 
-            if (Settings.ReceiveBufferSize.HasValue) server.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
-            if (Settings.SendBufferSize.HasValue) server.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
+            server.Option(ChannelOption.SoBacklog, Settings.Backlog)
+                  .Option(ChannelOption.SoLinger, Settings.TcpLinger)
+                  .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
+                  .Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
+
+                  .ChildOption(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
+                  .ChildOption(ChannelOption.SoReuseport, Settings.TcpReusePort)
+                  .ChildOption(ChannelOption.SoLinger, Settings.TcpLinger)
+                  .ChildOption(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
+                  .ChildOption(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
+
+                  .Option(ChannelOption.AutoRead, false)
+                  .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)new PooledByteBufferAllocator() : new UnpooledByteBufferAllocator())
+                  .ChildHandler(new ActionChannelInitializer<ISocketChannel>(SetServerPipeline));
+
+            if (Settings.ReceiveBufferSize.HasValue) server.ChildOption(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
+            if (Settings.SendBufferSize.HasValue) server.ChildOption(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
+
             if (Settings.WriteBufferHighWaterMark.HasValue) server.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value);
             if (Settings.WriteBufferLowWaterMark.HasValue) server.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value);
 
@@ -478,23 +510,23 @@ namespace Akka.Remote.Transport.DotNetty
 
     #region == class HeliosBackwardsCompatabilityLengthFramePrepender ==
 
-    internal sealed class HeliosBackwardsCompatabilityLengthFramePrepender : LengthFieldPrepender
-    {
-        private readonly List<object> _temporaryOutput = new List<object>(2);
+    //internal sealed class HeliosBackwardsCompatabilityLengthFramePrepender : LengthFieldPrepender
+    //{
+    //    private readonly List<object> _temporaryOutput = new List<object>(2);
 
-        public HeliosBackwardsCompatabilityLengthFramePrepender(int lengthFieldLength, bool lengthFieldIncludesLengthFieldLength)
-            : base(ByteOrder.LittleEndian, lengthFieldLength, 0, lengthFieldIncludesLengthFieldLength) { }
+    //    public HeliosBackwardsCompatabilityLengthFramePrepender(int lengthFieldLength, bool lengthFieldIncludesLengthFieldLength)
+    //        : base(ByteOrder.LittleEndian, lengthFieldLength, 0, lengthFieldIncludesLengthFieldLength) { }
 
-        protected override void Encode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
-        {
-            base.Encode(context, message, output);
-            var lengthFrame = (IByteBuffer)_temporaryOutput[0];
-            var combined = lengthFrame.WriteBytes(message);
-            ReferenceCountUtil.SafeRelease(message, 1); // ready to release it - bytes have been copied
-            output.Add(combined.Retain());
-            _temporaryOutput.Clear();
-        }
-    }
+    //    protected override void Encode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
+    //    {
+    //        base.Encode(context, message, output);
+    //        var lengthFrame = (IByteBuffer)_temporaryOutput[0];
+    //        var combined = lengthFrame.WriteBytes(message);
+    //        ReferenceCountUtil.SafeRelease(message, 1); // ready to release it - bytes have been copied
+    //        output.Add(combined.Retain());
+    //        _temporaryOutput.Clear();
+    //    }
+    //}
 
     #endregion
 }

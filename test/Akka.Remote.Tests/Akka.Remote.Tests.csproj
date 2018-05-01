@@ -8,6 +8,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
     <DefineConstants>$(DefineConstants);FSCHECK</DefineConstants>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>
@@ -22,6 +23,14 @@
   <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
     <PackageReference Include="FsCheck" Version="$(FsCheckPackageVersion)" />
     <PackageReference Include="FsCheck.Xunit" Version="$(FsCheckXunitPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netcore' ">
+    <PackageReference Include="System.ObjectModel" Version="$(SystemObjectModelPackageVersion)" />
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="$(SystemRuntimeSerializationPrimitivesPackageVersion)" />
+    <PackageReference Include="System.Runtime.Serialization.Xml" Version="$(SystemRuntimeSerializationXmlPackageVersion)" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="$(SystemRuntimeSerializationFormattersPackageVersion)" />
+    <PackageReference Include="System.Xml.XmlSerializer" Version="$(SystemXmlXmlSerializerPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
