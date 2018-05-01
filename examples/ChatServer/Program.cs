@@ -27,6 +27,7 @@ akka {
             port = 8081
             hostname = 0.0.0.0
             public-hostname = localhost
+            enable-libuv = true
         }
     }
 }

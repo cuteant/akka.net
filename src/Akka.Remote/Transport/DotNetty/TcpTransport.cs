@@ -15,6 +15,7 @@ using Akka.Event;
 using DotNetty.Buffers;
 using DotNetty.Common.Utilities;
 using DotNetty.Transport.Channels;
+using DotNetty.Transport.Libuv.Native;
 using Google.Protobuf;
 
 namespace Akka.Remote.Transport.DotNetty
@@ -61,32 +62,154 @@ namespace Akka.Remote.Transport.DotNetty
         /// <param name="exception">TBD</param>
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
-            var se = exception as SocketException;
-
-            if (se?.SocketErrorCode == SocketError.OperationAborted)
+            switch (exception)
             {
-                if (Log.IsInfoEnabled)
-                {
-                    Log.Info("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
-                        context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
-                }
+                case SocketException se when (se.SocketErrorCode == SocketError.Interrupted):
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("A blocking socket call was canceled. Channel [{0}->{1}](Id={2})",
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
 
-                NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
-            }
-            else if (se?.SocketErrorCode == SocketError.ConnectionReset)
-            {
-                if (Log.IsInfoEnabled)
-                {
-                    Log.Info("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
-                        context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
-                }
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
 
-                NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
-            }
-            else
-            {
-                base.ExceptionCaught(context, exception);
-                NotifyListener(new Disassociated(DisassociateInfo.Unknown));
+                case SocketException se when (se.SocketErrorCode == SocketError.TimedOut):
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("The connection attempt timed out, or the connected host has failed to respond. Channel [{0}->{1}](Id={2})",
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+
+                case SocketException se when (se.SocketErrorCode == SocketError.OperationAborted):
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("Socket read operation aborted. Connection is about to be closed. Channel [{0}->{1}](Id={2})",
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+
+                case SocketException se when (se.SocketErrorCode == SocketError.ConnectionAborted):
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("The connection was aborted by the .NET Framework or the underlying socket provider. Channel [{0}->{1}](Id={2})",
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+
+                case SocketException se when (se.SocketErrorCode == SocketError.ConnectionReset):
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("Connection was reset by the remote peer. Channel [{0}->{1}](Id={2})",
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+
+                // Libuv error handling: http://docs.libuv.org/en/v1.x/errors.html
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.EINTR): // interrupted system call
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.ENETDOWN): // network is down
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.ENETUNREACH): // network is unreachable
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.ENOTSOCK): // socket operation on non-socket
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.ENOTSUP): // operation not supported on socket
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.EPERM): // operation not permitted
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.ETIMEDOUT): // connection timed out
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.ECANCELED): // operation canceled
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.ECONNABORTED): // software caused connection abort
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+                case ChannelException ce when ((ce.InnerException as OperationException)?.ErrorCode == ErrorCode.ECONNRESET): // connection reset by peer
+                    if (Log.IsInfoEnabled)
+                    {
+                        Log.Info("{0}. Channel [{1}->{2}](Id={3})", (ce.InnerException as OperationException).Description,
+                            context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    }
+
+                    NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
+                    break;
+
+                default:
+                    base.ExceptionCaught(context, exception);
+                    NotifyListener(new Disassociated(DisassociateInfo.Unknown));
+                    break;
             }
 
             context.CloseAsync(); // close the channel
