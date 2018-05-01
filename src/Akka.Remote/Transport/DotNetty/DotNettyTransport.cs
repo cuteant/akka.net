@@ -298,7 +298,7 @@ namespace Akka.Remote.Transport.DotNetty
                 .Option(ChannelOption.SoLinger, Settings.TcpLinger)
                 .Option(ChannelOption.ConnectTimeout, Settings.ConnectTimeout)
                 .Option(ChannelOption.AutoRead, false)
-                .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)new PooledByteBufferAllocator() : new UnpooledByteBufferAllocator())
+                .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)PooledByteBufferAllocator.Default : UnpooledByteBufferAllocator.Default)
                 .ChannelFactory(() => Settings.EnforceIpFamily
                     ? new TcpSocketChannel(addressFamily)
                     : new TcpSocketChannel())
