@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -45,27 +46,33 @@ namespace Akka.Remote.Transport.DotNetty
         public override void ChannelActive(IChannelHandlerContext context)
         {
             base.ChannelActive(context);
-            if (!Transport.ConnectionGroup.TryAdd(context.Channel))
+
+            var channel = context.Channel;
+            if (!Transport.ConnectionGroup.TryAdd(channel.Id.AsLongText(), channel))
             {
                 Log.Warning("Unable to ADD channel [{0}->{1}](Id={2}) to connection group. May not shut down cleanly.",
-                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    channel.LocalAddress, channel.RemoteAddress, channel.Id);
             }
         }
 
         public override void ChannelInactive(IChannelHandlerContext context)
         {
             base.ChannelInactive(context);
-            if (!Transport.ConnectionGroup.TryRemove(context.Channel))
+
+            var channel = context.Channel;
+            if (!Transport.ConnectionGroup.TryRemove(channel.Id.AsLongText(), out var _))
             {
                 Log.Warning("Unable to REMOVE channel [{0}->{1}](Id={2}) from connection group. May not shut down cleanly.",
-                    context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+                    channel.LocalAddress, channel.RemoteAddress, channel.Id);
             }
         }
 
         public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
         {
             base.ExceptionCaught(context, exception);
-            Log.Error(exception, "Error caught channel [{0}->{1}](Id={2})", context.Channel.LocalAddress, context.Channel.RemoteAddress, context.Channel.Id);
+
+            var channel = context.Channel;
+            Log.Error(exception, "Error caught channel [{0}->{1}](Id={2})", channel.LocalAddress, channel.RemoteAddress, channel.Id);
         }
 
         protected abstract AssociationHandle CreateHandle(IChannel channel, Address localAddress, Address remoteAddress);
@@ -124,7 +131,7 @@ namespace Akka.Remote.Transport.DotNetty
 
     internal abstract class DotNettyTransport : Transport
     {
-        internal readonly ConcurrentSet<IChannel> ConnectionGroup;
+        internal readonly ConcurrentDictionary<string, IChannel> ConnectionGroup;
 
         protected readonly TaskCompletionSource<IAssociationEventListener> AssociationListenerPromise;
         protected readonly ILoggingAdapter Log;
@@ -161,7 +168,7 @@ namespace Akka.Remote.Transport.DotNetty
                 _serverWorkerGroup = new MultithreadEventLoopGroup(Settings.ServerSocketWorkerPoolSize);
                 _clientWorkerGroup = new MultithreadEventLoopGroup(Settings.ClientSocketWorkerPoolSize);
             }
-            ConnectionGroup = new ConcurrentSet<IChannel>();
+            ConnectionGroup = new ConcurrentDictionary<string, IChannel>(StringComparer.Ordinal);
             AssociationListenerPromise = new TaskCompletionSource<IAssociationEventListener>();
 
             SchemeIdentifier = (Settings.EnableSsl ? "ssl." : string.Empty) + Settings.TransportMode.ToString().ToLowerInvariant();
@@ -209,7 +216,7 @@ namespace Akka.Remote.Transport.DotNetty
                 // accepted until this value is reset it's possible that the first incoming
                 // association might come in though
                 newServerChannel.Configuration.AutoRead = false;
-                ConnectionGroup.TryAdd(newServerChannel);
+                ConnectionGroup.TryAdd(newServerChannel.Id.AsLongText(), newServerChannel);
                 ServerChannel = newServerChannel;
 
                 var addr = MapSocketToAddress(
@@ -258,7 +265,7 @@ namespace Akka.Remote.Transport.DotNetty
             try
             {
                 var tasks = new List<Task>();
-                foreach (var channel in ConnectionGroup)
+                foreach (var channel in ConnectionGroup.Values)
                 {
                     tasks.Add(channel.CloseAsync());
                 }

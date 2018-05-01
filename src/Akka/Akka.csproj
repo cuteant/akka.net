@@ -26,6 +26,7 @@
 
   <ItemGroup>
     <PackageReference Include="CuteAnt.Extensions.Serialization" Version="$(CuteAntExtensionsSerializationPackageVersion)" />
+    <PackageReference Include="MessagePack.Abstractions.Unofficial" Version="$(MessagePackAbstractionsUnofficialPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
