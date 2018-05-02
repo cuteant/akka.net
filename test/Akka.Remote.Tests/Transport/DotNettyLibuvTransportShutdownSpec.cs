@@ -93,8 +93,8 @@ namespace Akka.Remote.Tests.Transport
                 AwaitCondition(() => t1.ConnectionGroup.Count == 2);
                 AwaitCondition(() => t2.ConnectionGroup.Count == 2);
 
-                var chan1 = t1.ConnectionGroup.Single(x => !x.Id.Equals(t1.ServerChannel.Id));
-                var chan2 = t2.ConnectionGroup.Single(x => !x.Id.Equals(t2.ServerChannel.Id));
+                var chan1 = t1.ConnectionGroup.Values.Single(x => !x.Id.Equals(t1.ServerChannel.Id));
+                var chan2 = t2.ConnectionGroup.Values.Single(x => !x.Id.Equals(t2.ServerChannel.Id));
 
                 // force a disassociation
                 handle.Disassociate();
@@ -140,8 +140,8 @@ namespace Akka.Remote.Tests.Transport
                 AwaitCondition(() => t1.ConnectionGroup.Count == 2);
                 AwaitCondition(() => t2.ConnectionGroup.Count == 2);
 
-                var chan1 = t1.ConnectionGroup.Single(x => !x.Id.Equals(t1.ServerChannel.Id));
-                var chan2 = t2.ConnectionGroup.Single(x => !x.Id.Equals(t2.ServerChannel.Id));
+                var chan1 = t1.ConnectionGroup.Values.Single(x => !x.Id.Equals(t1.ServerChannel.Id));
+                var chan2 = t2.ConnectionGroup.Values.Single(x => !x.Id.Equals(t2.ServerChannel.Id));
 
                 //  shutdown remoting on t1
                 await t1.Shutdown();
@@ -187,8 +187,8 @@ namespace Akka.Remote.Tests.Transport
                 AwaitCondition(() => t1.ConnectionGroup.Count == 2);
                 AwaitCondition(() => t2.ConnectionGroup.Count == 2);
 
-                var chan1 = t1.ConnectionGroup.Single(x => !x.Id.Equals(t1.ServerChannel.Id));
-                var chan2 = t2.ConnectionGroup.Single(x => !x.Id.Equals(t2.ServerChannel.Id));
+                var chan1 = t1.ConnectionGroup.Values.Single(x => !x.Id.Equals(t1.ServerChannel.Id));
+                var chan2 = t2.ConnectionGroup.Values.Single(x => !x.Id.Equals(t2.ServerChannel.Id));
 
                 // force a disassociation
                 inboundHandle.Disassociate();
@@ -233,8 +233,8 @@ namespace Akka.Remote.Tests.Transport
                 AwaitCondition(() => t1.ConnectionGroup.Count == 2);
                 AwaitCondition(() => t2.ConnectionGroup.Count == 2);
 
-                var chan1 = t1.ConnectionGroup.Single(x => !x.Id.Equals(t1.ServerChannel.Id));
-                var chan2 = t2.ConnectionGroup.Single(x => !x.Id.Equals(t2.ServerChannel.Id));
+                var chan1 = t1.ConnectionGroup.Values.Single(x => !x.Id.Equals(t1.ServerChannel.Id));
+                var chan2 = t2.ConnectionGroup.Values.Single(x => !x.Id.Equals(t2.ServerChannel.Id));
 
                 // shutdown inbound side
                 await t2.Shutdown();
