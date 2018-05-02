@@ -195,6 +195,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Protobuf", "Protobuf", "{66
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Google.Protobuf", "src\Google.Protobuf\Google.Protobuf.csproj", "{854FEC16-4E42-4CDF-B65B-8F80E1EB0DE6}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Logger.Serilog.Tests", "test\Akka.Logger.Serilog.Tests\Akka.Logger.Serilog.Tests.csproj", "{AA26E3CF-E423-4DAA-BF79-F36430B4B8EB}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.projitems*{8dbb7dc8-2b90-4a8c-a60d-d41466174bde}*SharedItemsImports = 13
@@ -480,6 +482,10 @@ Global
 		{854FEC16-4E42-4CDF-B65B-8F80E1EB0DE6}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{854FEC16-4E42-4CDF-B65B-8F80E1EB0DE6}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{854FEC16-4E42-4CDF-B65B-8F80E1EB0DE6}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AA26E3CF-E423-4DAA-BF79-F36430B4B8EB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AA26E3CF-E423-4DAA-BF79-F36430B4B8EB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AA26E3CF-E423-4DAA-BF79-F36430B4B8EB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AA26E3CF-E423-4DAA-BF79-F36430B4B8EB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -565,6 +571,7 @@ Global
 		{76E72020-4B39-442C-9076-843B2BA062C2} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
 		{8DBB7DC8-2B90-4A8C-A60D-D41466174BDE} = {E71D61B4-AF27-49E2-878D-7C0CF0163937}
 		{854FEC16-4E42-4CDF-B65B-8F80E1EB0DE6} = {662A0C76-9131-435F-B77A-05C43CEEA8CF}
+		{AA26E3CF-E423-4DAA-BF79-F36430B4B8EB} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

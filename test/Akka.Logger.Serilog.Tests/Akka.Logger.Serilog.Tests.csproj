@@ -1,0 +1,14 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+ 
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Logger.Serilog.Tests</RootNamespace>
+    <AssemblyName>Akka.Logger.Serilog.Tests</AssemblyName>
+  </PropertyGroup>
+ 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Logger.Serilog\Akka.Logger.Serilog.csproj" />
+    <ProjectReference Include="..\..\src\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
+  </ItemGroup>
+
+</Project>
