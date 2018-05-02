@@ -41,8 +41,8 @@ namespace Akka.Serialization
             return s_formatter.Deserialize(type, bytes);
         }
 
-        public override int Identifier => 150;
+        public override int Identifier => 152;
 
-        public override bool IncludeManifest => true;
+        public override bool IncludeManifest => false;
     }
 }
