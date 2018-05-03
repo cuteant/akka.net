@@ -9,6 +9,7 @@ using System;
 using Akka.Actor;
 using Akka.Persistence.Serialization.Proto.Msg;
 using Akka.Serialization;
+using CuteAnt.Reflection;
 using Google.Protobuf;
 
 namespace Akka.Persistence.Serialization
@@ -31,24 +32,35 @@ namespace Akka.Persistence.Serialization
 
         private PersistentPayload GetPersistentPayload(Snapshot snapshot)
         {
-            Serializer serializer = system.Serialization.FindSerializerFor(snapshot.Data);
-            PersistentPayload payload = new PersistentPayload();
+            var serializer = system.Serialization.FindSerializerFor(snapshot.Data);
+            var payload = new PersistentPayload();
 
-            if (serializer is SerializerWithStringManifest)
+            if (serializer is SerializerWithStringManifest manifestSerializer)
             {
-                string manifest = ((SerializerWithStringManifest)serializer).Manifest(snapshot.Data);
-                payload.PayloadManifest = ByteString.CopyFromUtf8(manifest);
+                payload.IsSerializerWithStringManifest = true;
+                string manifest = manifestSerializer.Manifest(snapshot.Data);
+                if (!string.IsNullOrEmpty(manifest))
+                {
+                    payload.HasManifest = true;
+                    payload.PayloadManifest = ByteString.CopyFromUtf8(manifest);
+                }
+                else
+                {
+                    payload.PayloadManifest = ByteString.Empty;
+                }
             }
             else
             {
                 if (serializer.IncludeManifest)
                 {
-                    var payloadType = snapshot.Data.GetType();
-                    payload.PayloadManifest = ByteString.CopyFromUtf8(payloadType.AssemblyQualifiedName);
+                    payload.HasManifest = true;
+                    var typeKey = TypeSerializer.GetTypeKeyFromType(snapshot.Data.GetType());
+                    payload.TypeHashCode = typeKey.HashCode;
+                    payload.PayloadManifest = ProtobufUtil.FromBytes(typeKey.TypeName);
                 }
             }
 
-            payload.Payload = ByteString.CopyFrom(serializer.ToBinary(snapshot.Data));
+            payload.Payload = serializer.ToByteString(snapshot.Data);
             payload.SerializerId = serializer.Identifier;
 
             return payload;
@@ -63,12 +75,26 @@ namespace Akka.Persistence.Serialization
 
         private Snapshot GetSnapshot(byte[] bytes)
         {
-            PersistentPayload payload = PersistentPayload.Parser.ParseFrom(bytes);
+            var payload = PersistentPayload.Parser.ParseFrom(bytes);
 
-            string manifest = "";
-            if (payload.PayloadManifest != null) manifest = payload.PayloadManifest.ToStringUtf8();
-
-            return new Snapshot(system.Serialization.Deserialize(payload.Payload.ToByteArray(), payload.SerializerId, manifest));
+            if (payload.IsSerializerWithStringManifest)
+            {
+                return new Snapshot(system.Serialization.Deserialize(
+                    ProtobufUtil.GetBuffer(payload.Payload),
+                    payload.SerializerId,
+                    payload.HasManifest ? payload.PayloadManifest.ToStringUtf8() : null));
+            }
+            else if (payload.HasManifest)
+            {
+                return new Snapshot(system.Serialization.Deserialize(
+                    ProtobufUtil.GetBuffer(payload.Payload),
+                    payload.SerializerId,
+                    ProtobufUtil.GetBuffer(payload.PayloadManifest), payload.TypeHashCode));
+            }
+            else
+            {
+                return new Snapshot(system.Serialization.Deserialize(ProtobufUtil.GetBuffer(payload.Payload), payload.SerializerId));
+            }
         }
     }
 }

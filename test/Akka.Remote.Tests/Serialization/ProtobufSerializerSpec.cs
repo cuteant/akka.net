@@ -9,7 +9,7 @@ using System;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Remote.Configuration;
-using Akka.Remote.Serialization;
+using Akka.Serialization;
 using Akka.Remote.Serialization.Proto.Msg;
 using Akka.TestKit;
 using FluentAssertions;

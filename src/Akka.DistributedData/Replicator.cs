@@ -829,7 +829,7 @@ namespace Akka.DistributedData
 
             var bytes = _serializer.ToBinary(envelope.WithoutDeltaVersions());
             var serialized = SHA1.Create().ComputeHash(bytes);
-            return ByteString.CopyFrom(serialized);
+            return ProtobufUtil.FromBytes(serialized);
         }
 
         private DataEnvelope GetData(string key)

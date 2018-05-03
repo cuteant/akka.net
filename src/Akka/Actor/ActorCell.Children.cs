@@ -413,8 +413,7 @@ namespace Akka.Actor
                         {
                             var serializer = ser.FindSerializerFor(argument);
                             var bytes = serializer.ToBinary(argument);
-                            var manifestSerializer = serializer as SerializerWithStringManifest;
-                            if (manifestSerializer != null)
+                            if (serializer is SerializerWithStringManifest manifestSerializer)
                             {
                                 var manifest = manifestSerializer.Manifest(argument);
                                 if (ser.Deserialize(bytes, manifestSerializer.Identifier, manifest) == null)
@@ -424,7 +423,8 @@ namespace Akka.Actor
                             }
                             else
                             {
-                                if (ser.Deserialize(bytes, serializer.Identifier, argument.GetType().TypeQualifiedName()) == null)
+                                // ## 苦竹 修改 前面已经判断了是否 SerializerWithStringManifest，所以这儿改为类型参数，反序列化时减少些判断 ##
+                                if (ser.Deserialize(bytes, serializer.Identifier, argument.GetType()) == null) // argument.GetType().TypeQualifiedName()
                                 {
                                     throw new ArgumentException($"Pre-creation serialization check failed at [${_self.Path}/{name}]", nameof(name));
                                 }

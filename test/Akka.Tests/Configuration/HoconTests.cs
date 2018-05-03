@@ -685,7 +685,7 @@ a {
 akka.actor {
     serializers {
       akka-containers = ""Akka.Remote.Serialization.MessageContainerSerializer, Akka.Remote""
-      proto = ""Akka.Remote.Serialization.ProtobufSerializer, Akka.Remote""
+      proto = ""Akka.Serialization.ProtobufSerializer, Akka.Serialization.Protobuf""
       daemon-create = ""Akka.Remote.Serialization.DaemonMsgCreateSerializer, Akka.Remote""
     }
 

@@ -22,14 +22,11 @@
   <ItemGroup>
     <PackageReference Include="DotNetty.Handlers.Unofficial" Version="$(DotNettyHandlersUnofficialPackageVersion)" />
     <PackageReference Include="DotNetty.Transport.Libuv.Unofficial" Version="$(DotNettyTransportLibuvUnofficialPackageVersion)" />
-    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufPackageVersion)" />
-  </ItemGroup>
-  <ItemGroup Condition=" '$(TargetFramework)' == 'net471' ">
-    <PackageReference Include="Google.Protobuf.Tools" Version="$(GoogleProtobufToolsPackageVersion)" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\Remote.conf" />
+    <ProjectReference Include="..\Akka.Serialization.Protobuf\Akka.Serialization.Protobuf.csproj" />
     <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
 

@@ -7,7 +7,7 @@
 
 using Akka.Actor;
 using Akka.Serialization;
-using Akka.Util;
+using CuteAnt.Reflection;
 using Google.Protobuf;
 using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
 
@@ -22,10 +22,24 @@ namespace Akka.Remote
         /// <returns>System.Object.</returns>
         public static object Deserialize(ActorSystem system, SerializedMessage messageProtocol)
         {
-            return system.Serialization.Deserialize(
-                messageProtocol.Message.ToByteArray(),
-                messageProtocol.SerializerId,
-                !messageProtocol.MessageManifest.IsEmpty ? messageProtocol.MessageManifest.ToStringUtf8() : null);
+            if (messageProtocol.IsSerializerWithStringManifest)
+            {
+                return system.Serialization.Deserialize(
+                    ProtobufUtil.GetBuffer(messageProtocol.Message),
+                    messageProtocol.SerializerId,
+                    messageProtocol.HasManifest ? messageProtocol.MessageManifest.ToStringUtf8() : null);
+            }
+            else if (messageProtocol.HasManifest)
+            {
+                return system.Serialization.Deserialize(
+                    ProtobufUtil.GetBuffer(messageProtocol.Message),
+                    messageProtocol.SerializerId,
+                    ProtobufUtil.GetBuffer(messageProtocol.MessageManifest), messageProtocol.TypeHashCode);
+            }
+            else
+            {
+                return system.Serialization.Deserialize(ProtobufUtil.GetBuffer(messageProtocol.Message), messageProtocol.SerializerId);
+            }
         }
 
         /// <summary>Serializes the specified message.</summary>
@@ -46,19 +60,28 @@ namespace Akka.Remote
                 SerializerId = serializer.Identifier
             };
 
-            if (serializer is SerializerWithStringManifest serializer2)
+            if (serializer is SerializerWithStringManifest manifestSerializer)
             {
-                var manifest = serializer2.Manifest(message);
+                serializedMsg.IsSerializerWithStringManifest = true;
+                var manifest = manifestSerializer.Manifest(message);
                 if (!string.IsNullOrEmpty(manifest))
                 {
+                    serializedMsg.HasManifest = true;
                     serializedMsg.MessageManifest = ByteString.CopyFromUtf8(manifest);
+                }
+                else
+                {
+                    serializedMsg.MessageManifest = ByteString.Empty;
                 }
             }
             else
             {
                 if (serializer.IncludeManifest)
                 {
-                    serializedMsg.MessageManifest = ByteString.CopyFromUtf8(objectType.TypeQualifiedName());
+                    serializedMsg.HasManifest = true;
+                    var typeKey = TypeSerializer.GetTypeKeyFromType(objectType);
+                    serializedMsg.TypeHashCode = typeKey.HashCode;
+                    serializedMsg.MessageManifest = ProtobufUtil.FromBytes(typeKey.TypeName);
                 }
             }
 

@@ -46,8 +46,6 @@ message PropsData {
     repeated string manifests = 5; // contains string manifest for each arg
     repeated int32 serializerIds = 6; // serializer id for each arg
     repeated bool hasManifest = 7;
-    repeated bool isSerializerWithStringManifest = 8;
-    repeated int32 typeHashCode = 9;
 }
 
 // Serialization of akka.actor.Deploy

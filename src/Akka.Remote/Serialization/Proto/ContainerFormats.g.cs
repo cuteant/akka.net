@@ -35,21 +35,23 @@ namespace Akka.Remote.Serialization.Proto.Msg {
             "CgpDSElMRF9OQU1FEAISEQoNQ0hJTERfUEFUVEVSThADIhwKDEFjdG9yUmVm",
             "RGF0YRIMCgRwYXRoGAEgASgJIk8KC0FkZHJlc3NEYXRhEg4KBnN5c3RlbRgB",
             "IAEoCRIQCghob3N0bmFtZRgCIAEoCRIMCgRwb3J0GAMgASgNEhAKCHByb3Rv",
-            "Y29sGAQgASgJIkkKB1BheWxvYWQSDwoHbWVzc2FnZRgBIAEoDBIUCgxzZXJp",
-            "YWxpemVySWQYAiABKAUSFwoPbWVzc2FnZU1hbmlmZXN0GAMgASgMIksKCElk",
-            "ZW50aWZ5Ej8KCW1lc3NhZ2VJZBgBIAEoCzIsLkFra2EuUmVtb3RlLlNlcmlh",
-            "bGl6YXRpb24uUHJvdG8uTXNnLlBheWxvYWQiYgoNQWN0b3JJZGVudGl0eRJD",
-            "Cg1jb3JyZWxhdGlvbklkGAEgASgLMiwuQWtrYS5SZW1vdGUuU2VyaWFsaXph",
-            "dGlvbi5Qcm90by5Nc2cuUGF5bG9hZBIMCgRwYXRoGAIgASgJIi0KHlJlbW90",
-            "ZVdhdGNoZXJIZWFydGJlYXRSZXNwb25zZRILCgN1aWQYASABKAQi4QIKDUV4",
-            "Y2VwdGlvbkRhdGESEAoIdHlwZU5hbWUYASABKAkSDwoHbWVzc2FnZRgCIAEo",
-            "CRISCgpzdGFja1RyYWNlGAMgASgJEg4KBnNvdXJjZRgEIAEoCRJKCg5pbm5l",
-            "ckV4Y2VwdGlvbhgFIAEoCzIyLkFra2EuUmVtb3RlLlNlcmlhbGl6YXRpb24u",
-            "UHJvdG8uTXNnLkV4Y2VwdGlvbkRhdGESWgoMY3VzdG9tRmllbGRzGAYgAygL",
-            "MkQuQWtrYS5SZW1vdGUuU2VyaWFsaXphdGlvbi5Qcm90by5Nc2cuRXhjZXB0",
-            "aW9uRGF0YS5DdXN0b21GaWVsZHNFbnRyeRphChFDdXN0b21GaWVsZHNFbnRy",
-            "eRILCgNrZXkYASABKAkSOwoFdmFsdWUYAiABKAsyLC5Ba2thLlJlbW90ZS5T",
-            "ZXJpYWxpemF0aW9uLlByb3RvLk1zZy5QYXlsb2FkOgI4AWIGcHJvdG8z"));
+            "Y29sGAQgASgJIpwBCgdQYXlsb2FkEg8KB21lc3NhZ2UYASABKAwSFAoMc2Vy",
+            "aWFsaXplcklkGAIgASgFEhcKD21lc3NhZ2VNYW5pZmVzdBgDIAEoDBITCgto",
+            "YXNNYW5pZmVzdBgEIAEoCBImCh5pc1NlcmlhbGl6ZXJXaXRoU3RyaW5nTWFu",
+            "aWZlc3QYBSABKAgSFAoMdHlwZUhhc2hDb2RlGAYgASgFIksKCElkZW50aWZ5",
+            "Ej8KCW1lc3NhZ2VJZBgBIAEoCzIsLkFra2EuUmVtb3RlLlNlcmlhbGl6YXRp",
+            "b24uUHJvdG8uTXNnLlBheWxvYWQiYgoNQWN0b3JJZGVudGl0eRJDCg1jb3Jy",
+            "ZWxhdGlvbklkGAEgASgLMiwuQWtrYS5SZW1vdGUuU2VyaWFsaXphdGlvbi5Q",
+            "cm90by5Nc2cuUGF5bG9hZBIMCgRwYXRoGAIgASgJIi0KHlJlbW90ZVdhdGNo",
+            "ZXJIZWFydGJlYXRSZXNwb25zZRILCgN1aWQYASABKAQi4QIKDUV4Y2VwdGlv",
+            "bkRhdGESEAoIdHlwZU5hbWUYASABKAkSDwoHbWVzc2FnZRgCIAEoCRISCgpz",
+            "dGFja1RyYWNlGAMgASgJEg4KBnNvdXJjZRgEIAEoCRJKCg5pbm5lckV4Y2Vw",
+            "dGlvbhgFIAEoCzIyLkFra2EuUmVtb3RlLlNlcmlhbGl6YXRpb24uUHJvdG8u",
+            "TXNnLkV4Y2VwdGlvbkRhdGESWgoMY3VzdG9tRmllbGRzGAYgAygLMkQuQWtr",
+            "YS5SZW1vdGUuU2VyaWFsaXphdGlvbi5Qcm90by5Nc2cuRXhjZXB0aW9uRGF0",
+            "YS5DdXN0b21GaWVsZHNFbnRyeRphChFDdXN0b21GaWVsZHNFbnRyeRILCgNr",
+            "ZXkYASABKAkSOwoFdmFsdWUYAiABKAsyLC5Ba2thLlJlbW90ZS5TZXJpYWxp",
+            "emF0aW9uLlByb3RvLk1zZy5QYXlsb2FkOgI4AWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -57,7 +59,7 @@ namespace Akka.Remote.Serialization.Proto.Msg {
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.Selection), global::Akka.Remote.Serialization.Proto.Msg.Selection.Parser, new[]{ "Type", "Matcher" }, null, new[]{ typeof(global::Akka.Remote.Serialization.Proto.Msg.Selection.Types.PatternType) }, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.ActorRefData), global::Akka.Remote.Serialization.Proto.Msg.ActorRefData.Parser, new[]{ "Path" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.AddressData), global::Akka.Remote.Serialization.Proto.Msg.AddressData.Parser, new[]{ "System", "Hostname", "Port", "Protocol" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.Payload), global::Akka.Remote.Serialization.Proto.Msg.Payload.Parser, new[]{ "Message", "SerializerId", "MessageManifest" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.Payload), global::Akka.Remote.Serialization.Proto.Msg.Payload.Parser, new[]{ "Message", "SerializerId", "MessageManifest", "HasManifest", "IsSerializerWithStringManifest", "TypeHashCode" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.Identify), global::Akka.Remote.Serialization.Proto.Msg.Identify.Parser, new[]{ "MessageId" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.ActorIdentity), global::Akka.Remote.Serialization.Proto.Msg.ActorIdentity.Parser, new[]{ "CorrelationId", "Path" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.RemoteWatcherHeartbeatResponse), global::Akka.Remote.Serialization.Proto.Msg.RemoteWatcherHeartbeatResponse.Parser, new[]{ "Uid" }, null, null, null),
@@ -773,6 +775,9 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       message_ = other.message_;
       serializerId_ = other.serializerId_;
       messageManifest_ = other.messageManifest_;
+      hasManifest_ = other.hasManifest_;
+      isSerializerWithStringManifest_ = other.isSerializerWithStringManifest_;
+      typeHashCode_ = other.typeHashCode_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -814,6 +819,39 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       }
     }
 
+    /// <summary>Field number for the "hasManifest" field.</summary>
+    public const int HasManifestFieldNumber = 4;
+    private bool hasManifest_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool HasManifest {
+      get { return hasManifest_; }
+      set {
+        hasManifest_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "isSerializerWithStringManifest" field.</summary>
+    public const int IsSerializerWithStringManifestFieldNumber = 5;
+    private bool isSerializerWithStringManifest_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool IsSerializerWithStringManifest {
+      get { return isSerializerWithStringManifest_; }
+      set {
+        isSerializerWithStringManifest_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "typeHashCode" field.</summary>
+    public const int TypeHashCodeFieldNumber = 6;
+    private int typeHashCode_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int TypeHashCode {
+      get { return typeHashCode_; }
+      set {
+        typeHashCode_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as Payload);
@@ -830,6 +868,9 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       if (Message != other.Message) return false;
       if (SerializerId != other.SerializerId) return false;
       if (MessageManifest != other.MessageManifest) return false;
+      if (HasManifest != other.HasManifest) return false;
+      if (IsSerializerWithStringManifest != other.IsSerializerWithStringManifest) return false;
+      if (TypeHashCode != other.TypeHashCode) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -839,6 +880,9 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       if (Message.Length != 0) hash ^= Message.GetHashCode();
       if (SerializerId != 0) hash ^= SerializerId.GetHashCode();
       if (MessageManifest.Length != 0) hash ^= MessageManifest.GetHashCode();
+      if (HasManifest != false) hash ^= HasManifest.GetHashCode();
+      if (IsSerializerWithStringManifest != false) hash ^= IsSerializerWithStringManifest.GetHashCode();
+      if (TypeHashCode != 0) hash ^= TypeHashCode.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -864,6 +908,18 @@ namespace Akka.Remote.Serialization.Proto.Msg {
         output.WriteRawTag(26);
         output.WriteBytes(MessageManifest);
       }
+      if (HasManifest != false) {
+        output.WriteRawTag(32);
+        output.WriteBool(HasManifest);
+      }
+      if (IsSerializerWithStringManifest != false) {
+        output.WriteRawTag(40);
+        output.WriteBool(IsSerializerWithStringManifest);
+      }
+      if (TypeHashCode != 0) {
+        output.WriteRawTag(48);
+        output.WriteInt32(TypeHashCode);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -880,6 +936,15 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       }
       if (MessageManifest.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeBytesSize(MessageManifest);
+      }
+      if (HasManifest != false) {
+        size += 1 + 1;
+      }
+      if (IsSerializerWithStringManifest != false) {
+        size += 1 + 1;
+      }
+      if (TypeHashCode != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(TypeHashCode);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -900,6 +965,15 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       }
       if (other.MessageManifest.Length != 0) {
         MessageManifest = other.MessageManifest;
+      }
+      if (other.HasManifest != false) {
+        HasManifest = other.HasManifest;
+      }
+      if (other.IsSerializerWithStringManifest != false) {
+        IsSerializerWithStringManifest = other.IsSerializerWithStringManifest;
+      }
+      if (other.TypeHashCode != 0) {
+        TypeHashCode = other.TypeHashCode;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -922,6 +996,18 @@ namespace Akka.Remote.Serialization.Proto.Msg {
           }
           case 26: {
             MessageManifest = input.ReadBytes();
+            break;
+          }
+          case 32: {
+            HasManifest = input.ReadBool();
+            break;
+          }
+          case 40: {
+            IsSerializerWithStringManifest = input.ReadBool();
+            break;
+          }
+          case 48: {
+            TypeHashCode = input.ReadInt32();
             break;
           }
         }

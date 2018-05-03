@@ -30,28 +30,30 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
             "ZW5jZS5TZXJpYWxpemF0aW9uLlByb3RvLk1zZy5QZXJzaXN0ZW50UGF5bG9h",
             "ZBISCgpzZXF1ZW5jZU5yGAIgASgDEhUKDXBlcnNpc3RlbmNlSWQYAyABKAkS",
             "DwoHZGVsZXRlZBgEIAEoCBIOCgZzZW5kZXIYCyABKAkSEAoIbWFuaWZlc3QY",
-            "DCABKAkSEgoKd3JpdGVyR3VpZBgNIAEoCSJTChFQZXJzaXN0ZW50UGF5bG9h",
-            "ZBIUCgxzZXJpYWxpemVySWQYASABKAUSDwoHcGF5bG9hZBgCIAEoDBIXCg9w",
-            "YXlsb2FkTWFuaWZlc3QYAyABKAwiWwoLQXRvbWljV3JpdGUSTAoHcGF5bG9h",
-            "ZBgBIAMoCzI7LkFra2EuUGVyc2lzdGVuY2UuU2VyaWFsaXphdGlvbi5Qcm90",
-            "by5Nc2cuUGVyc2lzdGVudE1lc3NhZ2UijAEKE1VuY29uZmlybWVkRGVsaXZl",
-            "cnkSEgoKZGVsaXZlcnlJZBgBIAEoAxITCgtkZXN0aW5hdGlvbhgCIAEoCRJM",
-            "CgdwYXlsb2FkGAMgASgLMjsuQWtrYS5QZXJzaXN0ZW5jZS5TZXJpYWxpemF0",
-            "aW9uLlByb3RvLk1zZy5QZXJzaXN0ZW50UGF5bG9hZCKWAQobQXRMZWFzdE9u",
-            "Y2VEZWxpdmVyeVNuYXBzaG90EhkKEWN1cnJlbnREZWxpdmVyeUlkGAEgASgD",
-            "ElwKFXVuY29uZmlybWVkRGVsaXZlcmllcxgCIAMoCzI9LkFra2EuUGVyc2lz",
-            "dGVuY2UuU2VyaWFsaXphdGlvbi5Qcm90by5Nc2cuVW5jb25maXJtZWREZWxp",
-            "dmVyeSJMChpQZXJzaXN0ZW50U3RhdGVDaGFuZ2VFdmVudBIXCg9zdGF0ZUlk",
-            "ZW50aWZpZXIYASABKAkSFQoNdGltZW91dE1pbGxpcxgCIAEoAyKSAQoVUGVy",
-            "c2lzdGVudEZTTVNuYXBzaG90EhcKD3N0YXRlSWRlbnRpZmllchgBIAEoCRJJ",
-            "CgRkYXRhGAIgASgLMjsuQWtrYS5QZXJzaXN0ZW5jZS5TZXJpYWxpemF0aW9u",
-            "LlByb3RvLk1zZy5QZXJzaXN0ZW50UGF5bG9hZBIVCg10aW1lb3V0TWlsbGlz",
-            "GAMgASgDYgZwcm90bzM="));
+            "DCABKAkSEgoKd3JpdGVyR3VpZBgNIAEoCSKmAQoRUGVyc2lzdGVudFBheWxv",
+            "YWQSFAoMc2VyaWFsaXplcklkGAEgASgFEg8KB3BheWxvYWQYAiABKAwSFwoP",
+            "cGF5bG9hZE1hbmlmZXN0GAMgASgMEhMKC2hhc01hbmlmZXN0GAQgASgIEiYK",
+            "HmlzU2VyaWFsaXplcldpdGhTdHJpbmdNYW5pZmVzdBgFIAEoCBIUCgx0eXBl",
+            "SGFzaENvZGUYBiABKAUiWwoLQXRvbWljV3JpdGUSTAoHcGF5bG9hZBgBIAMo",
+            "CzI7LkFra2EuUGVyc2lzdGVuY2UuU2VyaWFsaXphdGlvbi5Qcm90by5Nc2cu",
+            "UGVyc2lzdGVudE1lc3NhZ2UijAEKE1VuY29uZmlybWVkRGVsaXZlcnkSEgoK",
+            "ZGVsaXZlcnlJZBgBIAEoAxITCgtkZXN0aW5hdGlvbhgCIAEoCRJMCgdwYXls",
+            "b2FkGAMgASgLMjsuQWtrYS5QZXJzaXN0ZW5jZS5TZXJpYWxpemF0aW9uLlBy",
+            "b3RvLk1zZy5QZXJzaXN0ZW50UGF5bG9hZCKWAQobQXRMZWFzdE9uY2VEZWxp",
+            "dmVyeVNuYXBzaG90EhkKEWN1cnJlbnREZWxpdmVyeUlkGAEgASgDElwKFXVu",
+            "Y29uZmlybWVkRGVsaXZlcmllcxgCIAMoCzI9LkFra2EuUGVyc2lzdGVuY2Uu",
+            "U2VyaWFsaXphdGlvbi5Qcm90by5Nc2cuVW5jb25maXJtZWREZWxpdmVyeSJM",
+            "ChpQZXJzaXN0ZW50U3RhdGVDaGFuZ2VFdmVudBIXCg9zdGF0ZUlkZW50aWZp",
+            "ZXIYASABKAkSFQoNdGltZW91dE1pbGxpcxgCIAEoAyKSAQoVUGVyc2lzdGVu",
+            "dEZTTVNuYXBzaG90EhcKD3N0YXRlSWRlbnRpZmllchgBIAEoCRJJCgRkYXRh",
+            "GAIgASgLMjsuQWtrYS5QZXJzaXN0ZW5jZS5TZXJpYWxpemF0aW9uLlByb3Rv",
+            "Lk1zZy5QZXJzaXN0ZW50UGF5bG9hZBIVCg10aW1lb3V0TWlsbGlzGAMgASgD",
+            "YgZwcm90bzM="));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Persistence.Serialization.Proto.Msg.PersistentMessage), global::Akka.Persistence.Serialization.Proto.Msg.PersistentMessage.Parser, new[]{ "Payload", "SequenceNr", "PersistenceId", "Deleted", "Sender", "Manifest", "WriterGuid" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Persistence.Serialization.Proto.Msg.PersistentPayload), global::Akka.Persistence.Serialization.Proto.Msg.PersistentPayload.Parser, new[]{ "SerializerId", "Payload", "PayloadManifest" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Persistence.Serialization.Proto.Msg.PersistentPayload), global::Akka.Persistence.Serialization.Proto.Msg.PersistentPayload.Parser, new[]{ "SerializerId", "Payload", "PayloadManifest", "HasManifest", "IsSerializerWithStringManifest", "TypeHashCode" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Persistence.Serialization.Proto.Msg.AtomicWrite), global::Akka.Persistence.Serialization.Proto.Msg.AtomicWrite.Parser, new[]{ "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Persistence.Serialization.Proto.Msg.UnconfirmedDelivery), global::Akka.Persistence.Serialization.Proto.Msg.UnconfirmedDelivery.Parser, new[]{ "DeliveryId", "Destination", "Payload" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Persistence.Serialization.Proto.Msg.AtLeastOnceDeliverySnapshot), global::Akka.Persistence.Serialization.Proto.Msg.AtLeastOnceDeliverySnapshot.Parser, new[]{ "CurrentDeliveryId", "UnconfirmedDeliveries" }, null, null, null),
@@ -400,6 +402,9 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
       serializerId_ = other.serializerId_;
       payload_ = other.payload_;
       payloadManifest_ = other.payloadManifest_;
+      hasManifest_ = other.hasManifest_;
+      isSerializerWithStringManifest_ = other.isSerializerWithStringManifest_;
+      typeHashCode_ = other.typeHashCode_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -441,6 +446,39 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
       }
     }
 
+    /// <summary>Field number for the "hasManifest" field.</summary>
+    public const int HasManifestFieldNumber = 4;
+    private bool hasManifest_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool HasManifest {
+      get { return hasManifest_; }
+      set {
+        hasManifest_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "isSerializerWithStringManifest" field.</summary>
+    public const int IsSerializerWithStringManifestFieldNumber = 5;
+    private bool isSerializerWithStringManifest_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool IsSerializerWithStringManifest {
+      get { return isSerializerWithStringManifest_; }
+      set {
+        isSerializerWithStringManifest_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "typeHashCode" field.</summary>
+    public const int TypeHashCodeFieldNumber = 6;
+    private int typeHashCode_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int TypeHashCode {
+      get { return typeHashCode_; }
+      set {
+        typeHashCode_ = value;
+      }
+    }
+
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public override bool Equals(object other) {
       return Equals(other as PersistentPayload);
@@ -457,6 +495,9 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
       if (SerializerId != other.SerializerId) return false;
       if (Payload != other.Payload) return false;
       if (PayloadManifest != other.PayloadManifest) return false;
+      if (HasManifest != other.HasManifest) return false;
+      if (IsSerializerWithStringManifest != other.IsSerializerWithStringManifest) return false;
+      if (TypeHashCode != other.TypeHashCode) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -466,6 +507,9 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
       if (SerializerId != 0) hash ^= SerializerId.GetHashCode();
       if (Payload.Length != 0) hash ^= Payload.GetHashCode();
       if (PayloadManifest.Length != 0) hash ^= PayloadManifest.GetHashCode();
+      if (HasManifest != false) hash ^= HasManifest.GetHashCode();
+      if (IsSerializerWithStringManifest != false) hash ^= IsSerializerWithStringManifest.GetHashCode();
+      if (TypeHashCode != 0) hash ^= TypeHashCode.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -491,6 +535,18 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
         output.WriteRawTag(26);
         output.WriteBytes(PayloadManifest);
       }
+      if (HasManifest != false) {
+        output.WriteRawTag(32);
+        output.WriteBool(HasManifest);
+      }
+      if (IsSerializerWithStringManifest != false) {
+        output.WriteRawTag(40);
+        output.WriteBool(IsSerializerWithStringManifest);
+      }
+      if (TypeHashCode != 0) {
+        output.WriteRawTag(48);
+        output.WriteInt32(TypeHashCode);
+      }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -507,6 +563,15 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
       }
       if (PayloadManifest.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeBytesSize(PayloadManifest);
+      }
+      if (HasManifest != false) {
+        size += 1 + 1;
+      }
+      if (IsSerializerWithStringManifest != false) {
+        size += 1 + 1;
+      }
+      if (TypeHashCode != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(TypeHashCode);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -527,6 +592,15 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
       }
       if (other.PayloadManifest.Length != 0) {
         PayloadManifest = other.PayloadManifest;
+      }
+      if (other.HasManifest != false) {
+        HasManifest = other.HasManifest;
+      }
+      if (other.IsSerializerWithStringManifest != false) {
+        IsSerializerWithStringManifest = other.IsSerializerWithStringManifest;
+      }
+      if (other.TypeHashCode != 0) {
+        TypeHashCode = other.TypeHashCode;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -549,6 +623,18 @@ namespace Akka.Persistence.Serialization.Proto.Msg {
           }
           case 26: {
             PayloadManifest = input.ReadBytes();
+            break;
+          }
+          case 32: {
+            HasManifest = input.ReadBool();
+            break;
+          }
+          case 40: {
+            IsSerializerWithStringManifest = input.ReadBool();
+            break;
+          }
+          case 48: {
+            TypeHashCode = input.ReadInt32();
             break;
           }
         }

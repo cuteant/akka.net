@@ -73,11 +73,13 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
             "clBvb2wSOAoEcG9vbBgBIAEoCzIqLkFra2EuQ2x1c3Rlci5TZXJpYWxpemF0",
             "aW9uLlByb3RvLk1zZy5Qb29sElEKCHNldHRpbmdzGAIgASgLMj8uQWtrYS5D",
             "bHVzdGVyLlNlcmlhbGl6YXRpb24uUHJvdG8uTXNnLkNsdXN0ZXJSb3V0ZXJQ",
-            "b29sU2V0dGluZ3MiPAoEUG9vbBIUCgxzZXJpYWxpemVySWQYASABKA0SEAoI",
-            "bWFuaWZlc3QYAiABKAkSDAoEZGF0YRgDIAEoDCJ8ChlDbHVzdGVyUm91dGVy",
-            "UG9vbFNldHRpbmdzEhYKDnRvdGFsSW5zdGFuY2VzGAEgASgNEhsKE21heElu",
-            "c3RhbmNlc1Blck5vZGUYAiABKA0SGQoRYWxsb3dMb2NhbFJvdXRlZXMYAyAB",
-            "KAgSDwoHdXNlUm9sZRgEIAEoCWIGcHJvdG8z"));
+            "b29sU2V0dGluZ3MijwEKBFBvb2wSFAoMc2VyaWFsaXplcklkGAEgASgNEhAK",
+            "CG1hbmlmZXN0GAIgASgMEgwKBGRhdGEYAyABKAwSEwoLaGFzTWFuaWZlc3QY",
+            "BCABKAgSJgoeaXNTZXJpYWxpemVyV2l0aFN0cmluZ01hbmlmZXN0GAUgASgI",
+            "EhQKDHR5cGVIYXNoQ29kZRgGIAEoBSJ8ChlDbHVzdGVyUm91dGVyUG9vbFNl",
+            "dHRpbmdzEhYKDnRvdGFsSW5zdGFuY2VzGAEgASgNEhsKE21heEluc3RhbmNl",
+            "c1Blck5vZGUYAiABKA0SGQoRYWxsb3dMb2NhbFJvdXRlZXMYAyABKAgSDwoH",
+            "dXNlUm9sZRgEIAEoCWIGcHJvdG8z"));
       descriptor = pbr::FileDescriptor.FromGeneratedCode(descriptorData,
           new pbr::FileDescriptor[] { global::Akka.Remote.Serialization.Proto.Msg.ContainerFormatsReflection.Descriptor, },
           new pbr::GeneratedClrTypeInfo(null, new pbr::GeneratedClrTypeInfo[] {
@@ -93,7 +95,7 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Cluster.Serialization.Proto.Msg.VectorClock), global::Akka.Cluster.Serialization.Proto.Msg.VectorClock.Parser, new[]{ "Timestamp", "Versions" }, null, null, new pbr::GeneratedClrTypeInfo[] { new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Cluster.Serialization.Proto.Msg.VectorClock.Types.Version), global::Akka.Cluster.Serialization.Proto.Msg.VectorClock.Types.Version.Parser, new[]{ "HashIndex", "Timestamp" }, null, null, null)}),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Cluster.Serialization.Proto.Msg.UniqueAddress), global::Akka.Cluster.Serialization.Proto.Msg.UniqueAddress.Parser, new[]{ "Address", "Uid" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Cluster.Serialization.Proto.Msg.ClusterRouterPool), global::Akka.Cluster.Serialization.Proto.Msg.ClusterRouterPool.Parser, new[]{ "Pool", "Settings" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Cluster.Serialization.Proto.Msg.Pool), global::Akka.Cluster.Serialization.Proto.Msg.Pool.Parser, new[]{ "SerializerId", "Manifest", "Data" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Cluster.Serialization.Proto.Msg.Pool), global::Akka.Cluster.Serialization.Proto.Msg.Pool.Parser, new[]{ "SerializerId", "Manifest", "Data", "HasManifest", "IsSerializerWithStringManifest", "TypeHashCode" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Cluster.Serialization.Proto.Msg.ClusterRouterPoolSettings), global::Akka.Cluster.Serialization.Proto.Msg.ClusterRouterPoolSettings.Parser, new[]{ "TotalInstances", "MaxInstancesPerNode", "AllowLocalRoutees", "UseRole" }, null, null, null)
           }));
     }
@@ -2509,6 +2511,9 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
       serializerId_ = other.serializerId_;
       manifest_ = other.manifest_;
       data_ = other.data_;
+      hasManifest_ = other.hasManifest_;
+      isSerializerWithStringManifest_ = other.isSerializerWithStringManifest_;
+      typeHashCode_ = other.typeHashCode_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -2530,9 +2535,9 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
 
     /// <summary>Field number for the "manifest" field.</summary>
     public const int ManifestFieldNumber = 2;
-    private string manifest_ = "";
+    private pb::ByteString manifest_ = pb::ByteString.Empty;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string Manifest {
+    public pb::ByteString Manifest {
       get { return manifest_; }
       set {
         manifest_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
@@ -2547,6 +2552,39 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
       get { return data_; }
       set {
         data_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+      }
+    }
+
+    /// <summary>Field number for the "hasManifest" field.</summary>
+    public const int HasManifestFieldNumber = 4;
+    private bool hasManifest_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool HasManifest {
+      get { return hasManifest_; }
+      set {
+        hasManifest_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "isSerializerWithStringManifest" field.</summary>
+    public const int IsSerializerWithStringManifestFieldNumber = 5;
+    private bool isSerializerWithStringManifest_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public bool IsSerializerWithStringManifest {
+      get { return isSerializerWithStringManifest_; }
+      set {
+        isSerializerWithStringManifest_ = value;
+      }
+    }
+
+    /// <summary>Field number for the "typeHashCode" field.</summary>
+    public const int TypeHashCodeFieldNumber = 6;
+    private int typeHashCode_;
+    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
+    public int TypeHashCode {
+      get { return typeHashCode_; }
+      set {
+        typeHashCode_ = value;
       }
     }
 
@@ -2566,6 +2604,9 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
       if (SerializerId != other.SerializerId) return false;
       if (Manifest != other.Manifest) return false;
       if (Data != other.Data) return false;
+      if (HasManifest != other.HasManifest) return false;
+      if (IsSerializerWithStringManifest != other.IsSerializerWithStringManifest) return false;
+      if (TypeHashCode != other.TypeHashCode) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -2575,6 +2616,9 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
       if (SerializerId != 0) hash ^= SerializerId.GetHashCode();
       if (Manifest.Length != 0) hash ^= Manifest.GetHashCode();
       if (Data.Length != 0) hash ^= Data.GetHashCode();
+      if (HasManifest != false) hash ^= HasManifest.GetHashCode();
+      if (IsSerializerWithStringManifest != false) hash ^= IsSerializerWithStringManifest.GetHashCode();
+      if (TypeHashCode != 0) hash ^= TypeHashCode.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -2594,11 +2638,23 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
       }
       if (Manifest.Length != 0) {
         output.WriteRawTag(18);
-        output.WriteString(Manifest);
+        output.WriteBytes(Manifest);
       }
       if (Data.Length != 0) {
         output.WriteRawTag(26);
         output.WriteBytes(Data);
+      }
+      if (HasManifest != false) {
+        output.WriteRawTag(32);
+        output.WriteBool(HasManifest);
+      }
+      if (IsSerializerWithStringManifest != false) {
+        output.WriteRawTag(40);
+        output.WriteBool(IsSerializerWithStringManifest);
+      }
+      if (TypeHashCode != 0) {
+        output.WriteRawTag(48);
+        output.WriteInt32(TypeHashCode);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -2612,10 +2668,19 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
         size += 1 + pb::CodedOutputStream.ComputeUInt32Size(SerializerId);
       }
       if (Manifest.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(Manifest);
+        size += 1 + pb::CodedOutputStream.ComputeBytesSize(Manifest);
       }
       if (Data.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeBytesSize(Data);
+      }
+      if (HasManifest != false) {
+        size += 1 + 1;
+      }
+      if (IsSerializerWithStringManifest != false) {
+        size += 1 + 1;
+      }
+      if (TypeHashCode != 0) {
+        size += 1 + pb::CodedOutputStream.ComputeInt32Size(TypeHashCode);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -2637,6 +2702,15 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
       if (other.Data.Length != 0) {
         Data = other.Data;
       }
+      if (other.HasManifest != false) {
+        HasManifest = other.HasManifest;
+      }
+      if (other.IsSerializerWithStringManifest != false) {
+        IsSerializerWithStringManifest = other.IsSerializerWithStringManifest;
+      }
+      if (other.TypeHashCode != 0) {
+        TypeHashCode = other.TypeHashCode;
+      }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -2653,11 +2727,23 @@ namespace Akka.Cluster.Serialization.Proto.Msg {
             break;
           }
           case 18: {
-            Manifest = input.ReadString();
+            Manifest = input.ReadBytes();
             break;
           }
           case 26: {
             Data = input.ReadBytes();
+            break;
+          }
+          case 32: {
+            HasManifest = input.ReadBool();
+            break;
+          }
+          case 40: {
+            IsSerializerWithStringManifest = input.ReadBool();
+            break;
+          }
+          case 48: {
+            TypeHashCode = input.ReadInt32();
             break;
           }
         }

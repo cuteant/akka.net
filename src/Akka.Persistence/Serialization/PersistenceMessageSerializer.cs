@@ -15,6 +15,7 @@ using Akka.Persistence.Fsm;
 using Akka.Persistence.Serialization.Proto.Msg;
 using Akka.Serialization;
 using Akka.Util;
+using CuteAnt.Reflection;
 using Google.Protobuf;
 
 namespace Akka.Persistence.Serialization
@@ -67,23 +68,35 @@ namespace Akka.Persistence.Serialization
 
         private PersistentPayload GetPersistentPayload(object obj)
         {
-            Serializer serializer = system.Serialization.FindSerializerFor(obj);
+            var serializer = system.Serialization.FindSerializerFor(obj);
             var payload = new PersistentPayload();
 
-            if (serializer is SerializerWithStringManifest serializer2)
+            if (serializer is SerializerWithStringManifest manifestSerializer)
             {
-                string manifest = serializer2.Manifest(obj);
-                payload.PayloadManifest = ByteString.CopyFromUtf8(manifest);
+                payload.IsSerializerWithStringManifest = true;
+                string manifest = manifestSerializer.Manifest(obj);
+                if (!string.IsNullOrEmpty(manifest))
+                {
+                    payload.HasManifest = true;
+                    payload.PayloadManifest = ByteString.CopyFromUtf8(manifest);
+                }
+                else
+                {
+                    payload.PayloadManifest = ByteString.Empty;
+                }
             }
             else
             {
                 if (serializer.IncludeManifest)
                 {
-                    payload.PayloadManifest = ByteString.CopyFromUtf8(obj.GetType().TypeQualifiedName());
+                    payload.HasManifest = true;
+                    var typeKey = TypeSerializer.GetTypeKeyFromType(obj.GetType());
+                    payload.TypeHashCode = typeKey.HashCode;
+                    payload.PayloadManifest = ProtobufUtil.FromBytes(typeKey.TypeName);
                 }
             }
 
-            payload.Payload = ByteString.CopyFrom(serializer.ToBinary(obj));
+            payload.Payload = serializer.ToByteString(obj);
             payload.SerializerId = serializer.Identifier;
 
             return payload;
@@ -191,10 +204,24 @@ namespace Akka.Persistence.Serialization
 
         private object GetPayload(PersistentPayload payload)
         {
-            string manifest = "";
-            if (payload.PayloadManifest != null) manifest = payload.PayloadManifest.ToStringUtf8();
-
-            return system.Serialization.Deserialize(payload.Payload.ToByteArray(), payload.SerializerId, manifest);
+            if (payload.IsSerializerWithStringManifest)
+            {
+                return system.Serialization.Deserialize(
+                    ProtobufUtil.GetBuffer(payload.Payload),
+                    payload.SerializerId,
+                    payload.HasManifest ? payload.PayloadManifest.ToStringUtf8() : null);
+            }
+            else if (payload.HasManifest)
+            {
+                return system.Serialization.Deserialize(
+                    ProtobufUtil.GetBuffer(payload.Payload),
+                    payload.SerializerId,
+                    ProtobufUtil.GetBuffer(payload.PayloadManifest), payload.TypeHashCode);
+            }
+            else
+            {
+                return system.Serialization.Deserialize(ProtobufUtil.GetBuffer(payload.Payload), payload.SerializerId);
+            }
         }
 
         private static AtomicWrite GetAtomicWrite(PersistenceMessageSerializer serializer, byte[] bytes)

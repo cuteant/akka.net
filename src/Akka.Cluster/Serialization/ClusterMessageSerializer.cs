@@ -15,6 +15,7 @@ using Akka.Cluster.Routing;
 using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt.Reflection;
 using Google.Protobuf;
 using AddressData = Akka.Remote.Serialization.Proto.Msg.AddressData;
 
@@ -26,7 +27,7 @@ namespace Akka.Cluster.Serialization
 
         public ClusterMessageSerializer(ExtendedActorSystem system) : base(system)
         {
-            
+
             _fromBinaryMap = new Dictionary<Type, Func<byte[], object>>
             {
                 [typeof(ClusterHeartbeatSender.Heartbeat)] = bytes => new ClusterHeartbeatSender.Heartbeat(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
@@ -136,7 +137,7 @@ namespace Akka.Cluster.Serialization
             {
                 From = UniqueAddressToProto(gossipEnvelope.From),
                 To = UniqueAddressToProto(gossipEnvelope.To),
-                SerializedGossip = ByteString.CopyFrom(GossipToProto(gossipEnvelope.Gossip).ToByteArray())
+                SerializedGossip = ProtobufUtil.FromBytes(GossipToProto(gossipEnvelope.Gossip).ToByteArray())
             };
 
             return message.ToByteArray();
@@ -197,14 +198,51 @@ namespace Akka.Cluster.Serialization
             var message = new Proto.Msg.Pool();
             var serializer = system.Serialization.FindSerializerFor(pool);
             message.SerializerId = (uint)serializer.Identifier;
-            message.Data = ByteString.CopyFrom(serializer.ToBinary(pool));
-            message.Manifest = GetObjectManifest(serializer, pool);
+            message.Data = serializer.ToByteString(pool);
+            #region ## 苦竹 修改 ##
+            //message.Manifest = GetObjectManifest(serializer, pool);
+            if (serializer is SerializerWithStringManifest manifestSerializer)
+            {
+                message.IsSerializerWithStringManifest = true;
+                var manifest = manifestSerializer.Manifest(pool);
+                if (!string.IsNullOrEmpty(manifest))
+                {
+                    message.HasManifest = true;
+                    message.Manifest = ByteString.CopyFromUtf8(manifest);
+                }
+                else
+                {
+                    message.Manifest = ByteString.Empty;
+                }
+            }
+            else
+            {
+                if (serializer.IncludeManifest)
+                {
+                    message.HasManifest = true;
+                    var typeKey = TypeSerializer.GetTypeKeyFromType(typeof(Akka.Routing.Pool));
+                    message.TypeHashCode = typeKey.HashCode;
+                    message.Manifest = ProtobufUtil.FromBytes(typeKey.TypeName);
+                }
+            }
+            #endregion
             return message;
         }
 
         private Akka.Routing.Pool PoolFrom(Proto.Msg.Pool poolProto)
         {
-            return (Akka.Routing.Pool)system.Serialization.Deserialize(poolProto.Data.ToByteArray(), (int)poolProto.SerializerId, poolProto.Manifest);
+            if (poolProto.IsSerializerWithStringManifest)
+            {
+                return (Akka.Routing.Pool)system.Serialization.Deserialize(ProtobufUtil.GetBuffer(poolProto.Data), (int)poolProto.SerializerId, poolProto.HasManifest ? poolProto.Manifest.ToStringUtf8() : null);
+            }
+            else if (poolProto.HasManifest)
+            {
+                return (Akka.Routing.Pool)system.Serialization.Deserialize(ProtobufUtil.GetBuffer(poolProto.Data), (int)poolProto.SerializerId, ProtobufUtil.GetBuffer(poolProto.Manifest), poolProto.TypeHashCode);
+            }
+            else
+            {
+                return (Akka.Routing.Pool)system.Serialization.Deserialize(ProtobufUtil.GetBuffer(poolProto.Data), (int)poolProto.SerializerId);
+            }
         }
 
         private static Proto.Msg.ClusterRouterPoolSettings ClusterRouterPoolSettingsToProto(ClusterRouterPoolSettings clusterRouterPoolSettings)
@@ -280,11 +318,11 @@ namespace Akka.Cluster.Serialization
             var roleMapping = gossip.AllRoles.ToList();
             var hashMapping = gossip.AllHashes.ToList();
 
-            Member MemberFromProto(Proto.Msg.Member member) => 
+            Member MemberFromProto(Proto.Msg.Member member) =>
                 Member.Create(
-                    addressMapping[member.AddressIndex], 
-                    member.UpNumber, 
-                    (MemberStatus)member.Status, 
+                    addressMapping[member.AddressIndex],
+                    member.UpNumber,
+                    (MemberStatus)member.Status,
                     member.RolesIndexes.Select(x => roleMapping[x]).ToImmutableHashSet());
 
             var members = gossip.Members.Select((Func<Proto.Msg.Member, Member>)MemberFromProto).ToImmutableSortedSet(Member.Ordering);
@@ -363,7 +401,7 @@ namespace Akka.Cluster.Serialization
 
         private static VectorClock VectorClockFrom(Proto.Msg.VectorClock version, IList<string> hashMapping)
         {
-            return VectorClock.Create(version.Versions.ToImmutableSortedDictionary(version1 => 
+            return VectorClock.Create(version.Versions.ToImmutableSortedDictionary(version1 =>
                     VectorClock.Node.FromHash(hashMapping[version1.HashIndex]), version1 => version1.Timestamp));
         }
 
@@ -419,15 +457,15 @@ namespace Akka.Cluster.Serialization
             return new UniqueAddress(AddressFrom(uniqueAddressProto.Address), (int)uniqueAddressProto.Uid);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetObjectManifest(Serializer serializer, object obj)
-        {
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                return manifestSerializer.Manifest(obj);
-            }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private static string GetObjectManifest(Serializer serializer, object obj)
+        //{
+        //    if (serializer is SerializerWithStringManifest manifestSerializer)
+        //    {
+        //        return manifestSerializer.Manifest(obj);
+        //    }
 
-            return obj.GetType().TypeQualifiedName();
-        }
+        //    return obj.GetType().TypeQualifiedName();
+        //}
     }
 }

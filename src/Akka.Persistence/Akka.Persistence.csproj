@@ -20,11 +20,11 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufPackageVersion)" />
+    <EmbeddedResource Include="persistence.conf" />
   </ItemGroup>
 
   <ItemGroup>
-    <EmbeddedResource Include="persistence.conf" />
+    <ProjectReference Include="..\Akka.Serialization.Protobuf\Akka.Serialization.Protobuf.csproj" />
     <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
 </Project>

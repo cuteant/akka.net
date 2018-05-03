@@ -78,7 +78,7 @@ namespace Akka.Remote.Serialization
             {
                 var tuple = Serialize(arg);
 
-                propsBuilder.Args.Add(ByteString.CopyFrom(tuple.Item4));
+                propsBuilder.Args.Add(ProtobufUtil.FromBytes(tuple.Item4));
                 propsBuilder.Manifests.Add(tuple.Item3);
                 propsBuilder.SerializerIds.Add(tuple.Item1);
                 propsBuilder.HasManifest.Add(tuple.Item2);
@@ -117,7 +117,7 @@ namespace Akka.Remote.Serialization
                 var tuple = Serialize(deploy.Config);
                 deployBuilder.ConfigSerializerId = tuple.Item1;
                 deployBuilder.ConfigManifest = tuple.Item3;
-                deployBuilder.Config = ByteString.CopyFrom(tuple.Item4);
+                deployBuilder.Config = ProtobufUtil.FromBytes(tuple.Item4);
             }
 
             if (deploy.RouterConfig != NoRouter.Instance)
@@ -125,7 +125,7 @@ namespace Akka.Remote.Serialization
                 var tuple = Serialize(deploy.RouterConfig);
                 deployBuilder.RouterConfigSerializerId = tuple.Item1;
                 deployBuilder.RouterConfigManifest = tuple.Item3;
-                deployBuilder.RouterConfig = ByteString.CopyFrom(tuple.Item4);
+                deployBuilder.RouterConfig = ProtobufUtil.FromBytes(tuple.Item4);
             }
 
             if (deploy.Scope != Deploy.NoScopeGiven)
@@ -133,7 +133,7 @@ namespace Akka.Remote.Serialization
                 var tuple = Serialize(deploy.Scope);
                 deployBuilder.ScopeSerializerId = tuple.Item1;
                 deployBuilder.ScopeManifest = tuple.Item3;
-                deployBuilder.Scope = ByteString.CopyFrom(tuple.Item4);
+                deployBuilder.Scope = ProtobufUtil.FromBytes(tuple.Item4);
             }
 
             if (deploy.Dispatcher != Deploy.NoDispatcherGiven)
