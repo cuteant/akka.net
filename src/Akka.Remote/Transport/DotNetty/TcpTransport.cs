@@ -11,6 +11,7 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
+using Akka.Serialization;
 using Akka.Event;
 using DotNetty.Buffers;
 using DotNetty.Common.Utilities;
@@ -300,12 +301,15 @@ namespace Akka.Remote.Transport.DotNetty
             return false;
         }
 
-        private IByteBuffer ToByteBuffer(ByteString payload)
+        private static IByteBuffer ToByteBuffer(ByteString payload)
         {
             //TODO: optimize DotNetty byte buffer usage
             // (maybe custom IByteBuffer working directly on ByteString?)
-            var buffer = Unpooled.WrappedBuffer(payload.ToByteArray());
-            return buffer;
+
+            // ## 苦竹 修改 ##
+            //var buffer = Unpooled.WrappedBuffer(payload.ToByteArray());
+            //return buffer;
+            return Unpooled.WrappedBuffer(ProtobufUtil.GetBuffer(payload));
         }
 
         public override void Disassociate() => _channel.CloseAsync();

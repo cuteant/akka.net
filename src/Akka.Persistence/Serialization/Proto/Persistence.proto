@@ -20,6 +20,9 @@ message PersistentPayload {
   int32 serializerId = 1;
   bytes payload = 2;
   bytes payloadManifest = 3;
+  bool hasManifest = 4;
+  bool isSerializerWithStringManifest = 5;
+  int32 typeHashCode = 6;
 }
 
 message AtomicWrite {

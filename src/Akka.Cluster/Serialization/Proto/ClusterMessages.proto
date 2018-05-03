@@ -169,9 +169,12 @@ message ClusterRouterPool {
 }
 
 message Pool {
-  uint32 serializerId = 1;
-  string manifest = 2;
+  int32 serializerId = 1;
+  bytes manifest = 2;
   bytes data = 3;
+  bool hasManifest = 4;
+  bool isSerializerWithStringManifest = 5;
+  int32 typeHashCode = 6;
 }
 
 message ClusterRouterPoolSettings {

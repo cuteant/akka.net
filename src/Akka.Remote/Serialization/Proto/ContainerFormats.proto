@@ -47,6 +47,9 @@ message Payload {
   bytes message = 1;
   int32 serializerId = 2;
   bytes messageManifest = 3;
+  bool hasManifest = 4;
+  bool isSerializerWithStringManifest = 5;
+  int32 typeHashCode = 6;
 }
 
 message Identify {

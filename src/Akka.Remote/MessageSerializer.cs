@@ -40,7 +40,9 @@ namespace Akka.Remote
 
             var serializedMsg = new SerializedMessage
             {
-                Message = ByteString.CopyFrom(serializer.ToBinaryWithAddress(address, message)),
+                // ## 苦竹 修改 ##
+                //Message = ByteString.CopyFrom(serializer.ToBinaryWithAddress(address, message)),
+                Message = serializer.ToByteStringWithAddress(address, message),
                 SerializerId = serializer.Identifier
             };
 
