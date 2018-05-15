@@ -17,7 +17,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="MongoDB.Driver.signed" Version="$(MongoDBDriverPackageVersion)" />
+    <PackageReference Include="MongoDB.Driver.StrongName" Version="$(MongoDBDriverStrongNamePackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
