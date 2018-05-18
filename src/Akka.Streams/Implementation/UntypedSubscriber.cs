@@ -100,8 +100,8 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public static object ToTyped(IUntypedSubscriber untypedSubscriber)
         {
-            if (untypedSubscriber is UntypedSubscriber)
-                return ((UntypedSubscriber) untypedSubscriber).Unwrap();
+            if (untypedSubscriber is UntypedSubscriber sub)
+                return sub.Unwrap();
             return untypedSubscriber;
         }
 

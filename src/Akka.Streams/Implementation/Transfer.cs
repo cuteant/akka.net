@@ -589,9 +589,8 @@ namespace Akka.Streams.Implementation
         /// <param name="self">TBD</param>
         public static void GotUpstreamSubscription(this IPump self)
         {
-            if (self.TransferState is WaitingForUpstreamSubscription)
+            if (self.TransferState is WaitingForUpstreamSubscription t)
             {
-                var t = (WaitingForUpstreamSubscription) self.TransferState;
                 if (t.Remaining == 1)
                 {
                     self.TransferState = t.AndThen.Precondition;
@@ -611,9 +610,8 @@ namespace Akka.Streams.Implementation
         /// <param name="phase">TBD</param>
         public static void NextPhase(this IPump self, TransferPhase phase)
         {
-            if (self.TransferState is WaitingForUpstreamSubscription)
+            if (self.TransferState is WaitingForUpstreamSubscription w)
             {
-                var w = (WaitingForUpstreamSubscription) self.TransferState;
                 self.TransferState = new WaitingForUpstreamSubscription(w.Remaining, phase);
             }
             else

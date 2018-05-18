@@ -69,29 +69,26 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            Terminated terminated;
-            if (message is OnNext)
+            switch (message)
             {
-                var onNext = (OnNext) message;
-                Ref.Tell(onNext.Element);
-            }
-            else if (message is OnError)
-            {
-                var onError = (OnError) message;
-                Ref.Tell(new Status.Failure(onError.Cause));
-                Context.Stop(Self);
-            }
-            else if (message is OnComplete)
-            {
-                Ref.Tell(OnCompleteMessage);
-                Context.Stop(Self);
-            }
-            else if ((terminated = message as Terminated) != null && terminated.ActorRef.Equals(Ref))
-                Context.Stop(Self); // will cancel upstream
-            else
-                return false;
+                case OnNext onNext:
+                    Ref.Tell(onNext.Element);
+                    return true;
+                case OnError onError:
+                    Ref.Tell(new Status.Failure(onError.Cause));
+                    Context.Stop(Self);
+                    return true;
+                case OnComplete _:
+                    Ref.Tell(OnCompleteMessage);
+                    Context.Stop(Self);
+                    return true;
+                case Terminated terminated when (terminated.ActorRef.Equals(Ref)):
+                    Context.Stop(Self); // will cancel upstream
+                    return true;
 
-            return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

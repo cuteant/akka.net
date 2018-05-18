@@ -114,48 +114,45 @@ namespace Akka.Streams.Implementation.IO
             {
                 var sender = args.Item1;
                 var msg = args.Item2;
-                if (msg is Tcp.Bound)
+                switch (msg)
                 {
-                    var bound = (Tcp.Bound)msg;
-                    _listener = sender;
-                    StageActorRef.Watch(_listener);
+                    case Tcp.Bound bound:
+                        _listener = sender;
+                        StageActorRef.Watch(_listener);
 
-                    if (IsAvailable(_stage._out))
-                        _listener.Tell(new Tcp.ResumeAccepting(1), StageActorRef);
+                        if (IsAvailable(_stage._out))
+                            _listener.Tell(new Tcp.ResumeAccepting(1), StageActorRef);
 
-                    var thisStage = StageActorRef;
-                    _bindingPromise.TrySetResult(new StreamTcp.ServerBinding(bound.LocalAddress, () =>
-                    {
-                        // Beware, sender must be explicit since stageActor.ref will be invalid to access after the stage stopped
-                        thisStage.Tell(Tcp.Unbind.Instance, thisStage);
-                        return _unbindPromise.Task;
-                    }));
-                }
-                else if (msg is Tcp.CommandFailed)
-                {
-                    var ex = BindFailedException.Instance;
-                    _bindingPromise.TrySetException(ex);
-                    _unbindPromise.TrySetResult(NotUsed.Instance);
-                    FailStage(ex);
-                }
-                else if (msg is Tcp.Connected)
-                {
-                    var connected = (Tcp.Connected)msg;
-                    Push(_stage._out, ConnectionFor(connected, sender));
-                }
-                else if (msg is Tcp.Unbind)
-                {
-                    if (!IsClosed(_stage._out) && !ReferenceEquals(_listener, null))
-                        TryUnbind();
-                }
-                else if (msg is Tcp.Unbound)
-                {
-                    UnbindCompleted();
-                }
-                else if (msg is Terminated)
-                {
-                    if (_unbindStarted) UnbindCompleted();
-                    else FailStage(new IllegalStateException("IO Listener actor terminated unexpectedly"));
+                        var thisStage = StageActorRef;
+                        _bindingPromise.TrySetResult(new StreamTcp.ServerBinding(bound.LocalAddress, () =>
+                        {
+                            // Beware, sender must be explicit since stageActor.ref will be invalid to access after the stage stopped
+                            thisStage.Tell(Tcp.Unbind.Instance, thisStage);
+                            return _unbindPromise.Task;
+                        }));
+                        break;
+                    case Tcp.CommandFailed _:
+                        var ex = BindFailedException.Instance;
+                        _bindingPromise.TrySetException(ex);
+                        _unbindPromise.TrySetResult(NotUsed.Instance);
+                        FailStage(ex);
+                        break;
+                    case Tcp.Connected connected:
+                        Push(_stage._out, ConnectionFor(connected, sender));
+                        break;
+                    case Tcp.Unbind _:
+                        if (!IsClosed(_stage._out) && !(_listener is null))
+                            TryUnbind();
+                        break;
+                    case Tcp.Unbound _:
+                        UnbindCompleted();
+                        break;
+                    case Terminated _:
+                        if (_unbindStarted) UnbindCompleted();
+                        else FailStage(new IllegalStateException("IO Listener actor terminated unexpectedly"));
+                        break;
+                    default:
+                        break;
                 }
             }
 
@@ -395,7 +392,7 @@ namespace Akka.Streams.Implementation.IO
             private readonly Outlet<ByteString> _bytesOut;
             private IActorRef _connection;
             private readonly OutHandler _readHandler;
-            
+
             public TcpStreamLogic(FlowShape<ByteString, ByteString> shape, ITcpRole role, EndPoint remoteAddress) : base(shape)
             {
                 _role = role;
@@ -458,9 +455,8 @@ namespace Akka.Streams.Implementation.IO
             {
                 SetKeepGoing(true);
 
-                if (_role is Inbound)
+                if (_role is Inbound inbound)
                 {
-                    var inbound = (Inbound)_role;
                     SetHandler(_bytesOut, _readHandler);
                     _connection = inbound.Connection;
                     GetStageActorRef(Connected).Watch(_connection);
@@ -480,9 +476,8 @@ namespace Akka.Streams.Implementation.IO
             /// </summary>
             public override void PostStop()
             {
-                if (_role is Outbound)
+                if (_role is Outbound outbound)
                 {
-                    var outbound = (Outbound)_role;
                     // Fail if has not been completed with an address earlier
                     outbound.LocalAddressPromise.TrySetException(new StreamTcpException("Connection failed"));
                 }
@@ -494,27 +489,30 @@ namespace Akka.Streams.Implementation.IO
                 {
                     var sender = args.Item1;
                     var msg = args.Item2;
-
-                    if (msg is Terminated)
-                        FailStage(new StreamTcpException("The IO manager actor (TCP) has terminated. Stopping now."));
-                    else if (msg is Tcp.CommandFailed)
-                        FailStage(new StreamTcpException($"Tcp command {((Tcp.CommandFailed)msg).Cmd} failed"));
-                    else if (msg is Tcp.Connected)
+                    switch (msg)
                     {
-                        var connected = (Tcp.Connected)msg;
+                        case Terminated _:
+                            FailStage(new StreamTcpException("The IO manager actor (TCP) has terminated. Stopping now."));
+                            break;
+                        case Tcp.CommandFailed _:
+                            FailStage(new StreamTcpException($"Tcp command {((Tcp.CommandFailed)msg).Cmd} failed"));
+                            break;
+                        case Tcp.Connected connected:
+                            ((Outbound)_role).LocalAddressPromise.TrySetResult(connected.LocalAddress);
+                            _connection = sender;
+                            SetHandler(_bytesOut, _readHandler);
+                            StageActorRef.Unwatch(outbound.Manager);
+                            StageActorRef.Become(Connected);
+                            StageActorRef.Watch(_connection);
+                            _connection.Tell(new Tcp.Register(StageActorRef, keepOpenOnPeerClosed: true, useResumeWriting: false), StageActorRef);
 
-                        ((Outbound)_role).LocalAddressPromise.TrySetResult(connected.LocalAddress);
-                        _connection = sender;
-                        SetHandler(_bytesOut, _readHandler);
-                        StageActorRef.Unwatch(outbound.Manager);
-                        StageActorRef.Become(Connected);
-                        StageActorRef.Watch(_connection);
-                        _connection.Tell(new Tcp.Register(StageActorRef, keepOpenOnPeerClosed: true, useResumeWriting: false), StageActorRef);
+                            if (IsAvailable(_bytesOut))
+                                _connection.Tell(Tcp.ResumeReading.Instance, StageActorRef);
 
-                        if (IsAvailable(_bytesOut))
-                            _connection.Tell(Tcp.ResumeReading.Instance, StageActorRef);
-
-                        Pull(_bytesIn);
+                            Pull(_bytesIn);
+                            break;
+                        default:
+                            break;
                     }
                 };
 
@@ -524,23 +522,37 @@ namespace Akka.Streams.Implementation.IO
             {
                 var msg = args.Item2;
 
-                if (msg is Terminated) FailStage(new StreamTcpException("The connection actor has terminated. Stopping now."));
-                else if (msg is Tcp.CommandFailed) FailStage(new StreamTcpException($"Tcp command {((Tcp.CommandFailed)msg).Cmd} failed"));
-                else if (msg is Tcp.ErrorClosed) FailStage(new StreamTcpException($"The connection closed with error: {((Tcp.ErrorClosed)msg).Cause}"));
-                else if (msg is Tcp.Aborted) FailStage(new StreamTcpException("The connection has been aborted"));
-                else if (msg is Tcp.Closed) CompleteStage();
-                else if (msg is Tcp.ConfirmedClosed) CompleteStage();
-                else if (msg is Tcp.PeerClosed) Complete(_bytesOut);
-                else if (msg is Tcp.Received)
+                switch (msg)
                 {
-                    var received = (Tcp.Received)msg;
-                    // Keep on reading even when closed. There is no "close-read-side" in TCP
-                    if (IsClosed(_bytesOut)) _connection.Tell(Tcp.ResumeReading.Instance, StageActorRef);
-                    else Push(_bytesOut, received.Data);
-                }
-                else if (msg is WriteAck)
-                {
-                    if (!IsClosed(_bytesIn)) Pull(_bytesIn);
+                    case Terminated _:
+                        FailStage(new StreamTcpException("The connection actor has terminated. Stopping now."));
+                        break;
+                    case Tcp.CommandFailed failed:
+                        FailStage(new StreamTcpException($"Tcp command {failed.Cmd} failed"));
+                        break;
+                    case Tcp.ErrorClosed closed:
+                        FailStage(new StreamTcpException($"The connection closed with error: {closed.Cause}"));
+                        break;
+                    case Tcp.Aborted _:
+                        FailStage(new StreamTcpException("The connection has been aborted"));
+                        break;
+                    case Tcp.Closed _:
+                    case Tcp.ConfirmedClosed _:
+                        CompleteStage();
+                        break;
+                    case Tcp.PeerClosed _:
+                        Complete(_bytesOut);
+                        break;
+                    case Tcp.Received received:
+                        // Keep on reading even when closed. There is no "close-read-side" in TCP
+                        if (IsClosed(_bytesOut)) _connection.Tell(Tcp.ResumeReading.Instance, StageActorRef);
+                        else Push(_bytesOut, received.Data);
+                        break;
+                    case WriteAck _:
+                        if (!IsClosed(_bytesIn)) Pull(_bytesIn);
+                        break;
+                    default:
+                        break;
                 }
             }
         }

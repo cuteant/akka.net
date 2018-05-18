@@ -52,8 +52,7 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public bool Apply(object message)
         {
-            ExposedPublisher publisher;
-            if ((publisher = message as ExposedPublisher) != null)
+            if (message is ExposedPublisher publisher)
             {
                 ReceiveExposedPublisher(publisher);
                 if (_stash.Any())

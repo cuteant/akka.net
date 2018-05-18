@@ -735,13 +735,13 @@ namespace Akka.Streams.Implementation
             InitialPhase(1, new TransferPhase(PrimaryInputs.NeedsInput.And(OutputBunch.AllOfMarkedOutputs), () =>
             {
                 var message = PrimaryInputs.DequeueInputElement();
-                var tuple = message as Tuple<T, T>;
 
-                if (tuple == null)
-                    throw new ArgumentException($"Unable to unzip elements of type {message.GetType().Name}");
-
-                OutputBunch.Enqueue(0, tuple.Item1);
-                OutputBunch.Enqueue(1, tuple.Item2);
+                if (message is Tuple<T, T> tuple)
+                {
+                    OutputBunch.Enqueue(0, tuple.Item1);
+                    OutputBunch.Enqueue(1, tuple.Item2);
+                }
+                throw new ArgumentException($"Unable to unzip elements of type {message.GetType().Name}");
             }));
         }
     }

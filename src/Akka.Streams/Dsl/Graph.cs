@@ -832,7 +832,7 @@ namespace Akka.Streams.Dsl
                 () => PassAlong(_stage.Right, _stage.Out));
             }
 
-            private void NullOut() => _other = default(T);
+            private void NullOut() => _other = default;
 
             private void Dispatch(T left, T right)
             {

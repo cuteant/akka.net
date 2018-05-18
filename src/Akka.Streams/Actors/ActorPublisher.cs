@@ -486,9 +486,8 @@ namespace Akka.Streams.Actors
         /// <returns>TBD</returns>
         protected internal override bool AroundReceive(Receive receive, object message)
         {
-            if (message is Request)
+            if (message is Request req)
             {
-                var req = (Request) message;
                 if (req.IsProcessed)
                 {
                     // it's an unstashed Request, demand is already handled
@@ -511,9 +510,8 @@ namespace Akka.Streams.Actors
                     }
                 }
             }
-            else if (message is Subscribe<T>)
+            else if (message is Subscribe<T> sub)
             {
-                var sub = (Subscribe<T>) message;
                 var subscriber = sub.Subscriber;
                 switch (_lifecycleState)
                 {
@@ -670,8 +668,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public ActorPublisherImpl(IActorRef @ref)
         {
-            if(@ref == null) throw new ArgumentNullException(nameof(@ref), "ActorPublisherImpl requires IActorRef to be defined");
-            _ref = @ref;
+            _ref = @ref ?? throw new ArgumentNullException(nameof(@ref), "ActorPublisherImpl requires IActorRef to be defined");
         }
 
         /// <summary>
@@ -704,8 +701,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public ActorPublisherSubscription(IActorRef @ref)
         {
-            if (@ref == null) throw new ArgumentNullException(nameof(@ref), "ActorPublisherSubscription requires IActorRef to be defined");
-            _ref = @ref;
+            _ref = @ref ?? throw new ArgumentNullException(nameof(@ref), "ActorPublisherSubscription requires IActorRef to be defined");
         }
 
         /// <summary>
@@ -817,8 +813,7 @@ namespace Akka.Streams.Actors
         /// <returns>TBD</returns>
         public State Remove(IActorRef actorRef)
         {
-            State s;
-            return _state.TryRemove(actorRef, out s) ? s : null;
+            return _state.TryRemove(actorRef, out var s) ? s : null;
         }
 
         /// <summary>

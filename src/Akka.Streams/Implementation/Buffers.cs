@@ -263,7 +263,7 @@ namespace Akka.Streams.Implementation
         {
             // this is the only place where readIdx is advanced, so give ModuloFixedSizeBuffer
             // a chance to prevent its fatal wrap-around
-            Put(ReadIndex, default(T), true);
+            Put(ReadIndex, default, true);
             ReadIndex++;
         }
 
@@ -273,7 +273,7 @@ namespace Akka.Streams.Implementation
         public void DropTail()
         {
             WriteIndex--;
-            Put(WriteIndex, default(T), false);
+            Put(WriteIndex, default, false);
         }
     }
 
@@ -390,12 +390,12 @@ namespace Akka.Streams.Implementation
             {
                 var pos = _head & Mask;
                 var ret = _queue[pos];
-                _queue[pos] = default(T);
+                _queue[pos] = default;
                 _head += 1;
                 return ret;
             }
 
-            public T Peek() => _tail == _head ? default(T) : _queue[_head & Mask];
+            public T Peek() => _tail == _head ? default : _queue[_head & Mask];
 
             public void Clear()
             {
@@ -408,7 +408,7 @@ namespace Akka.Streams.Implementation
             public void DropTail()
             {
                 _tail -= 1;
-                _queue[_tail & Mask] = default(T);
+                _queue[_tail & Mask] = default;
             }
         }
 

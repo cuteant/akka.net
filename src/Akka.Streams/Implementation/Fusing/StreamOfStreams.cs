@@ -235,7 +235,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
             }
 
-            private bool IsPrefixComplete => ReferenceEquals(_builder, null);
+            private bool IsPrefixComplete => _builder is null;
 
             private Source<T, NotUsed> OpenSubstream()
             {
@@ -1211,18 +1211,16 @@ namespace Akka.Streams.Implementation.Fusing
         [InternalApi]
         public static void Kill<T, TMat>(Source<T, TMat> s)
         {
-            var module = s.Module as GraphStageModule;
-            if (module?.Stage is SubSource<T>)
+            if (s.Module is GraphStageModule module && module.Stage is SubSource<T> sub)
             {
-                ((SubSource<T>) module.Stage).ExternalCallback(SubSink.Cancel.Instance);
+                sub.ExternalCallback(SubSink.Cancel.Instance);
                 return;
             }
 
-            var pub = s.Module as PublisherSource<T>;
-            if (pub != null)
+            if (s.Module is PublisherSource<T> pub)
             {
                 NotUsed _;
-                pub.Create(default(MaterializationContext), out _).Subscribe(CancelingSubscriber<T>.Instance);
+                pub.Create(default, out _).Subscribe(CancelingSubscriber<T>.Instance);
                 return;
             }
 
@@ -1331,11 +1329,15 @@ namespace Akka.Streams.Implementation.Fusing
         public void PushSubstream(T elem)
         {
             var s = _status.Value;
-            var f = s as Action<IActorSubscriberMessage>;
 
-            if (f == null)
+            if (s is Action<IActorSubscriberMessage> f)
+            {
+                f(new OnNext(elem));
+            }
+            else
+            {
                 throw new IllegalStateException("cannot push to uninitialized substream");
-            f(new OnNext(elem));
+            }
         }
 
         /// <summary>
@@ -1344,12 +1346,11 @@ namespace Akka.Streams.Implementation.Fusing
         public void CompleteSubstream()
         {
             var s = _status.Value;
-            var f = s as Action<IActorSubscriberMessage>;
 
-            if (f != null)
+            if (s is Action<IActorSubscriberMessage> f)
                 f(OnComplete.Instance);
             else if (!_status.CompareAndSet(null, OnComplete.Instance))
-                ((Action<IActorSubscriberMessage>) _status.Value)(OnComplete.Instance);
+                ((Action<IActorSubscriberMessage>)_status.Value)(OnComplete.Instance);
         }
 
         /// <summary>
@@ -1359,13 +1360,12 @@ namespace Akka.Streams.Implementation.Fusing
         public void FailSubstream(Exception ex)
         {
             var s = _status.Value;
-            var f = s as Action<IActorSubscriberMessage>;
             var failure = new OnError(ex);
 
-            if (f != null)
+            if (s is Action<IActorSubscriberMessage> f)
                 f(failure);
             else if (!_status.CompareAndSet(null, failure))
-                ((Action<IActorSubscriberMessage>) _status.Value)(failure);
+                ((Action<IActorSubscriberMessage>)_status.Value)(failure);
         }
 
         /// <summary>

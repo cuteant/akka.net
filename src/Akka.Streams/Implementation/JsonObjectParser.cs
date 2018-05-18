@@ -26,20 +26,20 @@ namespace Akka.Streams.Implementation
     [InternalApi]
     public class JsonObjectParser
     {
-        private static readonly byte SquareBraceStart = Convert.ToByte('[');
-        private static readonly byte SquareBraceEnd = Convert.ToByte(']');
-        private static readonly byte CurlyBraceStart = Convert.ToByte('{');
-        private static readonly byte CurlyBraceEnd = Convert.ToByte('}');
-        private static readonly byte DoubleQuote = Convert.ToByte('"');
-        private static readonly byte Backslash = Convert.ToByte('\\');
-        private static readonly byte Comma = Convert.ToByte(',');
+        private const byte SquareBraceStart = (byte)'[';
+        private const byte SquareBraceEnd = (byte)']';
+        private const byte CurlyBraceStart = (byte)'{';
+        private const byte CurlyBraceEnd = (byte)'}';
+        private const byte DoubleQuote = (byte)'"';
+        private const byte Backslash = (byte)'\\';
+        private const byte Comma = (byte)',';
 
-        private static readonly byte LineBreak = Convert.ToByte('\n');
-        private static readonly byte LineBreak2 = Convert.ToByte('\r');
-        private static readonly byte Tab = Convert.ToByte('\t');
-        private static readonly byte Space = Convert.ToByte(' ');
+        private const byte LineBreak = (byte)'\n';
+        private const byte LineBreak2 = (byte)'\r';
+        private const byte Tab = (byte)'\t';
+        private const byte Space = (byte)' ';
 
-        private static readonly byte[] Whitespace = {LineBreak, LineBreak2, Tab, Space};
+        private static readonly byte[] Whitespace = { LineBreak, LineBreak2, Tab, Space };
 
         private static bool IsWhitespace(byte input) => Whitespace.Contains(input);
 
@@ -88,7 +88,7 @@ namespace Akka.Streams.Implementation
         public Option<ByteString> Poll()
         {
             var foundObject = SeekObject();
-            if(!foundObject || _pos == -1 || _pos == 0)
+            if (!foundObject || _pos == -1 || _pos == 0)
                 return Option<ByteString>.None;
 
             var emit = _buffer.Slice(0, _pos);
@@ -125,63 +125,66 @@ namespace Akka.Streams.Implementation
 
         private void Proceed(byte input)
         {
-            if (input == SquareBraceStart && OutsideObject)
+            switch (input)
             {
-                // outer object is an array
-                _pos++;
-                _trimFront++;
-            }
-            else if (input == SquareBraceEnd && OutsideObject)
-                // outer array completed!
-                _pos = -1;
-            else if (input == Comma && OutsideObject)
-            {
-                // do nothing
-                _pos++;
-                _trimFront++;
-            }
-            else if (input == Backslash)
-            {
-                _isStartOfEscapeSequence = _lastInput != Backslash;
-                _pos++;
-            }
-            else if (input == DoubleQuote)
-            {
-                if (!_isStartOfEscapeSequence)
-                    _inStringExpression = !_inStringExpression;
-                _isStartOfEscapeSequence = false;
-                _pos++;
-            }
-            else if (input == CurlyBraceStart && !_inStringExpression)
-            {
-                _isStartOfEscapeSequence = false;
-                _depth++;
-                _pos++;
-            }
-            else if (input == CurlyBraceEnd && !_inStringExpression)
-            {
-                _isStartOfEscapeSequence = false;
-                _depth--;
-                _pos++;
-                if (_depth == 0)
-                {
-                    _charsInObject = 0;
-                    _completedObject = true;
-                }
-            }
-            else if (IsWhitespace(input) && !_inStringExpression)
-            {
-                _pos++;
-                if (_depth == 0)
+                case SquareBraceStart when (OutsideObject):
+                    // outer object is an array
+                    _pos++;
                     _trimFront++;
+                    break;
+                case SquareBraceEnd when (OutsideObject):
+                    // outer array completed!
+                    _pos = -1;
+                    break;
+                case Comma when (OutsideObject):
+                    // do nothing
+                    _pos++;
+                    _trimFront++;
+                    break;
+                case Backslash:
+                    _isStartOfEscapeSequence = _lastInput != Backslash;
+                    _pos++;
+                    break;
+                case DoubleQuote:
+                    if (!_isStartOfEscapeSequence)
+                    {
+                        _inStringExpression = !_inStringExpression;
+                    }
+                    _isStartOfEscapeSequence = false;
+                    _pos++;
+                    break;
+                case CurlyBraceStart when (!_inStringExpression):
+                    _isStartOfEscapeSequence = false;
+                    _depth++;
+                    _pos++;
+                    break;
+                case CurlyBraceEnd when (!_inStringExpression):
+                    _isStartOfEscapeSequence = false;
+                    _depth--;
+                    _pos++;
+                    if (_depth == 0)
+                    {
+                        _charsInObject = 0;
+                        _completedObject = true;
+                    }
+                    break;
+                default:
+                    if (IsWhitespace(input) && !_inStringExpression)
+                    {
+                        _pos++;
+                        if (_depth == 0) { _trimFront++; }
+                    }
+                    else if (InsideObject)
+                    {
+                        _isStartOfEscapeSequence = false;
+                        _pos++;
+                    }
+                    else
+                    {
+                        throw new Framing.FramingException($"Invalid JSON encountered at position {_pos} of {_buffer}");
+                    }
+                    break;
             }
-            else if (InsideObject)
-            {
-                _isStartOfEscapeSequence = false;
-                _pos++;
-            }
-            else
-                throw new Framing.FramingException($"Invalid JSON encountered at position {_pos} of {_buffer}");
 
             _lastInput = input;
         }

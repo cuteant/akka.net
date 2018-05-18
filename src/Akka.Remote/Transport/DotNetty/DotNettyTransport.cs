@@ -299,8 +299,8 @@ namespace Akka.Remote.Transport.DotNetty
 
             var client = new Bootstrap()
                 .Group(_clientWorkerGroup)
-                .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
-                .Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
+                //.Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
+                //.Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
                 .Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
                 .Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
                 .Option(ChannelOption.SoLinger, Settings.TcpLinger)

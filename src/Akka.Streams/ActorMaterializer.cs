@@ -86,12 +86,12 @@ namespace Akka.Streams
 
         private static ActorSystem ActorSystemOf(IActorRefFactory context)
         {
-            if (context is ExtendedActorSystem)
-                return (ActorSystem)context;
-            if (context is IActorContext)
-                return ((IActorContext)context).System;
+            if (context is ExtendedActorSystem system) { return system; }
+            if (context is IActorContext ct) { return ct.System; }
             if (context == null)
+            {
                 throw new ArgumentNullException(nameof(context), "IActorRefFactory must be defined");
+            }
 
             throw new ArgumentException($"ActorRefFactory context must be a ActorSystem or ActorContext, got [{context.GetType()}]");
         }
@@ -207,9 +207,7 @@ namespace Akka.Streams
         internal static ActorMaterializer Downcast(IMaterializer materializer)
         {
             //FIXME this method is going to cause trouble for other Materializer implementations
-            var downcast = materializer as ActorMaterializer;
-            if (downcast != null)
-                return downcast;
+            if (materializer is ActorMaterializer downcast) { return downcast; }
 
             throw new ArgumentException($"Expected {typeof(ActorMaterializer)} but got {materializer.GetType()}");
         }
@@ -545,7 +543,7 @@ namespace Akka.Streams
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(obj, null))
+            if (obj is null)
                 return false;
             if (ReferenceEquals(obj, this))
                 return true;

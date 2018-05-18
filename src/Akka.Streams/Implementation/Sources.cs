@@ -170,8 +170,7 @@ namespace Akka.Streams.Implementation
             {
                 StopCallback(input =>
                 {
-                    var offer = input as Offer<TOut>;
-                    if (offer != null)
+                    if (input is Offer<TOut> offer)
                     {
                         var promise = offer.CompletionSource;
                         promise.SetException(new IllegalStateException("Stream is terminated. SourceQueue is detached."));
@@ -232,71 +231,70 @@ namespace Akka.Streams.Implementation
                 return GetAsyncCallback<IInput>(
                     input =>
                     {
-                        var offer = input as Offer<TOut>;
-                        if (offer != null)
+                        switch (input)
                         {
-                            if (_stage._maxBuffer != 0)
-                            {
-                                BufferElement(offer);
-                                if (IsAvailable(_stage.Out))
-                                    Push(_stage.Out, _buffer.Dequeue());
-                            }
-                            else if (IsAvailable(_stage.Out))
-                            {
-                                Push(_stage.Out, offer.Element);
-                                offer.CompletionSource.SetResult(QueueOfferResult.Enqueued.Instance);
-                            }
-                            else if (_pendingOffer == null)
-                                _pendingOffer = offer;
-                            else
-                            {
-                                switch (_stage._overflowStrategy)
+                            case Offer<TOut> offer:
+                                if (_stage._maxBuffer != 0)
                                 {
-                                    case OverflowStrategy.DropHead:
-                                    case OverflowStrategy.DropBuffer:
-                                        _pendingOffer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
-                                        _pendingOffer = offer;
-                                        break;
-                                    case OverflowStrategy.DropTail:
-                                    case OverflowStrategy.DropNew:
-                                        offer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
-                                        break;
-                                    case OverflowStrategy.Backpressure:
-                                        offer.CompletionSource.SetException(
-                                            new IllegalStateException(
-                                                "You have to wait for previous offer to be resolved to send another request"));
-                                        break;
-                                    case OverflowStrategy.Fail:
-                                        var bufferOverflowException =
-                                            new BufferOverflowException(
-                                                $"Buffer overflow (max capacity was: {_stage._maxBuffer})!");
-                                        offer.CompletionSource.SetResult(new QueueOfferResult.Failure(bufferOverflowException));
-                                        _completion.SetException(bufferOverflowException);
-                                        FailStage(bufferOverflowException);
-                                        break;
-                                    default:
-                                        throw new ArgumentOutOfRangeException();
+                                    BufferElement(offer);
+                                    if (IsAvailable(_stage.Out))
+                                        Push(_stage.Out, _buffer.Dequeue());
                                 }
-                            }
-                        }
-
-                        var completion = input as Completion;
-                        if (completion != null)
-                        {
-                            if (_stage._maxBuffer != 0 && _buffer.NonEmpty || _pendingOffer != null)
-                                _terminating = true;
-                            else
-                            {
-                                _completion.SetResult(new object());
-                                CompleteStage();
-                            }
-                        }
-
-                        var failure = input as Failure;
-                        if (failure != null)
-                        {
-                            _completion.SetException(failure.Ex);
-                            FailStage(failure.Ex);
+                                else if (IsAvailable(_stage.Out))
+                                {
+                                    Push(_stage.Out, offer.Element);
+                                    offer.CompletionSource.SetResult(QueueOfferResult.Enqueued.Instance);
+                                }
+                                else if (_pendingOffer == null)
+                                    _pendingOffer = offer;
+                                else
+                                {
+                                    switch (_stage._overflowStrategy)
+                                    {
+                                        case OverflowStrategy.DropHead:
+                                        case OverflowStrategy.DropBuffer:
+                                            _pendingOffer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
+                                            _pendingOffer = offer;
+                                            break;
+                                        case OverflowStrategy.DropTail:
+                                        case OverflowStrategy.DropNew:
+                                            offer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
+                                            break;
+                                        case OverflowStrategy.Backpressure:
+                                            offer.CompletionSource.SetException(
+                                                new IllegalStateException(
+                                                    "You have to wait for previous offer to be resolved to send another request"));
+                                            break;
+                                        case OverflowStrategy.Fail:
+                                            var bufferOverflowException =
+                                                new BufferOverflowException(
+                                                    $"Buffer overflow (max capacity was: {_stage._maxBuffer})!");
+                                            offer.CompletionSource.SetResult(new QueueOfferResult.Failure(bufferOverflowException));
+                                            _completion.SetException(bufferOverflowException);
+                                            FailStage(bufferOverflowException);
+                                            break;
+                                        default:
+                                            throw new ArgumentOutOfRangeException();
+                                    }
+                                }
+                                break;
+                            case Completion completion:
+                                if (_stage._maxBuffer != 0 && _buffer.NonEmpty || _pendingOffer != null)
+                                {
+                                    _terminating = true;
+                                }
+                                else
+                                {
+                                    _completion.SetResult(new object());
+                                    CompleteStage();
+                                }
+                                break;
+                            case Failure failure:
+                                _completion.SetException(failure.Ex);
+                                FailStage(failure.Ex);
+                                break;
+                            default:
+                                break;
                         }
                     });
             }

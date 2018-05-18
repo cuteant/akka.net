@@ -201,7 +201,7 @@ namespace Akka.Streams.Implementation
             if (!_isUpstreamCompleted)
             {
                 _isUpstreamCompleted = true;
-                if (!ReferenceEquals(_upstream, null))
+                if (!(_upstream is null))
                     _upstream.Cancel();
                 Clear();
             }
@@ -434,9 +434,9 @@ namespace Akka.Streams.Implementation
             if (!IsDownstreamCompleted)
             {
                 IsDownstreamCompleted = true;
-                if (!ReferenceEquals(ExposedPublisher, null))
+                if (!(ExposedPublisher is null))
                     ExposedPublisher.Shutdown(null);
-                if (!ReferenceEquals(Subscriber, null))
+                if (!(Subscriber is null))
                     ReactiveStreamsCompliance.TryOnComplete(Subscriber);
             }
         }
@@ -449,7 +449,7 @@ namespace Akka.Streams.Implementation
             if (!IsDownstreamCompleted)
             {
                 IsDownstreamCompleted = true;
-                if (!ReferenceEquals(ExposedPublisher, null))
+                if (!(ExposedPublisher is null))
                     ExposedPublisher.Shutdown(null);
             }
         }
@@ -463,9 +463,9 @@ namespace Akka.Streams.Implementation
             if (!IsDownstreamCompleted)
             {
                 IsDownstreamCompleted = true;
-                if (!ReferenceEquals(ExposedPublisher, null))
+                if (!(ExposedPublisher is null))
                     ExposedPublisher.Shutdown(e);
-                if (!ReferenceEquals(Subscriber, null) && !(e is ISpecViolation))
+                if (!(Subscriber is null) && !(e is ISpecViolation))
                     ReactiveStreamsCompliance.TryOnError(Subscriber, e);
             }
         }
@@ -473,7 +473,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public bool IsClosed => IsDownstreamCompleted && !ReferenceEquals(Subscriber, null);
+        public bool IsClosed => IsDownstreamCompleted && !(Subscriber is null);
         /// <summary>
         /// TBD
         /// </summary>
@@ -489,7 +489,7 @@ namespace Akka.Streams.Implementation
         {
             foreach (var subscriber in subscribers)
             {
-                if (ReferenceEquals(Subscriber, null))
+                if (Subscriber is null)
                 {
                     Subscriber = subscriber;
                     ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CreateSubscription());
@@ -507,9 +507,9 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected bool WaitingExposedPublisher(object message)
         {
-            if (message is ExposedPublisher)
+            if (message is ExposedPublisher ep)
             {
-                ExposedPublisher = ((ExposedPublisher)message).Publisher;
+                ExposedPublisher = ep.Publisher;
                 SubReceive.Become(DownstreamRunning);
                 return true;
             }
@@ -524,30 +524,35 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected bool DownstreamRunning(object message)
         {
-            if (message is SubscribePending)
-                SubscribePending(ExposedPublisher.TakePendingSubscribers());
-            else if (message is RequestMore)
+            switch (message)
             {
-                var requestMore = (RequestMore)message;
-                if (requestMore.Demand < 1)
-                    Error(ReactiveStreamsCompliance.NumberOfElementsInRequestMustBePositiveException);
-                else
-                {
-                    DownstreamDemand += requestMore.Demand;
-                    if (DownstreamDemand < 1)
-                        DownstreamDemand = long.MaxValue;   // Long overflow, Reactive Streams Spec 3:17: effectively unbounded
+                case SubscribePending _:
+                    SubscribePending(ExposedPublisher.TakePendingSubscribers());
+                    return true;
+                case RequestMore requestMore:
+                    if (requestMore.Demand < 1)
+                    {
+                        Error(ReactiveStreamsCompliance.NumberOfElementsInRequestMustBePositiveException);
+                    }
+                    else
+                    {
+                        DownstreamDemand += requestMore.Demand;
+                        if (DownstreamDemand < 1)
+                        {
+                            DownstreamDemand = long.MaxValue;   // Long overflow, Reactive Streams Spec 3:17: effectively unbounded
+                        }
+
+                        Pump.Pump();
+                    }
+                    return true;
+                case Cancel _:
+                    IsDownstreamCompleted = true;
+                    ExposedPublisher.Shutdown(new NormalShutdownException(string.Empty));
                     Pump.Pump();
-                }
+                    return true;
+                default:
+                    return false;
             }
-            else if (message is Cancel)
-            {
-                IsDownstreamCompleted = true;
-                ExposedPublisher.Shutdown(new NormalShutdownException(string.Empty));
-                Pump.Pump();
-            }
-            else
-                return false;
-            return true;
         }
     }
 

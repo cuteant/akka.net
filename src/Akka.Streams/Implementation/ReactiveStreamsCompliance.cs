@@ -317,7 +317,7 @@ namespace Akka.Streams.Implementation
         /// <param name="subscriber">TBD</param>
         public static void RequireNonNullSubscriber<T>(ISubscriber<T> subscriber)
         {
-            if (ReferenceEquals(subscriber, null))
+            if (subscriber is null)
                 throw SubscriberMustNotBeNullException;
         }
 
@@ -330,7 +330,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         public static void RequireNonNullSubscription(ISubscription subscription)
         {
-            if (ReferenceEquals(subscription, null))
+            if (subscription is null)
                 throw SubscriptionMustNotBeNullException;
         }
 
@@ -343,7 +343,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         public static void RequireNonNullException(Exception exception)
         {
-            if (ReferenceEquals(exception, null))
+            if (exception is null)
                 throw ExceptionMustNotBeNullException;
         }
 
@@ -356,7 +356,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         public static void RequireNonNullElement(object element)
         {
-            if (ReferenceEquals(element, null))
+            if (element is null)
                 throw ElementMustNotBeNullException;
         }
 

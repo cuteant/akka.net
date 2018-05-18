@@ -74,14 +74,12 @@ namespace Akka.Streams.Implementation
         [InternalApi]
         protected IActorRef ActorOf(Props props, string name, string dispatcher)
         {
-            var localActorRef = Supervisor as LocalActorRef;
-            if (localActorRef != null)
-                return ((ActorCell) localActorRef.Underlying).AttachChild(props.WithDispatcher(dispatcher),
+            if (Supervisor is LocalActorRef localActorRef)
+                return ((ActorCell)localActorRef.Underlying).AttachChild(props.WithDispatcher(dispatcher),
                     isSystemService: false, name: name);
 
 
-            var repointableActorRef = Supervisor as RepointableActorRef;
-            if (repointableActorRef != null)
+            if (Supervisor is RepointableActorRef repointableActorRef)
             {
                 if (repointableActorRef.IsStarted)
                     return ((ActorCell)repointableActorRef.Underlying).AttachChild(props.WithDispatcher(dispatcher), isSystemService: false, name: name);
@@ -126,49 +124,41 @@ namespace Akka.Streams.Implementation
                 //if(IsDebug)
                 //    Console.WriteLine($"materializing {atomic}");
 
-                if (atomic is ISinkModule)
+                switch (atomic)
                 {
-                    var sink = (ISinkModule) atomic;
-                    object materialized;
-                    var subscriber = sink.Create(CreateMaterializationContext(effectiveAttributes), out materialized);
-                    AssignPort(sink.Shape.Inlets.First(), subscriber);
-                    materializedValues.Add(atomic, materialized);
-                }
-                else if (atomic is ISourceModule)
-                {
-                    var source = (ISourceModule) atomic;
-                    object materialized;
-                    var publisher = source.Create(CreateMaterializationContext(effectiveAttributes), out materialized);
-                    AssignPort(source.Shape.Outlets.First(), publisher);
-                    materializedValues.Add(atomic, materialized);
-                }
-                else if (atomic is IProcessorModule)
-                {
-                    var stage = atomic as IProcessorModule;
-                    var t = stage.CreateProcessor();
-                    var processor = t.Item1;
-                    var materialized = t.Item2;
+                    case ISinkModule sink:
+                        var subscriber = sink.Create(CreateMaterializationContext(effectiveAttributes), out var materialized0);
+                        AssignPort(sink.Shape.Inlets.First(), subscriber);
+                        materializedValues.Add(atomic, materialized0);
+                        break;
+                    case ISourceModule source:
+                        var publisher = source.Create(CreateMaterializationContext(effectiveAttributes), out var materialized1);
+                        AssignPort(source.Shape.Outlets.First(), publisher);
+                        materializedValues.Add(atomic, materialized1);
+                        break;
+                    case IProcessorModule stage:
+                        var t = stage.CreateProcessor();
+                        var processor = t.Item1;
+                        var materialized2 = t.Item2;
 
-                    AssignPort(stage.In, UntypedSubscriber.FromTyped(processor));
-                    AssignPort(stage.Out, UntypedPublisher.FromTyped(processor));
-                    materializedValues.Add(atomic, materialized);
-                }
-                //else if (atomic is TlsModule)
-                //{
-                //})
-                else if (atomic is GraphModule)
-                {
-                    var graph = (GraphModule) atomic;
-                    MaterializeGraph(graph, effectiveAttributes, materializedValues);
-                }
-                else if (atomic is GraphStageModule)
-                {
-                    var stage = (GraphStageModule) atomic;
-                    var graph =
-                        new GraphModule(
-                            GraphAssembly.Create(stage.Shape.Inlets, stage.Shape.Outlets, new[] {stage.Stage}),
-                            stage.Shape, stage.Attributes, new IModule[] {stage});
-                    MaterializeGraph(graph, effectiveAttributes, materializedValues);
+                        AssignPort(stage.In, UntypedSubscriber.FromTyped(processor));
+                        AssignPort(stage.Out, UntypedPublisher.FromTyped(processor));
+                        materializedValues.Add(atomic, materialized2);
+                        break;
+                    //case TlsModule _:
+                    //    break;
+                    case GraphModule graph:
+                        MaterializeGraph(graph, effectiveAttributes, materializedValues);
+                        break;
+                    case GraphStageModule graphStage:
+                        var graph0 =
+                            new GraphModule(
+                                GraphAssembly.Create(graphStage.Shape.Inlets, graphStage.Shape.Outlets, new[] { graphStage.Stage }),
+                                graphStage.Shape, graphStage.Attributes, new IModule[] { graphStage });
+                        MaterializeGraph(graph0, effectiveAttributes, materializedValues);
+                        break;
+                    default:
+                        break;
                 }
 
                 return NotUsed.Instance;
@@ -211,7 +201,7 @@ namespace Akka.Streams.Implementation
                     var publisher = typeof(ActorGraphInterpreter.BoundaryPublisher<>).Instantiate(elementType, impl, shell, i);
                     var message = new ActorGraphInterpreter.ExposedPublisher(shell, i, (IActorPublisher)publisher);
                     impl.Tell(message);
-                    AssignPort(outletsEnumerator.Current, (IUntypedPublisher) publisher);
+                    AssignPort(outletsEnumerator.Current, (IUntypedPublisher)publisher);
                     i++;
                 }
             }
@@ -305,19 +295,18 @@ namespace Akka.Streams.Implementation
         {
             return attributes.AttributeList.Aggregate(Settings, (settings, attribute) =>
             {
-                var buffer = attribute as Attributes.InputBuffer;
-                if (buffer != null)
-                    return settings.WithInputBuffer(buffer.Initial, buffer.Max);
+                switch (attribute)
+                {
+                    case Attributes.InputBuffer buffer:
+                        return settings.WithInputBuffer(buffer.Initial, buffer.Max);
+                    case ActorAttributes.Dispatcher dispatcher:
+                        return settings.WithDispatcher(dispatcher.Name);
+                    case ActorAttributes.SupervisionStrategy strategy:
+                        return settings.WithSupervisionStrategy(strategy.Decider);
 
-                var dispatcher = attribute as ActorAttributes.Dispatcher;
-                if (dispatcher != null)
-                    return settings.WithDispatcher(dispatcher.Name);
-                
-                var strategy = attribute as ActorAttributes.SupervisionStrategy;
-                if (strategy != null)
-                    return settings.WithSupervisionStrategy(strategy.Decider);
-
-                return settings;
+                    default:
+                        return settings;
+                }
             });
         }
 
@@ -356,7 +345,7 @@ namespace Akka.Streams.Implementation
         /// <param name="runnable">TBD</param>
         /// <param name="subFlowFuser">TBD</param>
         /// <returns>TBD</returns>
-        public override TMat Materialize<TMat>(IGraph<ClosedShape, TMat> runnable, Func<GraphInterpreterShell, IActorRef> subFlowFuser) 
+        public override TMat Materialize<TMat>(IGraph<ClosedShape, TMat> runnable, Func<GraphInterpreterShell, IActorRef> subFlowFuser)
             => Materialize(runnable, subFlowFuser, DefaultInitialAttributes);
 
         /// <summary>
@@ -368,7 +357,7 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public override TMat Materialize<TMat>(IGraph<ClosedShape, TMat> runnable, Attributes initialAttributes) =>
             Materialize(runnable, null, initialAttributes);
-        
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -387,13 +376,13 @@ namespace Akka.Streams.Implementation
             if (_haveShutDown.Value)
                 throw new IllegalStateException("Attempted to call Materialize() after the ActorMaterializer has been shut down.");
 
-            if (StreamLayout.IsDebug)
-                StreamLayout.Validate(runnableGraph.Module);
+            //if (StreamLayout.IsDebug)
+            //    StreamLayout.Validate(runnableGraph.Module);
 
             var session = new ActorMaterializerSession(this, runnableGraph.Module, initialAttributes, subFlowFuser);
 
             var matVal = session.Materialize();
-            return (TMat) matVal;
+            return (TMat)matVal;
         }
 
         /// <summary>
@@ -447,7 +436,7 @@ namespace Akka.Streams.Implementation
         /// <param name="namePrefix">TBD</param>
         /// <returns>TBD</returns>
         public IMaterializer WithNamePrefix(string namePrefix)
-            => new SubFusingActorMaterializerImpl((ActorMaterializerImpl) _delegateMaterializer.WithNamePrefix(namePrefix), _registerShell);
+            => new SubFusingActorMaterializerImpl((ActorMaterializerImpl)_delegateMaterializer.WithNamePrefix(namePrefix), _registerShell);
 
         /// <summary>
         /// TBD
@@ -667,23 +656,24 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            if (message is Materialize)
+            switch (message)
             {
-                var materialize = (Materialize) message;
-                Sender.Tell(Context.ActorOf(materialize.Props, materialize.Name));
-            }
-            else if (message is GetChildren)
-                Sender.Tell(new Children(Context.GetChildren().ToImmutableHashSet()));
-            else if (message is StopChildren)
-            {
-                foreach (var child in Context.GetChildren())
-                    Context.Stop(child);
+                case Materialize materialize:
+                    Sender.Tell(Context.ActorOf(materialize.Props, materialize.Name));
+                    return true;
 
-                Sender.Tell(StoppedChildren.Instance);
+                case GetChildren _:
+                    Sender.Tell(new Children(Context.GetChildren().ToImmutableHashSet()));
+                    return true;
+
+                case StopChildren _:
+                    foreach (var child in Context.GetChildren()) { Context.Stop(child); }
+                    Sender.Tell(StoppedChildren.Instance);
+                    return true;
+
+                default:
+                    return false;
             }
-            else
-                return false;
-            return true;
         }
 
         /// <summary>

@@ -277,9 +277,7 @@ namespace Akka.Streams.Stage
         /// </exception>
         public void Become(StageState<TIn, TOut> state)
         {
-            if (state == null)
-                throw new ArgumentNullException(nameof(state));
-            _current = state;
+            _current = state ?? throw new ArgumentNullException(nameof(state));
         }
 
         /// <summary>
@@ -367,8 +365,7 @@ namespace Akka.Streams.Stage
             if (!enumerator.MoveNext())
                 return _isEmitting ? context.AbsorbTermination() : context.Finish();
 
-            var es = Current as EmittingState<TIn, TOut>;
-            var nextState = es != null && _isEmitting
+            var nextState = Current is EmittingState<TIn, TOut> es && _isEmitting
                 ? es.Copy(enumerator)
                 : EmittingState(enumerator, StatefulStage.Finish.Instance);
             Become(nextState);
@@ -411,20 +408,25 @@ namespace Akka.Streams.Stage
                 {
                     var element = enumerator.Current;
                     if (enumerator.MoveNext())
+                    {
                         return context.Push(element);
+                    }
 
                     if (!context.IsFinishing)
                     {
                         _isEmitting = false;
 
-                        if (andThen is StatefulStage.Stay) ;
-                        else if (andThen is StatefulStage.Become<TIn, TOut>)
+                        if (andThen is StatefulStage.Stay)
                         {
-                            var become = andThen as StatefulStage.Become<TIn, TOut>;
+                        }
+                        else if (andThen is StatefulStage.Become<TIn, TOut> become)
+                        {
                             Become(become.State);
                         }
                         else if (andThen is StatefulStage.Finish)
+                        {
                             context.PushAndFinish(element);
+                        }
 
                         return context.Push(element);
                     }

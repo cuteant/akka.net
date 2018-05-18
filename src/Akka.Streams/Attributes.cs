@@ -54,7 +54,7 @@ namespace Akka.Streams
             }
 
             /// <inheritdoc/>
-            public bool Equals(Name other) => !ReferenceEquals(other, null) && Equals(Value, other.Value);
+            public bool Equals(Name other) => !(other is null) && Equals(Value, other.Value);
 
             /// <inheritdoc/>
             public override bool Equals(object obj) => obj is Name && Equals((Name)obj);
@@ -94,7 +94,7 @@ namespace Akka.Streams
             /// <inheritdoc/>
             public bool Equals(InputBuffer other)
             {
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
                 return Initial == other.Initial && Max == other.Max;
             }
@@ -154,7 +154,7 @@ namespace Akka.Streams
             /// <inheritdoc/>
             public bool Equals(LogLevels other)
             {
-                if (ReferenceEquals(other, null))
+                if (other is null)
                     return false;
                 if (ReferenceEquals(other, this))
                     return true;
@@ -374,9 +374,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public static string ExtractName(IModule module, string defaultIfNotFound)
         {
-            var copy = module as CopiedModule;
-
-            return copy != null
+            return module is CopiedModule copy
                 ? copy.Attributes.And(copy.CopyOf.Attributes).GetNameOrDefault(defaultIfNotFound)
                 : module.Attributes.GetNameOrDefault(defaultIfNotFound);
         }
@@ -412,7 +410,7 @@ namespace Akka.Streams
             /// <inheritdoc/>
             public bool Equals(Dispatcher other)
             {
-                if (ReferenceEquals(other, null))
+                if (other is null)
                     return false;
                 if (ReferenceEquals(other, this))
                     return true;

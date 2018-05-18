@@ -95,8 +95,7 @@ namespace Akka.Streams.Implementation
 
         object ISinkModule.Create(MaterializationContext context, out object materializer)
         {
-            TMat m;
-            var result = Create(context, out m);
+            var result = Create(context, out var m);
             materializer = m;
             return result;
         }
@@ -524,14 +523,14 @@ namespace Akka.Streams.Implementation
             public override void OnUpstreamFinish()
             {
                 var head = _prev;
-                _prev = default(T);
+                _prev = default;
                 _promise.TrySetResult(head);
                 CompleteStage();
             }
 
             public override void OnUpstreamFailure(Exception e)
             {
-                _prev = default(T);
+                _prev = default;
                 _promise.TrySetException(e);
                 FailStage(e);
             }
@@ -603,7 +602,7 @@ namespace Akka.Streams.Implementation
 
             public override void OnUpstreamFinish()
             {
-                _promise.TrySetResult(default(T));
+                _promise.TrySetResult(default);
                 _completionSignalled = true;
                 CompleteStage();
             }

@@ -225,7 +225,7 @@ namespace Akka.Streams.Stage
         {
             get
             {
-                if (ReferenceEquals(_timerAsyncCallback, null))
+                if (_timerAsyncCallback is null)
                     _timerAsyncCallback = GetAsyncCallback<TimerMessages.Scheduled>(OnInternalTimer);
 
                 return _timerAsyncCallback;

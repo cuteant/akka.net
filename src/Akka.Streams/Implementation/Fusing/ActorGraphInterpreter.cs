@@ -980,7 +980,7 @@ namespace Akka.Streams.Implementation.Fusing
             /// <param name="reason">TBD</param>
             public void OnInternalError(Exception reason)
             {
-                if (!(_upstreamCompleted || _downstreamCanceled) && !ReferenceEquals(_upstream, null))
+                if (!(_upstreamCompleted || _downstreamCanceled) && !(_upstream is null))
                     _upstream.Cancel();
 
                 if (!IsClosed(_outlet))
@@ -1063,7 +1063,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if (!_upstreamCompleted)
                 {
                     _upstreamCompleted = true;
-                    if (!ReferenceEquals(_upstream, null))
+                    if (!(_upstream is null))
                         ReactiveStreamsCompliance.TryCancel(_upstream);
                     Clear();
                 }
@@ -1226,7 +1226,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 foreach (var subscriber in _exposedPublisher.TakePendingSubscribers())
                 {
-                    if (ReferenceEquals(_subscriber, null))
+                    if (_subscriber is null)
                     {
                         _subscriber = subscriber;
                         ReactiveStreamsCompliance.TryOnSubscribe(_subscriber, new BoundarySubscription(_actor, _shell, _id));
@@ -1296,9 +1296,9 @@ namespace Akka.Streams.Implementation.Fusing
                 if (!(_upstreamCompleted || _downstreamCompleted))
                 {
                     _upstreamCompleted = true;
-                    if (!ReferenceEquals(_exposedPublisher, null))
+                    if (!(_exposedPublisher is null))
                         _exposedPublisher.Shutdown(null);
-                    if (!ReferenceEquals(_subscriber, null))
+                    if (!(_subscriber is null))
                         ReactiveStreamsCompliance.TryOnComplete(_subscriber);
                 }
             }

@@ -538,7 +538,7 @@ namespace Akka.Streams.Implementation.Stages
                 if (_stage._throwOnDefault)
                     _promise.TrySetException(new NoSuchElementException("First of empty stream"));
                 else
-                    _promise.TrySetResult(default(TIn));
+                    _promise.TrySetResult(default);
 
                 CompleteStage();
             }

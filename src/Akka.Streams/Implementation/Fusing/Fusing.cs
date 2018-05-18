@@ -552,8 +552,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <returns>TBD</returns>
         internal static ActorAttributes.Dispatcher GetDispatcher(IModule module)
         {
-            CopiedModule copied;
-            if ((copied = module as CopiedModule) != null)
+            if (module is CopiedModule copied)
             {
                 var attrs = copied.Attributes.And(copied.CopyOf.Attributes);
                 return attrs.GetAttribute<ActorAttributes.Dispatcher>(null);
@@ -898,10 +897,9 @@ namespace Akka.Streams.Implementation.Fusing
 
         private bool IsCopiedModuleWithGraphStageAndMaterializedValue(IModule module)
         {
-            var copiedModule = module as CopiedModule;
             GraphStageModule graphStageModule;
             Type stageType;
-            return copiedModule != null
+            return module is CopiedModule copiedModule
                 && (graphStageModule = copiedModule.CopyOf as GraphStageModule) != null
                 && (stageType = graphStageModule.Stage.GetType()).GetTypeInfo().IsGenericType
                 && stageType.GetGenericTypeDefinition() == typeof(MaterializedValueSource<>);
