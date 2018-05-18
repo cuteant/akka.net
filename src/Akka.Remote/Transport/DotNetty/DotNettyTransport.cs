@@ -12,6 +12,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
+using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading.Tasks;
@@ -419,14 +420,20 @@ namespace Akka.Remote.Transport.DotNetty
                     ? new TcpServerSocketChannel(addressFamily)
                     : new TcpServerSocketChannel());
             }
+            if (Settings.EnableLibuv && RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            {
+                server
+                    .Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
+                    .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr);
+            }
+            else
+            {
+                server.Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr);
+            }
 
             server.Option(ChannelOption.SoBacklog, Settings.Backlog)
                   .Option(ChannelOption.SoLinger, Settings.TcpLinger)
-                  .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
-                  .Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
 
-                  .ChildOption(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
-                  .ChildOption(ChannelOption.SoReuseport, Settings.TcpReusePort)
                   .ChildOption(ChannelOption.SoLinger, Settings.TcpLinger)
                   .ChildOption(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
                   .ChildOption(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
