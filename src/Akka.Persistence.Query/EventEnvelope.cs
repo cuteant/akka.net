@@ -37,7 +37,7 @@ namespace Akka.Persistence.Query
         public bool Equals(EventEnvelope other)
         {
             if (ReferenceEquals(this, other)) return true;
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
 
             return Offset == other.Offset
                    && PersistenceId == other.PersistenceId
