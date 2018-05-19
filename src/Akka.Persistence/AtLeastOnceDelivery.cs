@@ -190,10 +190,13 @@ namespace Akka.Persistence
         {
             var isWildcardSelection = destination.PathString.Contains("*");
             if (isWildcardSelection)
+            {
                 throw new NotSupportedException(
                     "Delivering to wildcard actor selections is not supported by AtLeastOnceDelivery. " +
                     "Introduce an mediator Actor which this AtLeastOnceDelivery Actor will deliver the messages to," +
                     "and will handle the logic of fan-out and collecting individual confirmations, until it can signal confirmation back to this Actor.");
+            }
+
             Deliver(ActorPath.Parse(destination.PathString), deliveryMessageMapper);
         }
 

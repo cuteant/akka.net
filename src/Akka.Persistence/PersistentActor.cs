@@ -413,11 +413,12 @@ namespace Akka.Persistence
 
         private Action<T> WrapAsyncHandler<T>(Func<T, Task> asyncHandler)
         {
-            return m =>
+            void wrapAsyncHandler(T m)
             {
-                Func<Task> wrap = () => asyncHandler(m);
+                Task wrap() => asyncHandler(m);
                 RunTask(wrap);
-            };
+            }
+            return wrapAsyncHandler;
         }
 
         #region Recover helper methods

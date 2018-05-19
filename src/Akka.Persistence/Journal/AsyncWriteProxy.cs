@@ -65,10 +65,7 @@ namespace Akka.Persistence.Journal
         /// </exception>
         public SetStore(IActorRef store)
         {
-            if (store == null)
-                throw new ArgumentNullException(nameof(store), "SetStore requires non-null reference to store actor");
-
-            Store = store;
+            Store = store ?? throw new ArgumentNullException(nameof(store), "SetStore requires non-null reference to store actor");
         }
 
         /// <summary>
@@ -99,10 +96,7 @@ namespace Akka.Persistence.Journal
             /// </exception>
             public ReplayFailure(Exception cause)
             {
-                if (cause == null)
-                    throw new ArgumentNullException(nameof(cause), "AsyncWriteTarget.ReplayFailure cause exception cannot be null");
-
-                Cause = cause;
+                Cause = cause ?? throw new ArgumentNullException(nameof(cause), "AsyncWriteTarget.ReplayFailure cause exception cannot be null");
             }
 
             /// <summary>
@@ -134,7 +128,7 @@ namespace Akka.Persistence.Journal
             /// <inheritdoc/>
             public bool Equals(ReplaySuccess other)
             {
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
 
                 return HighestSequenceNr == other.HighestSequenceNr;
@@ -206,7 +200,7 @@ namespace Akka.Persistence.Journal
             /// <inheritdoc/>
             public bool Equals(ReplayMessages other)
             {
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
 
                 return PersistenceId == other.PersistenceId
@@ -246,7 +240,7 @@ namespace Akka.Persistence.Journal
             /// <inheritdoc/>
             public bool Equals(DeleteMessagesTo other)
             {
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
 
                 return PersistenceId == other.PersistenceId
@@ -298,21 +292,22 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         protected internal override bool AroundReceive(Receive receive, object message)
         {
+            var isInitTimeout = message is InitTimeout;
             if (_isInitialized)
             {
-                if (!(message is InitTimeout))
+                if (!isInitTimeout)
                     return base.AroundReceive(receive, message);
             }
-            else if (message is SetStore)
-            {
-                _store = ((SetStore) message).Store;
-                Stash.UnstashAll();
-                _isInitialized = true;
-            }
-            else if (message is InitTimeout)
+            else if (isInitTimeout)
             {
                 _isInitTimedOut = true;
                 Stash.UnstashAll(); // will trigger appropriate failures
+            }
+            else if (message is SetStore setStore)
+            {
+                _store = setStore.Store;
+                Stash.UnstashAll();
+                _isInitialized = true;
             }
             else if (_isInitTimedOut)
             {
@@ -418,18 +413,18 @@ namespace Akka.Persistence.Journal
         public class InitTimeout
         {
             private InitTimeout() { }
-            private static readonly InitTimeout _instance = new InitTimeout();
+            public static readonly InitTimeout Instance = new InitTimeout();
 
-            /// <summary>
-            /// TBD
-            /// </summary>
-            public static InitTimeout Instance
-            {
-                get
-                {
-                    return _instance;
-                }
-            }
+            ///// <summary>
+            ///// TBD
+            ///// </summary>
+            //public static InitTimeout Instance
+            //{
+            //    get
+            //    {
+            //        return _instance;
+            //    }
+            //}
         }
     }
 
@@ -467,26 +462,27 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            if (message is IPersistentRepresentation) _replayCallback(message as IPersistentRepresentation);
-            else if (message is AsyncWriteTarget.ReplaySuccess)
+            switch (message)
             {
-                _replayCompletionPromise.SetResult(new object());
-                Context.Stop(Self);
+                case IPersistentRepresentation pr:
+                    _replayCallback(pr);
+                    return true;
+                case AsyncWriteTarget.ReplaySuccess _:
+                    _replayCompletionPromise.SetResult(new object());
+                    Context.Stop(Self);
+                    return true;
+                case AsyncWriteTarget.ReplayFailure failure:
+                    _replayCompletionPromise.SetException(failure.Cause);
+                    Context.Stop(Self);
+                    return true;
+                case ReceiveTimeout _:
+                    var timeoutException = new AsyncReplayTimeoutException($"Replay timed out after {_replayTimeout.TotalSeconds}s of inactivity");
+                    _replayCompletionPromise.SetException(timeoutException);
+                    Context.Stop(Self);
+                    return true;
+                default:
+                    return false;
             }
-            else if (message is AsyncWriteTarget.ReplayFailure)
-            {
-                var failure = message as AsyncWriteTarget.ReplayFailure;
-                _replayCompletionPromise.SetException(failure.Cause);
-                Context.Stop(Self);
-            }
-            else if (message is ReceiveTimeout)
-            {
-                var timeoutException = new AsyncReplayTimeoutException($"Replay timed out after {_replayTimeout.TotalSeconds}s of inactivity");
-                _replayCompletionPromise.SetException(timeoutException);
-                Context.Stop(Self);
-            }
-            else return false;
-            return true;
         }
     }
 }

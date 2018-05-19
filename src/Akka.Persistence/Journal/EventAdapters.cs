@@ -99,7 +99,7 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// The singleton instance of <see cref="IdentityEventAdapter"/>.
         /// </summary>
-        public static IdentityEventAdapter Instance { get; } = new IdentityEventAdapter();
+        public static readonly IdentityEventAdapter Instance = new IdentityEventAdapter();
 
         private IdentityEventAdapter() { }
 
@@ -428,8 +428,7 @@ namespace Akka.Persistence.Journal
                 var hoconObject = config.GetConfig(path).Root.GetObject();
                 return hoconObject.Unwrapped.ToDictionary(kv => kv.Key, kv =>
                 {
-                    var hoconValue = kv.Value as HoconValue;
-                    if (hoconValue != null)
+                    if (kv.Value is HoconValue hoconValue)
                     {
                         var str = hoconValue.GetString();
                         return str != null ? new[] { str } : hoconValue.GetStringList().ToArray();

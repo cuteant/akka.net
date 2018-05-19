@@ -42,7 +42,7 @@ namespace Akka.Persistence.Journal
     /// </summary>
     public class ReplayFilter : ActorBase
     {
-        private readonly LinkedList<ReplayedMessage>  _buffer = new LinkedList<ReplayedMessage>();
+        private readonly LinkedList<ReplayedMessage> _buffer = new LinkedList<ReplayedMessage>();
         private readonly LinkedList<string> _oldWriters = new LinkedList<string>();
         private string _writerUuid = string.Empty;
         private long _sequenceNr = -1;
@@ -131,29 +131,56 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            if (message is ReplayedMessage)
+            switch (message)
             {
-                var r = (ReplayedMessage) message;
-                if (DebugEnabled && _log.IsDebugEnabled)
-                    _log.Debug($"Replay: {r.Persistent}");
+                case ReplayedMessage r:
+                    if (DebugEnabled && _log.IsDebugEnabled) { _log.Debug($"Replay: {r.Persistent}"); }
 
-                try
-                {
-                    if (_buffer.Count == WindowSize)
+                    try
                     {
-                        var msg = _buffer.First;
-                        _buffer.RemoveFirst();
-                        PersistentActor.Tell(msg.Value, ActorRefs.NoSender);
-                    }
-
-                    if (r.Persistent.WriterGuid.Equals(_writerUuid))
-                    {
-                        // from same writer
-                        if (r.Persistent.SequenceNr < _sequenceNr)
+                        if (_buffer.Count == WindowSize)
                         {
-                            var errMsg = $@"Invalid replayed event [sequenceNr={r.Persistent.SequenceNr}, writerUUID={r.Persistent.WriterGuid}] as
+                            var msg = _buffer.First;
+                            _buffer.RemoveFirst();
+                            PersistentActor.Tell(msg.Value, ActorRefs.NoSender);
+                        }
+
+                        if (r.Persistent.WriterGuid.Equals(_writerUuid))
+                        {
+                            // from same writer
+                            if (r.Persistent.SequenceNr < _sequenceNr)
+                            {
+                                var errMsg = $@"Invalid replayed event [sequenceNr={r.Persistent.SequenceNr}, writerUUID={r.Persistent.WriterGuid}] as
                                             the sequenceNr should be equal to or greater than already-processed event [sequenceNr={_sequenceNr}, writerUUID={_writerUuid}] from the same writer, for the same persistenceId [{r.Persistent.PersistenceId}].
                                             Perhaps, events were journaled out of sequence, or duplicate PersistentId for different entities?";
+                                LogIssue(errMsg);
+                                switch (Mode)
+                                {
+                                    case ReplayFilterMode.RepairByDiscardOld:
+                                        //discard
+                                        break;
+                                    case ReplayFilterMode.Fail:
+                                        throw new IllegalStateException(errMsg);
+                                    case ReplayFilterMode.Warn:
+                                        _buffer.AddLast(r);
+                                        break;
+                                    case ReplayFilterMode.Disabled:
+                                        throw new ArgumentException("Mode must not be Disabled");
+                                }
+                            }
+                            else
+                            {
+                                // note that it is alright with == _sequenceNr, since such may be emitted by EventSeq
+                                _buffer.AddLast(r);
+                                _sequenceNr = r.Persistent.SequenceNr;
+                            }
+                        }
+                        else if (_oldWriters.Contains(r.Persistent.WriterGuid))
+                        {
+                            // from old writer
+                            var errMsg = $@"Invalid replayed event [sequenceNr={r.Persistent.SequenceNr}, writerUUID={r.Persistent.WriterGuid}].
+                                        There was already a newer writer whose last replayed event was [sequenceNr={_sequenceNr}, writerUUID={_writerUuid}] for the same persistenceId [{r.Persistent.PersistenceId}].
+                                        Perhaps, the old writer kept journaling messages after the new writer created, or duplicate PersistentId for different entities?";
                             LogIssue(errMsg);
                             switch (Mode)
                             {
@@ -171,94 +198,65 @@ namespace Akka.Persistence.Journal
                         }
                         else
                         {
-                            // note that it is alright with == _sequenceNr, since such may be emitted by EventSeq
-                            _buffer.AddLast(r);
+                            // from new writer
+                            if (!string.IsNullOrEmpty(_writerUuid))
+                                _oldWriters.AddLast(_writerUuid);
+                            if (_oldWriters.Count > MaxOldWriters)
+                                _oldWriters.RemoveFirst();
+                            _writerUuid = r.Persistent.WriterGuid;
                             _sequenceNr = r.Persistent.SequenceNr;
-                        }
-                    }
-                    else if (_oldWriters.Contains(r.Persistent.WriterGuid))
-                    {
-                        // from old writer
-                        var errMsg = $@"Invalid replayed event [sequenceNr={r.Persistent.SequenceNr}, writerUUID={r.Persistent.WriterGuid}].
-                                        There was already a newer writer whose last replayed event was [sequenceNr={_sequenceNr}, writerUUID={_writerUuid}] for the same persistenceId [{r.Persistent.PersistenceId}].
-                                        Perhaps, the old writer kept journaling messages after the new writer created, or duplicate PersistentId for different entities?";
-                        LogIssue(errMsg);
-                        switch (Mode)
-                        {
-                            case ReplayFilterMode.RepairByDiscardOld:
-                                //discard
-                                break;
-                            case ReplayFilterMode.Fail:
-                                throw new IllegalStateException(errMsg);
-                            case ReplayFilterMode.Warn:
-                                _buffer.AddLast(r);
-                                break;
-                            case ReplayFilterMode.Disabled:
-                                throw new ArgumentException("Mode must not be Disabled");
-                        }
-                    }
-                    else
-                    {
-                        // from new writer
-                        if (!string.IsNullOrEmpty(_writerUuid))
-                            _oldWriters.AddLast(_writerUuid);
-                        if (_oldWriters.Count > MaxOldWriters)
-                            _oldWriters.RemoveFirst();
-                        _writerUuid = r.Persistent.WriterGuid;
-                        _sequenceNr = r.Persistent.SequenceNr;
 
-                        // clear the buffer from messages from other writers with higher SequenceNr
-                        var node = _buffer.First;
-                        while (node != null)
-                        {
-                            var next = node.Next;
-                            var msg = node.Value;
-                            if (msg.Persistent.SequenceNr >= _sequenceNr)
+                            // clear the buffer from messages from other writers with higher SequenceNr
+                            var node = _buffer.First;
+                            while (node != null)
                             {
-                                var errMsg = $@"Invalid replayed event [sequenceNr=${r.Persistent.SequenceNr}, writerUUID=${r.Persistent.WriterGuid}] from a new writer.
+                                var next = node.Next;
+                                var msg = node.Value;
+                                if (msg.Persistent.SequenceNr >= _sequenceNr)
+                                {
+                                    var errMsg = $@"Invalid replayed event [sequenceNr=${r.Persistent.SequenceNr}, writerUUID=${r.Persistent.WriterGuid}] from a new writer.
                                                 An older writer already sent an event [sequenceNr=${msg.Persistent.SequenceNr}, writerUUID=${msg.Persistent.WriterGuid}] whose sequence number was equal or greater for the same persistenceId [${r.Persistent.PersistenceId}].
                                                 Perhaps, the new writer journaled the event out of sequence, or duplicate PersistentId for different entities?";
-                                LogIssue(errMsg);
-                                switch (Mode)
-                                {
-                                    case ReplayFilterMode.RepairByDiscardOld:
-                                        _buffer.Remove(node);
-                                        //discard
-                                        break;
-                                    case ReplayFilterMode.Fail:
-                                        throw new IllegalStateException(errMsg);
-                                    case ReplayFilterMode.Warn:
-                                        // keep
-                                        break;
-                                    case ReplayFilterMode.Disabled:
-                                        throw new ArgumentException("Mode must not be Disabled");
+                                    LogIssue(errMsg);
+                                    switch (Mode)
+                                    {
+                                        case ReplayFilterMode.RepairByDiscardOld:
+                                            _buffer.Remove(node);
+                                            //discard
+                                            break;
+                                        case ReplayFilterMode.Fail:
+                                            throw new IllegalStateException(errMsg);
+                                        case ReplayFilterMode.Warn:
+                                            // keep
+                                            break;
+                                        case ReplayFilterMode.Disabled:
+                                            throw new ArgumentException("Mode must not be Disabled");
+                                    }
                                 }
+                                node = next;
                             }
-                            node = next;
+                            _buffer.AddLast(r);
                         }
-                        _buffer.AddLast(r);
                     }
+                    catch (IllegalStateException ex)
+                    {
+                        if (Mode == ReplayFilterMode.Fail)
+                            Fail(ex);
+                        else
+                            throw;
+                    }
+                    return true;
+                case RecoverySuccess _:
+                case ReplayMessagesFailure _:
+                    if (DebugEnabled) { _log.Debug($"Replay completed: {message}"); }
 
-                }
-                catch (IllegalStateException ex)
-                {
-                    if (Mode == ReplayFilterMode.Fail)
-                        Fail(ex);
-                    else
-                        throw;
-                }
+                    SendBuffered();
+                    PersistentActor.Tell(message, ActorRefs.NoSender);
+                    Context.Stop(Self);
+                    return true;
+                default:
+                    return false;
             }
-            else if (message is RecoverySuccess || message is ReplayMessagesFailure)
-            {
-                if (DebugEnabled)
-                    _log.Debug($"Replay completed: {message}");
-
-                SendBuffered();
-                PersistentActor.Tell(message, ActorRefs.NoSender);
-                Context.Stop(Self);
-            }
-            else return false;
-            return true;
         }
 
         private void SendBuffered()
@@ -292,20 +290,18 @@ namespace Akka.Persistence.Journal
             PersistentActor.Tell(new ReplayMessagesFailure(cause), ActorRefs.NoSender);
             Context.Become(message =>
             {
-                if (message is ReplayedMessage)
+                switch (message)
                 {
-                    // discard
+                    case ReplayedMessage _:
+                        // discard
+                        return true;
+                    case RecoverySuccess _:
+                    case ReplayMessagesFailure _:
+                        Context.Stop(Self);
+                        return true;
+                    default:
+                        return false;
                 }
-                else if (message is RecoverySuccess || message is ReplayMessagesFailure)
-                {
-                    Context.Stop(Self);
-                }
-                else
-                {
-                    return false;
-                }
-
-                return true;
             });
         }
     }

@@ -36,12 +36,9 @@ namespace Akka.Persistence
         /// </exception>
         public AtLeastOnceDeliverySnapshot(long currentDeliveryId, UnconfirmedDelivery[] unconfirmedDeliveries)
         {
-            if (unconfirmedDeliveries == null)
-                throw new ArgumentNullException(nameof(unconfirmedDeliveries),
-                    "AtLeastOnceDeliverySnapshot expects not null array of unconfirmed deliveries");
-
             CurrentDeliveryId = currentDeliveryId;
-            UnconfirmedDeliveries = unconfirmedDeliveries;
+            UnconfirmedDeliveries = unconfirmedDeliveries ?? throw new ArgumentNullException(nameof(unconfirmedDeliveries),
+                    "AtLeastOnceDeliverySnapshot expects not null array of unconfirmed deliveries");
         }
 
         /// <summary>
@@ -57,7 +54,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(AtLeastOnceDeliverySnapshot other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(CurrentDeliveryId, other.CurrentDeliveryId)
@@ -98,11 +95,8 @@ namespace Akka.Persistence
         /// </exception>
         public UnconfirmedWarning(UnconfirmedDelivery[] unconfirmedDeliveries)
         {
-            if (unconfirmedDeliveries == null)
-                throw new ArgumentNullException(nameof(unconfirmedDeliveries),
+            UnconfirmedDeliveries = unconfirmedDeliveries ?? throw new ArgumentNullException(nameof(unconfirmedDeliveries),
                     "UnconfirmedWarning expects not null array of unconfirmed deliveries");
-
-            UnconfirmedDeliveries = unconfirmedDeliveries;
         }
 
         /// <summary>
@@ -113,7 +107,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(UnconfirmedWarning other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(UnconfirmedDeliveries, other.UnconfirmedDeliveries);
@@ -168,7 +162,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(UnconfirmedDelivery other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(DeliveryId, other.DeliveryId)
@@ -264,7 +258,7 @@ namespace Akka.Persistence
 
             public bool Equals(Delivery other)
             {
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
 
                 return Equals(Attempt, other.Attempt)

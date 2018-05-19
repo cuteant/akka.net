@@ -307,8 +307,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         protected Exception TryUnwrapException(Exception e)
         {
-            var aggregateException = e as AggregateException;
-            if (aggregateException != null)
+            if (e is AggregateException aggregateException)
             {
                 aggregateException = aggregateException.Flatten();
                 if (aggregateException.InnerExceptions.Count == 1)
@@ -352,15 +351,14 @@ namespace Akka.Persistence.Journal
                 writeResult = Task.FromResult((IImmutableList<Exception>)Enumerable.Repeat(e, atomicWriteCount).ToImmutableList());
             }
 
-            Action<Func<IPersistentRepresentation, Exception, object>, IImmutableList<Exception>> resequence = (mapper, results) =>
+            void resequence(Func<IPersistentRepresentation, Exception, object> mapper, IImmutableList<Exception> results)
             {
                 var i = 0;
-                var enumerator = results != null ? results.GetEnumerator() : null;
+                var enumerator = results?.GetEnumerator();
                 foreach (var resequencable in message.Messages)
                 {
-                    if (resequencable is AtomicWrite)
+                    if (resequencable is AtomicWrite aw)
                     {
-                        var aw = resequencable as AtomicWrite;
                         Exception exception = null;
                         if (enumerator != null)
                         {
@@ -381,7 +379,7 @@ namespace Akka.Persistence.Journal
                         i++;
                     }
                 }
-            };
+            }
 
             writeResult
                 .ContinueWith(t =>
@@ -398,9 +396,7 @@ namespace Akka.Persistence.Journal
                     }
                     else
                     {
-                        var exception = writeMessagesAsyncException != null
-                            ? writeMessagesAsyncException
-                            : (t.IsFaulted
+                        var exception = writeMessagesAsyncException ?? (t.IsFaulted
                                 ? TryUnwrapException(t.Exception)
                                 : new OperationCanceledException(
                                     "WriteMessagesAsync canceled, possibly due to timing out."));
@@ -436,8 +432,7 @@ namespace Akka.Persistence.Journal
 
             protected override bool Receive(object message)
             {
-                Desequenced d;
-                if ((d = message as Desequenced) != null)
+                if (message is Desequenced d)
                 {
                     do
                     {

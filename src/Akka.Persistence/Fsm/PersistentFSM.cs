@@ -21,7 +21,7 @@ namespace Akka.Persistence.Fsm
     /// <typeparam name="TState">The state name type</typeparam>
     /// <typeparam name="TData">The state data type</typeparam>
     /// <typeparam name="TEvent">The event data type</typeparam>
-    public abstract class PersistentFSM<TState, TData, TEvent> : PersistentFSMBase<TState, TData, TEvent> where TState : IFsmState 
+    public abstract class PersistentFSM<TState, TData, TEvent> : PersistentFSMBase<TState, TData, TEvent> where TState : IFsmState
     {
         /// <summary>
         /// Map from state identifier to state instance
@@ -57,38 +57,33 @@ namespace Akka.Persistence.Fsm
         /// <inheritdoc />
         protected override bool ReceiveRecover(object message)
         {
-            if (message is TEvent domainEvent)
+            switch (message)
             {
-                StartWith(StateName, ApplyEvent(domainEvent, StateData));
-                return true;
-            }
-
-            if (message is StateChangeEvent stateChangeEvent)
-            {
-                StartWith(StatesMap[stateChangeEvent.StateIdentifier], StateData, stateChangeEvent.Timeout);
-                return true;
-            }
-
-            if (message is SnapshotOffer snapshotOffer)
-            {
-                var persistentFSMSnapshot = snapshotOffer.Snapshot as PersistentFSMSnapshot<TData>;
-                if (persistentFSMSnapshot != null)
-                {
-                    StartWith(StatesMap[persistentFSMSnapshot.StateIdentifier], persistentFSMSnapshot.Data, persistentFSMSnapshot.Timeout);
+                case TEvent domainEvent:
+                    StartWith(StateName, ApplyEvent(domainEvent, StateData));
                     return true;
-                }
 
-                return false;
+                case StateChangeEvent stateChangeEvent:
+                    StartWith(StatesMap[stateChangeEvent.StateIdentifier], StateData, stateChangeEvent.Timeout);
+                    return true;
+
+                case SnapshotOffer snapshotOffer:
+                    if (snapshotOffer.Snapshot is PersistentFSMSnapshot<TData> persistentFSMSnapshot)
+                    {
+                        StartWith(StatesMap[persistentFSMSnapshot.StateIdentifier], persistentFSMSnapshot.Data, persistentFSMSnapshot.Timeout);
+                        return true;
+                    }
+
+                    return false;
+
+                case RecoveryCompleted _:
+                    Initialize();
+                    OnRecoveryCompleted();
+                    return true;
+
+                default:
+                    return false;
             }
-
-            if (message is RecoveryCompleted)
-            {
-                Initialize();
-                OnRecoveryCompleted();
-                return true;
-            }
-
-            return false;
         }
 
         /// <summary>
@@ -144,16 +139,19 @@ namespace Akka.Persistence.Fsm
 
                 PersistAll(eventsToPersist, @event =>
                 {
-                    if (@event is TEvent evt)
+                    switch (@event)
                     {
-                        nextData = ApplyEvent(evt, nextData);
-                        doSnapshot = doSnapshot || snapshotAfterExtension.IsSnapshotAfterSeqNo(LastSequenceNr);
-                        ApplyStateOnLastHandler();
-                    }
-                    else if (@event is StateChangeEvent)
-                    {
-                        doSnapshot = doSnapshot || snapshotAfterExtension.IsSnapshotAfterSeqNo(LastSequenceNr);
-                        ApplyStateOnLastHandler();
+                        case TEvent evt:
+                            nextData = ApplyEvent(evt, nextData);
+                            doSnapshot = doSnapshot || snapshotAfterExtension.IsSnapshotAfterSeqNo(LastSequenceNr);
+                            ApplyStateOnLastHandler();
+                            break;
+                        case StateChangeEvent _:
+                            doSnapshot = doSnapshot || snapshotAfterExtension.IsSnapshotAfterSeqNo(LastSequenceNr);
+                            ApplyStateOnLastHandler();
+                            break;
+                        default:
+                            break;
                     }
                 });
             }
@@ -239,7 +237,7 @@ namespace Akka.Persistence.Fsm
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
                 return Equals((PersistentFSMSnapshot<TD>)obj);
@@ -331,8 +329,8 @@ namespace Akka.Persistence.Fsm
             internal bool Notifies { get; }
 
             internal State<TS, TD, TE> Copy(
-                TS stateName = default(TS),
-                TD stateData = default(TD),
+                TS stateName = default,
+                TD stateData = default,
                 TimeSpan? timeout = null,
                 FSMBase.Reason stopReason = null,
                 IReadOnlyList<object> replies = null,
@@ -372,8 +370,10 @@ namespace Akka.Persistence.Fsm
             /// <returns>TBD</returns>
             public State<TS, TD, TE> Replying(object replyValue)
             {
-                var newReplies = new List<object>(Replies.Count + 1);
-                newReplies.Add(replyValue);
+                var newReplies = new List<object>(Replies.Count + 1)
+                {
+                    replyValue
+                };
                 newReplies.AddRange(Replies);
                 return Copy(replies: newReplies);
             }
@@ -464,7 +464,7 @@ namespace Akka.Persistence.Fsm
                 SnapshotAfterValue = config.GetInt(Key);
             }
         }
-        
+
         public int? SnapshotAfterValue { get; }
 
         public bool IsSnapshotAfterSeqNo(long lastSequenceNr)

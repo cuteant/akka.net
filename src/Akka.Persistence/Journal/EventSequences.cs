@@ -137,7 +137,7 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
-        public static IEventSequence Empty = EmptyEventSequence.Instance;
+        public static readonly IEventSequence Empty = EmptyEventSequence.Instance;
 
         /// <summary>
         /// TBD

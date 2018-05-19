@@ -157,7 +157,7 @@ namespace Akka.Persistence.Fsm
             /// <returns>TBD</returns>
             public StateFunction Using(Func<State<TState, TData, TEvent>, State<TState, TData, TEvent>> andThen)
             {
-                StateFunction continuedDelegate = (@event, state) => andThen.Invoke(Func.Invoke(@event, state));
+                State<TState, TData, TEvent> continuedDelegate(FSMBase.Event<TData> @event, State<TState, TData, TEvent> state = null) => andThen.Invoke(Func.Invoke(@event, state));
                 return continuedDelegate;
             }
         }
@@ -656,12 +656,12 @@ namespace Akka.Persistence.Fsm
         /// </returns>
         private static StateFunction OrElse(StateFunction original, StateFunction fallback)
         {
-            StateFunction chained = (@event, state) =>
+            State<TState, TData, TEvent> chained(FSMBase.Event<TData> @event, State<TState, TData, TEvent> state = null)
             {
                 var originalResult = original.Invoke(@event, state);
                 if (originalResult == null) return fallback.Invoke(@event, state);
                 return originalResult;
-            };
+            }
 
             return chained;
         }

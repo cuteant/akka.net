@@ -71,7 +71,7 @@ namespace Akka.Persistence.Journal
 
         private interface IPluginType
         {
-             string Qualifier { get; }
+            string Qualifier { get; }
         }
 
         private class Journal : IPluginType
@@ -117,7 +117,7 @@ namespace Akka.Persistence.Journal
                 throw new ArgumentException($"{pluginId}.{key} must be defined.");
             _startTarget = config.GetBoolean("start-target-" + _pluginType.Qualifier);
 
-            _selfAddress = ((ExtendedActorSystem) Context.System).Provider.DefaultAddress;
+            _selfAddress = ((ExtendedActorSystem)Context.System).Provider.DefaultAddress;
         }
 
         /// <summary>
@@ -133,17 +133,20 @@ namespace Akka.Persistence.Journal
             if (_startTarget)
             {
                 IActorRef target = null;
-                if (_pluginType is Journal)
+                switch (_pluginType)
                 {
-                    if (_log.IsInfoEnabled)
-                        _log.Info("Starting target journal [{0}]", _targetPluginId);
-                    target = Persistence.Instance.Apply(Context.System).JournalFor(_targetPluginId);
-                }
-                else if (_pluginType is SnapshotStore)
-                {
-                    if (_log.IsInfoEnabled)
-                        _log.Info("Starting target snapshot-store [{0}]", _targetPluginId);
-                    target = Persistence.Instance.Apply(Context.System).SnapshotStoreFor(_targetPluginId);
+                    case Journal _:
+                        if (_log.IsInfoEnabled) { _log.Info("Starting target journal [{0}]", _targetPluginId); }
+                        target = Persistence.Instance.Apply(Context.System).JournalFor(_targetPluginId);
+                        break;
+
+                    case SnapshotStore _:
+                        if (_log.IsInfoEnabled) { _log.Info("Starting target snapshot-store [{0}]", _targetPluginId); }
+                        target = Persistence.Instance.Apply(Context.System).SnapshotStoreFor(_targetPluginId);
+                        break;
+
+                    default:
+                        break;
                 }
                 Context.Become(Active(target, true));
             }
@@ -155,15 +158,15 @@ namespace Akka.Persistence.Journal
                 {
                     try
                     {
-                        if (_log.IsInfoEnabled)
-                            _log.Info("Setting target {0} address to {1}", _pluginType.Qualifier, targetAddress);
+                        if (_log.IsInfoEnabled) { _log.Info("Setting target {0} address to {1}", _pluginType.Qualifier, targetAddress); }
                         SetTargetLocation(Context.System, Address.Parse(targetAddress));
                     }
                     catch (UriFormatException)
                     {
                         if (_log.IsWarningEnabled)
-                            _log.Warning("Invalid URL provided for target {0} address: {1}", _pluginType.Qualifier,
-                                targetAddress);
+                        {
+                            _log.Warning("Invalid URL provided for target {0} address: {1}", _pluginType.Qualifier, targetAddress);
+                        }
                     }
                 }
                 Context.System.Scheduler.ScheduleTellOnce(_initTimeout, Self, InitTimeout.Instance, Self);
@@ -190,25 +193,27 @@ namespace Akka.Persistence.Journal
 
         private bool Init(object message)
         {
-            if (message is TargetLocation)
+            switch (message)
             {
-                Context.SetReceiveTimeout(TimeSpan.FromSeconds(1)); // for retries
-                Context.Become(Identifying(((TargetLocation)message).Address));
+                case TargetLocation tl:
+                    Context.SetReceiveTimeout(TimeSpan.FromSeconds(1)); // for retries
+                    Context.Become(Identifying(((TargetLocation)message).Address));
+                    break;
+                case InitTimeout _:
+                    if (_log.IsInfoEnabled)
+                    {
+                        _log.Info("Initialization timed-out (after {0}s), use `PersistencePluginProxy.SetTargetLocation` or set `target-{1}-address`",
+                            _initTimeout.TotalSeconds, _pluginType.Qualifier);
+                    }
+                    Context.Become(InitTimedOut());
+                    Stash.UnstashAll(); // will trigger appropriate failures
+                    break;
+                case Terminated _:
+                    break;
+                default:
+                    Stash.Stash();
+                    break;
             }
-            else if (message is InitTimeout)
-            {
-                if (_log.IsInfoEnabled)
-                    _log.Info(
-                        "Initialization timed-out (after {0}s), use `PersistencePluginProxy.SetTargetLocation` or set `target-{1}-address`",
-                        _initTimeout.TotalSeconds, _pluginType.Qualifier);
-                Context.Become(InitTimedOut());
-                Stash.UnstashAll(); // will trigger appropriate failures
-            }
-            else if (message is Terminated)
-            {
-            }
-            else
-                Stash.Stash();
             return true;
         }
 
@@ -221,9 +226,8 @@ namespace Akka.Persistence.Journal
 
         private void SendIdentify(Address address)
         {
-            var sel = Context.ActorSelection(string.Format("{0}/system/{1}", new RootActorPath(address), _targetPluginId));
-            if (_log.IsInfoEnabled)
-                _log.Info("Trying to identify target + {0} at {1}", _pluginType.Qualifier, sel);
+            var sel = Context.ActorSelection($"{new RootActorPath(address)}/system/{_targetPluginId}");
+            if (_log.IsInfoEnabled) { _log.Info("Trying to identify target + {0} at {1}", _pluginType.Qualifier, sel); }
             sel.Tell(new Identify(_targetPluginId));
         }
 
@@ -231,31 +235,31 @@ namespace Akka.Persistence.Journal
         {
             return message =>
             {
-                if (message is ActorIdentity)
+                switch (message)
                 {
-                    var ai = (ActorIdentity) message;
-                    if (_targetPluginId.Equals(ai.MessageId))
-                    {
-                        var target = ai.Subject;
-                        if (_log.IsInfoEnabled)
-                            _log.Info("Found target {0} at [{1}]", _pluginType.Qualifier, address);
-                        Context.SetReceiveTimeout(null);
-                        Context.Watch(target);
-                        Stash.UnstashAll();
-                        Context.Become(Active(target, address.Equals(_selfAddress)));
-                    }
-                    else
-                    {
-                        // will retry after ReceiveTimeout
-                    }
+                    case ActorIdentity ai:
+                        if (_targetPluginId.Equals(ai.MessageId))
+                        {
+                            var target = ai.Subject;
+                            if (_log.IsInfoEnabled) { _log.Info("Found target {0} at [{1}]", _pluginType.Qualifier, address); }
+                            Context.SetReceiveTimeout(null);
+                            Context.Watch(target);
+                            Stash.UnstashAll();
+                            Context.Become(Active(target, address.Equals(_selfAddress)));
+                        }
+                        else
+                        {
+                            // will retry after ReceiveTimeout
+                        }
+                        return true;
+                    case Terminated _:
+                        return true;
+                    case ReceiveTimeout _:
+                        SendIdentify(address);
+                        return true;
+                    default:
+                        return Init(message); ;
                 }
-                else if (message is Terminated)
-                {
-                }
-                else if (message is ReceiveTimeout)
-                    SendIdentify(address);
-                else return Init(message);
-                return true;
             };
         }
 
@@ -263,26 +267,25 @@ namespace Akka.Persistence.Journal
         {
             return message =>
             {
-                if (message is TargetLocation)
+                switch (message)
                 {
-                    var address = ((TargetLocation) message).Address;
-                    if (targetAtThisNode && !address.Equals(_selfAddress))
-                        BecomeIdentifying(address);
+                    case TargetLocation tl:
+                        var address = tl.Address;
+                        if (targetAtThisNode && !address.Equals(_selfAddress)) { BecomeIdentifying(address); }
+                        break;
+                    case Terminated t:
+                        if (t.ActorRef.Equals(targetJournal))
+                        {
+                            Context.Unwatch(targetJournal);
+                            Context.Become(InitTimedOut());
+                        }
+                        break;
+                    case InitTimeout _:
+                        break;
+                    default:
+                        targetJournal.Forward(message);
+                        break;
                 }
-                else if (message is Terminated)
-                {
-                    var t = (Terminated) message;
-                    if (t.ActorRef.Equals(targetJournal))
-                    {
-                        Context.Unwatch(targetJournal);
-                        Context.Become(InitTimedOut());
-                    }
-                }
-                else if (message is InitTimeout)
-                {
-                }
-                else
-                    targetJournal.Forward(message);
                 return true;
             };
         }
@@ -291,76 +294,69 @@ namespace Akka.Persistence.Journal
         {
             return message =>
             {
-                if (message is IJournalRequest)
+                switch (message)
                 {
-                     // exhaustive match
-                    if (message is WriteMessages)
-                    {
-                        var w = (WriteMessages) message;
-                        w.PersistentActor.Tell(new WriteMessagesFailed(TimeoutException()));
-                        foreach (var m in w.Messages)
+                    case IJournalRequest _:
+                        // exhaustive match
+                        switch (message)
                         {
-                            if (m is AtomicWrite)
-                            {
-                                foreach (var p in (IEnumerable<IPersistentRepresentation>) m.Payload)
+                            case WriteMessages w:
+                                w.PersistentActor.Tell(new WriteMessagesFailed(TimeoutException()));
+                                foreach (var m in w.Messages)
                                 {
-                                    w.PersistentActor.Tell(new WriteMessageFailure(p, TimeoutException(),
-                                        w.ActorInstanceId));
+                                    if (m is AtomicWrite)
+                                    {
+                                        foreach (var p in (IEnumerable<IPersistentRepresentation>)m.Payload)
+                                        {
+                                            w.PersistentActor.Tell(new WriteMessageFailure(p, TimeoutException(),
+                                                w.ActorInstanceId));
+                                        }
+                                    }
+                                    else if (m is NonPersistentMessage)
+                                    {
+                                        w.PersistentActor.Tell(new LoopMessageSuccess(m.Payload, w.ActorInstanceId));
+                                    }
                                 }
-                            }
-                            else if (m is NonPersistentMessage)
-                            {
-                                w.PersistentActor.Tell(new LoopMessageSuccess(m.Payload, w.ActorInstanceId));
-                            }
+                                break;
+                            case ReplayMessages r:
+                                r.PersistentActor.Tell(new ReplayMessagesFailure(TimeoutException()));
+                                break;
+                            case DeleteMessagesTo d:
+                                d.PersistentActor.Tell(new DeleteMessagesFailure(TimeoutException(), d.ToSequenceNr));
+                                break;
+                            default:
+                                break;
                         }
-                    }
-                    else if (message is ReplayMessages)
-                    {
-                        var r = (ReplayMessages) message;
-                        r.PersistentActor.Tell(new ReplayMessagesFailure(TimeoutException()));
-                    }
-                    else if (message is DeleteMessagesTo)
-                    {
-                        var d = (DeleteMessagesTo) message;
-                        d.PersistentActor.Tell(new DeleteMessagesFailure(TimeoutException(), d.ToSequenceNr));
-                    }
-                }
-                else if (message is ISnapshotRequest)
-                {
-                    // exhaustive match
-                    if (message is LoadSnapshot)
-                    {
-                        var l = (LoadSnapshot) message;
-                        Sender.Tell(new LoadSnapshotFailed(TimeoutException()));
-                    }
-                    else if (message is SaveSnapshot)
-                    {
-                        var s = (SaveSnapshot) message;
-                        Sender.Tell(new SaveSnapshotFailure(s.Metadata, TimeoutException()));
-                    }
-                    else if (message is DeleteSnapshot)
-                    {
-                        var d = (DeleteSnapshot) message;
-                        Sender.Tell(new DeleteSnapshotFailure(d.Metadata, TimeoutException()));
-                    }
-                    else if (message is DeleteSnapshots)
-                    {
-                        var d = (DeleteSnapshots) message;
-                        Sender.Tell(new DeleteSnapshotsFailure(d.Criteria, TimeoutException()));
-                    }
-                }
-                else if (message is TargetLocation)
-                {
-                    BecomeIdentifying(((TargetLocation) message).Address);
-                }
-                else if (message is Terminated)
-                {
-                }
-                else
-                {
-                    var exception = TimeoutException();
-                    if (_log.IsErrorEnabled)
-                        _log.Error(exception, "Failed PersistencePluginProxyRequest: {0}", exception.Message);
+                        break;
+                    case ISnapshotRequest _:
+                        // exhaustive match
+                        switch (message)
+                        {
+                            case LoadSnapshot l:
+                                Sender.Tell(new LoadSnapshotFailed(TimeoutException()));
+                                break;
+                            case SaveSnapshot s:
+                                Sender.Tell(new SaveSnapshotFailure(s.Metadata, TimeoutException()));
+                                break;
+                            case DeleteSnapshot d:
+                                Sender.Tell(new DeleteSnapshotFailure(d.Metadata, TimeoutException()));
+                                break;
+                            case DeleteSnapshots ds:
+                                Sender.Tell(new DeleteSnapshotsFailure(ds.Criteria, TimeoutException()));
+                                break;
+                            default:
+                                break;
+                        }
+                        break;
+                    case TargetLocation tl:
+                        BecomeIdentifying(tl.Address);
+                        break;
+                    case Terminated _:
+                        break;
+                    default:
+                        var exception = TimeoutException();
+                        if (_log.IsErrorEnabled) { _log.Error(exception, "Failed PersistencePluginProxyRequest: {0}", exception.Message); }
+                        break;
                 }
                 return true;
             };

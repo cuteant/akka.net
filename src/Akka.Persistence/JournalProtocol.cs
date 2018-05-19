@@ -50,7 +50,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteMessagesSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return ToSequenceNr == other.ToSequenceNr;
@@ -82,10 +82,7 @@ namespace Akka.Persistence
         /// </exception>
         public DeleteMessagesFailure(Exception cause, long toSequenceNr)
         {
-            if (cause == null)
-                throw new ArgumentNullException(nameof(cause), "DeleteMessagesFailure cause exception cannot be null");
-
-            Cause = cause;
+            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "DeleteMessagesFailure cause exception cannot be null");
             ToSequenceNr = toSequenceNr;
         }
 
@@ -102,7 +99,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteMessagesFailure other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Cause, other.Cause) && ToSequenceNr == other.ToSequenceNr;
@@ -167,7 +164,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteMessagesTo other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return string.Equals(PersistenceId, other.PersistenceId, StringComparison.Ordinal) &&
@@ -231,7 +228,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(WriteMessages other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(ActorInstanceId, other.ActorInstanceId)
@@ -289,10 +286,7 @@ namespace Akka.Persistence
         /// </exception>
         public WriteMessagesFailed(Exception cause)
         {
-            if (cause == null)
-                throw new ArgumentNullException(nameof(cause), "WriteMessagesFailed cause exception cannot be null");
-
-            Cause = cause;
+            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "WriteMessagesFailed cause exception cannot be null");
         }
 
         /// <summary>
@@ -303,7 +297,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(WriteMessagesFailed other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Cause, other.Cause);
@@ -350,7 +344,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(WriteMessageSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(ActorInstanceId, other.ActorInstanceId)
@@ -392,11 +386,8 @@ namespace Akka.Persistence
         /// </exception>
         public WriteMessageRejected(IPersistentRepresentation persistent, Exception cause, int actorInstanceId)
         {
-            if (cause == null)
-                throw new ArgumentNullException(nameof(cause), "WriteMessageRejected cause exception cannot be null");
-
+            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "WriteMessageRejected cause exception cannot be null");
             Persistent = persistent;
-            Cause = cause;
             ActorInstanceId = actorInstanceId;
         }
 
@@ -418,7 +409,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(WriteMessageRejected other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(ActorInstanceId, other.ActorInstanceId)
@@ -463,11 +454,8 @@ namespace Akka.Persistence
         /// </exception>
         public WriteMessageFailure(IPersistentRepresentation persistent, Exception cause, int actorInstanceId)
         {
-            if (cause == null)
-                throw new ArgumentNullException(nameof(cause), "WriteMessageFailure cause exception cannot be null");
-
+            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "WriteMessageFailure cause exception cannot be null");
             Persistent = persistent;
-            Cause = cause;
             ActorInstanceId = actorInstanceId;
         }
 
@@ -489,7 +477,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(WriteMessageFailure other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(ActorInstanceId, other.ActorInstanceId)
@@ -546,7 +534,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(LoopMessageSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(ActorInstanceId, other.ActorInstanceId)
@@ -620,7 +608,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(ReplayMessages other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(PersistenceId, other.PersistenceId)
@@ -674,7 +662,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(ReplayedMessage other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Persistent, other.Persistent);
@@ -717,7 +705,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(RecoverySuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(HighestSequenceNr, other.HighestSequenceNr);
@@ -749,10 +737,7 @@ namespace Akka.Persistence
         /// </exception>
         public ReplayMessagesFailure(Exception cause)
         {
-            if (cause == null)
-                throw new ArgumentNullException(nameof(cause), "ReplayMessagesFailure cause exception cannot be null");
-
-            Cause = cause;
+            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "ReplayMessagesFailure cause exception cannot be null");
         }
 
         /// <summary>
@@ -763,7 +748,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(ReplayMessagesFailure other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Cause, other.Cause);

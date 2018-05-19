@@ -23,7 +23,7 @@ namespace Akka.Persistence.Snapshot
 
         protected override Task DeleteAsync(SnapshotMetadata metadata)
         {
-            Func<SnapshotEntry, bool> pred = x => x.PersistenceId == metadata.PersistenceId &&
+            bool pred(SnapshotEntry x) => x.PersistenceId == metadata.PersistenceId &&
             (metadata.SequenceNr <= 0 || metadata.SequenceNr == long.MaxValue || x.SequenceNr == metadata.SequenceNr) &&
             (metadata.Timestamp == DateTime.MinValue || metadata.Timestamp == DateTime.MaxValue || x.Timestamp == metadata.Timestamp.Ticks);
 

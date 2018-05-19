@@ -315,7 +315,7 @@ namespace Akka.Persistence
         {
             if (events == null) return;
 
-            Action<object> inv = o => handler((TEvent)o);
+            void inv(object o) => handler((TEvent)o);
             var persistents = ImmutableList<IPersistentRepresentation>.Empty.ToBuilder();
             foreach (var @event in events)
             {
@@ -373,7 +373,7 @@ namespace Akka.Persistence
         /// <param name="handler">TBD</param>
         public void PersistAllAsync<TEvent>(IEnumerable<TEvent> events, Action<TEvent> handler)
         {
-            Action<object> inv = o => handler((TEvent)o);
+            void inv(object o) => handler((TEvent)o);
             foreach (var @event in events)
             {
                 _pendingInvocations.AddLast(new AsyncHandlerInvocation(@event, inv));
@@ -496,7 +496,7 @@ namespace Akka.Persistence
         {
             if (_asyncTaskRunning)
                 throw new NotSupportedException("RunTask calls cannot be nested");
-            Func<Task> wrap = () =>
+            Task wrap()
             {
                 Task t = action();
                 if (!t.IsCompleted)
@@ -521,7 +521,7 @@ namespace Akka.Persistence
                     t = tcs.Task;
                 }
                 return t;
-            };
+            }
 
             Dispatch.ActorTaskScheduler.RunTask(wrap);
         }
@@ -562,25 +562,22 @@ namespace Akka.Persistence
             {
                 _internalStash.Stash();
             }
-            catch(StashOverflowException e)
+            catch (StashOverflowException)
             {
                 var strategy = InternalStashOverflowStrategy;
-                if (strategy is DiscardToDeadLetterStrategy)
+                switch (strategy)
                 {
-                    var sender = Sender;
-                    Context.System.DeadLetters.Tell(new DeadLetter(currentMessage, sender, Self), Sender);
-                }
-                else if (strategy is ReplyToStrategy)
-                {
-                    Sender.Tell(((ReplyToStrategy)strategy).Response);
-                }
-                else if (strategy is ThrowOverflowExceptionStrategy)
-                {
-                    throw;
-                }
-                else // should not happen
-                {
-                    throw;
+                    case DiscardToDeadLetterStrategy _:
+                        var sender = Sender;
+                        Context.System.DeadLetters.Tell(new DeadLetter(currentMessage, sender, Self), Sender);
+                        break;
+                    case ReplyToStrategy replyToStrategy:
+                        Sender.Tell(replyToStrategy.Response);
+                        break;
+                    case ThrowOverflowExceptionStrategy _:
+                        throw;
+                    default: // should not happen
+                        throw;
                 }
             }
         }

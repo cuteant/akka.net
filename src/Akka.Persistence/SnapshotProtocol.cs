@@ -106,7 +106,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(SnapshotMetadata other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return string.Equals(PersistenceId, other.PersistenceId, StringComparison.Ordinal) && SequenceNr == other.SequenceNr && Timestamp.Equals(other.Timestamp);
@@ -151,7 +151,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(SaveSnapshotSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Metadata, other.Metadata);
@@ -190,7 +190,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshotSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Metadata, other.Metadata);
@@ -229,7 +229,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshotsSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Criteria, other.Criteria);
@@ -284,7 +284,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(SaveSnapshotFailure other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Cause, other.Cause) && Equals(Metadata, other.Metadata);
@@ -342,7 +342,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshotFailure other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Cause, other.Cause) && Equals(Metadata, other.Metadata);
@@ -394,7 +394,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshotsFailure other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Cause, other.Cause) && Equals(Criteria, other.Criteria);
@@ -447,7 +447,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(SnapshotOffer other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Metadata, other.Metadata) && Equals(Snapshot, other.Snapshot);
@@ -545,7 +545,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(SnapshotSelectionCriteria other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return MaxSequenceNr == other.MaxSequenceNr && MaxTimeStamp == other.MaxTimeStamp &&
@@ -603,7 +603,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(SelectedSnapshot other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Metadata, other.Metadata) && Equals(Snapshot, other.Snapshot);
@@ -662,7 +662,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(LoadSnapshot other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(ToSequenceNr, other.ToSequenceNr)
@@ -719,7 +719,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(LoadSnapshotResult other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(ToSequenceNr, other.ToSequenceNr)
@@ -765,7 +765,7 @@ namespace Akka.Persistence
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             return obj is LoadSnapshotFailed && Equals((LoadSnapshotFailed)obj);
         }
@@ -791,10 +791,7 @@ namespace Akka.Persistence
         /// </exception>
         public SaveSnapshot(SnapshotMetadata metadata, object snapshot)
         {
-            if (metadata == null)
-                throw new ArgumentNullException(nameof(metadata), "SaveSnapshot requires SnapshotMetadata to be provided");
-
-            Metadata = metadata;
+            Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata), "SaveSnapshot requires SnapshotMetadata to be provided");
             Snapshot = snapshot;
         }
 
@@ -811,7 +808,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(SaveSnapshot other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Metadata, other.Metadata) && Equals(Snapshot, other.Snapshot);
@@ -848,10 +845,7 @@ namespace Akka.Persistence
         /// </exception>
         public DeleteSnapshot(SnapshotMetadata metadata)
         {
-            if (metadata == null)
-                throw new ArgumentNullException(nameof(metadata), "DeleteSnapshot requires SnapshotMetadata to be provided");
-
-            Metadata = metadata;
+            Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata), "DeleteSnapshot requires SnapshotMetadata to be provided");
         }
 
         /// <summary>
@@ -862,7 +856,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshot other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Metadata, other.Metadata);
@@ -908,7 +902,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshots other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(PersistenceId, other.PersistenceId)

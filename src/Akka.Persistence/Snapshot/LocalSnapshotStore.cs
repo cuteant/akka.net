@@ -31,7 +31,7 @@ namespace Akka.Persistence.Snapshot
 
         private readonly Akka.Serialization.Serialization _serialization;
 
-        private string _defaultSerializer;
+        private readonly string _defaultSerializer;
 
         /// <summary>
         /// TBD
@@ -130,27 +130,19 @@ namespace Akka.Persistence.Snapshot
         /// <returns>TBD</returns>
         protected override bool ReceivePluginInternal(object message)
         {
-            if (message is SaveSnapshotSuccess)
+            switch (message)
             {
-                _saving.Remove(((SaveSnapshotSuccess) message).Metadata);
+                case SaveSnapshotSuccess _sss:
+                    _saving.Remove(_sss.Metadata);
+                    return true;
+                case SaveSnapshotFailure _:
+                case DeleteSnapshotsSuccess _:
+                case DeleteSnapshotsFailure _:
+                    // ignore
+                    return true;
+                default:
+                    return false;
             }
-            else if (message is SaveSnapshotFailure)
-            {
-                // ignore
-            }
-            else if (message is DeleteSnapshotsSuccess)
-            {
-                // ignore
-            }
-            else if (message is DeleteSnapshotsFailure)
-            {
-                // ignore
-            }
-            else
-            {
-                return false;
-            }
-            return true;
         }
 
         private IEnumerable<FileInfo> GetSnapshotFiles(SnapshotMetadata metadata)
@@ -163,33 +155,28 @@ namespace Akka.Persistence.Snapshot
         private SelectedSnapshot Load(ImmutableArray<SnapshotMetadata> metadata)
         {
             var last = metadata.LastOrDefault();
-            if (last == null)
-            {
-                return null;
-            }
-            else
-            {
-                try
-                {
-                    return WithInputStream(last, stream =>
-                    {
-                        var snapshot = Deserialize(stream);
+            if (last == null) { return null; }
 
-                        return new SelectedSnapshot(last, snapshot.Data);
-                    });
-                }
-                catch (Exception ex)
+            try
+            {
+                return WithInputStream(last, stream =>
                 {
-                    var remaining = metadata.RemoveAt(metadata.Length - 1);
-                    _log.Error(ex, $"Error loading snapshot [{last}], remaining attempts: [{remaining.Length}]");
-                    if (remaining.IsEmpty)
-                    {
-                        throw;
-                    }
-                    else
-                    {
-                        return Load(remaining);
-                    }
+                    var snapshot = Deserialize(stream);
+
+                    return new SelectedSnapshot(last, snapshot.Data);
+                });
+            }
+            catch (Exception ex)
+            {
+                var remaining = metadata.RemoveAt(metadata.Length - 1);
+                _log.Error(ex, $"Error loading snapshot [{last}], remaining attempts: [{remaining.Length}]");
+                if (remaining.IsEmpty)
+                {
+                    throw;
+                }
+                else
+                {
+                    return Load(remaining);
                 }
             }
         }
@@ -205,12 +192,12 @@ namespace Akka.Persistence.Snapshot
             {
                 Serialize(stream, new Serialization.Snapshot(snapshot));
             });
-		    var newName = GetSnapshotFileForWrite(metadata);
-			if (File.Exists(newName.FullName))
-			{
-				File.Delete(newName.FullName);
-			}
-			tempFile.MoveTo(newName.FullName);
+            var newName = GetSnapshotFileForWrite(metadata);
+            if (File.Exists(newName.FullName))
+            {
+                File.Delete(newName.FullName);
+            }
+            tempFile.MoveTo(newName.FullName);
         }
 
         private Serialization.Snapshot Deserialize(Stream stream)
@@ -301,8 +288,7 @@ namespace Akka.Persistence.Snapshot
                 var seqNrString = match.Groups[2].Value;
                 var timestampTicks = match.Groups[3].Value;
 
-                long sequenceNr, ticks;
-                if (long.TryParse(seqNrString, out sequenceNr) && long.TryParse(timestampTicks, out ticks))
+                if (long.TryParse(seqNrString, out var sequenceNr) && long.TryParse(timestampTicks, out var ticks))
                 {
                     return new SnapshotMetadata(pid, sequenceNr, new DateTime(ticks));
                 }

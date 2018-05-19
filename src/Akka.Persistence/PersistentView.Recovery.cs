@@ -69,11 +69,10 @@ namespace Akka.Persistence
         /// </summary>
         private ViewState RecoveryStarted(long replayMax)
         {
-            return new ViewState("recovery started - replayMax: " + replayMax, true, (receive, message) =>
+            void stateReceive(Receive receive, object message)
             {
-                if (message is LoadSnapshotResult)
+                if (message is LoadSnapshotResult loadResult)
                 {
-                    var loadResult = (LoadSnapshotResult)message;
                     if (loadResult.Snapshot != null)
                     {
                         var selectedSnapshot = loadResult.Snapshot;
@@ -84,7 +83,8 @@ namespace Akka.Persistence
                     Journal.Tell(new ReplayMessages(LastSequenceNr + 1, loadResult.ToSequenceNr, replayMax, PersistenceId, Self));
                 }
                 else _internalStash.Stash();
-            });
+            }
+            return new ViewState("recovery started - replayMax: " + replayMax, true, stateReceive);
         }
 
         /// <summary>
@@ -102,68 +102,63 @@ namespace Akka.Persistence
         /// </summary>
         private ViewState ReplayStarted(bool shouldAwait)
         {
-            return new ViewState("replay started", true, (receive, message) =>
+            void stateReceive(Receive receive, object message)
             {
-                if (message is ReplayedMessage)
+                switch (message)
                 {
-                    var replayedMessage = (ReplayedMessage)message;
-                    try
-                    {
-                        UpdateLastSequenceNr(replayedMessage.Persistent);
-                        base.AroundReceive(receive, replayedMessage.Persistent.Payload);
-                    }
-                    catch (Exception ex)
-                    {
-                        ChangeState(IgnoreRemainingReplay(ex));
-                    }
-                }
-                else if (message is RecoverySuccess)
-                {
-                    OnReplayComplete();
-                }
-                else if (message is ReplayMessagesFailure)
-                {
-                    var replayFailureMessage = (ReplayMessagesFailure)message;
-                    try
-                    {
-                        OnReplayError(replayFailureMessage.Cause);
-                    }
-                    finally
-                    {
-                        OnReplayComplete();
-                    }
-                }
-                else if (message is ScheduledUpdate)
-                {
-                    // ignore
-                }
-                else if (message is Update)
-                {
-                    var u = (Update) message;
-                    if (u.IsAwait)
-                    {
-                        _internalStash.Stash();
-                    }
-                }
-                else
-                {
-                    if (shouldAwait)
-                    {
-                        _internalStash.Stash();
-                    }
-                    else
-                    {
+                    case ReplayedMessage replayedMessage:
                         try
                         {
-                            base.AroundReceive(receive, message);
+                            UpdateLastSequenceNr(replayedMessage.Persistent);
+                            base.AroundReceive(receive, replayedMessage.Persistent.Payload);
                         }
                         catch (Exception ex)
                         {
                             ChangeState(IgnoreRemainingReplay(ex));
                         }
-                    }
+                        break;
+                    case RecoverySuccess _:
+                        OnReplayComplete();
+                        break;
+                    case ReplayMessagesFailure replayFailureMessage:
+                        try
+                        {
+                            OnReplayError(replayFailureMessage.Cause);
+                        }
+                        finally
+                        {
+                            OnReplayComplete();
+                        }
+                        break;
+                    case ScheduledUpdate _:
+                        // ignore
+                        break;
+                    case Update u:
+                        if (u.IsAwait)
+                        {
+                            _internalStash.Stash();
+                        }
+                        break;
+                    default:
+                        if (shouldAwait)
+                        {
+                            _internalStash.Stash();
+                        }
+                        else
+                        {
+                            try
+                            {
+                                base.AroundReceive(receive, message);
+                            }
+                            catch (Exception ex)
+                            {
+                                ChangeState(IgnoreRemainingReplay(ex));
+                            }
+                        }
+                        break;
                 }
-            });
+            }
+            return new ViewState("replay started", true, stateReceive);
         }
 
         /// <summary>
@@ -181,23 +176,32 @@ namespace Akka.Persistence
         /// </summary>
         private ViewState IgnoreRemainingReplay(Exception cause)
         {
-            return new ViewState("replay failed", true, (receive, message) =>
+            void stateReceive(Receive receive, object message)
             {
-                if (message is ReplayedMessage) { } 
-                else if (message is ReplayMessagesFailure)
+                switch (message)
                 {
-                    // journal couldn't tell the maximum stored sequence number, hence the next
-                    // replay must be a full replay (up to the highest stored sequence number)
-                    // Recover(lastSequenceNr) is sent by preRestart
-                    LastSequenceNr = long.MaxValue;
-                    OnReplayFailureCompleted(cause);
+                    case ReplayedMessage _:
+                        // ignore
+                        break;
+                    case ReplayMessagesFailure _:
+                        // journal couldn't tell the maximum stored sequence number, hence the next
+                        // replay must be a full replay (up to the highest stored sequence number)
+                        // Recover(lastSequenceNr) is sent by preRestart
+                        LastSequenceNr = long.MaxValue;
+                        OnReplayFailureCompleted(cause);
+                        break;
+                    case RecoverySuccess _:
+                        OnReplayFailureCompleted(cause);
+                        break;
+                    default:
+                        _internalStash.Stash();
+                        break;
                 }
-                else if (message is RecoverySuccess) OnReplayFailureCompleted(cause);
-                else _internalStash.Stash();
-            });
+            }
+            return new ViewState("replay failed", true, stateReceive);
         }
 
-        private void OnReplayFailureCompleted( Exception cause)
+        private void OnReplayFailureCompleted(Exception cause)
         {
             ChangeState(Idle());
             _internalStash.UnstashAll();
@@ -211,26 +215,30 @@ namespace Akka.Persistence
         /// </summary>
         private ViewState Idle()
         {
-            return new ViewState("idle", false, (receive, message) =>
+            void stateReceive(Receive receive, object message)
             {
-                if (message is ReplayedMessage)
+                switch (message)
                 {
-                    // we can get ReplayedMessage here if it was stashed by user during replay
-                    // unwrap the payload
-                    base.AroundReceive(receive, ((ReplayedMessage) message).Persistent.Payload);
+                    case ReplayedMessage replayed:
+                        // we can get ReplayedMessage here if it was stashed by user during replay
+                        // unwrap the payload
+                        base.AroundReceive(receive, replayed.Persistent.Payload);
+                        break;
+
+                    case ScheduledUpdate scheduled:
+                        ChangeStateToReplayStarted(false, scheduled.ReplayMax);
+                        break;
+
+                    case Update update:
+                        ChangeStateToReplayStarted(update.IsAwait, update.ReplayMax);
+                        break;
+
+                    default:
+                        base.AroundReceive(receive, message);
+                        break;
                 }
-                else if (message is ScheduledUpdate)
-                {
-                    var scheduled = (ScheduledUpdate) message;
-                    ChangeStateToReplayStarted(false, scheduled.ReplayMax);
-                }
-                else if (message is Update)
-                {
-                    var update = (Update)message;
-                    ChangeStateToReplayStarted(update.IsAwait, update.ReplayMax);
-                }
-                else base.AroundReceive(receive, message);
-            });
+            }
+            return new ViewState("idle", false, stateReceive);
         }
 
         private void ChangeStateToReplayStarted(bool isAwait, long replayMax)
