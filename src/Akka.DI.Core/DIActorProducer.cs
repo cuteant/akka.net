@@ -15,10 +15,8 @@ namespace Akka.DI.Core
     /// </summary>
     public class DIActorProducer : IIndirectActorProducer
     {
-        private IDependencyResolver dependencyResolver;
-        private Type actorType;
-
-        readonly Func<ActorBase> actorFactory;
+        private IDependencyResolver _dependencyResolver;
+        readonly Func<ActorBase> _actorFactory;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DIActorProducer"/> class.
@@ -30,38 +28,26 @@ namespace Akka.DI.Core
         /// </exception>
         public DIActorProducer(IDependencyResolver dependencyResolver, Type actorType)
         {
-            if (dependencyResolver == null) throw new ArgumentNullException(nameof(dependencyResolver), $"DIActorProducer requires {nameof(dependencyResolver)} to be provided");
-            if (actorType == null) throw new ArgumentNullException(nameof(actorType), $"DIActorProducer requires {nameof(actorType)} to be provided");
-
-            this.dependencyResolver = dependencyResolver;
-            this.actorType = actorType;
-            this.actorFactory = dependencyResolver.CreateActorFactory(actorType);
+            _dependencyResolver = dependencyResolver ?? throw new ArgumentNullException(nameof(dependencyResolver), $"DIActorProducer requires {nameof(dependencyResolver)} to be provided");
+            ActorType = actorType ?? throw new ArgumentNullException(nameof(actorType), $"DIActorProducer requires {nameof(actorType)} to be provided");
+            _actorFactory = dependencyResolver.CreateActorFactory(actorType);
         }
 
         /// <summary>
         /// Retrieves the type of the actor to produce.
         /// </summary>
-        public Type ActorType
-        {
-            get { return this.actorType; }
-        }
+        public Type ActorType { get; }
 
         /// <summary>
         /// Creates an actor based on the container's implementation specific actor factory.
         /// </summary>
         /// <returns>An actor created by the container.</returns>
-        public ActorBase Produce()
-        {
-            return actorFactory();
-        }
+        public ActorBase Produce() => _actorFactory();
 
         /// <summary>
         /// Signals the container that it can release its reference to the actor.
         /// </summary>
         /// <param name="actor">The actor to remove from the container.</param>
-        public void Release(ActorBase actor)
-        {
-            dependencyResolver.Release(actor);
-        }
+        public void Release(ActorBase actor) => _dependencyResolver.Release(actor);
     }
 }

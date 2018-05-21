@@ -25,10 +25,7 @@ namespace Akka.Util
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="type">The type.</param>
         /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-        public static bool Implements<T>(this Type type)
-        {
-            return Implements(type, typeof(T));
-        }
+        public static bool Implements<T>(this Type type) => Implements(type, typeof(T));
 
         /// <summary>
         /// Returns true if <paramref name="type" /> implements/inherits <paramref name="moreGeneralType" />.
@@ -37,13 +34,7 @@ namespace Akka.Util
         /// <param name="type">The type.</param>
         /// <param name="moreGeneralType">Type of the more general.</param>
         /// <returns><c>true</c> if XXXX, <c>false</c> otherwise.</returns>
-        public static bool Implements(this Type type, Type moreGeneralType)
-        {
-            return moreGeneralType.IsAssignableFrom(type);
-        }
-
-        //private static readonly ConcurrentDictionary<Type, string> ShortenedTypeNames = new ConcurrentDictionary<Type, string>();
-        //private static readonly string CoreAssemblyName = typeof(object).GetTypeInfo().Assembly.GetName().Name;
+        public static bool Implements(this Type type, Type moreGeneralType) => moreGeneralType.IsAssignableFrom(type);
 
         /// <summary>
         /// INTERNAL API
@@ -53,24 +44,7 @@ namespace Akka.Util
         /// <param name="type">TBD</param>
         /// <returns>Returns the type qualified name including namespace and assembly, but not assembly version.</returns>
         [InternalApi]
-        public static string TypeQualifiedName(this Type type)
-        {
-            return RuntimeTypeNameFormatter.Format(type);
-            //string shortened;
-            //if (ShortenedTypeNames.TryGetValue(type, out shortened))
-            //{
-            //    return shortened;
-            //}
-            //else
-            //{
-            //    var assemblyName = type.GetTypeInfo().Assembly.GetName().Name;
-            //    shortened = string.Equals(assemblyName, CoreAssemblyName, StringComparison.Ordinal)
-            //        ? type.GetTypeInfo().FullName
-            //        : $"{type.GetTypeInfo().FullName}, {assemblyName}";
-            //    ShortenedTypeNames.TryAdd(type, shortened);
-            //    return shortened;
-            //}
-        }
+        public static string TypeQualifiedName(this Type type) => RuntimeTypeNameFormatter.Format(type);
     }
 
     public static class TypeUtil

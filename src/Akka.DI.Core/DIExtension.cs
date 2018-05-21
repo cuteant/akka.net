@@ -24,10 +24,6 @@ namespace Akka.DI.Core
         /// </summary>
         /// <param name="system">The actor system to use when creating the extension.</param>
         /// <returns>The extension created using the given actor system.</returns>
-        public override DIExt CreateExtension(ExtendedActorSystem system)
-        {
-            var extension = new DIExt();
-            return extension;
-        }
+        public override DIExt CreateExtension(ExtendedActorSystem system) => new DIExt();
     }
 }

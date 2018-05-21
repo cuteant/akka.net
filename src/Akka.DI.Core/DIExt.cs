@@ -16,7 +16,7 @@ namespace Akka.DI.Core
     /// </summary>
     public class DIExt : IExtension
     {
-        private IDependencyResolver dependencyResolver;
+        private IDependencyResolver _dependencyResolver;
 
         /// <summary>
         /// Initializes the extension to use a given DI resolver.
@@ -27,8 +27,7 @@ namespace Akka.DI.Core
         /// </exception>
         public void Initialize(IDependencyResolver dependencyResolver)
         {
-            if (dependencyResolver == null) throw new ArgumentNullException(nameof(dependencyResolver), $"DIExt requires {nameof(dependencyResolver)} to be provided");
-            this.dependencyResolver = dependencyResolver;
+            _dependencyResolver = dependencyResolver ?? throw new ArgumentNullException(nameof(dependencyResolver), $"DIExt requires {nameof(dependencyResolver)} to be provided");
         }
 
         /// <summary>
@@ -36,9 +35,6 @@ namespace Akka.DI.Core
         /// </summary>
         /// <param name="actorType">The actor type for which to create the <see cref="Akka.Actor.Props"/> configuration.</param>
         /// <returns>A <see cref="Akka.Actor.Props"/> configuration object for the given actor type.</returns>
-        public Props Props(Type actorType)
-        {
-            return new Props(typeof(DIActorProducer), new object[] { dependencyResolver, actorType });
-        }
+        public Props Props(Type actorType) => new Props(typeof(DIActorProducer), new object[] { _dependencyResolver, actorType });
     }
 }

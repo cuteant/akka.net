@@ -21,10 +21,10 @@ namespace Akka.DI.AutoFac
     /// </summary>
     public class AutoFacDependencyResolver : IDependencyResolver, INoSerializationVerificationNeeded
     {
-        private ILifetimeScope container;
-        private ConcurrentDictionary<string, Type> typeCache;
-        private ActorSystem system;
-        private ConditionalWeakTable<ActorBase, ILifetimeScope> references;
+        private readonly ILifetimeScope _container;
+        private readonly ConcurrentDictionary<string, Type> _typeCache;
+        private readonly ActorSystem _system;
+        private readonly ConditionalWeakTable<ActorBase, ILifetimeScope> _references;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="AutoFacDependencyResolver"/> class.
@@ -36,13 +36,11 @@ namespace Akka.DI.AutoFac
         /// </exception>
         public AutoFacDependencyResolver(ILifetimeScope container, ActorSystem system)
         {
-            if (system == null) throw new ArgumentNullException(nameof(system));
-            if (container == null) throw new ArgumentNullException(nameof(container));
-            this.container = container;
-            typeCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal); //OrdinalIgnoreCase
-            this.system = system;
-            this.system.AddDependencyResolver(this);
-            this.references = new ConditionalWeakTable<ActorBase, ILifetimeScope>();
+            _container = container ?? throw new ArgumentNullException(nameof(container));
+            _typeCache = new ConcurrentDictionary<string, Type>(StringComparer.Ordinal); //OrdinalIgnoreCase
+            _system = system ?? throw new ArgumentNullException(nameof(system));
+            _system.AddDependencyResolver(this);
+            _references = new ConditionalWeakTable<ActorBase, ILifetimeScope>();
         }
 
         /// <summary>
@@ -52,10 +50,10 @@ namespace Akka.DI.AutoFac
         /// <returns>The type with the specified actor name</returns>
         public Type GetType(string actorName)
         {
-            typeCache.
+            _typeCache.
                 TryAdd(actorName,
                        actorName.GetTypeValue() ??
-                       container.
+                       _container.
                        ComponentRegistry.
                        Registrations.
                        Where(registration => registration.Activator.LimitType.
@@ -63,7 +61,7 @@ namespace Akka.DI.AutoFac
                         Select(registration => registration.Activator.LimitType).
                         FirstOrDefault());
 
-            return typeCache[actorName];
+            return _typeCache[actorName];
         }
 
         /// <summary>
@@ -75,9 +73,9 @@ namespace Akka.DI.AutoFac
         {
             return () =>
             {
-                var scope = container.BeginLifetimeScope();
+                var scope = _container.BeginLifetimeScope();
                 var actor = (ActorBase)scope.Resolve(actorType);
-                references.Add(actor, scope);
+                _references.Add(actor, scope);
                 return actor;
             };
         }
@@ -99,7 +97,7 @@ namespace Akka.DI.AutoFac
         /// <returns>The configuration object for the given actor type</returns>
         public virtual Props Create(Type actorType)
         {
-            return system.GetExtension<DIExt>().Props(actorType);
+            return _system.GetExtension<DIExt>().Props(actorType);
         }
 
         /// <summary>
@@ -108,12 +106,10 @@ namespace Akka.DI.AutoFac
         /// <param name="actor">The actor to remove from the container</param>
         public void Release(ActorBase actor)
         {
-            ILifetimeScope scope;
-
-            if (references.TryGetValue(actor, out scope))
+            if (_references.TryGetValue(actor, out ILifetimeScope scope))
             {
                 scope.Dispose();
-                references.Remove(actor);
+                _references.Remove(actor);
             }
         }
     }

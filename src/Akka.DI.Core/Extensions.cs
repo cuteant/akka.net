@@ -6,14 +6,8 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Reflection;
 using Akka.Actor;
 using CuteAnt.Reflection;
-//#if CORECLR 
-//using Microsoft.Extensions.DependencyModel;
-//#endif
 
 namespace Akka.DI.Core
 {
@@ -43,65 +37,20 @@ namespace Akka.DI.Core
         /// </summary>
         /// <param name="system">The actor system that contains the DI extension.</param>
         /// <returns>An adapter used to generate <see cref="Akka.Actor.Props"/> configuration objects using the DI extension.</returns>
-        public static DIActorSystemAdapter DI(this ActorSystem system)
-        {
-            return new DIActorSystemAdapter(system);
-        }
+        public static DIActorSystemAdapter DI(this ActorSystem system) => new DIActorSystemAdapter(system);
 
         /// <summary>
         /// Creates an adapter used to generate <see cref="Akka.Actor.Props"/> configuration objects using the DI extension using a given actor context.
         /// </summary>
         /// <param name="context">The actor context associated with a system that contains the DI extension.</param>
         /// <returns>An adapter used to generate <see cref="Akka.Actor.Props"/> configuration objects using the DI extension.</returns>
-        public static DIActorContextAdapter DI(this IActorContext context)
-        {
-            return new DIActorContextAdapter(context);
-        }
+        public static DIActorContextAdapter DI(this IActorContext context) => new DIActorContextAdapter(context);
 
         /// <summary>
         /// Retrieves the <see cref="Type"/> with a given name from the current <see cref="AppDomain"/>.
         /// </summary>
         /// <param name="typeName">The string representation of the type to retrieve.</param>
         /// <returns>The <see cref="Type"/> with the given name.</returns>
-        public static Type GetTypeValue(this string typeName)
-        {
-            return TypeUtils.TryResolveType(typeName, out var type) ? type : null;
-            //var firstTry = TypeUtils.ResolveType(typeName);
-            //Func<Type> searchForType = () =>
-            //    GetLoadedAssemblies()
-            //        .SelectMany(x => x.GetTypes())
-            //        .FirstOrDefault(t => string.Equals(t.Name, typeName, StringComparison.Ordinal));
-            //return firstTry ?? searchForType();
-        }
-
-        //        /// <summary>
-        //        /// Gets the list of loaded assemblies
-        //        /// </summary>
-        //        /// <returns>The list of loaded assemblies</returns>
-        //        private static IEnumerable<Assembly> GetLoadedAssemblies()
-        //        {
-        //#if APPDOMAIN
-        //            return AppDomain.CurrentDomain.GetAssemblies();
-        //#elif CORECLR 
-        //            var assemblies = new List<Assembly>();
-        //            var dependencies = DependencyContext.Default.RuntimeLibraries;
-        //            foreach (var library in dependencies)
-        //            {
-        //                try
-        //                {
-        //                    var assembly = Assembly.Load(new AssemblyName(library.Name));
-        //                    assemblies.Add(assembly);
-        //                }
-        //                catch
-        //                {
-        //                    //do nothing can't if can't load assembly
-        //                }
-        //            }
-        //            return assemblies;
-        //#else
-        //#warning Method not implemented
-        //            throw new NotImplementedException();
-        //#endif
-        //        }
+        public static Type GetTypeValue(this string typeName) => TypeUtils.TryResolveType(typeName, out var type) ? type : null;
     }
 }

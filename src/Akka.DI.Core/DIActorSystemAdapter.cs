@@ -16,8 +16,8 @@ namespace Akka.DI.Core
     /// </summary>
     public class DIActorSystemAdapter
     {
-        readonly DIExt producer;
-        readonly ActorSystem system;
+        readonly DIExt _producer;
+        readonly ActorSystem _system;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DIActorSystemAdapter"/> class.
@@ -28,9 +28,8 @@ namespace Akka.DI.Core
         /// </exception>
         public DIActorSystemAdapter(ActorSystem system)
         {
-            if (system == null) throw new ArgumentNullException(nameof(system), $"DIActorSystemAdapter requires {nameof(system)} to be provided");
-            this.system = system;
-            this.producer = system.GetExtension<DIExt>();
+            _system = system ?? throw new ArgumentNullException(nameof(system), $"DIActorSystemAdapter requires {nameof(system)} to be provided");
+            _producer = system.GetExtension<DIExt>();
         }
 
         /// <summary>
@@ -38,19 +37,13 @@ namespace Akka.DI.Core
         /// </summary>
         /// <param name="actorType">The actor type for which to create the <see cref="Akka.Actor.Props"/> configuration.</param>
         /// <returns>A <see cref="Akka.Actor.Props"/> configuration object for the given actor type.</returns>
-        public Props Props(Type actorType) 
-        {
-            return producer.Props(actorType);
-        }
+        public Props Props(Type actorType) => _producer.Props(actorType);
 
         /// <summary>
         /// Creates a <see cref="Akka.Actor.Props"/> configuration object for a given actor type.
         /// </summary>
         /// <typeparam name="TActor">The actor type for which to create the <see cref="Akka.Actor.Props"/> configuration.</typeparam>
         /// <returns>A <see cref="Akka.Actor.Props"/> configuration object for the given actor type.</returns>
-        public Props Props<TActor>() where TActor : ActorBase
-        {
-            return Props(typeof(TActor));
-        }
+        public Props Props<TActor>() where TActor : ActorBase => Props(typeof(TActor));
     }
 }

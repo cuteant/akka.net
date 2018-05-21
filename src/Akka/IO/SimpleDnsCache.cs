@@ -36,7 +36,7 @@ namespace Akka.IO
         /// </summary>
         public SimpleDnsCache()
         {
-            _cache = new AtomicReference<Cache>(new Cache(new SortedSet<ExpiryEntry>(new ExpiryEntryComparer()), new Dictionary<string, CacheEntry>(), Clock));
+            _cache = new AtomicReference<Cache>(new Cache(new SortedSet<ExpiryEntry>(new ExpiryEntryComparer()), new Dictionary<string, CacheEntry>(StringComparer.Ordinal), Clock));
             _ticksBase = DateTime.Now.Ticks;
         }
 

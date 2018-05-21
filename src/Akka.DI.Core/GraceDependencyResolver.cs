@@ -15,10 +15,9 @@ namespace Akka.DI.Grace
     /// </summary>
     public class GraceDependencyResolver : IDependencyResolver
     {
-        private IInjectionScope container;
-        //private ConcurrentDictionary<string, Type> typeCache;
-        private ActorSystem system;
-        private ConditionalWeakTable<ActorBase, IInjectionScope> references;
+        private readonly IInjectionScope _container;
+        private readonly ActorSystem _system;
+        private readonly ConditionalWeakTable<ActorBase, IInjectionScope> _references;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="GraceDependencyResolver"/> class.
@@ -30,17 +29,10 @@ namespace Akka.DI.Grace
         /// </exception>
         public GraceDependencyResolver(IInjectionScope container, ActorSystem system)
         {
-            if (system == null) throw new ArgumentNullException(nameof(system));
-            if (container == null) throw new ArgumentNullException(nameof(container));
-            this.container = container;
-//#if NET45
-//            typeCache = new ConcurrentDictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
-//#else
-//            typeCache = new ConcurrentDictionary<string, Type>(StringComparer.OrdinalIgnoreCase);
-//#endif
-            this.system = system;
-            this.system.AddDependencyResolver(this);
-            this.references = new ConditionalWeakTable<ActorBase, IInjectionScope>();
+            _container = container ?? throw new ArgumentNullException(nameof(container));
+            _system = system ?? throw new ArgumentNullException(nameof(system));
+            _system.AddDependencyResolver(this);
+            _references = new ConditionalWeakTable<ActorBase, IInjectionScope>();
         }
 
         /// <summary>
@@ -48,13 +40,7 @@ namespace Akka.DI.Grace
         /// </summary>
         /// <param name="actorName">The name of the actor to retrieve</param>
         /// <returns>The type with the specified actor name</returns>
-        public Type GetType(string actorName)
-        {
-            //typeCache.TryAdd(actorName, actorName.GetTypeValue());
-
-            //return typeCache[actorName];
-            return TypeUtils.ResolveType(actorName);
-        }
+        public Type GetType(string actorName) => TypeUtils.ResolveType(actorName);
 
         /// <summary>
         /// Creates a delegate factory used to create actors based on their type
@@ -65,9 +51,9 @@ namespace Akka.DI.Grace
         {
             return () =>
             {
-                var nestedContainer = container.CreateChildScope();
+                var nestedContainer = _container.CreateChildScope();
                 var actor = (ActorBase)nestedContainer.Locate(actorType);
-                references.Add(actor, nestedContainer);
+                _references.Add(actor, nestedContainer);
                 return actor;
             };
         }
@@ -77,20 +63,14 @@ namespace Akka.DI.Grace
         /// </summary>
         /// <typeparam name="TActor">The type of actor the configuration is based</typeparam>
         /// <returns>The configuration object for the given actor type</returns>
-        public Props Create<TActor>() where TActor : ActorBase
-        {
-            return Create(typeof(TActor));
-        }
+        public Props Create<TActor>() where TActor : ActorBase => Create(typeof(TActor));
 
         /// <summary>
         /// Used to register the configuration for an actor of the specified type <paramref name="actorType"/> 
         /// </summary>
         /// <param name="actorType">The <see cref="Type"/> of actor the configuration is based</param>
         /// <returns>The configuration object for the given actor type</returns>
-        public virtual Props Create(Type actorType)
-        {
-            return system.GetExtension<DIExt>().Props(actorType);
-        }
+        public virtual Props Create(Type actorType) => _system.GetExtension<DIExt>().Props(actorType);
 
         /// <summary>
         /// Signals the container to release it's reference to the actor.
@@ -98,10 +78,10 @@ namespace Akka.DI.Grace
         /// <param name="actor">The actor to remove from the container</param>
         public void Release(ActorBase actor)
         {
-            if (references.TryGetValue(actor, out IInjectionScope nestedContainer))
+            if (_references.TryGetValue(actor, out IInjectionScope nestedContainer))
             {
                 nestedContainer.Dispose();
-                references.Remove(actor);
+                _references.Remove(actor);
             }
         }
     }

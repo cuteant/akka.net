@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using Akka.Event;
 using Serilog.Events;
@@ -39,7 +40,7 @@ namespace Akka.Logger.Serilog
         {
             var template = _templateCache.Parse(format);
             var propertyTokens = template.Tokens.OfType<PropertyToken>().ToArray();
-            var properties = new Dictionary<string, LogEventPropertyValue>();
+            var properties = new Dictionary<string, LogEventPropertyValue>(StringComparer.Ordinal);
 
             for (var i = 0; i < args.Length; i++)
             {
