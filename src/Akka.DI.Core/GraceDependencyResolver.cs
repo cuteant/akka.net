@@ -47,15 +47,14 @@ namespace Akka.DI.Grace
         /// </summary>
         /// <param name="actorType">The type of actor that the factory builds</param>
         /// <returns>A delegate factory used to create actors</returns>
-        public Func<ActorBase> CreateActorFactory(Type actorType)
+        public Func<ActorBase> CreateActorFactory(Type actorType) => () => CreateActor(actorType);
+
+        private ActorBase CreateActor(Type actorType)
         {
-            return () =>
-            {
-                var nestedContainer = _container.CreateChildScope();
-                var actor = (ActorBase)nestedContainer.Locate(actorType);
-                _references.Add(actor, nestedContainer);
-                return actor;
-            };
+            var nestedContainer = _container.CreateChildScope();
+            var actor = (ActorBase)nestedContainer.Locate(actorType);
+            _references.Add(actor, nestedContainer);
+            return actor;
         }
 
         /// <summary>

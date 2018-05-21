@@ -69,15 +69,14 @@ namespace Akka.DI.AutoFac
         /// </summary>
         /// <param name="actorType">The type of actor that the factory builds</param>
         /// <returns>A delegate factory used to create actors</returns>
-        public Func<ActorBase> CreateActorFactory(Type actorType)
+        public Func<ActorBase> CreateActorFactory(Type actorType) => () => CreateActor(actorType);
+
+        private ActorBase CreateActor(Type actorType)
         {
-            return () =>
-            {
-                var scope = _container.BeginLifetimeScope();
-                var actor = (ActorBase)scope.Resolve(actorType);
-                _references.Add(actor, scope);
-                return actor;
-            };
+            var scope = _container.BeginLifetimeScope();
+            var actor = (ActorBase)scope.Resolve(actorType);
+            _references.Add(actor, scope);
+            return actor;
         }
 
         /// <summary>
