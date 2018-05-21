@@ -10,36 +10,24 @@ namespace Akka.Serialization
     {
         private readonly MsgPackSerializerSettings _settings;
         private static readonly LZ4TypelessMessagePackMessageFormatter s_formatter = LZ4TypelessMessagePackMessageFormatter.DefaultInstance;
+        private readonly int _initialBufferSize;
 
-        static LZ4TypelessMsgPackSerializer()
-        {
-            MsgPackSerializerHelper.Register();
-        }
+        static LZ4TypelessMsgPackSerializer() => MsgPackSerializerHelper.Register();
 
-        public LZ4TypelessMsgPackSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default)
-        {
-        }
+        public LZ4TypelessMsgPackSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default) { }
 
-        public LZ4TypelessMsgPackSerializer(ExtendedActorSystem system, Config config)
-            : this(system, MsgPackSerializerSettings.Create(config))
-        {
-        }
+        public LZ4TypelessMsgPackSerializer(ExtendedActorSystem system, Config config) : this(system, MsgPackSerializerSettings.Create(config)) { }
 
         public LZ4TypelessMsgPackSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
         {
             MsgPackSerializerHelper.LocalSystem.Value = system;
             _settings = settings;
+            _initialBufferSize = settings.InitialBufferSize;
         }
 
-        public override byte[] ToBinary(object obj)
-        {
-            return s_formatter.SerializeObject(obj);
-        }
+        public override byte[] ToBinary(object obj) => s_formatter.SerializeObject(obj, _initialBufferSize);
 
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            return s_formatter.Deserialize(type, bytes);
-        }
+        public override object FromBinary(byte[] bytes, Type type) => s_formatter.Deserialize(type, bytes);
 
         public override int Identifier => 153;
 

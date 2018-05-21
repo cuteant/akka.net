@@ -27,6 +27,7 @@ namespace Akka.Serialization
         public readonly HyperionSerializerSettings Settings;
 
         private readonly HyperionMessageFormatter _serializer;
+        private readonly int _initialBufferSize;
 
         /// <summary>Initializes a new instance of the <see cref="HyperionSerializer"/> class.</summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
@@ -58,6 +59,7 @@ namespace Akka.Serialization
 
             var provider = CreateKnownTypesProvider(system, settings.KnownTypesProvider);
 
+            _initialBufferSize = settings.InitialBufferSize;
             _serializer =
                 new HyperionMessageFormatter(new SerializerOptions(
                     preserveObjectReferences: settings.PreserveObjectReferences,
@@ -76,19 +78,13 @@ namespace Akka.Serialization
         /// <summary>Serializes the given object into a byte array</summary>
         /// <param name="obj">The object to serialize</param>
         /// <returns>A byte array containing the serialized object</returns>
-        public override byte[] ToBinary(object obj)
-        {
-            return _serializer.SerializeObject(obj);
-        }
+        public override byte[] ToBinary(object obj) => _serializer.SerializeObject(obj, _initialBufferSize);
 
         /// <summary>Deserializes a byte array into an object of type <paramref name="type"/>.</summary>
         /// <param name="bytes">The array containing the serialized object</param>
         /// <param name="type">The type of object contained in the array</param>
         /// <returns>The object contained in the array</returns>
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            return _serializer.Deserialize(type, bytes);
-        }
+        public override object FromBinary(byte[] bytes, Type type) => _serializer.Deserialize(type, bytes);
 
         private IKnownTypesProvider CreateKnownTypesProvider(ExtendedActorSystem system, Type type)
         {
@@ -111,6 +107,7 @@ namespace Akka.Serialization
     {
         /// <summary>Default settings used by <see cref="HyperionSerializer"/> when no config has been specified.</summary>
         public static readonly HyperionSerializerSettings Default = new HyperionSerializerSettings(
+            initialBufferSize: 1024 * 64,
             preserveObjectReferences: true,
             versionTolerance: true,
             knownTypesProvider: typeof(NoKnownTypes));
@@ -133,10 +130,14 @@ namespace Akka.Serialization
             var type = !string.IsNullOrEmpty(typeName) ? TypeUtils.ResolveType(typeName) : null; // Type.GetType(typeName, true)
 
             return new HyperionSerializerSettings(
+                initialBufferSize: config.GetInt("initial-buffer-size", 1024 * 64),
                 preserveObjectReferences: config.GetBoolean("preserve-object-references", true),
                 versionTolerance: config.GetBoolean("version-tolerance", true),
                 knownTypesProvider: type);
         }
+
+        /// <summary>The initial buffer size.</summary>
+        public readonly int InitialBufferSize;
 
         /// <summary>When true, it tells <see cref="HyperionSerializer"/> to keep track of references in
         /// serialized/deserialized object graph.</summary>
@@ -154,16 +155,21 @@ namespace Akka.Serialization
         public readonly Type KnownTypesProvider;
 
         /// <summary>Creates a new instance of a <see cref="HyperionSerializerSettings"/>.</summary>
+        /// <param name="initialBufferSize">The initial buffer size.</param>
         /// <param name="preserveObjectReferences">Flag which determines if serializer should keep track of references in serialized object graph.</param>
         /// <param name="versionTolerance">Flag which determines if field data should be serialized as part of type manifest.</param>
         /// <param name="knownTypesProvider">Type implementing <see cref="IKnownTypesProvider"/> to be used to determine a list of
         /// types implicitly known by all cooperating serializer.</param>
         /// <exception cref="ArgumentException">Raised when `known-types-provider` type doesn't implement <see cref="IKnownTypesProvider"/> interface.</exception>
-        public HyperionSerializerSettings(bool preserveObjectReferences, bool versionTolerance, Type knownTypesProvider)
+        public HyperionSerializerSettings(int initialBufferSize, bool preserveObjectReferences, bool versionTolerance, Type knownTypesProvider)
         {
             knownTypesProvider = knownTypesProvider ?? typeof(NoKnownTypes);
             if (!typeof(IKnownTypesProvider).IsAssignableFrom(knownTypesProvider))
                 throw new ArgumentException($"Known types provider must implement an interface {typeof(IKnownTypesProvider).FullName}");
+
+            if (initialBufferSize < 1024) { initialBufferSize = 1024; }
+            if (initialBufferSize > 81920) { initialBufferSize = 81920; }
+            InitialBufferSize = initialBufferSize;
 
             PreserveObjectReferences = preserveObjectReferences;
             VersionTolerance = versionTolerance;

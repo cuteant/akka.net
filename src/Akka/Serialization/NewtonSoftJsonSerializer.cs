@@ -8,18 +8,17 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
+using System.IO;
 using System.Linq;
 using System.Reflection;
 using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
-using System.IO;
-using CuteAnt.Text;
-using CuteAnt.Buffers;
 using CuteAnt.Collections;
 using CuteAnt.Extensions.Serialization;
 using CuteAnt.Reflection;
+using CuteAnt.Text;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -36,6 +35,7 @@ namespace Akka.Serialization
         /// A default instance of <see cref="NewtonSoftJsonSerializerSettings"/> used when no custom configuration has been provided.
         /// </summary>
         public static readonly NewtonSoftJsonSerializerSettings Default = new NewtonSoftJsonSerializerSettings(
+            initialBufferSize: 1024 * 64,
             encodeTypeNames: true,
             preserveObjectReferences: true,
             converters: Enumerable.Empty<Type>());
@@ -57,6 +57,7 @@ namespace Akka.Serialization
                 throw new ArgumentNullException(nameof(config), $"{nameof(NewtonSoftJsonSerializerSettings)} config was not provided");
 
             return new NewtonSoftJsonSerializerSettings(
+                initialBufferSize: config.GetInt("initial-buffer-size", 1024 * 64),
                 encodeTypeNames: config.GetBoolean("encode-type-names", true),
                 preserveObjectReferences: config.GetBoolean("preserve-object-references", true),
                 converters: GetConverterTypes(config));
@@ -76,6 +77,9 @@ namespace Akka.Serialization
                     yield return type;
                 }
         }
+
+        /// <summary>The initial buffer size.</summary>
+        public readonly int InitialBufferSize;
 
         /// <summary>
         /// When true, serializer will encode a type names into serialized json $type field. This must be true 
@@ -99,11 +103,16 @@ namespace Akka.Serialization
         /// <summary>
         /// Creates a new instance of the <see cref="NewtonSoftJsonSerializerSettings"/>.
         /// </summary>
+        /// <param name="initialBufferSize">The initial buffer size.</param>
         /// <param name="encodeTypeNames">Determines if a special `$type` field should be emitted into serialized JSON. Must be true if corresponding serializer is used as default.</param>
         /// <param name="preserveObjectReferences">Determines if object references should be tracked within serialized object graph. Must be true if corresponding serialize is used as default.</param>
         /// <param name="converters">A list of types implementing a <see cref="JsonConverter"/> to support custom types serialization.</param>
-        public NewtonSoftJsonSerializerSettings(bool encodeTypeNames, bool preserveObjectReferences, IEnumerable<Type> converters)
+        public NewtonSoftJsonSerializerSettings(int initialBufferSize, bool encodeTypeNames, bool preserveObjectReferences, IEnumerable<Type> converters)
         {
+            if (initialBufferSize < 1024) { initialBufferSize = 1024; }
+            if (initialBufferSize > 81920) { initialBufferSize = 81920; }
+            InitialBufferSize = initialBufferSize;
+
             EncodeTypeNames = encodeTypeNames;
             PreserveObjectReferences = preserveObjectReferences;
             Converters = converters ?? throw new ArgumentNullException(nameof(converters), $"{nameof(NewtonSoftJsonSerializerSettings)} requires a sequence of converters.");
@@ -118,6 +127,7 @@ namespace Akka.Serialization
     {
         private readonly JsonSerializer _serializer;
         private readonly JsonMessageFormatter _jsonFormatter;
+        private readonly int _initialBufferSize;
 
         /// <summary>
         /// TBD
@@ -155,6 +165,7 @@ namespace Akka.Serialization
             converters.Add(new DiscriminatedUnionConverter());
 
             #region ## 苦竹 修改 ##
+            _initialBufferSize = settings.InitialBufferSize;
             //Settings = new JsonSerializerSettings
             //{
             //    PreserveReferencesHandling = settings.PreserveObjectReferences
@@ -238,10 +249,7 @@ namespace Akka.Serialization
         /// </summary>
         /// <param name="obj">The object to serialize </param>
         /// <returns>A byte array containing the serialized object</returns>
-        public override byte[] ToBinary(object obj)
-        {
-            return _jsonFormatter.SerializeObject(obj);
-        }
+        public override byte[] ToBinary(object obj) => _jsonFormatter.SerializeObject(obj, _initialBufferSize);
 
         private static JsonWriter CreateJsonWriter(Stream writeStream, Encoding effectiveEncoding, IArrayPool<char> charPool, Formatting? jsonFormatting)
         {

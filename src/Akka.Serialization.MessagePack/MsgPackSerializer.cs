@@ -16,52 +16,24 @@ namespace Akka.Serialization
     {
         private readonly MsgPackSerializerSettings _settings;
         private static readonly MessagePackMessageFormatter s_formatter = MessagePackMessageFormatter.DefaultInstance;
+        private readonly int _initialBufferSize;
 
-        static MsgPackSerializer()
-        {
-            MsgPackSerializerHelper.Register();
-        }
+        static MsgPackSerializer() => MsgPackSerializerHelper.Register();
 
-        public MsgPackSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default)
-        {
-        }
+        public MsgPackSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default) { }
 
-        public MsgPackSerializer(ExtendedActorSystem system, Config config)
-            : this(system, MsgPackSerializerSettings.Create(config))
-        {
-        }
+        public MsgPackSerializer(ExtendedActorSystem system, Config config) : this(system, MsgPackSerializerSettings.Create(config)) { }
 
         public MsgPackSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
         {
             MsgPackSerializerHelper.LocalSystem.Value = system;
             _settings = settings;
+            _initialBufferSize = settings.InitialBufferSize;
         }
 
-        public override byte[] ToBinary(object obj)
-        {
-            //if (_settings.EnableLz4Compression)
-            //{
-            //    return LZ4MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), obj);
-            //}
-            //else
-            //{
-            //    return MessagePackSerializer.NonGeneric.Serialize(obj.GetType(), obj);
-            //}
-            return s_formatter.SerializeObject(obj);
-        }
+        public override byte[] ToBinary(object obj) => s_formatter.SerializeObject(obj, _initialBufferSize);
 
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            //if (_settings.EnableLz4Compression)
-            //{
-            //    return LZ4MessagePackSerializer.NonGeneric.Deserialize(type, bytes);
-            //}
-            //else
-            //{
-            //    return MessagePackSerializer.NonGeneric.Deserialize(type, bytes);
-            //}
-            return s_formatter.Deserialize(type, bytes);
-        }
+        public override object FromBinary(byte[] bytes, Type type) => s_formatter.Deserialize(type, bytes);
 
         public override int Identifier => 150;
 
