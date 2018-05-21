@@ -12,6 +12,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Remote.Serialization;
 using Akka.Remote.Transport;
+using Akka.Serialization;
 using Akka.TestKit;
 using Akka.Util.Internal;
 using Google.Protobuf;
@@ -41,18 +42,18 @@ namespace Akka.Remote.Tests.Transport
 
         private IHandleEvent testHeartbeat;
         private IHandleEvent testPayload;
-        private IHandleEvent testDisassociate(DisassociateInfo info) { return new InboundPayload(codec.ConstructDisassociate(info)); }
-        private IHandleEvent testAssociate(int uid) { return new InboundPayload(codec.ConstructAssociate(new HandshakeInfo(remoteAkkaAddress, uid))); }
+        private IHandleEvent testDisassociate(DisassociateInfo info) { return new InboundPayload(codec.ConstructDisassociate(info).ToByteString()); }
+        private IHandleEvent testAssociate(int uid) { return new InboundPayload(codec.ConstructAssociate(new HandshakeInfo(remoteAkkaAddress, uid)).ToByteString()); }
         private TimeSpan DefaultTimeout { get { return Dilated(TestKitSettings.DefaultTimeout); } }
 
         public AkkaProtocolSpec()
             : base(@"akka.test.default-timeout = 1.5 s")
         {
             codec = new AkkaPduProtobuffCodec(Sys);
-            testEnvelope = codec.ConstructMessage(localAkkaAddress, TestActor, testMsg);
-            testMsgPdu = codec.ConstructPayload(testEnvelope);
+            testEnvelope = codec.ConstructMessage(localAkkaAddress, TestActor, testMsg).ToByteString();
+            testMsgPdu = codec.ConstructPayload(testEnvelope).ToByteString();
 
-            testHeartbeat = new InboundPayload(codec.ConstructHeartbeat());
+            testHeartbeat = new InboundPayload(codec.ConstructHeartbeat().ToByteString());
             testPayload = new InboundPayload(testMsgPdu);
         }
 

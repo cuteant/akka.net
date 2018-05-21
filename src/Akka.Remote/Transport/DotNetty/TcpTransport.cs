@@ -11,8 +11,8 @@ using System.Net.Sockets;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
-using Akka.Serialization;
 using Akka.Event;
+using Akka.Serialization;
 using DotNetty.Buffers;
 using DotNetty.Common.Utilities;
 using DotNetty.Transport.Channels;
@@ -351,26 +351,21 @@ namespace Akka.Remote.Transport.DotNetty
         public TcpAssociationHandle(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
             : base(localAddress, remoteAddress) => _channel = channel;
 
-        public override bool Write(ByteString payload)
+        public override bool Write(in ByteBufferWrapper payload)
         {
             if (_channel.Open && _channel.IsWritable)
             {
-                var data = ToByteBuffer(payload);
-                _channel.WriteAndFlushAsync(data);
+                if (payload.IsPooled)
+                {
+                    _channel.WriteAndFlushAsync(BufferManagerUtil.WrappedBuffer(payload.Payload));
+                }
+                else
+                {
+                    _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload.Payload.Array));
+                }
                 return true;
             }
             return false;
-        }
-
-        private static IByteBuffer ToByteBuffer(ByteString payload)
-        {
-            //TODO: optimize DotNetty byte buffer usage
-            // (maybe custom IByteBuffer working directly on ByteString?)
-
-            // ## 苦竹 修改 ##
-            //var buffer = Unpooled.WrappedBuffer(payload.ToByteArray());
-            //return buffer;
-            return Unpooled.WrappedBuffer(ProtobufUtil.GetBuffer(payload));
         }
 
         public override void Disassociate() => _channel.CloseAsync();

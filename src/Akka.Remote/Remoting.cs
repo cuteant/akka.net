@@ -16,6 +16,7 @@ using Akka.Configuration;
 using Akka.Event;
 using Akka.Remote.Transport;
 using Akka.Util.Internal;
+using CuteAnt.AsyncEx;
 
 namespace Akka.Remote
 {
@@ -103,7 +104,7 @@ namespace Akka.Remote
         // once, and emulates a lazy val
         private volatile Address _defaultAddress;
 
-        private IActorRef _transportSupervisor;
+        private readonly IActorRef _transportSupervisor;
         private readonly EventPublisher _eventPublisher;
 
         /// <summary>TBD</summary>
@@ -210,7 +211,7 @@ namespace Akka.Remote
             if (_endpointManager == null)
             {
                 _log.Warning("Remoting is not running. Ignoring shutdown attempt");
-                return Task.FromResult(true);
+                return TaskConstants.BooleanTrue;
             }
             else
             {

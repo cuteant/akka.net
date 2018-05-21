@@ -11,9 +11,10 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
-using Google.Protobuf;
+using CuteAnt.AsyncEx;
 
 namespace Akka.Remote.Transport
 {
@@ -152,13 +153,13 @@ namespace Akka.Remote.Transport
 
         private Random Rng => ThreadLocalRandom.Current;
 
-        private bool _shouldDebugLog;
+        private readonly bool _shouldDebugLog;
         private volatile IAssociationEventListener _upstreamListener = null;
         private readonly ConcurrentDictionary<Address, IGremlinMode> addressChaosTable = new ConcurrentDictionary<Address, IGremlinMode>();
         private volatile IGremlinMode _allMode = PassThru.Instance;
 
-        /// <summary>TBD</summary>
-        private int MaximumOverhead = 0;
+        ///// <summary>TBD</summary>
+        //private int MaximumOverhead = 0;
 
         #region - AbstractTransportAdapter members -
 
@@ -177,12 +178,12 @@ namespace Akka.Remote.Transport
             {
                 case All all:
                     _allMode = all.Mode;
-                    return Task.FromResult(true);
+                    return TaskConstants.BooleanTrue;
 
                 case One one:
                     // don't care about the protocol part - we are injected in the stack anyway!
                     addressChaosTable.AddOrUpdate(NakedAddress(one.RemoteAddress), address => one.Mode, (address, mode) => one.Mode);
-                    return Task.FromResult(true);
+                    return TaskConstants.BooleanTrue;
 
                 default:
                     return WrappedTransport.ManagementCommand(message);
@@ -375,7 +376,7 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(ByteString payload)
+        public override bool Write(in ByteBufferWrapper payload)
         {
             if (!_gremlinAdapter.ShouldDropOutbound(WrappedHandle.RemoteAddress, payload, "handler.write"))
             {

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Reflection;
 using Akka.Actor;
+using CuteAnt.Buffers;
 using CuteAnt.Reflection;
 using Google.Protobuf;
 
@@ -74,5 +75,78 @@ namespace Akka.Serialization
         /// <param name="bytes">The <see cref="ByteString"/> containing the serialized object</param>
         /// <returns>The object contained in the <see cref="ByteString"/>.</returns>
         public static T FromByteString<T>(this Serializer serializer, ByteString bytes) => (T)FromByteString(serializer, bytes, typeof(T));
+
+
+        public static ByteBufferWrapper ToUnpooledByteBuffer(this IMessage message) => new ByteBufferWrapper(message.ToByteArray());
+
+        public static ByteBufferWrapper ToUnpooledByteBuffer(this ByteString bytes) => new ByteBufferWrapper(GetBuffer(bytes));
+
+        private const int c_initialBufferSize = 1024 * 64;
+        /// <summary>Serializes the given message data.</summary>
+        /// <param name="message">The message to write.</param>
+        /// <param name="initialBufferSize">The initial buffer size.</param>
+        /// <returns></returns>
+        public static ByteBufferWrapper ToPooledByteBuffer(this IMessage message, int initialBufferSize = c_initialBufferSize)
+        {
+            using (var pooledStream = BufferManagerOutputStreamManager.Create())
+            {
+                var outputStream = pooledStream.Object;
+                outputStream.Reinitialize(initialBufferSize, BufferManager.Shared);
+                message.WriteTo(outputStream);
+                return new ByteBufferWrapper(outputStream.ToArraySegment());
+            }
+        }
+
+        public
+#if !NET451
+            unsafe
+#endif
+            static ByteString ToByteString(this in ByteBufferWrapper byteBuffer)
+        {
+            if (byteBuffer.IsPooled)
+            {
+                var payload = byteBuffer.Payload;
+                var bytes = new byte[payload.Count];
+#if NET451
+                Buffer.BlockCopy(payload.Array, payload.Offset, bytes, 0, payload.Count);
+#else
+
+                fixed (byte* pSrc = &payload.Array[payload.Offset])
+                fixed (byte* pDst = &bytes[0])
+                {
+                    Buffer.MemoryCopy(pSrc, pDst, bytes.Length, payload.Count);
+                }
+#endif
+                BufferManager.Shared.Return(payload.Array);
+                return FromBytes(bytes);
+            }
+            else
+            {
+                return FromBytes(byteBuffer.Payload.Array);
+            }
+        }
+    }
+
+    public readonly struct ByteBufferWrapper
+    {
+        public readonly ArraySegment<byte> Payload;
+
+        public readonly bool IsPooled;
+
+        public readonly int Length;
+
+        public ByteBufferWrapper(in ArraySegment<byte> payload)
+        {
+            Payload = payload;
+            Length = payload.Count;
+            IsPooled = true;
+        }
+
+        public ByteBufferWrapper(byte[] payload)
+        {
+            Payload = new ArraySegment<byte>(payload);
+            Length = payload.Length;
+            IsPooled = false;
+        }
     }
 }

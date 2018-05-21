@@ -13,6 +13,7 @@ using Akka.Actor;
 using Akka.Dispatch.SysMsg;
 using Akka.Util;
 using Akka.Util.Internal;
+using Akka.Serialization;
 using Google.Protobuf;
 
 namespace Akka.Remote.Transport
@@ -787,7 +788,7 @@ namespace Akka.Remote.Transport
         }
 
         /// <inheritdoc/>
-        public override bool Write(ByteString payload)
+        public override bool Write(in ByteBufferWrapper payload)
         {
             var tokens = payload.Length;
             //need to declare recursive delegates first before they can self-reference

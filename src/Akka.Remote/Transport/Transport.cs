@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
+using Akka.Serialization;
 using Google.Protobuf;
 
 namespace Akka.Remote.Transport
@@ -332,7 +333,7 @@ namespace Akka.Remote.Transport
         /// </summary>
         /// <param name="payload">The payload to be delivered to the remote endpoint.</param>
         /// <returns>Bool indicating the availability of the association for subsequent writes.</returns>
-        public abstract bool Write(ByteString payload);
+        public abstract bool Write(in ByteBufferWrapper payload);
 
         /// <summary>
         /// Closes the underlying transport link, if needed. Some transports might not need an
@@ -347,7 +348,7 @@ namespace Akka.Remote.Transport
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((AssociationHandle)obj);

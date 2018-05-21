@@ -11,6 +11,7 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Serialization;
 using Akka.Util.Internal;
 using Google.Protobuf;
 
@@ -161,7 +162,7 @@ namespace Akka.Remote.Transport
         #region - Static properties -
 
         /// <summary>TBD</summary>
-        public static AtomicCounter UniqueId = new AtomicCounter(0);
+        public static readonly AtomicCounter UniqueId = new AtomicCounter(0);
 
         #endregion
     }
@@ -182,9 +183,9 @@ namespace Akka.Remote.Transport
             _settings = settings;
         }
 
-        private Transport _wrappedTransport;
+        private readonly Transport _wrappedTransport;
 
-        private AkkaProtocolSettings _settings;
+        private readonly AkkaProtocolSettings _settings;
 
         /// <summary>The <see cref="AkkaProtocolTransport"/> does not handle recovery of associations, this
         /// task is implemented in the remoting itself. Hence the strategy <see cref="Directive.Stop"/>.</summary>
@@ -306,7 +307,7 @@ namespace Akka.Remote.Transport
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             return obj is HandshakeInfo && Equals((HandshakeInfo)obj);
         }
@@ -361,7 +362,7 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(ByteString payload) => WrappedHandle.Write(Codec.ConstructPayload(payload));
+        public override bool Write(in ByteBufferWrapper payload) => WrappedHandle.Write(Codec.ConstructPayload(payload.ToByteString()));
 
         /// <summary>TBD</summary>
         public override void Disassociate() => Disassociate(DisassociateInfo.Unknown);
@@ -373,7 +374,7 @@ namespace Akka.Remote.Transport
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((AkkaProtocolHandle)obj);
@@ -625,13 +626,13 @@ namespace Akka.Remote.Transport
     internal sealed class ProtocolStateActor : FSM<AssociationState, ProtocolStateData>
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
-        private InitialProtocolStateData _initialData;
-        private HandshakeInfo _localHandshakeInfo;
-        private int? _refuseUid;
-        private AkkaProtocolSettings _settings;
-        private Address _localAddress;
-        private AkkaPduCodec _codec;
-        private FailureDetector _failureDetector;
+        private readonly  InitialProtocolStateData _initialData;
+        private readonly HandshakeInfo _localHandshakeInfo;
+        private readonly int? _refuseUid;
+        private readonly AkkaProtocolSettings _settings;
+        private readonly Address _localAddress;
+        private readonly AkkaPduCodec _codec;
+        private readonly FailureDetector _failureDetector;
 
         /// <summary>Constructor for outbound ProtocolStateActors</summary>
         /// <param name="handshakeInfo">TBD</param>

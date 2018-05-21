@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Dispatch.SysMsg;
 using Akka.Util.Internal;
+using CuteAnt.AsyncEx;
 
 namespace Akka.Dispatch
 {
@@ -116,7 +117,7 @@ namespace Akka.Dispatch
             RunTask(() =>
             {
                 action();
-                return Task.FromResult(0);
+                return TaskConstants.Completed;
             });
         }
 

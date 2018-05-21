@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
+using Akka.Serialization;
 using Google.Protobuf;
 
 namespace Akka.Remote.Transport
@@ -673,11 +674,11 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(ByteString payload)
+        public override bool Write(in ByteBufferWrapper payload)
         {
             if (Writeable)
             {
-                var result = _transport.Write(this, payload);
+                var result = _transport.Write(this, payload.ToByteString());
                 result.Wait(TimeSpan.FromSeconds(3));
                 return result.Result;
             }
