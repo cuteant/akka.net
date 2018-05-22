@@ -81,6 +81,7 @@ namespace Akka.Serialization
 
         public static ByteBufferWrapper ToUnpooledByteBuffer(this ByteString bytes) => new ByteBufferWrapper(GetBuffer(bytes));
 
+
         private const int c_initialBufferSize = 1024 * 64;
         public static byte[] ToArray(this IMessage message, int initialBufferSize = c_initialBufferSize)
         {
@@ -92,7 +93,6 @@ namespace Akka.Serialization
                 return outputStream.ToByteArray();
             }
         }
-
         /// <summary>Serializes the given message data.</summary>
         /// <param name="message">The message to write.</param>
         /// <param name="initialBufferSize">The initial buffer size.</param>
@@ -108,6 +108,7 @@ namespace Akka.Serialization
             }
         }
 
+
         public
 #if !NET451
             unsafe
@@ -119,7 +120,7 @@ namespace Akka.Serialization
                 var payload = byteBuffer.Payload;
                 var bytes = new byte[payload.Count];
 #if NET451
-                Buffer.BlockCopy(payload.Array, payload.Offset, bytes, 0, payload.Count);
+                Buffer.BlockCopy(payload.Array, payload.Offset, bytes, 0, bytes.Length);
 #else
 
                 fixed (byte* pSrc = &payload.Array[payload.Offset])
