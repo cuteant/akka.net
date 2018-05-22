@@ -106,9 +106,8 @@ namespace Akka.Cluster
         /// <inheritdoc cref="object.Equals(object)"/>
         public override bool Equals(object obj)
         {
-            var m = obj as Member;
-            if (m == null) return false;
-            return UniqueAddress.Equals(m.UniqueAddress);
+            if (obj is Member m) { return UniqueAddress.Equals(m.UniqueAddress); }
+            return false;
         }
 
         /// <inheritdoc cref="IComparable.CompareTo"/>
@@ -169,7 +168,7 @@ namespace Akka.Cluster
             //TODO: Akka exception?
             if (!AllowedTransitions[oldStatus].Contains(status))
                 throw new InvalidOperationException($"Invalid member status transition {Status} -> {status}");
-            
+
             return new Member(UniqueAddress, UpNumber, status, Roles);
         }
 
@@ -196,8 +195,8 @@ namespace Akka.Cluster
             /// <inheritdoc cref="IComparer{Address}.Compare"/>
             public int Compare(Address x, Address y)
             {
-                if (ReferenceEquals(x, null)) throw new ArgumentNullException(nameof(x));
-                if (ReferenceEquals(y, null)) throw new ArgumentNullException(nameof(y));
+                if (x is null) throw new ArgumentNullException(nameof(x));
+                if (y is null) throw new ArgumentNullException(nameof(y));
 
                 if (ReferenceEquals(x, y)) return 0;
                 var result = string.CompareOrdinal(x.Host ?? "", y.Host ?? "");
@@ -267,8 +266,8 @@ namespace Akka.Cluster
             /// <inheritdoc cref="IComparer{Member}.Compare"/>
             public int Compare(Member x, Member y)
             {
-                if (ReferenceEquals(x, null)) throw new ArgumentNullException(nameof(x));
-                if (ReferenceEquals(y, null)) throw new ArgumentNullException(nameof(y));
+                if (x is null) throw new ArgumentNullException(nameof(x));
+                if (y is null) throw new ArgumentNullException(nameof(y));
 
                 return x.UniqueAddress.CompareTo(y.UniqueAddress, AddressOrdering);
             }
@@ -319,7 +318,7 @@ namespace Akka.Cluster
 
             if (Member.AllowedTransitions[a.Status].Contains(b.Status))
                 return b;
-            if(Member.AllowedTransitions[b.Status].Contains(a.Status))
+            if (Member.AllowedTransitions[b.Status].Contains(a.Status))
                 return a;
 
             return null; // illegal transition
@@ -470,14 +469,14 @@ namespace Akka.Cluster
         /// <returns><c>true</c> if equal, <c>false</c> otherwise.</returns>
         public bool Equals(UniqueAddress other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Uid == other.Uid && Address.Equals(other.Address);
         }
 
         /// <inheritdoc cref="object.Equals(object)"/>
-        public override bool Equals(object obj) => obj is UniqueAddress && Equals((UniqueAddress) obj);
+        public override bool Equals(object obj) => obj is UniqueAddress && Equals((UniqueAddress)obj);
 
         /// <inheritdoc cref="object.GetHashCode"/>
         public override int GetHashCode()

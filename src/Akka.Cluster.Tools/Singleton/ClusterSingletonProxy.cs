@@ -46,7 +46,7 @@ namespace Akka.Cluster.Tools.Singleton
             /// <summary>
             /// TBD
             /// </summary>
-            public static TryToIdentifySingleton Instance { get; } = new TryToIdentifySingleton();
+            public static readonly TryToIdentifySingleton Instance = new TryToIdentifySingleton();
             private TryToIdentifySingleton() { }
         }
 

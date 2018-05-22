@@ -91,8 +91,7 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as Record;
-                if (other == null) return false;
+                if (!(obj is Record other)) return false;
                 return _version.Equals(other._version) &&
                        _status == other.Status &&
                        _observer.Equals(other._observer) &&
@@ -519,8 +518,7 @@ namespace Akka.Cluster
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            var other = obj as Reachability;
-            if (other == null) return false;
+            if (!(obj is Reachability other)) return false;
             return _records.Count == other._records.Count && 
                 _versions.Equals(other._versions) && 
                 _cache.Value.ObserverRowMap.Equals(other._cache.Value.ObserverRowMap);

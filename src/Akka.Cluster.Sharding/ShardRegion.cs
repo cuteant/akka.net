@@ -93,7 +93,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as StartEntity;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return EntityId.Equals(other.EntityId);
@@ -147,7 +147,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as StartEntityAck;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return EntityId.Equals(other.EntityId)

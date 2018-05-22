@@ -70,51 +70,50 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <returns>TBD</returns>
         protected bool DefaultReceive(object message)
         {
-            if (message is Subscribe)
+            switch (message)
             {
-                var subscribe = (Subscribe)message;
-
-                Context.Watch(subscribe.Ref);
-                Subscribers.Add(subscribe.Ref);
-                PruneDeadline = null;
-                Context.Parent.Tell(new Subscribed(new SubscribeAck(subscribe), Sender));
-            }
-            else if (message is Unsubscribe)
-            {
-                var unsubscribe = (Unsubscribe)message;
-
-                Context.Unwatch(unsubscribe.Ref);
-                Remove(unsubscribe.Ref);
-                Context.Parent.Tell(new Unsubscribed(new UnsubscribeAck(unsubscribe), Sender));
-            }
-            else if (message is Terminated)
-            {
-                var terminated = (Terminated)message;
-                Remove(terminated.ActorRef);
-            }
-            else if (message is Prune)
-            {
-                if (PruneDeadline != null && PruneDeadline.IsOverdue)
-                {
+                case Subscribe subscribe:
+                    Context.Watch(subscribe.Ref);
+                    Subscribers.Add(subscribe.Ref);
                     PruneDeadline = null;
-                    Context.Parent.Tell(NoMoreSubscribers.Instance);
-                }
-            }
-            else if (message is TerminateRequest)
-            {
-                if (Subscribers.Count == 0 && !Context.GetChildren().Any())
-                {
-                    Context.Stop(Self);
-                }
-                else
-                {
-                    Context.Parent.Tell(NewSubscriberArrived.Instance);
-                }
-            }
-            else
-            {
-                foreach (var subscriber in Subscribers)
-                    subscriber.Forward(message);
+                    Context.Parent.Tell(new Subscribed(new SubscribeAck(subscribe), Sender));
+                    break;
+
+                case Unsubscribe unsubscribe:
+                    Context.Unwatch(unsubscribe.Ref);
+                    Remove(unsubscribe.Ref);
+                    Context.Parent.Tell(new Unsubscribed(new UnsubscribeAck(unsubscribe), Sender));
+                    break;
+
+                case Terminated terminated:
+                    Remove(terminated.ActorRef);
+                    break;
+
+                case Prune _:
+                    if (PruneDeadline != null && PruneDeadline.IsOverdue)
+                    {
+                        PruneDeadline = null;
+                        Context.Parent.Tell(NoMoreSubscribers.Instance);
+                    }
+                    break;
+
+                case TerminateRequest _:
+                    if (Subscribers.Count == 0 && !Context.GetChildren().Any())
+                    {
+                        Context.Stop(Self);
+                    }
+                    else
+                    {
+                        Context.Parent.Tell(NewSubscriberArrived.Instance);
+                    }
+                    break;
+
+                default:
+                    foreach (var subscriber in Subscribers)
+                    {
+                        subscriber.Forward(message);
+                    }
+                    break;
             }
 
             return true;
@@ -174,68 +173,68 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <returns>TBD</returns>
         protected override bool Business(object message)
         {
-            Subscribe subscribe;
-            Unsubscribe unsubscribe;
-            if ((subscribe = message as Subscribe) != null && subscribe.Group != null)
+            switch (message)
             {
-                var encodedGroup = Utils.EncodeName(subscribe.Group);
-                _buffer.BufferOr(Utils.MakeKey(Self.Path / encodedGroup), subscribe, Sender, () =>
-                {
-                    var child = Context.Child(encodedGroup);
-                    if (!child.IsNobody())
+                case Subscribe subscribe when subscribe.Group != null:
+                    var encodedGroup = Utils.EncodeName(subscribe.Group);
+                    _buffer.BufferOr(Utils.MakeKey(Self.Path / encodedGroup), subscribe, Sender, () =>
                     {
-                        child.Forward(message);
-                    }
-                    else
+                        var child = Context.Child(encodedGroup);
+                        if (!child.IsNobody())
+                        {
+                            child.Forward(message);
+                        }
+                        else
+                        {
+                            NewGroupActor(encodedGroup).Forward(message);
+                        }
+                    });
+                    PruneDeadline = null;
+                    return true;
+
+                case Unsubscribe unsubscribe when unsubscribe.Group != null:
+                    var encodedGroup0 = Utils.EncodeName(unsubscribe.Group);
+                    _buffer.BufferOr(Utils.MakeKey(Self.Path / encodedGroup0), unsubscribe, Sender, () =>
                     {
-                        NewGroupActor(encodedGroup).Forward(message);
-                    }
-                });
-                PruneDeadline = null;
+                        var child = Context.Child(encodedGroup0);
+                        if (!child.IsNobody())
+                        {
+                            child.Forward(message);
+                        }
+                        else
+                        {
+                                // no such group here
+                            }
+                    });
+                    return true;
+
+                case Subscribed _:
+                    Context.Parent.Forward(message);
+                    return true;
+
+                case Unsubscribed _:
+                    Context.Parent.Forward(message);
+                    return true;
+
+                case NoMoreSubscribers _:
+                    var key = Utils.MakeKey(Sender);
+                    _buffer.InitializeGrouping(key);
+                    Sender.Tell(TerminateRequest.Instance);
+                    return true;
+
+                case NewSubscriberArrived _:
+                    var key0 = Utils.MakeKey(Sender);
+                    _buffer.ForwardMessages(key0, Sender);
+                    return true;
+
+                case Terminated terminated:
+                    var key1 = Utils.MakeKey(terminated.ActorRef);
+                    _buffer.RecreateAndForwardMessagesIfNeeded(key1, () => NewGroupActor(terminated.ActorRef.Path.Name));
+                    return true;
+
+                default:
+                    return false;
             }
-            else if ((unsubscribe = message as Unsubscribe) != null && unsubscribe.Group != null)
-            {
-                var encodedGroup = Utils.EncodeName(unsubscribe.Group);
-                _buffer.BufferOr(Utils.MakeKey(Self.Path / encodedGroup), unsubscribe, Sender, () =>
-                {
-                    var child = Context.Child(encodedGroup);
-                    if (!child.IsNobody())
-                    {
-                        child.Forward(message);
-                    }
-                    else
-                    {
-                        // no such group here
-                    }
-                });
-            }
-            else if (message is Subscribed)
-            {
-                Context.Parent.Forward(message);
-            }
-            else if (message is Unsubscribed)
-            {
-                Context.Parent.Forward(message);
-            }
-            else if (message is NoMoreSubscribers)
-            {
-                var key = Utils.MakeKey(Sender);
-                _buffer.InitializeGrouping(key);
-                Sender.Tell(TerminateRequest.Instance);
-            }
-            else if (message is NewSubscriberArrived)
-            {
-                var key = Utils.MakeKey(Sender);
-                _buffer.ForwardMessages(key, Sender);
-            }
-            else if (message is Terminated)
-            {
-                var terminated = (Terminated)message;
-                var key = Utils.MakeKey(terminated.ActorRef);
-                _buffer.RecreateAndForwardMessagesIfNeeded(key, () => NewGroupActor(terminated.ActorRef.Path.Name));
-            }
-            else return false;
-            return true;
         }
 
         private IActorRef NewGroupActor(string encodedGroup)

@@ -36,7 +36,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(Put other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Ref, other.Ref);
         }
@@ -83,7 +83,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(Remove other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Path, other.Path);
         }
@@ -149,7 +149,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(Subscribe other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Topic, other.Topic) &&
                    Equals(Group, other.Group) &&
@@ -223,7 +223,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(Unsubscribe other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Topic, other.Topic) &&
                    Equals(Group, other.Group) &&
@@ -279,7 +279,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(SubscribeAck other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Subscribe, other.Subscribe);
         }
@@ -325,7 +325,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(UnsubscribeAck other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Unsubscribe, other.Unsubscribe);
         }
@@ -384,7 +384,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(Publish other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Topic, other.Topic) &&
                    Equals(SendOneMessageToEachGroup, other.SendOneMessageToEachGroup) &&
@@ -451,7 +451,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(Send other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Path, other.Path) &&
                    Equals(LocalAffinity, other.LocalAffinity) &&
@@ -520,7 +520,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(SendToAll other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(ExcludeSelf, other.ExcludeSelf) &&
                    Equals(Path, other.Path) &&
@@ -588,7 +588,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public bool Equals(CurrentTopics other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
 
             return Topics.SequenceEqual(other.Topics);

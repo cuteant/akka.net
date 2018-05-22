@@ -94,10 +94,9 @@ namespace Akka.Cluster.Sharding
                 ExtractEntityId extractEntityId, ExtractShardId extractShardId, IShardAllocationStrategy allocationStrategy, object handOffStopMessage)
             {
                 if (string.IsNullOrEmpty(typeName)) throw new ArgumentNullException(nameof(typeName), "ClusterSharding start requires type name to be provided");
-                if (entityProps == null) throw new ArgumentNullException(nameof(entityProps), $"ClusterSharding start requires Props for [{typeName}] to be provided");
 
                 TypeName = typeName;
-                EntityProps = entityProps;
+                EntityProps = entityProps ?? throw new ArgumentNullException(nameof(entityProps), $"ClusterSharding start requires Props for [{typeName}] to be provided");
                 Settings = settings;
                 ExtractEntityId = extractEntityId;
                 ExtractShardId = extractShardId;

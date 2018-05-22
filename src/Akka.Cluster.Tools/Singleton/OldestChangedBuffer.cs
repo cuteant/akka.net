@@ -35,7 +35,7 @@ namespace Akka.Cluster.Tools.Singleton
             /// <summary>
             /// TBD
             /// </summary>
-            public static GetNext Instance { get; } = new GetNext();
+            public static readonly GetNext Instance = new GetNext();
             private GetNext() { }
         }
 
@@ -172,8 +172,7 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void SendFirstChange()
         {
-            object change;
-            _changes = _changes.Dequeue(out change);
+            _changes = _changes.Dequeue(out var change);
             Context.Parent.Tell(change);
         }
 
@@ -192,22 +191,43 @@ namespace Akka.Cluster.Tools.Singleton
         /// <inheritdoc cref="UntypedActor.OnReceive"/>
         protected override void OnReceive(object message)
         {
-            if (message is ClusterEvent.CurrentClusterState) HandleInitial((ClusterEvent.CurrentClusterState)message);
-            else if (message is ClusterEvent.MemberUp) Add(((ClusterEvent.MemberUp)message).Member);
-            else if (message is ClusterEvent.MemberRemoved) Remove(((ClusterEvent.IMemberEvent)(message)).Member);
-            else if (message is ClusterEvent.MemberExited
-                && !message.AsInstanceOf<ClusterEvent.MemberExited>()
-                .Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress)) Remove(((ClusterEvent.IMemberEvent)(message)).Member);
-            else if (message is SelfExiting)
+            switch (message)
             {
-                Remove(_cluster.ReadView.Self);
-                Sender.Tell(Done.Instance);
-            }
-            else if (message is GetNext && _changes.IsEmpty) Context.BecomeStacked(OnDeliverNext);
-            else if (message is GetNext) SendFirstChange();
-            else
-            {
-                Unhandled(message);
+                case ClusterEvent.CurrentClusterState state:
+                    HandleInitial(state);
+                    break;
+
+                case ClusterEvent.MemberUp up:
+                    Add(up.Member);
+                    break;
+
+                case ClusterEvent.MemberRemoved removed:
+                    Remove(removed.Member);
+                    break;
+
+                case ClusterEvent.MemberExited exited when (!exited.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress)):
+                    Remove(exited.Member);
+                    break;
+
+                case SelfExiting _:
+                    Remove(_cluster.ReadView.Self);
+                    Sender.Tell(Done.Instance);
+                    break;
+
+                case GetNext _:
+                    if (_changes.IsEmpty)
+                    {
+                        Context.BecomeStacked(OnDeliverNext);
+                    }
+                    else
+                    {
+                        SendFirstChange();
+                    }
+                    break;
+
+                default:
+                    Unhandled(message);
+                    break;
             }
         }
 
@@ -217,40 +237,38 @@ namespace Akka.Cluster.Tools.Singleton
         /// <param name="message">The message to handle.</param>
         private void OnDeliverNext(object message)
         {
-            if (message is ClusterEvent.CurrentClusterState)
+            switch (message)
             {
-                HandleInitial((ClusterEvent.CurrentClusterState)message);
-                SendFirstChange();
-                Context.UnbecomeStacked();
-            }
-            else if (message is ClusterEvent.MemberUp)
-            {
-                var memberUp = (ClusterEvent.MemberUp)message;
-                Add(memberUp.Member);
-                DeliverChanges();
-            }
-            else if (message is ClusterEvent.MemberRemoved)
-            {
-                var removed = (ClusterEvent.MemberRemoved) message;
-                Remove(removed.Member);
-                DeliverChanges();
-            }
-            else if (message is ClusterEvent.MemberExited &&
-                message.AsInstanceOf<ClusterEvent.MemberExited>().Member.UniqueAddress != _cluster.SelfUniqueAddress)
-            {
-                var memberEvent = (ClusterEvent.IMemberEvent)message;
-                Remove(memberEvent.Member);
-                DeliverChanges();
-            }
-            else if (message is SelfExiting)
-            {
-                Remove(_cluster.ReadView.Self);
-                DeliverChanges();
-                Sender.Tell(Done.Instance); // reply to ask
-            }
-            else
-            {
-                Unhandled(message);
+                case ClusterEvent.CurrentClusterState state:
+                    HandleInitial(state);
+                    SendFirstChange();
+                    Context.UnbecomeStacked();
+                    break;
+
+                case ClusterEvent.MemberUp memberUp:
+                    Add(memberUp.Member);
+                    DeliverChanges();
+                    break;
+
+                case ClusterEvent.MemberRemoved removed:
+                    Remove(removed.Member);
+                    DeliverChanges();
+                    break;
+
+                case ClusterEvent.MemberExited exited when exited.Member.UniqueAddress != _cluster.SelfUniqueAddress:
+                    Remove(exited.Member);
+                    DeliverChanges();
+                    break;
+
+                case SelfExiting _:
+                    Remove(_cluster.ReadView.Self);
+                    DeliverChanges();
+                    Sender.Tell(Done.Instance); // reply to ask
+                    break;
+
+                default:
+                    Unhandled(message);
+                    break;
             }
         }
 

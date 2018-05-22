@@ -178,18 +178,18 @@ namespace Akka.Cluster
                     if (deploy.RouterConfig is RemoteRouterConfig)
                         throw new ConfigurationException($"Cluster deployment can't be combined with [{deploy.Config}]");
 
-                    if (deploy.RouterConfig is Pool)
+                    if (deploy.RouterConfig is Pool pool)
                     {
                         return
                             deploy.WithScope(scope: ClusterScope.Instance)
-                                .WithRouterConfig(new ClusterRouterPool(deploy.RouterConfig as Pool,
+                                .WithRouterConfig(new ClusterRouterPool(pool,
                                     ClusterRouterPoolSettings.FromConfig(deploy.Config)));
                     }
-                    else if (deploy.RouterConfig is Group)
+                    else if (deploy.RouterConfig is Group group)
                     {
                         return
                             deploy.WithScope(scope: ClusterScope.Instance)
-                                .WithRouterConfig(new ClusterRouterGroup(deploy.RouterConfig as Group,
+                                .WithRouterConfig(new ClusterRouterGroup(group,
                                     ClusterRouterGroupSettings.FromConfig(deploy.Config)));
                     }
                     else

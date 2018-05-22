@@ -62,7 +62,7 @@ namespace Akka.Cluster.Routing
         /// This exception is thrown when either the specified <paramref name="routeesPaths"/> is undefined
         /// or a path defined in the specified <paramref name="routeesPaths"/> is an invalid relative actor path.
         /// </exception>
-        public ClusterRouterGroupSettings(int totalInstances, IEnumerable<string> routeesPaths, bool allowLocalRoutees, string useRole = null) 
+        public ClusterRouterGroupSettings(int totalInstances, IEnumerable<string> routeesPaths, bool allowLocalRoutees, string useRole = null)
             : base(totalInstances, allowLocalRoutees, useRole)
         {
             if (routeesPaths == null || !routeesPaths.Any() || string.IsNullOrEmpty(routeesPaths.First()))
@@ -127,7 +127,7 @@ namespace Akka.Cluster.Routing
         /// <param name="useRole">N/A</param>
         /// <param name="maxInstancesPerNode">N/A</param>
         [Obsolete("This method is deprecated [1.1.0]")]
-        public ClusterRouterPoolSettings(int totalInstances, bool allowLocalRoutees, string useRole, int maxInstancesPerNode) 
+        public ClusterRouterPoolSettings(int totalInstances, bool allowLocalRoutees, string useRole, int maxInstancesPerNode)
             : this(totalInstances, maxInstancesPerNode, allowLocalRoutees, useRole)
         {
         }
@@ -173,14 +173,14 @@ namespace Akka.Cluster.Routing
         private bool Equals(ClusterRouterPoolSettings other)
         {
             return MaxInstancesPerNode == other.MaxInstancesPerNode
-                && TotalInstances == other.TotalInstances 
-                && AllowLocalRoutees == other.AllowLocalRoutees 
+                && TotalInstances == other.TotalInstances
+                && AllowLocalRoutees == other.AllowLocalRoutees
                 && string.Equals(UseRole, other.UseRole, StringComparison.Ordinal);
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
             return Equals((ClusterRouterPoolSettings)obj);
@@ -710,7 +710,7 @@ namespace Akka.Cluster.Routing
         /// <returns>TBD</returns>
         public bool IsAvailable(Member member)
         {
-            return (member.Status == MemberStatus.Up || member.Status == MemberStatus.WeaklyUp) && 
+            return (member.Status == MemberStatus.Up || member.Status == MemberStatus.WeaklyUp) &&
                    SatisfiesRole(member.Roles) &&
                    (Settings.AllowLocalRoutees || member.Address != Cluster.SelfAddress);
         }
@@ -801,39 +801,37 @@ namespace Akka.Cluster.Routing
         /// <param name="message">TBD</param>
         protected override void OnReceive(object message)
         {
-            if (message is ClusterEvent.CurrentClusterState)
+            switch (message)
             {
-                var state = (ClusterEvent.CurrentClusterState)message;
-                Nodes = ImmutableSortedSet.Create(Member.AddressOrdering, state.Members.Where(IsAvailable).Select(x => x.Address).ToArray());
-                AddRoutees();
-            }
-            else if (message is ClusterEvent.IMemberEvent)
-            {
-                var memberEvent = (ClusterEvent.IMemberEvent)message;
-                if (IsAvailable(memberEvent.Member))
-                {
-                    AddMember(memberEvent.Member);
-                }
-                else
-                {
-                    // other events means that it is no onger interesting, such as
-                    // MemberExited, MemberRemoved
-                    RemoveMember(memberEvent.Member);
-                }
-            }
-            else if (message is ClusterEvent.UnreachableMember)
-            {
-                var member = (ClusterEvent.UnreachableMember)message;
-                RemoveMember(member.Member);
-            }
-            else if (message is ClusterEvent.ReachableMember)
-            {
-                var member =(ClusterEvent.ReachableMember)message;
-                if (IsAvailable(member.Member)) AddMember(member.Member);
-            }
-            else
-            {
-                base.OnReceive(message);
+                case ClusterEvent.CurrentClusterState state:
+                    Nodes = ImmutableSortedSet.Create(Member.AddressOrdering, state.Members.Where(IsAvailable).Select(x => x.Address).ToArray());
+                    AddRoutees();
+                    break;
+
+                case ClusterEvent.IMemberEvent memberEvent:
+                    if (IsAvailable(memberEvent.Member))
+                    {
+                        AddMember(memberEvent.Member);
+                    }
+                    else
+                    {
+                        // other events means that it is no onger interesting, such as
+                        // MemberExited, MemberRemoved
+                        RemoveMember(memberEvent.Member);
+                    }
+                    break;
+
+                case ClusterEvent.UnreachableMember unreachableMember:
+                    RemoveMember(unreachableMember.Member);
+                    break;
+
+                case ClusterEvent.ReachableMember reachableMember:
+                    if (IsAvailable(reachableMember.Member)) { AddMember(reachableMember.Member); }
+                    break;
+
+                default:
+                    base.OnReceive(message);
+                    break;
             }
         }
     }
@@ -855,8 +853,7 @@ namespace Akka.Cluster.Routing
         public ClusterRouterGroupActor(ClusterRouterGroupSettings settings) : base(settings)
         {
             Settings = settings;
-            var groupConfig = Cell.RouterConfig as Group;
-            if (groupConfig != null)
+            if (Cell.RouterConfig is Group groupConfig)
             {
                 _group = groupConfig;
             }
@@ -886,27 +883,21 @@ namespace Akka.Cluster.Routing
         /// </summary>
         public override void AddRoutees()
         {
-            Action doAddRoutees = null;
-            doAddRoutees = () =>
+            var deploymentTarget = SelectDeploymentTarget();
+            while (deploymentTarget != null)
             {
-                var deploymentTarget = SelectDeploymentTarget();
-                if (deploymentTarget != null)
-                {
-                    var address = deploymentTarget.Item1;
-                    var path = deploymentTarget.Item2;
-                    var routee = _group.RouteeFor(address + path, Context);
-                    UsedRouteePaths = UsedRouteePaths.SetItem(
-                        address,
-                        UsedRouteePaths.GetOrElse(address, ImmutableHashSet<string>.Empty).Add(path));
+                var address = deploymentTarget.Item1;
+                var path = deploymentTarget.Item2;
+                var routee = _group.RouteeFor(address + path, Context);
+                UsedRouteePaths = UsedRouteePaths.SetItem(
+                    address,
+                    UsedRouteePaths.GetOrElse(address, ImmutableHashSet<string>.Empty).Add(path));
 
-                    //must register each one, since registered routees are used in SelectDeploymentTarget
-                    Cell.AddRoutee(routee);
+                //must register each one, since registered routees are used in SelectDeploymentTarget
+                Cell.AddRoutee(routee);
 
-                    doAddRoutees();
-                }
-            };
-
-            doAddRoutees();
+                deploymentTarget = SelectDeploymentTarget();
+            }
         }
 
         /// <summary>
@@ -974,8 +965,7 @@ namespace Akka.Cluster.Routing
             _supervisorStrategy = supervisorStrategy;
             Settings = settings;
 
-            var pool = Cell.RouterConfig as Pool;
-            if (pool != null)
+            if (Cell.RouterConfig is Pool pool)
             {
                 Pool = pool;
             }
@@ -1055,8 +1045,7 @@ namespace Akka.Cluster.Routing
         protected override void OnReceive(object message)
         {
             // Moved from RouterPoolActor
-            var poolSize = message as AdjustPoolSize;
-            if (poolSize != null)
+            if (message is AdjustPoolSize poolSize)
             {
                 if (poolSize.Change > 0)
                 {

@@ -206,7 +206,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as State;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shards.SequenceEqual(other.Shards)
@@ -291,7 +291,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as Register;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return ShardRegion.Equals(other.ShardRegion);
@@ -339,7 +339,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as RegisterProxy;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return ShardRegionProxy.Equals(other.ShardRegionProxy);
@@ -386,7 +386,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as RegisterAck;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Coordinator.Equals(other.Coordinator);
@@ -435,7 +435,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as GetShardHome;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard);
@@ -489,7 +489,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardHome;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard)
@@ -540,7 +540,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as HostShard;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard);
@@ -588,7 +588,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardStarted;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard);
@@ -641,7 +641,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as BeginHandOff;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard);
@@ -689,7 +689,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as BeginHandOffAck;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard);
@@ -740,7 +740,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as HandOff;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard);
@@ -788,7 +788,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardStopped;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard);
@@ -896,7 +896,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as GracefulShutdownRequest;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return ShardRegion.Equals(other.ShardRegion);
@@ -949,7 +949,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardRegionRegistered;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Region.Equals(other.Region);
@@ -997,7 +997,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardRegionProxyRegistered;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return RegionProxy.Equals(other.RegionProxy);
@@ -1045,7 +1045,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardRegionTerminated;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Region.Equals(other.Region);
@@ -1093,7 +1093,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardRegionProxyTerminated;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return RegionProxy.Equals(other.RegionProxy);
@@ -1147,7 +1147,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardHomeAllocated;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard)
@@ -1198,7 +1198,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardHomeDeallocated;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Shard.Equals(other.Shard);
@@ -1359,8 +1359,7 @@ namespace Akka.Cluster.Sharding
                             return true;
                     }
                     return false;
-                case SnapshotOffer offer when offer.Snapshot is State:
-                    var state = offer.Snapshot as State;
+                case SnapshotOffer offer when offer.Snapshot is State state:
                     if (Log.IsDebugEnabled) Log.Debug("ReceiveRecover SnapshotOffer {0}", state);
                     CurrentState = state.WithRememberEntities(Settings.RememberEntities);
                     // Old versions of the state object may not have unallocatedShard set,

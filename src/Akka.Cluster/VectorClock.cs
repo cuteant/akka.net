@@ -38,9 +38,9 @@ namespace Akka.Cluster
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is VectorClock && Equals((VectorClock) obj);
+            return obj is VectorClock && Equals((VectorClock)obj);
         }
 
         public override int GetHashCode()
@@ -146,9 +146,8 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var that = obj as Node;
-                if (that == null) return false;
-                return _value.Equals(that._value);
+                if (obj is Node that) { return _value.Equals(that._value); }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -318,7 +317,7 @@ namespace Akka.Cluster
         /// <returns><c>true</c> if both vector clocks are equal; otherwise <c>false</c></returns>
         public static bool operator ==(VectorClock left, VectorClock right)
         {
-            if (ReferenceEquals(left, null))
+            if (left is null)
                 return false;
 
             return left.IsSameAs(right);
@@ -332,7 +331,7 @@ namespace Akka.Cluster
         /// <returns><c>true</c> if both vector clocks are not equal; otherwise <c>false</c></returns>
         public static bool operator !=(VectorClock left, VectorClock right)
         {
-            if (ReferenceEquals(left, null))
+            if (left is null)
                 return false;
 
             return left.IsConcurrentWith(right);
@@ -372,48 +371,46 @@ namespace Akka.Cluster
         private static Ordering Compare(IEnumerator<KeyValuePair<Node, long>> i1, IEnumerator<KeyValuePair<Node, long>> i2, Ordering requestedOrder)
         {
             //TODO: Tail recursion issues?
-            Func<KeyValuePair<Node, long>, KeyValuePair<Node, long>, Ordering, Ordering> compareNext = null;
-            compareNext =
-                (nt1, nt2, currentOrder) =>
+            Ordering compareNext(KeyValuePair<Node, long> nt1, KeyValuePair<Node, long> nt2, Ordering currentOrder)
+            {
+                if (requestedOrder != Ordering.FullOrder && currentOrder != Ordering.Same &&
+                    currentOrder != requestedOrder)
+                    return currentOrder;
+                if (nt1.Equals(CmpEndMarker) && nt2.Equals(CmpEndMarker)) return currentOrder;
+                // i1 is empty but i2 is not, so i1 can only be Before
+                if (nt1.Equals(CmpEndMarker))
+                    return currentOrder == Ordering.After ? Ordering.Concurrent : Ordering.Before;
+                // i2 is empty but i1 is not, so i1 can only be After
+                if (nt2.Equals(CmpEndMarker))
+                    return currentOrder == Ordering.Before ? Ordering.Concurrent : Ordering.After;
+                // compare the nodes
+                var nc = nt1.Key.CompareTo(nt2.Key);
+                if (nc == 0)
                 {
-                    if (requestedOrder != Ordering.FullOrder && currentOrder != Ordering.Same &&
-                        currentOrder != requestedOrder)
-                        return currentOrder;
-                    if (nt1.Equals(CmpEndMarker) && nt2.Equals(CmpEndMarker)) return currentOrder;
-                    // i1 is empty but i2 is not, so i1 can only be Before
-                    if (nt1.Equals(CmpEndMarker))
-                        return currentOrder == Ordering.After ? Ordering.Concurrent : Ordering.Before;
-                    // i2 is empty but i1 is not, so i1 can only be After
-                    if (nt2.Equals(CmpEndMarker))
-                        return currentOrder == Ordering.Before ? Ordering.Concurrent : Ordering.After;
-                    // compare the nodes
-                    var nc = nt1.Key.CompareTo(nt2.Key);
-                    if (nc == 0)
+                    // both nodes exist compare the timestamps
+                    // same timestamp so just continue with the next nodes   
+                    if (nt1.Value == nt2.Value)
+                        return compareNext(NextOrElse(i1, CmpEndMarker), NextOrElse(i2, CmpEndMarker), currentOrder);
+                    if (nt1.Value < nt2.Value)
                     {
-                        // both nodes exist compare the timestamps
-                        // same timestamp so just continue with the next nodes   
-                        if (nt1.Value == nt2.Value)
-                            return compareNext(NextOrElse(i1, CmpEndMarker), NextOrElse(i2, CmpEndMarker), currentOrder);
-                        if (nt1.Value < nt2.Value)
-                        {
-                            // t1 is less than t2, so i1 can only be Before
-                            if (currentOrder == Ordering.After) return Ordering.Concurrent;
-                            return compareNext(NextOrElse(i1, CmpEndMarker), NextOrElse(i2, CmpEndMarker),
-                                Ordering.Before);
-                        }
-                        if (currentOrder == Ordering.Before) return Ordering.Concurrent;
-                        return compareNext(NextOrElse(i1, CmpEndMarker), NextOrElse(i2, CmpEndMarker), Ordering.After);
+                        // t1 is less than t2, so i1 can only be Before
+                        if (currentOrder == Ordering.After) return Ordering.Concurrent;
+                        return compareNext(NextOrElse(i1, CmpEndMarker), NextOrElse(i2, CmpEndMarker),
+                            Ordering.Before);
                     }
-                    if (nc < 0)
-                    {
-                        // this node only exists in i1 so i1 can only be After
-                        if (currentOrder == Ordering.Before) return Ordering.Concurrent;
-                        return compareNext(NextOrElse(i1, CmpEndMarker), nt2, Ordering.After);
-                    }
-                    // this node only exists in i2 so i1 can only be Before
-                    if (currentOrder == Ordering.After) return Ordering.Concurrent;
-                    return compareNext(nt1, NextOrElse(i2, CmpEndMarker), Ordering.Before);
-                };
+                    if (currentOrder == Ordering.Before) return Ordering.Concurrent;
+                    return compareNext(NextOrElse(i1, CmpEndMarker), NextOrElse(i2, CmpEndMarker), Ordering.After);
+                }
+                if (nc < 0)
+                {
+                    // this node only exists in i1 so i1 can only be After
+                    if (currentOrder == Ordering.Before) return Ordering.Concurrent;
+                    return compareNext(NextOrElse(i1, CmpEndMarker), nt2, Ordering.After);
+                }
+                // this node only exists in i2 so i1 can only be Before
+                if (currentOrder == Ordering.After) return Ordering.Concurrent;
+                return compareNext(nt1, NextOrElse(i2, CmpEndMarker), Ordering.Before);
+            }
 
             return compareNext(NextOrElse(i1, CmpEndMarker), NextOrElse(i2, CmpEndMarker), Ordering.Same);
         }

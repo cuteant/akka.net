@@ -66,7 +66,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
             switch (obj)
             {
                 case ClusterReceptionist.Contacts contacts:
-                    return ContactsToProto(obj as ClusterReceptionist.Contacts);
+                    return ContactsToProto(contacts);
                 case ClusterReceptionist.GetContacts getContacts:
                 case ClusterReceptionist.Heartbeat heartbeat:
                 case ClusterReceptionist.HeartbeatRsp heartbeatRsp:

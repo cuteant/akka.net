@@ -92,7 +92,7 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        public static SubscribeClusterClients Instance { get; } = new SubscribeClusterClients();
+        public static readonly SubscribeClusterClients Instance = new SubscribeClusterClients();
         private SubscribeClusterClients() { }
     }
 
@@ -104,7 +104,7 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        public static UnsubscribeClusterClients Instance { get; } = new UnsubscribeClusterClients();
+        public static readonly UnsubscribeClusterClients Instance = new UnsubscribeClusterClients();
         private UnsubscribeClusterClients() { }
     }
 
@@ -117,7 +117,7 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        public static GetClusterClients Instance { get; } = new GetClusterClients();
+        public static readonly GetClusterClients Instance = new GetClusterClients();
         private GetClusterClients() { }
     }
 
@@ -176,7 +176,7 @@ namespace Akka.Cluster.Tools.Client
             /// <summary>
             /// TBD
             /// </summary>
-            public static GetContacts Instance { get; } = new GetContacts();
+            public static readonly GetContacts Instance = new GetContacts();
             private GetContacts() { }
         }
 
@@ -203,13 +203,12 @@ namespace Akka.Cluster.Tools.Client
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
 
-                var other = obj as Contacts;
-                if (other == null) return false;
+                if (obj is Contacts other) { return ContactPoints.SequenceEqual(other.ContactPoints); }
 
-                return ContactPoints.SequenceEqual(other.ContactPoints);
+                return false;
             }
 
             /// <inheritdoc/>
@@ -236,7 +235,7 @@ namespace Akka.Cluster.Tools.Client
             /// <summary>
             /// TBD
             /// </summary>
-            public static Heartbeat Instance { get; } = new Heartbeat();
+            public static readonly Heartbeat Instance = new Heartbeat();
             private Heartbeat() { }
         }
 
@@ -249,7 +248,7 @@ namespace Akka.Cluster.Tools.Client
             /// <summary>
             /// TBD
             /// </summary>
-            public static HeartbeatRsp Instance { get; } = new HeartbeatRsp();
+            public static readonly HeartbeatRsp Instance = new HeartbeatRsp();
             private HeartbeatRsp() { }
         }
 
@@ -262,7 +261,7 @@ namespace Akka.Cluster.Tools.Client
             /// <summary>
             /// TBD
             /// </summary>
-            public static Ping Instance { get; } = new Ping();
+            public static readonly Ping Instance = new Ping();
             private Ping() { }
         }
 
@@ -274,7 +273,7 @@ namespace Akka.Cluster.Tools.Client
             /// <summary>
             /// TBD
             /// </summary>
-            public static CheckDeadlines Instance { get; } = new CheckDeadlines();
+            public static readonly CheckDeadlines Instance = new CheckDeadlines();
             private CheckDeadlines() { }
         }
         #endregion
@@ -302,7 +301,7 @@ namespace Akka.Cluster.Tools.Client
             /// <summary>
             /// The singleton instance of this comparer
             /// </summary>
-            public static RingOrdering Instance { get; } = new RingOrdering();
+            public static readonly RingOrdering Instance = new RingOrdering();
             private RingOrdering() { }
 
             /// <summary>
@@ -426,122 +425,118 @@ namespace Akka.Cluster.Tools.Client
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            if (message is PublishSubscribe.Send
-                || message is PublishSubscribe.SendToAll
-                || message is PublishSubscribe.Publish)
+            switch (message)
             {
-                var tunnel = ResponseTunnel(Sender);
-                tunnel.Tell(Ping.Instance); // keep alive
-                _pubSubMediator.Tell(message, tunnel);
-            }
-            else if (message is Heartbeat)
-            {
-                if (_cluster.Settings.VerboseHeartbeatLogging)
-                {
-                    _log.Debug("Heartbeat from client [{0}]", Sender.Path);
-                }
-                Sender.Tell(HeartbeatRsp.Instance);
-                UpdateClientInteractions(Sender);
-            }
-            else if (message is GetContacts)
-            {
-                // Consistent hashing is used to ensure that the reply to GetContacts
-                // is the same from all nodes (most of the time) and it also
-                // load balances the client connections among the nodes in the cluster.
-                if (_settings.NumberOfContacts >= _nodes.Count)
-                {
-                    var contacts = new Contacts(_nodes.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());
-                    if (_log.IsDebugEnabled)
-                        _log.Debug("Client [{0}] gets contactPoints [{1}] (all nodes)", Sender.Path, string.Join(", ", contacts));
+                case PublishSubscribe.Send _:
+                case PublishSubscribe.SendToAll _:
+                case PublishSubscribe.Publish _:
+                    var tunnel = ResponseTunnel(Sender);
+                    tunnel.Tell(Ping.Instance); // keep alive
+                    _pubSubMediator.Tell(message, tunnel);
+                    return true;
 
-                    Sender.Tell(contacts);
-                }
-                else
-                {
-                    // using ToStringWithAddress in case the client is local, normally it is not, and
-                    // ToStringWithAddress will use the remote address of the client
-                    var addr = _consistentHash.NodeFor(Sender.Path.ToStringWithAddress(_cluster.SelfAddress));
-
-                    var first = _nodes.From(addr).Tail().Take(_settings.NumberOfContacts).ToArray();
-                    var slice = first.Length == _settings.NumberOfContacts
-                        ? first
-                        : first.Union(_nodes.Take(_settings.NumberOfContacts - first.Length)).ToArray();
-                    var contacts = new Contacts(slice.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());
-
-                    if (_log.IsDebugEnabled)
-                        _log.Debug("Client [{0}] gets ContactPoints [{1}]", Sender.Path, string.Join(", ", contacts.ContactPoints));
-
-                    Sender.Tell(contacts);
+                case Heartbeat _:
+                    if (_cluster.Settings.VerboseHeartbeatLogging)
+                    {
+                        _log.Debug("Heartbeat from client [{0}]", Sender.Path);
+                    }
+                    Sender.Tell(HeartbeatRsp.Instance);
                     UpdateClientInteractions(Sender);
-                }
-            }
-            else if (message is ClusterEvent.CurrentClusterState)
-            {
-                var state = (ClusterEvent.CurrentClusterState)message;
+                    return true;
 
-                _nodes = ImmutableSortedSet<Address>.Empty.WithComparer(RingOrdering.Instance)
-                    .Union(state.Members
-                        .Where(m => m.Status != MemberStatus.Joining && IsMatchingRole(m))
-                        .Select(m => m.Address));
+                case GetContacts _:
+                    // Consistent hashing is used to ensure that the reply to GetContacts
+                    // is the same from all nodes (most of the time) and it also
+                    // load balances the client connections among the nodes in the cluster.
+                    if (_settings.NumberOfContacts >= _nodes.Count)
+                    {
+                        var contacts = new Contacts(_nodes.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());
+                        if (_log.IsDebugEnabled)
+                            _log.Debug("Client [{0}] gets contactPoints [{1}] (all nodes)", Sender.Path, string.Join(", ", contacts));
 
-                _consistentHash = ConsistentHash.Create(_nodes, _virtualNodesFactor);
-            }
-            else if (message is ClusterEvent.MemberUp)
-            {
-                var up = (ClusterEvent.MemberUp)message;
-                if (IsMatchingRole(up.Member))
-                {
-                    _nodes = _nodes.Add(up.Member.Address);
+                        Sender.Tell(contacts);
+                    }
+                    else
+                    {
+                        // using ToStringWithAddress in case the client is local, normally it is not, and
+                        // ToStringWithAddress will use the remote address of the client
+                        var addr = _consistentHash.NodeFor(Sender.Path.ToStringWithAddress(_cluster.SelfAddress));
+
+                        var first = _nodes.From(addr).Tail().Take(_settings.NumberOfContacts).ToArray();
+                        var slice = first.Length == _settings.NumberOfContacts
+                            ? first
+                            : first.Union(_nodes.Take(_settings.NumberOfContacts - first.Length)).ToArray();
+                        var contacts = new Contacts(slice.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());
+
+                        if (_log.IsDebugEnabled)
+                            _log.Debug("Client [{0}] gets ContactPoints [{1}]", Sender.Path, string.Join(", ", contacts.ContactPoints));
+
+                        Sender.Tell(contacts);
+                        UpdateClientInteractions(Sender);
+                    }
+                    return true;
+
+                case ClusterEvent.CurrentClusterState state:
+                    _nodes = ImmutableSortedSet<Address>.Empty.WithComparer(RingOrdering.Instance)
+                        .Union(state.Members
+                            .Where(m => m.Status != MemberStatus.Joining && IsMatchingRole(m))
+                            .Select(m => m.Address));
+
                     _consistentHash = ConsistentHash.Create(_nodes, _virtualNodesFactor);
-                }
-            }
-            else if (message is ClusterEvent.MemberRemoved)
-            {
-                var removed = (ClusterEvent.MemberRemoved)message;
+                    return true;
 
-                if (removed.Member.Address.Equals(_cluster.SelfAddress))
-                {
-                    Context.Stop(Self);
-                }
-                else if (IsMatchingRole(removed.Member))
-                {
-                    _nodes = _nodes.Remove(removed.Member.Address);
-                    _consistentHash = ConsistentHash.Create(_nodes, _virtualNodesFactor);
-                }
-            }
-            else if (message is ClusterEvent.IMemberEvent)
-            {
-                // not of interest
-            }
-            else if (message is SubscribeClusterClients)
-            {
-                var subscriber = Sender;
-                subscriber.Tell(new ClusterClients(_clientInteractions.Keys.ToImmutableHashSet()));
-                _subscribers = _subscribers.Add(subscriber);
-                Context.Watch(subscriber);
-            }
-            else if (message is UnsubscribeClusterClients)
-            {
-                var subscriber = Sender;
-                _subscribers = _subscribers.Where(c => !c.Equals(subscriber)).ToImmutableList();
-            }
-            else if (message is Terminated)
-            {
-                var terminated = (Terminated)message;
-                Self.Tell(UnsubscribeClusterClients.Instance, terminated.ActorRef);
-            }
-            else if (message is GetClusterClients)
-            {
-                Sender.Tell(new ClusterClients(_clientInteractions.Keys.ToImmutableHashSet()));
-            }
-            else if (message is CheckDeadlines)
-            {
-                _clientInteractions = _clientInteractions.Where(c => c.Value.IsAvailable).ToImmutableDictionary();
-                PublishClientsUnreachable();
-            }
-            else return false;
+                case ClusterEvent.MemberUp up:
+                    if (IsMatchingRole(up.Member))
+                    {
+                        _nodes = _nodes.Add(up.Member.Address);
+                        _consistentHash = ConsistentHash.Create(_nodes, _virtualNodesFactor);
+                    }
+                    return true;
 
-            return true;
+                case ClusterEvent.MemberRemoved removed:
+                    if (removed.Member.Address.Equals(_cluster.SelfAddress))
+                    {
+                        Context.Stop(Self);
+                    }
+                    else if (IsMatchingRole(removed.Member))
+                    {
+                        _nodes = _nodes.Remove(removed.Member.Address);
+                        _consistentHash = ConsistentHash.Create(_nodes, _virtualNodesFactor);
+                    }
+                    return true;
+
+                case ClusterEvent.IMemberEvent _:
+                    // not of interest
+                    return true;
+
+                case SubscribeClusterClients _:
+                    var subscriber = Sender;
+                    subscriber.Tell(new ClusterClients(_clientInteractions.Keys.ToImmutableHashSet()));
+                    _subscribers = _subscribers.Add(subscriber);
+                    Context.Watch(subscriber);
+                    return true;
+
+                case UnsubscribeClusterClients _:
+                    var subscriber0 = Sender;
+                    _subscribers = _subscribers.Where(c => !c.Equals(subscriber0)).ToImmutableList();
+                    return true;
+
+                case Terminated terminated:
+                    Self.Tell(UnsubscribeClusterClients.Instance, terminated.ActorRef);
+                    return true;
+
+                case GetClusterClients _:
+                    Sender.Tell(new ClusterClients(_clientInteractions.Keys.ToImmutableHashSet()));
+                    return true;
+
+                case CheckDeadlines _:
+                    _clientInteractions = _clientInteractions.Where(c => c.Value.IsAvailable).ToImmutableDictionary();
+                    PublishClientsUnreachable();
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         private void UpdateClientInteractions(IActorRef client)
@@ -603,22 +598,22 @@ namespace Akka.Cluster.Tools.Client
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            if (message is ClusterReceptionist.Ping)
+            switch (message)
             {
-                // keep alive from client
-            }
-            else if (message is ReceiveTimeout)
-            {
-                if (_log.IsDebugEnabled) _log.Debug("ClientResponseTunnel for client [{0}] stopped due to inactivity", _client.Path);
-                Context.Stop(Self);
-            }
-            else
-            {
-                _client.Tell(message, ActorRefs.NoSender);
-                if (IsAsk())
-                    Context.Stop(Self);
-            }
+                case ClusterReceptionist.Ping _:
+                    // keep alive from client
+                    break;
 
+                case ReceiveTimeout _:
+                    if (_log.IsDebugEnabled) _log.Debug("ClientResponseTunnel for client [{0}] stopped due to inactivity", _client.Path);
+                    Context.Stop(Self);
+                    break;
+
+                default:
+                    _client.Tell(message, ActorRefs.NoSender);
+                    if (IsAsk()) { Context.Stop(Self); }
+                    break;
+            }
             return true;
         }
 

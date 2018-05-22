@@ -86,7 +86,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <inheritdoc/>
         public bool Equals(Bucket other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
 
             return Equals(Owner, other.Owner)
@@ -151,7 +151,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <inheritdoc/>
         public bool Equals(ValueHolder other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
             return Equals(Version, other.Version) &&
                    Equals(Ref, other.Ref);
@@ -205,15 +205,15 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(obj, null)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(obj, this)) return true;
 
-            var other = obj as Status;
-            if (other == null)
-                return false;
-
-            return Versions.SequenceEqual(other.Versions) 
-                && IsReplyToStatus.Equals(other.IsReplyToStatus);
+            if (obj is Status other)
+            {
+                return Versions.SequenceEqual(other.Versions)
+                    && IsReplyToStatus.Equals(other.IsReplyToStatus);
+            }
+            return false;
         }
 
         /// <inheritdoc/>
@@ -257,7 +257,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <inheritdoc/>
         public bool Equals(Delta other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
 
             return Buckets.SequenceEqual(other.Buckets);
@@ -409,7 +409,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             return obj is SendToOneSubscriber && Equals((SendToOneSubscriber)obj);
         }
@@ -446,7 +446,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// TBD
         /// </summary>
         public static NoMoreSubscribers Instance { get; } = new NoMoreSubscribers();
-        private NoMoreSubscribers() {}
+        private NoMoreSubscribers() { }
     }
 
     /// <summary>
@@ -459,7 +459,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// TBD
         /// </summary>
         public static TerminateRequest Instance { get; } = new TerminateRequest();
-        private TerminateRequest() {}
+        private TerminateRequest() { }
     }
 
     /// <summary>

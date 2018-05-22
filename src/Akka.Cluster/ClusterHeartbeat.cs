@@ -172,18 +172,19 @@ namespace Akka.Cluster
 
         private void DoHeartbeat()
         {
+            var verboseHeartbeatLogging = _cluster.Settings.VerboseHeartbeatLogging;
             foreach (var to in _state.ActiveReceivers)
             {
                 if (_failureDetector.IsMonitoring(to.Address))
                 {
-                    if (_cluster.Settings.VerboseHeartbeatLogging)
+                    if (verboseHeartbeatLogging)
                     {
                         _log.Debug("Cluster Node [{0}] - Heartbeat to [{1}]", _cluster.SelfAddress, to.Address);
                     }
                 }
                 else
                 {
-                    if (_cluster.Settings.VerboseHeartbeatLogging)
+                    if (verboseHeartbeatLogging)
                     {
                         _log.Debug("Cluster Node [{0}] - First Heartbeat to [{1}]", _cluster.SelfAddress, to.Address);
                     }
@@ -247,7 +248,7 @@ namespace Akka.Cluster
             public override bool Equals(object obj)
 #pragma warning restore 659
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 return obj is Heartbeat && Equals((Heartbeat)obj);
             }
@@ -282,7 +283,7 @@ namespace Akka.Cluster
             public override bool Equals(object obj)
 #pragma warning restore 659
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 return obj is HeartbeatRsp && Equals((HeartbeatRsp)obj);
             }
@@ -575,8 +576,7 @@ namespace Akka.Cluster
                 // The reason for not limiting it to strictly monitoredByNrOfMembers is that the leader must
                 // be able to continue its duties (e.g. removal of downed nodes) when many nodes are shutdown
                 // at the same time and nobody in the remaining cluster is monitoring some of the shutdown nodes.
-                Func<int, IEnumerator<UniqueAddress>, ImmutableSortedSet<UniqueAddress>, Tuple<int, ImmutableSortedSet<UniqueAddress>>> take = null;
-                take = (n, iter, acc) =>
+                Tuple<int, ImmutableSortedSet<UniqueAddress>> take(int n, IEnumerator<UniqueAddress> iter, ImmutableSortedSet<UniqueAddress> acc)
                 {
                     if (iter.MoveNext() == false || n == 0)
                     {
@@ -599,7 +599,7 @@ namespace Akka.Cluster
                             return take(n - 1, iter, acc.Add(next)); // include the reachable
                         }
                     }
-                };
+                }
 
                 var tuple = take(MonitoredByNumberOfNodes, NodeRing().From(sender).Skip(1).GetEnumerator(), ImmutableSortedSet<UniqueAddress>.Empty);
                 var remaining = tuple.Item1;
@@ -627,7 +627,7 @@ namespace Akka.Cluster
                 selfAddress ?? SelfAddress,
                 nodes ?? Nodes,
                 unreachable ?? Unreachable,
-                monitoredByNumberOfNodes.HasValue ? monitoredByNumberOfNodes.Value : MonitoredByNumberOfNodes);
+                monitoredByNumberOfNodes ?? MonitoredByNumberOfNodes);
         }
 
         #region Operators

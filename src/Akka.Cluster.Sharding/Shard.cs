@@ -80,7 +80,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardState;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return Entries.SequenceEqual(other.Entries);
@@ -189,7 +189,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as StateChange;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return EntityId.Equals(other.EntityId);
@@ -329,7 +329,7 @@ namespace Akka.Cluster.Sharding
             {
                 var other = obj as ShardStats;
 
-                if (ReferenceEquals(other, null)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(other, this)) return true;
 
                 return ShardId.Equals(other.ShardId)

@@ -45,7 +45,7 @@ namespace Akka.Cluster.Sharding
         private readonly bool _rememberEntities;
 
         private bool _allRegionsRegistered = false;
-        private ImmutableHashSet<IKey<IReplicatedData>> _allKeys;
+        private readonly ImmutableHashSet<IKey<IReplicatedData>> _allKeys;
         private IImmutableSet<string> _shards = ImmutableHashSet<string>.Empty;
 
         public DDataShardCoordinator(string typeName, ClusterShardingSettings settings, IShardAllocationStrategy allocationStrategy, IActorRef replicator, int majorityMinCap, bool rememberEntities)
@@ -263,7 +263,7 @@ namespace Akka.Cluster.Sharding
         public void Update<TEvent>(TEvent e, Action<TEvent> handler) where TEvent : PersistentShardCoordinator.IDomainEvent
         {
             SendCoordinatorStateUpdate(e);
-            switch ((PersistentShardCoordinator.IDomainEvent)e)
+            switch (e)
             {
                 case PersistentShardCoordinator.ShardHomeAllocated allocated when _rememberEntities && !_shards.Contains(allocated.Shard):
                     SendShardsUpdate(allocated.Shard);

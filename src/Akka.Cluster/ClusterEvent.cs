@@ -32,7 +32,7 @@ namespace Akka.Cluster
         /// </summary>
         public enum SubscriptionInitialStateMode
         {
-           /// <summary>
+            /// <summary>
             /// When using this subscription mode a snapshot of
             /// <see cref="CurrentClusterState"/> will be sent to the
             /// subscriber as the first message.
@@ -84,7 +84,7 @@ namespace Akka.Cluster
                 ImmutableHashSet<Address>.Empty,
                 null,
                 ImmutableDictionary<string, Address>.Empty)
-            {}
+            { }
 
             /// <summary>
             /// Creates a new instance of the current cluster state.
@@ -243,9 +243,8 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as MemberStatusChange;
-                if (other == null) return false;
-                return _member.Equals(other._member);
+                if (obj is MemberStatusChange other) { return _member.Equals(other._member); }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -362,8 +361,8 @@ namespace Akka.Cluster
             /// <summary>
             /// The status of the node before the state change event.
             /// </summary>
-            public MemberStatus PreviousStatus 
-            { 
+            public MemberStatus PreviousStatus
+            {
                 get { return _previousStatus; }
             }
 
@@ -386,9 +385,11 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as MemberRemoved;
-                if (other == null) return false;
-                return _member.Equals(other._member) && _previousStatus == other._previousStatus;
+                if (obj is MemberRemoved other)
+                {
+                    return _member.Equals(other._member) && _previousStatus == other._previousStatus;
+                }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -397,7 +398,7 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash *  + base.GetHashCode();
+                    hash = hash * +base.GetHashCode();
                     hash = hash * 23 + _previousStatus.GetHashCode();
                     return hash;
                 }
@@ -432,9 +433,11 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as LeaderChanged;
-                if (other == null) return false;
-                return (_leader == null && other._leader == null) || (_leader != null && _leader.Equals(other._leader));
+                if (obj is LeaderChanged other)
+                {
+                    return (_leader == null && other._leader == null) || (_leader != null && _leader.Equals(other._leader));
+                }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -506,10 +509,12 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as RoleLeaderChanged;
-                if (other == null) return false;
-                return _role.Equals(other._role) 
-                    && ((_leader == null && other._leader == null) || (_leader != null && _leader.Equals(other._leader)));
+                if (obj is RoleLeaderChanged other)
+                {
+                    return _role.Equals(other._role)
+                        && ((_leader == null && other._leader == null) || (_leader != null && _leader.Equals(other._leader)));
+                }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -575,9 +580,11 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as ReachabilityEvent;
-                if (other == null) return false;
-                return _member.Equals(other._member);
+                if (obj is ReachabilityEvent other)
+                {
+                    return _member.Equals(other._member);
+                }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -668,9 +675,11 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as SeenChanged;
-                if (other == null) return false;
-                return _convergence.Equals(other._convergence) && _seenBy.SequenceEqual(other._seenBy);
+                if (obj is SeenChanged other)
+                {
+                    return _convergence.Equals(other._convergence) && _seenBy.SequenceEqual(other._seenBy);
+                }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -718,9 +727,8 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as ReachabilityChanged;
-                if (other == null) return false;
-                return _reachability.Equals(other._reachability);
+                if (obj is ReachabilityChanged other) { return _reachability.Equals(other._reachability); }
+                return false;
             }
 
             /// <inheritdoc/>
@@ -785,9 +793,11 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                var other = obj as CurrentInternalStats;
-                if (other == null) return false;
-                return _gossipStats.Equals(other._gossipStats) && _vclockStats.Equals(other._vclockStats);
+                if (obj is CurrentInternalStats other)
+                {
+                    return _gossipStats.Equals(other._gossipStats) && _vclockStats.Equals(other._vclockStats);
+                }
+                return false;
             }
         }
 
@@ -852,8 +862,8 @@ namespace Akka.Cluster
                 .GroupBy(m => m.UniqueAddress);
 
             var changedMembers = membersGroupedByAddress
-                .Where(g => g.Count() == 2 
-                && (g.First().Status != g.Skip(1).First().Status 
+                .Where(g => g.Count() == 2
+                && (g.First().Status != g.Skip(1).First().Status
                     || g.First().UpNumber != g.Skip(1).First().UpNumber))
                 .Select(g => g.First());
 
@@ -1033,11 +1043,11 @@ namespace Akka.Cluster
                 members: _latestGossip.Members,
                 unreachable: unreachable,
                 seenBy: _latestGossip.SeenBy.Select(s => s.Address).ToImmutableHashSet(),
-                leader: _latestGossip.Leader(_selfUniqueAddress) == null ? null : _latestGossip.Leader(_selfUniqueAddress).Address,
+                leader: _latestGossip.Leader(_selfUniqueAddress)?.Address,
                 roleLeaderMap: _latestGossip.AllRoles.ToImmutableDictionary(r => r, r =>
                 {
                     var leader = _latestGossip.RoleLeader(r, _selfUniqueAddress);
-                    return leader == null ? null : leader.Address;
+                    return leader?.Address;
                 }));
             receiver.Tell(state);
         }
@@ -1046,15 +1056,14 @@ namespace Akka.Cluster
         {
             if (initMode == ClusterEvent.SubscriptionInitialStateMode.InitialStateAsEvents)
             {
-                Action<object> pub = @event =>
+                void pub(object @event)
                 {
                     var eventType = @event.GetType();
-                    if (to.Any(o => o.IsAssignableFrom(eventType)))
-                        subscriber.Tell(@event);
-                };
+                    if (to.Any(o => o.IsAssignableFrom(eventType))) { subscriber.Tell(@event); }
+                }
                 PublishDiff(Gossip.Empty, _latestGossip, pub);
             }
-            else if(initMode == ClusterEvent.SubscriptionInitialStateMode.InitialStateAsSnapshot)
+            else if (initMode == ClusterEvent.SubscriptionInitialStateMode.InitialStateAsSnapshot)
             {
                 SendCurrentClusterState(subscriber);
             }
