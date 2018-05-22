@@ -173,8 +173,7 @@ namespace Akka.DistributedData
         /// <returns>TBD</returns>
         public GCounter Prune(UniqueAddress removedNode, UniqueAddress collapseInto)
         {
-            ulong prunedNodeValue;
-            return State.TryGetValue(removedNode, out prunedNodeValue)
+            return State.TryGetValue(removedNode, out var prunedNodeValue)
                 ? new GCounter(State.Remove(removedNode)).Increment(collapseInto, prunedNodeValue)
                 : this;
         }
@@ -195,7 +194,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(GCounter other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Value, other.Value);
@@ -207,7 +206,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public int CompareTo(GCounter other)
         {
-            if (ReferenceEquals(other, null)) return 1;
+            if (other is null) return 1;
             return Value.CompareTo(other.Value);
         }
 

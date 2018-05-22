@@ -58,7 +58,7 @@ namespace Akka.DistributedData
         /// <returns>TBD</returns>
         public bool Equals(Flag other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Enabled == other.Enabled;

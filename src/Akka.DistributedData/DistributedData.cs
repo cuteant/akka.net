@@ -84,7 +84,7 @@ namespace Akka.DistributedData
         /// Asynchronously returns list of locally known keys.
         /// </summary>
         /// <returns></returns>
-        public async Task<IImmutableSet<string>> GetKeysAsync(CancellationToken cancellation = default (CancellationToken))
+        public async Task<IImmutableSet<string>> GetKeysAsync(CancellationToken cancellation = default)
         {
             var response = await Replicator.Ask(Dsl.GetKeyIds, cancellation);
             switch (response)
@@ -112,7 +112,7 @@ namespace Akka.DistributedData
         /// <param name="consistency">A read consistency requested for this write.</param>
         /// <param name="cancellation">Cancellation token used to cancel request prematurelly if needed.</param>
         /// <returns>A task which may return a replicated data value or throw an exception.</returns>
-        public async Task<T> GetAsync<T>(IKey<T> key, IReadConsistency consistency = null, CancellationToken cancellation = default(CancellationToken)) 
+        public async Task<T> GetAsync<T>(IKey<T> key, IReadConsistency consistency = null, CancellationToken cancellation = default) 
             where T : class, IReplicatedData<T>
         {
             var id = Guid.NewGuid();
@@ -128,7 +128,7 @@ namespace Akka.DistributedData
                 case GetFailure failure: throw new TimeoutException($"Couldn't retrieve the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
                 case Status.Failure failure:
                     ExceptionDispatchInfo.Capture(failure.Cause).Throw();
-                    return default(T);
+                    return default;
                 default: throw new NotSupportedException("Unknown response type: " + response);
             }
         }
@@ -150,7 +150,7 @@ namespace Akka.DistributedData
         /// <param name="consistency">A write consistency requested for this write.</param>
         /// <param name="cancellation">Cancellation token used to cancel request prematurelly if needed.</param>
         /// <returns>A task which may complete successfully if update was confirmed within provided consistency or throw an exception.</returns>
-        public async Task UpdateAsync<T>(IKey<T> key, T replica, IWriteConsistency consistency = null, CancellationToken cancellation = default(CancellationToken)) 
+        public async Task UpdateAsync<T>(IKey<T> key, T replica, IWriteConsistency consistency = null, CancellationToken cancellation = default) 
             where T : IReplicatedData<T>
         {
             var id = Guid.NewGuid();
@@ -185,7 +185,7 @@ namespace Akka.DistributedData
         /// <param name="consistency">A consistency level requested for this deletion.</param>
         /// <param name="cancellation">Cancellation token used to cancel request prematurelly if needed.</param>
         /// <returns></returns>
-        public async Task DeleteAsync<T>(IKey<T> key, IWriteConsistency consistency = null, CancellationToken cancellation = default(CancellationToken)) where T : IReplicatedData<T>
+        public async Task DeleteAsync<T>(IKey<T> key, IWriteConsistency consistency = null, CancellationToken cancellation = default) where T : IReplicatedData<T>
         {
             var id = Guid.NewGuid();
             var response = await Replicator.Ask(Dsl.Delete(key, consistency, id), cancellation);

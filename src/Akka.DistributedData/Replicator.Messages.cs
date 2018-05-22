@@ -39,13 +39,12 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) =>
-            obj is GetKeysIdsResult && Equals((GetKeysIdsResult)obj);
+        public override bool Equals(object obj) => obj is GetKeysIdsResult result && Equals(result);
 
         /// <inheritdoc/>
         public bool Equals(GetKeysIdsResult other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Keys.SetEquals(other.Keys);
@@ -88,7 +87,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(Get other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Request, other.Request) &&
@@ -96,7 +95,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is Get && Equals((Get)obj);
+        public override bool Equals(object obj) => obj is Get get && Equals(get);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -184,14 +183,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(GetSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Request, other.Request) && Equals(Data, other.Data);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is GetSuccess && Equals((GetSuccess)obj);
+        public override bool Equals(object obj) => obj is GetSuccess getSuccess && Equals(getSuccess);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -235,14 +234,14 @@ namespace Akka.DistributedData
 
         public bool Equals(NotFound other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Request, other.Request);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is NotFound && Equals((NotFound)obj);
+        public override bool Equals(object obj) => obj is NotFound notFound && Equals(notFound);
 
         /// <inheritdoc/>
         public override string ToString() => $"NotFound({Key}{(Request == null ? "" : ", req=" + Request)})";
@@ -285,14 +284,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(GetFailure other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Request, other.Request);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is GetFailure && Equals((GetFailure)obj);
+        public override bool Equals(object obj) => obj is GetFailure getFailure && Equals(getFailure);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -345,14 +344,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(Subscribe other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Subscriber, other.Subscriber);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is Subscribe && Equals((Subscribe)obj);
+        public override bool Equals(object obj) => obj is Subscribe subscribe && Equals(subscribe);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -386,14 +385,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(Unsubscribe other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Subscriber, other.Subscriber);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is Unsubscribe && Equals((Unsubscribe)obj);
+        public override bool Equals(object obj) => obj is Unsubscribe unsubscribe && Equals(unsubscribe);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -435,7 +434,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(Changed other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Data, other.Data);
@@ -448,7 +447,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is Changed && Equals((Changed)obj);
+        public override bool Equals(object obj) => obj is Changed changed && Equals(changed);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -565,14 +564,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(UpdateSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Request, other.Request);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is UpdateSuccess && Equals((UpdateSuccess)obj);
+        public override bool Equals(object obj) => obj is UpdateSuccess updateSuccess && Equals(updateSuccess);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -624,14 +623,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(UpdateTimeout other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Request, other.Request);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is UpdateTimeout && Equals((UpdateTimeout)obj);
+        public override bool Equals(object obj) => obj is UpdateTimeout updateTimeout && Equals(updateTimeout);
 
         /// <inheritdoc/>
         public override string ToString() => $"UpdateTimeout({Key}{(Request == null ? "" : ", req=" + Request)})";
@@ -728,7 +727,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(StoreFailure other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(_key, other._key) && Equals(_request, other._request);
         }
@@ -736,9 +735,9 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is StoreFailure && Equals((StoreFailure)obj);
+            return obj is StoreFailure storeFailure && Equals(storeFailure);
         }
 
         /// <inheritdoc/>
@@ -772,14 +771,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(Delete other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Consistency, other.Consistency) && Equals(Request, other.Request);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is Delete && Equals((Delete)obj);
+        public override bool Equals(object obj) => obj is Delete delete && Equals(delete);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -846,14 +845,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(DeleteSuccess other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DeleteSuccess && Equals((DeleteSuccess)obj);
+        public override bool Equals(object obj) => obj is DeleteSuccess ds && Equals(ds);
 
         /// <inheritdoc/>
         public override int GetHashCode() => Key.GetHashCode();
@@ -877,14 +876,14 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(ReplicationDeleteFailure other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key);
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is ReplicationDeleteFailure && Equals((ReplicationDeleteFailure)obj);
+        public override bool Equals(object obj) => obj is ReplicationDeleteFailure failure && Equals(failure);
 
         /// <inheritdoc/>
         public override int GetHashCode() => Key.GetHashCode();
@@ -913,7 +912,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(DataDeleted other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Request, other.Request);

@@ -71,7 +71,7 @@ namespace Akka.DistributedData.Serialization
             {
                 var position = n.Current;
                 var c = Get(key, position);
-                if (!ReferenceEquals(c, null)) return c;
+                if (!(c is null)) return c;
                 var b2 = getOrAddFactory(key);
                 if (position == n.Current)
                 {
@@ -84,7 +84,7 @@ namespace Akka.DistributedData.Serialization
                     // some other thread added, try one more time
                     // to reduce duplicates
                     var c2 = Get(key, n.Current);
-                    if (!ReferenceEquals(c2, null)) return c2;
+                    if (!(c2 is null)) return c2;
                     else
                     {
                         Add(key, b2);

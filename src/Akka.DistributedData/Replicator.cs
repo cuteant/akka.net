@@ -662,9 +662,16 @@ namespace Akka.DistributedData
 
         private bool IsLocalUpdate(IWriteConsistency consistency)
         {
-            if (consistency is WriteLocal) return true;
-            if (consistency is WriteAll || consistency is WriteMajority) return _nodes.Count == 0;
-            return false;
+            switch (consistency)
+            {
+                case WriteLocal _:
+                    return true;
+                case WriteAll _:
+                case WriteMajority _:
+                    return _nodes.Count == 0;
+                default:
+                    return false;
+            }
         }
 
         private void ReceiveWrite(string key, DataEnvelope envelope)

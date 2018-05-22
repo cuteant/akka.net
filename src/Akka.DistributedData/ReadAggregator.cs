@@ -41,16 +41,25 @@ namespace Akka.DistributedData
 
         private int GetDoneWhenRemainingSize()
         {
-            if (_consistency is ReadFrom) return Nodes.Count - (((ReadFrom)_consistency).N - 1);
-            else if (_consistency is ReadAll) return 0;
-            else if (_consistency is ReadMajority)
+            switch (_consistency)
             {
-                var ncount = Nodes.Count + 1;
-                var w = CalculateMajorityWithMinCapacity(((ReadMajority)_consistency).MinCapacity, ncount);
-                return ncount - w;
+                case ReadFrom readFrom:
+                    return Nodes.Count - (readFrom.N - 1);
+
+                case ReadAll _:
+                    return 0;
+
+                case ReadMajority readMajority:
+                    var ncount = Nodes.Count + 1;
+                    var w = CalculateMajorityWithMinCapacity(readMajority.MinCapacity, ncount);
+                    return ncount - w;
+
+                case ReadLocal _:
+                    throw new ArgumentException("ReadAggregator does not support ReadLocal");
+
+                default:
+                    throw new ArgumentException("Invalid consistency level");
             }
-            else if (_consistency is ReadLocal) throw new ArgumentException("ReadAggregator does not support ReadLocal");
-            else throw new ArgumentException("Invalid consistency level");
         }
 
         protected override void PreStart()
@@ -164,7 +173,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(ReadFrom other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return N == other.N && Timeout.Equals(other.Timeout);
         }
@@ -205,7 +214,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(ReadMajority other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return Timeout.Equals(other.Timeout) && MinCapacity == other.MinCapacity;
         }
@@ -241,7 +250,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(ReadAll other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return Timeout.Equals(other.Timeout);
         }

@@ -175,8 +175,7 @@ namespace Akka.DistributedData
         public LWWDictionary<TKey, TValue> SetItem(UniqueAddress node, TKey key, TValue value,
             Clock<TValue> clock = null)
         {
-            LWWRegister<TValue> register;
-            var newRegister = _underlying.TryGetValue(key, out register)
+            var newRegister = _underlying.TryGetValue(key, out var register)
                 ? register.WithValue(node, value, clock ?? LWWRegister<TValue>.DefaultClock)
                 : new LWWRegister<TValue>(node, value, clock ?? LWWRegister<TValue>.DefaultClock);
 
@@ -206,14 +205,13 @@ namespace Akka.DistributedData
         /// <returns>TBD</returns>
         public bool TryGetValue(TKey key, out TValue value)
         {
-            LWWRegister<TValue> register;
-            if (_underlying.TryGetValue(key, out register))
+            if (_underlying.TryGetValue(key, out var register))
             {
                 value = register.Value;
                 return true;
             }
 
-            value = default(TValue);
+            value = default;
             return false;
         }
 
@@ -271,7 +269,7 @@ namespace Akka.DistributedData
         /// <returns>TBD</returns>
         public bool Equals(LWWDictionary<TKey, TValue> other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return _underlying.Equals(other._underlying);
@@ -286,7 +284,7 @@ namespace Akka.DistributedData
 
         /// <inheritdoc/>
         public override bool Equals(object obj) =>
-            obj is LWWDictionary<TKey, TValue> && Equals((LWWDictionary<TKey, TValue>)obj);
+            obj is LWWDictionary<TKey, TValue> lww && Equals(lww);
 
         /// <inheritdoc/>
         public override int GetHashCode() => _underlying.GetHashCode();

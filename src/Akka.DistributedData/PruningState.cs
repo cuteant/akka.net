@@ -47,7 +47,7 @@ namespace Akka.DistributedData
 
         public bool Equals(PruningInitialized other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(Owner, other.Owner) && Seen.SetEquals(other.Seen);
         }
@@ -77,8 +77,7 @@ namespace Akka.DistributedData
 
         public IPruningState Merge(IPruningState other)
         {
-            var that = other as PruningPerformed;
-            if (that != null)
+            if (other is PruningPerformed that)
             {
                 return this.ObsoleteTime >= that.ObsoleteTime ? this : that;
             }
@@ -87,7 +86,7 @@ namespace Akka.DistributedData
 
         public bool Equals(PruningPerformed other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return ObsoleteTime.Equals(other.ObsoleteTime);
         }

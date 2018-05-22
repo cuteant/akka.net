@@ -65,7 +65,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(IKey key)
         {
-            if (ReferenceEquals(key, null)) return false;
+            if (key is null) return false;
             if (ReferenceEquals(this, key)) return true;
 
             return Id == key.Id;

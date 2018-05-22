@@ -114,7 +114,7 @@ namespace Akka.DistributedData.Internal
         /// <inheritdoc/>
         public bool Equals(Write other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Key == other.Key && Equals(Envelope, other.Envelope);
@@ -254,7 +254,7 @@ namespace Akka.DistributedData.Internal
         /// <inheritdoc/>
         public bool Equals(ReadResult other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Envelope, other.Envelope);
@@ -299,7 +299,7 @@ namespace Akka.DistributedData.Internal
         /// <inheritdoc/>
         public bool Equals(ReadRepair other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Key, other.Key) && Equals(Envelope, other.Envelope);
@@ -402,8 +402,7 @@ namespace Akka.DistributedData.Internal
         /// <returns>TBD</returns>
         internal bool NeedPruningFrom(UniqueAddress removedNode)
         {
-            var r = Data as IRemovedNodePruning;
-            return r != null && r.NeedPruningFrom(removedNode);
+            return Data is IRemovedNodePruning r && r.NeedPruningFrom(removedNode);
         }
 
         /// <summary>
@@ -424,15 +423,12 @@ namespace Akka.DistributedData.Internal
         /// <returns>TBD</returns>
         internal DataEnvelope Prune(UniqueAddress from, PruningPerformed pruningPerformed)
         {
-            var dataWithRemovedNodePruning = Data as IRemovedNodePruning;
-            if (dataWithRemovedNodePruning != null)
+            if (Data is IRemovedNodePruning dataWithRemovedNodePruning)
             {
-                IPruningState state;
-                if (!Pruning.TryGetValue(from, out state))
+                if (!Pruning.TryGetValue(from, out var state))
                     throw new ArgumentException($"Can't prune {@from} since it's not found in DataEnvelope");
 
-                var initialized = state as PruningInitialized;
-                if (initialized != null)
+                if (state is PruningInitialized initialized)
                 {
                     var prunedData = dataWithRemovedNodePruning.Prune(from, initialized.Owner);
                     return new DataEnvelope(data: prunedData, pruning: Pruning.SetItem(from, pruningPerformed), deltaVersions: CleanedDeltaVersions(from));
@@ -454,8 +450,7 @@ namespace Akka.DistributedData.Internal
                 var mergedPrunning = other.Pruning.ToBuilder();
                 foreach (var entry in this.Pruning)
                 {
-                    IPruningState state;
-                    if (mergedPrunning.TryGetValue(entry.Key, out state))
+                    if (mergedPrunning.TryGetValue(entry.Key, out var state))
                         mergedPrunning[entry.Key] = entry.Value.Merge(state);
                     else
                         mergedPrunning[entry.Key] = entry.Value;
@@ -511,8 +506,7 @@ namespace Akka.DistributedData.Internal
 
         private IReplicatedData Cleaned(IReplicatedData c, IImmutableDictionary<UniqueAddress, IPruningState> p) => p.Aggregate(c, (state, kvp) =>
         {
-            var pruning = c as IRemovedNodePruning;
-            if (pruning != null
+            if (c is IRemovedNodePruning pruning
                 && kvp.Value is PruningPerformed
                 && pruning.NeedPruningFrom(kvp.Key))
                 return pruning.PruningCleanup(kvp.Key);
@@ -544,7 +538,7 @@ namespace Akka.DistributedData.Internal
         /// <returns>TBD</returns>
         public bool Equals(DataEnvelope other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             if (!Equals(Data, other.Data)) return false;
@@ -563,7 +557,7 @@ namespace Akka.DistributedData.Internal
         /// </summary>
         /// <param name="obj">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Equals(object obj) => obj is DataEnvelope && Equals((DataEnvelope)obj);
+        public override bool Equals(object obj) => obj is DataEnvelope dataEnvelope && Equals(dataEnvelope);
 
         /// <summary>
         /// TBD
@@ -669,7 +663,7 @@ namespace Akka.DistributedData.Internal
         /// <inheritdoc/>
         public bool Equals(Status other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return other.Chunk.Equals(Chunk) && other.TotalChunks.Equals(TotalChunks) && Digests.SequenceEqual(other.Digests);
@@ -734,7 +728,7 @@ namespace Akka.DistributedData.Internal
         /// <inheritdoc/>
         public bool Equals(Gossip other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return other.SendBack.Equals(SendBack) && UpdatedData.SequenceEqual(other.UpdatedData);
@@ -782,14 +776,14 @@ namespace Akka.DistributedData.Internal
 
         public bool Equals(Delta other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(DataEnvelope, other.DataEnvelope) && FromSeqNr == other.FromSeqNr && ToSeqNr == other.ToSeqNr;
         }
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             return obj is Delta && Equals((Delta)obj);
         }
@@ -847,7 +841,7 @@ namespace Akka.DistributedData.Internal
 
         public bool Equals(DeltaPropagation other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             if (!Equals(FromNode, other.FromNode) || !ShouldReply == other.ShouldReply || Deltas.Count != other.Deltas.Count)
                 return false;
@@ -862,7 +856,7 @@ namespace Akka.DistributedData.Internal
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             return obj is DeltaPropagation && Equals((DeltaPropagation)obj);
         }

@@ -81,8 +81,7 @@ namespace Akka.DistributedData
         /// </summary>
         public bool TryGetValue(TKey key, out BigInteger value)
         {
-            PNCounter counter;
-            if (_underlying.TryGetValue(key, out counter))
+            if (_underlying.TryGetValue(key, out var counter))
             {
                 value = counter.Value;
                 return true;
@@ -160,7 +159,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(PNCounterDictionary<TKey> other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(_underlying, other._underlying);

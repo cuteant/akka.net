@@ -48,16 +48,14 @@ namespace Akka.DistributedData
         {
             if (dot.IsEmpty) return VersionVector.Empty;
 
-            if (dot is SingleVersionVector)
+            if (dot is SingleVersionVector single)
             {
                 // if dot is dominated by version vector, drop it
-                var single = (SingleVersionVector)dot;
                 return vvector.VersionAt(single.Node) >= single.Version ? VersionVector.Empty : dot;
             }
 
-            if (dot is MultiVersionVector)
+            if (dot is MultiVersionVector multi)
             {
-                var multi = (MultiVersionVector)dot;
                 var acc = ImmutableDictionary<UniqueAddress, long>.Empty.ToBuilder();
                 foreach (var pair in multi.Versions)
                 {
@@ -121,75 +119,83 @@ namespace Akka.DistributedData
             var l = lhs.ElementsMap[k];
             var r = rhs.ElementsMap[k];
 
-            if (l is SingleVersionVector)
+            switch (l)
             {
-                var lhsDots = (SingleVersionVector)l;
-                if (r is SingleVersionVector)
-                {
-                    var rhsDots = (SingleVersionVector)r;
-                    if (lhsDots.Node == rhsDots.Node && lhsDots.Version == rhsDots.Version)
+                case SingleVersionVector lhsDots:
                     {
-                        return acc.SetItem(k, lhsDots);
-                    }
-                    else
-                    {
-                        var lhsKeep = ORSet.SubtractDots(lhsDots, rhs._versionVector);
-                        var rhsKeep = ORSet.SubtractDots(rhsDots, lhs._versionVector);
-                        var merged = lhsKeep.Merge(rhsKeep);
-                        return merged.IsEmpty ? acc : acc.SetItem(k, merged);
-                    }
-                }
-                else
-                {
-                    var rhsDots = (MultiVersionVector)r;
-                    var commonDots = rhsDots.Versions
-                        .Where(kv => lhsDots.Version == kv.Value && lhsDots.Node == kv.Key)
-                        .ToImmutableDictionary();
-                    var commonDotKeys = commonDots.Keys.ToImmutableArray();
-                    var lhsUnique = commonDotKeys.Length != 0 ? VersionVector.Empty : lhsDots;
-                    var rhsUniqueDots = rhsDots.Versions.RemoveRange(commonDotKeys);
-                    var lhsKeep = ORSet.SubtractDots(lhsUnique, rhs._versionVector);
-                    var rhsKeep = ORSet.SubtractDots(new MultiVersionVector(rhsUniqueDots), lhs._versionVector);
-                    var merged = lhsKeep.Merge(rhsKeep).Merge(new MultiVersionVector(commonDots));
-
-                    return merged.IsEmpty ? acc : acc.SetItem(k, merged);
-                }
-            }
-            else
-            {
-                var lhsDots = (MultiVersionVector)l;
-                if (r is SingleVersionVector)
-                {
-                    var rhsDots = (SingleVersionVector)r;
-                    var commonDots = lhsDots.Versions
-                        .Where(kv => kv.Value == rhsDots.Version && kv.Key == rhsDots.Node)
-                        .ToImmutableDictionary();
-                    var commonDotKeys = commonDots.Keys.ToImmutableArray();
-                    var lhsUniqueDots = lhsDots.Versions.RemoveRange(commonDotKeys);
-                    var rhsUnique = commonDotKeys.IsEmpty ? rhsDots : VersionVector.Empty;
-                    var lhsKeep = ORSet.SubtractDots(VersionVector.Create(lhsUniqueDots), rhs._versionVector);
-                    var rhsKeep = ORSet.SubtractDots(rhsUnique, lhs._versionVector);
-                    var merged = lhsKeep.Merge(rhsKeep).Merge(VersionVector.Create(commonDots));
-                    return merged.IsEmpty ? acc : acc.SetItem(k, merged);
-                }
-                else
-                {
-                    var rhsDots = (MultiVersionVector)r;
-                    var commonDots = rhsDots.Versions
-                        .Where(kv =>
+                        switch (r)
                         {
-                            long v;
-                            return rhsDots.Versions.TryGetValue(kv.Key, out v) && v == kv.Value;
-                        }).ToImmutableDictionary();
-                    var commonDotKeys = commonDots.Keys.ToImmutableArray();
-                    var lhsUniqueDots = lhsDots.Versions.RemoveRange(commonDotKeys);
-                    var rhsUniqueDots = rhsDots.Versions.RemoveRange(commonDotKeys);
-                    var lhsKeep = ORSet.SubtractDots(VersionVector.Create(lhsUniqueDots), rhs._versionVector);
-                    var rhsKeep = ORSet.SubtractDots(VersionVector.Create(rhsUniqueDots), lhs._versionVector);
-                    var merged = lhsKeep.Merge(rhsKeep).Merge(VersionVector.Create(commonDots));
-                    return merged.IsEmpty ? acc : acc.SetItem(k, merged);
-                }
+                            case SingleVersionVector rhsDots:
+                                {
+                                    if (lhsDots.Node == rhsDots.Node && lhsDots.Version == rhsDots.Version)
+                                    {
+                                        return acc.SetItem(k, lhsDots);
+                                    }
+                                    else
+                                    {
+                                        var lhsKeep = ORSet.SubtractDots(lhsDots, rhs._versionVector);
+                                        var rhsKeep = ORSet.SubtractDots(rhsDots, lhs._versionVector);
+                                        var merged = lhsKeep.Merge(rhsKeep);
+                                        return merged.IsEmpty ? acc : acc.SetItem(k, merged);
+                                    }
+                                }
+                            case MultiVersionVector rhsDots:
+                                {
+                                    var commonDots = rhsDots.Versions
+                                        .Where(kv => lhsDots.Version == kv.Value && lhsDots.Node == kv.Key)
+                                        .ToImmutableDictionary();
+                                    var commonDotKeys = commonDots.Keys.ToImmutableArray();
+                                    var lhsUnique = commonDotKeys.Length != 0 ? VersionVector.Empty : lhsDots;
+                                    var rhsUniqueDots = rhsDots.Versions.RemoveRange(commonDotKeys);
+                                    var lhsKeep = ORSet.SubtractDots(lhsUnique, rhs._versionVector);
+                                    var rhsKeep = ORSet.SubtractDots(new MultiVersionVector(rhsUniqueDots), lhs._versionVector);
+                                    var merged = lhsKeep.Merge(rhsKeep).Merge(new MultiVersionVector(commonDots));
+
+                                    return merged.IsEmpty ? acc : acc.SetItem(k, merged);
+                                }
+                            default:
+                                break;
+                        }
+                    }
+                    break;
+                case MultiVersionVector lhsDots:
+                    {
+                        switch (r)
+                        {
+                            case SingleVersionVector rhsDots:
+                                {
+                                    var commonDots = lhsDots.Versions
+                                        .Where(kv => kv.Value == rhsDots.Version && kv.Key == rhsDots.Node)
+                                        .ToImmutableDictionary();
+                                    var commonDotKeys = commonDots.Keys.ToImmutableArray();
+                                    var lhsUniqueDots = lhsDots.Versions.RemoveRange(commonDotKeys);
+                                    var rhsUnique = commonDotKeys.IsEmpty ? rhsDots : VersionVector.Empty;
+                                    var lhsKeep = ORSet.SubtractDots(VersionVector.Create(lhsUniqueDots), rhs._versionVector);
+                                    var rhsKeep = ORSet.SubtractDots(rhsUnique, lhs._versionVector);
+                                    var merged = lhsKeep.Merge(rhsKeep).Merge(VersionVector.Create(commonDots));
+                                    return merged.IsEmpty ? acc : acc.SetItem(k, merged);
+                                }
+                            case MultiVersionVector rhsDots:
+                                {
+                                    var commonDots = rhsDots.Versions
+                                        .Where(kv => rhsDots.Versions.TryGetValue(kv.Key, out var v) && v == kv.Value).ToImmutableDictionary();
+                                    var commonDotKeys = commonDots.Keys.ToImmutableArray();
+                                    var lhsUniqueDots = lhsDots.Versions.RemoveRange(commonDotKeys);
+                                    var rhsUniqueDots = lhsDots.Versions.RemoveRange(commonDotKeys);
+                                    var lhsKeep = ORSet.SubtractDots(VersionVector.Create(lhsUniqueDots), rhs._versionVector);
+                                    var rhsKeep = ORSet.SubtractDots(VersionVector.Create(rhsUniqueDots), lhs._versionVector);
+                                    var merged = lhsKeep.Merge(rhsKeep).Merge(VersionVector.Create(commonDots));
+                                    return merged.IsEmpty ? acc : acc.SetItem(k, merged);
+                                }
+                            default:
+                                break;
+                        }
+                    }
+                    break;
+                default:
+                    break;
             }
+            throw new NotSupportedException();
         });
 
         public ORSet() : this(ImmutableDictionary<T, VersionVector>.Empty, VersionVector.Empty, null)
@@ -371,7 +377,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(ORSet<T> other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return _versionVector == other._versionVector && ElementsMap.SequenceEqual(other.ElementsMap);
@@ -423,7 +429,7 @@ namespace Akka.DistributedData
 
             public bool Equals(IDeltaOperation other)
             {
-                if (ReferenceEquals(null, other)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
                 if (other is AtomicDeltaOperation op)
                 {
@@ -434,7 +440,7 @@ namespace Akka.DistributedData
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 if (obj.GetType() != this.GetType()) return false;
                 return Equals((AtomicDeltaOperation)obj);
@@ -453,24 +459,25 @@ namespace Akka.DistributedData
             public override ORSet<T> Underlying { get; }
             public override IReplicatedData Merge(IReplicatedData other)
             {
-                if (other is AddDeltaOperation)
+                switch (other)
                 {
-                    var u = ((AddDeltaOperation)other).Underlying;
-                    // Note that we only merge deltas originating from the same node
-                    return new AddDeltaOperation(new ORSet<T>(
-                        ConcatElementsMap(u.ElementsMap),
-                        Underlying._versionVector.Merge(u._versionVector)));
+                    case AddDeltaOperation op:
+                        var u = op.Underlying;
+                        // Note that we only merge deltas originating from the same node
+                        return new AddDeltaOperation(new ORSet<T>(
+                            ConcatElementsMap(u.ElementsMap),
+                            Underlying._versionVector.Merge(u._versionVector)));
+                        
+                    case AtomicDeltaOperation op:
+                        return new DeltaGroup(ImmutableArray.Create(this, other));
+                        
+                    case DeltaGroup deltaGroup:
+                        var vector = deltaGroup.Operations;
+                        return new DeltaGroup(vector.Add(this));
+                        
+                    default:
+                        throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
                 }
-                else if (other is AtomicDeltaOperation)
-                {
-                    return new DeltaGroup(ImmutableArray.Create(this, other));
-                }
-                else if (other is DeltaGroup)
-                {
-                    var vector = ((DeltaGroup)other).Operations;
-                    return new DeltaGroup(vector.Add(this));
-                }
-                else throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
             }
 
             private ImmutableDictionary<T, VersionVector> ConcatElementsMap(
@@ -498,16 +505,18 @@ namespace Akka.DistributedData
             public override ORSet<T> Underlying { get; }
             public override IReplicatedData Merge(IReplicatedData other)
             {
-                if (other is AtomicDeltaOperation)
+                switch (other)
                 {
-                    return new DeltaGroup(ImmutableArray.Create(this, other));
+                    case AtomicDeltaOperation _:
+                        return new DeltaGroup(ImmutableArray.Create(this, other));
+                        
+                    case DeltaGroup deltaGroup:
+                        var vector = deltaGroup.Operations;
+                        return new DeltaGroup(vector.Add(this));
+                        
+                    default:
+                        throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
                 }
-                else if (other is DeltaGroup)
-                {
-                    var vector = ((DeltaGroup)other).Operations;
-                    return new DeltaGroup(vector.Add(this));
-                }
-                else throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
             }
         }
 
@@ -521,16 +530,18 @@ namespace Akka.DistributedData
             public override ORSet<T> Underlying { get; }
             public override IReplicatedData Merge(IReplicatedData other)
             {
-                if (other is AtomicDeltaOperation)
+                switch (other)
                 {
-                    return new DeltaGroup(ImmutableArray.Create(this, other));
+                    case AtomicDeltaOperation _:
+                        return new DeltaGroup(ImmutableArray.Create(this, other));
+
+                    case DeltaGroup deltaGroup:
+                        var vector = deltaGroup.Operations;
+                        return new DeltaGroup(vector.Add(this));
+
+                    default:
+                        throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
                 }
-                else if (other is DeltaGroup)
-                {
-                    var vector = ((DeltaGroup)other).Operations;
-                    return new DeltaGroup(vector.Add(this));
-                }
-                else throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
             }
         }
 
@@ -545,22 +556,21 @@ namespace Akka.DistributedData
 
             public IReplicatedData Merge(IReplicatedData other)
             {
-                if (other is AddDeltaOperation)
+                switch (other)
                 {
-                    // merge AddDeltaOp into last AddDeltaOp in the group, if possible
-                    var last = Operations[Operations.Length - 1];
-                    return last is AddDeltaOperation
-                        ? new DeltaGroup(Operations.SetItem(Operations.Length - 1, other.Merge(last)))
-                        : new DeltaGroup(Operations.Add(other));
-                }
-                else if (other is DeltaGroup)
-                {
-                    var otherVector = ((DeltaGroup)other).Operations;
-                    return new DeltaGroup(Operations.AddRange(otherVector));
-                }
-                else
-                {
-                    return new DeltaGroup(Operations.Add(other));
+                    case AddDeltaOperation _:
+                        // merge AddDeltaOp into last AddDeltaOp in the group, if possible
+                        var last = Operations[Operations.Length - 1];
+                        return last is AddDeltaOperation
+                            ? new DeltaGroup(Operations.SetItem(Operations.Length - 1, other.Merge(last)))
+                            : new DeltaGroup(Operations.Add(other));
+
+                    case DeltaGroup deltaGroup:
+                        var otherVector = deltaGroup.Operations;
+                        return new DeltaGroup(Operations.AddRange(otherVector));
+                        
+                    default:
+                        return new DeltaGroup(Operations.Add(other));
                 }
             }
 
@@ -569,7 +579,7 @@ namespace Akka.DistributedData
 
             public bool Equals(IDeltaOperation other)
             {
-                if (ReferenceEquals(null, other)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
                 if (other is DeltaGroup group)
                 {
@@ -580,7 +590,7 @@ namespace Akka.DistributedData
 
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 return obj is DeltaGroup && Equals((DeltaGroup)obj);
             }

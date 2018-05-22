@@ -101,8 +101,7 @@ namespace Akka.DistributedData
                             // in most cases the delta group merging will be the same for each node,
                             // so we cache the merged results
                             var cacheKey = Tuple.Create(key, fromSeqNr, toSeqNr);
-                            IReplicatedData deltaGroup;
-                            if (!cache.TryGetValue(cacheKey, out deltaGroup))
+                            if (!cache.TryGetValue(cacheKey, out IReplicatedData deltaGroup))
                             {
                                 using (var e = deltaEntriesAfterJ.Values.GetEnumerator())
                                 {
@@ -141,8 +140,7 @@ namespace Akka.DistributedData
 
         public bool HasDeltaEntries(string key)
         {
-            ImmutableSortedDictionary<long, IReplicatedData> entries;
-            if (_deltaEntries.TryGetValue(key, out entries))
+            if (_deltaEntries.TryGetValue(key, out var entries))
             {
                 return !entries.IsEmpty;
             }
@@ -182,8 +180,7 @@ namespace Akka.DistributedData
 
         private long FindSmallestVersionPropagatedToAllNodes(string key, IEnumerable<Address> nodes)
         {
-            ImmutableDictionary<Address, long> deltaSentToNodeForKey;
-            if (_deltaSentToNode.TryGetValue(key, out deltaSentToNodeForKey) && !deltaSentToNodeForKey.IsEmpty)
+            if (_deltaSentToNode.TryGetValue(key, out var deltaSentToNodeForKey) && !deltaSentToNodeForKey.IsEmpty)
             {
                 return nodes.Any(node => !deltaSentToNodeForKey.ContainsKey(node))
                     ? 0L

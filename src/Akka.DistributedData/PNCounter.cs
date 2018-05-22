@@ -103,7 +103,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public bool Equals(PNCounter other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return other.Increments.Equals(Increments) && other.Decrements.Equals(Decrements);
