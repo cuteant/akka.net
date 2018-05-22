@@ -33,18 +33,18 @@ namespace Akka.Persistence.Serialization
             switch (obj)
             {
                 case IPersistentRepresentation repr:
-                    return GetPersistentMessage(repr).ToByteArray();
+                    return GetPersistentMessage(repr).ToArray();
                 case AtomicWrite aw:
-                    return GetAtomicWrite(aw).ToByteArray();
+                    return GetAtomicWrite(aw).ToArray();
                 case AtLeastOnceDeliverySnapshot snap:
-                    return GetAtLeastOnceDeliverySnapshot(snap).ToByteArray();
+                    return GetAtLeastOnceDeliverySnapshot(snap).ToArray();
                 case PersistentFSM.StateChangeEvent stateEvent:
-                    return GetStateChangeEvent(stateEvent).ToByteArray();
+                    return GetStateChangeEvent(stateEvent).ToArray();
                 default:
                     if (obj.GetType().GetTypeInfo().IsGenericType
                         && obj.GetType().GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>))
                     {
-                        return GetPersistentFSMSnapshot(obj).ToByteArray();
+                        return GetPersistentFSMSnapshot(obj).ToArray();
                     }
                     throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{GetType()}]");
             }

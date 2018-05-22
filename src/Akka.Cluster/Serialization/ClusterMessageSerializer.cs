@@ -53,9 +53,9 @@ namespace Akka.Cluster.Serialization
             switch (obj)
             {
                 case ClusterHeartbeatSender.Heartbeat heartbeat:
-                    return AddressToProto(heartbeat.From).ToByteArray();
+                    return AddressToProto(heartbeat.From).ToArray();
                 case ClusterHeartbeatSender.HeartbeatRsp heartbeatRsp:
-                    return UniqueAddressToProto(heartbeatRsp.From).ToByteArray();
+                    return UniqueAddressToProto(heartbeatRsp.From).ToArray();
                 case GossipEnvelope gossipEnvelope:
                     return GossipEnvelopeToProto(gossipEnvelope);
                 case GossipStatus gossipStatus:
@@ -65,17 +65,17 @@ namespace Akka.Cluster.Serialization
                 case InternalClusterAction.Welcome welcome:
                     return WelcomeMessageBuilder(welcome);
                 case ClusterUserAction.Leave leave:
-                    return AddressToProto(leave.Address).ToByteArray();
+                    return AddressToProto(leave.Address).ToArray();
                 case ClusterUserAction.Down down:
-                    return AddressToProto(down.Address).ToByteArray();
+                    return AddressToProto(down.Address).ToArray();
                 case InternalClusterAction.InitJoin _:
-                    return new Google.Protobuf.WellKnownTypes.Empty().ToByteArray();
+                    return new Google.Protobuf.WellKnownTypes.Empty().ToArray();
                 case InternalClusterAction.InitJoinAck initJoinAck:
-                    return AddressToProto(initJoinAck.Address).ToByteArray();
+                    return AddressToProto(initJoinAck.Address).ToArray();
                 case InternalClusterAction.InitJoinNack initJoinNack:
-                    return AddressToProto(initJoinNack.Address).ToByteArray();
+                    return AddressToProto(initJoinNack.Address).ToArray();
                 case InternalClusterAction.ExitingConfirmed exitingConfirmed:
-                    return UniqueAddressToProto(exitingConfirmed.Address).ToByteArray();
+                    return UniqueAddressToProto(exitingConfirmed.Address).ToArray();
                 case ClusterRouterPool pool:
                     return ClusterRouterPoolToByteArray(pool);
                 default:
@@ -103,7 +103,7 @@ namespace Akka.Cluster.Serialization
                 Node = UniqueAddressToProto(join.Node)
             };
             message.Roles.AddRange(join.Roles);
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private static InternalClusterAction.Join JoinFrom(byte[] bytes)
@@ -119,7 +119,7 @@ namespace Akka.Cluster.Serialization
                 From = UniqueAddressToProto(welcome.From),
                 Gossip = GossipToProto(welcome.Gossip)
             };
-            return welcomeProto.ToByteArray();
+            return welcomeProto.ToArray();
         }
 
         private static InternalClusterAction.Welcome WelcomeFrom(byte[] bytes)
@@ -137,10 +137,10 @@ namespace Akka.Cluster.Serialization
             {
                 From = UniqueAddressToProto(gossipEnvelope.From),
                 To = UniqueAddressToProto(gossipEnvelope.To),
-                SerializedGossip = ProtobufUtil.FromBytes(GossipToProto(gossipEnvelope.Gossip).ToByteArray())
+                SerializedGossip = ProtobufUtil.FromBytes(GossipToProto(gossipEnvelope.Gossip).ToArray())
             };
 
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private static GossipEnvelope GossipEnvelopeFrom(byte[] bytes)
@@ -164,7 +164,7 @@ namespace Akka.Cluster.Serialization
             };
             message.AllHashes.AddRange(allHashes);
             message.Version = VectorClockToProto(gossipStatus.Version, hashMapping);
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private static GossipStatus GossipStatusFrom(byte[] bytes)
@@ -184,7 +184,7 @@ namespace Akka.Cluster.Serialization
                 Pool = PoolToProto(clusterRouterPool.Local),
                 Settings = ClusterRouterPoolSettingsToProto(clusterRouterPool.Settings)
             };
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private ClusterRouterPool ClusterRouterPoolFrom(byte[] bytes)

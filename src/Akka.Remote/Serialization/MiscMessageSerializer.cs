@@ -213,7 +213,7 @@ namespace Akka.Remote.Serialization
                 protoIdentify.MessageId = _payloadSupport.PayloadToProto(identify.MessageId);
             }
 
-            return protoIdentify.ToByteArray();
+            return protoIdentify.ToArray();
         }
 
         private Identify IdentifyFromProto(byte[] bytes)
@@ -237,7 +237,7 @@ namespace Akka.Remote.Serialization
                 CorrelationId = _payloadSupport.PayloadToProto(actorIdentity.MessageId),
                 Path = Akka.Serialization.Serialization.SerializedActorPath(actorIdentity.Subject)
             };
-            return protoIdentify.ToByteArray();
+            return protoIdentify.ToArray();
         }
 
         private ActorIdentity ActorIdentityFromProto(byte[] bytes)
@@ -262,7 +262,7 @@ namespace Akka.Remote.Serialization
                 protoActor.Path = Akka.Serialization.Serialization.SerializedActorPath(actorRef);
             }
 
-            return protoActor.ToByteArray();
+            return protoActor.ToArray();
         }
 
         private IActorRef ActorRefFromProto(byte[] bytes)
@@ -285,7 +285,7 @@ namespace Akka.Remote.Serialization
             {
                 Uid = (ulong)heartbeatRsp.AddressUid // TODO: change to uint32
             };
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private RemoteWatcher.HeartbeatRsp HearthbeatRspFromProto(byte[] bytes)
@@ -303,7 +303,7 @@ namespace Akka.Remote.Serialization
             {
                 Node = AddressMessageBuilder(remoteScope.Address)
             };
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private RemoteScope RemoteScopeFromProto(byte[] bytes)
@@ -348,7 +348,7 @@ namespace Akka.Remote.Serialization
                 message.RouterDispatcher = fromConfig.RouterDispatcher;
             }
 
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private FromConfig FromConfigFromProto(byte[] bytes)
@@ -383,7 +383,7 @@ namespace Akka.Remote.Serialization
                 BackoffRate = defaultResizer.BackoffRate,
                 MessagesPerResize = (uint)defaultResizer.MessagesPerResize
             };
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private DefaultResizer DefaultResizerFromProto(byte[] bytes)
@@ -426,7 +426,7 @@ namespace Akka.Remote.Serialization
         //
         private byte[] RoundRobinPoolToProto(RoundRobinPool roundRobinPool)
         {
-            return GenericRoutingPoolBuilder(roundRobinPool).ToByteArray();
+            return GenericRoutingPoolBuilder(roundRobinPool).ToArray();
         }
 
         private RoundRobinPool RoundRobinPoolFromProto(byte[] bytes)
@@ -454,7 +454,7 @@ namespace Akka.Remote.Serialization
         //
         private byte[] BroadcastPoolToProto(BroadcastPool broadcastPool)
         {
-            return GenericRoutingPoolBuilder(broadcastPool).ToByteArray();
+            return GenericRoutingPoolBuilder(broadcastPool).ToArray();
         }
 
         private BroadcastPool BroadcastPoolFromProto(byte[] bytes)
@@ -481,7 +481,7 @@ namespace Akka.Remote.Serialization
         //
         private byte[] RandomPoolToProto(RandomPool randomPool)
         {
-            return GenericRoutingPoolBuilder(randomPool).ToByteArray();
+            return GenericRoutingPoolBuilder(randomPool).ToArray();
         }
 
         private RandomPool RandomPoolFromProto(byte[] bytes)
@@ -514,7 +514,7 @@ namespace Akka.Remote.Serialization
                 Generic = GenericRoutingPoolBuilder(scatterGatherFirstCompletedPool),
                 Within = Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(scatterGatherFirstCompletedPool.Within)
             };
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private ScatterGatherFirstCompletedPool ScatterGatherFirstCompletedPoolFromProto(byte[] bytes)
@@ -549,7 +549,7 @@ namespace Akka.Remote.Serialization
                 Within = Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(tailChoppingPool.Within),
                 Interval = Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(tailChoppingPool.Interval)
             };
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private TailChoppingPool TailChoppingPoolFromProto(byte[] bytes)
@@ -579,7 +579,7 @@ namespace Akka.Remote.Serialization
         //
         private byte[] ConsistentHashingPoolToProto(ConsistentHashingPool hashingPool)
         {
-            return GenericRoutingPoolBuilder(hashingPool).ToByteArray();
+            return GenericRoutingPoolBuilder(hashingPool).ToArray();
         }
 
         private object ConsistentHashingPoolFromProto(byte[] bytes)
@@ -611,7 +611,7 @@ namespace Akka.Remote.Serialization
                 Local = _payloadSupport.PayloadToProto(remoteRouterConfig.Local)
             };
             protoRemoteRouterConfig.Nodes.AddRange(remoteRouterConfig.Nodes.Select(AddressMessageBuilder));
-            return protoRemoteRouterConfig.ToByteArray();
+            return protoRemoteRouterConfig.ToArray();
         }
 
         private RemoteRouterConfig RemoteRouterConfigFromProto(byte[] bytes)

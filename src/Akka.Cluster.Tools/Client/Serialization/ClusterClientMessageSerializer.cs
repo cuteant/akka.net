@@ -122,7 +122,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
             {
                 protoMessage.ContactPoints.Add(contactPoint);
             }
-            return protoMessage.ToByteArray();
+            return protoMessage.ToArray();
         }
 
         private ClusterReceptionist.Contacts ContactsFromBinary(byte[] binary)

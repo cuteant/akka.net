@@ -77,11 +77,22 @@ namespace Akka.Serialization
         public static T FromByteString<T>(this Serializer serializer, ByteString bytes) => (T)FromByteString(serializer, bytes, typeof(T));
 
 
-        public static ByteBufferWrapper ToUnpooledByteBuffer(this IMessage message) => new ByteBufferWrapper(message.ToByteArray());
+        public static ByteBufferWrapper ToUnpooledByteBuffer(this IMessage message) => new ByteBufferWrapper(message.ToArray());
 
         public static ByteBufferWrapper ToUnpooledByteBuffer(this ByteString bytes) => new ByteBufferWrapper(GetBuffer(bytes));
 
         private const int c_initialBufferSize = 1024 * 64;
+        public static byte[] ToArray(this IMessage message, int initialBufferSize = c_initialBufferSize)
+        {
+            using (var pooledStream = BufferManagerOutputStreamManager.Create())
+            {
+                var outputStream = pooledStream.Object;
+                outputStream.Reinitialize(initialBufferSize, BufferManager.Shared);
+                message.WriteTo(outputStream);
+                return outputStream.ToByteArray();
+            }
+        }
+
         /// <summary>Serializes the given message data.</summary>
         /// <param name="message">The message to write.</param>
         /// <param name="initialBufferSize">The initial buffer size.</param>

@@ -151,7 +151,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 message.Versions.Add(protoVersion);
             }
 
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private Internal.Status StatusFrom(byte[] bytes)
@@ -191,7 +191,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 message.Buckets.Add(protoBucket);
             }
 
-            return message.ToByteArray();
+            return message.ToArray();
         }
 
         private Delta DeltaFrom(byte[] bytes)
@@ -223,7 +223,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 LocalAffinity = send.LocalAffinity,
                 Payload = _payloadSupport.PayloadToProto(send.Message)
             };
-            return protoMessage.ToByteArray();
+            return protoMessage.ToArray();
         }
 
         private Send SendFrom(byte[] bytes)
@@ -240,7 +240,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 AllButSelf = sendToAll.ExcludeSelf,
                 Payload = _payloadSupport.PayloadToProto(sendToAll.Message)
             };
-            return protoMessage.ToByteArray();
+            return protoMessage.ToArray();
         }
 
         private SendToAll SendToAllFrom(byte[] bytes)
@@ -256,7 +256,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 Topic = publish.Topic,
                 Payload = _payloadSupport.PayloadToProto(publish.Message)
             };
-            return protoMessage.ToByteArray();
+            return protoMessage.ToArray();
         }
 
         private Publish PublishFrom(byte[] bytes)
@@ -271,7 +271,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             {
                 Payload = _payloadSupport.PayloadToProto(sendToOneSubscriber.Message)
             };
-            return protoMessage.ToByteArray();
+            return protoMessage.ToArray();
         }
 
         private SendToOneSubscriber SendToOneSubscriberFrom(byte[] bytes)

@@ -25,7 +25,7 @@ namespace Akka.Persistence.Serialization
 
         public override byte[] ToBinary(object obj)
         {
-            if (obj is Snapshot snapShot) return GetPersistentPayload(snapShot).ToByteArray();
+            if (obj is Snapshot snapShot) return GetPersistentPayload(snapShot).ToArray();
 
             throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{GetType()}]");
         }
