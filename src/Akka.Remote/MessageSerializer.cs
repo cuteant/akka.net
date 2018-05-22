@@ -63,11 +63,11 @@ namespace Akka.Remote
             if (serializer is SerializerWithStringManifest manifestSerializer)
             {
                 serializedMsg.IsSerializerWithStringManifest = true;
-                var manifest = manifestSerializer.Manifest(message);
-                if (!string.IsNullOrEmpty(manifest))
+                var manifest = manifestSerializer.ManifestBytes(message);
+                if (manifest != null)
                 {
                     serializedMsg.HasManifest = true;
-                    serializedMsg.MessageManifest = ByteString.CopyFromUtf8(manifest);
+                    serializedMsg.MessageManifest = ProtobufUtil.FromBytes(manifest);
                 }
                 else
                 {

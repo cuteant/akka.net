@@ -38,11 +38,11 @@ namespace Akka.Persistence.Serialization
             if (serializer is SerializerWithStringManifest manifestSerializer)
             {
                 payload.IsSerializerWithStringManifest = true;
-                string manifest = manifestSerializer.Manifest(snapshot.Data);
-                if (!string.IsNullOrEmpty(manifest))
+                var manifest = manifestSerializer.ManifestBytes(snapshot.Data);
+                if (manifest != null)
                 {
                     payload.HasManifest = true;
-                    payload.PayloadManifest = ByteString.CopyFromUtf8(manifest);
+                    payload.PayloadManifest = ProtobufUtil.FromBytes(manifest);
                 }
                 else
                 {

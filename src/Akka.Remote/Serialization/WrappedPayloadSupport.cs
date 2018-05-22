@@ -39,11 +39,11 @@ namespace Akka.Remote.Serialization
             if (serializer is SerializerWithStringManifest manifestSerializer)
             {
                 payloadProto.IsSerializerWithStringManifest = true;
-                var manifest = manifestSerializer.Manifest(payload);
-                if (!string.IsNullOrEmpty(manifest))
+                var manifest = manifestSerializer.ManifestBytes(payload);
+                if (manifest != null)
                 {
                     payloadProto.HasManifest = true;
-                    payloadProto.MessageManifest = ByteString.CopyFromUtf8(manifest);
+                    payloadProto.MessageManifest = ProtobufUtil.FromBytes(manifest);
                 }
                 else
                 {

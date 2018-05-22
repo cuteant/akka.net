@@ -78,7 +78,7 @@ namespace Akka.Remote.Serialization
         }
 
 #if SERIALIZATION
-        private FormatterConverter DefaultFormatterConverter = new FormatterConverter();
+        private readonly FormatterConverter DefaultFormatterConverter = new FormatterConverter();
 
         public Proto.Msg.ExceptionData ExceptionToProtoNet(Exception exception)
         {

@@ -11,6 +11,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Persistence.Fsm;
 using Akka.Serialization;
+using CuteAnt.Text;
 using Xunit;
 using Xunit.Abstractions;
 using Akka.Util.Internal;
@@ -166,6 +167,7 @@ namespace Akka.Persistence.TCK.Serialization
         public class MySnapshotSerializer2 : SerializerWithStringManifest
         {
             private const string ContactsManifest = "A";
+            private static readonly byte[] ContactsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ContactsManifest);
 
             public MySnapshotSerializer2(ExtendedActorSystem system) : base(system) { }
             public override int Identifier => 77126;
@@ -179,6 +181,12 @@ namespace Akka.Persistence.TCK.Serialization
             public override string Manifest(object obj)
             {
                 if (obj is MySnapshot2) return ContactsManifest;
+                throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MySnapshotSerializer2)}]");
+            }
+            /// <inheritdoc />
+            public override byte[] ManifestBytes(object obj)
+            {
+                if (obj is MySnapshot2) return ContactsManifestBytes;
                 throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MySnapshotSerializer2)}]");
             }
 

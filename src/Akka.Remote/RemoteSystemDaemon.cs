@@ -139,31 +139,28 @@ namespace Akka.Remote
         /// <param name="message">TBD</param>
         public override void SendSystemMessage(ISystemMessage message)
         {
-            if (message is DeathWatchNotification)
+            if (message is DeathWatchNotification deathWatchNotification)
             {
-                var deathWatchNotification = message as DeathWatchNotification;
-                if (deathWatchNotification.Actor is ActorRefWithCell child)
+                var parent = deathWatchNotification.Actor;
+                switch (parent)
                 {
-                    if (child.IsLocal)
-                    {
-                        _terminating.Locked(() =>
+                    case ActorRefWithCell child:
+                        if (child.IsLocal)
                         {
-                            var name = child.Path.Elements.Drop(1).Join("/");
-                            RemoveChild(name, child);
-                            var parent = child.Parent;
-                            if (RemoveChildParentNeedsUnwatch(parent, child))
+                            _terminating.Locked(() =>
                             {
-                                parent.SendSystemMessage(new Unwatch(parent, this));
-                            }
-                            TerminationHookDoneWhenNoChildren();
-                        });
-                    }
-                }
-                else
-                {
-                    var parent = deathWatchNotification.Actor;
-                    if (parent is IActorRefScope parentWithScope && !parentWithScope.IsLocal)
-                    {
+                                var name = child.Path.Elements.Drop(1).Join("/");
+                                RemoveChild(name, child);
+                                var childParent = child.Parent;
+                                if (RemoveChildParentNeedsUnwatch(childParent, child))
+                                {
+                                    childParent.SendSystemMessage(new Unwatch(childParent, this));
+                                }
+                                TerminationHookDoneWhenNoChildren();
+                            });
+                        }
+                        break;
+                    case IActorRefScope parentWithScope when !parentWithScope.IsLocal:
                         _terminating.Locked(() =>
                         {
                             if (_parent2Children.TryRemove(parent, out var children))
@@ -177,7 +174,9 @@ namespace Akka.Remote
                                 TerminationHookDoneWhenNoChildren();
                             }
                         });
-                    }
+                        break;
+                    default:
+                        break;
                 }
             }
             else
@@ -192,10 +191,10 @@ namespace Akka.Remote
         {
             var supervisor = (IInternalActorRef)message.Supervisor;
             var parent = supervisor;
-            Props props = message.Props;
+            var props = message.Props;
             if (ActorPath.TryParse(message.Path, out var childPath))
             {
-                IEnumerable<string> subPath = childPath.ElementsWithUid.Drop(1); //drop the /remote
+                var subPath = childPath.ElementsWithUid.Drop(1); //drop the /remote
                 ActorPath p = Path / subPath;
                 var s = subPath.Join("/");
                 var i = s.IndexOf("#", StringComparison.Ordinal);

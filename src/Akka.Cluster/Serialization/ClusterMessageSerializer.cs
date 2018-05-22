@@ -27,7 +27,6 @@ namespace Akka.Cluster.Serialization
 
         public ClusterMessageSerializer(ExtendedActorSystem system) : base(system)
         {
-
             _fromBinaryMap = new Dictionary<Type, Func<byte[], object>>
             {
                 [typeof(ClusterHeartbeatSender.Heartbeat)] = bytes => new ClusterHeartbeatSender.Heartbeat(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
@@ -204,11 +203,11 @@ namespace Akka.Cluster.Serialization
             if (serializer is SerializerWithStringManifest manifestSerializer)
             {
                 message.IsSerializerWithStringManifest = true;
-                var manifest = manifestSerializer.Manifest(pool);
-                if (!string.IsNullOrEmpty(manifest))
+                var manifest = manifestSerializer.ManifestBytes(pool);
+                if (manifest != null)
                 {
                     message.HasManifest = true;
-                    message.Manifest = ByteString.CopyFromUtf8(manifest);
+                    message.Manifest = ProtobufUtil.FromBytes(manifest);
                 }
                 else
                 {
@@ -325,7 +324,7 @@ namespace Akka.Cluster.Serialization
                     (MemberStatus)member.Status,
                     member.RolesIndexes.Select(x => roleMapping[x]).ToImmutableHashSet());
 
-            var members = gossip.Members.Select((Func<Proto.Msg.Member, Member>)MemberFromProto).ToImmutableSortedSet(Member.Ordering);
+            var members = gossip.Members.Select(MemberFromProto).ToImmutableSortedSet(Member.Ordering);
             var reachability = ReachabilityFromProto(gossip.Overview.ObserverReachability, addressMapping);
             var seen = gossip.Overview.Seen.Select(x => addressMapping[x]).ToImmutableHashSet();
             var overview = new GossipOverview(seen, reachability);

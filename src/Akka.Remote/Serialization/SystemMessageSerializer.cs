@@ -155,7 +155,7 @@ namespace Akka.Remote.Serialization
         //
         // Supervise
         //
-        private byte[] SuperviseToProto(Supervise supervise)
+        private static byte[] SuperviseToProto(Supervise supervise)
         {
             var message = new Proto.Msg.SuperviseData
             {
@@ -177,7 +177,7 @@ namespace Akka.Remote.Serialization
         //
         // Watch
         //
-        private byte[] WatchToProto(Watch watch)
+        private static byte[] WatchToProto(Watch watch)
         {
             var message = new Proto.Msg.WatchData
             {
@@ -204,7 +204,7 @@ namespace Akka.Remote.Serialization
         //
         // Unwatch
         //
-        private byte[] UnwatchToProto(Unwatch unwatch)
+        private static byte[] UnwatchToProto(Unwatch unwatch)
         {
             var message = new Proto.Msg.WatchData
             {
@@ -258,7 +258,7 @@ namespace Akka.Remote.Serialization
         //
         // DeathWatchNotification
         //
-        private byte[] DeathWatchNotificationToProto(DeathWatchNotification deathWatchNotification)
+        private static byte[] DeathWatchNotificationToProto(DeathWatchNotification deathWatchNotification)
         {
             var message = new Proto.Msg.DeathWatchNotificationData
             {

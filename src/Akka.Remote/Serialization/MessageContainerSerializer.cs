@@ -100,7 +100,7 @@ namespace Akka.Remote.Serialization
             return new ActorSelectionMessage(message, elements);
         }
 
-        private Proto.Msg.Selection BuildPattern(string matcher, Proto.Msg.Selection.Types.PatternType tpe)
+        private static Proto.Msg.Selection BuildPattern(string matcher, Proto.Msg.Selection.Types.PatternType tpe)
         {
             var selection = new Proto.Msg.Selection { Type = tpe };
             if (matcher != null) { selection.Matcher = matcher; }

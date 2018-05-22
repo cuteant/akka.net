@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt;
+using CuteAnt.Text;
 
 namespace Akka.Cluster.Tools.Singleton.Serialization
 {
@@ -18,10 +19,18 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
     /// </summary>
     public class ClusterSingletonMessageSerializer : SerializerWithStringManifest
     {
+        #region manifest
+
         private const string HandOverToMeManifest = "A";
+        private static readonly byte[] HandOverToMeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverToMeManifest);
         private const string HandOverInProgressManifest = "B";
+        private static readonly byte[] HandOverInProgressManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverInProgressManifest);
         private const string HandOverDoneManifest = "C";
+        private static readonly byte[] HandOverDoneManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverDoneManifest);
         private const string TakeOverFromMeManifest = "D";
+        private static readonly byte[] TakeOverFromMeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(TakeOverFromMeManifest);
+
+        #endregion
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
         private readonly IDictionary<string, Func<byte[], IClusterSingletonMessage>> _fromBinaryMap;
@@ -106,6 +115,23 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                     return HandOverDoneManifest;
                 case TakeOverFromMe fromMe:
                     return TakeOverFromMeManifest;
+                default:
+                    throw new ArgumentException($"Cannot serialize object of type [{o.GetType()}] in [{GetType()}]");
+            }
+        }
+        /// <inheritdoc />
+        public override byte[] ManifestBytes(object o)
+        {
+            switch (o)
+            {
+                case HandOverToMe toMe:
+                    return HandOverToMeManifestBytes;
+                case HandOverInProgress inProgress:
+                    return HandOverInProgressManifestBytes;
+                case HandOverDone done:
+                    return HandOverDoneManifestBytes;
+                case TakeOverFromMe fromMe:
+                    return TakeOverFromMeManifestBytes;
                 default:
                     throw new ArgumentException($"Cannot serialize object of type [{o.GetType()}] in [{GetType()}]");
             }

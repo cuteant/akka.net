@@ -14,7 +14,7 @@ using Akka.Actor;
 using Akka.Persistence.Fsm;
 using Akka.Persistence.Serialization.Proto.Msg;
 using Akka.Serialization;
-using Akka.Util;
+using CuteAnt;
 using CuteAnt.Reflection;
 using Google.Protobuf;
 
@@ -52,7 +52,7 @@ namespace Akka.Persistence.Serialization
 
         private PersistentMessage GetPersistentMessage(IPersistentRepresentation persistent)
         {
-            PersistentMessage message = new PersistentMessage();
+            var message = new PersistentMessage();
 
             if (persistent.PersistenceId != null) message.PersistenceId = persistent.PersistenceId;
             if (persistent.Manifest != null) message.Manifest = persistent.Manifest;
@@ -74,11 +74,11 @@ namespace Akka.Persistence.Serialization
             if (serializer is SerializerWithStringManifest manifestSerializer)
             {
                 payload.IsSerializerWithStringManifest = true;
-                string manifest = manifestSerializer.Manifest(obj);
-                if (!string.IsNullOrEmpty(manifest))
+                var manifest = manifestSerializer.ManifestBytes(obj);
+                if (manifest != null)
                 {
                     payload.HasManifest = true;
-                    payload.PayloadManifest = ByteString.CopyFromUtf8(manifest);
+                    payload.PayloadManifest = ProtobufUtil.FromBytes(manifest);
                 }
                 else
                 {
@@ -131,7 +131,7 @@ namespace Akka.Persistence.Serialization
             return message;
         }
 
-        private PersistentStateChangeEvent GetStateChangeEvent(PersistentFSM.StateChangeEvent changeEvent)
+        private static PersistentStateChangeEvent GetStateChangeEvent(PersistentFSM.StateChangeEvent changeEvent)
         {
             var message = new PersistentStateChangeEvent
             {
@@ -146,7 +146,7 @@ namespace Akka.Persistence.Serialization
 
         private PersistentFSMSnapshot GetPersistentFSMSnapshot(object obj)
         {
-            Type type = obj.GetType();
+            var type = obj.GetType();
 
             var message = new PersistentFSMSnapshot
             {
@@ -186,7 +186,7 @@ namespace Akka.Persistence.Serialization
 
         private static IPersistentRepresentation GetPersistentRepresentation(PersistenceMessageSerializer serializer, PersistentMessage message)
         {
-            IActorRef sender = ActorRefs.NoSender;
+            var sender = ActorRefs.NoSender;
             if (message.Sender != null)
             {
                 sender = serializer.system.Provider.ResolveActorRef(message.Sender);
@@ -271,7 +271,7 @@ namespace Akka.Persistence.Serialization
             }
 
             // use reflection to create the generic type of PersistentFSM.PersistentFSMSnapshot
-            Type[] types = { typeof(string), type.GenericTypeArguments[0], typeof(TimeSpan?) };
+            Type[] types = { TypeConstants.StringType, type.GenericTypeArguments[0], typeof(TimeSpan?) };
             object[] arguments = { message.StateIdentifier, GetPayload(message.Data), timeout };
 
             return type.GetConstructor(types).Invoke(arguments);

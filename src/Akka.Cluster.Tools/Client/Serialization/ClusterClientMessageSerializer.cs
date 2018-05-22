@@ -11,7 +11,7 @@ using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt;
-using Google.Protobuf;
+using CuteAnt.Text;
 
 namespace Akka.Cluster.Tools.Client.Serialization
 {
@@ -20,10 +20,18 @@ namespace Akka.Cluster.Tools.Client.Serialization
     /// </summary>
     public class ClusterClientMessageSerializer : SerializerWithStringManifest
     {
+        #region manifests
+
         private const string ContactsManifest = "A";
+        private static readonly byte[] ContactsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ContactsManifest);
         private const string GetContactsManifest = "B";
+        private static readonly byte[] GetContactsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetContactsManifest);
         private const string HeartbeatManifest = "C";
+        private static readonly byte[] HeartbeatManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HeartbeatManifest);
         private const string HeartbeatRspManifest = "D";
+        private static readonly byte[] HeartbeatRspManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HeartbeatRspManifest);
+
+        #endregion
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
         private readonly IDictionary<string, Func<byte[], IClusterClientMessage>> _fromBinaryMap;
@@ -110,6 +118,24 @@ namespace Akka.Cluster.Tools.Client.Serialization
                     return HeartbeatManifest;
                 case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
                     return HeartbeatRspManifest;
+                default:
+                    throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+            }
+        }
+
+        /// <inheritdoc />
+        public override byte[] ManifestBytes(object o)
+        {
+            switch (o)
+            {
+                case ClusterReceptionist.Contacts contacts:
+                    return ContactsManifestBytes;
+                case ClusterReceptionist.GetContacts getContacts:
+                    return GetContactsManifestBytes;
+                case ClusterReceptionist.Heartbeat heartbeat:
+                    return HeartbeatManifestBytes;
+                case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
+                    return HeartbeatRspManifestBytes;
                 default:
                     throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
             }

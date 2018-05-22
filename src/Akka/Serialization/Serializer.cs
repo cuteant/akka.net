@@ -146,6 +146,17 @@ namespace Akka.Serialization
         /// <param name="o">The object for which the manifest is needed.</param>
         /// <returns>The manifest needed for the deserialization of the specified <paramref name="o"/>.</returns>
         public abstract string Manifest(object o);
+
+        /// <summary>
+        /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.
+        /// 
+        /// <note>
+        /// This method returns <see cref="String.Empty"/> if a manifest is not needed.
+        /// </note>
+        /// </summary>
+        /// <param name="o">The object for which the manifest is needed.</param>
+        /// <returns>The manifest needed for the deserialization of the specified <paramref name="o"/>.</returns>
+        public abstract byte[] ManifestBytes(object o);
     }
 
     /// <summary>

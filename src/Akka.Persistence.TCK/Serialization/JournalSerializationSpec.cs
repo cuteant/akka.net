@@ -15,6 +15,7 @@ using Akka.Persistence.Journal;
 using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt.Text;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -194,8 +195,9 @@ namespace Akka.Persistence.TCK.Serialization
 
         public class MyPayload2Serializer : SerializerWithStringManifest
         {
-            private readonly string _manifestV1 = typeof(MyPayload).TypeQualifiedName();
-            private readonly string _manifestV2 = "MyPayload-V2";
+            private static readonly string _manifestV1 = typeof(MyPayload).TypeQualifiedName();
+            private const string _manifestV2 = "MyPayload-V2";
+            private static readonly byte[] _manifestV2Bytes = StringHelper.UTF8NoBOM.GetBytes(_manifestV2);
 
             public MyPayload2Serializer(ExtendedActorSystem system) : base(system)
             {
@@ -216,6 +218,11 @@ namespace Akka.Persistence.TCK.Serialization
             public override string Manifest(object o)
             {
                 return _manifestV2;
+            }
+            /// <inheritdoc />
+            public override byte[] ManifestBytes(object o)
+            {
+                return _manifestV2Bytes;
             }
 
             public override object FromBinary(byte[] bytes, string manifest)

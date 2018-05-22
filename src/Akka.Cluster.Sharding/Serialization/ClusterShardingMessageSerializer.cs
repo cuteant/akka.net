@@ -8,12 +8,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.IO;
-using System.IO.Compression;
 using System.Linq;
 using Akka.Actor;
 using Akka.Serialization;
-using Google.Protobuf;
+using CuteAnt.Text;
 using ActorRefMessage = Akka.Remote.Serialization.Proto.Msg.ActorRefData;
 
 namespace Akka.Cluster.Sharding.Serialization
@@ -26,35 +24,61 @@ namespace Akka.Cluster.Sharding.Serialization
         #region manifests
 
         private const string CoordinatorStateManifest = "AA";
+        private static readonly byte[] CoordinatorStateManifestBytes = StringHelper.UTF8NoBOM.GetBytes(CoordinatorStateManifest);
         private const string ShardRegionRegisteredManifest = "AB";
+        private static readonly byte[] ShardRegionRegisteredManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionRegisteredManifest);
         private const string ShardRegionProxyRegisteredManifest = "AC";
+        private static readonly byte[] ShardRegionProxyRegisteredManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionProxyRegisteredManifest);
         private const string ShardRegionTerminatedManifest = "AD";
+        private static readonly byte[] ShardRegionTerminatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionTerminatedManifest);
         private const string ShardRegionProxyTerminatedManifest = "AE";
+        private static readonly byte[] ShardRegionProxyTerminatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionProxyTerminatedManifest);
         private const string ShardHomeAllocatedManifest = "AF";
+        private static readonly byte[] ShardHomeAllocatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeAllocatedManifest);
         private const string ShardHomeDeallocatedManifest = "AG";
+        private static readonly byte[] ShardHomeDeallocatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeDeallocatedManifest);
 
         private const string RegisterManifest = "BA";
+        private static readonly byte[] RegisterManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterManifest);
         private const string RegisterProxyManifest = "BB";
+        private static readonly byte[] RegisterProxyManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterProxyManifest);
         private const string RegisterAckManifest = "BC";
+        private static readonly byte[] RegisterAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterAckManifest);
         private const string GetShardHomeManifest = "BD";
+        private static readonly byte[] GetShardHomeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetShardHomeManifest);
         private const string ShardHomeManifest = "BE";
+        private static readonly byte[] ShardHomeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeManifest);
         private const string HostShardManifest = "BF";
+        private static readonly byte[] HostShardManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HostShardManifest);
         private const string ShardStartedManifest = "BG";
+        private static readonly byte[] ShardStartedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStartedManifest);
         private const string BeginHandOffManifest = "BH";
+        private static readonly byte[] BeginHandOffManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BeginHandOffManifest);
         private const string BeginHandOffAckManifest = "BI";
+        private static readonly byte[] BeginHandOffAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BeginHandOffAckManifest);
         private const string HandOffManifest = "BJ";
+        private static readonly byte[] HandOffManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOffManifest);
         private const string ShardStoppedManifest = "BK";
+        private static readonly byte[] ShardStoppedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStoppedManifest);
         private const string GracefulShutdownReqManifest = "BL";
+        private static readonly byte[] GracefulShutdownReqManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GracefulShutdownReqManifest);
 
         private const string EntityStateManifest = "CA";
+        private static readonly byte[] EntityStateManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStateManifest);
         private const string EntityStartedManifest = "CB";
+        private static readonly byte[] EntityStartedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStartedManifest);
         private const string EntityStoppedManifest = "CD";
+        private static readonly byte[] EntityStoppedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStoppedManifest);
 
         private const string StartEntityManifest = "EA";
+        private static readonly byte[] StartEntityManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StartEntityManifest);
         private const string StartEntityAckManifest = "EB";
+        private static readonly byte[] StartEntityAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StartEntityAckManifest);
 
         private const string GetShardStatsManifest = "DA";
+        private static readonly byte[] GetShardStatsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetShardStatsManifest);
         private const string ShardStatsManifest = "DB";
+        private static readonly byte[] ShardStatsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStatsManifest);
 
         #endregion
 
@@ -201,6 +225,41 @@ namespace Akka.Cluster.Sharding.Serialization
                 case ShardRegion.StartEntityAck _: return StartEntityAckManifest;
                 case Shard.GetShardStats _: return GetShardStatsManifest;
                 case Shard.ShardStats _: return ShardStatsManifest;
+            }
+            throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{this.GetType()}]");
+        }
+
+        /// <inheritdoc />
+        public override byte[] ManifestBytes(object o)
+        {
+            switch (o)
+            {
+                case Shard.ShardState _: return EntityStateManifestBytes;
+                case Shard.EntityStarted _: return EntityStartedManifestBytes;
+                case Shard.EntityStopped _: return EntityStoppedManifestBytes;
+                case PersistentShardCoordinator.State _: return CoordinatorStateManifestBytes;
+                case PersistentShardCoordinator.ShardRegionRegistered _: return ShardRegionRegisteredManifestBytes;
+                case PersistentShardCoordinator.ShardRegionProxyRegistered _: return ShardRegionProxyRegisteredManifestBytes;
+                case PersistentShardCoordinator.ShardRegionTerminated _: return ShardRegionTerminatedManifestBytes;
+                case PersistentShardCoordinator.ShardRegionProxyTerminated _: return ShardRegionProxyTerminatedManifestBytes;
+                case PersistentShardCoordinator.ShardHomeAllocated _: return ShardHomeAllocatedManifestBytes;
+                case PersistentShardCoordinator.ShardHomeDeallocated _: return ShardHomeDeallocatedManifestBytes;
+                case PersistentShardCoordinator.Register _: return RegisterManifestBytes;
+                case PersistentShardCoordinator.RegisterProxy _: return RegisterProxyManifestBytes;
+                case PersistentShardCoordinator.RegisterAck _: return RegisterAckManifestBytes;
+                case PersistentShardCoordinator.GetShardHome _: return GetShardHomeManifestBytes;
+                case PersistentShardCoordinator.ShardHome _: return ShardHomeManifestBytes;
+                case PersistentShardCoordinator.HostShard _: return HostShardManifestBytes;
+                case PersistentShardCoordinator.ShardStarted _: return ShardStartedManifestBytes;
+                case PersistentShardCoordinator.BeginHandOff _: return BeginHandOffManifestBytes;
+                case PersistentShardCoordinator.BeginHandOffAck _: return BeginHandOffAckManifestBytes;
+                case PersistentShardCoordinator.HandOff _: return HandOffManifestBytes;
+                case PersistentShardCoordinator.ShardStopped _: return ShardStoppedManifestBytes;
+                case PersistentShardCoordinator.GracefulShutdownRequest _: return GracefulShutdownReqManifestBytes;
+                case ShardRegion.StartEntity _: return StartEntityManifestBytes;
+                case ShardRegion.StartEntityAck _: return StartEntityAckManifestBytes;
+                case Shard.GetShardStats _: return GetShardStatsManifestBytes;
+                case Shard.ShardStats _: return ShardStatsManifestBytes;
             }
             throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{this.GetType()}]");
         }
@@ -377,7 +436,7 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         // ActorRefMessage
         //
-        private ActorRefMessage ActorRefMessageToProto(IActorRef actorRef)
+        private static ActorRefMessage ActorRefMessageToProto(IActorRef actorRef)
         {
             var message = new ActorRefMessage
             {
@@ -395,14 +454,14 @@ namespace Akka.Cluster.Sharding.Serialization
         // Shard.ShardState
         //
 
-        private Proto.Msg.EntityState EntityStateToProto(Shard.ShardState entityState)
+        private static Proto.Msg.EntityState EntityStateToProto(Shard.ShardState entityState)
         {
             var message = new Proto.Msg.EntityState();
             message.Entities.AddRange(entityState.Entries);
             return message;
         }
 
-        private Shard.ShardState EntityStateFromBinary(byte[] bytes)
+        private static Shard.ShardState EntityStateFromBinary(byte[] bytes)
         {
             var msg = Proto.Msg.EntityState.Parser.ParseFrom(bytes);
             return new Shard.ShardState(msg.Entities.ToImmutableHashSet());
@@ -411,7 +470,7 @@ namespace Akka.Cluster.Sharding.Serialization
         //
         // ShardIdMessage
         //
-        private Proto.Msg.ShardIdMessage ShardIdMessageToProto(string shard)
+        private static Proto.Msg.ShardIdMessage ShardIdMessageToProto(string shard)
         {
             var message = new Proto.Msg.ShardIdMessage
             {
@@ -420,7 +479,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return message;
         }
 
-        private string ShardIdMessageFromBinary(byte[] bytes)
+        private static string ShardIdMessageFromBinary(byte[] bytes)
         {
             return Proto.Msg.ShardIdMessage.Parser.ParseFrom(bytes).Shard;
         }

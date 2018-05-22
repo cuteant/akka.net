@@ -33,7 +33,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        public static HandOverToMe Instance { get; } = new HandOverToMe();
+        public static readonly HandOverToMe Instance = new HandOverToMe();
         private HandOverToMe() { }
     }
 
@@ -46,7 +46,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        public static HandOverInProgress Instance { get; } = new HandOverInProgress();
+        public static readonly HandOverInProgress Instance = new HandOverInProgress();
         private HandOverInProgress() { }
     }
 
@@ -59,7 +59,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        public static HandOverDone Instance { get; } = new HandOverDone();
+        public static readonly HandOverDone Instance = new HandOverDone();
         private HandOverDone() { }
     }
 
@@ -72,7 +72,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        public static TakeOverFromMe Instance { get; } = new TakeOverFromMe();
+        public static readonly TakeOverFromMe Instance = new TakeOverFromMe();
         private TakeOverFromMe() { }
     }
 
@@ -85,7 +85,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        public static Cleanup Instance { get; } = new Cleanup();
+        public static readonly Cleanup Instance = new Cleanup();
         private Cleanup() { }
     }
 
@@ -98,7 +98,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        public static StartOldestChangedBuffer Instance { get; } = new StartOldestChangedBuffer();
+        public static readonly StartOldestChangedBuffer Instance = new StartOldestChangedBuffer();
         private StartOldestChangedBuffer() { }
     }
 

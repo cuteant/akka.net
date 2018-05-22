@@ -196,7 +196,7 @@ namespace Akka.Remote.Serialization
         //
         // IActorRef
         //
-        private Proto.Msg.ActorRefData SerializeActorRef(IActorRef actorRef)
+        private static Proto.Msg.ActorRefData SerializeActorRef(IActorRef actorRef)
         {
             return new Proto.Msg.ActorRefData
             {

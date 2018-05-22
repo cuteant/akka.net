@@ -13,8 +13,7 @@ using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe.Internal;
 using Akka.Remote.Serialization;
 using Akka.Serialization;
-using Akka.Util;
-using Google.Protobuf;
+using CuteAnt.Text;
 using AddressData = Akka.Remote.Serialization.Proto.Msg.AddressData;
 
 namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
@@ -24,12 +23,22 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
     /// </summary>
     public class DistributedPubSubMessageSerializer : SerializerWithStringManifest
     {
+        #region manifests
+
         private const string StatusManifest = "A";
+        private static readonly byte[] StatusManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StatusManifest);
         private const string DeltaManifest = "B";
+        private static readonly byte[] DeltaManifestBytes = StringHelper.UTF8NoBOM.GetBytes(DeltaManifest);
         private const string SendManifest = "C";
+        private static readonly byte[] SendManifestBytes = StringHelper.UTF8NoBOM.GetBytes(SendManifest);
         private const string SendToAllManifest = "D";
+        private static readonly byte[] SendToAllManifestBytes = StringHelper.UTF8NoBOM.GetBytes(SendToAllManifest);
         private const string PublishManifest = "E";
+        private static readonly byte[] PublishManifestBytes = StringHelper.UTF8NoBOM.GetBytes(PublishManifest);
         private const string SendToOneSubscriberManifest = "F";
+        private static readonly byte[] SendToOneSubscriberManifestBytes = StringHelper.UTF8NoBOM.GetBytes(SendToOneSubscriberManifest);
+
+        #endregion
 
         private readonly IDictionary<string, Func<byte[], object>> _fromBinaryMap;
 
@@ -134,8 +143,29 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                     throw new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
             }
         }
+        /// <inheritdoc />
+        public override byte[] ManifestBytes(object o)
+        {
+            switch (o)
+            {
+                case Internal.Status status:
+                    return StatusManifestBytes;
+                case Internal.Delta delta:
+                    return DeltaManifestBytes;
+                case Send send:
+                    return SendManifestBytes;
+                case SendToAll sendToAll:
+                    return SendToAllManifestBytes;
+                case Publish publish:
+                    return PublishManifestBytes;
+                case SendToOneSubscriber sub:
+                    return SendToOneSubscriberManifestBytes;
+                default:
+                    throw new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
+            }
+        }
 
-        private byte[] StatusToProto(Internal.Status status)
+        private static byte[] StatusToProto(Internal.Status status)
         {
             var message = new Proto.Msg.Status
             {
@@ -154,7 +184,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             return message.ToArray();
         }
 
-        private Internal.Status StatusFrom(byte[] bytes)
+        private static Internal.Status StatusFrom(byte[] bytes)
         {
             var statusProto = Proto.Msg.Status.Parser.ParseFrom(bytes);
             var versions = new Dictionary<Address, long>();
@@ -314,15 +344,15 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             return system.Provider.ResolveActorRef(path);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static string GetObjectManifest(Serializer serializer, object obj)
-        {
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                return manifestSerializer.Manifest(obj);
-            }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private static string GetObjectManifest(Serializer serializer, object obj)
+        //{
+        //    if (serializer is SerializerWithStringManifest manifestSerializer)
+        //    {
+        //        return manifestSerializer.Manifest(obj);
+        //    }
 
-            return obj.GetType().TypeQualifiedName();
-        }
+        //    return obj.GetType().TypeQualifiedName();
+        //}
     }
 }

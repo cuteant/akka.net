@@ -18,31 +18,54 @@ using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt;
-using Google.Protobuf;
+using CuteAnt.Text;
 
 namespace Akka.Remote.Serialization
 {
     public sealed class MiscMessageSerializer : SerializerWithStringManifest
     {
+        #region manifests
+
         private const string IdentifyManifest = "ID";
+        private static readonly byte[] IdentifyManifestBytes = StringHelper.UTF8NoBOM.GetBytes(IdentifyManifest);
         private const string ActorIdentityManifest = "AID";
+        private static readonly byte[] ActorIdentityManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ActorIdentityManifest);
         private const string ActorRefManifest = "AR";
+        private static readonly byte[] ActorRefManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ActorRefManifest);
         private const string PoisonPillManifest = "PP";
+        private static readonly byte[] PoisonPillManifestBytes = StringHelper.UTF8NoBOM.GetBytes(PoisonPillManifest);
         private const string KillManifest = "K";
+        private static readonly byte[] KillManifestBytes = StringHelper.UTF8NoBOM.GetBytes(KillManifest);
         private const string RemoteWatcherHearthbeatManifest = "RWHB";
+        private static readonly byte[] RemoteWatcherHearthbeatManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteWatcherHearthbeatManifest);
         private const string RemoteWatcherHearthbeatRspManifest = "RWHR";
+        private static readonly byte[] RemoteWatcherHearthbeatRspManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteWatcherHearthbeatRspManifest);
         private const string LocalScopeManifest = "LS";
+        private static readonly byte[] LocalScopeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(LocalScopeManifest);
         private const string RemoteScopeManifest = "RS";
+        private static readonly byte[] RemoteScopeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteScopeManifest);
         private const string ConfigManifest = "CF";
+        private static readonly byte[] ConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ConfigManifest);
         private const string FromConfigManifest = "FC";
+        private static readonly byte[] FromConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(FromConfigManifest);
         private const string DefaultResizerManifest = "DR";
+        private static readonly byte[] DefaultResizerManifestBytes = StringHelper.UTF8NoBOM.GetBytes(DefaultResizerManifest);
         private const string RoundRobinPoolManifest = "RORRP";
+        private static readonly byte[] RoundRobinPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RoundRobinPoolManifest);
         private const string BroadcastPoolManifest = "ROBP";
+        private static readonly byte[] BroadcastPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BroadcastPoolManifest);
         private const string RandomPoolManifest = "RORP";
+        private static readonly byte[] RandomPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RandomPoolManifest);
         private const string ScatterGatherPoolManifest = "ROSGP";
+        private static readonly byte[] ScatterGatherPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ScatterGatherPoolManifest);
         private const string TailChoppingPoolManifest = "ROTCP";
+        private static readonly byte[] TailChoppingPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(TailChoppingPoolManifest);
         private const string ConsistentHashingPoolManifest = "ROCHP";
+        private static readonly byte[] ConsistentHashingPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ConsistentHashingPoolManifest);
         private const string RemoteRouterConfigManifest = "RORRC";
+        private static readonly byte[] RemoteRouterConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteRouterConfigManifest);
+
+        #endregion
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
 
@@ -154,6 +177,55 @@ namespace Akka.Remote.Serialization
         }
 
         /// <inheritdoc />
+        public override byte[] ManifestBytes(object obj)
+        {
+            switch (obj)
+            {
+                case Identify identify:
+                    return IdentifyManifestBytes;
+                case ActorIdentity actorIdentity:
+                    return ActorIdentityManifestBytes;
+                case IActorRef actorRef:
+                    return ActorRefManifestBytes;
+                case PoisonPill poisonPill:
+                    return PoisonPillManifestBytes;
+                case Kill kill:
+                    return KillManifestBytes;
+                case RemoteWatcher.Heartbeat heartbeat:
+                    return RemoteWatcherHearthbeatManifestBytes;
+                case RemoteWatcher.HeartbeatRsp heartbeatRsp:
+                    return RemoteWatcherHearthbeatRspManifestBytes;
+                case RemoteScope remoteScope:
+                    return RemoteScopeManifestBytes;
+                case LocalScope localScope:
+                    return LocalScopeManifestBytes;
+                case Config config:
+                    return ConfigManifestBytes;
+                case FromConfig fromConfig:
+                    return FromConfigManifestBytes;
+                case DefaultResizer defaultResizer:
+                    return DefaultResizerManifestBytes;
+                case RoundRobinPool roundRobinPool:
+                    return RoundRobinPoolManifestBytes;
+                case BroadcastPool broadcastPool:
+                    return BroadcastPoolManifestBytes;
+                case RandomPool randomPool:
+                    return RandomPoolManifestBytes;
+                case ScatterGatherFirstCompletedPool scatterPool:
+                    return ScatterGatherPoolManifestBytes;
+                case TailChoppingPool tailChoppingPool:
+                    return TailChoppingPoolManifestBytes;
+                case ConsistentHashingPool hashingPool:
+                    return ConsistentHashingPoolManifestBytes;
+                case RemoteRouterConfig remoteRouterConfig:
+                    return RemoteRouterConfigManifestBytes;
+
+                default:
+                    throw new ArgumentException($"Cannot deserialize object of type [{obj.GetType().TypeQualifiedName()}]");
+            }
+        }
+
+        /// <inheritdoc />
         public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
@@ -250,7 +322,7 @@ namespace Akka.Remote.Serialization
         //
         // IActorRef
         //
-        private byte[] ActorRefToProto(IActorRef actorRef)
+        private static byte[] ActorRefToProto(IActorRef actorRef)
         {
             var protoActor = new Proto.Msg.ActorRefData();
             if (actorRef is Nobody) // TODO: this is a hack. Should work without it
@@ -279,7 +351,7 @@ namespace Akka.Remote.Serialization
         //
         // RemoteWatcher.HeartbeatRsp
         //
-        private byte[] HeartbeatRspToProto(RemoteWatcher.HeartbeatRsp heartbeatRsp)
+        private static byte[] HeartbeatRspToProto(RemoteWatcher.HeartbeatRsp heartbeatRsp)
         {
             var message = new Proto.Msg.RemoteWatcherHeartbeatResponse
             {
@@ -288,7 +360,7 @@ namespace Akka.Remote.Serialization
             return message.ToArray();
         }
 
-        private RemoteWatcher.HeartbeatRsp HearthbeatRspFromProto(byte[] bytes)
+        private static RemoteWatcher.HeartbeatRsp HearthbeatRspFromProto(byte[] bytes)
         {
             var message = Proto.Msg.RemoteWatcherHeartbeatResponse.Parser.ParseFrom(bytes);
             return new RemoteWatcher.HeartbeatRsp((int)message.Uid);
@@ -297,7 +369,7 @@ namespace Akka.Remote.Serialization
         //
         // RemoteScope
         //
-        private byte[] RemoteScopeToProto(RemoteScope remoteScope)
+        private static byte[] RemoteScopeToProto(RemoteScope remoteScope)
         {
             var message = new Proto.Msg.RemoteScope
             {
@@ -306,7 +378,7 @@ namespace Akka.Remote.Serialization
             return message.ToArray();
         }
 
-        private RemoteScope RemoteScopeFromProto(byte[] bytes)
+        private static RemoteScope RemoteScopeFromProto(byte[] bytes)
         {
             var message = Proto.Msg.RemoteScope.Parser.ParseFrom(bytes);
             return new RemoteScope(AddressFrom(message.Node));
@@ -315,14 +387,14 @@ namespace Akka.Remote.Serialization
         //
         // Config
         //
-        private byte[] ConfigToProto(Config config)
+        private static byte[] ConfigToProto(Config config)
         {
             if (config.IsEmpty) { return EmptyBytes; }
 
             return Encoding.UTF8.GetBytes(config.Root.ToString());
         }
 
-        private Config ConfigFromProto(byte[] bytes)
+        private static Config ConfigFromProto(byte[] bytes)
         {
             if (bytes.Length == 0) { return Config.Empty; }
 
@@ -371,7 +443,7 @@ namespace Akka.Remote.Serialization
         //
         // DefaultResizer
         //
-        private byte[] DefaultResizerToProto(DefaultResizer defaultResizer)
+        private static byte[] DefaultResizerToProto(DefaultResizer defaultResizer)
         {
             var message = new Proto.Msg.DefaultResizer
             {
@@ -386,7 +458,7 @@ namespace Akka.Remote.Serialization
             return message.ToArray();
         }
 
-        private DefaultResizer DefaultResizerFromProto(byte[] bytes)
+        private static DefaultResizer DefaultResizerFromProto(byte[] bytes)
         {
             var resizer = Proto.Msg.DefaultResizer.Parser.ParseFrom(bytes);
             return new DefaultResizer(
