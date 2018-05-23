@@ -74,10 +74,7 @@ namespace Akka.Event
         /// <exception cref="ArgumentNullException">This exception is thrown when the given <paramref name="logMessageFormatter"/> is undefined.</exception>
         protected LoggingAdapterBase(ILogMessageFormatter logMessageFormatter)
         {
-            if(logMessageFormatter == null)
-                throw new ArgumentNullException(nameof(logMessageFormatter), "The message formatter must not be null.");
-
-            _logMessageFormatter = logMessageFormatter;
+            _logMessageFormatter = logMessageFormatter ?? throw new ArgumentNullException(nameof(logMessageFormatter), "The message formatter must not be null.");
         }
 
         /// <summary>

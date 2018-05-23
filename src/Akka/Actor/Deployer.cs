@@ -34,13 +34,15 @@ namespace Akka.Actor
         /// <param name="settings">The settings used to configure the deployer.</param>
         public Deployer(Settings settings)
         {
+            const string defaultKey = "default";
+
             _settings = settings;
             var config = settings.Config.GetConfig("akka.actor.deployment");
-            Default = config.GetConfig("default");
+            Default = config.GetConfig(defaultKey);
 
             var rootObj = config.Root.GetObject();
             if (rootObj == null) return;
-            var unwrapped = rootObj.Unwrapped.Where(d => !d.Key.Equals("default")).ToArray();
+            var unwrapped = rootObj.Unwrapped.Where(d => !string.Equals(defaultKey, d.Key, StringComparison.Ordinal)).ToArray();
             foreach (var d in unwrapped.Select(x => ParseConfig(x.Key, config.GetConfig(x.Key.BetweenDoubleQuotes()))))
             {
                 SetDeploy(d);
@@ -54,8 +56,10 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public Deploy Lookup(ActorPath path)
         {
+            const string _user = "user";
+
             var rawElements = path.Elements;
-            if (rawElements[0] != "user" || rawElements.Count < 2)
+            if (!string.Equals(_user, rawElements[0], StringComparison.Ordinal) || rawElements.Count < 2)
             {
                 return Deploy.None;
             }
@@ -95,7 +99,7 @@ namespace Akka.Actor
         /// </exception>
         public void SetDeploy(Deploy deploy)
         {
-            Action<IList<string>, Deploy> add = (path, d) =>
+            void add(IList<string> path, Deploy d)
             {
                 bool set;
                 do
@@ -114,7 +118,7 @@ namespace Akka.Actor
                     }
                     set = _deployments.CompareAndSet(w, w.Insert(path.GetEnumerator(), d));
                 } while (!set);
-            };
+            }
             var elements = deploy.Path.Split('/').Drop(1).ToList();
             add(elements, deploy);
         }

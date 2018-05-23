@@ -114,11 +114,12 @@ namespace Akka.Dispatch
         /// <param name="action">TBD</param>
         public static void RunTask(Action action)
         {
-            RunTask(() =>
+            Task run()
             {
                 action();
                 return TaskConstants.Completed;
-            });
+            }
+            RunTask(run);
         }
 
         /// <summary>
@@ -143,25 +144,26 @@ namespace Akka.Dispatch
             ActorTaskScheduler actorScheduler = context.TaskScheduler;
             actorScheduler.CurrentMessage = context.CurrentMessage;
 
+            void continuationAction(Task parent)
+            {
+                Exception exception = GetTaskException(parent);
+
+                if (exception == null)
+                {
+                    dispatcher.Resume(context);
+
+                    context.CheckReceiveTimeout();
+                }
+                else
+                {
+                    context.Self.AsInstanceOf<IInternalActorRef>().SendSystemMessage(new ActorTaskSchedulerMessage(exception, actorScheduler.CurrentMessage));
+                }
+                //clear the current message field of the scheduler
+                actorScheduler.CurrentMessage = null;
+            }
             Task<Task>.Factory.StartNew(asyncAction, CancellationToken.None, TaskCreationOptions.None, actorScheduler)
                               .Unwrap()
-                              .ContinueWith(parent =>
-                              {
-                                  Exception exception = GetTaskException(parent);
-
-                                  if (exception == null)
-                                  {
-                                      dispatcher.Resume(context);
-
-                                      context.CheckReceiveTimeout();
-                                  }
-                                  else
-                                  {
-                                      context.Self.AsInstanceOf<IInternalActorRef>().SendSystemMessage(new ActorTaskSchedulerMessage(exception, actorScheduler.CurrentMessage));
-                                  }
-                                  //clear the current message field of the scheduler
-                                  actorScheduler.CurrentMessage = null;
-                              }, actorScheduler);
+                              .ContinueWith(continuationAction, actorScheduler);
         }
 
         private static Exception GetTaskException(Task task)

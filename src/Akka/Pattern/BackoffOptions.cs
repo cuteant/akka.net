@@ -131,9 +131,8 @@ namespace Akka.Pattern
                 if (_randomFactor < 0.0 || _randomFactor > 1.0)
                     throw new ArgumentException("RandomFactor must be between 0.0 and 1.0");
                 
-                if (_reset is AutoReset)
+                if (_reset is AutoReset autoReset)
                 {
-                    var autoReset = (AutoReset)_reset;
                     if (_minBackoff > autoReset.ResetBackoff && autoReset.ResetBackoff > _maxBackoff)
                         throw new ArgumentException();
                 }

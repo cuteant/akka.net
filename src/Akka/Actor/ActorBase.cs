@@ -187,8 +187,7 @@ namespace Akka.Actor
         /// </exception>
         protected virtual void Unhandled(object message)
         {
-            var terminatedMessage = message as Terminated;
-            if (terminatedMessage != null)
+            if (message is Terminated terminatedMessage)
             {
                 throw new DeathPactException(terminatedMessage.ActorRef);
             }

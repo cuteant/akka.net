@@ -73,8 +73,7 @@ namespace Akka.Actor
                 {
                     Thread.Sleep(precision);
                     var now = HighResMonotonicClock.Ticks;
-                    ScheduledWork work;
-                    while (_workQueue.TryDequeue(out work))
+                    while (_workQueue.TryDequeue(out var work))
                     {
                         //has work already expired?
                         if (work.TickExpires < now)
@@ -176,7 +175,7 @@ namespace Akka.Actor
 
         private void InternalScheduleOnce(TimeSpan initialDelay, Action action, CancellationToken token)
         {
-            Action executeAction = () =>
+            void executeAction()
             {
                 if (token.IsCancellationRequested)
                     return;
@@ -192,7 +191,7 @@ namespace Akka.Actor
                 {
                     Log.Error(x, "DedicatedThreadScheduler failed to execute action");
                 }
-            };
+            }
             AddWork(initialDelay, executeAction, token);
 
         }
@@ -201,8 +200,7 @@ namespace Akka.Actor
         private void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action,
             CancellationToken token)
         {
-            Action executeAction = null;
-            executeAction = () =>
+            void executeAction()
             {
                 if (token.IsCancellationRequested)
                     return;
@@ -222,7 +220,8 @@ namespace Akka.Actor
                 {
                     Log.Error(x, "DedicatedThreadScheduler failed to execute action");
                 }
-            };
+            }
+
             AddWork(initialDelay, executeAction, token);
 
         }

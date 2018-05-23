@@ -148,7 +148,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public bool Equals(Address other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return Port == other.Port && string.Equals(Host, other.Host, StringComparison.Ordinal) && string.Equals(System, other.System, StringComparison.Ordinal) && string.Equals(Protocol, other.Protocol, StringComparison.Ordinal);
         }
@@ -369,8 +369,7 @@ namespace Akka.Actor
         {
             try
             {
-                Uri uri;
-                bool isRelative = Uri.TryCreate(addr, UriKind.Relative, out uri);
+                bool isRelative = Uri.TryCreate(addr, UriKind.Relative, out var uri);
                 if (!isRelative) return null;
 
                 var finalAddr = addr;

@@ -31,7 +31,7 @@ namespace Akka.Actor
         public static Task PipeTo<T>(this Task<T> taskToPipe, ICanTell recipient, IActorRef sender = null, Func<T, object> success = null, Func<Exception, object> failure = null)
         {
             sender = sender ?? ActorRefs.NoSender;
-            return taskToPipe.ContinueWith(tresult =>
+            void continuationAction(Task<T> tresult)
             {
                 if (tresult.IsCanceled || tresult.IsFaulted)
                     recipient.Tell(failure != null
@@ -41,7 +41,8 @@ namespace Akka.Actor
                     recipient.Tell(success != null
                         ? success(tresult.Result)
                         : tresult.Result, sender);
-            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            }
+            return taskToPipe.ContinueWith(continuationAction, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
         /// <summary>
@@ -57,7 +58,7 @@ namespace Akka.Actor
         public static Task PipeTo(this Task taskToPipe, ICanTell recipient, IActorRef sender = null, Func<object> success = null, Func<Exception, object> failure = null)
         {
             sender = sender ?? ActorRefs.NoSender;
-            return taskToPipe.ContinueWith(tresult =>
+            void continuationAction(Task tresult)
             {
                 if (tresult.IsCanceled || tresult.IsFaulted)
                     recipient.Tell(failure != null
@@ -65,7 +66,8 @@ namespace Akka.Actor
                         : new Status.Failure(tresult.Exception), sender);
                 else if (tresult.IsCompleted && success != null)
                     recipient.Tell(success(), sender);
-            }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            }
+            return taskToPipe.ContinueWith(continuationAction, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
     }
 }

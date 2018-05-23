@@ -215,32 +215,32 @@ namespace Akka.Routing
         /// <returns>The number of routees considered to be above pressure level.</returns>
         public int Pressure(IEnumerable<Routee> currentRoutees)
         {
-            return currentRoutees.Count(
-                routee =>
+            bool filter(Routee routee)
+            {
+                if (routee is ActorRefRoutee actorRefRoutee && actorRefRoutee.Actor is ActorRefWithCell actorRef)
                 {
-                    if (routee is ActorRefRoutee actorRefRoutee && actorRefRoutee.Actor is ActorRefWithCell actorRef)
+                    var underlying = actorRef.Underlying;
+                    if (underlying is ActorCell cell)
                     {
-                        var underlying = actorRef.Underlying;
-                        if (underlying is ActorCell cell)
-                        {
-                            if (PressureThreshold == 1)
-                                return cell.Mailbox.IsScheduled() && cell.Mailbox.HasMessages;
-                            if (PressureThreshold < 1)
-                                return cell.Mailbox.IsScheduled() && cell.CurrentMessage != null;
+                        if (PressureThreshold == 1)
+                            return cell.Mailbox.IsScheduled() && cell.Mailbox.HasMessages;
+                        if (PressureThreshold < 1)
+                            return cell.Mailbox.IsScheduled() && cell.CurrentMessage != null;
 
-                            return cell.Mailbox.NumberOfMessages >= PressureThreshold;
-                        }
-                        else
-                        {
-                            if (PressureThreshold == 1)
-                                return underlying.HasMessages;
-                            if (PressureThreshold < 1)
-                                return true; //unstarted cells are always busy, for instance
-                            return underlying.NumberOfMessages >= PressureThreshold;
-                        }
+                        return cell.Mailbox.NumberOfMessages >= PressureThreshold;
                     }
-                    return false;
-                });
+                    else
+                    {
+                        if (PressureThreshold == 1)
+                            return underlying.HasMessages;
+                        if (PressureThreshold < 1)
+                            return true; //unstarted cells are always busy, for instance
+                        return underlying.NumberOfMessages >= PressureThreshold;
+                    }
+                }
+                return false;
+            }
+            return currentRoutees.Count(filter);
         }
 
         /// <summary>
@@ -344,7 +344,7 @@ namespace Akka.Routing
         /// <inheritdoc/>
         public bool Equals(DefaultResizer other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return MessagesPerResize == other.MessagesPerResize && BackoffRate.Equals(other.BackoffRate) && RampupRate.Equals(other.RampupRate) && BackoffThreshold.Equals(other.BackoffThreshold) && UpperBound == other.UpperBound && PressureThreshold == other.PressureThreshold && LowerBound == other.LowerBound;
         }
@@ -352,7 +352,7 @@ namespace Akka.Routing
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((DefaultResizer)obj);

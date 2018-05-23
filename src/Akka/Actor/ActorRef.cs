@@ -309,16 +309,15 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override string ToString()
         {
-            if(Path.Uid == ActorCell.UndefinedUid) return $"[{Path}]";
+            if (Path.Uid == ActorCell.UndefinedUid) return $"[{Path}]";
             return $"[{Path}#{Path.Uid}]";
         }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            var other = obj as IActorRef;
-            if (other == null) return false;
-            return Equals(other);
+            if (obj is IActorRef other) return Equals(other);
+            return false;
         }
 
         /// <inheritdoc/>
@@ -341,13 +340,13 @@ namespace Akka.Actor
         {
             if (obj != null && !(obj is IActorRef))
                 throw new ArgumentException("Object must be of type IActorRef.", nameof(obj));
-            return CompareTo((IActorRef) obj);
+            return CompareTo((IActorRef)obj);
         }
 
         /// <inheritdoc/>
         public bool Equals(IActorRef other)
         {
-            return Path.Uid == other.Path.Uid 
+            return Path.Uid == other.Path.Uid
                 && Path.Equals(other.Path);
         }
 
@@ -552,7 +551,7 @@ namespace Akka.Actor
         /// <inheritdoc cref="InternalActorRefBase"/>
         public override void SendSystemMessage(ISystemMessage message)
         {
-           
+
         }
 
         /// <inheritdoc cref="InternalActorRefBase"/>
@@ -746,7 +745,7 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="name">TBD</param>
         /// <param name="child">TBD</param>
-        public void RemoveChild(string name,IActorRef child)
+        public void RemoveChild(string name, IActorRef child)
         {
             if (!_children.TryRemove(name, out var tmp))
             {

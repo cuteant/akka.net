@@ -34,7 +34,7 @@ namespace Akka.Routing
     /// <summary>
     /// This class represents a message sent by an actor to another actor that is listening to it.
     /// </summary>
-    public abstract class ListenerMessage {}
+    public abstract class ListenerMessage { }
 
     /// <summary>
     /// The class represents a <see cref="ListenerMessage"/> sent by an <see cref="IActorRef"/> to another <see cref="IActorRef"/>
@@ -125,7 +125,7 @@ namespace Akka.Routing
         {
             get
             {
-                return message =>
+                bool process(object message)
                 {
                     switch (message)
                     {
@@ -137,12 +137,15 @@ namespace Akka.Routing
                             return true;
                         case WithListeners listeners:
                             foreach (var listener in Listeners)
+                            {
                                 listeners.ListenerFunction(listener);
+                            }
                             return true;
                         default:
                             return false;
                     }
                 };
+                return process;
             }
         }
 
@@ -152,8 +155,7 @@ namespace Akka.Routing
         /// <param name="actor">The actor to add to the collection of registered listeners.</param>
         public void Add(IActorRef actor)
         {
-            if(!Listeners.Contains(actor))
-                Listeners.Add(actor);
+            if (!Listeners.Contains(actor)) { Listeners.Add(actor); }
         }
 
         /// <summary>
@@ -162,8 +164,7 @@ namespace Akka.Routing
         /// <param name="actor">The actor to remove from the collection of registered listeners.</param>
         public void Remove(IActorRef actor)
         {
-            if(Listeners.Contains(actor))
-                Listeners.Remove(actor);
+            if (Listeners.Contains(actor)) { Listeners.Remove(actor); }
         }
 
         /// <summary>
@@ -186,8 +187,7 @@ namespace Akka.Routing
         /// <param name="sender">The actor that sends the message.</param>
         public void Gossip(object message, IActorRef sender)
         {
-            foreach(var listener in Listeners)
-                listener.Tell(message, sender);
+            foreach (var listener in Listeners) { listener.Tell(message, sender); }
         }
     }
 }

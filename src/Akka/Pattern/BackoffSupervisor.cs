@@ -144,8 +144,7 @@ namespace Akka.Pattern
 
         private bool OnTerminated(object message)
         {
-            var terminated = message as Terminated;
-            if (terminated != null && terminated.ActorRef.Equals(Child))
+            if (message is Terminated terminated && terminated.ActorRef.Equals(Child))
             {
                 Child = null;
                 var restartDelay = CalculateDelay(RestartCountN, _minBackoff, _maxBackoff, _randomFactor);

@@ -63,21 +63,25 @@ namespace Akka.Actor
             var promiseRef = PromiseActorRef.Apply(internalTarget.Provider, timeout, target, stopMessage.GetType().Name);
             internalTarget.SendSystemMessage(new Watch(internalTarget, promiseRef));
             target.Tell(stopMessage, ActorRefs.NoSender);
-            return promiseRef.Result.ContinueWith(t =>
+
+            bool continuationFunction(Task<object> t)
             {
                 if (t.Status == TaskStatus.RanToCompletion)
                 {
                     var returnResult = false;
+
+                    void terminatedAction(Terminated terminated)
+                    {
+                        returnResult = (terminated.ActorRef.Path.Equals(target.Path));
+                    }
+                    void defaultAction(object m)
+                    {
+                        internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
+                        returnResult = false;
+                    }
                     PatternMatch.Match(t.Result)
-                        .With<Terminated>(terminated =>
-                        {
-                            returnResult = (terminated.ActorRef.Path.Equals(target.Path));
-                        })
-                        .Default(m =>
-                        {
-                            internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
-                            returnResult = false;
-                        });
+                        .With<Terminated>(terminatedAction)
+                        .Default(defaultAction);
                     return returnResult;
                 }
                 else
@@ -88,7 +92,8 @@ namespace Akka.Actor
                     else
                         throw t.Exception;
                 }
-            }, TaskContinuationOptions.ExecuteSynchronously);
+            }
+            return promiseRef.Result.ContinueWith(continuationFunction, TaskContinuationOptions.ExecuteSynchronously);
         }
     }
 }

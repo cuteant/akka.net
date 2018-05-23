@@ -6,9 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Util;
@@ -124,11 +122,9 @@ namespace Akka.Event
         /// <returns>TBD</returns>
         public bool InitUnsubscriber(IActorRef unsubscriber, ActorSystem system)
         {
-            if (system == null)
-            {
-                return false;
-            }
-            return _initiallySubscribedOrUnsubscriber.Match().With<Left<IImmutableSet<IActorRef>>>(v =>
+            if (system == null) { return false; }
+
+            void Handle0(Left<IImmutableSet<IActorRef>> v)
             {
                 if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v, Either.Right(unsubscriber)))
                 {
@@ -146,9 +142,8 @@ namespace Akka.Event
                 {
                     InitUnsubscriber(unsubscriber, system);
                 }
-
-
-            }).With<Right<IActorRef>>(presentUnsubscriber =>
+            }
+            void Handle1(Right<IActorRef> presentUnsubscriber)
             {
                 if (_debug)
                 {
@@ -156,39 +151,48 @@ namespace Akka.Event
                         string.Format("not using unsubscriber {0}, because already initialized with {1}", unsubscriber, presentUnsubscriber)));
 
                 }
-            }).WasHandled;
+            }
+
+            return _initiallySubscribedOrUnsubscriber.Match()
+                .With<Left<IImmutableSet<IActorRef>>>(Handle0)
+                .With<Right<IActorRef>>(Handle1)
+                .WasHandled;
         }
 
         private void RegisterWithUnsubscriber(IActorRef subscriber)
         {
-            _initiallySubscribedOrUnsubscriber.Match().With<Left<IImmutableSet<IActorRef>>>(v =>
+            void Handle0(Left<IImmutableSet<IActorRef>> v)
             {
-                if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v,
-                    Either.Left<IImmutableSet<IActorRef>>(v.Value.Add(subscriber))))
+                if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v, Either.Left(v.Value.Add(subscriber))))
                 {
                     RegisterWithUnsubscriber(subscriber);
                 }
-
-            }).With<Right<IActorRef>>(unsubscriber =>
+            }
+            void Handle1(Right<IActorRef> unsubscriber)
             {
-                unsubscriber.Value.Tell( new EventStreamUnsubscriber.Register(subscriber));
-            });
+                unsubscriber.Value.Tell(new EventStreamUnsubscriber.Register(subscriber));
+            }
+            _initiallySubscribedOrUnsubscriber.Match()
+                .With<Left<IImmutableSet<IActorRef>>>(Handle0)
+                .With<Right<IActorRef>>(Handle1);
         }
 
         private void UnregisterIfNoMoreSubscribedChannels(IActorRef subscriber)
         {
-            _initiallySubscribedOrUnsubscriber.Match().With<Left<IImmutableSet<IActorRef>>>(v =>
+            void Handle0(Left<IImmutableSet<IActorRef>> v)
             {
-                if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v,
-                    Either.Left<IImmutableSet<IActorRef>>(v.Value.Remove(subscriber))))
+                if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v, Either.Left(v.Value.Remove(subscriber))))
                 {
                     UnregisterIfNoMoreSubscribedChannels(subscriber);
                 }
-
-            }).With<Right<IActorRef>>(unsubscriber =>
+            }
+            void Handle1(Right<IActorRef> unsubscriber)
             {
                 unsubscriber.Value.Tell(new EventStreamUnsubscriber.UnregisterIfNoMoreSubscribedChannels(subscriber));
-            });
+            }
+            _initiallySubscribedOrUnsubscriber.Match()
+                .With<Left<IImmutableSet<IActorRef>>>(Handle0)
+                .With<Right<IActorRef>>(Handle1);
         }
     }
 }

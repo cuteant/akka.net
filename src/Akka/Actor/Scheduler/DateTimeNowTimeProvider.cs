@@ -14,7 +14,11 @@ namespace Akka.Actor
     /// </summary>
     public class DateTimeOffsetNowTimeProvider : ITimeProvider, IDateTimeOffsetNowTimeProvider
     {
-        private static readonly DateTimeOffsetNowTimeProvider _instance = new DateTimeOffsetNowTimeProvider();
+        /// <summary>
+        /// TBD
+        /// </summary>
+        public static readonly DateTimeOffsetNowTimeProvider Instance = new DateTimeOffsetNowTimeProvider();
+
         private DateTimeOffsetNowTimeProvider() { }
         /// <summary>
         /// TBD
@@ -24,17 +28,12 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        public TimeSpan MonotonicClock {get { return Util.MonotonicClock.Elapsed; }}
+        public TimeSpan MonotonicClock { get { return Util.MonotonicClock.Elapsed; } }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public TimeSpan HighResMonotonicClock{get { return Util.MonotonicClock.ElapsedHighRes; }}
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public static DateTimeOffsetNowTimeProvider Instance { get { return _instance; } }
+        public TimeSpan HighResMonotonicClock { get { return Util.MonotonicClock.ElapsedHighRes; } }
     }
 }
 

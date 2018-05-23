@@ -249,7 +249,7 @@ namespace Akka.Actor
         /// <summary>
         /// This is necessary for weaving the PromiseActorRef into the asked message, i.e. the replyTo pattern.
         /// </summary>
-        private volatile string _mcn;
+        private readonly string _mcn;
 
         #region Internal states
 
@@ -274,13 +274,10 @@ namespace Akka.Actor
         internal sealed class Registering
         {
             private Registering() { }
-            // ReSharper disable once InconsistentNaming
-            private static readonly Registering _instance = new Registering();
-
             /// <summary>
             /// TBD
             /// </summary>
-            public static Registering Instance { get { return _instance; } }
+            public static readonly Registering Instance = new Registering();
         }
 
         /// <summary>
@@ -289,13 +286,10 @@ namespace Akka.Actor
         internal sealed class Stopped
         {
             private Stopped() { }
-            // ReSharper disable once InconsistentNaming
-            private static readonly Stopped _instance = new Stopped();
-
             /// <summary>
             /// TBD
             /// </summary>
-            public static Stopped Instance { get { return _instance; } }
+            public static readonly Stopped Instance = new Stopped();
         }
 
         /// <summary>
@@ -322,7 +316,7 @@ namespace Akka.Actor
             /// <inheritdoc/>
             public bool Equals(StoppedWithPath other)
             {
-                if (ReferenceEquals(null, other)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
                 return Equals(Path, other.Path);
             }
@@ -330,7 +324,7 @@ namespace Akka.Actor
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 return obj is StoppedWithPath && Equals((StoppedWithPath)obj);
             }
@@ -378,10 +372,11 @@ namespace Akka.Actor
             //    string.Format("Ask timed out on [{0}] after [{1} ms]. Sender[{2}] sent message of type {3}.", targetName, timeout.TotalMilliseconds, sender, messageClassName)))),
             //    c);
 
-            result.Task.ContinueWith(r =>
+            void continuationAction(Task<object> task)
             {
                 a.Stop();
-            }, TaskContinuationOptions.ExecuteSynchronously);
+            }
+            result.Task.ContinueWith(continuationAction, TaskContinuationOptions.ExecuteSynchronously);
 
             return a;
         }

@@ -16,16 +16,15 @@ namespace Akka.Actor.Internal
     /// </summary>
     public class TerminatedChildrenContainer : EmptyChildrenContainer
     {
-        private static readonly IChildrenContainer _instance = new TerminatedChildrenContainer();
+        /// <summary>
+        /// TBD
+        /// </summary>
+        public new static readonly IChildrenContainer Instance = new TerminatedChildrenContainer();
 
         private TerminatedChildrenContainer()
         {
             //Intentionally left blank
         }
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public new static IChildrenContainer Instance { get { return _instance; } }
 
         /// <summary>
         /// TBD

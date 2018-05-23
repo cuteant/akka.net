@@ -154,24 +154,27 @@ namespace Akka.Routing
             // create the initial routees before scheduling the Router actor
             Router = RouterConfig.CreateRouter(System);
 
-            if (RouterConfig is Pool pool)
+            switch (RouterConfig)
             {
-                var nrOfRoutees = pool.GetNrOfInstances(System);
-                if (nrOfRoutees > 0)
-                    AddRoutees(Vector.Fill<Routee>(nrOfRoutees)(() => pool.NewRoutee(RouteeProps, this)));
-            }
-            else if (RouterConfig is Group group)
-            {
-                // must not use group.paths(system) for old (not re-compiled) custom routers
-                // for binary backwards compatibility reasons
-                var deprecatedPaths = group.Paths;
+                case Pool pool:
+                    var nrOfRoutees = pool.GetNrOfInstances(System);
+                    if (nrOfRoutees > 0) { AddRoutees(Vector.Fill<Routee>(nrOfRoutees)(() => pool.NewRoutee(RouteeProps, this))); }
+                    break;
 
-                var paths = deprecatedPaths == null
-                        ? group.GetPaths(System)?.ToArray()
-                        : deprecatedPaths.ToArray();
+                case Group group:
+                    // must not use group.paths(system) for old (not re-compiled) custom routers
+                    // for binary backwards compatibility reasons
+                    var deprecatedPaths = group.Paths;
 
-                if (paths.NonEmpty())
-                    AddRoutees(paths.Select(p => group.RouteeFor(p, this)).ToList());
+                    var paths = deprecatedPaths == null
+                            ? group.GetPaths(System)?.ToArray()
+                            : deprecatedPaths.ToArray();
+
+                    if (paths.NonEmpty()) { AddRoutees(paths.Select(p => group.RouteeFor(p, this)).ToList()); }
+                    break;
+
+                default:
+                    break;
             }
 
             PreSuperStart();

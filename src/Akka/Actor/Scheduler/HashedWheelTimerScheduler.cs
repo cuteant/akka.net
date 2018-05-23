@@ -249,8 +249,7 @@ namespace Akka.Actor
             // adds new timeouts in a loop.
             for (var i = 0; i < 100000; i++)
             {
-                SchedulerRegistration reg;
-                if (!_registrations.TryDequeue(out reg))
+                if (!_registrations.TryDequeue(out var reg))
                 {
                     // all processed
                     break;

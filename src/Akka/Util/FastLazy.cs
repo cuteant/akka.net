@@ -148,7 +148,7 @@ namespace Akka.Util
                     Volatile.Write(ref _creating, 1);
                     _createdValue = _producer(_state);
                     Volatile.Write(ref _created, 1);
-                    _state = default(S); // for reference types to make it suitable for gc
+                    _state = default; // for reference types to make it suitable for gc
                 }
                 else
                 {

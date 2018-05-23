@@ -85,7 +85,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             return obj is Phase && Equals((Phase)obj);
         }
@@ -257,6 +257,16 @@ namespace Akka.Actor
         {
             if (_clrHooksStarted.CompareAndSet(false, true))
             {
+                void continuationAction(Task<Done[]> tr)
+                {
+                    if (tr.IsFaulted || tr.IsCanceled)
+                        _hooksRunPromise.SetException(tr.Exception.Flatten());
+                    else
+                    {
+                        _hooksRunPromise.SetResult(Done.Instance);
+                    }
+                }
+
                 Task.WhenAll(_clrShutdownTasks.Select(hook =>
                 {
                     try
@@ -269,15 +279,7 @@ namespace Akka.Actor
                         Log.Error(ex, "Error occurred while executing CLR shutdown hook");
                         return TaskEx.FromException<Done>(ex);
                     }
-                })).ContinueWith(tr =>
-                {
-                    if (tr.IsFaulted || tr.IsCanceled)
-                        _hooksRunPromise.SetException(tr.Exception.Flatten());
-                    else
-                    {
-                        _hooksRunPromise.SetResult(Done.Instance);
-                    }
-                });
+                })).ContinueWith(continuationAction);
             }
 
             return ClrShutdownTask;
@@ -410,16 +412,19 @@ namespace Akka.Actor
                     : OrderedPhases.From(fromPhase)).ToList();
 
                 var done = Loop(runningPhases);
-                done.ContinueWith(tr =>
+
+                void continuationAction(Task<Done> tr)
                 {
-                    if(!tr.IsFaulted && !tr.IsCanceled)
+                    if (!tr.IsFaulted && !tr.IsCanceled)
                         _runPromise.SetResult(tr.Result);
                     else
                     {
                         // ReSharper disable once PossibleNullReferenceException
                         _runPromise.SetException(tr.Exception.Flatten());
                     }
-                });
+                }
+
+                done.ContinueWith(continuationAction);
             }
             return _runPromise.Task;
         }
@@ -524,7 +529,7 @@ namespace Akka.Actor
             var exitClr = conf.GetBoolean("exit-clr");
             if (terminateActorSystem || exitClr)
             {
-                coord.AddTask(PhaseActorSystemTerminate, "terminate-system", () =>
+                Task<Done> terminateSystem()
                 {
                     if (exitClr && terminateActorSystem)
                     {
@@ -534,27 +539,30 @@ namespace Akka.Actor
                         // We must spawn a separate Task to not block current thread,
                         // since that would have blocked the shutdown of the ActorSystem.
                         var timeout = coord.Timeout(PhaseActorSystemTerminate);
-                        return Task.Run(() =>
+                        Done run()
                         {
                             if (!system.WhenTerminated.Wait(timeout) && !coord._runningClrHook)
                             {
                                 Environment.Exit(0);
                             }
                             return Done.Instance;
-                        });
+                        }
+                        return Task.Run(run);
                     }
 
                     if (terminateActorSystem)
                     {
-                        return system.Terminate().ContinueWith(tr =>
+                        Done continuationFunc(Task tr)
                         {
                             if (exitClr && !coord._runningClrHook)
                             {
                                 Environment.Exit(0);
                             }
                             return Done.Instance;
-                        });
-                    } else if (exitClr)
+                        }
+                        return system.Terminate().ContinueWith(continuationFunc);
+                    }
+                    else if (exitClr)
                     {
                         Environment.Exit(0);
                         return TaskEx.Completed;
@@ -563,7 +571,8 @@ namespace Akka.Actor
                     {
                         return TaskEx.Completed;
                     }
-                });
+                }
+                coord.AddTask(PhaseActorSystemTerminate, "terminate-system", terminateSystem);
             }
         }
 
@@ -588,27 +597,28 @@ namespace Akka.Actor
 #else
                 // TODO: what to do for NetCore?
 #endif
-
-                coord.AddClrShutdownHook(() =>
+                Done hook()
+                {
+                    if (!system.WhenTerminated.IsCompleted)
+                    {
+                        if (coord.Log.IsInfoEnabled) coord.Log.Info("Starting coordinated shutdown from CLR termination hook.");
+                        try
+                        {
+                            coord.Run().Wait(coord.TotalTimeout);
+                        }
+                        catch (Exception ex)
+                        {
+                            coord.Log.Warning("CoordinatedShutdown from CLR shutdown failed: {0}", ex.Message);
+                        }
+                    }
+                    return Done.Instance;
+                }
+                Task<Done> hookAsync()
                 {
                     coord._runningClrHook = true;
-                    return Task.Run(() =>
-                    {
-                        if (!system.WhenTerminated.IsCompleted)
-                        {
-                            if (coord.Log.IsInfoEnabled) coord.Log.Info("Starting coordinated shutdown from CLR termination hook.");
-                            try
-                            {
-                                coord.Run().Wait(coord.TotalTimeout);
-                            }
-                            catch (Exception ex)
-                            {
-                                coord.Log.Warning("CoordinatedShutdown from CLR shutdown failed: {0}", ex.Message);
-                            }
-                        }
-                        return Done.Instance;
-                    });
-                });
+                    return Task.Run(hook);
+                }
+                coord.AddClrShutdownHook(hookAsync);
             }
         }
     }

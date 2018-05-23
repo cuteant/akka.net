@@ -13,7 +13,6 @@ using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
 using Debug = Akka.Event.Debug;
-using System.Globalization;
 
 namespace Akka.Actor
 {
@@ -132,7 +131,7 @@ namespace Akka.Actor
             var message = envelope.Message;
 
             var actor = _actor;
-            var actorType = actor != null ? actor.GetType() : null;
+            var actorType = actor?.GetType();
 
             if (System.Settings.DebugAutoReceive)
             {

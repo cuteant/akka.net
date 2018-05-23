@@ -245,8 +245,7 @@ namespace Akka.IO
             get
             {
                 if (index >= _count) throw new IndexOutOfRangeException("Requested index is outside of the bounds of the ByteString");
-                int j;
-                var i = GetBufferFittingIndex(index, out j);
+                var i = GetBufferFittingIndex(index, out int j);
                 var buffer = _buffers[i];
                 return buffer.Array[buffer.Offset + j];
             }
@@ -292,9 +291,8 @@ namespace Akka.IO
             if (count <= 0) return Empty;
 
             if (index == 0 && count == _count) return this;
-            
-            int j;
-            var i = GetBufferFittingIndex(index, out j);
+
+            var i = GetBufferFittingIndex(index, out int j);
             var init = _buffers[i];
 
             var copied = Math.Min(init.Count - j, count);
@@ -380,8 +378,7 @@ namespace Akka.IO
         {
             if (from >= _count) return -1;
 
-            int j;
-            var i = GetBufferFittingIndex(from, out j);
+            var i = GetBufferFittingIndex(from, out int j);
             var idx = from;
             for (; i < _buffers.Length; i++)
             {
@@ -409,8 +406,8 @@ namespace Akka.IO
             // quick check: if subsequence is longer than remaining size, return false
             if (other.Count > _count - index) return false;
 
-            int thisIdx = 0, otherIdx = 0;
-            var i = GetBufferFittingIndex(index, out thisIdx);
+            int otherIdx = 0;
+            var i = GetBufferFittingIndex(index, out int thisIdx);
             var j = 0;
             while (j < other._buffers.Length)
             {
@@ -548,7 +545,7 @@ namespace Akka.IO
         public bool Equals(ByteString other)
         {
             if (ReferenceEquals(other, this)) return true;
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (_count != other._count) return false;
 
             using (var thisEnum = this.GetEnumerator())

@@ -42,7 +42,7 @@ namespace Akka.Event
             _eventStream = eventStream;
             _system = system;
             _debug = debug;
-           
+
         }
 
         /// <summary>
@@ -52,26 +52,35 @@ namespace Akka.Event
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            return message.Match().With<Register>(register =>
+            void HandleRegister(Register register)
             {
                 if (_debug)
                     _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
                        string.Format("watching {0} in order to unsubscribe from EventStream when it terminates", register.Actor)));
                 Context.Watch(register.Actor);
-            }).With<UnregisterIfNoMoreSubscribedChannels>(unregister =>
+            }
+
+            void HandleUnregister(UnregisterIfNoMoreSubscribedChannels unregister)
             {
                 if (_debug)
                     _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
                         string.Format("unwatching {0} since has no subscriptions", unregister.Actor)));
                 Context.Unwatch(unregister.Actor);
-            }).With<Terminated>(terminated =>
+            }
+
+            void HandleTerminated(Terminated terminated)
             {
                 if (_debug)
                     _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
-                        string.Format("unsubscribe {0} from {1}, because it was terminated", terminated.Actor , _eventStream )));
+                        string.Format("unsubscribe {0} from {1}, because it was terminated", terminated.Actor, _eventStream)));
                 _eventStream.Unsubscribe(terminated.Actor);
-            })
-            .WasHandled;
+            }
+
+            return message.Match()
+                .With<Register>(HandleRegister)
+                .With<UnregisterIfNoMoreSubscribedChannels>(HandleUnregister)
+                .With<Terminated>(HandleTerminated)
+                .WasHandled;
         }
 
         /// <summary>
@@ -157,16 +166,12 @@ namespace Akka.Event
     class EventStreamUnsubscribersProvider
     {
         private readonly AtomicCounter _unsubscribersCounter = new AtomicCounter(0);
-        private static readonly EventStreamUnsubscribersProvider _instance = new EventStreamUnsubscribersProvider();
 
 
         /// <summary>
         /// TBD
         /// </summary>
-        public static EventStreamUnsubscribersProvider Instance
-        {
-            get { return _instance; }
-        }
+        public static readonly EventStreamUnsubscribersProvider Instance = new EventStreamUnsubscribersProvider();
 
         /// <summary>
         /// TBD

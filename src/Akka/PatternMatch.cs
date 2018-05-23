@@ -101,9 +101,9 @@ namespace Akka
         /// <returns>Case.</returns>
         public Case With<TMessage>(Action<TMessage> action)
         {
-            if (!_handled && _message is TMessage)
+            if (!_handled && _message is TMessage msg)
             {
-                action((TMessage) _message);
+                action(msg);
                 _handled = true;
             }
 
@@ -206,9 +206,9 @@ namespace Akka
         /// <returns>Case.</returns>
         public Case<T> With<TMessage>(Func<TMessage, T> function)
         {
-            if (!_handled && _message is TMessage)
+            if (!_handled && _message is TMessage msg)
             {
-                _result = function((TMessage)_message);
+                _result = function(msg);
                 _handled = true;
             }
 

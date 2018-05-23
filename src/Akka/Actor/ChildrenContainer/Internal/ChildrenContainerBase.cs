@@ -182,8 +182,7 @@ namespace Akka.Actor.Internal
         /// <returns>TBD</returns>
         public bool Contains(IActorRef actor)
         {
-            ChildRestartStats stats;
-            return TryGetByRef(actor, out stats);
+            return TryGetByRef(actor, out var _);
         }
 
         /// <summary>

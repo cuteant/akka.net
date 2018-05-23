@@ -148,8 +148,7 @@ namespace Akka.Actor
             if (underlying == null)
                 throw new IllegalStateException("Underlying cell is null");
 
-            var unstartedCell = underlying as UnstartedCell;
-            if (unstartedCell != null)
+            if (underlying is UnstartedCell unstartedCell)
             {
                 // The problem here was that if the real actor (which will start running
                 // at cell.start()) creates children in its constructor, then this may
@@ -296,9 +295,8 @@ namespace Akka.Actor
                     IChildStats stats;
                     if (Lookup.TryGetChildStatsByName(nameAndUid.Name, out stats))
                     {
-                        var crs = stats as ChildRestartStats;
                         var uid = nameAndUid.Uid;
-                        if (crs != null && (uid == ActorCell.UndefinedUid || uid == crs.Uid))
+                        if (stats is ChildRestartStats crs && (uid == ActorCell.UndefinedUid || uid == crs.Uid))
                         {
                             if (name.Skip(1).Any())
                                 return crs.Child.GetChild(name.Skip(1));
@@ -583,7 +581,7 @@ namespace Akka.Actor
 
         private bool CellIsReady(ICell cell)
         {
-            return !ReferenceEquals(cell, this) && !ReferenceEquals(cell, null);
+            return !ReferenceEquals(cell, this) && !(cell is null);
         }
 
         /// <summary>

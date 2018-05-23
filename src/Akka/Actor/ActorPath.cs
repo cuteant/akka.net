@@ -59,8 +59,7 @@ namespace Akka.Actor
             /// <returns>The <see cref="ActorPath"/> encapsulated by this surrogate.</returns>
             public ISurrogated FromSurrogate(ActorSystem system)
             {
-                ActorPath path;
-                if (TryParse(Path, out path))
+                if (TryParse(Path, out var path))
                 {
                     return path;
                 }
@@ -73,7 +72,7 @@ namespace Akka.Actor
             /// <inheritdoc/>
             public bool Equals(Surrogate other)
             {
-                if (ReferenceEquals(null, other)) return false;
+                if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
                 return string.Equals(Path, other.Path, StringComparison.Ordinal);
             }
@@ -88,7 +87,7 @@ namespace Akka.Actor
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                if (ReferenceEquals(null, obj)) return false;
+                if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 var actorPath = obj as ActorPath;
                 if (actorPath != null) return Equals(actorPath);
@@ -294,8 +293,7 @@ namespace Akka.Actor
         /// <returns>A newly created <see cref="ActorPath"/></returns>
         public static ActorPath Parse(string path)
         {
-            ActorPath actorPath;
-            if (TryParse(path, out actorPath))
+            if (TryParse(path, out var actorPath))
             {
                 return actorPath;
             }
@@ -313,10 +311,7 @@ namespace Akka.Actor
         {
             actorPath = null;
 
-
-            Address address;
-            Uri uri;
-            if (!TryParseAddress(path, out address, out uri)) return false;
+            if (!TryParseAddress(path, out var address, out var uri)) return false;
             var pathElements = uri.AbsolutePath.Split('/');
             actorPath = new RootActorPath(address) / pathElements.Skip(1);
             if (uri.Fragment.StartsWith("#", StringComparison.Ordinal))
@@ -335,8 +330,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public static bool TryParseAddress(string path, out Address address)
         {
-            Uri uri;
-            return TryParseAddress(path, out address, out uri);
+            return TryParseAddress(path, out address, out var _);
         }
 
         private static bool TryParseAddress(string path, out Address address, out Uri uri)

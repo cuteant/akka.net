@@ -86,17 +86,16 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            var terminated = message as Terminated;
-            if(terminated != null)
+            if (message is Terminated terminated)
             {
                 var terminatedActor = terminated.ActorRef;
-                if(_userGuardian.Equals(terminatedActor))
+                if (_userGuardian.Equals(terminatedActor))
                 {
                     // time for the systemGuardian to stop, but first notify all the
                     // termination hooks, they will reply with TerminationHookDone
                     // and when all are done the systemGuardian is stopped
                     Context.Become(Terminating);
-                    foreach(var terminationHook in _terminationHooks)
+                    foreach (var terminationHook in _terminationHooks)
                     {
                         terminationHook.Tell(TerminationHook.Instance);
                     }
@@ -110,17 +109,15 @@ namespace Akka.Actor
                 }
                 return true;
             }
-            
-            var stopChild = message as StopChild;
-            if(stopChild != null)
+
+            if (message is StopChild stopChild)
             {
                 Context.Stop(stopChild.Child);
                 return true;
             }
             var sender = Sender;
-            
-            var registerTerminationHook = message as RegisterTerminationHook;
-            if(registerTerminationHook != null && !ReferenceEquals(sender, Context.System.DeadLetters))
+
+            if (message is RegisterTerminationHook registerTerminationHook && !ReferenceEquals(sender, Context.System.DeadLetters))
             {
                 _terminationHooks.Add(sender);
                 Context.Watch(sender);
@@ -132,16 +129,14 @@ namespace Akka.Actor
 
         private bool Terminating(object message)
         {
-            var terminated = message as Terminated;
-            if(terminated != null)
+            if (message is Terminated terminated)
             {
                 StopWhenAllTerminationHooksDone(terminated.ActorRef);
                 return true;
             }
             var sender = Sender;
 
-            var terminationHookDone = message as TerminationHookDone;
-            if(terminationHookDone != null)
+            if (message is TerminationHookDone terminationHookDone)
             {
                 StopWhenAllTerminationHooksDone(sender);
                 return true;
@@ -206,14 +201,12 @@ namespace Akka.Actor
         protected override void TellInternal(object message, IActorRef sender)
         {
             if (message == null) throw new InvalidMessageException("Message is null");
-            var i = message as Identify;
-            if (i != null)
+            if (message is Identify i)
             {
                 sender.Tell(new ActorIdentity(i.MessageId, ActorRefs.Nobody));
                 return;
             }
-            var d = message as DeadLetter;
-            if (d != null)
+            if (message is DeadLetter d)
             {
                 if (!SpecialHandle(d.Message, d.Sender)) { _eventStream.Publish(d); }
                 return;
@@ -229,8 +222,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         protected override bool SpecialHandle(object message, IActorRef sender)
         {
-            var w = message as Watch;
-            if (w != null)
+            if (message is Watch w)
             {
                 if (!w.Watchee.Equals(this) && !w.Watcher.Equals(this))
                 {

@@ -133,8 +133,7 @@ namespace Akka.Dispatch
         /// <param name="config">TBD</param>
         public CachingConfig(Config config)
         {
-            var cachingConfig = config as CachingConfig;
-            if (cachingConfig != null)
+            if (config is CachingConfig cachingConfig)
             {
                 _config = cachingConfig._config;
                 _entryMap = cachingConfig._entryMap;

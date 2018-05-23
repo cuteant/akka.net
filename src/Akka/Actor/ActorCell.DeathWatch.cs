@@ -9,7 +9,6 @@ using System;
 using System.Linq;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
-using Akka.Util.Internal;
 
 namespace Akka.Actor
 {

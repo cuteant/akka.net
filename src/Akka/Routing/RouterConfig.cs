@@ -120,7 +120,7 @@ namespace Akka.Routing
         /// <inheritdoc/>
         public bool Equals(RouterConfig other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return GetType() == other.GetType() && (GetType() == typeof(NoRouter) || string.Equals(RouterDispatcher, other.RouterDispatcher));
@@ -199,7 +199,7 @@ namespace Akka.Routing
         /// <inheritdoc/>
         public bool Equals(Group other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return InternalPaths.SequenceEqual(other.InternalPaths);
         }
@@ -207,7 +207,7 @@ namespace Akka.Routing
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((Group)obj);
@@ -358,7 +358,7 @@ namespace Akka.Routing
         /// <inheritdoc/>
         public bool Equals(Pool other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return Equals(Resizer, other.Resizer) && UsePoolDispatcher.Equals(other.UsePoolDispatcher) &&
                    NrOfInstances == other.NrOfInstances;
@@ -367,7 +367,7 @@ namespace Akka.Routing
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
             return Equals((Pool)obj);

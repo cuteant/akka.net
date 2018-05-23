@@ -45,34 +45,36 @@ namespace Akka.Pattern
             }
 
             var tcs = new TaskCompletionSource<T>();
-            scheduler.Advanced.ScheduleOnce(duration, () =>
+            void run()
             {
                 try
                 {
-                    value().ContinueWith(tr =>
-                    {
-                        try
-                        {
-                            if (tr.IsCanceled || tr.IsFaulted)
-                            {
-                                tcs.SetException(tr.Exception.InnerException);
-                            }
-                            else
-                                tcs.SetResult(tr.Result);
-                        }
-                        catch (AggregateException ex)
-                        {
-                            // in case the task faults
-                            tcs.SetException(ex.Flatten());
-                        }
-                    });
+                    value().ContinueWith(continuationAction);
                 }
                 catch (Exception ex)
-                { 
+                {
                     // in case the value() function faults
                     tcs.SetException(ex);
                 }
-            });
+            }
+            void continuationAction(Task<T> tr)
+            {
+                try
+                {
+                    if (tr.IsCanceled || tr.IsFaulted)
+                    {
+                        tcs.SetException(tr.Exception.InnerException);
+                    }
+                    else
+                        tcs.SetResult(tr.Result);
+                }
+                catch (AggregateException ex)
+                {
+                    // in case the task faults
+                    tcs.SetException(ex.Flatten());
+                }
+            }
+            scheduler.Advanced.ScheduleOnce(duration, run);
             return tcs.Task;
         }
     }

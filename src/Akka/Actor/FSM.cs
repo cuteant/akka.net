@@ -522,8 +522,10 @@ namespace Akka.Actor
             /// <returns>TBD</returns>
             public State<TS, TD> Replying(object replyValue)
             {
-                var newReplies = new List<object>(Replies.Count + 1);
-                newReplies.Add(replyValue);
+                var newReplies = new List<object>(Replies.Count + 1)
+                {
+                    replyValue
+                };
                 newReplies.AddRange(Replies);
 
                 return Copy(Timeout, replies: newReplies);

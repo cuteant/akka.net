@@ -240,7 +240,7 @@ namespace Akka.Actor
                     {
                         SetFailed(_self);
                     }
-                    SuspendChildren(childrenNotToSuspend == null ? null : childrenNotToSuspend.ToList());
+                    SuspendChildren(childrenNotToSuspend?.ToList());
 
                     //Tell supervisor
                     Parent.SendSystemMessage(new Failed(_self, cause, _self.Path.Uid));
@@ -377,8 +377,7 @@ namespace Akka.Actor
             //the UID protects against reception of a Failed from a child which was
             //killed in preRestart and re-created in postRestart
 
-            ChildRestartStats childStats;
-            if (TryGetChildStatsByRef(failedChild, out childStats))
+            if (TryGetChildStatsByRef(failedChild, out var childStats))
             {
                 var statsUid = childStats.Child.Path.Uid;
                 if (statsUid == f.Uid)

@@ -217,8 +217,7 @@ namespace Akka.Actor
             int index = 0;
             foreach (string element in name)
             {
-                var currentLocalActorRef = current as LocalActorRef;
-                if (currentLocalActorRef != null)
+                if (current is LocalActorRef currentLocalActorRef)
                 {
                     switch (element)
                     {

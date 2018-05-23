@@ -234,14 +234,12 @@ namespace Akka.Actor
         [Obsolete("Use TryGetChildStatsByName [0.7.1]", true)]
         public IInternalActorRef GetChildByName(string name)   //TODO: Should return  Option[ChildStats]
         {
-            IInternalActorRef child;
-            return TryGetSingleChild(name, out child) ? child : ActorRefs.Nobody;
+            return TryGetSingleChild(name, out var child) ? child : ActorRefs.Nobody;
         }
 
         IActorRef IActorContext.Child(string name)
         {
-            IInternalActorRef child;
-            return TryGetSingleChild(name, out child) ? child : ActorRefs.Nobody;
+            return TryGetSingleChild(name, out var child) ? child : ActorRefs.Nobody;
         }
 
         /// <summary>
@@ -435,8 +433,7 @@ namespace Akka.Actor
         {
             if (actor != null)
             {
-                var disposable = actor as IDisposable;
-                if (disposable != null)
+                if (actor is IDisposable disposable)
                 {
                     try
                     {

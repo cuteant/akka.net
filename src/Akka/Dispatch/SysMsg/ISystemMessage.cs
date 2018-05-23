@@ -482,7 +482,7 @@ namespace Akka.Dispatch.SysMsg
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
             return Equals((Watch)obj);
@@ -541,9 +541,9 @@ namespace Akka.Dispatch.SysMsg
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is Unwatch && Equals((Unwatch)obj);
+            return obj is Unwatch unwatch && Equals(unwatch);
         }
 
         public override int GetHashCode()
@@ -838,9 +838,9 @@ namespace Akka.Dispatch.SysMsg
 
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is Create && Equals((Create)obj);
+            return obj is Create create && Equals(create);
         }
 
         public override int GetHashCode()
@@ -864,17 +864,11 @@ namespace Akka.Dispatch.SysMsg
     public sealed class RegisterTerminationHook
     {
         private RegisterTerminationHook() { }
-        private static readonly RegisterTerminationHook _instance = new RegisterTerminationHook();
+
         /// <summary>
         /// TBD
         /// </summary>
-        public static RegisterTerminationHook Instance
-        {
-            get
-            {
-                return _instance;
-            }
-        }
+        public static readonly RegisterTerminationHook Instance = new RegisterTerminationHook();
 
         /// <summary>
         /// TBD
@@ -892,17 +886,11 @@ namespace Akka.Dispatch.SysMsg
     public sealed class TerminationHook
     {
         private TerminationHook() { }
-        private static readonly TerminationHook _instance = new TerminationHook();
+
         /// <summary>
         /// TBD
         /// </summary>
-        public static TerminationHook Instance
-        {
-            get
-            {
-                return _instance;
-            }
-        }
+        public static readonly TerminationHook Instance = new TerminationHook();
 
         /// <summary>
         /// TBD
@@ -920,17 +908,11 @@ namespace Akka.Dispatch.SysMsg
     public sealed class TerminationHookDone
     {
         private TerminationHookDone() { }
-        private static readonly TerminationHookDone _instance = new TerminationHookDone();
+
         /// <summary>
         /// TBD
         /// </summary>
-        public static TerminationHookDone Instance
-        {
-            get
-            {
-                return _instance;
-            }
-        }
+        public static readonly TerminationHookDone Instance = new TerminationHookDone();
 
         /// <summary>
         /// TBD

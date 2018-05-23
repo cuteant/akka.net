@@ -56,18 +56,15 @@ namespace Akka.Util.Internal
         protected async Task NotifyTransitionListeners()
         {
             if (!HasListeners) return;
-            await Task
-                .Factory
-                .StartNew
-                (
-                    () =>
-                    {
-                        foreach (var listener in _listeners)
-                        {
-                            listener.Invoke();
-                        }
-                    }
-                ).ConfigureAwait(false);
+
+            void run()
+            {
+                foreach (var listener in _listeners)
+                {
+                    listener.Invoke();
+                }
+            }
+            await Task.Factory.StartNew(run).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -86,7 +83,7 @@ namespace Akka.Util.Internal
         {
             var deadline = DateTime.UtcNow.Add(_callTimeout);
             ExceptionDispatchInfo capturedException = null;
-            T result = default(T);
+            T result = default;
             try
             {
                 result = await task().ConfigureAwait(false);

@@ -91,9 +91,9 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is Identify && Equals((Identify)obj);
+            return obj is Identify identify && Equals(identify);
         }
 
         /// <inheritdoc/>
@@ -146,9 +146,9 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is ActorIdentity && Equals((ActorIdentity)obj);
+            return obj is ActorIdentity actorIdentity && Equals(actorIdentity);
         }
 
         /// <inheritdoc/>

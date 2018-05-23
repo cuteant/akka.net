@@ -169,9 +169,8 @@ namespace Akka.Actor
         {
             if (LoggingEnabled)
             {
-                var actorInitializationException = cause as ActorInitializationException;
                 string message;
-                if (actorInitializationException != null && actorInitializationException.InnerException != null)
+                if (cause is ActorInitializationException actorInitializationException && actorInitializationException.InnerException != null)
                     message = actorInitializationException.InnerException.Message;
                 else
                     message = cause.Message;
@@ -490,7 +489,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public bool Equals(OneForOneStrategy other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
 
             return MaxNumberOfRetries.Equals(other.MaxNumberOfRetries) &&
@@ -772,7 +771,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public bool Equals(AllForOneStrategy other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
 
             return MaxNumberOfRetries.Equals(other.MaxNumberOfRetries) &&
@@ -1032,7 +1031,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public bool Equals(DeployableDecider other)
         {
-            if (ReferenceEquals(other, null)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(other, this)) return true;
 
             return DefaultDirective.Equals(other.DefaultDirective) &&
