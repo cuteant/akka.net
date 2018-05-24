@@ -107,7 +107,7 @@ namespace Akka.Event
                     shouldRemoveStandardOutLogger = false;
                     continue;
                 }
-                
+
                 try
                 {
                     AddLogger(system, loggerType, logLevel, logName, timeout);
@@ -153,8 +153,7 @@ namespace Akka.Event
                 if (!(logger is StandardOutLogger))
                 {
                     Unsubscribe(logger);
-                    var internalActorRef = logger as IInternalActorRef;
-                    if (internalActorRef != null)
+                    if (logger is IInternalActorRef internalActorRef)
                     {
                         internalActorRef.Stop();
                     }
@@ -180,15 +179,15 @@ namespace Akka.Event
                 Publish(new Warning(loggingBusName, GetType(),
                      string.Format("Logger {0} [{2}] did not respond within {1} to InitializeLogger(bus)", loggerName, timeout, loggerType.FullName)));
             }
-                
+
             if (!(response is LoggerInitialized))
                 throw new LoggerInitializationException($"Logger {loggerName} [{loggerType.FullName}] did not respond with LoggerInitialized, sent instead {response}");
-            
+
 
             _loggers.Add(logger);
             SubscribeLogLevelAndAbove(logLevel, logger);
             Publish(new Debug(loggingBusName, GetType(), $"Logger {loggerName} [{loggerType.Name}] started"));
-            
+
         }
 
         private string CreateLoggerName(Type actorClass)
@@ -248,21 +247,20 @@ namespace Akka.Event
         {
             protected override bool Receive(object message)
             {
-                var msg = message as UnhandledMessage;
-                if (msg == null) 
-                    return false;
-
-                Context.System.EventStream.Publish(ToDebug(msg));
-                return true;
+                if (message is UnhandledMessage msg)
+                {
+                    Context.System.EventStream.Publish(ToDebug(msg));
+                    return true;
+                }
+                return false;
             }
 
             private static Debug ToDebug(UnhandledMessage message)
             {
-                var msg = string.Format(
-                    CultureInfo.InvariantCulture, "Unhandled message from {0} : {1}",
-                    message.Sender.Path,
-                    message.Message
-                    );
+                // avoid NREs when we have ActorRefs.NoSender
+                var sender = Equals(message.Sender, ActorRefs.NoSender) ? "NoSender" : message.Sender.Path.ToString();
+
+                var msg = string.Format(CultureInfo.InvariantCulture, "Unhandled message from {0} : {1}", sender, message.Message);
 
                 return new Debug(message.Recipient.Path.ToString(), message.Recipient.GetType(), msg);
             }

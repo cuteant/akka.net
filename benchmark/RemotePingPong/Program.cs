@@ -55,7 +55,7 @@ namespace RemotePingPong
                 dot-netty.tcp {
                     port = 0
                     hostname = ""localhost""
-                    enable-libuv = true
+                    enable-libuv = false
                 }
               }
             ");

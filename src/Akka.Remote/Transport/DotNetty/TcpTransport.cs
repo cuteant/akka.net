@@ -393,34 +393,32 @@ namespace Akka.Remote.Transport.DotNetty
             }
             catch (AggregateException e) when (e.InnerException is ConnectException cause)
             {
-                var socketException = cause?.InnerException as SocketException;
-
-                if (socketException?.SocketErrorCode == SocketError.ConnectionRefused)
-                {
-                    throw new InvalidAssociationException(socketException.Message + " " + remoteAddress);
-                }
-
-                throw new InvalidAssociationException("Failed to associate with " + remoteAddress, e);
+                throw HandleConnectException(remoteAddress, cause, e);
             }
             catch (AggregateException e) when (e.InnerException is ConnectTimeoutException cause)
             {
                 throw new InvalidAssociationException(cause.Message);
             }
-            catch (ConnectException exc) // ## 苦竹 添加 ##
+            catch (ConnectException exc)
             {
-                var socketException = exc.InnerException as SocketException;
-
-                if (socketException?.SocketErrorCode == SocketError.ConnectionRefused)
-                {
-                    throw new InvalidAssociationException($"{socketException.Message} {remoteAddress}");
-                }
-
-                throw new InvalidAssociationException($"Failed to associate with {remoteAddress}", exc);
+                throw HandleConnectException(remoteAddress, exc, null);
             }
-            catch (ConnectTimeoutException exc) // ## 苦竹 添加 ##
+            catch (ConnectTimeoutException exc)
             {
                 throw new InvalidAssociationException(exc.Message);
             }
+        }
+
+        private static Exception HandleConnectException(Address remoteAddress, ConnectException cause, AggregateException e)
+        {
+            var socketException = cause?.InnerException as SocketException;
+
+            if (socketException?.SocketErrorCode == SocketError.ConnectionRefused)
+            {
+                return new InvalidAssociationException(socketException.Message + " " + remoteAddress);
+            }
+
+            return new InvalidAssociationException("Failed to associate with " + remoteAddress, e ?? (Exception)cause);
         }
 
         private async Task<IPEndPoint> MapEndpointAsync(EndPoint socketAddress)
