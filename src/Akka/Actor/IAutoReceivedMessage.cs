@@ -176,14 +176,14 @@ namespace Akka.Actor
     /// it processes the message, which gets handled using the normal supervisor mechanism, and
     /// <see cref="IActorContext.Stop"/> which causes the actor to stop without processing any more messages. </para>
     /// </summary>
-    public sealed class PoisonPill : IAutoReceivedMessage, IPossiblyHarmful, IDeadLetterSuppression
+    public sealed class PoisonPill : IAutoReceivedMessage, IPossiblyHarmful, IDeadLetterSuppression, ISingletonMessage
     {
         private PoisonPill() { }
 
         /// <summary>
         /// The singleton instance of PoisonPill.
         /// </summary>
-        public static PoisonPill Instance { get; } = new PoisonPill();
+        public static readonly PoisonPill Instance = new PoisonPill();
 
         /// <inheritdoc/>
         public override string ToString()
@@ -199,14 +199,14 @@ namespace Akka.Actor
     /// is processed, without throwing an exception, and 
     /// <see cref="IActorContext.Stop"/> which causes the actor to stop without processing any more messages. </para>
     /// </summary>
-    public sealed class Kill : IAutoReceivedMessage
+    public sealed class Kill : IAutoReceivedMessage, ISingletonMessage
     {
         private Kill() { }
 
         /// <summary>
         /// The singleton instance of Kill.
         /// </summary>
-        public static Kill Instance { get; } = new Kill();
+        public static readonly Kill Instance = new Kill();
 
         /// <inheritdoc/>
         public override string ToString()

@@ -12,7 +12,7 @@ namespace Akka.Actor
     /// <summary>
     /// This class represents a binding of an actor deployment to a local system.
     /// </summary>
-    public class LocalScope : Scope, ISurrogated
+    public class LocalScope : Scope, ISurrogated, ISingletonMessage
     {
         /// <summary>
         /// This class represents a surrogate of a <see cref="LocalScope"/> binding.

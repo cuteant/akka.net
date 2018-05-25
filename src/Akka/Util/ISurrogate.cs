@@ -6,13 +6,14 @@
 //-----------------------------------------------------------------------
 
 using Akka.Actor;
+using MessagePack;
 
 namespace Akka.Util
 {
     /// <summary>
     /// TBD
     /// </summary>
-    public interface ISurrogate
+    public interface ISurrogate : IObjectReferences
     {
         /// <summary>
         /// TBD
@@ -25,7 +26,7 @@ namespace Akka.Util
     /// <summary>
     /// Used for surrogate serialization.
     /// </summary>
-    public interface ISurrogated
+    public interface ISurrogated : IObjectReferences
     {
         /// <summary>
         /// TBD

@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using Akka.Configuration.Hocon;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Configuration
 {
@@ -18,7 +19,7 @@ namespace Akka.Configuration
     /// the internal representation of a HOCON (Human-Optimized Config Object Notation)
     /// configuration string.
     /// </summary>
-    public class Config
+    public class Config : IObjectReferences
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Config"/> class.

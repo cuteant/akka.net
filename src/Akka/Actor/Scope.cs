@@ -50,19 +50,14 @@ namespace Akka.Actor
     /// <summary>
     /// This class represents a binding of an actor deployment to an unspecified system.
     /// </summary>
-    internal class NoScopeGiven : Scope
+    internal class NoScopeGiven : Scope, ISingletonMessage
     {
         private NoScopeGiven() { }
-
-        private static readonly NoScopeGiven _instance = new NoScopeGiven();
 
         /// <summary>
         /// The singleton instance of this scope.
         /// </summary>
-        public static NoScopeGiven Instance
-        {
-            get { return _instance; }
-        }
+        public static readonly NoScopeGiven Instance = new NoScopeGiven();
 
         /// <summary>
         /// Creates a new <see cref="Akka.Actor.Scope" /> from this scope using another <see cref="Akka.Actor.Scope" />

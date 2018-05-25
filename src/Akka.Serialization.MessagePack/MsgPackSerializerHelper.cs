@@ -1,7 +1,6 @@
 ﻿using System.Threading;
 using Akka.Actor;
 using CuteAnt.Extensions.Serialization;
-using MessagePack;
 
 namespace Akka.Serialization.Resolvers
 {
@@ -17,22 +16,19 @@ namespace Akka.Serialization.Resolvers
             if (Interlocked.CompareExchange(ref _registered, Locked, Unlocked) == Locked) { return; }
 
             MessagePackStandardResolver.Register(
-#if SERIALIZATION
-                SerializableResolver.Instance,
-#endif
-                //HyperionExceptionResolver.Instance,
+                AkkaResolver.Instance,
 
-                HyperionExpressionResolver.Instance,
+                AkkaHyperionExceptionResolver.Instance,
 
-                HyperionResolver.Instance,
+                AkkaHyperionExpressionResolver.Instance,
 
-                AkkaResolver.Instance);
+                AkkaHyperionResolver.Instance);
         }
 
 #if NET451
-        internal static readonly CuteAnt.AsyncLocalShim<ActorSystem> LocalSystem = new CuteAnt.AsyncLocalShim<ActorSystem>();
+        internal static readonly CuteAnt.AsyncLocalShim<ExtendedActorSystem> LocalSystem = new CuteAnt.AsyncLocalShim<ExtendedActorSystem>();
 #else
-        internal static readonly AsyncLocal<ActorSystem> LocalSystem = new AsyncLocal<ActorSystem>();
+        internal static readonly AsyncLocal<ExtendedActorSystem> LocalSystem = new AsyncLocal<ExtendedActorSystem>();
 #endif
     }
 }

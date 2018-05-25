@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
+using MessagePack;
 
 namespace Akka.Routing
 {
@@ -17,7 +18,7 @@ namespace Akka.Routing
     /// <see cref="Akka.Routing.Pool"/> routers with dynamically resizable number of routees are implemented by providing a Resizer
     /// implementation in the <see cref="Akka.Routing.Pool"/> configuration
     /// </summary>
-    public abstract class Resizer
+    public abstract class Resizer : IObjectReferences
     {
         /// <summary>
         /// Is it time for resizing. Typically implemented with modulo of nth message, but
