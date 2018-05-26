@@ -9,13 +9,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Reflection;
+using System.Runtime.Serialization;
 using Akka.Dispatch;
 using Akka.Util.Internal;
 using Akka.Util.Reflection;
 using Akka.Routing;
 using Akka.Util;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 
 namespace Akka.Actor
 {
@@ -300,7 +300,8 @@ namespace Akka.Actor
         /// <summary>
         /// The type of the actor that is created.
         /// </summary>
-        [JsonIgnore]
+        //[JsonIgnore]
+        [IgnoreDataMember]
         public Type Type
         {
             get
@@ -315,7 +316,8 @@ namespace Akka.Actor
         /// <summary>
         /// The dispatcher used in the deployment of the actor.
         /// </summary>
-        [JsonIgnore]
+        //[JsonIgnore]
+        [IgnoreDataMember]
         public string Dispatcher
         {
             get
@@ -328,7 +330,8 @@ namespace Akka.Actor
         /// <summary>
         /// The mailbox used in the deployment of the actor.
         /// </summary>
-        [JsonIgnore]
+        //[JsonIgnore]
+        [IgnoreDataMember]
         public string Mailbox
         {
             get
@@ -350,7 +353,8 @@ namespace Akka.Actor
         /// <summary>
         /// The router used in the deployment of the actor.
         /// </summary>
-        [JsonIgnore]
+        //[JsonIgnore]
+        [IgnoreDataMember]
         public RouterConfig RouterConfig
         {
             get { return Deploy.RouterConfig; }

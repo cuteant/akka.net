@@ -25,6 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
     <PackageReference Include="Hyperion.Unofficial" Version="$(HyperionUnofficialPackageVersion)" />
   </ItemGroup>
 

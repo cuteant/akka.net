@@ -317,18 +317,11 @@ namespace Akka.Remote.TestKit
             }
         }
 
-        internal class Disconnected
+        internal class Disconnected : ISingletonMessage
         {
             private Disconnected() { }
-            private static readonly Disconnected _instance = new Disconnected();
 
-            public static Disconnected Instance
-            {
-                get
-                {
-                    return _instance;
-                }
-            }            
+            public static readonly Disconnected Instance = new Disconnected();
         }
 
         private readonly ILoggingAdapter _log = Context.GetLogger();

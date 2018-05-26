@@ -226,14 +226,14 @@ namespace Akka.Actor.Internal
             const string configPath = "akka.suppress-json-serializer-warning";
             var showSerializerWarning = Settings.Config.HasPath(configPath) && !Settings.Config.GetBoolean(configPath);
 
-            if (showSerializerWarning &&
-                Serialization.FindSerializerForType(typeof(object)) is NewtonSoftJsonSerializer)
-            {
-                Log.Warning($"NewtonSoftJsonSerializer has been detected as a default serializer. " +
-                            $"It will be obsoleted in Akka.NET starting from version 1.5 in the favor of Hyperion " +
-                            $"(for more info visit: http://getakka.net/articles/networking/serialization.html#how-to-setup-hyperion-as-default-serializer ). " +
-                            $"If you want to suppress this message set HOCON `{configPath}` config flag to on.");
-            }
+            //if (showSerializerWarning &&
+            //    Serialization.FindSerializerForType(typeof(object)) is NewtonSoftJsonSerializer)
+            //{
+            //    Log.Warning($"NewtonSoftJsonSerializer has been detected as a default serializer. " +
+            //                $"It will be obsoleted in Akka.NET starting from version 1.5 in the favor of Hyperion " +
+            //                $"(for more info visit: http://getakka.net/articles/networking/serialization.html#how-to-setup-hyperion-as-default-serializer ). " +
+            //                $"If you want to suppress this message set HOCON `{configPath}` config flag to on.");
+            //}
         }
 
         /// <inheritdoc/>

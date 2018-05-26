@@ -10,7 +10,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Reflection;
 using Akka.Configuration.Hocon;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 
 namespace Akka.Configuration
 {
@@ -142,17 +142,17 @@ namespace Akka.Configuration
             }
         }
 
-        /// <summary>
-        /// Creates a configuration based on the supplied source object
-        /// </summary>
-        /// <param name="source">The source object</param>
-        /// <returns>The configuration created from the source object</returns>
-        public static Config FromObject(object source)
-        {
-            var json = JsonConvert.SerializeObject(source);
-            var config = ParseString(json);
-            return config;
-        }
+        ///// <summary>
+        ///// Creates a configuration based on the supplied source object
+        ///// </summary>
+        ///// <param name="source">The source object</param>
+        ///// <returns>The configuration created from the source object</returns>
+        //public static Config FromObject(object source)
+        //{
+        //    var json = JsonConvert.SerializeObject(source);
+        //    var config = ParseString(json);
+        //    return config;
+        //}
     }
 }
 

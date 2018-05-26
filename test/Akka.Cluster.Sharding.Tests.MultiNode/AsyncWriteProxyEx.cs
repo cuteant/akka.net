@@ -9,15 +9,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
-using System.Runtime.Serialization;
-using Akka.Event;
-using Akka.Persistence.Journal;
-using Akka.Persistence;
-using System.Threading;
-using Akka.Util.Internal;
 using Akka.Actor.Internal;
+using Akka.Persistence;
+using Akka.Persistence.Journal;
 
 namespace Akka.Cluster.Sharding.Tests
 {
@@ -60,6 +57,7 @@ namespace Akka.Cluster.Sharding.Tests
     /// TBD
     /// </summary>
     [Serializable]
+    [MessagePack.MessagePackObject]
     public sealed class SetStore
     {
         /// <summary>
@@ -71,15 +69,13 @@ namespace Akka.Cluster.Sharding.Tests
         /// </exception>
         public SetStore(IActorRef store)
         {
-            if (store == null)
-                throw new ArgumentNullException(nameof(store), "SetStore requires non-null reference to store actor");
-
-            Store = store;
+            Store = store ?? throw new ArgumentNullException(nameof(store), "SetStore requires non-null reference to store actor");
         }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePack.Key(0)]
         public readonly IActorRef Store;
     }
 
@@ -285,21 +281,14 @@ namespace Akka.Cluster.Sharding.Tests
         /// <summary>
         /// TBD
         /// </summary>
-        public class InitTimeout
+        public sealed class InitTimeout : ISingletonMessage
         {
             private InitTimeout() { }
-            private static readonly InitTimeout _instance = new InitTimeout();
 
             /// <summary>
             /// TBD
             /// </summary>
-            public static InitTimeout Instance
-            {
-                get
-                {
-                    return _instance;
-                }
-            }
+            public static readonly InitTimeout Instance = new InitTimeout();
         }
     }
 

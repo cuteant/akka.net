@@ -1,9 +1,12 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
+using Akka.Actor;
 using Akka.Util;
 using CuteAnt.Reflection;
 using Hyperion;
+using Hyperion.Surrogates;
 using MessagePack;
 using MessagePack.Formatters;
 
@@ -17,11 +20,15 @@ namespace Akka.Serialization.Resolvers
         public AkkaHyperionExceptionFormatter() : base(
             new SerializerOptions(
                 versionTolerance: false,
-                preserveObjectReferences: true,
-                surrogates: new[] { Surrogate
-                    .Create<ISurrogated, ISurrogate>(
-                    from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
-                    to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)) }))
+                preserveObjectReferences: true//,
+                //surrogates: new[]
+                //    {
+                //        Surrogate.Create<IActorRef, ActorRefSurrogate>(ActorRefSurrogate.ToSurrogate, ActorRefSurrogate.FromSurrogate),
+                //        Surrogate.Create<ISurrogated, ISurrogate>(
+                //            from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
+                //            to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)),
+                //    }
+                ))
         { }
     }
 
@@ -77,11 +84,15 @@ namespace Akka.Serialization.Resolvers
         public AkkaHyperionExpressionFormatter() : base(
             new SerializerOptions(
                 versionTolerance: false,
-                preserveObjectReferences: true,
-                surrogates: new[] { Surrogate
-                    .Create<ISurrogated, ISurrogate>(
-                    from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
-                    to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)) }))
+                preserveObjectReferences: true//,
+                //surrogates: new[]
+                //    {
+                //        Surrogate.Create<IActorRef, ActorRefSurrogate>(ActorRefSurrogate.ToSurrogate, ActorRefSurrogate.FromSurrogate),
+                //        Surrogate.Create<ISurrogated, ISurrogate>(
+                //            from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
+                //            to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)),
+                //    }
+                ))
         { }
     }
 
@@ -132,16 +143,19 @@ namespace Akka.Serialization.Resolvers
 
     #region == AkkaHyperionFormatter ==
 
-    internal class AkkaHyperionFormatter<T> : HyperionFormatterBase<T>
+    internal class AkkaHyperionFormatter<T> : SimpleHyperionFormatter<T>
     {
         public AkkaHyperionFormatter() : base(
             new SerializerOptions(
                 versionTolerance: false,
                 preserveObjectReferences: true,
-                surrogates: new[] { Surrogate
-                    .Create<ISurrogated, ISurrogate>(
-                    from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
-                    to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)) }))
+                surrogates: new[]
+                    {
+                        Surrogate.Create<ISurrogated, ISurrogate>(
+                            from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
+                            to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)),
+                    }
+                ))
         { }
     }
 
@@ -175,8 +189,14 @@ namespace Akka.Serialization.Resolvers
 
     internal static class AkkaHyperionGetFormatterHelper
     {
+        private static readonly HashSet<Type> s_ignoreTypes = new HashSet<Type>()
+        {
+            typeof(Akka.Actor.Address)
+        };
         internal static object GetFormatter(Type t)
         {
+            if (s_ignoreTypes.Contains(t)) { return null; }
+
             if (typeof(IObjectReferences).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(AkkaHyperionFormatter<>).GetCachedGenericType(t));

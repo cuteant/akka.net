@@ -11,6 +11,11 @@ namespace Akka.Serialization.Resolvers
 
         private static int _registered = Unlocked;
 
+        static MsgPackSerializerHelper()
+        {
+            MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance);
+        }
+
         public static void Register()
         {
             if (Interlocked.CompareExchange(ref _registered, Locked, Unlocked) == Locked) { return; }
@@ -22,7 +27,8 @@ namespace Akka.Serialization.Resolvers
 
                 AkkaHyperionExpressionResolver.Instance,
 
-                AkkaHyperionResolver.Instance);
+                AkkaHyperionResolver.Instance
+            );
         }
 
 #if NET451

@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Cluster
 {
@@ -27,12 +28,13 @@ namespace Akka.Cluster
     /// - Unreachable if any observer node considers it as Unreachable
     /// - Reachable otherwise, i.e. no observer node considers it as Unreachable
     /// </summary>
-    internal class Reachability //TODO: ISerializable?
+    [MessagePackObject]
+    internal sealed class Reachability //TODO: ISerializable?
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static readonly Reachability Empty = 
+        public static readonly Reachability Empty =
             new Reachability(ImmutableList.Create<Record>(), ImmutableDictionary.Create<UniqueAddress, long>());
 
         /// <summary>
@@ -40,38 +42,40 @@ namespace Akka.Cluster
         /// </summary>
         /// <param name="records">TBD</param>
         /// <param name="versions">TBD</param>
+        [SerializationConstructor]
         public Reachability(ImmutableList<Record> records, ImmutableDictionary<UniqueAddress, long> versions)
         {
             _cache = new Lazy<Cache>(() => new Cache(records));
-            _versions = versions;
-            _records = records;
+            Versions = versions;
+            Records = records;
         }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         public sealed class Record
         {
-            readonly UniqueAddress _observer;
             /// <summary>
             /// TBD
             /// </summary>
-            public UniqueAddress Observer { get { return _observer; } }
-            readonly UniqueAddress _subject;
+            [Key(0)]
+            public readonly UniqueAddress Observer;
             /// <summary>
             /// TBD
             /// </summary>
-            public UniqueAddress Subject { get { return _subject; } }
-            readonly ReachabilityStatus _status;
+            [Key(1)]
+            public readonly UniqueAddress Subject;
             /// <summary>
             /// TBD
             /// </summary>
-            public ReachabilityStatus Status { get { return _status; } }
-            readonly long _version;
+            [Key(2)]
+            public readonly ReachabilityStatus Status;
             /// <summary>
             /// TBD
             /// </summary>
-            public long Version { get { return _version; } }
+            [Key(3)]
+            public readonly long Version;
 
             /// <summary>
             /// TBD
@@ -80,22 +84,23 @@ namespace Akka.Cluster
             /// <param name="subject">TBD</param>
             /// <param name="status">TBD</param>
             /// <param name="version">TBD</param>
+            [SerializationConstructor]
             public Record(UniqueAddress observer, UniqueAddress subject, ReachabilityStatus status, long version)
             {
-                _observer = observer;
-                _subject = subject;
-                _status = status;
-                _version = version;
+                Observer = observer;
+                Subject = subject;
+                Status = status;
+                Version = version;
             }
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
                 if (!(obj is Record other)) return false;
-                return _version.Equals(other._version) &&
-                       _status == other.Status &&
-                       _observer.Equals(other._observer) &&
-                       _subject.Equals(other._subject);
+                return Version.Equals(other.Version) &&
+                       Status == other.Status &&
+                       Observer.Equals(other.Observer) &&
+                       Subject.Equals(other.Subject);
             }
 
             /// <inheritdoc/>
@@ -134,14 +139,14 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        public ImmutableList<Record> Records { get { return _records; } }
-        readonly ImmutableList<Record> _records;
+        [Key(0)]
+        public readonly ImmutableList<Record> Records;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public ImmutableDictionary<UniqueAddress, long> Versions { get { return _versions; } }
-        readonly ImmutableDictionary<UniqueAddress, long> _versions;
+        [Key(1)]
+        public readonly ImmutableDictionary<UniqueAddress, long> Versions;
 
         /// <summary>
         /// TBD
@@ -151,26 +156,22 @@ namespace Akka.Cluster
             /// <summary>
             /// TBD
             /// </summary>
-            public ImmutableDictionary<UniqueAddress, ImmutableDictionary<UniqueAddress, Record>> ObserverRowMap { get { return _observerRowsMap; } }
-            readonly ImmutableDictionary<UniqueAddress, ImmutableDictionary<UniqueAddress, Record>> _observerRowsMap;
+            public readonly ImmutableDictionary<UniqueAddress, ImmutableDictionary<UniqueAddress, Record>> ObserverRowMap;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public ImmutableHashSet<UniqueAddress> AllTerminated { get { return _allTerminated; } }
-            readonly ImmutableHashSet<UniqueAddress> _allTerminated;
+            public readonly ImmutableHashSet<UniqueAddress> AllTerminated;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public ImmutableHashSet<UniqueAddress> AllUnreachable { get { return _allUnreachable; } }
-            readonly ImmutableHashSet<UniqueAddress> _allUnreachable;
+            public readonly ImmutableHashSet<UniqueAddress> AllUnreachable;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public ImmutableHashSet<UniqueAddress> AllUnreachableOrTerminated { get { return _allUnreachableOrTerminated; } }
-            readonly ImmutableHashSet<UniqueAddress> _allUnreachableOrTerminated;
+            public readonly ImmutableHashSet<UniqueAddress> AllUnreachableOrTerminated;
 
             /// <summary>
             /// TBD
@@ -180,9 +181,9 @@ namespace Akka.Cluster
             {
                 if (records.IsEmpty)
                 {
-                    _observerRowsMap = ImmutableDictionary.Create<UniqueAddress, ImmutableDictionary<UniqueAddress, Record>>();
-                    _allTerminated = ImmutableHashSet.Create<UniqueAddress>();
-                    _allUnreachable = ImmutableHashSet.Create<UniqueAddress>();
+                    ObserverRowMap = ImmutableDictionary.Create<UniqueAddress, ImmutableDictionary<UniqueAddress, Record>>();
+                    AllTerminated = ImmutableHashSet.Create<UniqueAddress>();
+                    AllUnreachable = ImmutableHashSet.Create<UniqueAddress>();
                 }
                 else
                 {
@@ -192,11 +193,11 @@ namespace Akka.Cluster
 
                     foreach (var r in records)
                     {
-                        ImmutableDictionary<UniqueAddress, Record> m = mapBuilder.TryGetValue(r.Observer, out m) 
-                            ? m.SetItem(r.Subject, r) 
+                        ImmutableDictionary<UniqueAddress, Record> m = mapBuilder.TryGetValue(r.Observer, out m)
+                            ? m.SetItem(r.Subject, r)
                             //TODO: Other collections take items for Create. Create unnecessary array here
                             : ImmutableDictionary.CreateRange(new[] { new KeyValuePair<UniqueAddress, Record>(r.Subject, r) });
-                        
+
 
                         mapBuilder.AddOrSet(r.Observer, m);
 
@@ -204,18 +205,18 @@ namespace Akka.Cluster
                         else if (r.Status == ReachabilityStatus.Terminated) terminatedBuilder.Add(r.Subject);
                     }
 
-                    _observerRowsMap = ImmutableDictionary.CreateRange(mapBuilder);
-                    _allTerminated = terminatedBuilder.ToImmutable();
-                    _allUnreachable = unreachableBuilder.ToImmutable().Except(AllTerminated);
+                    ObserverRowMap = ImmutableDictionary.CreateRange(mapBuilder);
+                    AllTerminated = terminatedBuilder.ToImmutable();
+                    AllUnreachable = unreachableBuilder.ToImmutable().Except(AllTerminated);
                 }
 
-                _allUnreachableOrTerminated = _allTerminated.IsEmpty
+                AllUnreachableOrTerminated = AllTerminated.IsEmpty
                     ? AllUnreachable
                     : AllUnreachable.Union(AllTerminated);
             }
         }
 
-        //TODO: Serialization should ignore
+        [IgnoreMember]
         readonly Lazy<Cache> _cache;
 
         ImmutableDictionary<UniqueAddress, Record> ObserverRows(UniqueAddress observer)
@@ -259,7 +260,7 @@ namespace Akka.Cluster
 
         long CurrentVersion(UniqueAddress observer)
         {
-            return _versions.TryGetValue(observer, out long version) ? version : 0;
+            return Versions.TryGetValue(observer, out long version) ? version : 0;
         }
 
         long NextVersion(UniqueAddress observer)
@@ -270,28 +271,28 @@ namespace Akka.Cluster
         private Reachability Change(UniqueAddress observer, UniqueAddress subject, ReachabilityStatus status)
         {
             var v = NextVersion(observer);
-            var newVersions = _versions.SetItem(observer, v);
+            var newVersions = Versions.SetItem(observer, v);
             var newRecord = new Record(observer, subject, status, v);
             var oldObserverRows = ObserverRows(observer);
             if (oldObserverRows == null && status == ReachabilityStatus.Reachable) return this;
-            if (oldObserverRows == null) return new Reachability(_records.Add(newRecord), newVersions);
+            if (oldObserverRows == null) return new Reachability(Records.Add(newRecord), newVersions);
 
-            if(!oldObserverRows.TryGetValue(subject, out var oldRecord))
+            if (!oldObserverRows.TryGetValue(subject, out var oldRecord))
             {
                 if (status == ReachabilityStatus.Reachable &&
                     oldObserverRows.Values.All(r => r.Status == ReachabilityStatus.Reachable))
-                    return new Reachability(_records.FindAll(r => !r.Observer.Equals(observer)), newVersions);
-                return new Reachability(_records.Add(newRecord), newVersions);
+                    return new Reachability(Records.FindAll(r => !r.Observer.Equals(observer)), newVersions);
+                return new Reachability(Records.Add(newRecord), newVersions);
             }
 
             if (oldRecord.Status == ReachabilityStatus.Terminated || oldRecord.Status == status)
                 return this;
 
-            if(status == ReachabilityStatus.Reachable && 
+            if (status == ReachabilityStatus.Reachable &&
                 oldObserverRows.Values.All(r => r.Status == ReachabilityStatus.Reachable || r.Subject.Equals(subject)))
-                return new Reachability(_records.FindAll(r => !r.Observer.Equals(observer)), newVersions);
+                return new Reachability(Records.FindAll(r => !r.Observer.Equals(observer)), newVersions);
 
-            var newRecords = _records.SetItem(_records.IndexOf(oldRecord), newRecord);
+            var newRecords = Records.SetItem(Records.IndexOf(oldRecord), newRecord);
             return new Reachability(newRecords, newVersions);
         }
 
@@ -305,7 +306,7 @@ namespace Akka.Cluster
         {
             var recordBuilder = ImmutableList.CreateBuilder<Record>();
             //TODO: Size hint somehow?
-            var newVersions = _versions;
+            var newVersions = Versions;
             foreach (var observer in allowed)
             {
                 var observerVersion1 = CurrentVersion(observer);
@@ -317,12 +318,12 @@ namespace Akka.Cluster
                 if (rows1 != null && rows2 != null)
                 {
                     var rows = observerVersion1 > observerVersion2 ? rows1 : rows2;
-                    foreach(var record in rows.Values.Where(r => allowed.Contains(r.Subject)))
+                    foreach (var record in rows.Values.Where(r => allowed.Contains(r.Subject)))
                         recordBuilder.Add(record);
                 }
                 if (rows1 != null && rows2 == null)
                 {
-                    if(observerVersion1 > observerVersion2)
+                    if (observerVersion1 > observerVersion2)
                         foreach (var record in rows1.Values.Where(r => allowed.Contains(r.Subject)))
                             recordBuilder.Add(record);
                 }
@@ -330,7 +331,7 @@ namespace Akka.Cluster
                 {
                     if (observerVersion2 > observerVersion1)
                         foreach (var record in rows2.Values.Where(r => allowed.Contains(r.Subject)))
-                           recordBuilder.Add(record);
+                            recordBuilder.Add(record);
                 }
 
                 if (observerVersion2 > observerVersion1)
@@ -350,8 +351,8 @@ namespace Akka.Cluster
         public Reachability Remove(IEnumerable<UniqueAddress> nodes)
         {
             var nodesSet = nodes.ToImmutableHashSet();
-            var newRecords = _records.FindAll(r => !nodesSet.Contains(r.Observer) && !nodesSet.Contains(r.Subject));
-            var newVersions = _versions.RemoveRange(nodes);
+            var newRecords = Records.FindAll(r => !nodesSet.Contains(r.Observer) && !nodesSet.Contains(r.Subject));
+            var newVersions = Versions.RemoveRange(nodes);
             return new Reachability(newRecords, newVersions);
         }
 
@@ -368,8 +369,8 @@ namespace Akka.Cluster
             }
             else
             {
-                var newRecords = _records.FindAll(r => !nodes.Contains(r.Observer));
-                var newVersions = _versions.RemoveRange(nodes);
+                var newRecords = Records.FindAll(r => !nodes.Contains(r.Observer));
+                var newVersions = Versions.RemoveRange(nodes);
                 return new Reachability(newRecords, newVersions);
             }
         }
@@ -385,7 +386,7 @@ namespace Akka.Cluster
             var observerRows = ObserverRows(observer);
             if (observerRows == null) return ReachabilityStatus.Reachable;
 
-            if(!observerRows.TryGetValue(subject, out var record))
+            if (!observerRows.TryGetValue(subject, out var record))
                 return ReachabilityStatus.Reachable;
 
             return record.Status;
@@ -432,14 +433,16 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember]
         public bool IsAllReachable
         {
-            get { return _records.IsEmpty; } 
+            get { return Records.IsEmpty; }
         }
 
         /// <summary>
         /// Doesn't include terminated
         /// </summary>
+        [IgnoreMember]
         public ImmutableHashSet<UniqueAddress> AllUnreachable
         {
             get { return _cache.Value.AllUnreachable; }
@@ -448,6 +451,7 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember]
         public ImmutableHashSet<UniqueAddress> AllUnreachableOrTerminated
         {
             get { return _cache.Value.AllUnreachableOrTerminated; }
@@ -470,13 +474,14 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember]
         public ImmutableDictionary<UniqueAddress, ImmutableHashSet<UniqueAddress>> ObserversGroupedByUnreachable
         {
             get
             {
                 var builder = new Dictionary<UniqueAddress, ImmutableHashSet<UniqueAddress>>();
 
-                var grouped = _records.GroupBy(p => p.Subject);
+                var grouped = Records.GroupBy(p => p.Subject);
                 foreach (var records in grouped)
                 {
                     if (records.Any(r => r.Status == ReachabilityStatus.Unreachable))
@@ -492,9 +497,10 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember]
         public ImmutableHashSet<UniqueAddress> AllObservers
         {
-            get { return ImmutableHashSet.CreateRange(_versions.Keys); }
+            get { return ImmutableHashSet.CreateRange(Versions.Keys); }
         }
 
         /// <summary>
@@ -512,15 +518,15 @@ namespace Akka.Cluster
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return _versions.GetHashCode();
+            return Versions.GetHashCode();
         }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
             if (!(obj is Reachability other)) return false;
-            return _records.Count == other._records.Count && 
-                _versions.Equals(other._versions) && 
+            return Records.Count == other.Records.Count &&
+                Versions.Equals(other.Versions) &&
                 _cache.Value.ObserverRowMap.Equals(other._cache.Value.ObserverRowMap);
         }
 
@@ -529,7 +535,7 @@ namespace Akka.Cluster
         {
             var builder = new StringBuilder("Reachability(");
 
-            foreach (var observer in _versions.Keys)
+            foreach (var observer in Versions.Keys)
             {
                 var rows = ObserverRows(observer);
                 if (rows == null) continue;

@@ -16,7 +16,7 @@ namespace Akka
     /// where no result shall be returned from materialization.
     /// </summary>
     [Serializable]
-    public sealed class NotUsed : IEquatable<NotUsed>, IComparable<NotUsed>
+    public sealed class NotUsed : IEquatable<NotUsed>, IComparable<NotUsed>, ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="NotUsed"/>.

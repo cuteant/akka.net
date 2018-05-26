@@ -271,7 +271,7 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        internal sealed class Registering
+        internal sealed class Registering : ISingletonMessage
         {
             private Registering() { }
             /// <summary>
@@ -283,7 +283,7 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        internal sealed class Stopped
+        internal sealed class Stopped : ISingletonMessage
         {
             private Stopped() { }
             /// <summary>

@@ -7,7 +7,7 @@
 
 using System;
 using System.Collections.Generic;
-using Newtonsoft.Json;
+using MessagePack;
 
 namespace Akka.Persistence
 {
@@ -29,7 +29,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Metadata for all persisted snapshot records.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SnapshotMetadata : IEquatable<SnapshotMetadata>
     {
         /// <summary>
@@ -77,7 +77,7 @@ namespace Akka.Persistence
         /// <param name="persistenceId">The id of the persistent actor fro mwhich the snapshot was taken.</param>
         /// <param name="sequenceNr">The sequence number at which the snapshot was taken.</param>
         /// <param name="timestamp">The time at which the snapshot was saved.</param>
-        [JsonConstructor]
+        [SerializationConstructor]
         public SnapshotMetadata(string persistenceId, long sequenceNr, DateTime timestamp)
         {
             PersistenceId = persistenceId;
@@ -88,16 +88,19 @@ namespace Akka.Persistence
         /// <summary>
         /// Id of the persistent actor from which the snapshot was taken.
         /// </summary>
+        [Key(0)]
         public string PersistenceId { get; }
 
         /// <summary>
         /// Sequence number at which a snapshot was taken.
         /// </summary>
+        [Key(1)]
         public long SequenceNr { get; }
 
         /// <summary>
         /// Time at which the snapshot was saved.
         /// </summary>
+        [Key(2)]
         public DateTime Timestamp { get; }
 
         /// <inheritdoc/>
@@ -472,7 +475,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Selection criteria for loading and deleting a snapshots.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SnapshotSelectionCriteria : IEquatable<SnapshotSelectionCriteria>
     {
         /// <summary>
@@ -492,7 +495,7 @@ namespace Akka.Persistence
         /// <param name="maxTimeStamp">Upper bound for a selected snapshot's timestamp.</param>
         /// <param name="minSequenceNr">Lower bound for a selected snapshot's sequence number</param>
         /// <param name="minTimestamp">Lower bound for a selected snapshot's timestamp</param>
-        [JsonConstructor]
+        [SerializationConstructor]
         public SnapshotSelectionCriteria(long maxSequenceNr, DateTime maxTimeStamp, long minSequenceNr = 0L, DateTime? minTimestamp = null)
         {
             MaxSequenceNr = maxSequenceNr;
@@ -512,21 +515,25 @@ namespace Akka.Persistence
         /// <summary>
         /// Upper bound for a selected snapshot's sequence number.
         /// </summary>
+        [Key(0)]
         public long MaxSequenceNr { get; }
 
         /// <summary>
         /// Upper bound for a selected snapshot's timestamp.
         /// </summary>
+        [Key(1)]
         public DateTime MaxTimeStamp { get; }
 
         /// <summary>
         /// Lower bound for a selected snapshot's sequence number
         /// </summary>
+        [Key(2)]
         public long MinSequenceNr { get; }
 
         /// <summary>
         /// Lower bound for a selected snapshot's timestamp
         /// </summary>
+        [Key(3)]
         public DateTime? MinTimestamp { get; }
 
         internal SnapshotSelectionCriteria Limit(long toSequenceNr)

@@ -11,12 +11,14 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 using Akka.Actor;
+using MessagePack;
 
 namespace Akka.Remote
 {
     #region == class SeqNo ==
 
     /// <summary>Implements a 64-bit sequence number with proper overflow ordering</summary>
+    [MessagePackObject]
     internal sealed class SeqNo : IComparable<SeqNo>, IEquatable<SeqNo>
     {
         /// <summary>TBD</summary>
@@ -24,7 +26,8 @@ namespace Akka.Remote
         public SeqNo(long rawValue) => RawValue = rawValue;
 
         /// <summary>TBD</summary>
-        public long RawValue { get; private set; }
+        [Key(0)]
+        public readonly long RawValue;
 
         /// <summary>
         /// Checks if this sequence number is an immediate successor of the provided one.
@@ -201,6 +204,7 @@ namespace Akka.Remote
     #region == AckedDelivery message types ==
 
     /// <summary>TBD</summary>
+    [MessagePackObject]
     internal sealed class Ack
     {
         /// <summary>Class representing an acknowledgement with select negative acknowledgements.</summary>
@@ -209,6 +213,7 @@ namespace Akka.Remote
         /// Set of sequence numbers between the last delivered one and <paramref
         /// name="cumulativeAck"/> that has not been received.
         /// </param>
+        [SerializationConstructor]
         public Ack(SeqNo cumulativeAck, IEnumerable<SeqNo> nacks)
         {
             Nacks = new SortedSet<SeqNo>(nacks, SeqNo.Comparer);
@@ -220,10 +225,12 @@ namespace Akka.Remote
         public Ack(SeqNo cumulativeAck) : this(cumulativeAck, new List<SeqNo>()) { }
 
         /// <summary>TBD</summary>
-        public SeqNo CumulativeAck { get; }
+        [Key(0)]
+        public readonly SeqNo CumulativeAck;
 
         /// <summary>TBD</summary>
-        public SortedSet<SeqNo> Nacks { get; }
+        [Key(1)]
+        public readonly SortedSet<SeqNo> Nacks;
 
         /// <summary>Returns a <see cref="System.String"/> that represents this instance.</summary>
         /// <returns>A <see cref="System.String"/> that represents this instance.</returns>

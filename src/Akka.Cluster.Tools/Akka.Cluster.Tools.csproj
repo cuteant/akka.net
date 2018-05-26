@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Client\reference.conf;PublishSubscribe\reference.conf;Singleton\reference.conf" />
+    <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
     <ProjectReference Include="..\Akka.Cluster\Akka.Cluster.csproj" />
   </ItemGroup>
 

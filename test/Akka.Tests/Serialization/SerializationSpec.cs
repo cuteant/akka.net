@@ -11,6 +11,7 @@ using Akka.Configuration;
 using Akka.Dispatch.SysMsg;
 using Akka.Routing;
 using Akka.Serialization;
+using Akka.Util;
 using Akka.TestKit;
 using Akka.TestKit.TestActors;
 using Xunit;
@@ -153,6 +154,51 @@ namespace Akka.Tests.Serialization
         {
             public IActorRef ActorRef { get; set; }
         }
+        public class Poco : ISurrogated
+        {
+            public class Surrogate : ISurrogate
+            {
+                public string TheName { get; set; }
+                public ISurrogated FromSurrogate(ActorSystem system)
+                {
+                    return new Poco()
+                    {
+                        Name = TheName
+                    };
+                }
+            }
+            public string Name { get; set; }
+            public ISurrogate ToSurrogate(ActorSystem system)
+            {
+                return new Surrogate
+                {
+                    TheName = Name
+                };
+            }
+        }
+
+        [Fact]
+        public void CanSerializeArrayOfTypes()
+        {
+            var message = new[] { typeof(NullReferenceException), typeof(ArgumentException) };
+            var serializer = Sys.Serialization.FindSerializerFor(message);
+            var bytes = serializer.ToBinary(message);
+            var res = (Type[])serializer.FromBinary(bytes, typeof(Type[]));
+        }
+
+        [Fact]
+        public void CanSerializeSurrogate()
+        {
+            var message = new Poco
+            {
+                Name = "Foo"
+            };
+            var serializer = Sys.Serialization.FindSerializerFor(message);
+            var bytes = serializer.ToBinary(message);
+            var res = (Poco)serializer.FromBinary(bytes, typeof(Poco));
+
+            Assert.Equal(message.Name, res.Name);
+        }
 
         [Fact]
         public void Can_serialize_address_message()
@@ -245,7 +291,7 @@ namespace Akka.Tests.Serialization
             AssertEqual(message);        
         }
 
-        [Fact]
+        [Fact(Skip = "Not supported yet")]
         public void Can_serialize_immutable_messages_with_private_ctor()
         {
             var message = new ImmutableMessageWithPrivateCtor(Tuple.Create("aaa", "bbb"));
@@ -470,6 +516,31 @@ namespace Akka.Tests.Serialization
         }
 
         [Fact]
+        public void CanSerializeActorRefWithUID()
+        {
+            var aref = ActorOf<BlackHoleActor>();
+            var surrogate = aref.ToSurrogate(Sys) as ActorRefBase.Surrogate;
+            var uid = aref.Path.Uid;
+            Assert.Contains("#" + uid, surrogate.Path);
+        }
+
+        [Fact]
+        public void CanSerializeEmptyDecider()
+        {
+            var decider = Decider.From(
+                Directive.Restart,
+                Directive.Stop.When<NullReferenceException>(),
+                Directive.Escalate.When<Exception>()
+                );
+
+            var serializer = Sys.Serialization.FindSerializerFor(decider);
+            var bytes = serializer.ToBinary(decider);
+            var sref = (DeployableDecider)serializer.FromBinary(bytes, typeof(DeployableDecider));
+            Assert.NotNull(sref);
+            Assert.Equal(decider.DefaultDirective, sref.DefaultDirective);
+        }
+
+        [Fact]
         public void Can_serialize_Decider()
         {
             var decider = Decider.From(
@@ -538,7 +609,8 @@ namespace Akka.Tests.Serialization
             Sys.Serialization.FindSerializerFor(null).GetType().ShouldBe(typeof(NullSerializer));
             Sys.Serialization.FindSerializerFor(new byte[]{1,2,3}).GetType().ShouldBe(typeof(ByteArraySerializer));
             Sys.Serialization.FindSerializerFor("dummy").GetType().ShouldBe(typeof(DummySerializer));
-            Sys.Serialization.FindSerializerFor(123).GetType().ShouldBe(typeof(NewtonSoftJsonSerializer));
+            //Sys.Serialization.FindSerializerFor(123).GetType().ShouldBe(typeof(NewtonSoftJsonSerializer));
+            Sys.Serialization.FindSerializerFor(123).GetType().ShouldBe(typeof(MsgPackTypelessSerializer));
         }
 
         [Fact]

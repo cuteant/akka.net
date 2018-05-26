@@ -37,7 +37,7 @@ namespace Akka.Cluster.Serialization
                 [typeof(InternalClusterAction.Welcome)] = WelcomeFrom,
                 [typeof(ClusterUserAction.Leave)] = bytes => new ClusterUserAction.Leave(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
                 [typeof(ClusterUserAction.Down)] = bytes => new ClusterUserAction.Down(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
-                [typeof(InternalClusterAction.InitJoin)] = bytes => new InternalClusterAction.InitJoin(),
+                [typeof(InternalClusterAction.InitJoin)] = bytes => InternalClusterAction.InitJoin.Instance,
                 [typeof(InternalClusterAction.InitJoinAck)] = bytes => new InternalClusterAction.InitJoinAck(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
                 [typeof(InternalClusterAction.InitJoinNack)] = bytes => new InternalClusterAction.InitJoinNack(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
                 [typeof(InternalClusterAction.ExitingConfirmed)] = bytes => new InternalClusterAction.ExitingConfirmed(UniqueAddressFrom(Proto.Msg.UniqueAddress.Parser.ParseFrom(bytes))),

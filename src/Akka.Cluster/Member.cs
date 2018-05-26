@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Akka.Actor;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Cluster
 {
@@ -21,6 +22,7 @@ namespace Akka.Cluster
     /// NOTE: <see cref="GetHashCode"/> and <see cref="Equals"/> are solely based on the underlying <see cref="Address"/>, 
     /// not its <see cref="MemberStatus"/> and roles.
     /// </remarks>
+    [MessagePackObject]
     public class Member : IComparable<Member>, IComparable
     {
         /// <summary>
@@ -47,22 +49,26 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        public UniqueAddress UniqueAddress { get; }
+        [Key(0)]
+        public readonly UniqueAddress UniqueAddress;
 
         /// <summary>
         /// TBD
         /// </summary>
-        internal int UpNumber { get; }
+        [Key(1)]
+        internal readonly int UpNumber;
 
         /// <summary>
         /// The status of the current member.
         /// </summary>
-        public MemberStatus Status { get; }
+        [Key(2)]
+        public readonly MemberStatus Status;
 
         /// <summary>
         /// The set of roles for the current member. Can be empty.
         /// </summary>
-        public ImmutableHashSet<string> Roles { get; }
+        [Key(3)]
+        public readonly ImmutableHashSet<string> Roles;
 
         /// <summary>
         /// Creates a new <see cref="Member"/>.
@@ -84,7 +90,8 @@ namespace Akka.Cluster
         /// <param name="upNumber">The upNumber of the member, as assigned by the leader at the time the node joined the cluster.</param>
         /// <param name="status">The status of this member.</param>
         /// <param name="roles">The roles for this member. Can be empty.</param>
-        internal Member(UniqueAddress uniqueAddress, int upNumber, MemberStatus status, ImmutableHashSet<string> roles)
+        [SerializationConstructor]
+        public Member(UniqueAddress uniqueAddress, int upNumber, MemberStatus status, ImmutableHashSet<string> roles)
         {
             UniqueAddress = uniqueAddress;
             UpNumber = upNumber;
@@ -95,6 +102,7 @@ namespace Akka.Cluster
         /// <summary>
         /// The <see cref="Address"/> for this member.
         /// </summary>
+        [IgnoreMember]
         public Address Address { get { return UniqueAddress.Address; } }
 
         /// <inheritdoc cref="object.GetHashCode"/>
@@ -439,16 +447,19 @@ namespace Akka.Cluster
     /// The `uid` is needed to be able to distinguish different
     /// incarnations of a member with same hostname and port.
     /// </summary>
+    [MessagePackObject]
     public class UniqueAddress : IComparable<UniqueAddress>, IEquatable<UniqueAddress>, IComparable
     {
         /// <summary>
         /// The bound listening address for Akka.Remote.
         /// </summary>
+        [Key(0)]
         public Address Address { get; }
 
         /// <summary>
         /// A random long integer used to signal the incarnation of this cluster instance.
         /// </summary>
+        [Key(1)]
         public int Uid { get; }
 
         /// <summary>

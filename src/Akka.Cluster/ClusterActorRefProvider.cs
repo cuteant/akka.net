@@ -87,7 +87,7 @@ namespace Akka.Cluster
     /// <summary>
     /// This class represents a binding of an actor deployment to a cluster-aware system.
     /// </summary>
-    public class ClusterScope : Scope
+    public class ClusterScope : Scope, ISingletonMessage
     {
         private ClusterScope() { }
 

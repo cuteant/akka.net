@@ -14,6 +14,7 @@ using Akka.Actor;
 using Akka.Dispatch;
 using Akka.Event;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Cluster
 {
@@ -25,7 +26,7 @@ namespace Akka.Cluster
     /// cluster.Subscribe(actorRef, typeof(IClusterDomainEvent));
     /// </code>
     /// </summary>
-    public class ClusterEvent
+    public sealed class ClusterEvent
     {
         /// <summary>
         /// The mode for getting the current state of the cluster upon first subscribing.
@@ -67,14 +68,9 @@ namespace Akka.Cluster
         /// <summary>
         /// A snapshot of the current state of the <see cref="Cluster"/>
         /// </summary>
+        [MessagePackObject]
         public sealed class CurrentClusterState
         {
-            private readonly ImmutableSortedSet<Member> _members;
-            private readonly ImmutableHashSet<Member> _unreachable;
-            private readonly ImmutableHashSet<Address> _seenBy;
-            private readonly Address _leader;
-            private readonly ImmutableDictionary<string, Address> _roleLeaderMap;
-
             /// <summary>
             /// Creates a new instance of the current cluster state.
             /// </summary>
@@ -94,6 +90,7 @@ namespace Akka.Cluster
             /// <param name="seenBy">The set of nodes who have seen us.</param>
             /// <param name="leader">The leader of the cluster.</param>
             /// <param name="roleLeaderMap">The list of role leaders.</param>
+            [SerializationConstructor]
             public CurrentClusterState(
                 ImmutableSortedSet<Member> members,
                 ImmutableHashSet<Member> unreachable,
@@ -101,60 +98,51 @@ namespace Akka.Cluster
                 Address leader,
                 ImmutableDictionary<string, Address> roleLeaderMap)
             {
-                _members = members;
-                _unreachable = unreachable;
-                _seenBy = seenBy;
-                _leader = leader;
-                _roleLeaderMap = roleLeaderMap;
+                Members = members;
+                Unreachable = unreachable;
+                SeenBy = seenBy;
+                Leader = leader;
+                RoleLeaderMap = roleLeaderMap;
             }
 
             /// <summary>
             /// Get current member list
             /// </summary>
-            public ImmutableSortedSet<Member> Members
-            {
-                get { return _members; }
-            }
+            [Key(0)]
+            public readonly ImmutableSortedSet<Member> Members;
 
             /// <summary>
             /// Get current unreachable set
             /// </summary>
-            public ImmutableHashSet<Member> Unreachable
-            {
-                get { return _unreachable; }
-            }
+            [Key(1)]
+            public readonly ImmutableHashSet<Member> Unreachable;
 
             /// <summary>
             /// Get current "seen-by" set
             /// </summary>
-            public ImmutableHashSet<Address> SeenBy
-            {
-                get { return _seenBy; }
-            }
+            [Key(2)]
+            public readonly ImmutableHashSet<Address> SeenBy;
 
             /// <summary>
             /// Get address of current leader, or null if noe
             /// </summary>
-            public Address Leader
-            {
-                get { return _leader; }
-            }
+            [Key(3)]
+            public readonly Address Leader;
 
             /// <summary>
             /// All node roles in the cluster
             /// </summary>
+            [IgnoreMember]
             public ImmutableHashSet<string> AllRoles
             {
-                get { return _roleLeaderMap.Keys.ToImmutableHashSet(); }
+                get { return RoleLeaderMap.Keys.ToImmutableHashSet(); }
             }
 
             /// <summary>
             /// Needed internally inside the <see cref="ClusterReadView"/>
             /// </summary>
-            internal ImmutableDictionary<string, Address> RoleLeaderMap
-            {
-                get { return _roleLeaderMap; }
-            }
+            [Key(4)]
+            internal readonly ImmutableDictionary<string, Address> RoleLeaderMap;
 
             /// <summary>
             /// Get address of current leader, if any, within the role set
@@ -163,7 +151,7 @@ namespace Akka.Cluster
             /// <returns>The address of the node who is the real leader, if any. Otherwise <c>null</c>.</returns>
             public Address RoleLeader(string role)
             {
-                return _roleLeaderMap.GetOrElse(role, null);
+                return RoleLeaderMap.GetOrElse(role, null);
             }
 
             /// <summary>
@@ -184,11 +172,11 @@ namespace Akka.Cluster
                 ImmutableDictionary<string, Address> roleLeaderMap = null)
             {
                 return new CurrentClusterState(
-                    members ?? _members,
-                    unreachable ?? _unreachable,
-                    seenBy ?? _seenBy,
-                    leader ?? (_leader != null ? (Address)_leader.Clone() : null),
-                    roleLeaderMap ?? _roleLeaderMap);
+                    members ?? Members,
+                    unreachable ?? Unreachable,
+                    seenBy ?? SeenBy,
+                    leader ?? (Leader != null ? (Address)Leader.Clone() : null),
+                    roleLeaderMap ?? RoleLeaderMap);
             }
         }
 
@@ -210,13 +198,15 @@ namespace Akka.Cluster
         /// <summary>
         /// This class provides base functionality for defining state change events for cluster member nodes.
         /// </summary>
+        [Union(0, typeof(MemberJoined))]
+        [Union(1, typeof(MemberUp))]
+        [Union(2, typeof(MemberWeaklyUp))]
+        [Union(3, typeof(MemberLeft))]
+        [Union(4, typeof(MemberExited))]
+        [Union(5, typeof(MemberRemoved))]
+        [MessagePackObject]
         public abstract class MemberStatusChange : IMemberEvent
         {
-            /// <summary>
-            /// TBD
-            /// </summary>
-            protected readonly Member _member;
-
             /// <summary>
             /// Initializes a new instance of the <see cref="MemberStatusChange"/> class.
             /// </summary>
@@ -229,21 +219,19 @@ namespace Akka.Cluster
             {
                 if (member.Status != validStatus)
                     throw new ArgumentException($"Expected {validStatus} state, got: {member}");
-                _member = member;
+                Member = member;
             }
 
             /// <summary>
             /// The cluster member node that changed status.
             /// </summary>
-            public Member Member
-            {
-                get { return _member; }
-            }
+            [Key(0)]
+            public Member Member { get; }
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                if (obj is MemberStatusChange other) { return _member.Equals(other._member); }
+                if (obj is MemberStatusChange other) { return Member.Equals(other.Member); }
                 return false;
             }
 
@@ -253,7 +241,7 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash * 23 + _member.GetHashCode();
+                    hash = hash * 23 + Member.GetHashCode();
                     return hash;
                 }
             }
@@ -269,28 +257,30 @@ namespace Akka.Cluster
         /// This class represents a <see cref="MemberStatusChange"/> event where the
         /// cluster node changed its status to <see cref="MemberStatus.Joining"/>.
         /// </summary>
+        [MessagePackObject]
         public sealed class MemberJoined : MemberStatusChange
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="MemberJoined"/> class.
             /// </summary>
             /// <param name="member">The node that changed state.</param>
-            public MemberJoined(Member member)
-                : base(member, MemberStatus.Joining) { }
+            [SerializationConstructor]
+            public MemberJoined(Member member) : base(member, MemberStatus.Joining) { }
         }
 
         /// <summary>
         /// This class represents a <see cref="MemberStatusChange"/> event where the
         /// cluster node changed its status to <see cref="MemberStatus.Up"/>.
         /// </summary>
+        [MessagePackObject]
         public sealed class MemberUp : MemberStatusChange
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="MemberUp"/> class.
             /// </summary>
             /// <param name="member">The node that changed state.</param>
-            public MemberUp(Member member)
-                : base(member, MemberStatus.Up) { }
+            [SerializationConstructor]
+            public MemberUp(Member member) : base(member, MemberStatus.Up) { }
         }
 
         /// <summary>
@@ -299,28 +289,30 @@ namespace Akka.Cluster
         /// cannot be reached, i.e. there are unreachable nodes.
         /// It will be moved to <see cref="MemberStatus.Up"/> when convergence is reached.
         /// </summary>
+        [MessagePackObject]
         public sealed class MemberWeaklyUp : MemberStatusChange
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="MemberWeaklyUp"/> class.
             /// </summary>
             /// <param name="member">The node that changed state.</param>
-            public MemberWeaklyUp(Member member)
-                : base(member, MemberStatus.WeaklyUp) { }
+            [SerializationConstructor]
+            public MemberWeaklyUp(Member member) : base(member, MemberStatus.WeaklyUp) { }
         }
 
         /// <summary>
         /// This class represents a <see cref="MemberStatusChange"/> event where the
         /// cluster node changed its status to <see cref="MemberStatus.Leaving"/>.
         /// </summary>
+        [MessagePackObject]
         public sealed class MemberLeft : MemberStatusChange
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="MemberJoined"/> class.
             /// </summary>
             /// <param name="member">The node that changed state.</param>
-            public MemberLeft(Member member)
-                : base(member, MemberStatus.Leaving) { }
+            [SerializationConstructor]
+            public MemberLeft(Member member) : base(member, MemberStatus.Leaving) { }
         }
 
         /// <summary>
@@ -328,16 +320,15 @@ namespace Akka.Cluster
         /// cluster node changed its status to <see cref="MemberStatus.Exiting"/>.
         /// The node is removed when all members have seen the <see cref="MemberStatus.Exiting"/> status.
         /// </summary>
+        [MessagePackObject]
         public sealed class MemberExited : MemberStatusChange
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="MemberJoined"/> class.
             /// </summary>
             /// <param name="member">The node that changed state.</param>
-            public MemberExited(Member member)
-                : base(member, MemberStatus.Exiting)
-            {
-            }
+            [SerializationConstructor]
+            public MemberExited(Member member) : base(member, MemberStatus.Exiting) { }
         }
 
         /// <summary>
@@ -354,17 +345,14 @@ namespace Akka.Cluster
         /// the node was removed after graceful leaving and exiting.
         /// </para>
         /// </summary>
+        [MessagePackObject]
         public sealed class MemberRemoved : MemberStatusChange
         {
-            readonly MemberStatus _previousStatus;
-
             /// <summary>
             /// The status of the node before the state change event.
             /// </summary>
-            public MemberStatus PreviousStatus
-            {
-                get { return _previousStatus; }
-            }
+            [Key(1)]
+            public readonly MemberStatus PreviousStatus;
 
             /// <summary>
             /// Initializes a new instance of the <see cref="MemberRemoved"/> class.
@@ -374,12 +362,13 @@ namespace Akka.Cluster
             /// <exception cref="ArgumentException">
             /// This exception is thrown if the node's current status doesn't match the <see cref="MemberStatus.Removed"/> status.
             /// </exception>
+            [SerializationConstructor]
             public MemberRemoved(Member member, MemberStatus previousStatus)
                 : base(member, MemberStatus.Removed)
             {
                 if (member.Status != MemberStatus.Removed)
                     throw new ArgumentException($"Expected Removed status, got {member}");
-                _previousStatus = previousStatus;
+                PreviousStatus = previousStatus;
             }
 
             /// <inheritdoc/>
@@ -387,7 +376,7 @@ namespace Akka.Cluster
             {
                 if (obj is MemberRemoved other)
                 {
-                    return _member.Equals(other._member) && _previousStatus == other._previousStatus;
+                    return Member.Equals(other.Member) && PreviousStatus == other.PreviousStatus;
                 }
                 return false;
             }
@@ -399,7 +388,7 @@ namespace Akka.Cluster
                 {
                     var hash = 17;
                     hash = hash * +base.GetHashCode();
-                    hash = hash * 23 + _previousStatus.GetHashCode();
+                    hash = hash * 23 + PreviousStatus.GetHashCode();
                     return hash;
                 }
             }
@@ -409,33 +398,31 @@ namespace Akka.Cluster
         /// Leader of the cluster members changed. Published when the state change
         /// is first seen on a node.
         /// </summary>
+        [MessagePackObject]
         public sealed class LeaderChanged : IClusterDomainEvent
         {
-            private readonly Address _leader;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="leader">TBD</param>
+            [SerializationConstructor]
             public LeaderChanged(Address leader)
             {
-                _leader = leader;
+                Leader = leader;
             }
 
             /// <summary>
             /// Address of current leader, or null if none
             /// </summary>
-            public Address Leader
-            {
-                get { return _leader; }
-            }
+            [Key(0)]
+            public readonly Address Leader;
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
                 if (obj is LeaderChanged other)
                 {
-                    return (_leader == null && other._leader == null) || (_leader != null && _leader.Equals(other._leader));
+                    return (Leader == null && other.Leader == null) || (Leader != null && Leader.Equals(other.Leader));
                 }
                 return false;
             }
@@ -446,7 +433,7 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash * 23 + (_leader == null ? 0 : _leader.GetHashCode());
+                    hash = hash * 23 + (Leader == null ? 0 : Leader.GetHashCode());
                     return hash;
                 }
             }
@@ -462,37 +449,32 @@ namespace Akka.Cluster
         /// First member (leader) of the members within a role set changed.
         /// Published when the state change is first seen on a node.
         /// </summary>
+        [MessagePackObject]
         public sealed class RoleLeaderChanged : IClusterDomainEvent
         {
-            private readonly Address _leader;
-            private readonly string _role;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="role">TBD</param>
             /// <param name="leader">TBD</param>
+            [SerializationConstructor]
             public RoleLeaderChanged(string role, Address leader)
             {
-                _role = role;
-                _leader = leader;
-            }
-
-            /// <summary>
-            /// Address of current leader, or null if none
-            /// </summary>
-            public Address Leader
-            {
-                get { return _leader; }
+                Role = role;
+                Leader = leader;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public string Role
-            {
-                get { return _role; }
-            }
+            [Key(0)]
+            public readonly string Role;
+
+            /// <summary>
+            /// Address of current leader, or null if none
+            /// </summary>
+            [Key(1)]
+            public readonly Address Leader;
 
             /// <inheritdoc/>
             public override int GetHashCode()
@@ -500,8 +482,8 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash * 23 + _role.GetHashCode();
-                    hash = hash * 23 + (_leader == null ? 0 : _leader.GetHashCode());
+                    hash = hash * 23 + Role.GetHashCode();
+                    hash = hash * 23 + (Leader == null ? 0 : Leader.GetHashCode());
                     return hash;
                 }
             }
@@ -511,8 +493,8 @@ namespace Akka.Cluster
             {
                 if (obj is RoleLeaderChanged other)
                 {
-                    return _role.Equals(other._role)
-                        && ((_leader == null && other._leader == null) || (_leader != null && _leader.Equals(other._leader)));
+                    return Role.Equals(other.Role)
+                        && ((Leader == null && other.Leader == null) || (Leader != null && Leader.Equals(other.Leader)));
                 }
                 return false;
             }
@@ -527,7 +509,7 @@ namespace Akka.Cluster
         /// <summary>
         /// Indicates that the <see cref="Cluster"/> plugin is shutting down.
         /// </summary>
-        public sealed class ClusterShuttingDown : IClusterDomainEvent, IDeadLetterSuppression
+        public sealed class ClusterShuttingDown : IClusterDomainEvent, IDeadLetterSuppression, ISingletonMessage
         {
             private ClusterShuttingDown()
             {
@@ -556,33 +538,32 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [Union(0, typeof(UnreachableMember))]
+        [Union(1, typeof(ReachableMember))]
+        [MessagePackObject]
         public abstract class ReachabilityEvent : IReachabilityEvent
         {
-            private readonly Member _member;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="member">TBD</param>
             protected ReachabilityEvent(Member member)
             {
-                _member = member;
+                Member = member;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Member Member
-            {
-                get { return _member; }
-            }
+            [Key(0)]
+            public readonly Member Member;
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
                 if (obj is ReachabilityEvent other)
                 {
-                    return _member.Equals(other._member);
+                    return Member.Equals(other.Member);
                 }
                 return false;
             }
@@ -593,7 +574,7 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash * 23 + _member.GetHashCode();
+                    hash = hash * 23 + Member.GetHashCode();
                     return hash;
                 }
             }
@@ -608,12 +589,14 @@ namespace Akka.Cluster
         /// <summary>
         /// A member is considered as unreachable by the failure detector.
         /// </summary>
+        [MessagePackObject]
         public sealed class UnreachableMember : ReachabilityEvent
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="member">TBD</param>
+            [SerializationConstructor]
             public UnreachableMember(Member member)
                 : base(member)
             {
@@ -625,12 +608,14 @@ namespace Akka.Cluster
         /// after having been unreachable.
         /// <see cref="Akka.Cluster.ClusterEvent.UnreachableMember"/>
         /// </summary>
+        [MessagePackObject]
         public sealed class ReachableMember : ReachabilityEvent
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="member">TBD</param>
+            [SerializationConstructor]
             public ReachableMember(Member member)
                 : base(member)
             {
@@ -640,44 +625,39 @@ namespace Akka.Cluster
         /// <summary>
         /// The nodes that have seen current version of the Gossip.
         /// </summary>
+        [MessagePackObject]
         internal sealed class SeenChanged : IClusterDomainEvent
         {
-            private readonly bool _convergence;
-            private readonly ImmutableHashSet<Address> _seenBy;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="convergence">TBD</param>
             /// <param name="seenBy">TBD</param>
+            [SerializationConstructor]
             public SeenChanged(bool convergence, ImmutableHashSet<Address> seenBy)
             {
-                _convergence = convergence;
-                _seenBy = seenBy;
+                Convergence = convergence;
+                SeenBy = seenBy;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public bool Convergence
-            {
-                get { return _convergence; }
-            }
+            [Key(0)]
+            public readonly bool Convergence;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public ImmutableHashSet<Address> SeenBy
-            {
-                get { return _seenBy; }
-            }
+            [Key(1)]
+            public readonly ImmutableHashSet<Address> SeenBy;
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
                 if (obj is SeenChanged other)
                 {
-                    return _convergence.Equals(other._convergence) && _seenBy.SequenceEqual(other._seenBy);
+                    return Convergence.Equals(other.Convergence) && SeenBy.SequenceEqual(other.SeenBy);
                 }
                 return false;
             }
@@ -688,9 +668,9 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash * 23 + _convergence.GetHashCode();
+                    hash = hash * 23 + Convergence.GetHashCode();
 
-                    foreach (var t in _seenBy)
+                    foreach (var t in SeenBy)
                     {
                         hash = hash * 23 + t.GetHashCode();
                     }
@@ -703,31 +683,29 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         internal sealed class ReachabilityChanged : IClusterDomainEvent
         {
-            private readonly Reachability _reachability;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="reachability">TBD</param>
+            [SerializationConstructor]
             public ReachabilityChanged(Reachability reachability)
             {
-                _reachability = reachability;
+                Reachability = reachability;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Reachability Reachability
-            {
-                get { return _reachability; }
-            }
+            [Key(0)]
+            public readonly Reachability Reachability;
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
-                if (obj is ReachabilityChanged other) { return _reachability.Equals(other._reachability); }
+                if (obj is ReachabilityChanged other) { return Reachability.Equals(other.Reachability); }
                 return false;
             }
 
@@ -737,7 +715,7 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash * 23 + _reachability.GetHashCode();
+                    hash = hash * 23 + Reachability.GetHashCode();
                     return hash;
                 }
             }
@@ -746,37 +724,32 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         internal sealed class CurrentInternalStats : IClusterDomainEvent
         {
-            private readonly GossipStats _gossipStats;
-            private readonly VectorClockStats _vclockStats;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="gossipStats">TBD</param>
             /// <param name="vclockStats">TBD</param>
+            [SerializationConstructor]
             public CurrentInternalStats(GossipStats gossipStats, VectorClockStats vclockStats)
             {
-                _gossipStats = gossipStats;
-                _vclockStats = vclockStats;
+                GossipStats = gossipStats;
+                SeenBy = vclockStats;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public GossipStats GossipStats
-            {
-                get { return _gossipStats; }
-            }
+            [Key(0)]
+            public readonly GossipStats GossipStats;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public VectorClockStats SeenBy
-            {
-                get { return _vclockStats; }
-            }
+            [Key(1)]
+            public readonly VectorClockStats SeenBy;
 
             /// <inheritdoc/>
             public override int GetHashCode()
@@ -784,8 +757,8 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash * 23 + _gossipStats.GetHashCode();
-                    hash = hash * 23 + _vclockStats.GetHashCode();
+                    hash = hash * 23 + GossipStats.GetHashCode();
+                    hash = hash * 23 + SeenBy.GetHashCode();
                     return hash;
                 }
             }
@@ -795,7 +768,7 @@ namespace Akka.Cluster
             {
                 if (obj is CurrentInternalStats other)
                 {
-                    return _gossipStats.Equals(other._gossipStats) && _vclockStats.Equals(other._vclockStats);
+                    return GossipStats.Equals(other.GossipStats) && SeenBy.Equals(other.SeenBy);
                 }
                 return false;
             }

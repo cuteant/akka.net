@@ -21,7 +21,17 @@ namespace Akka.Tests.Serialization
         [Fact]
         public void Json_serializer_should_have_correct_defaults()
         {
-            using (var system = ActorSystem.Create(nameof(NewtonsoftJsonConfigSpec)))
+            var config = ConfigurationFactory.ParseString(@"
+                akka.actor {
+                    serializers {
+                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json""
+                    }
+                    serialization-bindings {
+                        ""System.Object"" = json
+                    }
+                }
+            ");
+            using (var system = ActorSystem.Create(nameof(NewtonsoftJsonConfigSpec), config))
             {
                 var serializer = (NewtonSoftJsonSerializer)system.Serialization.FindSerializerForType(typeof(object));
                 Assert.Equal(TypeNameHandling.All, serializer.Settings.TypeNameHandling);
@@ -37,6 +47,12 @@ namespace Akka.Tests.Serialization
         {
             var config = ConfigurationFactory.ParseString(@"
                 akka.actor {
+                    serializers {
+                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json""
+                    }
+                    serialization-bindings {
+                        ""System.Object"" = json
+                    }
                     serialization-settings.json {
                         preserve-object-references = false
                         encode-type-names = false
@@ -59,6 +75,12 @@ namespace Akka.Tests.Serialization
         {
             var config = ConfigurationFactory.ParseString(@"
                 akka.actor {
+                    serializers {
+                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json""
+                    }
+                    serialization-bindings {
+                        ""System.Object"" = json
+                    }
                     serialization-settings.json {
                         converters = [   
                             ""Akka.Tests.Serialization.DummyConverter, Akka.Tests""

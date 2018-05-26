@@ -9,7 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Newtonsoft.Json;
+using System.Runtime.Serialization;
+//using Newtonsoft.Json;
 using System.Text.RegularExpressions;
 
 namespace Akka.Configuration.Hocon
@@ -47,7 +48,8 @@ namespace Akka.Configuration.Hocon
         /// Retrieves the underlying map that contains the barebones
         /// object values.
         /// </summary>
-        [JsonIgnore]
+        //[JsonIgnore]
+        [IgnoreDataMember]
         public IDictionary<string, object> Unwrapped
         {
             get

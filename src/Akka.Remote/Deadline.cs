@@ -6,27 +6,34 @@
 //-----------------------------------------------------------------------
 
 using System;
+using MessagePack;
 
 namespace Akka.Remote
 {
     /// <summary>This class represents the latest date or time by which an operation should be completed.</summary>
+    [MessagePackObject]
     public sealed class Deadline
     {
         /// <summary>Initializes a new instance of the <see cref="Deadline"/> class.</summary>
         /// <param name="when">The <see cref="DateTime"/> that the deadline is due.</param>
+        [SerializationConstructor]
         public Deadline(DateTime when) => When = when;
 
         /// <summary>Determines whether the deadline has past.</summary>
+        [IgnoreMember]
         public bool IsOverdue => DateTime.UtcNow > When;
 
         /// <summary>Determines whether there is still time left until the deadline.</summary>
+        [IgnoreMember]
         public bool HasTimeLeft => DateTime.UtcNow < When;
 
         /// <summary>The <see cref="DateTime"/> that the deadline is due.</summary>
-        public DateTime When { get; private set; }
+        [Key(0)]
+        public readonly DateTime When;
 
         /// <summary><para>The amount of time left until the deadline is reached.</para>
         /// <note>Warning: creates a new <see cref="TimeSpan"/> instance each time it's used </note>.</summary>
+        [IgnoreMember]
         public TimeSpan TimeLeft { get { return When - DateTime.UtcNow; } }
 
         #region Overrides

@@ -326,7 +326,7 @@ namespace Akka.Actor
         private ActorBase NewActor()
         {
             PrepareForNewActor();
-            ActorBase instance=null;
+            ActorBase instance = null;
             //set the thread static context or things will break
             UseThreadContext(() =>
             {

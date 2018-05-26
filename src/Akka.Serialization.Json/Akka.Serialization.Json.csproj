@@ -5,7 +5,7 @@
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
     <RootNamespace>Akka.Serialization</RootNamespace>
-    <AssemblyName>Akka.Serialization.MessagePack</AssemblyName>
+    <AssemblyName>Akka.Serialization.Json</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
   </PropertyGroup>
@@ -13,15 +13,14 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageId>Akka.Serialization.MessagePack.Unofficial</PackageId>
-    <Title>Akka.Serialization.MessagePack (Unofficial)</Title>
-    <Description>MessagePack serializer for Akka.NET</Description>
-    <PackageTags>akka;actors;actor model;Akka;concurrency;messagepack;serializer;serialization</PackageTags>
+    <PackageId>Akka.Serialization.Json.Unofficial</PackageId>
+    <Title>Akka.Serialization.Json (Unofficial)</Title>
+    <Description>Json serializer for Akka.NET</Description>
+    <PackageTags>akka;actors;actor model;Akka;concurrency;json;serializer;serialization</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CuteAnt.Extensions.Serialization.MessagePack" Version="$(CuteAntExtensionsSerializationMessagePackPackageVersion)" />
-    <PackageReference Include="MessagePack.Hyperion" Version="$(MessagePackHyperionPackageVersion)" />
+    <PackageReference Include="CuteAnt.Extensions.Serialization" Version="$(CuteAntExtensionsSerializationPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

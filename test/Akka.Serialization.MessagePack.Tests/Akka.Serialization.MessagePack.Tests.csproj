@@ -8,8 +8,8 @@
   </PropertyGroup>
  
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Akka.Serialization.MessagePack\Akka.Serialization.MessagePack.csproj" />
     <ProjectReference Include="..\..\src\Akka.Serialization.TestKit\Akka.Serialization.TestKit.csproj" />
+    <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
   </ItemGroup>
 
   <ItemGroup>

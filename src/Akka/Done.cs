@@ -13,7 +13,7 @@ namespace Akka
     /// Used with <see cref="Task"/> instances to signal completion,
     /// but there is no actual value completed. 
     /// </summary>
-    public sealed class Done
+    public sealed class Done : ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="Done"/>

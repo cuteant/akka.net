@@ -14,7 +14,7 @@ namespace Akka.Actor
     /// <see cref="ActorBase.SetReceiveTimeout">SetReceiveTimeout</see>
     /// and no message has been sent to the actor during the specified amount of time.
     /// </summary>
-    public class ReceiveTimeout : IPossiblyHarmful
+    public sealed class ReceiveTimeout : IPossiblyHarmful, ISingletonMessage
     {
         private ReceiveTimeout() { }
 

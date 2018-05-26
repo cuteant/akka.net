@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using Akka.Event;
+using MessagePack;
 
 namespace Akka.Actor
 {
@@ -21,6 +22,7 @@ namespace Akka.Actor
     /// Terminated message can't be forwarded to another actor, since that actor might not be watching the subject.
     /// Instead, if you need to forward Terminated to another actor you should send the information in your own message.
     /// </summary>
+    [MessagePackObject]
     public sealed class Terminated : IAutoReceivedMessage, IPossiblyHarmful, IDeadLetterSuppression, INoSerializationVerificationNeeded
     {
         /// <summary>
@@ -39,19 +41,22 @@ namespace Akka.Actor
         /// <summary>
         /// The watched actor that terminated
         /// </summary>
+        [Key(0)]
         public IActorRef ActorRef { get; }
+
+        /// <summary>
+        /// The Terminated message was derived from that the remote node hosting the watched actor was detected as unreachable
+        /// </summary>
+        [Key(1)]
+        public bool ExistenceConfirmed { get; }
 
         /// <summary>
         /// Is false when the Terminated message was not sent
         /// directly from the watched actor, but derived from another source, such as 
         /// when watching a non-local ActorRef, which might not have been resolved
         /// </summary>
+        [Key(2)]
         public bool AddressTerminated { get; }
-
-        /// <summary>
-        /// The Terminated message was derived from that the remote node hosting the watched actor was detected as unreachable
-        /// </summary>
-        public bool ExistenceConfirmed { get; }
 
         /// <summary>
         /// Returns a <see cref="string" /> that represents this instance.
@@ -66,6 +71,7 @@ namespace Akka.Actor
     /// <summary>
     /// Request to an <see cref="ICanTell"/> to get back the identity of the underlying actors.
     /// </summary>
+    [MessagePackObject]
     public sealed class Identify : IAutoReceivedMessage, INotInfluenceReceiveTimeout
     {
         /// <summary>
@@ -80,6 +86,7 @@ namespace Akka.Actor
         /// <summary>
         /// A correlating ID used to distinguish multiple <see cref="Identify"/> requests to the same receiver.
         /// </summary>
+        [Key(0)]
         public object MessageId { get; }
 
         #region Equals
@@ -113,6 +120,7 @@ namespace Akka.Actor
     /// <summary>
     /// Response to the <see cref="Identify"/> message, get identity by Sender
     /// </summary>
+    [MessagePackObject]
     public sealed class ActorIdentity
     {
         /// <summary>
@@ -129,12 +137,14 @@ namespace Akka.Actor
         /// <summary>
         /// The same correlating ID used in the original <see cref="Identify"/> message.
         /// </summary>
+        [Key(0)]
         public object MessageId { get; }
 
         /// <summary>
         /// A reference to the underyling actor.
         /// </summary>
         /// <remarks>Will be <c>null</c> if sent an <see cref="ActorSelection"/> that could not be resolved.</remarks>
+        [Key(1)]
         public IActorRef Subject { get; }
 
         #region Equals
@@ -225,7 +235,8 @@ namespace Akka.Actor
     /// The watcher <see cref="DeathWatch"/> subscribes to the <see cref="AddressTerminatedTopic"/> and translates this
     /// event to <see cref="Terminated"/>, which is sent to itself.
     /// </summary>
-    internal class AddressTerminated : IAutoReceivedMessage, IPossiblyHarmful, IDeadLetterSuppression
+    [MessagePackObject]
+    internal sealed class AddressTerminated : IAutoReceivedMessage, IPossiblyHarmful, IDeadLetterSuppression
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="AddressTerminated" /> class.
@@ -239,6 +250,7 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public Address Address { get; }
 
         /// <inheritdoc/>

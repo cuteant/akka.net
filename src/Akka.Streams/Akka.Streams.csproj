@@ -21,6 +21,7 @@
 
   <ItemGroup>
     <PackageReference Include="Reactive.Streams" Version="$(ReactiveStreamsPackageVersion)" />
+    <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
   </ItemGroup>
   <ItemGroup>
     <EmbeddedResource Include="reference.conf" />

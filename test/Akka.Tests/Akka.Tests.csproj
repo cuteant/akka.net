@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <Content Include="App.config" />
+    <ProjectReference Include="..\..\src\Akka.Serialization.Json\Akka.Serialization.Json.csproj" />
     <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
     <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
   </ItemGroup>

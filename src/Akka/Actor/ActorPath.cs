@@ -9,8 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.Serialization;
 using Akka.Util;
-using Newtonsoft.Json;
+//using Newtonsoft.Json;
 using static System.String;
 
 namespace Akka.Actor
@@ -564,7 +565,8 @@ namespace Akka.Actor
         public override IReadOnlyList<string> Elements => EmptyElements;
 
         /// <inheritdoc/>
-        [JsonIgnore]
+        //[JsonIgnore]
+        [IgnoreDataMember]
         public override ActorPath Root => this;
 
         /// <inheritdoc/>

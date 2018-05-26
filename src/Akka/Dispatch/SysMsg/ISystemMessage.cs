@@ -861,7 +861,7 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     /// TBD
     /// </summary>
-    public sealed class RegisterTerminationHook
+    public sealed class RegisterTerminationHook : ISingletonMessage
     {
         private RegisterTerminationHook() { }
 
@@ -883,7 +883,7 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     /// TBD
     /// </summary>
-    public sealed class TerminationHook
+    public sealed class TerminationHook : ISingletonMessage
     {
         private TerminationHook() { }
 
@@ -905,7 +905,7 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     ///     Class Terminate.
     /// </summary>
-    public sealed class TerminationHookDone
+    public sealed class TerminationHookDone : ISingletonMessage
     {
         private TerminationHookDone() { }
 

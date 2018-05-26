@@ -9,6 +9,7 @@ using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Annotations;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Event
 {
@@ -97,12 +98,14 @@ namespace Akka.Event
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Register
+        [MessagePackObject]
+        internal sealed class Register
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="actor">TBD</param>
+            [SerializationConstructor]
             public Register(IActorRef actor)
             {
                 Actor = actor;
@@ -111,19 +114,22 @@ namespace Akka.Event
             /// <summary>
             /// TBD
             /// </summary>
-            public IActorRef Actor { get; private set; }
+            [Key(0)]
+            public IActorRef Actor { get; }
         }
 
 
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Terminated
+        [MessagePackObject]
+        internal sealed class Terminated
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="actor">TBD</param>
+            [SerializationConstructor]
             public Terminated(IActorRef actor)
             {
                 Actor = actor;
@@ -132,18 +138,21 @@ namespace Akka.Event
             /// <summary>
             /// TBD
             /// </summary>
-            public IActorRef Actor { get; private set; }
+            [Key(0)]
+            public IActorRef Actor { get; }
         }
 
         /// <summary>
         /// TBD
         /// </summary>
-        internal class UnregisterIfNoMoreSubscribedChannels
+        [MessagePackObject]
+        internal sealed class UnregisterIfNoMoreSubscribedChannels
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="actor">TBD</param>
+            [SerializationConstructor]
             public UnregisterIfNoMoreSubscribedChannels(IActorRef actor)
             {
                 Actor = actor;
@@ -152,7 +161,8 @@ namespace Akka.Event
             /// <summary>
             /// TBD
             /// </summary>
-            public IActorRef Actor { get; private set; }
+            [Key(0)]
+            public IActorRef Actor { get; }
         }
     }
 

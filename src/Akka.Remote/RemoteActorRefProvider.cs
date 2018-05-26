@@ -715,7 +715,7 @@ namespace Akka.Remote
                 StartWith(TerminatorState.Uninitialized, null);
             }
 
-            public sealed class TransportShutdown
+            public sealed class TransportShutdown : ISingletonMessage
             {
                 private TransportShutdown() { }
 

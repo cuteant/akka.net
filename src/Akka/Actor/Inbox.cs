@@ -11,12 +11,15 @@ using System.Collections.Generic;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor.Internal;
+using MessagePack;
 
 namespace Akka.Actor
 {
     /// <summary>
     /// TBD
     /// </summary>
+    [Union(0, typeof(Get))]
+    [Union(1, typeof(Select))]
     internal interface IQuery
     {
         /// <summary>
@@ -38,6 +41,7 @@ namespace Akka.Actor
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     internal struct Get : IQuery
     {
         /// <summary>
@@ -45,6 +49,7 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="deadline">TBD</param>
         /// <param name="client">TBD</param>
+        [SerializationConstructor]
         public Get(TimeSpan deadline, IActorRef client = null)
             : this()
         {
@@ -55,10 +60,12 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public TimeSpan Deadline { get; private set; }
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public IActorRef Client { get; private set; }
         /// <summary>
         /// TBD
@@ -74,6 +81,7 @@ namespace Akka.Actor
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     internal struct Select : IQuery
     {
         /// <summary>
@@ -82,6 +90,7 @@ namespace Akka.Actor
         /// <param name="deadline">TBD</param>
         /// <param name="predicate">TBD</param>
         /// <param name="client">TBD</param>
+        [SerializationConstructor]
         public Select(TimeSpan deadline, Predicate<object> predicate, IActorRef client = null)
             : this()
         {
@@ -93,15 +102,18 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        public TimeSpan Deadline { get; private set; }
+        [Key(0)]
+        public TimeSpan Deadline { get; }
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public Predicate<object> Predicate { get; set; }
         /// <summary>
         /// TBD
         /// </summary>
-        public IActorRef Client { get; private set; }
+        [Key(2)]
+        public IActorRef Client { get; }
         /// <summary>
         /// TBD
         /// </summary>
@@ -116,6 +128,7 @@ namespace Akka.Actor
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     internal struct StartWatch
     {
         /// <summary>
@@ -123,6 +136,7 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="target">TBD</param>
         /// <param name="message">TBD</param>
+        [SerializationConstructor]
         public StartWatch(IActorRef target, object message)
             : this()
         {
@@ -133,24 +147,28 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        public IActorRef Target { get; private set; }
+        [Key(0)]
+        public IActorRef Target { get; }
 
         /// <summary>
         /// The custom termination message or null
         /// </summary>
-        public object Message { get; private set; }
+        [Key(1)]
+        public object Message { get; }
     }
 
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     internal struct StopWatch
     {
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="target">TBD</param>
-        public StopWatch(IActorRef target) 
+        [SerializationConstructor]
+        public StopWatch(IActorRef target)
             : this()
         {
             Target = target;
@@ -159,7 +177,8 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        public IActorRef Target { get; private set; }
+        [Key(0)]
+        public IActorRef Target { get; }
     }
 
     internal struct Kick { }
@@ -296,7 +315,7 @@ namespace Akka.Actor
                 return item;
             }
 
-            return default(T);
+            return default;
         }
 
         /// <summary>
@@ -314,12 +333,10 @@ namespace Akka.Actor
     /// </summary>
     internal class DeadlineComparer : IComparer<IQuery>
     {
-        private static readonly DeadlineComparer _instance = new DeadlineComparer();
-
         /// <summary>
         /// The singleton instance of this comparer
         /// </summary>
-        public static DeadlineComparer Instance { get { return _instance; } }
+        public static readonly DeadlineComparer Instance = new DeadlineComparer();
 
         private DeadlineComparer()
         {
@@ -434,7 +451,7 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         public IActorRef Receiver { get; private set; }
-        
+
         /// <summary>
         /// Make the inbox’s actor watch the <paramref name="subject"/> actor such that 
         /// reception of the <see cref="Terminated"/> message can then be awaited.

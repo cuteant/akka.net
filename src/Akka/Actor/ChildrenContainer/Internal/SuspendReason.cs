@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using MessagePack;
 
 namespace Akka.Actor.Internal
 {
@@ -29,6 +30,7 @@ namespace Akka.Actor.Internal
         /// TBD
         /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
         /// </summary>
+        [MessagePackObject]
         public class Creation : SuspendReason, IWaitingForChildren
         {
             //Intentionally left blank
@@ -38,6 +40,7 @@ namespace Akka.Actor.Internal
         /// TBD
         /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
         /// </summary>
+        [MessagePackObject]
         public class Recreation : SuspendReason, IWaitingForChildren
         {
             /// <summary>
@@ -49,6 +52,7 @@ namespace Akka.Actor.Internal
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public Exception Cause { get; }
         }
 
@@ -56,7 +60,7 @@ namespace Akka.Actor.Internal
         /// TBD
         /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
         /// </summary>
-        public class Termination : SuspendReason
+        public class Termination : SuspendReason, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -69,7 +73,7 @@ namespace Akka.Actor.Internal
         /// TBD
         /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
         /// </summary>
-        public class UserRequest : SuspendReason
+        public class UserRequest : SuspendReason, ISingletonMessage
         {
             /// <summary>
             /// TBD

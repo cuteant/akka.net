@@ -12,12 +12,12 @@ namespace Akka.TestKit
     /// <summary>
     /// TBD
     /// </summary>
-    public sealed class NullMessageEnvelope : MessageEnvelope
+    public sealed class NullMessageEnvelope : MessageEnvelope, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static NullMessageEnvelope Instance=new NullMessageEnvelope();
+        public static NullMessageEnvelope Instance = new NullMessageEnvelope();
 
         private NullMessageEnvelope(){}
 

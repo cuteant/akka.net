@@ -90,6 +90,7 @@ namespace Akka.Remote.TestKit
         /// <summary>
         /// This exception is thrown when a client has disconnected.
         /// </summary>
+        [Serializable]
         public class ClientDisconnectedException : AkkaException
         {
             /// <summary>

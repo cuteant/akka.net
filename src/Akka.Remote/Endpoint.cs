@@ -19,6 +19,7 @@ using Akka.Remote.Transport;
 using Akka.Util;
 using Akka.Util.Internal;
 using Google.Protobuf;
+using MessagePack;
 using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
 
 namespace Akka.Remote
@@ -323,7 +324,7 @@ namespace Akka.Remote
         #region - Internal message classes -
 
         /// <summary>TBD</summary>
-        public class IsIdle
+        public class IsIdle : ISingletonMessage
         {
             /// <summary>TBD</summary>
             public static readonly IsIdle Instance = new IsIdle();
@@ -332,7 +333,7 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
-        public class Idle
+        public class Idle : ISingletonMessage
         {
             /// <summary>TBD</summary>
             public static readonly Idle Instance = new Idle();
@@ -341,7 +342,7 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
-        public class TooLongIdle
+        public class TooLongIdle : ISingletonMessage
         {
             /// <summary>TBD</summary>
             public static readonly TooLongIdle Instance = new TooLongIdle();
@@ -1593,7 +1594,7 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
-        public sealed class BackoffTimer
+        public sealed class BackoffTimer : ISingletonMessage
         {
             private BackoffTimer() { }
 
@@ -1602,7 +1603,7 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
-        public sealed class FlushAndStop
+        public sealed class FlushAndStop : ISingletonMessage
         {
             private FlushAndStop() { }
 
@@ -1611,7 +1612,7 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
-        public sealed class AckIdleCheckTimer
+        public sealed class AckIdleCheckTimer : ISingletonMessage
         {
             private AckIdleCheckTimer() { }
 
@@ -1619,7 +1620,7 @@ namespace Akka.Remote
             public static readonly AckIdleCheckTimer Instance = new AckIdleCheckTimer();
         }
 
-        private sealed class FlushAndStopTimeout
+        private sealed class FlushAndStopTimeout : ISingletonMessage
         {
             private FlushAndStopTimeout() { }
 
@@ -1638,11 +1639,13 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
+        [MessagePackObject]
         public sealed class StopReading
         {
             /// <summary>TBD</summary>
             /// <param name="writer">TBD</param>
             /// <param name="replyTo">TBD</param>
+            [SerializationConstructor]
             public StopReading(IActorRef writer, IActorRef replyTo)
             {
                 Writer = writer;
@@ -1650,32 +1653,40 @@ namespace Akka.Remote
             }
 
             /// <summary>TBD</summary>
-            public IActorRef Writer { get; }
+            [Key(0)]
+            public readonly IActorRef Writer;
 
             /// <summary>TBD</summary>
-            public IActorRef ReplyTo { get; }
+            [Key(1)]
+            public readonly IActorRef ReplyTo;
         }
 
         /// <summary>TBD</summary>
+        [MessagePackObject]
         public sealed class StoppedReading
         {
             /// <summary>TBD</summary>
             /// <param name="writer">TBD</param>
+            [SerializationConstructor]
             public StoppedReading(IActorRef writer) => Writer = writer;
 
             /// <summary>TBD</summary>
-            public IActorRef Writer { get; }
+            [Key(0)]
+            public readonly IActorRef Writer;
         }
 
         /// <summary>TBD</summary>
+        [MessagePackObject]
         public sealed class OutboundAck
         {
             /// <summary>TBD</summary>
             /// <param name="ack">TBD</param>
+            [SerializationConstructor]
             public OutboundAck(Ack ack) => Ack = ack;
 
             /// <summary>TBD</summary>
-            public Ack Ack { get; }
+            [Key(0)]
+            public readonly Ack Ack;
         }
 
         private const string AckIdleTimerName = "AckIdleTimer";

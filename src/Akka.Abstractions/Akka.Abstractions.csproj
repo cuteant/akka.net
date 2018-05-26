@@ -1,0 +1,22 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka</RootNamespace>
+    <AssemblyName>Akka.Abstractions</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);CLONEABLE;CONFIGURATION;SERIALIZATION;UNSAFE_THREADING;APPDOMAIN</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Abstractions.Unofficial</PackageId>
+    <Title>Akka.Abstractions (Unofficial)</Title>
+    <Description>Akka.NET is a port of the popular Java/Scala framework Akka to .NET</Description>
+    <PackageTags>$(AkkaPackageTags)</PackageTags>
+  </PropertyGroup>
+
+</Project>

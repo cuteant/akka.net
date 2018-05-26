@@ -13,7 +13,7 @@ namespace Akka.Actor
     /// <summary>
     /// A <see cref="ICancelable"/> that is already canceled.
     /// </summary>
-    public class AlreadyCanceledCancelable : ICancelable
+    public class AlreadyCanceledCancelable : ICancelable, ISingletonMessage
     {
         private static readonly AlreadyCanceledCancelable _instance = new AlreadyCanceledCancelable();
 

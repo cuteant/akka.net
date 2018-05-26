@@ -14,6 +14,8 @@ using MessagePack.Formatters;
 
 namespace Akka.Serialization.Resolvers
 {
+    #region == AkkaResolver ==
+
     internal sealed class AkkaResolver : IFormatterResolver
     {
         public static IFormatterResolver Instance = new AkkaResolver();
@@ -45,7 +47,7 @@ namespace Akka.Serialization.Resolvers
 
             if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
             {
-                return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).GetCachedGenericType(t));
+                return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
             }
 
             if (typeof(ISingletonMessage).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
@@ -57,16 +59,25 @@ namespace Akka.Serialization.Resolvers
         }
     }
 
+    #endregion
+
     #region == ActorRefFormatter ==
 
     // IActorRef
     internal class ActorRefFormatter<T> : IMessagePackFormatter<T> where T : IActorRef
     {
+        private const string c_nobody = "nobody";
+
         public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
         {
             if (value == null)
             {
                 return MessagePackBinary.WriteNil(ref bytes, offset);
+            }
+
+            if (value is Nobody) // TODO: this is a hack. Should work without it
+            {
+                return MessagePackBinary.WriteString(ref bytes, offset, c_nobody);
             }
 
             return MessagePackBinary.WriteString(ref bytes, offset, Serialization.SerializedActorPath(value));
@@ -81,6 +92,11 @@ namespace Akka.Serialization.Resolvers
             }
 
             var path = MessagePackBinary.ReadString(bytes, offset, out readSize);
+
+            if (string.Equals(c_nobody, path, StringComparison.Ordinal))
+            {
+                return (T)(object)Nobody.Instance;
+            }
 
             var system = MsgPackSerializerHelper.LocalSystem.Value;
             if (system == null) { return default; }
@@ -173,6 +189,55 @@ namespace Akka.Serialization.Resolvers
             bytes[offset + 2] = c_empty;
 
             return c_totalSize;
+        }
+    }
+
+    #endregion
+
+
+    #region == AkkaTypelessObjectResolver ==
+
+    internal sealed class AkkaTypelessFormatter : TypelessFormatter
+    {
+        public new static readonly IMessagePackFormatter<object> Instance = new AkkaTypelessFormatter();
+
+        protected override byte[] TranslateTypeName(Type actualType, out Type expectedType)
+        {
+            if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(actualType.GetTypeInfo()))
+            {
+                expectedType = typeof(IActorRef);
+            }
+            else
+            {
+                expectedType = actualType;
+            }
+            return TypeSerializer.GetTypeKeyFromType(expectedType).TypeName;
+        }
+    }
+
+    internal sealed class AkkaTypelessObjectResolver : IFormatterResolver
+    {
+        public static readonly IFormatterResolver Instance = new AkkaTypelessObjectResolver();
+
+        AkkaTypelessObjectResolver()
+        {
+        }
+
+        public IMessagePackFormatter<T> GetFormatter<T>()
+        {
+            return FormatterCache<T>.formatter;
+        }
+
+        static class FormatterCache<T>
+        {
+            public static readonly IMessagePackFormatter<T> formatter;
+
+            static FormatterCache()
+            {
+                formatter = (typeof(T) == typeof(object))
+                    ? (IMessagePackFormatter<T>)AkkaTypelessFormatter.Instance
+                    : null;
+            }
         }
     }
 

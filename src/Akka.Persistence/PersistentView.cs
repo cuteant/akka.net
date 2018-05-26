@@ -8,7 +8,7 @@
 using System;
 using Akka.Actor;
 using Akka.Event;
-using Newtonsoft.Json;
+using MessagePack;
 
 namespace Akka.Persistence
 {
@@ -18,7 +18,7 @@ namespace Akka.Persistence
     /// To update a view with messages that have been written after handling this request, another <see cref="Update"/> 
     /// request must be sent to the view.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     [Obsolete("PersistentView was deprecated and will be removed in the next major version [1.3.0]")]
     public sealed class Update
     {
@@ -46,7 +46,7 @@ namespace Akka.Persistence
         /// </summary>
         /// <param name="isAwait">TBD</param>
         /// <param name="replayMax">TBD</param>
-        [JsonConstructor]
+        [SerializationConstructor]
         public Update(bool isAwait, long replayMax)
         {
             IsAwait = isAwait;
@@ -58,11 +58,13 @@ namespace Akka.Persistence
         /// until the incremental message replay, triggered by this update request, completes. 
         /// If `false`, any message sent to the view may interleave with replayed <see cref="Persistent"/> message stream.
         /// </summary>
+        [Key(0)]
         public bool IsAwait { get; private set; }
 
         /// <summary>
         /// Maximum number of messages to replay when handling this update request. Defaults to <see cref="long.MaxValue"/> (i.e. no limit).
         /// </summary>
+        [Key(1)]
         public long ReplayMax { get; private set; }
     }
 

@@ -18,6 +18,7 @@ using Akka.Remote;
 using Akka.Util;
 using Akka.Util.Internal;
 using Akka.Util.Internal.Collections;
+using MessagePack;
 
 namespace Akka.Cluster
 {
@@ -36,6 +37,10 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [Union(0, typeof(JoinTo))]
+        [Union(1, typeof(Leave))]
+        [Union(2, typeof(Down))]
+        [MessagePackObject]
         internal abstract class BaseClusterUserAction
         {
             /// <summary>
@@ -50,6 +55,7 @@ namespace Akka.Cluster
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public Address Address { get; }
 
             /// <summary>
@@ -82,6 +88,7 @@ namespace Akka.Cluster
         /// Command to initiate join another node (represented by `address`).
         /// Join will be sent to the other node.
         /// </summary>
+        [MessagePackObject]
         internal sealed class JoinTo : BaseClusterUserAction
         {
             /// <summary>
@@ -97,6 +104,7 @@ namespace Akka.Cluster
         /// <summary>
         /// Command to leave the cluster.
         /// </summary>
+        [MessagePackObject]
         internal sealed class Leave : BaseClusterUserAction, IClusterMessage
         {
             /// <summary>
@@ -111,6 +119,7 @@ namespace Akka.Cluster
         /// <summary>
         /// Command to mark node as temporary down.
         /// </summary>
+        [MessagePackObject]
         internal sealed class Down : BaseClusterUserAction, IClusterMessage
         {
             /// <summary>
@@ -132,30 +141,31 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         internal sealed class Join : IClusterMessage
         {
-            readonly UniqueAddress _node;
-            readonly ImmutableHashSet<string> _roles;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="node">the node that wants to join the cluster</param>
             /// <param name="roles">TBD</param>
+            [SerializationConstructor]
             public Join(UniqueAddress node, ImmutableHashSet<string> roles)
             {
-                _node = node;
-                _roles = roles;
+                Node = node;
+                Roles = roles;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public UniqueAddress Node { get { return _node; } }
+            [Key(0)]
+            public UniqueAddress Node { get; }
             /// <summary>
             /// TBD
             /// </summary>
-            public ImmutableHashSet<string> Roles { get { return _roles; } }
+            [Key(1)]
+            public ImmutableHashSet<string> Roles { get; }
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
@@ -167,7 +177,7 @@ namespace Akka.Cluster
 
             private bool Equals(Join other)
             {
-                return _node.Equals(other._node) && !_roles.Except(other._roles).Any();
+                return Node.Equals(other.Node) && !Roles.Except(other.Roles).Any();
             }
 
             /// <inheritdoc/>
@@ -175,7 +185,7 @@ namespace Akka.Cluster
             {
                 unchecked
                 {
-                    return (_node.GetHashCode() * 397) ^ _roles.GetHashCode();
+                    return (Node.GetHashCode() * 397) ^ Roles.GetHashCode();
                 }
             }
 
@@ -190,11 +200,9 @@ namespace Akka.Cluster
         /// <summary>
         /// Reply to Join
         /// </summary>
+        [MessagePackObject]
         internal sealed class Welcome : IClusterMessage
         {
-            readonly UniqueAddress _from;
-            readonly Gossip _gossip;
-
             /// <summary>
             /// TBD
             /// </summary>
@@ -202,19 +210,21 @@ namespace Akka.Cluster
             /// <param name="gossip">TBD</param>
             public Welcome(UniqueAddress from, Gossip gossip)
             {
-                _from = from;
-                _gossip = gossip;
+                From = from;
+                Gossip = gossip;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public UniqueAddress From { get { return _from; } }
+            [Key(0)]
+            public UniqueAddress From { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Gossip Gossip { get { return _gossip; } }
+            [Key(1)]
+            public Gossip Gossip { get; }
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
@@ -226,7 +236,7 @@ namespace Akka.Cluster
 
             private bool Equals(Welcome other)
             {
-                return _from.Equals(other._from) && string.Equals(_gossip.ToString(), other._gossip.ToString(), StringComparison.Ordinal);
+                return From.Equals(other.From) && string.Equals(Gossip.ToString(), other.Gossip.ToString(), StringComparison.Ordinal);
             }
 
             /// <inheritdoc/>
@@ -234,7 +244,7 @@ namespace Akka.Cluster
             {
                 unchecked
                 {
-                    return (_from.GetHashCode() * 397) ^ _gossip.GetHashCode();
+                    return (From.GetHashCode() * 397) ^ Gossip.GetHashCode();
                 }
             }
 
@@ -244,26 +254,23 @@ namespace Akka.Cluster
         /// Command to initiate the process to join the specified
         /// seed nodes.
         /// </summary>
+        [MessagePackObject]
         internal sealed class JoinSeedNodes : IDeadLetterSuppression
         {
-            readonly ImmutableList<Address> _seedNodes;
-
             /// <summary>
             /// Creates a new instance of the command.
             /// </summary>
             /// <param name="seedNodes">The list of seeds we wish to join.</param>
             public JoinSeedNodes(ImmutableList<Address> seedNodes)
             {
-                _seedNodes = seedNodes;
+                SeedNodes = seedNodes;
             }
 
             /// <summary>
             /// The list of seeds we wish to join.
             /// </summary>
-            public ImmutableList<Address> SeedNodes
-            {
-                get { return _seedNodes; }
-            }
+            [Key(0)]
+            public readonly ImmutableList<Address> SeedNodes;
         }
 
         /// <summary>
@@ -274,13 +281,19 @@ namespace Akka.Cluster
         /// If a node is uninitialized it will reply to `InitJoin` with
         /// <see cref="InitJoinNack"/>.
         /// </summary>
-        internal class JoinSeenNode
+        internal sealed class JoinSeenNode : ISingletonMessage
         {
+            private JoinSeenNode() { }
+            public static readonly JoinSeenNode Instance = new JoinSeenNode();
         }
 
         /// <inheritdoc cref="JoinSeenNode"/>
-        internal class InitJoin : IClusterMessage, IDeadLetterSuppression
+        internal sealed class InitJoin : IClusterMessage, IDeadLetterSuppression, ISingletonMessage
         {
+            private InitJoin() { }
+
+            public static readonly InitJoin Instance = new InitJoin();
+
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
@@ -289,27 +302,25 @@ namespace Akka.Cluster
         }
 
         /// <inheritdoc cref="JoinSeenNode"/>
+        [MessagePackObject]
         internal sealed class InitJoinAck : IClusterMessage, IDeadLetterSuppression
         {
-            readonly Address _address;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="address">TBD</param>
             /// <returns>TBD</returns>
+            [SerializationConstructor]
             public InitJoinAck(Address address)
             {
-                _address = address;
+                Address = address;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Address Address
-            {
-                get { return _address; }
-            }
+            [Key(0)]
+            public readonly Address Address;
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
@@ -321,37 +332,35 @@ namespace Akka.Cluster
 
             private bool Equals(InitJoinAck other)
             {
-                return Equals(_address, other._address);
+                return Equals(Address, other.Address);
             }
 
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (_address != null ? _address.GetHashCode() : 0);
+                return (Address != null ? Address.GetHashCode() : 0);
             }
         }
 
         /// <inheritdoc cref="JoinSeenNode"/>
+        [MessagePackObject]
         internal sealed class InitJoinNack : IClusterMessage, IDeadLetterSuppression
         {
-            readonly Address _address;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="address">The address we attempted to join</param>
+            [SerializationConstructor]
             public InitJoinNack(Address address)
             {
-                _address = address;
+                Address = address;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Address Address
-            {
-                get { return _address; }
-            }
+            [Key(0)]
+            public readonly Address Address;
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
@@ -363,21 +372,23 @@ namespace Akka.Cluster
 
             private bool Equals(InitJoinNack other)
             {
-                return Equals(_address, other._address);
+                return Equals(Address, other.Address);
             }
 
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (_address != null ? _address.GetHashCode() : 0);
+                return (Address != null ? Address.GetHashCode() : 0);
             }
         }
 
         /// <summary>
         /// Signals that a member is confirmed to be exiting the cluster
         /// </summary>
+        [MessagePackObject]
         internal sealed class ExitingConfirmed : IClusterMessage, IDeadLetterSuppression
         {
+            [SerializationConstructor]
             public ExitingConfirmed(UniqueAddress address)
             {
                 Address = address;
@@ -386,7 +397,8 @@ namespace Akka.Cluster
             /// <summary>
             /// The member's address
             /// </summary>
-            public UniqueAddress Address { get; }
+            [Key(0)]
+            public readonly UniqueAddress Address;
 
             private bool Equals(ExitingConfirmed other)
             {
@@ -411,7 +423,7 @@ namespace Akka.Cluster
         /// <summary>
         /// Used to signal that a self-exiting event has completed.
         /// </summary>
-        internal sealed class ExitingCompleted
+        internal sealed class ExitingCompleted : ISingletonMessage
         {
             private ExitingCompleted() { }
 
@@ -429,7 +441,7 @@ namespace Akka.Cluster
         /// <summary>
         /// Used to trigger the publication of gossip
         /// </summary>
-        internal class GossipTick : ITick
+        internal sealed class GossipTick : ITick, ISingletonMessage
         {
             private GossipTick() { }
 
@@ -442,7 +454,7 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        internal class GossipSpeedupTick : ITick
+        internal sealed class GossipSpeedupTick : ITick, ISingletonMessage
         {
             private GossipSpeedupTick() { }
 
@@ -455,7 +467,7 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        internal class ReapUnreachableTick : ITick
+        internal sealed class ReapUnreachableTick : ITick, ISingletonMessage
         {
             private ReapUnreachableTick() { }
 
@@ -468,7 +480,7 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        internal class MetricsTick : ITick
+        internal sealed class MetricsTick : ITick, ISingletonMessage
         {
             private MetricsTick() { }
 
@@ -481,7 +493,7 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        internal class LeaderActionsTick : ITick
+        internal sealed class LeaderActionsTick : ITick, ISingletonMessage
         {
             private LeaderActionsTick() { }
 
@@ -494,7 +506,7 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        internal class PublishStatsTick : ITick
+        internal sealed class PublishStatsTick : ITick, ISingletonMessage
         {
             private PublishStatsTick() { }
 
@@ -507,42 +519,43 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         internal sealed class SendGossipTo
         {
-            readonly Address _address;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="address">TBD</param>
+            [SerializationConstructor]
             public SendGossipTo(Address address)
             {
-                _address = address;
+                Address = address;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Address Address { get { return _address; } }
+            [Key(0)]
+            public readonly Address Address;
 
             /// <inheritdoc/>
             public override bool Equals(object obj)
             {
                 if (!(obj is SendGossipTo other)) return false;
-                return _address.Equals(other._address);
+                return Address.Equals(other.Address);
             }
 
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return _address.GetHashCode();
+                return Address.GetHashCode();
             }
         }
 
         /// <summary>
         /// Gets a reference to the cluster core daemon.
         /// </summary>
-        internal class GetClusterCoreRef
+        internal sealed class GetClusterCoreRef : ISingletonMessage
         {
             private GetClusterCoreRef() { }
 
@@ -557,12 +570,14 @@ namespace Akka.Cluster
         /// <see cref="OnMemberStatusChangedListener"/> that will be invoked
         /// when the current member is marked as up.
         /// </summary>
+        [MessagePackObject]
         public sealed class AddOnMemberUpListener : INoSerializationVerificationNeeded
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="callback">TBD</param>
+            [SerializationConstructor]
             public AddOnMemberUpListener(Action callback)
             {
                 Callback = callback;
@@ -571,6 +586,7 @@ namespace Akka.Cluster
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public Action Callback { get; }
         }
 
@@ -578,12 +594,14 @@ namespace Akka.Cluster
         /// Command to the <see cref="ClusterDaemon"/> to create a <see cref="OnMemberStatusChangedListener"/>
         /// that will be invoked when the current member is removed.
         /// </summary>
+        [MessagePackObject]
         public sealed class AddOnMemberRemovedListener : INoSerializationVerificationNeeded
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="callback">TBD</param>
+            [SerializationConstructor]
             public AddOnMemberRemovedListener(Action callback)
             {
                 Callback = callback;
@@ -592,23 +610,24 @@ namespace Akka.Cluster
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public Action Callback { get; }
         }
 
         /// <summary>
         /// All messages related to creating or removing <see cref="Cluster"/> event subscriptions
         /// </summary>
+        [Union(0, typeof(Subscribe))]
+        [Union(1, typeof(Unsubscribe))]
+        [Union(2, typeof(SendCurrentClusterState))]
         public interface ISubscriptionMessage { }
 
         /// <summary>
         /// Subscribe an actor to new <see cref="Cluster"/> events.
         /// </summary>
+        [MessagePackObject]
         public sealed class Subscribe : ISubscriptionMessage
         {
-            readonly IActorRef _subscriber;
-            readonly ClusterEvent.SubscriptionInitialStateMode _initialStateMode;
-            readonly ImmutableHashSet<Type> _to;
-
             /// <summary>
             /// Creates a new subscription
             /// </summary>
@@ -618,150 +637,135 @@ namespace Akka.Cluster
             public Subscribe(IActorRef subscriber, ClusterEvent.SubscriptionInitialStateMode initialStateMode,
                 ImmutableHashSet<Type> to)
             {
-                _subscriber = subscriber;
-                _initialStateMode = initialStateMode;
-                _to = to;
+                Subscriber = subscriber;
+                InitialStateMode = initialStateMode;
+                To = to;
             }
 
             /// <summary>
             /// The actor that is subscribed to cluster events.
             /// </summary>
-            public IActorRef Subscriber
-            {
-                get { return _subscriber; }
-            }
+            [Key(0)]
+            public readonly IActorRef Subscriber;
 
             /// <summary>
             /// The delivery mechanism for the initial cluster state.
             /// </summary>
-            public ClusterEvent.SubscriptionInitialStateMode InitialStateMode
-            {
-                get { return _initialStateMode; }
-            }
+            [Key(1)]
+            public readonly ClusterEvent.SubscriptionInitialStateMode InitialStateMode;
 
             /// <summary>
             /// The range of cluster events to which <see cref="Subscriber"/> is subscribed.
             /// </summary>
-            public ImmutableHashSet<Type> To
-            {
-                get { return _to; }
-            }
+            [Key(2)]
+            public readonly ImmutableHashSet<Type> To;
         }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         public sealed class Unsubscribe : ISubscriptionMessage, IDeadLetterSuppression
         {
-            readonly IActorRef _subscriber;
-            readonly Type _to;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="subscriber">TBD</param>
             /// <param name="to">TBD</param>
+            [SerializationConstructor]
             public Unsubscribe(IActorRef subscriber, Type to)
             {
-                _to = to;
-                _subscriber = subscriber;
+                To = to;
+                Subscriber = subscriber;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public IActorRef Subscriber
-            {
-                get { return _subscriber; }
-            }
+            [Key(0)]
+            public readonly IActorRef Subscriber;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Type To
-            {
-                get { return _to; }
-            }
+            [Key(1)]
+            public readonly Type To;
         }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         public sealed class SendCurrentClusterState : ISubscriptionMessage
         {
-            readonly IActorRef _receiver;
-
             /// <summary>
             /// TBD
             /// </summary>
-            public IActorRef Receiver
-            {
-                get { return _receiver; }
-            }
+            [Key(0)]
+            public readonly IActorRef Receiver;
 
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="receiver"><see cref="Akka.Cluster.ClusterEvent.CurrentClusterState"/> will be sent to the `receiver`</param>
+            [SerializationConstructor]
             public SendCurrentClusterState(IActorRef receiver)
             {
-                _receiver = receiver;
+                Receiver = receiver;
             }
         }
 
         /// <summary>
         /// TBD
         /// </summary>
-        interface IPublishMessage { }
+        [Union(0, typeof(PublishChanges))]
+        [Union(1, typeof(PublishEvent))]
+        internal interface IPublishMessage { }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         internal sealed class PublishChanges : IPublishMessage
         {
-            readonly Gossip _newGossip;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="newGossip">TBD</param>
-            internal PublishChanges(Gossip newGossip)
+            [SerializationConstructor]
+            public PublishChanges(Gossip newGossip)
             {
-                _newGossip = newGossip;
+                NewGossip = newGossip;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public Gossip NewGossip
-            {
-                get { return _newGossip; }
-            }
+            [Key(0)]
+            public readonly Gossip NewGossip;
         }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         internal sealed class PublishEvent : IPublishMessage
         {
-            readonly ClusterEvent.IClusterDomainEvent _event;
-
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="event">TBD</param>
-            internal PublishEvent(ClusterEvent.IClusterDomainEvent @event)
+            [SerializationConstructor]
+            public PublishEvent(ClusterEvent.IClusterDomainEvent @event)
             {
-                _event = @event;
+                Event = @event;
             }
 
             /// <summary>
             /// TBD
             /// </summary>
-            public ClusterEvent.IClusterDomainEvent Event
-            {
-                get { return _event; }
-            }
+            [Key(0)]
+            public readonly ClusterEvent.IClusterDomainEvent Event;
         }
     }
 
@@ -2585,7 +2589,7 @@ namespace Akka.Cluster
         /// </summary>
         protected override void PreStart()
         {
-            Self.Tell(new InternalClusterAction.JoinSeenNode());
+            Self.Tell(InternalClusterAction.JoinSeenNode.Instance);
         }
 
         /// <summary>
@@ -2601,7 +2605,7 @@ namespace Akka.Cluster
                     foreach (var path in _seeds.Where(x => x != _selfAddress)
                                 .Select(y => Context.ActorSelection(Context.Parent.Path.ToStringWithAddress(y))))
                     {
-                        path.Tell(new InternalClusterAction.InitJoin());
+                        path.Tell(InternalClusterAction.InitJoin.Instance);
                     }
                     _attempts++;
                     break;
@@ -2623,7 +2627,7 @@ namespace Akka.Cluster
                             _attempts, string.Join(",", _seeds.Where(x => !x.Equals(_selfAddress))));
                     }
                     // no InitJoinAck received - try again
-                    Self.Tell(new InternalClusterAction.JoinSeenNode());
+                    Self.Tell(InternalClusterAction.JoinSeenNode.Instance);
                     break;
 
                 default:
@@ -2690,8 +2694,8 @@ namespace Akka.Cluster
 
             _remainingSeeds = seeds.Remove(_selfAddress);
             _timeout = Deadline.Now + _cluster.Settings.SeedNodeTimeout;
-            _retryTaskToken = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), Self, new InternalClusterAction.JoinSeenNode(), Self);
-            Self.Tell(new InternalClusterAction.JoinSeenNode());
+            _retryTaskToken = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1), Self, InternalClusterAction.JoinSeenNode.Instance, Self);
+            Self.Tell(InternalClusterAction.JoinSeenNode.Instance);
         }
 
         /// <summary>
@@ -2716,7 +2720,7 @@ namespace Akka.Cluster
                         // send InitJoin to remaining seed nodes (except myself)
                         foreach (var seed in _remainingSeeds.Select(
                                     x => Context.ActorSelection(Context.Parent.Path.ToStringWithAddress(x))))
-                            seed.Tell(new InternalClusterAction.InitJoin());
+                            seed.Tell(InternalClusterAction.InitJoin.Instance);
                     }
                     else
                     {
@@ -2752,27 +2756,18 @@ namespace Akka.Cluster
     /// <summary>
     /// INTERNAL API
     /// </summary>
+    [MessagePackObject]
     internal sealed class GossipStats
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        [Key(0)]
         public readonly long ReceivedGossipCount;
-        /// <summary>
-        /// TBD
-        /// </summary>
+        [Key(1)]
         public readonly long MergeCount;
-        /// <summary>
-        /// TBD
-        /// </summary>
+        [Key(2)]
         public readonly long SameCount;
-        /// <summary>
-        /// TBD
-        /// </summary>
+        [Key(3)]
         public readonly long NewerCount;
-        /// <summary>
-        /// TBD
-        /// </summary>
+        [Key(4)]
         public readonly long OlderCount;
 
         /// <summary>
@@ -2783,6 +2778,7 @@ namespace Akka.Cluster
         /// <param name="sameCount">TBD</param>
         /// <param name="newerCount">TBD</param>
         /// <param name="olderCount">TBD</param>
+        [SerializationConstructor]
         public GossipStats(long receivedGossipCount = 0L,
             long mergeCount = 0L,
             long sameCount = 0L,
@@ -2995,6 +2991,7 @@ namespace Akka.Cluster
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     internal sealed class VectorClockStats
     {
         /// <summary>
@@ -3002,6 +2999,7 @@ namespace Akka.Cluster
         /// </summary>
         /// <param name="versionSize">TBD</param>
         /// <param name="seenLatest">TBD</param>
+        [SerializationConstructor]
         public VectorClockStats(int versionSize = 0, int seenLatest = 0)
         {
             VersionSize = versionSize;
@@ -3011,10 +3009,12 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public int VersionSize { get; }
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public int SeenLatest { get; }
 
         /// <inheritdoc/>

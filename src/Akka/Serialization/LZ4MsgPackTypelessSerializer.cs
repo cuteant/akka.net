@@ -6,19 +6,19 @@ using CuteAnt.Extensions.Serialization;
 
 namespace Akka.Serialization
 {
-    public sealed class TypelessMsgPackSerializer : Serializer
+    public sealed class LZ4MsgPackTypelessSerializer : Serializer
     {
         private readonly MsgPackSerializerSettings _settings;
-        private static readonly TypelessMessagePackMessageFormatter s_formatter = TypelessMessagePackMessageFormatter.DefaultInstance;
+        private static readonly LZ4TypelessMessagePackMessageFormatter s_formatter = LZ4TypelessMessagePackMessageFormatter.DefaultInstance;
         private readonly int _initialBufferSize;
 
-        static TypelessMsgPackSerializer() => MsgPackSerializerHelper.Register();
+        static LZ4MsgPackTypelessSerializer() => MsgPackSerializerHelper.Register();
 
-        public TypelessMsgPackSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default) { }
+        public LZ4MsgPackTypelessSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default) { }
 
-        public TypelessMsgPackSerializer(ExtendedActorSystem system, Config config) : this(system, MsgPackSerializerSettings.Create(config)) { }
+        public LZ4MsgPackTypelessSerializer(ExtendedActorSystem system, Config config) : this(system, MsgPackSerializerSettings.Create(config)) { }
 
-        public TypelessMsgPackSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
+        public LZ4MsgPackTypelessSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
         {
             MsgPackSerializerHelper.LocalSystem.Value = system;
             _settings = settings;
@@ -29,7 +29,7 @@ namespace Akka.Serialization
 
         public override object FromBinary(byte[] bytes, Type type) => s_formatter.Deserialize(type, bytes);
 
-        public override int Identifier => 152;
+        public override int Identifier => 153;
 
         public override bool IncludeManifest => false;
     }

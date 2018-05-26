@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="reference.conf" />
+    <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
     <ProjectReference Include="..\Akka.Persistence\Akka.Persistence.csproj" />
     <ProjectReference Include="..\Akka.Cluster.Tools\Akka.Cluster.Tools.csproj" />
     <ProjectReference Include="..\Akka.DistributedData\Akka.DistributedData.csproj" />

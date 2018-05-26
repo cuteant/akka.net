@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Cluster
 {
@@ -29,6 +30,7 @@ namespace Akka.Cluster
     /// Based on code from the 'vlock' VectorClock library by Coda Hale.
     /// </para>
     /// </summary>
+    [MessagePackObject]
     public sealed class VectorClock
     {
         private bool Equals(VectorClock other)
@@ -48,7 +50,7 @@ namespace Akka.Cluster
             unchecked
             {
                 var hashCode = 23;
-                foreach (var c in _versions)
+                foreach (var c in Versions)
                 {
                     hashCode = hashCode * 31 + c.Key.GetHashCode();
                     hashCode = hashCode * 31 + c.Value.GetHashCode();
@@ -60,17 +62,22 @@ namespace Akka.Cluster
         /// <summary>
         /// Hash representation of a versioned node name.
         /// </summary>
-        public class Node : IComparable<Node>
+        [MessagePackObject]
+        public sealed class Node : IComparable<Node>
         {
+            [Key(0)]
             private readonly string _value;
+            [IgnoreMember]
             private readonly int _computedHashValue;
 #if DEBUG
+            [IgnoreMember]
             string ActualValue { get; set; }
 #endif
             /// <summary>
             /// Creates a new vectorclock node.
             /// </summary>
             /// <param name="value">The hash value of the string.</param>
+            [SerializationConstructor]
             public Node(string value)
             {
                 _value = value;
@@ -166,7 +173,7 @@ namespace Akka.Cluster
         /// <summary>
         /// Timestamp used by the <see cref="VectorClock"/>.
         /// </summary>
-        internal class Timestamp
+        internal sealed class Timestamp
         {
             /// <summary>
             /// TBD
@@ -206,11 +213,11 @@ namespace Akka.Cluster
             FullOrder
         }
 
-        readonly ImmutableSortedDictionary<Node, long> _versions;
         /// <summary>
         /// The list of vector clock values for each node.
         /// </summary>
-        public ImmutableSortedDictionary<Node, long> Versions { get { return _versions; } }
+        [Key(0)]
+        public readonly ImmutableSortedDictionary<Node, long> Versions;
 
         /// <summary>
         /// Creates a new <see cref="VectorClock"/>
@@ -231,9 +238,9 @@ namespace Akka.Cluster
             return new VectorClock(seedValues);
         }
 
-        private VectorClock(ImmutableSortedDictionary<Node, long> versions)
+        public VectorClock(ImmutableSortedDictionary<Node, long> versions)
         {
-            _versions = versions;
+            Versions = versions;
         }
 
         /// <summary>
@@ -243,8 +250,8 @@ namespace Akka.Cluster
         /// <returns>An updated <see cref="VectorClock"/> instance.</returns>
         public VectorClock Increment(Node node)
         {
-            var currentTimestamp = _versions.GetOrElse(node, Timestamp.Zero);
-            return new VectorClock(_versions.SetItem(node, currentTimestamp + 1));
+            var currentTimestamp = Versions.GetOrElse(node, Timestamp.Zero);
+            return new VectorClock(Versions.SetItem(node, currentTimestamp + 1));
         }
 
         /// <summary>
@@ -365,7 +372,7 @@ namespace Akka.Cluster
         {
             if (ReferenceEquals(this, that) || Versions.Equals(that.Versions)) return Ordering.Same;
 
-            return Compare(_versions.GetEnumerator(), that._versions.GetEnumerator(), order == Ordering.Concurrent ? Ordering.FullOrder : order);
+            return Compare(Versions.GetEnumerator(), that.Versions.GetEnumerator(), order == Ordering.Concurrent ? Ordering.FullOrder : order);
         }
 
         private static Ordering Compare(IEnumerator<KeyValuePair<Node, long>> i1, IEnumerator<KeyValuePair<Node, long>> i2, Ordering requestedOrder)
@@ -446,7 +453,7 @@ namespace Akka.Cluster
         public VectorClock Merge(VectorClock that)
         {
             var mergedVersions = that.Versions;
-            foreach (var pair in _versions)
+            foreach (var pair in Versions)
             {
                 var mergedVersionsCurrentTime = mergedVersions.GetOrElse(pair.Key, Timestamp.Zero);
                 if (pair.Value > mergedVersionsCurrentTime)
@@ -475,7 +482,7 @@ namespace Akka.Cluster
         /// <inheritdoc/>
         public override string ToString()
         {
-            var versions = _versions.Select(p => p.Key + "->" + p.Value);
+            var versions = Versions.Select(p => p.Key + "->" + p.Value);
             return $"VectorClock({string.Join(", ", versions)})";
         }
     }

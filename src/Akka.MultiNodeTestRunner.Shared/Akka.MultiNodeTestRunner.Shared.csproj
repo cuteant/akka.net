@@ -14,6 +14,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="Newtonsoft.Json" Version="$(NewtonsoftJsonPackageVersion)" />
     <PackageReference Include="TeamCity.ServiceMessages" Version="$(TeamCityServiceMessagesPackageVersion)" />
   </ItemGroup>
 

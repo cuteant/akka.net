@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using Akka.Util;
+using MessagePack;
 
 namespace Akka.Actor
 {
@@ -23,6 +24,7 @@ namespace Akka.Actor
     /// for example a remote transport would want to associate additional
     /// information with an address, then this must be done externally.
     /// </summary>
+    [MessagePackObject]
     public sealed class Address : IEquatable<Address>, IComparable<Address>, IComparable, ISurrogated
 #if CLONEABLE
         , ICloneable
@@ -62,11 +64,8 @@ namespace Akka.Actor
         /// </summary>
         public static readonly Address AllSystems = new Address("akka", "all-systems");
 
+        [IgnoreMember]
         private readonly Lazy<string> _toString;
-        private readonly string _host;
-        private readonly int? _port;
-        private readonly string _system;
-        private readonly string _protocol;
 
         /// <summary>
         /// TBD
@@ -75,39 +74,45 @@ namespace Akka.Actor
         /// <param name="system">TBD</param>
         /// <param name="host">TBD</param>
         /// <param name="port">TBD</param>
+        [SerializationConstructor]
         public Address(string protocol, string system, string host = null, int? port = null)
         {
-            _protocol = protocol;
-            _system = system;
-            _host = host?.ToLowerInvariant();
-            _port = port;
+            Protocol = protocol;
+            System = system;
+            Host = host?.ToLowerInvariant();
+            Port = port;
             _toString = CreateLazyToString();
         }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public string Host => _host;
+        [Key(0)]
+        public readonly string Protocol;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public int? Port => _port;
+        [Key(1)]
+        public readonly string System;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public string System => _system;
+        [Key(2)]
+        public readonly string Host;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public string Protocol => _protocol;
+        [Key(3)]
+        public readonly int? Port;
 
         /// <summary>
         /// Returns true if this Address is only defined locally. It is not safe to send locally scoped addresses to remote
         ///  hosts. See also <see cref="HasGlobalScope"/>
         /// </summary>
+        [IgnoreMember]
         public bool HasLocalScope => string.IsNullOrEmpty(Host);
 
         /// <summary>
@@ -115,6 +120,7 @@ namespace Akka.Actor
         /// addresses of global scope are safe to sent to other hosts, as they globally and uniquely identify an addressable
         /// entity.
         /// </summary>
+        [IgnoreMember]
         public bool HasGlobalScope => !string.IsNullOrEmpty(Host);
 
         private Lazy<string> CreateLazyToString()

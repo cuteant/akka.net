@@ -38,16 +38,14 @@ namespace Akka.Actor.Internal
     /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
     /// </summary>
     [InternalApi]
-    public class InternalActivateFsmLogging
+    public class InternalActivateFsmLogging : ISingletonMessage
     {
-        private static readonly InternalActivateFsmLogging _instance = new InternalActivateFsmLogging();
-
         private InternalActivateFsmLogging(){}
         /// <summary>
         /// INTERNAL API. Used for testing.
         /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
         /// </summary>
-        public static InternalActivateFsmLogging Instance { get { return _instance; } }
+        public static readonly InternalActivateFsmLogging Instance = new InternalActivateFsmLogging();
     }
 }
 

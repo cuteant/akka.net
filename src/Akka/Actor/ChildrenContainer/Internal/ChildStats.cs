@@ -20,15 +20,14 @@ namespace Akka.Actor.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    public class ChildNameReserved : IChildStats
+    public class ChildNameReserved : IChildStats, ISingletonMessage
     {
-        private static readonly ChildNameReserved _instance = new ChildNameReserved();
         private ChildNameReserved() {/* Intentionally left blank */}
 
         /// <summary>
         /// TBD
         /// </summary>
-        public static ChildNameReserved Instance { get { return _instance; } }
+        public static readonly ChildNameReserved Instance = new ChildNameReserved();
         /// <inheritdoc/>
         public override string ToString()
         {

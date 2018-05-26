@@ -15,6 +15,7 @@ using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.AsyncEx;
+using MessagePack;
 
 namespace Akka.Remote.Transport
 {
@@ -74,22 +75,27 @@ namespace Akka.Remote.Transport
         public interface IFailureInjectorCommand { }
 
         /// <summary>TBD</summary>
+        [MessagePackObject]
         public sealed class All
         {
             /// <summary>TBD</summary>
             /// <param name="mode">TBD</param>
+            [SerializationConstructor]
             public All(IGremlinMode mode) => Mode = mode;
 
             /// <summary>TBD</summary>
-            public IGremlinMode Mode { get; }
+            [Key(0)]
+            public readonly IGremlinMode Mode;
         }
 
         /// <summary>TBD</summary>
+        [MessagePackObject]
         public sealed class One
         {
             /// <summary>TBD</summary>
             /// <param name="remoteAddress">TBD</param>
             /// <param name="mode">TBD</param>
+            [SerializationConstructor]
             public One(Address remoteAddress, IGremlinMode mode)
             {
                 Mode = mode;
@@ -97,17 +103,19 @@ namespace Akka.Remote.Transport
             }
 
             /// <summary>TBD</summary>
-            public Address RemoteAddress { get; }
+            [Key(0)]
+            public readonly Address RemoteAddress;
 
             /// <summary>TBD</summary>
-            public IGremlinMode Mode { get; }
+            [Key(1)]
+            public readonly IGremlinMode Mode;
         }
 
         /// <summary>TBD</summary>
         public interface IGremlinMode { }
 
         /// <summary>TBD</summary>
-        public sealed class PassThru : IGremlinMode
+        public sealed class PassThru : IGremlinMode, ISingletonMessage
         {
             private PassThru() { }
 
@@ -116,11 +124,13 @@ namespace Akka.Remote.Transport
         }
 
         /// <summary>TBD</summary>
+        [MessagePackObject]
         public sealed class Drop : IGremlinMode
         {
             /// <summary>TBD</summary>
             /// <param name="outboundDropP">TBD</param>
             /// <param name="inboundDropP">TBD</param>
+            [SerializationConstructor]
             public Drop(double outboundDropP, double inboundDropP)
             {
                 InboundDropP = inboundDropP;
@@ -128,10 +138,12 @@ namespace Akka.Remote.Transport
             }
 
             /// <summary>TBD</summary>
-            public double OutboundDropP { get; }
+            [Key(0)]
+            public readonly double OutboundDropP;
 
             /// <summary>TBD</summary>
-            public double InboundDropP { get; }
+            [Key(1)]
+            public readonly double InboundDropP;
         }
 
         #endregion
