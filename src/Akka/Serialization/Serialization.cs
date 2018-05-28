@@ -71,6 +71,8 @@ namespace Akka.Serialization
             var serializerBindingConfig = system.Settings.Config.GetConfig("akka.actor.serialization-bindings").AsEnumerable().ToList();
             var serializerSettingsConfig = system.Settings.Config.GetConfig("akka.actor.serialization-settings");
 
+            MsgPackSerializerHelper.LocalSystem.Value = system;
+
             foreach (var kvp in serializersConfig)
             {
                 var serializerTypeName = kvp.Value.GetString();

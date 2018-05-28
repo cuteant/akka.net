@@ -22,7 +22,7 @@ namespace Akka.Cluster
         /// <summary>
         /// A leave request for beginning the exit process from the <see cref="Cluster"/>
         /// </summary>
-        public sealed class LeaveReq
+        public sealed class LeaveReq : ISingletonMessage
         {
             private LeaveReq() { }
 

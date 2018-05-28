@@ -6,10 +6,12 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Event;
+using MessagePack;
 using Assert = System.Diagnostics.Debug;
 
 namespace Akka.Dispatch.SysMsg
@@ -278,12 +280,21 @@ namespace Akka.Dispatch.SysMsg
     /// all of the capabilities needed to express a full-fledged system message.
     /// </summary>
     [InternalApi]
+    [Union(0, typeof(DeathWatchNotification))]
+    [Union(1, typeof(Failed))]
+    [Union(2, typeof(Supervise))]
+    [Union(3, typeof(Watch))]
+    [Union(4, typeof(Unwatch))]
+    [Union(5, typeof(Recreate))]
+    [Union(6, typeof(Resume))]
+    [Union(7, typeof(Create))]
+    [MessagePackObject]
     public abstract class SystemMessage : ISystemMessage
     {
         /// <summary>
         /// The next <see cref="ISystemMessage"/> in the linked list.
         /// </summary>
-        [NonSerialized]
+        [IgnoreMember, IgnoreDataMember, NonSerialized]
         internal SystemMessage Next;
 
         /// <summary>
@@ -297,6 +308,7 @@ namespace Akka.Dispatch.SysMsg
         /// <summary>
         /// Returns <c>true</c> if we are unlinked.
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public bool Unlinked { get { return Next == null; } }
     }
 
@@ -305,6 +317,10 @@ namespace Akka.Dispatch.SysMsg
     /// </summary>
     public sealed class NoMessage : SystemMessage
     {
+        private NoMessage() { } // NoMessage should never be serialized or deserialized
+
+        public static readonly NoMessage Instance = new NoMessage();
+
         /// <inheritdoc cref="object"/>
         public override string ToString()
         {
@@ -315,6 +331,7 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     ///     Class DeathWatchNotification.
     /// </summary>
+    [MessagePackObject]
     public sealed class DeathWatchNotification : SystemMessage, IDeadLetterSuppression
     {
         /// <summary>
@@ -323,6 +340,7 @@ namespace Akka.Dispatch.SysMsg
         /// <param name="actor">The actor.</param>
         /// <param name="existenceConfirmed">if set to <c>true</c> [existence confirmed].</param>
         /// <param name="addressTerminated">if set to <c>true</c> [address terminated].</param>
+        [SerializationConstructor]
         public DeathWatchNotification(IActorRef actor, bool existenceConfirmed, bool addressTerminated)
         {
             Actor = actor;
@@ -334,19 +352,22 @@ namespace Akka.Dispatch.SysMsg
         ///     Gets the actor.
         /// </summary>
         /// <value>The actor.</value>
-        public IActorRef Actor { get; private set; }
+        [Key(0)]
+        public readonly IActorRef Actor;
 
         /// <summary>
         ///     Gets a value indicating whether [existence confirmed].
         /// </summary>
         /// <value><c>true</c> if [existence confirmed]; otherwise, <c>false</c>.</value>
-        public bool ExistenceConfirmed { get; private set; }
+        [Key(1)]
+        public readonly bool ExistenceConfirmed;
 
         /// <summary>
         ///     Gets a value indicating whether [address terminated].
         /// </summary>
         /// <value><c>true</c> if [address terminated]; otherwise, <c>false</c>.</value>
-        public bool AddressTerminated { get; private set; }
+        [Key(2)]
+        public readonly bool AddressTerminated;
 
         /// <inheritdoc cref="object"/>
         public override string ToString()
@@ -359,11 +380,9 @@ namespace Akka.Dispatch.SysMsg
     /// INTERNAL API
     /// </summary>
     [InternalApi]
+    [MessagePackObject]
     public sealed class Failed : SystemMessage, IStashWhenFailed
     {
-        private readonly long _uid;
-        private readonly Exception _cause;
-        private readonly IActorRef _child;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="Failed" /> class.
@@ -371,29 +390,33 @@ namespace Akka.Dispatch.SysMsg
         /// <param name="child">The child.</param>
         /// <param name="cause">The cause.</param>
         /// <param name="uid">The uid</param>
+        [SerializationConstructor]
         public Failed(IActorRef child, Exception cause, long uid)
         {
-            _uid = uid;
-            _child = child;
-            _cause = cause;
+            Uid = uid;
+            Child = child;
+            Cause = cause;
         }
 
         /// <summary>
         ///     Gets the child.
         /// </summary>
         /// <value>The child.</value>
-        public IActorRef Child { get { return _child; } }
+        [Key(0)]
+        public readonly IActorRef Child;
 
         /// <summary>
         ///     Gets the cause.
         /// </summary>
         /// <value>The cause.</value>
-        public Exception Cause { get { return _cause; } }
+        [Key(1)]
+        public readonly Exception Cause;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public long Uid { get { return _uid; } }
+        [Key(2)]
+        public readonly long Uid;
 
         /// <summary>
         /// TBD
@@ -401,13 +424,14 @@ namespace Akka.Dispatch.SysMsg
         /// <returns>TBD</returns>
         public override string ToString()
         {
-            return "<Failed>: " + _child + " (" + _uid + ") " + (_cause != null ? ", Cause=" + _cause : "");
+            return "<Failed>: " + Child + " (" + Uid + ") " + (Cause != null ? ", Cause=" + Cause : "");
         }
     }
 
     /// <summary>
     ///     Class Supervise.
     /// </summary>
+    [MessagePackObject]
     public sealed class Supervise : SystemMessage
     {
         /// <summary>
@@ -415,6 +439,7 @@ namespace Akka.Dispatch.SysMsg
         /// </summary>
         /// <param name="child">The child.</param>
         /// <param name="async">if set to <c>true</c> [asynchronous].</param>
+        [SerializationConstructor]
         public Supervise(IActorRef child, bool async)
         {
             Child = child;
@@ -422,16 +447,18 @@ namespace Akka.Dispatch.SysMsg
         }
 
         /// <summary>
-        ///     Gets a value indicating whether this <see cref="Supervise" /> is asynchronous.
-        /// </summary>
-        /// <value><c>true</c> if asynchronous; otherwise, <c>false</c>.</value>
-        public bool Async { get; private set; }
-
-        /// <summary>
         ///     Gets the child.
         /// </summary>
         /// <value>The child.</value>
-        public IActorRef Child { get; private set; }
+        [Key(0)]
+        public readonly IActorRef Child;
+
+        /// <summary>
+        ///     Gets a value indicating whether this <see cref="Supervise" /> is asynchronous.
+        /// </summary>
+        /// <value><c>true</c> if asynchronous; otherwise, <c>false</c>.</value>
+        [Key(1)]
+        public readonly bool Async;
 
         /// <summary>
         /// TBD
@@ -450,6 +477,7 @@ namespace Akka.Dispatch.SysMsg
     /// is stopped. In the case of a remote actor references, a <see cref="Terminated"/> may also be produced in
     /// the event that the association between the two remote actor systems fails.
     /// </summary>
+    [MessagePackObject]
     public class Watch : SystemMessage
     {
         /// <summary>
@@ -457,6 +485,7 @@ namespace Akka.Dispatch.SysMsg
         /// </summary>
         /// <param name="watchee">The watchee.</param>
         /// <param name="watcher">The watcher.</param>
+        [SerializationConstructor]
         public Watch(IInternalActorRef watchee, IInternalActorRef watcher)
         {
             Watchee = watchee;
@@ -467,13 +496,15 @@ namespace Akka.Dispatch.SysMsg
         /// Gets the watchee.
         /// </summary>
         /// <value>The watchee.</value>
-        public IInternalActorRef Watchee { get; }
+        [Key(0)]
+        public readonly IInternalActorRef Watchee;
 
         /// <summary>
         /// Gets the watcher.
         /// </summary>
         /// <value>The watcher.</value>
-        public IInternalActorRef Watcher { get; }
+        [Key(1)]
+        public readonly IInternalActorRef Watcher;
 
         protected bool Equals(Watch other)
         {
@@ -509,6 +540,7 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     /// Unsubscribes <see cref="Watcher"/> from any death watch notifications for <see cref="Watchee"/>.
     /// </summary>
+    [MessagePackObject]
     public sealed class Unwatch : SystemMessage
     {
         /// <summary>
@@ -516,6 +548,7 @@ namespace Akka.Dispatch.SysMsg
         /// </summary>
         /// <param name="watchee">The watchee.</param>
         /// <param name="watcher">The watcher.</param>
+        [SerializationConstructor]
         public Unwatch(IInternalActorRef watchee, IInternalActorRef watcher)
         {
             Watchee = watchee;
@@ -526,13 +559,15 @@ namespace Akka.Dispatch.SysMsg
         /// Gets the watchee.
         /// </summary>
         /// <value>The watchee.</value>
-        public IInternalActorRef Watchee { get; }
+        [Key(0)]
+        public readonly IInternalActorRef Watchee;
 
         /// <summary>
         /// Gets the watcher.
         /// </summary>
         /// <value>The watcher.</value>
-        public IInternalActorRef Watcher { get; }
+        [Key(1)]
+        public readonly IInternalActorRef Watcher;
 
         private bool Equals(Unwatch other)
         {
@@ -564,26 +599,26 @@ namespace Akka.Dispatch.SysMsg
         }
     }
 
-    /// <summary>
-    ///     Class ActorTask.
-    /// </summary>
-    public sealed class ActorTask : SystemMessage
-    {
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="ActorTask" /> class.
-        /// </summary>
-        /// <param name="task">The task.</param>
-        public ActorTask(Task task)
-        {
-            Task = task;
-        }
+    ///// <summary>
+    /////     Class ActorTask.
+    ///// </summary>
+    //public sealed class ActorTask : SystemMessage
+    //{
+    //    /// <summary>
+    //    ///     Initializes a new instance of the <see cref="ActorTask" /> class.
+    //    /// </summary>
+    //    /// <param name="task">The task.</param>
+    //    public ActorTask(Task task)
+    //    {
+    //        Task = task;
+    //    }
 
-        /// <summary>
-        ///     Gets the task.
-        /// </summary>
-        /// <value>The task.</value>
-        public Task Task { get; private set; }
-    }
+    //    /// <summary>
+    //    ///     Gets the task.
+    //    /// </summary>
+    //    /// <value>The task.</value>
+    //    public Task Task { get; private set; }
+    //}
 
     /// <summary>
     /// TBD
@@ -647,12 +682,14 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     /// Sent to self from <see cref="ActorCell.Restart"/>
     /// </summary>
+    [MessagePackObject]
     public sealed class Recreate : SystemMessage, IStashWhenWaitingForChildren
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="Recreate" /> class.
         /// </summary>
         /// <param name="cause">The cause.</param>
+        [SerializationConstructor]
         public Recreate(Exception cause)
         {
             Cause = cause;
@@ -662,7 +699,8 @@ namespace Akka.Dispatch.SysMsg
         ///     Gets the cause.
         /// </summary>
         /// <value>The cause.</value>
-        public Exception Cause { get; private set; }
+        [Key(0)]
+        public readonly Exception Cause;
 
         /// <summary>
         /// TBD
@@ -677,12 +715,14 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     ///  Sent to self from <see cref="ActorCell.Resume"/>
     /// </summary>
+    [MessagePackObject]
     public sealed class Resume : SystemMessage, IStashWhenWaitingForChildren
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="Resume" /> class.
         /// </summary>
         /// <param name="causedByFailure">The caused by failure.</param>
+        [SerializationConstructor]
         public Resume(Exception causedByFailure)
         {
             CausedByFailure = causedByFailure;
@@ -692,7 +732,8 @@ namespace Akka.Dispatch.SysMsg
         ///     Gets or sets the caused by failure.
         /// </summary>
         /// <value>The caused by failure.</value>
-        public Exception CausedByFailure { get; set; }
+        [Key(0)]
+        public readonly Exception CausedByFailure;
 
         /// <summary>
         /// TBD
@@ -707,8 +748,11 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     ///  Sent to self from <see cref="ActorCell.Suspend"/>
     /// </summary>
-    public sealed class Suspend : SystemMessage, IStashWhenWaitingForChildren
+    public sealed class Suspend : SystemMessage, IStashWhenWaitingForChildren, ISingletonMessage
     {
+        private Suspend() { }
+        public static readonly Suspend Instance = new Suspend();
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -719,30 +763,35 @@ namespace Akka.Dispatch.SysMsg
         }
     }
 
-    /// <summary>
-    ///     Class Stop.
-    /// </summary>
-    public sealed class Stop : SystemMessage
-    {
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <returns>TBD</returns>
-        public override string ToString()
-        {
-            return "<Stop>";
-        }
-    }
+    ///// <summary>
+    /////     Class Stop.
+    ///// </summary>
+    //public sealed class Stop : SystemMessage, ISingletonMessage
+    //{
+    //    private Stop() { }
+    //    public static readonly Stop Instance = new Stop();
+
+    //    /// <summary>
+    //    /// TBD
+    //    /// </summary>
+    //    /// <returns>TBD</returns>
+    //    public override string ToString()
+    //    {
+    //        return "<Stop>";
+    //    }
+    //}
 
     /// <summary>
     ///     INTERNAL
     /// </summary>
+    [MessagePackObject]
     public sealed class StopChild   //StopChild is NOT a ISystemMessage
     {
         /// <summary>
         ///     Initializes a new instance of the <see cref="StopChild" /> class.
         /// </summary>
         /// <param name="child">The child.</param>
+        [SerializationConstructor]
         public StopChild(IActorRef child)
         {
             Child = child;
@@ -752,7 +801,8 @@ namespace Akka.Dispatch.SysMsg
         ///     Gets the child.
         /// </summary>
         /// <value>The child.</value>
-        public IActorRef Child { get; private set; }
+        [Key(0)]
+        public readonly IActorRef Child;
 
 
         /// <summary>
@@ -765,43 +815,46 @@ namespace Akka.Dispatch.SysMsg
         }
     }
 
-    /// <summary>
-    ///     Class Escalate.
-    /// </summary>
-    public sealed class Escalate : SystemMessage
-    {
-        /// <summary>
-        ///     Initializes a new instance of the <see cref="Escalate" /> class.
-        /// </summary>
-        /// <param name="reason">The reason.</param>
-        public Escalate(Exception reason)
-        {
-            Reason = reason;
-        }
+    ///// <summary>
+    /////     Class Escalate.
+    ///// </summary>
+    //public sealed class Escalate : SystemMessage
+    //{
+    //    /// <summary>
+    //    ///     Initializes a new instance of the <see cref="Escalate" /> class.
+    //    /// </summary>
+    //    /// <param name="reason">The reason.</param>
+    //    public Escalate(Exception reason)
+    //    {
+    //        Reason = reason;
+    //    }
 
-        /// <summary>
-        ///     Gets the reason.
-        /// </summary>
-        /// <value>The reason.</value>
-        public Exception Reason { get; private set; }
+    //    /// <summary>
+    //    ///     Gets the reason.
+    //    /// </summary>
+    //    /// <value>The reason.</value>
+    //    public Exception Reason { get; private set; }
 
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <returns>TBD</returns>
-        public override string ToString()
-        {
-            return "<Escalate>" + (Reason == null ? "" : " Reason: " + Reason);
-        }
-    }
+    //    /// <summary>
+    //    /// TBD
+    //    /// </summary>
+    //    /// <returns>TBD</returns>
+    //    public override string ToString()
+    //    {
+    //        return "<Escalate>" + (Reason == null ? "" : " Reason: " + Reason);
+    //    }
+    //}
 
 
     /// <summary>
     ///     Class Terminate.
     /// </summary>
-    public sealed class Terminate : SystemMessage, IPossiblyHarmful, IDeadLetterSuppression
+    public sealed class Terminate : SystemMessage, IPossiblyHarmful, IDeadLetterSuppression, ISingletonMessage
     {
+        private Terminate() { }
+        public static readonly Terminate Instance = new Terminate();
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -815,12 +868,14 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     /// Sent to self from <see cref="MessageDispatcher.Register"/>
     /// </summary>
+    [MessagePackObject]
     public sealed class Create : SystemMessage
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Create" /> class.
         /// </summary>
         /// <param name="failure">TBD</param>
+        [SerializationConstructor]
         public Create(ActorInitializationException failure = null)
         {
             Failure = failure;
@@ -829,7 +884,8 @@ namespace Akka.Dispatch.SysMsg
         /// <summary>
         /// TBD
         /// </summary>
-        public ActorInitializationException Failure { get; }
+        [Key(0)]
+        public readonly ActorInitializationException Failure;
 
         private bool Equals(Create other)
         {

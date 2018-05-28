@@ -1,13 +1,8 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="AkkaResolver.cs" company="Akka.NET Project">
-//     Copyright (C) 2017 Akka.NET Contrib <https://github.com/AkkaNetContrib/Akka.Serialization>
-// </copyright>
-//-----------------------------------------------------------------------
-
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Akka.Actor;
+using Akka.Serialization.Formatters;
 using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
@@ -45,6 +40,11 @@ namespace Akka.Serialization.Resolvers
         {
             if (FormatterMap.TryGetValue(t, out var formatter)) return formatter;
 
+            //if (typeof(IInternalActorRef).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+            //{
+            //    return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
+            //}
+
             if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
@@ -61,159 +61,7 @@ namespace Akka.Serialization.Resolvers
 
     #endregion
 
-    #region == ActorRefFormatter ==
-
-    // IActorRef
-    internal class ActorRefFormatter<T> : IMessagePackFormatter<T> where T : IActorRef
-    {
-        private const string c_nobody = "nobody";
-
-        public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
-        {
-            if (value == null)
-            {
-                return MessagePackBinary.WriteNil(ref bytes, offset);
-            }
-
-            if (value is Nobody) // TODO: this is a hack. Should work without it
-            {
-                return MessagePackBinary.WriteString(ref bytes, offset, c_nobody);
-            }
-
-            return MessagePackBinary.WriteString(ref bytes, offset, Serialization.SerializedActorPath(value));
-        }
-
-        public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
-        {
-            if (MessagePackBinary.IsNil(bytes, offset))
-            {
-                readSize = 1;
-                return default;
-            }
-
-            var path = MessagePackBinary.ReadString(bytes, offset, out readSize);
-
-            if (string.Equals(c_nobody, path, StringComparison.Ordinal))
-            {
-                return (T)(object)Nobody.Instance;
-            }
-
-            var system = MsgPackSerializerHelper.LocalSystem.Value;
-            if (system == null) { return default; }
-
-            return (T)system.Provider.ResolveActorRef(path);
-        }
-    }
-
-    #endregion
-
-    #region == ActorPathFormatter ==
-
-    // ActorPath
-    internal class ActorPathFormatter<T> : IMessagePackFormatter<T> where T : ActorPath
-    {
-        public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
-        {
-            if (value == null)
-            {
-                return MessagePackBinary.WriteNil(ref bytes, offset);
-            }
-
-            return MessagePackBinary.WriteString(ref bytes, offset, value.ToSerializationFormat());
-        }
-
-        public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
-        {
-            if (MessagePackBinary.IsNil(bytes, offset))
-            {
-                readSize = 1;
-                return null;
-            }
-
-            var path = MessagePackBinary.ReadString(bytes, offset, out readSize);
-
-            return ActorPath.TryParse(path, out var actorPath) ? (T)actorPath : null;
-        }
-    }
-
-    #endregion
-
-    #region == SingletonMessageFormatter ==
-
-    internal class SingletonMessageFormatter<T> : IMessagePackFormatter<T> where T : class
-    {
-        const int c_totalSize = 3;
-        const byte c_valueSize = 1;
-        const byte c_empty = 1;
-        private static readonly T s_instance;
-
-        static SingletonMessageFormatter()
-        {
-            var thisType = typeof(T);
-            var field = thisType.GetField("_instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (field != null) { s_instance = field.GetValue(null) as T; }
-            if (s_instance != null) { return; }
-
-            field = thisType.GetField("Instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (field != null) { s_instance = field.GetValue(null) as T; }
-            if (s_instance != null) { return; }
-
-            field = thisType.GetField("_singleton", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (field != null) { s_instance = field.GetValue(null) as T; }
-            if (s_instance != null) { return; }
-
-            field = thisType.GetField("Singleton", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (field != null) { s_instance = field.GetValue(null) as T; }
-            if (s_instance != null) { return; }
-
-            var property = thisType.GetProperty("Instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (property != null) { s_instance = property.GetValue(null) as T; }
-            if (s_instance != null) { return; }
-
-            property = thisType.GetProperty("Singleton", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (property != null) { s_instance = property.GetValue(null) as T; }
-        }
-
-        public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
-        {
-            readSize = c_totalSize;
-            return s_instance;
-        }
-
-        public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
-        {
-            MessagePackBinary.EnsureCapacity(ref bytes, offset, c_totalSize);
-
-            bytes[offset] = MessagePackCode.Bin8;
-            bytes[offset + 1] = c_valueSize;
-            bytes[offset + 2] = c_empty;
-
-            return c_totalSize;
-        }
-    }
-
-    #endregion
-
-
     #region == AkkaTypelessObjectResolver ==
-
-    internal sealed class AkkaTypelessFormatter : TypelessFormatter
-    {
-        public new static readonly IMessagePackFormatter<object> Instance = new AkkaTypelessFormatter();
-
-        protected override byte[] TranslateTypeName(Type actualType, out Type expectedType)
-        {
-            if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(actualType.GetTypeInfo()))
-            {
-                expectedType = typeof(IActorRef);
-            }
-            else
-            {
-                expectedType = actualType;
-            }
-            return TypeSerializer.GetTypeKeyFromType(expectedType).TypeName;
-        }
-    }
 
     internal sealed class AkkaTypelessObjectResolver : IFormatterResolver
     {

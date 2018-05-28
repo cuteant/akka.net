@@ -26,7 +26,6 @@ namespace Akka.Serialization
 
         public MsgPackSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
         {
-            MsgPackSerializerHelper.LocalSystem.Value = system;
             _settings = settings;
             _initialBufferSize = settings.InitialBufferSize;
         }

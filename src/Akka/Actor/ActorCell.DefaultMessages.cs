@@ -499,13 +499,13 @@ namespace Akka.Actor
         ///     Async stop this actor
         /// </summary>
         /// <remarks>➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅</remarks>
-        public void Stop() => SendSystemMessage(new Dispatch.SysMsg.Terminate());
+        public void Stop() => SendSystemMessage(Dispatch.SysMsg.Terminate.Instance);
 
         /// <summary>
         ///     Suspends this instance.
         /// </summary>
         /// <remarks>➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅</remarks>
-        public void Suspend() => SendSystemMessage(new Dispatch.SysMsg.Suspend());
+        public void Suspend() => SendSystemMessage(Dispatch.SysMsg.Suspend.Instance);
 
         /// <summary>
         /// TBD

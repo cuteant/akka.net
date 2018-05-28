@@ -2,38 +2,13 @@
 using System.Collections.Generic;
 using System.Linq.Expressions;
 using System.Reflection;
-using Akka.Actor;
-using Akka.Util;
+using Akka.Serialization.Formatters;
 using CuteAnt.Reflection;
-using Hyperion;
-using Hyperion.Surrogates;
 using MessagePack;
 using MessagePack.Formatters;
 
 namespace Akka.Serialization.Resolvers
 {
-    #region == AkkaHyperionExceptionFormatter ==
-
-    internal class AkkaHyperionExceptionFormatter<TException> : HyperionExceptionFormatter<TException>
-        where TException : Exception
-    {
-        public AkkaHyperionExceptionFormatter() : base(
-            new SerializerOptions(
-                versionTolerance: false,
-                preserveObjectReferences: true//,
-                //surrogates: new[]
-                //    {
-                //        Surrogate.Create<IActorRef, ActorRefSurrogate>(ActorRefSurrogate.ToSurrogate, ActorRefSurrogate.FromSurrogate),
-                //        Surrogate.Create<ISurrogated, ISurrogate>(
-                //            from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
-                //            to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)),
-                //    }
-                ))
-        { }
-    }
-
-    #endregion
-
     #region == AkkaHyperionExceptionResolver ==
 
     internal sealed class AkkaHyperionExceptionResolver : IFormatterResolver
@@ -71,29 +46,6 @@ namespace Akka.Serialization.Resolvers
 
             return null;
         }
-    }
-
-    #endregion
-
-
-    #region == AkkaHyperionExpressionFormatter ==
-
-    internal class AkkaHyperionExpressionFormatter<TExpression> : HyperionExpressionFormatter<TExpression>
-        where TExpression : Expression
-    {
-        public AkkaHyperionExpressionFormatter() : base(
-            new SerializerOptions(
-                versionTolerance: false,
-                preserveObjectReferences: true//,
-                //surrogates: new[]
-                //    {
-                //        Surrogate.Create<IActorRef, ActorRefSurrogate>(ActorRefSurrogate.ToSurrogate, ActorRefSurrogate.FromSurrogate),
-                //        Surrogate.Create<ISurrogated, ISurrogate>(
-                //            from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
-                //            to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)),
-                //    }
-                ))
-        { }
     }
 
     #endregion
@@ -136,27 +88,6 @@ namespace Akka.Serialization.Resolvers
 
             return null;
         }
-    }
-
-    #endregion
-
-
-    #region == AkkaHyperionFormatter ==
-
-    internal class AkkaHyperionFormatter<T> : SimpleHyperionFormatter<T>
-    {
-        public AkkaHyperionFormatter() : base(
-            new SerializerOptions(
-                versionTolerance: false,
-                preserveObjectReferences: true,
-                surrogates: new[]
-                    {
-                        Surrogate.Create<ISurrogated, ISurrogate>(
-                            from => from.ToSurrogate(MsgPackSerializerHelper.LocalSystem.Value),
-                            to => to.FromSurrogate(MsgPackSerializerHelper.LocalSystem.Value)),
-                    }
-                ))
-        { }
     }
 
     #endregion

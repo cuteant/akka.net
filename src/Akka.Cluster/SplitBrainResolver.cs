@@ -230,7 +230,7 @@ namespace Akka.Cluster
     {
         #region internal classes
 
-        private sealed class StabilityReached
+        private sealed class StabilityReached : ISingletonMessage
         {
             public static readonly StabilityReached Instance = new StabilityReached();
             private StabilityReached() { }

@@ -484,7 +484,7 @@ namespace Akka.Dispatch
             if (Actor != null)
             {
                 var dlm = Actor.Dispatcher.Mailboxes.DeadLetterMailbox;
-                var messageList = SystemDrain(new LatestFirstSystemMessageList(new NoMessage()));
+                var messageList = SystemDrain(new LatestFirstSystemMessageList(NoMessage.Instance));
                 while (messageList.NonEmpty)
                 {
                     // message must be "virgin" before being able to SystemEnqueue again

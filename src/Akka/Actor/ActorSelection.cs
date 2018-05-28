@@ -11,9 +11,11 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
+using Akka.Serialization.Formatters;
 using Akka.Util;
 using Akka.Util.Internal;
 using Akka.Util.Internal.Collections;
+using MessagePack;
 
 namespace Akka.Actor
 {
@@ -63,10 +65,10 @@ namespace Akka.Actor
         /// <param name="anchor">The anchor.</param>
         /// <param name="path">The path.</param>
         public ActorSelection(IActorRef anchor, string path)
-            : this(anchor, path == "" ? new string[] {} : path.Split('/'))
+            : this(anchor, path == "" ? new string[] { } : path.Split('/'))
         {
         }
-        
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ActorSelection" /> class.
         /// </summary>
@@ -75,7 +77,7 @@ namespace Akka.Actor
         public ActorSelection(IActorRef anchor, IEnumerable<string> elements)
         {
             Anchor = anchor;
-            
+
             Path = elements
                 .Where(s => !string.IsNullOrWhiteSpace(s))
                 .Select<string, SelectionPathElement>(e =>
@@ -99,7 +101,7 @@ namespace Akka.Actor
             if (sender == null && ActorCell.Current != null && ActorCell.Current.Self != null)
                 sender = ActorCell.Current.Self;
 
-            DeliverSelection(Anchor as IInternalActorRef, sender, 
+            DeliverSelection(Anchor as IInternalActorRef, sender,
                 new ActorSelectionMessage(message, Path, wildCardFanOut: false));
         }
 
@@ -145,17 +147,17 @@ namespace Akka.Actor
             try
             {
                 var identity = await this.Ask<ActorIdentity>(new Identify(null), timeout, ct).ConfigureAwait(false);
-                if(identity.Subject == null)
+                if (identity.Subject == null)
                     throw new ActorNotFoundException("subject was null");
 
                 return identity.Subject;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 throw new ActorNotFoundException("Exception occurred while resolving ActorSelection", ex);
             }
         }
-        
+
         /// <summary>
         /// INTERNAL API
         /// Convenience method used by remoting when receiving <see cref="ActorSelectionMessage" /> from a remote
@@ -183,7 +185,7 @@ namespace Akka.Actor
                             path: anchor.Path / sel.Elements.Select(el => el.ToString()),
                             eventStream: refWithCell.Underlying.System.EventStream);
 
-                        switch(iter.Next())
+                        switch (iter.Next())
                         {
                             case SelectParent _:
                                 var parent = actorRef.Parent;
@@ -241,7 +243,7 @@ namespace Akka.Actor
                                             elements: iter.ToVector().ToArray(),
                                             wildCardFanOut: sel.WildCardFanOut || matchingChildren.Count > 1);
 
-                                        for(var i = 0; i < matchingChildren.Count; i++)
+                                        for (var i = 0; i < matchingChildren.Count; i++)
                                             DeliverSelection(matchingChildren[i] as IInternalActorRef, sender, message);
                                     }
                                 }
@@ -298,14 +300,16 @@ namespace Akka.Actor
     /// <summary>
     /// Class ActorSelectionMessage.
     /// </summary>
+    [MessagePackObject]
     public class ActorSelectionMessage : IAutoReceivedMessage, IPossiblyHarmful
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ActorSelectionMessage" /> class.
-        /// </summary>
+        /// </summary>s
         /// <param name="message">The message.</param>
         /// <param name="elements">The elements.</param>
         /// <param name="wildCardFanOut">TBD</param>
+        [SerializationConstructor]
         public ActorSelectionMessage(object message, SelectionPathElement[] elements, bool wildCardFanOut = false)
         {
             Message = message;
@@ -316,16 +320,20 @@ namespace Akka.Actor
         /// <summary>
         /// The message that should be delivered to this ActorSelection.
         /// </summary>
+        [Key(0)]
+        [MessagePackFormatter(typeof(WrappedPayloadFormatter))]
         public object Message { get; }
 
         /// <summary>
         /// The elements, e.g. "foo/bar/baz".
         /// </summary>
+        [Key(1)]
         public SelectionPathElement[] Elements { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(2)]
         public bool WildCardFanOut { get; }
 
         /// <inheritdoc/>
@@ -339,6 +347,10 @@ namespace Akka.Actor
     /// <summary>
     /// Class SelectionPathElement.
     /// </summary>
+    [Union(0, typeof(SelectChildName))]
+    [Union(1, typeof(SelectChildPattern))]
+    [Union(2, typeof(SelectParent))]
+    [MessagePackObject]
     public abstract class SelectionPathElement
     {
     }
@@ -346,12 +358,14 @@ namespace Akka.Actor
     /// <summary>
     /// Class SelectChildName.
     /// </summary>
+    [MessagePackObject]
     public class SelectChildName : SelectionPathElement
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SelectChildName" /> class.
         /// </summary>
         /// <param name="name">The name.</param>
+        [SerializationConstructor]
         public SelectChildName(string name)
         {
             Name = name;
@@ -360,7 +374,8 @@ namespace Akka.Actor
         /// <summary>
         /// Gets the actor name.
         /// </summary>
-        public string Name { get; }
+        [Key(0)]
+        public readonly string Name;
 
         /// <inheritdoc/>
         protected bool Equals(SelectChildName other)
@@ -387,12 +402,14 @@ namespace Akka.Actor
     /// <summary>
     /// Class SelectChildPattern.
     /// </summary>
+    [MessagePackObject]
     public class SelectChildPattern : SelectionPathElement
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SelectChildPattern" /> class.
         /// </summary>
         /// <param name="patternStr">The pattern string.</param>
+        [SerializationConstructor]
         public SelectChildPattern(string patternStr)
         {
             PatternStr = patternStr;
@@ -401,7 +418,8 @@ namespace Akka.Actor
         /// <summary>
         /// Gets the pattern string.
         /// </summary>
-        public string PatternStr { get; }
+        [Key(0)]
+        public readonly string PatternStr;
 
         /// <inheritdoc/>
         protected bool Equals(SelectChildPattern other) => string.Equals(PatternStr, other.PatternStr, StringComparison.Ordinal);
@@ -426,6 +444,7 @@ namespace Akka.Actor
     /// <summary>
     /// Class SelectParent.
     /// </summary>
+    [MessagePackObject]
     public class SelectParent : SelectionPathElement
     {
         /// <inheritdoc/>

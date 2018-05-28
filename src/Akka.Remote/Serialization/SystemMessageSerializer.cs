@@ -7,14 +7,13 @@
 
 using System;
 using System.Collections.Generic;
-using System.Text;
 using Akka.Actor;
 using Akka.Dispatch.SysMsg;
 using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt;
-using Google.Protobuf;
+using CuteAnt.Extensions.Serialization;
 
 namespace Akka.Remote.Serialization
 {
@@ -24,6 +23,9 @@ namespace Akka.Remote.Serialization
         private ExceptionSupport _exceptionSupport;
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
+
+        private static readonly TypelessMessagePackMessageFormatter s_formatter = TypelessMessagePackMessageFormatter.DefaultInstance;
+        private const int c_initialBufferSize = 1024 * 2;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SystemMessageSerializer" /> class.
@@ -36,47 +38,74 @@ namespace Akka.Remote.Serialization
         }
 
         /// <inheritdoc />
-        public override bool IncludeManifest { get; } = true; // TODO: should be false
+        public override bool IncludeManifest { get; } = false;
+
+        private static readonly Dictionary<Type, bool> s_toBinaryMap = new Dictionary<Type, bool>()
+        {
+            { typeof(Create), true },
+            { typeof(Recreate), true },
+            { typeof(Suspend), true },
+            { typeof(Resume), true },
+            { typeof(Terminate), true },
+            { typeof(Supervise), true },
+            { typeof(Watch), true },
+            { typeof(Unwatch), true },
+            { typeof(Failed), true },
+            { typeof(DeathWatchNotification), true },
+            { typeof(NoMessage), false },
+        };
 
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
-            switch (obj)
+            if (s_toBinaryMap.TryGetValue(obj.GetType(), out var canSerialize))
             {
-                case Create create:
-                    return CreateToProto(create);
-                case Recreate recreate:
-                    return RecreateToProto(recreate);
-                case Suspend suspend:
-                    return EmptyBytes;
-                case Resume resume:
-                    return ResumeToProto(resume);
-                case Terminate terminate:
-                    return EmptyBytes;
-                case Supervise supervise:
-                    return SuperviseToProto(supervise);
-                case Watch watch:
-                    return WatchToProto(watch);
-                case Unwatch unwatch:
-                    return UnwatchToProto(unwatch);
-                case Failed failed:
-                    return FailedToProto(failed);
-                case DeathWatchNotification deathWatchNotification:
-                    return DeathWatchNotificationToProto(deathWatchNotification);
-                case NoMessage noMessage:
+                if (canSerialize)
+                {
+                    s_formatter.SerializeObject(obj, c_initialBufferSize);
+                }
+                else
+                {
                     throw new ArgumentException("NoMessage should never be serialized or deserialized");
-                default:
-                    throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+                }
             }
+            throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+            //switch (obj)
+            //{
+            //    case Create create:
+            //        return CreateToProto(create);
+            //    case Recreate recreate:
+            //        return RecreateToProto(recreate);
+            //    case Suspend suspend:
+            //        return EmptyBytes;
+            //    case Resume resume:
+            //        return ResumeToProto(resume);
+            //    case Terminate terminate:
+            //        return EmptyBytes;
+            //    case Supervise supervise:
+            //        return SuperviseToProto(supervise);
+            //    case Watch watch:
+            //        return WatchToProto(watch);
+            //    case Unwatch unwatch:
+            //        return UnwatchToProto(unwatch);
+            //    case Failed failed:
+            //        return FailedToProto(failed);
+            //    case DeathWatchNotification deathWatchNotification:
+            //        return DeathWatchNotificationToProto(deathWatchNotification);
+            //    case NoMessage noMessage:
+            //        throw new ArgumentException("NoMessage should never be serialized or deserialized");
+            //    default:
+            //        throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+            //}
         }
 
         private static readonly Dictionary<Type, Func<SystemMessageSerializer, byte[], object>> s_fromBinaryMap = new Dictionary<Type, Func<SystemMessageSerializer, byte[], object>>()
         {
             { typeof(Create), (s, b)=> CreateFromProto(s, b) },
             { typeof(Recreate), (s, b)=> RecreateFromProto(s, b) },
-            { typeof(Suspend), (s, b)=> new Suspend() },
+            { typeof(Suspend), (s, b)=> Suspend.Instance },
             { typeof(Resume), (s, b)=> ResumeFromProto(s, b) },
-            { typeof(Terminate), (s, b)=> new Terminate() },
+            { typeof(Terminate), (s, b)=> Terminate.Instance },
             { typeof(Supervise), (s, b)=> SuperviseFromProto(s, b) },
             { typeof(Watch), (s, b)=> WatchFromProto(s, b) },
             { typeof(Unwatch), (s, b)=> UnwatchFromProto(s, b) },
@@ -87,12 +116,13 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (s_fromBinaryMap.TryGetValue(type, out var factory))
-            {
-                return factory(this, bytes);
-            }
+            return s_formatter.Deserialize(type, bytes);
+            //if (s_fromBinaryMap.TryGetValue(type, out var factory))
+            //{
+            //    return factory(this, bytes);
+            //}
 
-            throw new ArgumentException($"Unimplemented deserialization of message with manifest [{type.TypeQualifiedName()}] in [${nameof(SystemMessageSerializer)}]");
+            //throw new ArgumentException($"Unimplemented deserialization of message with manifest [{type.TypeQualifiedName()}] in [${nameof(SystemMessageSerializer)}]");
         }
 
         //

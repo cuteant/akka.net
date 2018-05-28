@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 using CuteAnt;
+using CuteAnt.Text;
 using Akka.Actor;
 using Akka.Serialization;
 using Akka.Util;
@@ -17,6 +18,9 @@ namespace Akka.Remote.Serialization
 {
     public sealed class PrimitiveSerializers : Serializer
     {
+        private static readonly Encoding s_encodingUtf8 = StringHelper.UTF8NoBOM;
+        private static readonly Encoding s_decodingUtf8 = Encoding.UTF8;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PrimitiveSerializers" /> class.
         /// </summary>
@@ -34,7 +38,7 @@ namespace Akka.Remote.Serialization
             switch (obj)
             {
                 case string str:
-                    return Encoding.UTF8.GetBytes(str);
+                    return s_encodingUtf8.GetBytes(str);
                 case int intValue:
                     return BitConverter.GetBytes((int)obj);
                 case long longValue:
@@ -46,7 +50,7 @@ namespace Akka.Remote.Serialization
 
         private static readonly Dictionary<Type, Func<byte[], object>> s_fromBinaryMap = new Dictionary<Type, Func<byte[], object>>()
         {
-            { TypeConstants.StringType, bytes => Encoding.UTF8.GetString(bytes) },
+            { TypeConstants.StringType, bytes => s_decodingUtf8.GetString(bytes) },
             { TypeConstants.IntType, bytes => BitConverter.ToInt32(bytes, 0) },
             { TypeConstants.LongType, bytes => BitConverter.ToInt64(bytes, 0) },
         };

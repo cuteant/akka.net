@@ -13,6 +13,7 @@ using Akka.Event;
 using Akka.Pattern;
 using Akka.Streams.Dsl;
 using Akka.Streams.Implementation;
+using MessagePack;
 using Reactive.Streams;
 
 namespace Akka.Streams.Actors
@@ -82,18 +83,17 @@ namespace Akka.Streams.Actors
     /// This message is delivered to the <see cref="ActorPublisher{T}"/> actor when the stream
     /// subscriber requests more elements.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class Request : IActorPublisherMessage, INoSerializationVerificationNeeded
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        [Key(0)]
         public readonly long Count;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="count">TBD</param>
+        [SerializationConstructor]
         public Request(long count)
         {
             Count = count;
@@ -107,6 +107,7 @@ namespace Akka.Streams.Actors
         /// <summary>
         /// INTERNAL API: needed for stash support
         /// </summary>
+        [Key(1)]
         internal bool IsProcessed { get; private set; }
     }
 
@@ -115,7 +116,7 @@ namespace Akka.Streams.Actors
     /// subscriber cancels the subscription.
     /// </summary>
     [Serializable]
-    public sealed class Cancel : IActorPublisherMessage, INoSerializationVerificationNeeded
+    public sealed class Cancel : IActorPublisherMessage, INoSerializationVerificationNeeded, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -130,7 +131,7 @@ namespace Akka.Streams.Actors
     /// publisher will already be in cancelled state, thus the actor should clean-up and stop itself.
     /// </summary>
     [Serializable]
-    public sealed class SubscriptionTimeoutExceeded : IActorPublisherMessage, INoSerializationVerificationNeeded
+    public sealed class SubscriptionTimeoutExceeded : IActorPublisherMessage, INoSerializationVerificationNeeded, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -688,8 +689,10 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     public sealed class ActorPublisherSubscription : ISubscription
     {
+        [Key(0)]
         private readonly IActorRef _ref;
 
         /// <summary>
@@ -699,6 +702,7 @@ namespace Akka.Streams.Actors
         /// <exception cref="ArgumentNullException">
         /// This exception is thrown when the specified <paramref name="ref"/> is undefined.
         /// </exception>
+        [SerializationConstructor]
         public ActorPublisherSubscription(IActorRef @ref)
         {
             _ref = @ref ?? throw new ArgumentNullException(nameof(@ref), "ActorPublisherSubscription requires IActorRef to be defined");
@@ -719,15 +723,19 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     public sealed class OnErrorBlock
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly Exception Cause;
+
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public readonly bool Stop;
 
         /// <summary>
@@ -735,6 +743,7 @@ namespace Akka.Streams.Actors
         /// </summary>
         /// <param name="cause">TBD</param>
         /// <param name="stop">TBD</param>
+        [SerializationConstructor]
         public OnErrorBlock(Exception cause, bool stop)
         {
             Cause = cause;

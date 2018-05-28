@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Streams.Dsl;
+using MessagePack;
 using Reactive.Streams;
 
 namespace Akka.Streams.Actors
@@ -17,18 +18,20 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class OnSubscribe : INoSerializationVerificationNeeded, IDeadLetterSuppression
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly ISubscription Subscription;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="subscription">TBD</param>
+        [SerializationConstructor]
         public OnSubscribe(ISubscription subscription)
         {
             Subscription = subscription;
@@ -43,18 +46,20 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class OnNext : IActorSubscriberMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly object Element;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="element">TBD</param>
+        [SerializationConstructor]
         public OnNext(object element)
         {
             Element = element;
@@ -64,18 +69,20 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class OnError : IActorSubscriberMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly Exception Cause;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="cause">TBD</param>
+        [SerializationConstructor]
         public OnError(Exception cause)
         {
             Cause = cause;
@@ -86,7 +93,7 @@ namespace Akka.Streams.Actors
     /// TBD
     /// </summary>
     [Serializable]
-    public sealed class OnComplete : IActorSubscriberMessage
+    public sealed class OnComplete : IActorSubscriberMessage, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -321,8 +328,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public ActorSubscriberImpl(IActorRef impl)
         {
-            if (impl == null) throw new ArgumentNullException(nameof(impl), "ActorSubscriberImpl requires actor impl to be defined");
-            _impl = impl;
+            _impl = impl ?? throw new ArgumentNullException(nameof(impl), "ActorSubscriberImpl requires actor impl to be defined");
         }
 
         /// <summary>
@@ -449,8 +455,7 @@ namespace Akka.Streams.Actors
         /// <returns>TBD</returns>
         public State Remove(IActorRef actorRef)
         {
-            State s;
-            return _state.TryRemove(actorRef, out s) ? s : null;
+            return _state.TryRemove(actorRef, out var s) ? s : null;
         }
 
         /// <summary>

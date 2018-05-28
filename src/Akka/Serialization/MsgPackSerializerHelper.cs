@@ -1,8 +1,11 @@
 ﻿using System.Threading;
 using Akka.Actor;
+using Akka.Serialization.Formatters;
+using Akka.Serialization.Resolvers;
 using CuteAnt.Extensions.Serialization;
+using MessagePack;
 
-namespace Akka.Serialization.Resolvers
+namespace Akka.Serialization
 {
     internal sealed class MsgPackSerializerHelper
     {
@@ -14,6 +17,7 @@ namespace Akka.Serialization.Resolvers
         static MsgPackSerializerHelper()
         {
             MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance);
+            MessagePackSerializer.Typeless.RegisterTypelessFormatter(AkkaTypelessFormatter.Instance);
         }
 
         public static void Register()

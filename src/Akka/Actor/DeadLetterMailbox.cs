@@ -62,7 +62,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public bool TryDequeue(out Envelope envelope)
         {
-            envelope = new Envelope(new NoMessage(), ActorRefs.NoSender);
+            envelope = new Envelope(NoMessage.Instance, ActorRefs.NoSender);
             return false;
         }
 
