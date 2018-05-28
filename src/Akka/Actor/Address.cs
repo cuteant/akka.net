@@ -7,8 +7,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using Akka.Util;
 using MessagePack;
@@ -64,7 +64,7 @@ namespace Akka.Actor
         /// </summary>
         public static readonly Address AllSystems = new Address("akka", "all-systems");
 
-        [IgnoreMember]
+        [IgnoreMember, IgnoreDataMember]
         private readonly Lazy<string> _toString;
 
         /// <summary>
@@ -112,7 +112,7 @@ namespace Akka.Actor
         /// Returns true if this Address is only defined locally. It is not safe to send locally scoped addresses to remote
         ///  hosts. See also <see cref="HasGlobalScope"/>
         /// </summary>
-        [IgnoreMember]
+        [IgnoreMember, IgnoreDataMember]
         public bool HasLocalScope => string.IsNullOrEmpty(Host);
 
         /// <summary>
@@ -120,7 +120,7 @@ namespace Akka.Actor
         /// addresses of global scope are safe to sent to other hosts, as they globally and uniquely identify an addressable
         /// entity.
         /// </summary>
-        [IgnoreMember]
+        [IgnoreMember, IgnoreDataMember]
         public bool HasGlobalScope => !string.IsNullOrEmpty(Host);
 
         private Lazy<string> CreateLazyToString()

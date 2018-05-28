@@ -2,6 +2,7 @@
 using System.Reflection;
 using System.Text;
 using Akka.Actor;
+using Akka.Configuration;
 using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
@@ -144,6 +145,31 @@ namespace Akka.Serialization.Formatters
                 expectedType = actualType;
             }
             return TypeSerializer.GetTypeKeyFromType(expectedType).TypeName;
+        }
+    }
+
+    #endregion
+
+    #region == ActorConfigFormatter ==
+
+    internal sealed class ActorConfigFormatter : IMessagePackFormatter<Config>
+    {
+        internal static readonly ActorConfigFormatter Instnace = new ActorConfigFormatter();
+
+        public int Serialize(ref byte[] bytes, int offset, Config value, IFormatterResolver formatterResolver)
+        {
+            if (value == null || value.IsEmpty) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+
+            return MessagePackBinary.WriteString(ref bytes, offset, value.Root.ToString());
+        }
+
+        public Config Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        {
+            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return Config.Empty; }
+
+            var config = MessagePackBinary.ReadString(bytes, offset, out readSize);
+
+            return ConfigurationFactory.ParseString(config);
         }
     }
 

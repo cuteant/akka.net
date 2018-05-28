@@ -1,7 +1,6 @@
 ﻿using System;
 using Akka.Actor;
 using Akka.Configuration;
-using Akka.Serialization.Resolvers;
 using CuteAnt.Extensions.Serialization;
 
 namespace Akka.Serialization
@@ -24,11 +23,23 @@ namespace Akka.Serialization
             _initialBufferSize = settings.InitialBufferSize;
         }
 
-        public override byte[] ToBinary(object obj) => s_formatter.SerializeObject(obj, _initialBufferSize);
+        public override byte[] ToBinary(object obj)
+        {
+            MsgPackSerializerHelper.LocalSystem.Value = system;
+            var bts = s_formatter.SerializeObject(obj, _initialBufferSize);
+            MsgPackSerializerHelper.LocalSystem.Value = null;
+            return bts;
+        }
 
-        public override object FromBinary(byte[] bytes, Type type) => s_formatter.Deserialize(type, bytes);
+        public override object FromBinary(byte[] bytes, Type type)
+        {
+            MsgPackSerializerHelper.LocalSystem.Value = system;
+            var obj = s_formatter.Deserialize(type, bytes);
+            MsgPackSerializerHelper.LocalSystem.Value = null;
+            return obj;
+        }
 
-        public override int Identifier => 153;
+        public override int Identifier => -3;
 
         public override bool IncludeManifest => false;
     }

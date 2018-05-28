@@ -430,7 +430,7 @@ namespace Akka.Actor
         /// </summary>
         public void Suspend()
         {
-            SendSystemMessage(Akka.Dispatch.SysMsg.Suspend.Instance);
+            SendSystemMessage(new Akka.Dispatch.SysMsg.Suspend());
         }
 
         /// <summary>
@@ -456,7 +456,7 @@ namespace Akka.Actor
         /// </summary>
         public void Stop()
         {
-            SendSystemMessage(Terminate.Instance);
+            SendSystemMessage(new Terminate());
         }
 
         /// <summary>

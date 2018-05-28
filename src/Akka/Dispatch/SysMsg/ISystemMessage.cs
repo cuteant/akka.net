@@ -287,7 +287,6 @@ namespace Akka.Dispatch.SysMsg
     [Union(4, typeof(Unwatch))]
     [Union(5, typeof(Recreate))]
     [Union(6, typeof(Resume))]
-    [Union(7, typeof(Create))]
     [MessagePackObject]
     public abstract class SystemMessage : ISystemMessage
     {
@@ -748,11 +747,8 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     ///  Sent to self from <see cref="ActorCell.Suspend"/>
     /// </summary>
-    public sealed class Suspend : SystemMessage, IStashWhenWaitingForChildren, ISingletonMessage
+    public sealed class Suspend : SystemMessage, IStashWhenWaitingForChildren
     {
-        private Suspend() { }
-        public static readonly Suspend Instance = new Suspend();
-
         /// <summary>
         /// TBD
         /// </summary>
@@ -850,11 +846,8 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     ///     Class Terminate.
     /// </summary>
-    public sealed class Terminate : SystemMessage, IPossiblyHarmful, IDeadLetterSuppression, ISingletonMessage
+    public sealed class Terminate : SystemMessage, IPossiblyHarmful, IDeadLetterSuppression
     {
-        private Terminate() { }
-        public static readonly Terminate Instance = new Terminate();
-
         /// <summary>
         /// TBD
         /// </summary>
@@ -868,14 +861,12 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     /// Sent to self from <see cref="MessageDispatcher.Register"/>
     /// </summary>
-    [MessagePackObject]
     public sealed class Create : SystemMessage
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Create" /> class.
         /// </summary>
         /// <param name="failure">TBD</param>
-        [SerializationConstructor]
         public Create(ActorInitializationException failure = null)
         {
             Failure = failure;
@@ -884,7 +875,6 @@ namespace Akka.Dispatch.SysMsg
         /// <summary>
         /// TBD
         /// </summary>
-        [Key(0)]
         public readonly ActorInitializationException Failure;
 
         private bool Equals(Create other)

@@ -18,7 +18,9 @@ namespace Akka.Routing
     /// <see cref="Akka.Routing.Pool"/> routers with dynamically resizable number of routees are implemented by providing a Resizer
     /// implementation in the <see cref="Akka.Routing.Pool"/> configuration
     /// </summary>
-    public abstract class Resizer : IObjectReferences
+    [Union(0, typeof(DefaultResizer))]
+    [MessagePackObject]
+    public abstract class Resizer
     {
         /// <summary>
         /// Is it time for resizing. Typically implemented with modulo of nth message, but
@@ -71,6 +73,7 @@ namespace Akka.Routing
     /// <summary>
     /// Implementation of <see cref="Akka.Routing.Resizer"/> that adjust the <see cref="Akka.Routing.Pool"/> based on specified thresholds.
     /// </summary>
+    [MessagePackObject]
     public class DefaultResizer : Resizer, IEquatable<DefaultResizer>
     {
         /// <summary>
@@ -95,6 +98,7 @@ namespace Akka.Routing
         /// <li>The given <paramref name="messagesPerResize"/> was less than one.</li>
         /// </ul>
         /// </exception>
+        [SerializationConstructor]
         public DefaultResizer(
             int lower,
             int upper,
@@ -288,12 +292,14 @@ namespace Akka.Routing
         /// <summary>
         /// The fewest number of routees the router should ever have.
         /// </summary>
+        [Key(0)]
         public int LowerBound { get; set; }
 
         /// <summary>
         /// The most number of routees the router should ever have. 
         /// Must be greater than or equal to `lowerBound`.
         /// </summary>
+        [Key(1)]
         public int UpperBound { get; set; }
 
         /// <summary>
@@ -308,14 +314,16 @@ namespace Akka.Routing
         ///           default UnboundedMailbox is O(N) operation.</li>
         /// </ul>
         /// </summary>
-        public int PressureThreshold { get; private set; }
+        [Key(2)]
+        public int PressureThreshold { get; }
 
         /// <summary>
         /// Percentage to increase capacity whenever all routees are busy.
         /// For example, 0.2 would increase 20% (rounded up), i.e. if current
         /// capacity is 6 it will request an increase of 2 more routees.
         /// </summary>
-        public double RampupRate { get; private set; }
+        [Key(3)]
+        public double RampupRate { get; }
 
         /// <summary>
         /// Minimum fraction of busy routees before backing off.
@@ -326,7 +334,8 @@ namespace Akka.Routing
         ///
         /// Use 0.0 or negative to avoid removal of routees.
         /// </summary>
-        public double BackoffThreshold { get; private set; }
+        [Key(4)]
+        public double BackoffThreshold { get; }
 
         /// <summary>
         /// Fraction of routees to be removed when the resizer reaches the
@@ -334,13 +343,15 @@ namespace Akka.Routing
         /// For example, 0.1 would decrease 10% (rounded up), i.e. if current
         /// capacity is 9 it will request an decrease of 1 routee.
         /// </summary>
-        public double BackoffRate { get; private set; }
+        [Key(5)]
+        public double BackoffRate { get; }
 
         /// <summary>
         /// Number of messages between resize operation.
         /// Use 1 to resize before each message.
         /// </summary>
-        public int MessagesPerResize { get; private set; }
+        [Key(6)]
+        public int MessagesPerResize { get; }
 
         /// <inheritdoc/>
         public bool Equals(DefaultResizer other)

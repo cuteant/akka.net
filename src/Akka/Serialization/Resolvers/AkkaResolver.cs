@@ -2,7 +2,9 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Akka.Actor;
+using Akka.Configuration;
 using Akka.Serialization.Formatters;
+using Akka.Util;
 using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
@@ -34,6 +36,7 @@ namespace Akka.Serialization.Resolvers
             {typeof(IActorRef), new ActorRefFormatter<IActorRef>()},
             {typeof(IInternalActorRef), new ActorRefFormatter<IInternalActorRef>()},
             {typeof(RepointableActorRef), new ActorRefFormatter<RepointableActorRef>()},
+            //{typeof(Config), ActorConfigFormatter.Instnace},
         };
 
         internal static object GetFormatter(Type t)
@@ -53,6 +56,14 @@ namespace Akka.Serialization.Resolvers
             if (typeof(ISingletonMessage).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(SingletonMessageFormatter<>).GetCachedGenericType(t));
+            }
+
+            if (MsgPackSerializerHelper.UseRemotingSerializer)
+            {
+                if (typeof(ISurrogated).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+                {
+                    return ActivatorUtils.FastCreateInstance(typeof(WrappedPayloadFormatter<>).GetCachedGenericType(t));
+                }
             }
 
             return null;

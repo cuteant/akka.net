@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using Akka.Event;
+using Akka.Serialization.Formatters;
 using MessagePack;
 
 namespace Akka.Actor
@@ -87,6 +88,7 @@ namespace Akka.Actor
         /// A correlating ID used to distinguish multiple <see cref="Identify"/> requests to the same receiver.
         /// </summary>
         [Key(0)]
+        [MessagePackFormatter(typeof(WrappedPayloadFormatter))]
         public object MessageId { get; }
 
         #region Equals
@@ -138,6 +140,7 @@ namespace Akka.Actor
         /// The same correlating ID used in the original <see cref="Identify"/> message.
         /// </summary>
         [Key(0)]
+        [MessagePackFormatter(typeof(WrappedPayloadFormatter))]
         public object MessageId { get; }
 
         /// <summary>

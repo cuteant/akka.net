@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using MessagePack;
 
 namespace Akka.Actor
 {
@@ -13,6 +14,7 @@ namespace Akka.Actor
     /// This class represents a binding of an actor deployment to a remote system.
     /// Actors in this scope are deployed to a specified <see cref="Address"/>.
     /// </summary>
+    [MessagePackObject]
     public class RemoteScope : Scope, IEquatable<RemoteScope>
     {
         /// <summary>
@@ -26,6 +28,7 @@ namespace Akka.Actor
         /// Initializes a new instance of the <see cref="RemoteScope"/> class.
         /// </summary>
         /// <param name="address">The address to which actors are deployed.</param>
+        [SerializationConstructor]
         public RemoteScope(Address address)
         {
             Address = address;
@@ -34,6 +37,7 @@ namespace Akka.Actor
         /// <summary>
         /// The address to which actors are deployed.
         /// </summary>
+        [Key(0)]
         public Address Address { get; set; }
 
         /// <inheritdoc/>

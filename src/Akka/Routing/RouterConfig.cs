@@ -421,7 +421,7 @@ namespace Akka.Routing
     /// Router configuration which has no default, i.e. external configuration is required.
     /// This can be used when the dispatcher to be used for the head Router needs to be configured
     /// </summary>
-    public class FromConfig : Pool
+    public sealed class FromConfig : Pool
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="FromConfig" /> class.
@@ -571,12 +571,12 @@ namespace Akka.Routing
     /// from lower-precedence sources. The decision whether or not to create a
     /// router is taken in the <see cref="LocalActorRefProvider"/> based on <see cref="Props"/>.
     /// </summary>
-    public class NoRouter : RouterConfig
+    public sealed class NoRouter : RouterConfig
     {
         /// <summary>
         /// TBD
         /// </summary>
-        protected NoRouter()
+        private NoRouter()
         {
         }
 
@@ -642,7 +642,7 @@ namespace Akka.Routing
         /// <summary>
         /// TBD
         /// </summary>
-        public static NoRouter Instance { get; } = new NoRouter();
+        public static readonly NoRouter Instance = new NoRouter();
 
         /// <summary>
         /// This class represents a surrogate of a <see cref="NoRouter"/> router.

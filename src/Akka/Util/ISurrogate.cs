@@ -13,7 +13,7 @@ namespace Akka.Util
     /// <summary>
     /// TBD
     /// </summary>
-    public interface ISurrogate : IObjectReferences
+    public interface ISurrogate
     {
         /// <summary>
         /// TBD

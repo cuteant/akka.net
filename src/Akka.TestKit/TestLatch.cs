@@ -7,8 +7,10 @@
 
 using System;
 using System.ComponentModel;
+using System.Runtime.Serialization;
 using System.Threading;
 using Akka.Actor;
+using MessagePack;
 
 namespace Akka.TestKit
 {
@@ -24,10 +26,16 @@ namespace Akka.TestKit
     /// </para>
     /// Timeouts will always throw an exception.
     /// </summary>
+    [MessagePackObject]
     public class TestLatch
     {
-        private readonly CountdownEvent _latch;
+        [Key(0)]
         private readonly Func<TimeSpan, TimeSpan> _dilate;
+        [Key(1)]
+        private readonly int _count;
+        [IgnoreMember, IgnoreDataMember]
+        private readonly CountdownEvent _latch;
+        [Key(2)]
         private readonly TimeSpan _defaultTimeout;
 
         /// <summary>
@@ -67,6 +75,7 @@ namespace Akka.TestKit
         /// <param name="defaultTimeout">TBD</param>
         public TestLatch(int count, TimeSpan defaultTimeout)
         {
+            _count = count;
             _latch = new CountdownEvent(count);
             _defaultTimeout = defaultTimeout;
         }
@@ -79,7 +88,8 @@ namespace Akka.TestKit
         /// <param name="count">TBD</param>
         /// <param name="defaultTimeout">TBD</param>
         [EditorBrowsable(EditorBrowsableState.Never)]
-        internal TestLatch(Func<TimeSpan, TimeSpan> dilate, int count, TimeSpan defaultTimeout)
+        [SerializationConstructor]
+        public TestLatch(Func<TimeSpan, TimeSpan> dilate, int count, TimeSpan defaultTimeout)
             :this(dilate, defaultTimeout,count)
         {
         }

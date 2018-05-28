@@ -17,6 +17,7 @@ using Akka.TestKit;
 using Akka.TestKit.TestActors;
 using Akka.Tests.TestUtils;
 using Akka.Util.Internal;
+using MessagePack;
 using FluentAssertions;
 using Xunit;
 
@@ -56,10 +57,13 @@ namespace Akka.Tests.Routing
             }
         }
 
+        [MessagePackObject]
         private class TestResizer : Resizer
         {
+            [Key(0)]
             private readonly TestLatch _latch;
 
+            [SerializationConstructor]
             public TestResizer(TestLatch latch)
             {
                 _latch = latch;
@@ -77,10 +81,13 @@ namespace Akka.Tests.Routing
             }
         }
 
+        [MessagePackObject]
         private class TestResizer2 : Resizer
         {
+            [Key(0)]
             private readonly TestLatch _latch;
 
+            [SerializationConstructor]
             public TestResizer2(TestLatch latch)
             {
                 _latch = latch;

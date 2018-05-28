@@ -40,5 +40,12 @@ namespace Akka.Serialization
 #else
         internal static readonly AsyncLocal<ExtendedActorSystem> LocalSystem = new AsyncLocal<ExtendedActorSystem>();
 #endif
+
+        private static int _useRemotingSerializer = Unlocked;
+        public static bool UseRemotingSerializer
+        {
+            get => Volatile.Read(ref _useRemotingSerializer) == Locked;
+            set => Interlocked.Exchange(ref _useRemotingSerializer, value ? Locked : Unlocked);
+        }
     }
 }

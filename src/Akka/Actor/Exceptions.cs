@@ -132,7 +132,6 @@ namespace Akka.Actor
     /// <summary>
     /// This exception is thrown when the initialization logic for an Actor fails.
     /// </summary>
-    [MessagePack.MessagePackObject]
     public class ActorInitializationException : AkkaException
     {
         /// <summary>
@@ -197,7 +196,6 @@ namespace Akka.Actor
         /// <summary>
         /// Retrieves the actor whose initialization logic failed.
         /// </summary>
-        [MessagePack.Key(0)]
         public IActorRef Actor { get; set; }
 
         /// <summary>

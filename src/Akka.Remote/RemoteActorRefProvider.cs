@@ -19,6 +19,7 @@ using Akka.Dispatch.SysMsg;
 using Akka.Event;
 using Akka.Remote.Configuration;
 using Akka.Remote.Serialization;
+using Akka.Serialization;
 using Akka.Util.Internal;
 
 namespace Akka.Remote
@@ -105,6 +106,8 @@ namespace Akka.Remote
             RemoteSettings = new RemoteSettings(settings.Config);
             Deployer = remoteDeployer;
             _log = _local.Log;
+
+            MsgPackSerializerHelper.UseRemotingSerializer = true;
         }
 
         #endregion
