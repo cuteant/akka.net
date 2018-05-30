@@ -8,9 +8,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Remote
 {
@@ -27,15 +29,18 @@ namespace Akka.Remote
     public abstract class AssociationEvent : RemotingLifecycleEvent
     {
         /// <summary>TBD</summary>
+        [Key(5)]
         public abstract Address LocalAddress { get; protected set; }
 
         /// <summary>TBD</summary>
+        [Key(6)]
         public abstract Address RemoteAddress { get; protected set; }
 
         /// <summary>TBD</summary>
+        [Key(7)]
         public abstract bool IsInbound { get; protected set; }
 
-        /// <summary>TBD</summary>
+        [IgnoreMember, IgnoreDataMember]
         protected string EventName;
 
         /// <summary>TBD</summary>
@@ -48,6 +53,7 @@ namespace Akka.Remote
     }
 
     /// <summary>TBD</summary>
+    [MessagePackObject]
     public sealed class AssociatedEvent : AssociationEvent
     {
         /// <summary>TBD</summary>
@@ -55,18 +61,22 @@ namespace Akka.Remote
         public override LogLevel LogLevel() => Event.LogLevel.DebugLevel;
 
         /// <summary>TBD</summary>
+        [Key(0)]
         public override Address LocalAddress { get; protected set; }
 
         /// <summary>TBD</summary>
+        [Key(1)]
         public override Address RemoteAddress { get; protected set; }
 
         /// <summary>TBD</summary>
+        [Key(2)]
         public override bool IsInbound { get; protected set; }
 
         /// <summary>TBD</summary>
         /// <param name="localAddress">TBD</param>
         /// <param name="remoteAddress">TBD</param>
         /// <param name="inbound">TBD</param>
+        [SerializationConstructor]
         public AssociatedEvent(Address localAddress, Address remoteAddress, bool inbound)
         {
             LocalAddress = localAddress;
@@ -77,18 +87,22 @@ namespace Akka.Remote
     }
 
     /// <summary>Event that is fired when a remote association to another <see cref="ActorSystem"/> is terminated.</summary>
+    [MessagePackObject]
     public sealed class DisassociatedEvent : AssociationEvent
     {
         /// <inheritdoc/>
         public override LogLevel LogLevel() => Event.LogLevel.DebugLevel;
 
         /// <inheritdoc/>
+        [Key(0)]
         public override Address LocalAddress { get; protected set; }
 
         /// <inheritdoc/>
+        [Key(1)]
         public override Address RemoteAddress { get; protected set; }
 
         /// <inheritdoc/>
+        [Key(2)]
         public override bool IsInbound { get; protected set; }
 
         /// <summary>Creates a new <see cref="DisassociatedEvent"/> instance.</summary>
@@ -97,6 +111,7 @@ namespace Akka.Remote
         /// <param name="inbound">
         /// <c>true</c> if this side of the connection as inbound, <c>false</c> if it was outbound.
         /// </param>
+        [SerializationConstructor]
         public DisassociatedEvent(Address localAddress, Address remoteAddress, bool inbound)
         {
             LocalAddress = localAddress;
@@ -107,6 +122,7 @@ namespace Akka.Remote
     }
 
     /// <summary>TBD</summary>
+    [MessagePackObject]
     public sealed class AssociationErrorEvent : AssociationEvent
     {
         /// <summary>TBD</summary>
@@ -115,6 +131,7 @@ namespace Akka.Remote
         /// <param name="remoteAddress">TBD</param>
         /// <param name="inbound">TBD</param>
         /// <param name="level">TBD</param>
+        [SerializationConstructor]
         public AssociationErrorEvent(Exception cause, Address localAddress, Address remoteAddress, bool inbound, LogLevel level)
         {
             LocalAddress = localAddress;
@@ -126,8 +143,22 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
+        [Key(0)]
         public Exception Cause { get; }
 
+        /// <summary>TBD</summary>
+        [Key(1)]
+        public override Address LocalAddress { get; protected set; }
+
+        /// <summary>TBD</summary>
+        [Key(2)]
+        public override Address RemoteAddress { get; protected set; }
+
+        /// <summary>TBD</summary>
+        [Key(3)]
+        public override bool IsInbound { get; protected set; }
+
+        [Key(4)]
         private readonly LogLevel _level;
 
         /// <summary>TBD</summary>
@@ -135,27 +166,21 @@ namespace Akka.Remote
         public override LogLevel LogLevel() => _level;
 
         /// <summary>TBD</summary>
-        public override Address LocalAddress { get; protected set; }
-
-        /// <summary>TBD</summary>
-        public override Address RemoteAddress { get; protected set; }
-
-        /// <summary>TBD</summary>
-        public override bool IsInbound { get; protected set; }
-
-        /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         public override string ToString() => $"{base.ToString()}: Error [{Cause.Message}] [{Cause.StackTrace}]";
     }
 
     /// <summary>TBD</summary>
+    [MessagePackObject]
     public sealed class RemotingListenEvent : RemotingLifecycleEvent
     {
         /// <summary>TBD</summary>
         /// <param name="listenAddresses">TBD</param>
+        [SerializationConstructor]
         public RemotingListenEvent(IList<Address> listenAddresses) => ListenAddresses = listenAddresses;
 
         /// <summary>TBD</summary>
+        [Key(0)]
         public IList<Address> ListenAddresses { get; }
 
         /// <summary>TBD</summary>
@@ -168,6 +193,7 @@ namespace Akka.Remote
     }
 
     /// <summary>Event that is published when the remoting system terminates.</summary>
+    [MessagePackObject]
     public sealed class RemotingShutdownEvent : RemotingLifecycleEvent
     {
         /// <inheritdoc/>
@@ -178,13 +204,16 @@ namespace Akka.Remote
     }
 
     /// <summary>TBD</summary>
+    [MessagePackObject]
     public sealed class RemotingErrorEvent : RemotingLifecycleEvent
     {
         /// <summary>TBD</summary>
         /// <param name="cause">TBD</param>
+        [SerializationConstructor]
         public RemotingErrorEvent(Exception cause) => Cause = cause;
 
         /// <summary>TBD</summary>
+        [Key(0)]
         public Exception Cause { get; }
 
         /// <summary>TBD</summary>
@@ -197,11 +226,13 @@ namespace Akka.Remote
     }
 
     /// <summary>TBD</summary>
+    [MessagePackObject]
     public sealed class QuarantinedEvent : RemotingLifecycleEvent
     {
         /// <summary>TBD</summary>
         /// <param name="address">TBD</param>
         /// <param name="uid">TBD</param>
+        [SerializationConstructor]
         public QuarantinedEvent(Address address, int uid)
         {
             Uid = uid;
@@ -209,9 +240,11 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
+        [Key(0)]
         public Address Address { get; }
 
         /// <summary>TBD</summary>
+        [Key(1)]
         public int Uid { get; }
 
         /// <summary>TBD</summary>
@@ -231,11 +264,13 @@ namespace Akka.Remote
     }
 
     /// <summary>TBD</summary>
+    [MessagePackObject]
     public sealed class ThisActorSystemQuarantinedEvent : RemotingLifecycleEvent
     {
         /// <summary>TBD</summary>
         /// <param name="localAddress">TBD</param>
         /// <param name="remoteAddress">TBD</param>
+        [SerializationConstructor]
         public ThisActorSystemQuarantinedEvent(Address localAddress, Address remoteAddress)
         {
             LocalAddress = localAddress;
@@ -243,9 +278,11 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
+        [Key(0)]
         public Address LocalAddress { get; }
 
         /// <summary>TBD</summary>
+        [Key(1)]
         public Address RemoteAddress { get; }
 
         /// <summary>TBD</summary>

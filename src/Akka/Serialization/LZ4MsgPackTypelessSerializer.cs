@@ -1,14 +1,18 @@
 ﻿using System;
 using Akka.Actor;
 using Akka.Configuration;
+using Akka.Util;
 using CuteAnt.Extensions.Serialization;
+using Hyperion;
+using MessagePack;
+using MessagePack.Resolvers;
 
 namespace Akka.Serialization
 {
     public sealed class LZ4MsgPackTypelessSerializer : Serializer
     {
         private readonly MsgPackSerializerSettings _settings;
-        private static readonly LZ4TypelessMessagePackMessageFormatter s_formatter = LZ4TypelessMessagePackMessageFormatter.DefaultInstance;
+        private readonly LZ4TypelessMessagePackMessageFormatter _formatter;
         private readonly int _initialBufferSize;
 
         static LZ4MsgPackTypelessSerializer() => MsgPackSerializerHelper.Register();
@@ -21,23 +25,29 @@ namespace Akka.Serialization
         {
             _settings = settings;
             _initialBufferSize = settings.InitialBufferSize;
+
+            var akkaSurrogate =
+                Surrogate
+                .Create<ISurrogated, ISurrogate>(
+                from => from.ToSurrogate(system),
+                to => to.FromSurrogate(system));
+
+            var serializer = new Hyperion.Serializer(
+                new SerializerOptions(
+                    versionTolerance: true,
+                    preserveObjectReferences: true,
+                    surrogates: new[] { akkaSurrogate }
+                ));
+
+            var resolver = new TypelessDefaultResolver();
+            resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
+            resolver.Context.Add(MsgPackSerializerHelper.ActorSystem, system);
+            _formatter = new LZ4TypelessMessagePackMessageFormatter(resolver);
         }
 
-        public override byte[] ToBinary(object obj)
-        {
-            MsgPackSerializerHelper.LocalSystem.Value = system;
-            var bts = s_formatter.SerializeObject(obj, _initialBufferSize);
-            MsgPackSerializerHelper.LocalSystem.Value = null;
-            return bts;
-        }
+        public override byte[] ToBinary(object obj) => _formatter.SerializeObject(obj, _initialBufferSize);
 
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            MsgPackSerializerHelper.LocalSystem.Value = system;
-            var obj = s_formatter.Deserialize(type, bytes);
-            MsgPackSerializerHelper.LocalSystem.Value = null;
-            return obj;
-        }
+        public override object FromBinary(byte[] bytes, Type type) => _formatter.Deserialize(type, bytes);
 
         public override int Identifier => -3;
 

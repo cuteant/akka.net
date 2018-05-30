@@ -52,12 +52,12 @@ namespace Akka.TestKit
     /// for the next message. This is the default <see cref="AutoPilot"/> used 
     /// by <see cref="AutoPilot"/>.
     /// </summary>
-    public sealed class NoAutoPilot : AutoPilot
+    public sealed class NoAutoPilot : AutoPilot, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static NoAutoPilot Instance = new NoAutoPilot();
+        public static readonly NoAutoPilot Instance = new NoAutoPilot();
 
         private NoAutoPilot() { }
 
@@ -77,12 +77,12 @@ namespace Akka.TestKit
     /// When returned by another <see cref="AutoPilot"/> then <see cref="TestActor"/>
     /// will reuse the AutoPilot for the next message.
     /// </summary>
-    public sealed class KeepRunning : AutoPilot
+    public sealed class KeepRunning : AutoPilot, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static KeepRunning Instance = new KeepRunning();
+        public static readonly KeepRunning Instance = new KeepRunning();
 
         private KeepRunning(){ }
         

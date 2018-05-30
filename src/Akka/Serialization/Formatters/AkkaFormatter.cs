@@ -2,7 +2,6 @@
 using System.Reflection;
 using System.Text;
 using Akka.Actor;
-using Akka.Configuration;
 using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
@@ -33,8 +32,8 @@ namespace Akka.Serialization.Formatters
 
             if (string.Equals(c_nobody, path, StringComparison.Ordinal)) { return (T)(object)Nobody.Instance; }
 
-            var system = MsgPackSerializerHelper.LocalSystem.Value;
-            if (system == null) { return default; }
+            var system = formatterResolver.GetActorSystem();
+            //if (system == null) { return default; }
 
             return (T)system.Provider.ResolveActorRef(path);
         }
@@ -152,26 +151,26 @@ namespace Akka.Serialization.Formatters
 
     #region == ActorConfigFormatter ==
 
-    internal sealed class ActorConfigFormatter : IMessagePackFormatter<Config>
-    {
-        internal static readonly ActorConfigFormatter Instnace = new ActorConfigFormatter();
+    //internal sealed class ActorConfigFormatter : IMessagePackFormatter<Config>
+    //{
+    //    internal static readonly ActorConfigFormatter Instnace = new ActorConfigFormatter();
 
-        public int Serialize(ref byte[] bytes, int offset, Config value, IFormatterResolver formatterResolver)
-        {
-            if (value == null || value.IsEmpty) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+    //    public int Serialize(ref byte[] bytes, int offset, Config value, IFormatterResolver formatterResolver)
+    //    {
+    //        if (value == null || value.IsEmpty) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            return MessagePackBinary.WriteString(ref bytes, offset, value.Root.ToString());
-        }
+    //        return MessagePackBinary.WriteString(ref bytes, offset, value.Root.ToString());
+    //    }
 
-        public Config Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
-        {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return Config.Empty; }
+    //    public Config Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+    //    {
+    //        if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return Config.Empty; }
 
-            var config = MessagePackBinary.ReadString(bytes, offset, out readSize);
+    //        var config = MessagePackBinary.ReadString(bytes, offset, out readSize);
 
-            return ConfigurationFactory.ParseString(config);
-        }
-    }
+    //        return ConfigurationFactory.ParseString(config);
+    //    }
+    //}
 
     #endregion
 
@@ -202,8 +201,8 @@ namespace Akka.Serialization.Formatters
 
             readSize = offset - startOffset;
 
-            var system = MsgPackSerializerHelper.LocalSystem.Value;
-            if (system == null) { return default; }
+            var system = formatterResolver.GetActorSystem();
+            //if (system == null) { return default; }
 
             if (isSerializerWithStringManifest)
             {
@@ -223,8 +222,8 @@ namespace Akka.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var system = MsgPackSerializerHelper.LocalSystem.Value;
-            if (system == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            var system = formatterResolver.GetActorSystem();
+            //if (system == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var serializer = system.Serialization.FindSerializerFor(value);
             var isSerializerWithStringManifest = false;

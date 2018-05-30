@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using Akka.Actor;
+using MessagePack;
 
 namespace Akka.TestKit
 {

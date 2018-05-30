@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -23,22 +24,26 @@ namespace Akka.Actor
     /// This class represents a logical view of a section of an <see cref="ActorSystem">ActorSystem's</see>
     /// tree of actors that allows for broadcasting of messages to that section.
     /// </summary>
+    [MessagePackObject]
     public class ActorSelection : ICanTell
     {
         /// <summary>
         /// Gets the anchor.
         /// </summary>
+        [Key(0)]
         public IActorRef Anchor { get; private set; }
 
         /// <summary>
         /// Gets the elements.
         /// </summary>
+        [Key(1)]
         public SelectionPathElement[] Path { get; private set; }
 
         /// <summary>
         /// A string representation of all of the elements in the <see cref="ActorSelection"/> path,
         /// starting with "/" and separated with "/".
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public string PathString => "/" + string.Join("/", Path.Select(x => x.ToString()));
 
         /// <summary>
@@ -53,6 +58,7 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="anchor">The anchor.</param>
         /// <param name="path">The path.</param>
+        [SerializationConstructor]
         public ActorSelection(IActorRef anchor, SelectionPathElement[] path)
         {
             Anchor = anchor;

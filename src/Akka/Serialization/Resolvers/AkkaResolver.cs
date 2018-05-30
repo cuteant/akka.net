@@ -13,11 +13,11 @@ namespace Akka.Serialization.Resolvers
 {
     #region == AkkaResolver ==
 
-    internal sealed class AkkaResolver : IFormatterResolver
+    internal sealed class AkkaResolver : FormatterResolver
     {
         public static IFormatterResolver Instance = new AkkaResolver();
         private AkkaResolver() { }
-        public IMessagePackFormatter<T> GetFormatter<T>() => FormatterCache<T>.Formatter;
+        public override IMessagePackFormatter<T> GetFormatter<T>() => FormatterCache<T>.Formatter;
 
         private static class FormatterCache<T>
         {
@@ -48,23 +48,23 @@ namespace Akka.Serialization.Resolvers
             //    return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
             //}
 
-            if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
-            {
-                return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
-            }
-
             if (typeof(ISingletonMessage).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(SingletonMessageFormatter<>).GetCachedGenericType(t));
             }
 
-            if (MsgPackSerializerHelper.UseRemotingSerializer)
+            if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
             {
-                if (typeof(ISurrogated).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
-                {
-                    return ActivatorUtils.FastCreateInstance(typeof(WrappedPayloadFormatter<>).GetCachedGenericType(t));
-                }
+                return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
             }
+
+            //if (MsgPackSerializerHelper.UseRemotingSerializer)
+            //{
+            //    if (typeof(ISurrogated).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+            //    {
+            //        return ActivatorUtils.FastCreateInstance(typeof(WrappedPayloadFormatter<>).GetCachedGenericType(t));
+            //    }
+            //}
 
             return null;
         }
@@ -74,7 +74,7 @@ namespace Akka.Serialization.Resolvers
 
     #region == AkkaTypelessObjectResolver ==
 
-    internal sealed class AkkaTypelessObjectResolver : IFormatterResolver
+    internal sealed class AkkaTypelessObjectResolver : FormatterResolver
     {
         public static readonly IFormatterResolver Instance = new AkkaTypelessObjectResolver();
 
@@ -82,7 +82,7 @@ namespace Akka.Serialization.Resolvers
         {
         }
 
-        public IMessagePackFormatter<T> GetFormatter<T>()
+        public override IMessagePackFormatter<T> GetFormatter<T>()
         {
             return FormatterCache<T>.formatter;
         }

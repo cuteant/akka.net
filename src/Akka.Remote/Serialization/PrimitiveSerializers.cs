@@ -13,6 +13,7 @@ using CuteAnt.Text;
 using Akka.Actor;
 using Akka.Serialization;
 using Akka.Util;
+using Google.Protobuf;
 
 namespace Akka.Remote.Serialization
 {
@@ -37,6 +38,8 @@ namespace Akka.Remote.Serialization
         {
             switch (obj)
             {
+                case ByteString bytes:
+                    return ProtobufUtil.GetBuffer(bytes);
                 case string str:
                     return s_encodingUtf8.GetBytes(str);
                 case int intValue:
@@ -53,6 +56,7 @@ namespace Akka.Remote.Serialization
             { TypeConstants.StringType, bytes => s_decodingUtf8.GetString(bytes) },
             { TypeConstants.IntType, bytes => BitConverter.ToInt32(bytes, 0) },
             { TypeConstants.LongType, bytes => BitConverter.ToInt64(bytes, 0) },
+            { typeof(ByteString), bytes => ProtobufUtil.FromBytes(bytes) },
         };
 
         /// <inheritdoc />

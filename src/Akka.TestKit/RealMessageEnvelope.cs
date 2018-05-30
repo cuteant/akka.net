@@ -6,36 +6,40 @@
 //-----------------------------------------------------------------------
 
 using Akka.Actor;
+using Akka.Serialization.Formatters;
+using MessagePack;
 
 namespace Akka.TestKit
 {
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     public class RealMessageEnvelope : MessageEnvelope
     {
-        private readonly object _message;
-        private readonly IActorRef _sender;
-
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="message">TBD</param>
         /// <param name="sender">TBD</param>
+        [SerializationConstructor]
         public RealMessageEnvelope(object message, IActorRef sender)
         {
-            _message = message;
-            _sender = sender;
+            Message = message;
+            Sender = sender;
         }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public override object Message { get { return _message; } }
+        [Key(0)]
+        [MessagePackFormatter(typeof(WrappedPayloadFormatter))]
+        public override object Message { get; }
         /// <summary>
         /// TBD
         /// </summary>
-        public override IActorRef Sender{get { return _sender; }}
+        [Key(1)]
+        public override IActorRef Sender { get; }
 
         /// <summary>
         /// TBD

@@ -1,13 +1,15 @@
-﻿using System.Threading;
+﻿using System.Runtime.CompilerServices;
+using System.Threading;
 using Akka.Actor;
 using Akka.Serialization.Formatters;
 using Akka.Serialization.Resolvers;
-using CuteAnt.Extensions.Serialization;
+using CuteAnt;
 using MessagePack;
+using MessagePack.Resolvers;
 
 namespace Akka.Serialization
 {
-    internal sealed class MsgPackSerializerHelper
+    public static class MsgPackSerializerHelper
     {
         private const int Locked = 1;
         private const int Unlocked = 0;
@@ -20,32 +22,31 @@ namespace Akka.Serialization
             MessagePackSerializer.Typeless.RegisterTypelessFormatter(AkkaTypelessFormatter.Instance);
         }
 
-        public static void Register()
+        internal static void Register()
         {
             if (Interlocked.CompareExchange(ref _registered, Locked, Unlocked) == Locked) { return; }
 
             MessagePackStandardResolver.Register(
                 AkkaResolver.Instance,
 
-                AkkaHyperionExceptionResolver.Instance,
+                HyperionExceptionResolver2.Instance,
 
-                AkkaHyperionExpressionResolver.Instance,
+                HyperionExpressionResolver.Instance,
 
                 AkkaHyperionResolver.Instance
             );
         }
 
-#if NET451
-        internal static readonly CuteAnt.AsyncLocalShim<ExtendedActorSystem> LocalSystem = new CuteAnt.AsyncLocalShim<ExtendedActorSystem>();
-#else
-        internal static readonly AsyncLocal<ExtendedActorSystem> LocalSystem = new AsyncLocal<ExtendedActorSystem>();
-#endif
-
         private static int _useRemotingSerializer = Unlocked;
-        public static bool UseRemotingSerializer
+        internal static bool UseRemotingSerializer
         {
             get => Volatile.Read(ref _useRemotingSerializer) == Locked;
             set => Interlocked.Exchange(ref _useRemotingSerializer, value ? Locked : Unlocked);
         }
+
+        internal const string ActorSystem = "ACTORSYSTEM";
+        [MethodImpl(InlineMethod.Value)]
+        public static ExtendedActorSystem GetActorSystem(this IFormatterResolver formatterResolver)
+            => formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystem);
     }
 }
