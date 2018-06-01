@@ -57,9 +57,9 @@ namespace Akka.Remote
         /// <param name="log">TBD</param>
         public DefaultMessageDispatcher(ActorSystem system, IRemoteActorRefProvider provider, ILoggingAdapter log)
         {
-            this._system = system;
-            this._provider = provider;
-            this._log = log;
+            _system = system;
+            _provider = provider;
+            _log = log;
             _remoteDaemon = provider.RemoteDaemon;
             _settings = provider.RemoteSettings;
         }
@@ -107,37 +107,43 @@ namespace Akka.Remote
                             var msgLog = $"RemoteMessage: {payload} to {recipient}<+{originalReceiver} from {sender}";
                             _log.Debug("received local message [{0}]", msgLog);
                         }
-                        if (payload is ActorSelectionMessage sel)
+                        switch (payload)
                         {
-                            var actorPath = "/" + string.Join("/", sel.Elements.Select(x => x.ToString()));
-                            if (_settings.UntrustedMode
-                                && (!_settings.TrustedSelectionPaths.Contains(actorPath)
-                                    || sel.Message is IPossiblyHarmful
-                                    || !recipient.Equals(_provider.RootGuardian)))
-                            {
-                                _log.Debug(
-                                    "operating in UntrustedMode, dropping inbound actor selection to [{0}], allow it" +
-                                    "by adding the path to 'akka.remote.trusted-selection-paths' in configuration",
-                                    actorPath);
-                            }
-                            else
-                            {
-                                //run the receive logic for ActorSelectionMessage here to make sure it is not stuck on busy user actor
-                                ActorSelection.DeliverSelection(recipient, sender, sel);
-                            }
-                        }
-                        else if (payload is IPossiblyHarmful && _settings.UntrustedMode)
-                        {
-                            _log.Debug("operating in UntrustedMode, dropping inbound IPossiblyHarmful message of type {0}",
-                                payload.GetType());
-                        }
-                        else if (payload is ISystemMessage)
-                        {
-                            recipient.SendSystemMessage((ISystemMessage)payload);
-                        }
-                        else
-                        {
-                            recipient.Tell(payload, sender);
+                            case ActorSelectionMessage sel:
+                                if (_settings.UntrustedMode
+                                    && (!_settings.TrustedSelectionPaths.Contains(FormatActorPath(sel))
+                                        || sel.Message is IPossiblyHarmful
+                                        || !recipient.Equals(_provider.RootGuardian)))
+                                {
+                                    if (_log.IsDebugEnabled)
+                                    {
+                                        _log.Debug(
+                                            "operating in UntrustedMode, dropping inbound actor selection to [{0}], allow it" +
+                                            "by adding the path to 'akka.remote.trusted-selection-paths' in configuration",
+                                            FormatActorPath(sel));
+                                    }
+                                }
+                                else
+                                {
+                                    //run the receive logic for ActorSelectionMessage here to make sure it is not stuck on busy user actor
+                                    ActorSelection.DeliverSelection(recipient, sender, sel);
+                                }
+                                break;
+
+                            case IPossiblyHarmful _ when _settings.UntrustedMode:
+                                if (_log.IsDebugEnabled)
+                                {
+                                    _log.Debug("operating in UntrustedMode, dropping inbound IPossiblyHarmful message of type {0}", payload.GetType());
+                                }
+                                break;
+
+                            case ISystemMessage sysMsg:
+                                recipient.SendSystemMessage(sysMsg);
+                                break;
+
+                            default:
+                                recipient.Tell(payload, sender);
+                                break;
                         }
                         break;
 
@@ -169,6 +175,11 @@ namespace Akka.Remote
                         break;
                 }
             }
+        }
+
+        private static string FormatActorPath(ActorSelectionMessage sel)
+        {
+            return "/" + string.Join("/", sel.Elements.Select(x => x.ToString()));
         }
 
         #endregion

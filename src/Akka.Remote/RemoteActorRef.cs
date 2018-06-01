@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Dispatch.SysMsg;
@@ -77,7 +78,19 @@ namespace Akka.Remote
         /// <param name="name">The name.</param>
         /// <returns>ActorRef.</returns>
         /// <exception cref="System.NotImplementedException">TBD</exception>
-        public override IActorRef GetChild(IEnumerable<string> name) => throw new NotImplementedException();
+        public override IActorRef GetChild(IEnumerable<string> name)
+        {
+            var items = name.ToList();
+            switch (items.FirstOrDefault())
+            {
+                case null:
+                    return this;
+                case "..":
+                    return Parent.GetChild(items.Skip(1));
+                default:
+                    return new RemoteActorRef(Remote, LocalAddressToUse, Path / items, ActorRefs.Nobody, Props.None, Deploy.None);
+            }
+        }
 
         /// <summary>Resumes the specified caused by failure.</summary>
         /// <param name="causedByFailure">The caused by failure.</param>

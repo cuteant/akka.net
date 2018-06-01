@@ -16,6 +16,7 @@ using Akka.Dispatch.SysMsg;
 using Akka.Event;
 using Akka.Util;
 using Akka.Util.Internal;
+using Akka.Util.Internal.Collections;
 
 namespace Akka.Remote
 {
@@ -106,6 +107,53 @@ namespace Akka.Remote
                 case IDaemonMsg _:
                     Log.Debug("Received command [{0}] to RemoteSystemDaemon on [{1}]", message, Path.Address);
                     if (message is DaemonMsgCreate daemon) HandleDaemonMsgCreate(daemon);
+                    break;
+
+                case ActorSelectionMessage sel:
+                    var iter = sel.Elements.Iterator();
+
+                    Tuple<IEnumerable<string>, object> Rec(IImmutableList<string> acc)
+                    {
+                        while (true)
+                        {
+                            if (iter.IsEmpty())
+                                return Tuple.Create(acc.Reverse(), sel.Message);
+
+                            // find child elements, and the message to send, which is a remaining ActorSelectionMessage
+                            // in case of SelectChildPattern, otherwise the actual message of the selection
+                            switch (iter.Next())
+                            {
+                                case SelectChildName n:
+                                    acc = ImmutableList.Create(n.Name).AddRange(acc);
+                                    continue;
+                                case SelectParent p when !acc.Any():
+                                    continue;
+                                case SelectParent p:
+                                    acc = acc.Skip(1).ToImmutableList();
+                                    continue;
+                                case SelectChildPattern pat:
+                                    return Tuple.Create<IEnumerable<string>, object>(acc.Reverse(), sel.Copy(elements: new[] { pat }.Concat(iter.ToVector()).ToArray()));
+                                default: // compiler ceremony - should never be hit
+                                    throw new InvalidOperationException("Unknown ActorSelectionPart []");
+                            }
+                        }
+                    }
+
+                    var t = Rec(ImmutableList<string>.Empty);
+                    var concatenatedChildNames = t.Item1;
+                    var m = t.Item2;
+
+                    var child = GetChild(concatenatedChildNames);
+                    if (child.IsNobody())
+                    {
+                        var emptyRef = new EmptyLocalActorRef(_system.Provider,
+                            Path / sel.Elements.Select(el => el.ToString()), _system.EventStream);
+                        emptyRef.Tell(sel, sender);
+                    }
+                    else
+                    {
+                        child.Tell(m, sender);
+                    }
                     break;
 
                 //Remote ActorSystem on another process / machine has died.

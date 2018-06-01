@@ -17,7 +17,7 @@ namespace Akka.Dispatch.MessageQueues
     public abstract class BlockingMessageQueue : IMessageQueue, IBlockingMessageQueueSemantics
     {
         private readonly object _lock = new object();
-        private TimeSpan _blockTimeOut = TimeSpan.FromSeconds(1);
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -26,11 +26,7 @@ namespace Akka.Dispatch.MessageQueues
         /// <summary>
         /// TBD
         /// </summary>
-        public TimeSpan BlockTimeOut
-        {
-            get { return _blockTimeOut; }
-            set { _blockTimeOut = value; }
-        }
+        public TimeSpan BlockTimeOut { get; set; } = TimeSpan.FromSeconds(1);
 
         /// <summary>
         /// TBD
@@ -47,14 +43,9 @@ namespace Akka.Dispatch.MessageQueues
         {
             get
             {
-                Monitor.TryEnter(_lock, BlockTimeOut);
-                try
+                lock (_lock)
                 {
                     return LockedCount;
-                }
-                finally
-                {
-                    Monitor.Exit(_lock);
                 }
             }
         }
@@ -66,14 +57,9 @@ namespace Akka.Dispatch.MessageQueues
         /// <param name="envelope">TBD</param>
         public void Enqueue(IActorRef receiver, Envelope envelope)
         {
-            Monitor.TryEnter(_lock, BlockTimeOut);
-            try
+            lock (_lock)
             {
                 LockedEnqueue(envelope);
-            }
-            finally
-            {
-                Monitor.Exit(_lock);
             }
         }
 
@@ -84,14 +70,9 @@ namespace Akka.Dispatch.MessageQueues
         /// <returns>TBD</returns>
         public bool TryDequeue(out Envelope envelope)
         {
-            Monitor.TryEnter(_lock, BlockTimeOut);
-            try
+            lock (_lock)
             {
                 return LockedTryDequeue(out envelope);
-            }
-            finally
-            {
-                Monitor.Exit(_lock);
             }
         }
 
@@ -103,8 +84,7 @@ namespace Akka.Dispatch.MessageQueues
         /// <returns>TBD</returns>
         public void CleanUp(IActorRef owner, IMessageQueue deadletters)
         {
-            Envelope msg;
-            while (TryDequeue(out msg)) // lock gets acquired inside the TryDequeue method
+            while (TryDequeue(out var msg)) // lock gets acquired inside the TryDequeue method
             {
                 deadletters.Enqueue(owner, msg);
             }
