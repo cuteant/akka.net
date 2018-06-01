@@ -13,13 +13,9 @@ namespace Akka.Serialization.Formatters
     // IActorRef
     internal class ActorRefFormatter<T> : IMessagePackFormatter<T> where T : IActorRef
     {
-        private const string c_nobody = "nobody";
-
         public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
-
-            if (value is Nobody) { return MessagePackBinary.WriteString(ref bytes, offset, c_nobody); }
 
             return MessagePackBinary.WriteString(ref bytes, offset, Serialization.SerializedActorPath(value));
         }
@@ -29,8 +25,6 @@ namespace Akka.Serialization.Formatters
             if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
 
             var path = MessagePackBinary.ReadString(bytes, offset, out readSize);
-
-            if (string.Equals(c_nobody, path, StringComparison.Ordinal)) { return (T)(object)Nobody.Instance; }
 
             var system = formatterResolver.GetActorSystem();
             //if (system == null) { return default; }

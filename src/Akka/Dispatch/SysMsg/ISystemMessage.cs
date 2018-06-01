@@ -280,14 +280,14 @@ namespace Akka.Dispatch.SysMsg
     /// all of the capabilities needed to express a full-fledged system message.
     /// </summary>
     [InternalApi]
-    [Union(0, typeof(DeathWatchNotification))]
-    [Union(1, typeof(Failed))]
-    [Union(2, typeof(Supervise))]
-    [Union(3, typeof(Watch))]
-    [Union(4, typeof(Unwatch))]
-    [Union(5, typeof(Recreate))]
-    [Union(6, typeof(Resume))]
-    [MessagePackObject]
+    //[Union(0, typeof(DeathWatchNotification))]
+    //[Union(1, typeof(Failed))]
+    //[Union(2, typeof(Supervise))]
+    //[Union(3, typeof(Watch))]
+    //[Union(4, typeof(Unwatch))]
+    //[Union(5, typeof(Recreate))]
+    //[Union(6, typeof(Resume))]
+    //[MessagePackObject]
     public abstract class SystemMessage : ISystemMessage
     {
         /// <summary>
@@ -747,8 +747,11 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     ///  Sent to self from <see cref="ActorCell.Suspend"/>
     /// </summary>
+    [MessagePackObject]
     public sealed class Suspend : SystemMessage, IStashWhenWaitingForChildren
     {
+        [SerializationConstructor]
+        public Suspend() { }
         /// <summary>
         /// TBD
         /// </summary>
@@ -846,8 +849,12 @@ namespace Akka.Dispatch.SysMsg
     /// <summary>
     ///     Class Terminate.
     /// </summary>
+    [MessagePackObject]
     public sealed class Terminate : SystemMessage, IPossiblyHarmful, IDeadLetterSuppression
     {
+        [SerializationConstructor]
+        public Terminate() { }
+
         /// <summary>
         /// TBD
         /// </summary>

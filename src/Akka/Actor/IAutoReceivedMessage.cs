@@ -73,7 +73,7 @@ namespace Akka.Actor
     /// Request to an <see cref="ICanTell"/> to get back the identity of the underlying actors.
     /// </summary>
     [MessagePackObject]
-    public sealed class Identify : IAutoReceivedMessage, INotInfluenceReceiveTimeout
+    public sealed class Identify : IAutoReceivedMessage, INotInfluenceReceiveTimeout, IObjectReferences
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Identify" /> class.
@@ -123,7 +123,7 @@ namespace Akka.Actor
     /// Response to the <see cref="Identify"/> message, get identity by Sender
     /// </summary>
     [MessagePackObject]
-    public sealed class ActorIdentity
+    public sealed class ActorIdentity : IObjectReferences
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ActorIdentity" /> class.

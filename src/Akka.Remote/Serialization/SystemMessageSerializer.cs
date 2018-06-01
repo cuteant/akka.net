@@ -13,19 +13,15 @@ using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt;
-using CuteAnt.Extensions.Serialization;
 
 namespace Akka.Remote.Serialization
 {
-    public sealed class SystemMessageSerializer : Serializer
+    public sealed class SystemMessageSerializer : Akka.Serialization.Serializer
     {
         private readonly WrappedPayloadSupport _payloadSupport;
         private ExceptionSupport _exceptionSupport;
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
-
-        private static readonly MessagePackMessageFormatter s_formatter = MessagePackMessageFormatter.DefaultInstance;
-        private const int c_initialBufferSize = 1024 * 2;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SystemMessageSerializer" /> class.
@@ -40,36 +36,9 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override bool IncludeManifest { get; } = true;
 
-        private static readonly Dictionary<Type, bool> s_toBinaryMap = new Dictionary<Type, bool>()
-        {
-            { typeof(Create), true },
-            { typeof(Recreate), true },
-            { typeof(Suspend), true },
-            { typeof(Resume), true },
-            { typeof(Terminate), true },
-            { typeof(Supervise), true },
-            { typeof(Watch), true },
-            { typeof(Unwatch), true },
-            { typeof(Failed), true },
-            { typeof(DeathWatchNotification), true },
-            { typeof(NoMessage), false },
-        };
-
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
-            //if (s_toBinaryMap.TryGetValue(obj.GetType(), out var canSerialize))
-            //{
-            //    if (canSerialize)
-            //    {
-            //        s_formatter.SerializeObject(obj, c_initialBufferSize);
-            //    }
-            //    else
-            //    {
-            //        throw new ArgumentException("NoMessage should never be serialized or deserialized");
-            //    }
-            //}
-            //throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
             switch (obj)
             {
                 case Create create:
@@ -116,7 +85,6 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            //return s_formatter.Deserialize(type, bytes);
             if (s_fromBinaryMap.TryGetValue(type, out var factory))
             {
                 return factory(this, bytes);
