@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using MessagePack;
 
 namespace Akka.Persistence.Journal
 {
@@ -30,8 +31,7 @@ namespace Akka.Persistence.Journal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
-    public sealed class EmptyEventSequence : IEmptyEventSequence, IEquatable<IEventSequence>
+    public sealed class EmptyEventSequence : IEmptyEventSequence, IEquatable<IEventSequence>, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -62,14 +62,16 @@ namespace Akka.Persistence.Journal
     /// TBD
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    [Serializable]
+    [MessagePackObject]
     public class EventSequence<T> : IEventSequence, IEquatable<IEventSequence>
     {
+        [Key(0)]
         private readonly IList<object> _events;
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="events">TBD</param>
+        [SerializationConstructor]
         public EventSequence(IEnumerable<object> events)
         {
             _events = events.ToList();
@@ -78,6 +80,7 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember]
         public IEnumerable<object> Events => _events;
 
         /// <inheritdoc/>
@@ -96,14 +99,16 @@ namespace Akka.Persistence.Journal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public struct SingleEventSequence : IEventSequence, IEquatable<IEventSequence>
     {
+        [Key(0)]
         private readonly object[] _events;
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="e">TBD</param>
+        [SerializationConstructor]
         public SingleEventSequence(object e) : this()
         {
             _events = new[] { e };
@@ -112,6 +117,7 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember]
         public IEnumerable<object> Events => _events;
 
         /// <inheritdoc/>

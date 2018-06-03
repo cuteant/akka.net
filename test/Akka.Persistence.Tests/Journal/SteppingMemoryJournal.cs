@@ -31,13 +31,13 @@ namespace Akka.Persistence.Tests.Journal
         /// <summary>
         /// Allow the journal to do one operation
         /// </summary>
-        internal class Token
+        internal class Token : ISingletonMessage
         {
             public static readonly Token Instance = new Token();
             private Token() { }
         }
 
-        internal class TokenConsumed
+        internal class TokenConsumed : ISingletonMessage
         {
             public static readonly TokenConsumed Instance = new TokenConsumed();
             private TokenConsumed() { }

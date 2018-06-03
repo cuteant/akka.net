@@ -8,6 +8,7 @@
 using System;
 using Akka.Actor;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Persistence
 {
@@ -36,15 +37,15 @@ namespace Akka.Persistence
         /// <summary>
         /// TBD
         /// </summary>
-        public string Name { get; private set; }
+        public readonly string Name;
         /// <summary>
         /// TBD
         /// </summary>
-        public bool IsRecoveryRunning { get; private set; }
+        public readonly bool IsRecoveryRunning;
         /// <summary>
         /// TBD
         /// </summary>
-        public StateReceive StateReceive { get; private set; }
+        public readonly StateReceive StateReceive;
 
         /// <summary>
         /// TBD

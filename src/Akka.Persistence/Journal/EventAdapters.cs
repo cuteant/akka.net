@@ -16,6 +16,7 @@ using Akka.Configuration.Hocon;
 using Akka.Event;
 using Akka.Pattern;
 using CuteAnt.Reflection;
+using MessagePack;
 
 namespace Akka.Persistence.Journal
 {
@@ -93,8 +94,7 @@ namespace Akka.Persistence.Journal
     /// <summary>
     /// No-op model adapter which passes through the incoming events as-is.
     /// </summary>
-    [Serializable]
-    public sealed class IdentityEventAdapter : IEventAdapter
+    public sealed class IdentityEventAdapter : IEventAdapter, ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="IdentityEventAdapter"/>.
@@ -123,7 +123,7 @@ namespace Akka.Persistence.Journal
     }
 
     [Serializable]
-    internal class NoopWriteEventAdapter : IEventAdapter
+    internal class NoopWriteEventAdapter : IEventAdapter, IObjectReferences
     {
         private readonly IReadEventAdapter _readEventAdapter;
 
@@ -149,7 +149,7 @@ namespace Akka.Persistence.Journal
     }
 
     [Serializable]
-    internal class NoopReadEventAdapter : IEventAdapter
+    internal class NoopReadEventAdapter : IEventAdapter, IObjectReferences
     {
         private readonly IWriteEventAdapter _writeEventAdapter;
 
@@ -178,7 +178,7 @@ namespace Akka.Persistence.Journal
     /// TBD
     /// </summary>
     [Serializable]
-    public sealed class CombinedReadEventAdapter : IEventAdapter
+    public sealed class CombinedReadEventAdapter : IEventAdapter, IObjectReferences
     {
         private static readonly Exception OnlyReadSideException = new IllegalStateException(
                 "CombinedReadEventAdapter must not be used when writing (creating manifests) events!");
@@ -234,7 +234,7 @@ namespace Akka.Persistence.Journal
     /// <summary>
     /// TBD
     /// </summary>
-    internal class IdentityEventAdapters : EventAdapters
+    internal class IdentityEventAdapters : EventAdapters, ISingletonMessage
     {
         /// <summary>
         /// TBD

@@ -594,7 +594,7 @@ namespace Akka.DistributedData.Internal
     /// </summary>
     /// <returns>TBD</returns>
     [Serializable]
-    internal sealed class DeletedData : IReplicatedData<DeletedData>, IEquatable<DeletedData>
+    internal sealed class DeletedData : IReplicatedData<DeletedData>, IEquatable<DeletedData>, ISingletonMessage
     {
         /// <summary>
         /// TBD

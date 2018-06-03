@@ -12,6 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Pattern;
+using MessagePack;
 
 namespace Akka.Persistence.Journal
 {
@@ -406,8 +407,10 @@ namespace Akka.Persistence.Journal
                 }, _continuationOptions);
         }
 
+        [MessagePackObject]
         internal sealed class Desequenced
         {
+            [SerializationConstructor]
             public Desequenced(object message, long sequenceNr, IActorRef target, IActorRef sender)
             {
                 Message = message;
@@ -416,12 +419,16 @@ namespace Akka.Persistence.Journal
                 Sender = sender;
             }
 
+            [Key(0)]
             public object Message { get; }
 
+            [Key(1)]
             public long SequenceNr { get; }
 
+            [Key(2)]
             public IActorRef Target { get; }
 
+            [Key(3)]
             public IActorRef Sender { get; }
         }
 

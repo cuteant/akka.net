@@ -41,7 +41,7 @@ namespace Akka.Persistence.Tests.Serialization
         public void Serialization_respects_default_serializer_parameter()
         {
             var message = new TestMessage("this is my test message");
-            var serializer = _serialization.FindSerializerFor(message, "json");
+            var serializer = _serialization.FindSerializerFor(message, "msgpack-typeless");
             Assert.Equal(1, serializer.Identifier); //by default configuration the serializer id for json == newtonsoft == 1
         }
 

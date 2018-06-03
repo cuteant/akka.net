@@ -11,6 +11,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
+using Akka.Serialization;
 using Akka.TestKit;
 using Xunit;
 
@@ -39,7 +40,7 @@ namespace Akka.Persistence.Tests
     {
         #region internal test classes
 
-        internal sealed class Start
+        internal sealed class Start : ISingletonMessage
         {
             public static readonly Start Instance = new Start();
             private Start() { }

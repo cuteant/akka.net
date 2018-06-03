@@ -15,7 +15,7 @@ namespace Akka.Persistence.Tests
 {
     public class OptionalSnapshotStoreSpec : PersistenceSpec
     {
-        public sealed class GetConfig
+        public sealed class GetConfig : ISingletonMessage
         {
             public static readonly GetConfig Instance = new GetConfig();
             private GetConfig() { }

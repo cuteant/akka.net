@@ -263,11 +263,12 @@ namespace Akka.Persistence
         {
             void stateReceive(Receive receive, object message)
             {
-                var handled = CommonProcessingStateBehavior(message, err =>
+                void onWriteMessageComplete(bool err)
                 {
                     _pendingInvocations.Pop();
                     UnstashInternally(err);
-                });
+                }
+                var handled = CommonProcessingStateBehavior(message, onWriteMessageComplete);
                 if (!handled)
                 {
                     try
@@ -321,7 +322,7 @@ namespace Akka.Persistence
         {
             void stateReceive(Receive receive, object message)
             {
-                var handled = CommonProcessingStateBehavior(message, err =>
+                void onWriteMessageComplete(bool err)
                 {
                     var invocation = _pendingInvocations.Pop();
 
@@ -335,7 +336,8 @@ namespace Akka.Persistence
                         ChangeState(ProcessingCommands());
                         UnstashInternally(err);
                     }
-                });
+                }
+                var handled = CommonProcessingStateBehavior(message, onWriteMessageComplete);
 
                 if (!handled) { StashInternally(message); }
             }

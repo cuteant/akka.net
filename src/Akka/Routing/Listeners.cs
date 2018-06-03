@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using Akka.Actor;
+using MessagePack;
 
 namespace Akka.Routing
 {
@@ -40,12 +41,14 @@ namespace Akka.Routing
     /// The class represents a <see cref="ListenerMessage"/> sent by an <see cref="IActorRef"/> to another <see cref="IActorRef"/>
     /// instructing the second actor to start listening for messages sent by the first actor.
     /// </summary>
+    [MessagePackObject]
     public sealed class Listen : ListenerMessage
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Listen"/> class.
         /// </summary>
         /// <param name="listener">The actor that receives the message.</param>
+        [SerializationConstructor]
         public Listen(IActorRef listener)
         {
             Listener = listener;
@@ -54,6 +57,7 @@ namespace Akka.Routing
         /// <summary>
         /// The actor that receives the message.
         /// </summary>
+        [Key(0)]
         public IActorRef Listener { get; }
     }
 
@@ -61,12 +65,14 @@ namespace Akka.Routing
     /// The class represents a <see cref="ListenerMessage"/> sent by an <see cref="IActorRef"/> to another <see cref="IActorRef"/>
     /// instructing the second actor to stop listening for messages sent by the first actor.
     /// </summary>
+    [MessagePackObject]
     public sealed class Deafen : ListenerMessage
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Deafen"/> class.
         /// </summary>
         /// <param name="listener">The actor that no longer receives the message.</param>
+        [SerializationConstructor]
         public Deafen(IActorRef listener)
         {
             Listener = listener;
@@ -75,6 +81,7 @@ namespace Akka.Routing
         /// <summary>
         /// The actor that no longer receives the message.
         /// </summary>
+        [Key(0)]
         public IActorRef Listener { get; }
     }
 
@@ -82,12 +89,14 @@ namespace Akka.Routing
     /// This class represents a <see cref="ListenerMessage"/> instructing an <see cref="IActorRef"/>
     /// to perform a supplied <see cref="Action{IActorRef}"/> for all of its listeners.
     /// </summary>
+    [MessagePackObject]
     public sealed class WithListeners : ListenerMessage
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="WithListeners"/> class.
         /// </summary>
         /// <param name="listenerFunction">The action to perform for all of an actor's listeners.</param>
+        [SerializationConstructor]
         public WithListeners(Action<IActorRef> listenerFunction)
         {
             ListenerFunction = listenerFunction;
@@ -96,6 +105,7 @@ namespace Akka.Routing
         /// <summary>
         /// The action to perform for all of an actor's listeners.
         /// </summary>
+        [Key(0)]
         public Action<IActorRef> ListenerFunction { get; }
     }
 

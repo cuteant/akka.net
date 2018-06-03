@@ -10,7 +10,9 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Serialization;
 using Akka.TestKit;
+using MessagePack;
 using Xunit;
 
 namespace Akka.Persistence.Tests
@@ -19,31 +21,37 @@ namespace Akka.Persistence.Tests
     {
         #region internal test classes
 
-        [Serializable]
+        [MessagePackObject]
         private sealed class AcceptedReq : IEvt
         {
+            [SerializationConstructor]
             public AcceptedReq(string payload, string destinationPath)
             {
                 Payload = payload;
                 DestinationPath = destinationPath;
             }
 
+            [Key(0)]
             public string Payload { get; private set; }
 
             //FIXME: change to Akka.Actor.ActorPath when serialization problems will be solved
+            [Key(1)]
             public string DestinationPath { get; private set; }
         }
 
-        [Serializable]
+        [MessagePackObject]
         private sealed class Action : IEquatable<Action>
         {
+            [SerializationConstructor]
             public Action(long id, string payload)
             {
                 Id = id;
                 Payload = payload;
             }
 
+            [Key(0)]
             public long Id { get; private set; }
+            [Key(1)]
             public string Payload { get; private set; }
 
             public bool Equals(Action other)
@@ -66,14 +74,16 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        [Serializable]
+        [MessagePackObject]
         private sealed class ActionAck : IEquatable<ActionAck>
         {
+            [SerializationConstructor]
             public ActionAck(long id)
             {
                 Id = id;
             }
 
+            [Key(0)]
             public long Id { get; private set; }
 
             public bool Equals(ActionAck other)
@@ -83,7 +93,7 @@ namespace Akka.Persistence.Tests
         }
 
         [Serializable]
-        private sealed class Boom
+        private sealed class Boom : ISingletonMessage
         {
             public static readonly Boom Instance = new Boom();
         }
@@ -113,7 +123,7 @@ namespace Akka.Persistence.Tests
         }
 
         [Serializable]
-        private sealed class InvalidReq
+        private sealed class InvalidReq : ISingletonMessage
         {
             public static readonly InvalidReq Instance = new InvalidReq();
 
@@ -245,19 +255,20 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        [Serializable]
+        [MessagePackObject]
         private sealed class Req
         {
+            [SerializationConstructor]
             public Req(string payload)
             {
                 Payload = payload;
             }
 
+            [Key(0)]
             public string Payload { get; private set; }
         }
 
-        [Serializable]
-        private sealed class ReqAck
+        private sealed class ReqAck : ISingletonMessage
         {
             public static readonly ReqAck Instance = new ReqAck();
 
@@ -271,14 +282,16 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        [Serializable]
+        [MessagePackObject]
         private sealed class ReqDone : IEvt, IEquatable<ReqDone>
         {
+            [SerializationConstructor]
             public ReqDone(long id)
             {
                 Id = id;
             }
 
+            [Key(0)]
             public long Id { get; private set; }
 
             public bool Equals(ReqDone other)
@@ -288,7 +301,7 @@ namespace Akka.Persistence.Tests
         }
 
         [Serializable]
-        private sealed class SaveSnap
+        private sealed class SaveSnap : ISingletonMessage
         {
             public static readonly SaveSnap Instance = new SaveSnap();
         }

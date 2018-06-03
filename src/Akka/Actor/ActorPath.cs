@@ -11,7 +11,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.Serialization;
 using Akka.Util;
-//using Newtonsoft.Json;
+using MessagePack;
 using static System.String;
 
 namespace Akka.Actor
@@ -31,6 +31,7 @@ namespace Akka.Actor
     /// references are compared the unique id of the actor is not taken into account
     /// when comparing actor paths.
     /// </summary>
+    [MessagePackObject]
     public abstract class ActorPath : IEquatable<ActorPath>, IComparable<ActorPath>, ISurrogated
     {
         /// <summary>
@@ -180,6 +181,7 @@ namespace Akka.Actor
         /// Gets the uid.
         /// </summary>
         /// <value> The uid. </value>
+        [IgnoreMember, IgnoreDataMember]
         public long Uid { get; }
 
         internal static readonly string[] EmptyElements = { };
@@ -190,6 +192,7 @@ namespace Akka.Actor
         /// Gets the elements.
         /// </summary>
         /// <value> The elements. </value>
+        [IgnoreMember, IgnoreDataMember]
         public abstract IReadOnlyList<string> Elements { get; }
 
         /// <summary>
@@ -215,6 +218,7 @@ namespace Akka.Actor
         /// Gets the name.
         /// </summary>
         /// <value> The name. </value>
+        [IgnoreMember, IgnoreDataMember]
         public string Name { get; }
 
         /// <summary>
@@ -222,16 +226,19 @@ namespace Akka.Actor
         /// the RootActorPath.
         /// </summary>
         /// <value> The address. </value>
+        [IgnoreMember, IgnoreDataMember]
         public Address Address { get; }
 
         /// <summary>
         /// The root actor path.
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public abstract ActorPath Root { get; }
 
         /// <summary>
         /// The path of the parent to this actor.
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public abstract ActorPath Parent { get; }
 
         /// <inheritdoc/>

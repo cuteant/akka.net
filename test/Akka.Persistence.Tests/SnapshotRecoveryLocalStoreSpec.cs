@@ -15,7 +15,7 @@ namespace Akka.Persistence.Tests
         private const string PersistenceId = "europe";
         private const string ExtendedName = PersistenceId + "italy";
 
-        public sealed class TakeSnapshot
+        public sealed class TakeSnapshot : ISingletonMessage
         {
             private TakeSnapshot() {}
             public static readonly TakeSnapshot Instance = new TakeSnapshot();

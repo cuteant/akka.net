@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Serialization;
 using Akka.TestKit;
 using Xunit;
 
@@ -162,7 +163,7 @@ namespace Akka.Persistence.Tests
         }
 
         [Serializable]
-        sealed class Req
+        public sealed class Req
         {
             public Req(string payload)
             {
@@ -173,7 +174,7 @@ namespace Akka.Persistence.Tests
         }
 
         [Serializable]
-        sealed class ReqAck
+        sealed class ReqAck : ISingletonMessage
         {
             public static readonly ReqAck Instance = new ReqAck();
             private ReqAck() { }
@@ -184,7 +185,7 @@ namespace Akka.Persistence.Tests
         }
 
         [Serializable]
-        sealed class InvalidReq
+        sealed class InvalidReq : ISingletonMessage
         {
             public static readonly InvalidReq Instance = new InvalidReq();
             private InvalidReq() { }
@@ -274,10 +275,10 @@ namespace Akka.Persistence.Tests
         }
 
         [Serializable]
-        sealed class Boom { public static readonly Boom Instance = new Boom(); }
+        sealed class Boom : ISingletonMessage { public static readonly Boom Instance = new Boom(); }
 
         [Serializable]
-        sealed class SaveSnap { public static readonly SaveSnap Instance = new SaveSnap(); }
+        sealed class SaveSnap : ISingletonMessage { public static readonly SaveSnap Instance = new SaveSnap(); }
 
         [Serializable]
         sealed class Snap

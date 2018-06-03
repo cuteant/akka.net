@@ -11,6 +11,7 @@ using FluentAssertions;
 using System;
 using System.Collections.Generic;
 using Akka.Configuration;
+using MessagePack;
 using Xunit;
 using static Akka.Actor.FSMBase;
 
@@ -435,9 +436,9 @@ namespace Akka.Persistence.Tests.Fsm
 
                 fsmRef.Tell("4x"); //changes the state to Persist4xAtOnce, also updates SeqNo although nothing is persisted
                 fsmRef.Tell(10); //Persist4xAtOnce = persist 10, 4x times
-                // snapshot-after = 3, but the SeqNo is not multiple of 3,
-                // as saveStateSnapshot() is called at the end of persistent event "batch" = 4x of 10's.
-            
+                                 // snapshot-after = 3, but the SeqNo is not multiple of 3,
+                                 // as saveStateSnapshot() is called at the end of persistent event "batch" = 4x of 10's.
+
                 probe.ExpectMsg("SeqNo=8, StateData=List(10, 10, 10, 10, 3, 2, 1)");
             }
             finally
@@ -584,14 +585,14 @@ namespace Akka.Persistence.Tests.Fsm
 
     public class TimeoutFsm : PersistentFSM<TimeoutFsm.ITimeoutState, string, string>
     {
-        public interface ITimeoutState: PersistentFSM.IFsmState
+        public interface ITimeoutState : PersistentFSM.IFsmState
         {
-            
+
         }
 
-        public class Init : ITimeoutState
+        public class Init : ITimeoutState, ISingletonMessage
         {
-            public static Init Instance { get; } = new Init();
+            public static readonly Init Instance = new Init();
 
             private Init() { }
             public override bool Equals(object obj) => !ReferenceEquals(obj, null) && obj is Init;
@@ -600,7 +601,7 @@ namespace Akka.Persistence.Tests.Fsm
             public string Identifier => "Init";
         }
 
-        public class OverrideTimeoutToInf
+        public class OverrideTimeoutToInf : ISingletonMessage
         {
             public static readonly OverrideTimeoutToInf Instance = new OverrideTimeoutToInf();
             private OverrideTimeoutToInf() { }
@@ -713,9 +714,9 @@ namespace Akka.Persistence.Tests.Fsm
 
     public interface IUserState : PersistentFSM.IFsmState { }
 
-    public class Shopping : IUserState
+    public class Shopping : IUserState, ISingletonMessage
     {
-        public static Shopping Instance { get; } = new Shopping();
+        public static readonly Shopping Instance = new Shopping();
 
         private Shopping() { }
         public override bool Equals(object obj) => !ReferenceEquals(obj, null) && obj is Shopping;
@@ -725,9 +726,9 @@ namespace Akka.Persistence.Tests.Fsm
         public string Identifier => "Shopping";
     }
 
-    public class Inactive : IUserState
+    public class Inactive : IUserState, ISingletonMessage
     {
-        public static Inactive Instance { get; } = new Inactive();
+        public static readonly Inactive Instance = new Inactive();
 
         private Inactive() { }
         public override bool Equals(object obj) => !ReferenceEquals(obj, null) && obj is Inactive;
@@ -737,9 +738,9 @@ namespace Akka.Persistence.Tests.Fsm
         public string Identifier => "Inactive";
     }
 
-    public class Paid : IUserState
+    public class Paid : IUserState, ISingletonMessage
     {
-        public static Paid Instance { get; } = new Paid();
+        public static readonly Paid Instance = new Paid();
 
         private Paid() { }
         public override bool Equals(object obj) => !ReferenceEquals(obj, null) && obj is Paid;
@@ -749,9 +750,9 @@ namespace Akka.Persistence.Tests.Fsm
         public string Identifier => "Paid";
     }
 
-    public class LookingAround : IUserState
+    public class LookingAround : IUserState, ISingletonMessage
     {
-        public static LookingAround Instance { get; } = new LookingAround();
+        public static readonly LookingAround Instance = new LookingAround();
 
         private LookingAround() { }
         public override bool Equals(object obj) => !ReferenceEquals(obj, null) && obj is LookingAround;
@@ -765,8 +766,10 @@ namespace Akka.Persistence.Tests.Fsm
 
     #region Customer states data
 
+    [MessagePackObject]
     internal class Item
     {
+        [SerializationConstructor]
         public Item(string id, string name, float price)
         {
             Id = id;
@@ -774,8 +777,11 @@ namespace Akka.Persistence.Tests.Fsm
             Price = price;
         }
 
+        [Key(0)]
         public string Id { get; }
+        [Key(1)]
         public string Name { get; }
+        [Key(2)]
         public float Price { get; }
 
         #region Equals
@@ -812,6 +818,7 @@ namespace Akka.Persistence.Tests.Fsm
         IShoppingCart Empty();
     }
 
+    [MessagePackObject]
     internal class EmptyShoppingCart : IShoppingCart
     {
         public IShoppingCart AddItem(Item item)
@@ -824,9 +831,11 @@ namespace Akka.Persistence.Tests.Fsm
             return this;
         }
 
+        [Key(0)]
         public ICollection<Item> Items { get; set; }
     }
 
+    [MessagePackObject]
     internal class NonEmptyShoppingCart : IShoppingCart
     {
         public NonEmptyShoppingCart(Item item)
@@ -834,6 +843,9 @@ namespace Akka.Persistence.Tests.Fsm
             Items = new List<Item>();
             Items.Add(item);
         }
+
+        [SerializationConstructor]
+        public NonEmptyShoppingCart() { }
 
         public IShoppingCart AddItem(Item item)
         {
@@ -846,6 +858,7 @@ namespace Akka.Persistence.Tests.Fsm
             return new EmptyShoppingCart();
         }
 
+        [Key(0)]
         public ICollection<Item> Items { get; set; }
     }
 
@@ -931,20 +944,20 @@ namespace Akka.Persistence.Tests.Fsm
 
     public interface ISnapshotFSMState : PersistentFSM.IFsmState { }
 
-    public class PersistSingleAtOnce : ISnapshotFSMState
+    public class PersistSingleAtOnce : ISnapshotFSMState, ISingletonMessage
     {
-        public static PersistSingleAtOnce Instance { get; } = new PersistSingleAtOnce();
+        public static readonly PersistSingleAtOnce Instance = new PersistSingleAtOnce();
         private PersistSingleAtOnce() { }
         public string Identifier => "PersistSingleAtOnce";
     }
 
-    public class Persist4xAtOnce : ISnapshotFSMState
+    public class Persist4xAtOnce : ISnapshotFSMState, ISingletonMessage
     {
-        public static Persist4xAtOnce Instance { get; } = new Persist4xAtOnce();
+        public static readonly Persist4xAtOnce Instance = new Persist4xAtOnce();
         private Persist4xAtOnce() { }
         public string Identifier => "Persist4xAtOnce";
     }
-    
+
     public interface ISnapshotFSMEvent { }
 
     public class IntAdded : ISnapshotFSMEvent
@@ -953,7 +966,7 @@ namespace Akka.Persistence.Tests.Fsm
         {
             I = i;
         }
-        
+
         public int I { get; }
     }
 
@@ -1010,7 +1023,7 @@ namespace Akka.Persistence.Tests.Fsm
             }
             return currentData;
         }
-        
+
         public static Props Props(IActorRef probe)
         {
             return Actor.Props.Create(() => new SnapshotFSM(probe));

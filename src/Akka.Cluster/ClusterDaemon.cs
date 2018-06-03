@@ -617,9 +617,9 @@ namespace Akka.Cluster
         /// <summary>
         /// All messages related to creating or removing <see cref="Cluster"/> event subscriptions
         /// </summary>
-        [Union(0, typeof(Subscribe))]
-        [Union(1, typeof(Unsubscribe))]
-        [Union(2, typeof(SendCurrentClusterState))]
+        //[Union(0, typeof(Subscribe))]
+        //[Union(1, typeof(Unsubscribe))]
+        //[Union(2, typeof(SendCurrentClusterState))]
         public interface ISubscriptionMessage { }
 
         /// <summary>
@@ -718,8 +718,8 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        [Union(0, typeof(PublishChanges))]
-        [Union(1, typeof(PublishEvent))]
+        //[Union(0, typeof(PublishChanges))]
+        //[Union(1, typeof(PublishEvent))]
         internal interface IPublishMessage { }
 
         /// <summary>

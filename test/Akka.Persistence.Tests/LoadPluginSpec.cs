@@ -14,7 +14,7 @@ namespace Akka.Persistence.Tests
 {
     public class LoadPluginSpec : PersistenceSpec
     {
-        public sealed class GetConfig
+        public sealed class GetConfig : ISingletonMessage
         {
             public static readonly GetConfig Instance = new GetConfig();
             private GetConfig() { }

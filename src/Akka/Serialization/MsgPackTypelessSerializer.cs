@@ -45,7 +45,18 @@ namespace Akka.Serialization
             _formatter = new TypelessMessagePackMessageFormatter(resolver);
         }
 
-        public override byte[] ToBinary(object obj) => _formatter.SerializeObject(obj, _initialBufferSize);
+        public override byte[] ToBinary(object obj)
+        {
+            try
+            {
+                return _formatter.SerializeObject(obj, _initialBufferSize);
+            }
+            catch(Exception exc)
+            {
+                var err = exc.ToString();
+                throw exc;
+            }
+        }
 
         public override object FromBinary(byte[] bytes, Type type) => _formatter.Deserialize(type, bytes);
 

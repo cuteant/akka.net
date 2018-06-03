@@ -8,10 +8,12 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Persistence.Journal;
 using Akka.Persistence.Serialization;
+using MessagePack;
 
 namespace Akka.Persistence
 {
@@ -68,8 +70,10 @@ namespace Akka.Persistence
     /// <summary>
     /// Message which can be resequenced by <see cref="AsyncWriteJournal"/>, but will not be persisted.
     /// </summary>
+    [MessagePackObject]
     internal sealed class NonPersistentMessage : IPersistentEnvelope
     {
+        [SerializationConstructor]
         public NonPersistentMessage(object payload, IActorRef sender)
         {
             Payload = payload;
@@ -77,16 +81,20 @@ namespace Akka.Persistence
             Size = 1;
         }
 
+        [Key(0)]
         public object Payload { get; }
 
+        [Key(1)]
         public IActorRef Sender { get; }
 
+        [IgnoreMember, IgnoreDataMember]
         public int Size { get; }
     }
 
     /// <summary>
     /// TBD
     /// </summary>
+    [MessagePackObject]
     public sealed class AtomicWrite : IPersistentEnvelope, IMessage
     {
         /// <summary>
@@ -137,31 +145,37 @@ namespace Akka.Persistence
         /// <summary>
         /// This persistent message's payload.
         /// </summary>
+        [Key(0)]
         public object Payload { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public IActorRef Sender { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public int Size { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public string PersistenceId { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public long LowestSequenceNr { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public long HighestSequenceNr { get; }
 
         /// <inheritdoc/>
@@ -206,6 +220,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Representation of a persistent message in the journal plugin API.
     /// </summary>
+    //[Union(0, typeof(Persistent))]
     public interface IPersistentRepresentation : IMessage
     {
         /// <summary>
@@ -277,8 +292,8 @@ namespace Akka.Persistence
     /// INTERNAL API.
     /// </summary>
     [InternalApi]
-    [Serializable]
-    public class Persistent : IPersistentRepresentation, IEquatable<IPersistentRepresentation>
+    [MessagePackObject]
+    public sealed class Persistent : IPersistentRepresentation, IEquatable<IPersistentRepresentation>
     {
         /// <summary>
         /// Plugin API: value of an undefined persistenceId or manifest.
@@ -307,24 +322,31 @@ namespace Akka.Persistence
         }
 
         /// <inheritdoc />
+        [Key(0)]
         public object Payload { get; }
 
         /// <inheritdoc />
-        public string Manifest { get; }
-
-        /// <inheritdoc />
-        public string PersistenceId { get; }
-
-        /// <inheritdoc />
+        [Key(1)]
         public long SequenceNr { get; }
 
         /// <inheritdoc />
+        [Key(2)]
+        public string PersistenceId { get; }
+
+        /// <inheritdoc />
+        [Key(3)]
+        public string Manifest { get; }
+
+        /// <inheritdoc />
+        [Key(4)]
         public bool IsDeleted { get; }
 
         /// <inheritdoc />
+        [Key(5)]
         public IActorRef Sender { get; }
 
         /// <inheritdoc />
+        [Key(6)]
         public string WriterGuid { get; }
 
         /// <inheritdoc />

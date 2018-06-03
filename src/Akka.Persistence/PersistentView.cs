@@ -59,19 +59,19 @@ namespace Akka.Persistence
         /// If `false`, any message sent to the view may interleave with replayed <see cref="Persistent"/> message stream.
         /// </summary>
         [Key(0)]
-        public bool IsAwait { get; private set; }
+        public readonly bool IsAwait;
 
         /// <summary>
         /// Maximum number of messages to replay when handling this update request. Defaults to <see cref="long.MaxValue"/> (i.e. no limit).
         /// </summary>
         [Key(1)]
-        public long ReplayMax { get; private set; }
+        public readonly long ReplayMax;
     }
 
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     [Obsolete("PersistentView was deprecated and will be removed in the next major version [1.3.0]")]
     public sealed class ScheduledUpdate
     {
@@ -79,6 +79,7 @@ namespace Akka.Persistence
         /// TBD
         /// </summary>
         /// <param name="replayMax">TBD</param>
+        [SerializationConstructor]
         public ScheduledUpdate(long replayMax)
         {
             ReplayMax = replayMax;
@@ -87,7 +88,8 @@ namespace Akka.Persistence
         /// <summary>
         /// TBD
         /// </summary>
-        public long ReplayMax { get; private set; }
+        [Key(0)]
+        public readonly long ReplayMax;
     }
 
     /// <summary>

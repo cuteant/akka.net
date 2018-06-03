@@ -11,6 +11,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Persistence.Serialization;
+using MessagePack;
 using static Akka.Persistence.Fsm.PersistentFSM;
 
 namespace Akka.Persistence.Fsm
@@ -171,6 +172,7 @@ namespace Akka.Persistence.Fsm
         /// <summary>
         /// Persisted on state change
         /// </summary>
+        [MessagePackObject]
         public class StateChangeEvent : IMessage
         {
             /// <summary>
@@ -178,6 +180,7 @@ namespace Akka.Persistence.Fsm
             /// </summary>
             /// <param name="stateIdentifier">FSM state identifier.</param>
             /// <param name="timeout">FSM state timeout.</param>
+            [SerializationConstructor]
             public StateChangeEvent(string stateIdentifier, TimeSpan? timeout)
             {
                 StateIdentifier = stateIdentifier;
@@ -187,18 +190,21 @@ namespace Akka.Persistence.Fsm
             /// <summary>
             /// FSM state identifier.
             /// </summary>
+            [Key(0)]
             public string StateIdentifier { get; }
 
             /// <summary>
             /// FSM state timeout.
             /// </summary>
+            [Key(1)]
             public TimeSpan? Timeout { get; }
         }
 
         /// <summary>
         /// FSM state and data snapshot
         /// </summary>
-        public class PersistentFSMSnapshot<TD> : IMessage
+        [MessagePackObject]
+        public class PersistentFSMSnapshot<TD> : IMessage 
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="PersistentFSMSnapshot{TD}"/> class.
@@ -206,6 +212,7 @@ namespace Akka.Persistence.Fsm
             /// <param name="stateIdentifier">FSM state identifier.</param>
             /// <param name="data">FSM state data</param>
             /// <param name="timeout">FSM state timeout.</param>
+            [SerializationConstructor]
             public PersistentFSMSnapshot(string stateIdentifier, TD data, TimeSpan? timeout)
             {
                 StateIdentifier = stateIdentifier;
@@ -216,16 +223,19 @@ namespace Akka.Persistence.Fsm
             /// <summary>
             /// FSM state identifier.
             /// </summary>
+            [Key(0)]
             public string StateIdentifier { get; }
 
             /// <summary>
             /// FSM state data.
             /// </summary>
+            [Key(1)]
             public TD Data { get; }
 
             /// <summary>
             /// FSM state timeout.
             /// </summary>
+            [Key(2)]
             public TimeSpan? Timeout { get; }
 
             protected bool Equals(PersistentFSMSnapshot<TD> other)

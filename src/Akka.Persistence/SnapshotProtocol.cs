@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using Akka.Serialization.Formatters;
 using MessagePack;
 
 namespace Akka.Persistence
@@ -89,19 +90,19 @@ namespace Akka.Persistence
         /// Id of the persistent actor from which the snapshot was taken.
         /// </summary>
         [Key(0)]
-        public string PersistenceId { get; }
+        public readonly string PersistenceId;
 
         /// <summary>
         /// Sequence number at which a snapshot was taken.
         /// </summary>
         [Key(1)]
-        public long SequenceNr { get; }
+        public readonly long SequenceNr;
 
         /// <summary>
         /// Time at which the snapshot was saved.
         /// </summary>
         [Key(2)]
-        public DateTime Timestamp { get; }
+        public readonly DateTime Timestamp;
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => Equals(obj as SnapshotMetadata);
@@ -134,13 +135,14 @@ namespace Akka.Persistence
     /// <summary>
     /// Sent to <see cref="PersistentActor"/> after successful saving of a snapshot.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SaveSnapshotSuccess : ISnapshotResponse, IEquatable<SaveSnapshotSuccess>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="SaveSnapshotSuccess"/> class.
         /// </summary>
         /// <param name="metadata">Snapshot metadata.</param>
+        [SerializationConstructor]
         public SaveSnapshotSuccess(SnapshotMetadata metadata)
         {
             Metadata = metadata;
@@ -149,7 +151,8 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot metadata.
         /// </summary>
-        public SnapshotMetadata Metadata { get; }
+        [Key(0)]
+        public readonly SnapshotMetadata Metadata;
 
         /// <inheritdoc/>
         public bool Equals(SaveSnapshotSuccess other)
@@ -173,13 +176,14 @@ namespace Akka.Persistence
     /// <summary>
     /// Sent to <see cref="PersistentActor"/> after successful deletion of a snapshot.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class DeleteSnapshotSuccess : ISnapshotResponse, IEquatable<DeleteSnapshotSuccess>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DeleteSnapshotSuccess"/> class.
         /// </summary>
         /// <param name="metadata">Snapshot metadata.</param>
+        [SerializationConstructor]
         public DeleteSnapshotSuccess(SnapshotMetadata metadata)
         {
             Metadata = metadata;
@@ -188,7 +192,8 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot metadata.
         /// </summary>
-        public SnapshotMetadata Metadata { get; }
+        [Key(0)]
+        public readonly SnapshotMetadata Metadata;
 
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshotSuccess other)
@@ -212,13 +217,14 @@ namespace Akka.Persistence
     /// <summary>
     /// Sent to <see cref="PersistentActor"/> after successful deletion of a specified range of snapshots.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class DeleteSnapshotsSuccess : ISnapshotResponse, IEquatable<DeleteSnapshotsSuccess>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DeleteSnapshotsSuccess"/> class.
         /// </summary>
         /// <param name="criteria">Snapshot selection criteria.</param>
+        [SerializationConstructor]
         public DeleteSnapshotsSuccess(SnapshotSelectionCriteria criteria)
         {
             Criteria = criteria;
@@ -227,7 +233,8 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot selection criteria.
         /// </summary>
-        public SnapshotSelectionCriteria Criteria { get; }
+        [Key(0)]
+        public readonly SnapshotSelectionCriteria Criteria;
 
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshotsSuccess other)
@@ -260,7 +267,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Sent to <see cref="PersistentActor"/> after failed saving a snapshot.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SaveSnapshotFailure : ISnapshotResponse, IEquatable<SaveSnapshotFailure>
     {
         /// <summary>
@@ -268,6 +275,7 @@ namespace Akka.Persistence
         /// </summary>
         /// <param name="metadata">Snapshot metadata.</param>
         /// <param name="cause">A failure cause.</param>
+        [SerializationConstructor]
         public SaveSnapshotFailure(SnapshotMetadata metadata, Exception cause)
         {
             Metadata = metadata;
@@ -277,12 +285,14 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot metadata.
         /// </summary>
-        public SnapshotMetadata Metadata { get; }
+        [Key(0)]
+        public readonly SnapshotMetadata Metadata;
 
         /// <summary>
         /// A failure cause.
         /// </summary>
-        public Exception Cause { get; }
+        [Key(1)]
+        public readonly Exception Cause;
 
         /// <inheritdoc/>
         public bool Equals(SaveSnapshotFailure other)
@@ -318,7 +328,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Sent to <see cref="PersistentActor"/> after failed deletion of a snapshot.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class DeleteSnapshotFailure : ISnapshotResponse, IEquatable<DeleteSnapshotFailure>
     {
         /// <summary>
@@ -326,6 +336,7 @@ namespace Akka.Persistence
         /// </summary>
         /// <param name="metadata">Snapshot metadata.</param>
         /// <param name="cause">A failure cause.</param>
+        [SerializationConstructor]
         public DeleteSnapshotFailure(SnapshotMetadata metadata, Exception cause)
         {
             Metadata = metadata;
@@ -335,12 +346,14 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot metadata.
         /// </summary>
-        public SnapshotMetadata Metadata { get; }
+        [Key(0)]
+        public readonly SnapshotMetadata Metadata;
 
         /// <summary>
         /// A failure cause.
         /// </summary>
-        public Exception Cause { get; }
+        [Key(1)]
+        public readonly Exception Cause;
 
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshotFailure other)
@@ -370,7 +383,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Sent to <see cref="PersistentActor"/> after failed deletion of a range of snapshots.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class DeleteSnapshotsFailure : ISnapshotResponse, IEquatable<DeleteSnapshotsFailure>
     {
         /// <summary>
@@ -378,6 +391,7 @@ namespace Akka.Persistence
         /// </summary>
         /// <param name="criteria">Snapshot selection criteria.</param>
         /// <param name="cause">A failure cause.</param>
+        [SerializationConstructor]
         public DeleteSnapshotsFailure(SnapshotSelectionCriteria criteria, Exception cause)
         {
             Criteria = criteria;
@@ -387,12 +401,14 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot selection criteria.
         /// </summary>
-        public SnapshotSelectionCriteria Criteria { get; }
+        [Key(0)]
+        public readonly SnapshotSelectionCriteria Criteria;
 
         /// <summary>
         /// A failure cause.
         /// </summary>
-        public Exception Cause { get; }
+        [Key(1)]
+        public readonly Exception Cause;
 
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshotsFailure other)
@@ -423,7 +439,7 @@ namespace Akka.Persistence
     /// Offers a <see cref="PersistentActor"/> a previously saved snapshot during recovery.
     /// This offer is received before any further replayed messages.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SnapshotOffer : IEquatable<SnapshotOffer>
     {
         /// <summary>
@@ -431,6 +447,7 @@ namespace Akka.Persistence
         /// </summary>
         /// <param name="metadata">Snapshot metadata.</param>
         /// <param name="snapshot">Snapshot.</param>
+        [SerializationConstructor]
         public SnapshotOffer(SnapshotMetadata metadata, object snapshot)
         {
             Metadata = metadata;
@@ -440,12 +457,14 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot metadata.
         /// </summary>
-        public SnapshotMetadata Metadata { get; }
+        [Key(0)]
+        public readonly SnapshotMetadata Metadata;
 
         /// <summary>
         /// Snapshot.
         /// </summary>
-        public object Snapshot { get; }
+        [Key(1)]
+        public readonly object Snapshot;
 
         /// <inheritdoc/>
         public bool Equals(SnapshotOffer other)
@@ -516,25 +535,25 @@ namespace Akka.Persistence
         /// Upper bound for a selected snapshot's sequence number.
         /// </summary>
         [Key(0)]
-        public long MaxSequenceNr { get; }
+        public readonly long MaxSequenceNr;
 
         /// <summary>
         /// Upper bound for a selected snapshot's timestamp.
         /// </summary>
         [Key(1)]
-        public DateTime MaxTimeStamp { get; }
+        public readonly DateTime MaxTimeStamp;
 
         /// <summary>
         /// Lower bound for a selected snapshot's sequence number
         /// </summary>
         [Key(2)]
-        public long MinSequenceNr { get; }
+        public readonly long MinSequenceNr;
 
         /// <summary>
         /// Lower bound for a selected snapshot's timestamp
         /// </summary>
         [Key(3)]
-        public DateTime? MinTimestamp { get; }
+        public readonly DateTime? MinTimestamp;
 
         internal SnapshotSelectionCriteria Limit(long toSequenceNr)
         {
@@ -583,7 +602,7 @@ namespace Akka.Persistence
     /// <summary>
     /// A selected snapshot matching <see cref="SnapshotSelectionCriteria"/>.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SelectedSnapshot : IEquatable<SelectedSnapshot>
     {
         /// <summary>
@@ -591,6 +610,7 @@ namespace Akka.Persistence
         /// </summary>
         /// <param name="metadata">Snapshot metadata.</param>
         /// <param name="snapshot">Snapshot.</param>
+        [SerializationConstructor]
         public SelectedSnapshot(SnapshotMetadata metadata, object snapshot)
         {
             Metadata = metadata;
@@ -600,12 +620,14 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot metadata.
         /// </summary>
-        public SnapshotMetadata Metadata { get; }
+        [Key(0)]
+        public readonly SnapshotMetadata Metadata;
 
         /// <summary>
         /// Snapshot.
         /// </summary>
-        public object Snapshot { get; }
+        [Key(1)]
+        public readonly object Snapshot;
 
         /// <inheritdoc/>
         public bool Equals(SelectedSnapshot other)
@@ -635,7 +657,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Instructs a snapshot store to load the snapshot.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class LoadSnapshot : ISnapshotRequest, IEquatable<LoadSnapshot>
     {
         /// <summary>
@@ -644,6 +666,7 @@ namespace Akka.Persistence
         /// <param name="persistenceId">Persistent actor identifier.</param>
         /// <param name="criteria">Criteria for selecting snapshot, from which the recovery should start.</param>
         /// <param name="toSequenceNr">Upper, inclusive sequence number bound for recovery.</param>
+        [SerializationConstructor]
         public LoadSnapshot(string persistenceId, SnapshotSelectionCriteria criteria, long toSequenceNr)
         {
             PersistenceId = persistenceId;
@@ -654,17 +677,20 @@ namespace Akka.Persistence
         /// <summary>
         /// Persistent actor identifier.
         /// </summary>
-        public string PersistenceId { get; }
+        [Key(0)]
+        public readonly string PersistenceId;
 
         /// <summary>
         /// Criteria for selecting snapshot, from which the recovery should start.
         /// </summary>
-        public SnapshotSelectionCriteria Criteria { get; }
+        [Key(1)]
+        public readonly SnapshotSelectionCriteria Criteria;
 
         /// <summary>
         /// Upper, inclusive sequence number bound for recovery.
         /// </summary>
-        public long ToSequenceNr { get; }
+        [Key(2)]
+        public readonly long ToSequenceNr;
 
         /// <inheritdoc/>
         public bool Equals(LoadSnapshot other)
@@ -699,7 +725,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Response to a <see cref="LoadSnapshot"/> message.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class LoadSnapshotResult : ISnapshotResponse, IEquatable<LoadSnapshotResult>
     {
         /// <summary>
@@ -707,6 +733,7 @@ namespace Akka.Persistence
         /// </summary>
         /// <param name="snapshot">Loaded snapshot or null if none provided.</param>
         /// <param name="toSequenceNr">Upper sequence number bound (inclusive) for recovery.</param>
+        [SerializationConstructor]
         public LoadSnapshotResult(SelectedSnapshot snapshot, long toSequenceNr)
         {
             Snapshot = snapshot;
@@ -716,12 +743,14 @@ namespace Akka.Persistence
         /// <summary>
         /// Loaded snapshot or null if none provided.
         /// </summary>
-        public SelectedSnapshot Snapshot { get; }
+        [Key(0)]
+        public readonly SelectedSnapshot Snapshot;
 
         /// <summary>
         /// Upper sequence number bound (inclusive) for recovery.
         /// </summary>
-        public long ToSequenceNr { get; }
+        [Key(1)]
+        public readonly long ToSequenceNr;
 
         /// <inheritdoc/>
         public bool Equals(LoadSnapshotResult other)
@@ -752,12 +781,14 @@ namespace Akka.Persistence
     /// <summary>
     /// Reply message to a failed <see cref="LoadSnapshot"/> request.
     /// </summary>
+    [MessagePackObject]
     public sealed class LoadSnapshotFailed : ISnapshotResponse
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="LoadSnapshotFailed"/> class.
         /// </summary>
         /// <param name="cause">Failure cause.</param>
+        [SerializationConstructor]
         public LoadSnapshotFailed(Exception cause)
         {
             Cause = cause;
@@ -766,7 +797,8 @@ namespace Akka.Persistence
         /// <summary>
         /// Failure cause.
         /// </summary>
-        public Exception Cause { get; }
+        [Key(0)]
+        public readonly Exception Cause;
 
         private bool Equals(LoadSnapshotFailed other) => Equals(Cause, other.Cause);
 
@@ -785,7 +817,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Instructs a snapshot store to save a snapshot.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SaveSnapshot : ISnapshotRequest, IEquatable<SaveSnapshot>
     {
         /// <summary>
@@ -796,6 +828,7 @@ namespace Akka.Persistence
         /// <exception cref="ArgumentNullException">
         /// This exception is thrown when the specified <paramref name="metadata"/> is undefined.
         /// </exception>
+        [SerializationConstructor]
         public SaveSnapshot(SnapshotMetadata metadata, object snapshot)
         {
             Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata), "SaveSnapshot requires SnapshotMetadata to be provided");
@@ -805,12 +838,14 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot metadata.
         /// </summary>
-        public SnapshotMetadata Metadata { get; }
+        [Key(0)]
+        public readonly SnapshotMetadata Metadata;
 
         /// <summary>
         /// Snapshot.
         /// </summary>
-        public object Snapshot { get; }
+        [Key(1)]
+        public readonly object Snapshot;
 
         /// <inheritdoc/>
         public bool Equals(SaveSnapshot other)
@@ -840,7 +875,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Instructs a snapshot store to delete a snapshot.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class DeleteSnapshot : ISnapshotRequest, IEquatable<DeleteSnapshot>
     {
         /// <summary>
@@ -850,6 +885,7 @@ namespace Akka.Persistence
         /// <exception cref="ArgumentNullException">
         /// This exception is thrown when the specified <paramref name="metadata"/> is undefined.
         /// </exception>
+        [SerializationConstructor]
         public DeleteSnapshot(SnapshotMetadata metadata)
         {
             Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata), "DeleteSnapshot requires SnapshotMetadata to be provided");
@@ -858,7 +894,8 @@ namespace Akka.Persistence
         /// <summary>
         /// Snapshot metadata.
         /// </summary>
-        public SnapshotMetadata Metadata { get; }
+        [Key(0)]
+        public readonly SnapshotMetadata Metadata;
 
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshot other)
@@ -882,7 +919,7 @@ namespace Akka.Persistence
     /// <summary>
     /// Instructs a snapshot store to delete all snapshots that match provided criteria.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class DeleteSnapshots : ISnapshotRequest, IEquatable<DeleteSnapshots>
     {
         /// <summary>
@@ -890,6 +927,7 @@ namespace Akka.Persistence
         /// </summary>
         /// <param name="persistenceId">Persistent actor id.</param>
         /// <param name="criteria">Criteria for selecting snapshots to be deleted.</param>
+        [SerializationConstructor]
         public DeleteSnapshots(string persistenceId, SnapshotSelectionCriteria criteria)
         {
             PersistenceId = persistenceId;
@@ -899,12 +937,14 @@ namespace Akka.Persistence
         /// <summary>
         /// Persistent actor id.
         /// </summary>
-        public string PersistenceId { get; }
+        [Key(0)]
+        public readonly string PersistenceId;
 
         /// <summary>
         /// Criteria for selecting snapshots to be deleted.
         /// </summary>
-        public SnapshotSelectionCriteria Criteria { get; }
+        [Key(1)]
+        public readonly SnapshotSelectionCriteria Criteria;
 
         /// <inheritdoc/>
         public bool Equals(DeleteSnapshots other)

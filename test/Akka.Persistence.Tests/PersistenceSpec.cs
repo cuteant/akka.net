@@ -130,7 +130,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    internal sealed class GetState
+    internal sealed class GetState : ISingletonMessage
     {
         public static readonly GetState Instance = new GetState();
         private GetState() { }

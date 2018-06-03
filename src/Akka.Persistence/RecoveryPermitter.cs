@@ -14,21 +14,21 @@ using Akka.Persistence.Internal;
 
 namespace Akka.Persistence
 {
-    internal sealed class RequestRecoveryPermit
+    internal sealed class RequestRecoveryPermit : ISingletonMessage
     {
-        public static RequestRecoveryPermit Instance { get; } = new RequestRecoveryPermit();
+        public static readonly RequestRecoveryPermit Instance = new RequestRecoveryPermit();
         private RequestRecoveryPermit() { }
     }
 
-    internal sealed class RecoveryPermitGranted
+    internal sealed class RecoveryPermitGranted : ISingletonMessage
     {
-        public static RecoveryPermitGranted Instance { get; } = new RecoveryPermitGranted();
+        public static readonly RecoveryPermitGranted Instance = new RecoveryPermitGranted();
         private RecoveryPermitGranted() { }
     }
 
-    internal sealed class ReturnRecoveryPermit
+    internal sealed class ReturnRecoveryPermit : ISingletonMessage
     {
-        public static ReturnRecoveryPermit Instance { get; } = new ReturnRecoveryPermit();
+        public static readonly ReturnRecoveryPermit Instance = new ReturnRecoveryPermit();
         private ReturnRecoveryPermit() { }
     }
 

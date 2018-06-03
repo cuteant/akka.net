@@ -13,6 +13,7 @@ using Akka.Configuration;
 using Akka.Event;
 using Akka.TestKit.Internal;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.TestKit
 {
@@ -21,7 +22,7 @@ namespace Akka.TestKit
     /// </summary>
     public abstract partial class TestKitBase : IActorRefFactory
     {
-        private class TestState
+        private class TestState : IObjectReferences
         {
             public TestState()
             {

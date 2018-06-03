@@ -110,6 +110,7 @@ namespace Akka.TestKit
         /// <summary>
         /// Gets a value indicating whether the latch is open.
         /// </summary>
+        [IgnoreMember]
         public bool IsOpen
         {
             get { return _latch.CurrentCount == 0; }

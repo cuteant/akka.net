@@ -9,9 +9,10 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Akka.Actor;
-using System.Runtime.Serialization;
+using MessagePack;
 
 namespace Akka.Persistence.Journal
 {
@@ -53,7 +54,7 @@ namespace Akka.Persistence.Journal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SetStore
     {
         /// <summary>
@@ -63,6 +64,7 @@ namespace Akka.Persistence.Journal
         /// <exception cref="ArgumentNullException">
         /// This exception is thrown when the specified <paramref name="store"/> is undefined.
         /// </exception>
+        [SerializationConstructor]
         public SetStore(IActorRef store)
         {
             Store = store ?? throw new ArgumentNullException(nameof(store), "SetStore requires non-null reference to store actor");
@@ -71,6 +73,7 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly IActorRef Store;
     }
 
@@ -108,13 +111,14 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public sealed class ReplaySuccess : IEquatable<ReplaySuccess>
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="highestSequenceNr">TBD</param>
+            [SerializationConstructor]
             public ReplaySuccess(long highestSequenceNr)
             {
                 HighestSequenceNr = highestSequenceNr;
@@ -123,7 +127,8 @@ namespace Akka.Persistence.Journal
             /// <summary>
             /// TBD
             /// </summary>
-            public long HighestSequenceNr { get; }
+            [Key(0)]
+            public readonly long HighestSequenceNr;
 
             /// <inheritdoc/>
             public bool Equals(ReplaySuccess other)
@@ -138,13 +143,14 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public sealed class WriteMessages
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="messages">TBD</param>
+            [SerializationConstructor]
             public WriteMessages(IEnumerable<AtomicWrite> messages)
             {
                 Messages = messages.ToArray();
@@ -153,13 +159,14 @@ namespace Akka.Persistence.Journal
             /// <summary>
             /// TBD
             /// </summary>
-            public AtomicWrite[] Messages { get; }
+            [Key(0)]
+            public readonly AtomicWrite[] Messages;
         }
 
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public sealed class ReplayMessages : IEquatable<ReplayMessages>
         {
             /// <summary>
@@ -169,6 +176,7 @@ namespace Akka.Persistence.Journal
             /// <param name="fromSequenceNr">TBD</param>
             /// <param name="toSequenceNr">TBD</param>
             /// <param name="max">TBD</param>
+            [SerializationConstructor]
             public ReplayMessages(string persistenceId, long fromSequenceNr, long toSequenceNr, long max)
             {
                 PersistenceId = persistenceId;
@@ -180,22 +188,26 @@ namespace Akka.Persistence.Journal
             /// <summary>
             /// TBD
             /// </summary>
-            public string PersistenceId { get; }
+            [Key(0)]
+            public readonly string PersistenceId;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public long FromSequenceNr { get; }
+            [Key(1)]
+            public readonly long FromSequenceNr;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public long ToSequenceNr { get; }
+            [Key(2)]
+            public readonly long ToSequenceNr;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public long Max { get; }
+            [Key(3)]
+            public readonly long Max;
 
             /// <inheritdoc/>
             public bool Equals(ReplayMessages other)
@@ -213,7 +225,7 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public sealed class DeleteMessagesTo : IEquatable<DeleteMessagesTo>
         {
             /// <summary>
@@ -221,6 +233,7 @@ namespace Akka.Persistence.Journal
             /// </summary>
             /// <param name="persistenceId">TBD</param>
             /// <param name="toSequenceNr">TBD</param>
+            [SerializationConstructor]
             public DeleteMessagesTo(string persistenceId, long toSequenceNr)
             {
                 PersistenceId = persistenceId;
@@ -230,12 +243,14 @@ namespace Akka.Persistence.Journal
             /// <summary>
             /// TBD
             /// </summary>
-            public string PersistenceId { get; }
+            [Key(0)]
+            public readonly string PersistenceId;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public long ToSequenceNr { get; }
+            [Key(1)]
+            public readonly long ToSequenceNr;
 
             /// <inheritdoc/>
             public bool Equals(DeleteMessagesTo other)
@@ -410,7 +425,7 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
-        public class InitTimeout
+        public class InitTimeout : ISingletonMessage
         {
             private InitTimeout() { }
             public static readonly InitTimeout Instance = new InitTimeout();

@@ -13,7 +13,7 @@ namespace Akka.TestKit
     /// <summary>
     /// TBD
     /// </summary>
-    public abstract class MessageEnvelope   //this is called Message in Akka JVM
+    public abstract class MessageEnvelope : IObjectReferences   //this is called Message in Akka JVM
     {
         /// <summary>
         /// TBD

@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Persistence.Serialization;
+using MessagePack;
 
 namespace Akka.Persistence
 {
@@ -24,6 +25,7 @@ namespace Akka.Persistence
     /// During recovery the snapshot received in <see cref="SnapshotOffer" /> should be sent with
     /// <see cref="AtLeastOnceDeliverySemantic.SetDeliverySnapshot" />.
     /// </summary>
+    [MessagePackObject]
     public sealed class AtLeastOnceDeliverySnapshot : IMessage, IEquatable<AtLeastOnceDeliverySnapshot>
     {
         /// <summary>
@@ -34,6 +36,7 @@ namespace Akka.Persistence
         /// <exception cref="ArgumentNullException">
         /// This exception is thrown when the specified <paramref name="unconfirmedDeliveries"/> array is undefined.
         /// </exception>
+        [SerializationConstructor]
         public AtLeastOnceDeliverySnapshot(long currentDeliveryId, UnconfirmedDelivery[] unconfirmedDeliveries)
         {
             CurrentDeliveryId = currentDeliveryId;
@@ -44,11 +47,13 @@ namespace Akka.Persistence
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public long CurrentDeliveryId { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public UnconfirmedDelivery[] UnconfirmedDeliveries { get; }
 
         /// <inheritdoc/>
@@ -83,7 +88,7 @@ namespace Akka.Persistence
     /// Message should be sent after <see cref="AtLeastOnceDeliverySemantic.WarnAfterNumberOfUnconfirmedAttempts" />
     /// limit will is reached.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class UnconfirmedWarning : IEquatable<UnconfirmedWarning>
     {
         /// <summary>
@@ -93,6 +98,7 @@ namespace Akka.Persistence
         /// <exception cref="ArgumentNullException">
         /// This exception is thrown when the specified <paramref name="unconfirmedDeliveries"/> array is undefined.
         /// </exception>
+        [SerializationConstructor]
         public UnconfirmedWarning(UnconfirmedDelivery[] unconfirmedDeliveries)
         {
             UnconfirmedDeliveries = unconfirmedDeliveries ?? throw new ArgumentNullException(nameof(unconfirmedDeliveries),
@@ -102,6 +108,7 @@ namespace Akka.Persistence
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public UnconfirmedDelivery[] UnconfirmedDeliveries { get; }
 
         /// <inheritdoc/>
@@ -128,7 +135,7 @@ namespace Akka.Persistence
     /// It's included inside <see cref="UnconfirmedWarning" /> and <see cref="AtLeastOnceDeliverySnapshot" />.
     /// <see cref="AtLeastOnceDeliverySemantic.WarnAfterNumberOfUnconfirmedAttempts" />
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class UnconfirmedDelivery : IEquatable<UnconfirmedDelivery>
     {
         /// <summary>
@@ -147,16 +154,19 @@ namespace Akka.Persistence
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public long DeliveryId { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public ActorPath Destination { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(2)]
         public object Message { get; }
 
         /// <inheritdoc/>
@@ -237,9 +247,10 @@ namespace Akka.Persistence
     /// </summary>
     public class AtLeastOnceDeliverySemantic
     {
-        [Serializable]
+        [MessagePackObject]
         public sealed class Delivery : IEquatable<Delivery>
         {
+            [SerializationConstructor]
             public Delivery(ActorPath destination, object message, DateTime timestamp, int attempt)
             {
                 Destination = destination;
@@ -248,13 +259,17 @@ namespace Akka.Persistence
                 Attempt = attempt;
             }
 
-            public int Attempt { get; }
+            [Key(0)]
+            public readonly ActorPath Destination;
 
-            public ActorPath Destination { get; }
+            [Key(1)]
+            public readonly object Message;
 
-            public object Message { get; }
+            [Key(2)]
+            public readonly DateTime Timestamp;
 
-            public DateTime Timestamp { get; }
+            [Key(3)]
+            public readonly int Attempt;
 
             public bool Equals(Delivery other)
             {
@@ -289,13 +304,12 @@ namespace Akka.Persistence
             public override string ToString() => $"Delivery<dest: {Destination}, attempt: {Attempt}, timestamp: {Timestamp}, message: {Message}";
         }
 
-        [Serializable]
-        public sealed class RedeliveryTick : INotInfluenceReceiveTimeout
+        public sealed class RedeliveryTick : INotInfluenceReceiveTimeout, ISingletonMessage
         {
             /// <summary>
             /// The singleton instance of the redelivery tick
             /// </summary>
-            public static RedeliveryTick Instance { get; } = new RedeliveryTick();
+            public static readonly RedeliveryTick Instance = new RedeliveryTick();
 
             private RedeliveryTick() { }
 

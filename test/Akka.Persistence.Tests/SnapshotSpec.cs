@@ -11,8 +11,10 @@ using System.Collections.Immutable;
 using System.Linq;
 using Akka.Actor;
 using Akka.Persistence.Internal;
+using Akka.Serialization;
 using Akka.TestKit;
 using Akka.Util.Internal;
+using MessagePack;
 using Xunit;
 
 namespace Akka.Persistence.Tests
@@ -21,7 +23,7 @@ namespace Akka.Persistence.Tests
     {
         #region Internal test classes
 
-        internal class TakeSnapshot
+        internal class TakeSnapshot : ISingletonMessage
         {
             public static readonly TakeSnapshot Instance = new TakeSnapshot();
             private TakeSnapshot()
@@ -111,23 +113,29 @@ namespace Akka.Persistence.Tests
             }
         }
 
+        [MessagePackObject]
         public sealed class DeleteOne
         {
+            [SerializationConstructor]
             public DeleteOne(SnapshotMetadata metadata)
             {
                 Metadata = metadata;
             }
 
+            [Key(0)]
             public SnapshotMetadata Metadata { get; private set; }
         }
 
+        [MessagePackObject]
         public sealed class DeleteMany
         {
+            [SerializationConstructor]
             public DeleteMany(SnapshotSelectionCriteria criteria)
             {
                 Criteria = criteria;
             }
 
+            [Key(0)]
             public SnapshotSelectionCriteria Criteria { get; private set; }
         }
 

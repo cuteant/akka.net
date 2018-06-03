@@ -250,7 +250,7 @@ namespace Akka.Remote.TestKit
             }
         }
 
-        internal class Connected : INoSerializationVerificationNeeded
+        internal class Connected : INoSerializationVerificationNeeded, MessagePack.IObjectReferences
         {
             readonly IChannel _channel;
             public IChannel Channel{get { return _channel; }}

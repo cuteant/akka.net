@@ -18,8 +18,8 @@ namespace Akka.Actor
     /// <summary>
     /// TBD
     /// </summary>
-    [Union(0, typeof(Get))]
-    [Union(1, typeof(Select))]
+    //[Union(0, typeof(Get))]
+    //[Union(1, typeof(Select))]
     internal interface IQuery
     {
         /// <summary>

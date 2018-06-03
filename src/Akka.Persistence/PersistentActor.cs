@@ -8,19 +8,20 @@
 using System;
 using System.Collections.Generic;
 using System.Runtime.Serialization;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Configuration;
+using Akka.Serialization.Formatters;
 using Akka.Tools.MatchHandler;
-using System.Threading.Tasks;
+using MessagePack;
 
 namespace Akka.Persistence
 {
     /// <summary>
     /// Sent to a <see cref="PersistentActor"/> when the journal replay has been finished.
     /// </summary>
-    [Serializable]
-    public sealed class RecoveryCompleted
+    public sealed class RecoveryCompleted : ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="RecoveryCompleted"/>.
@@ -45,7 +46,7 @@ namespace Akka.Persistence
     /// <see cref="SnapshotOffer"/> message, followed by replayed messages, if any, that are younger than the snapshot, up to the
     /// specified upper sequence number bound (<see cref="ToSequenceNr"/>).
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class Recovery
     {
         /// <summary>
@@ -88,6 +89,7 @@ namespace Akka.Persistence
         /// <param name="fromSnapshot">Criteria for selecting a saved snapshot from which recovery should start. Default is latest(= youngest) snapshot.</param>
         /// <param name="toSequenceNr">Upper, inclusive sequence number bound for recovery. Default is no upper bound.</param>
         /// <param name="replayMax">Maximum number of messages to replay. Default is no limit.</param>
+        [SerializationConstructor]
         public Recovery(SnapshotSelectionCriteria fromSnapshot = null, long toSequenceNr = long.MaxValue, long replayMax = long.MaxValue)
         {
             FromSnapshot = fromSnapshot ?? SnapshotSelectionCriteria.Latest;
@@ -98,16 +100,19 @@ namespace Akka.Persistence
         /// <summary>
         /// Criteria for selecting a saved snapshot from which recovery should start. Default is latest (= youngest) snapshot.
         /// </summary>
+        [Key(0)]
         public SnapshotSelectionCriteria FromSnapshot { get; }
 
         /// <summary>
         /// Upper, inclusive sequence number bound for recovery. Default is no upper bound.
         /// </summary>
+        [Key(1)]
         public long ToSequenceNr { get; }
 
         /// <summary>
         /// Maximum number of messages to replay. Default is no limit.
         /// </summary>
+        [Key(2)]
         public long ReplayMax { get; }
     }
 
@@ -153,12 +158,12 @@ namespace Akka.Persistence
     /// <summary>
     /// Discard the message to <see cref="DeadLetterActorRef"/>
     /// </summary>
-    public class DiscardToDeadLetterStrategy : IStashOverflowStrategy
+    public class DiscardToDeadLetterStrategy : IStashOverflowStrategy, ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="DiscardToDeadLetterStrategy"/>.
         /// </summary>
-        public static DiscardToDeadLetterStrategy Instance { get; } = new DiscardToDeadLetterStrategy();
+        public static readonly DiscardToDeadLetterStrategy Instance = new DiscardToDeadLetterStrategy();
 
         private DiscardToDeadLetterStrategy() { }
     }
@@ -170,12 +175,12 @@ namespace Akka.Persistence
     /// or <see cref="Eventsourced.PersistAll{TEvent}(IEnumerable{TEvent},Action{TEvent})"/>
     /// or has many messages needed to replay.
     /// </summary>
-    public class ThrowOverflowExceptionStrategy : IStashOverflowStrategy
+    public class ThrowOverflowExceptionStrategy : IStashOverflowStrategy, ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="ThrowOverflowExceptionStrategy"/>.
         /// </summary>
-        public static ThrowOverflowExceptionStrategy Instance { get; } = new ThrowOverflowExceptionStrategy();
+        public static readonly ThrowOverflowExceptionStrategy Instance = new ThrowOverflowExceptionStrategy();
 
         private ThrowOverflowExceptionStrategy() { }
     }
@@ -183,12 +188,14 @@ namespace Akka.Persistence
     /// <summary>
     /// Reply to sender with predefined response, and discard the received message silently.
     /// </summary>
+    [MessagePackObject]
     public sealed class ReplyToStrategy : IStashOverflowStrategy
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ReplyToStrategy"/> class.
         /// </summary>
         /// <param name="response">TBD</param>
+        [SerializationConstructor]
         public ReplyToStrategy(object response)
         {
             Response = response;
@@ -197,6 +204,7 @@ namespace Akka.Persistence
         /// <summary>
         /// The message replying to sender with
         /// </summary>
+        [Key(0)]
         public object Response { get; }
     }
 

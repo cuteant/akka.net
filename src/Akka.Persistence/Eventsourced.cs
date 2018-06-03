@@ -9,10 +9,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Util.Internal;
-using System.Threading.Tasks;
+using MessagePack;
 
 namespace Akka.Persistence
 {
@@ -26,16 +27,20 @@ namespace Akka.Persistence
     /// <summary>
     /// Forces actor to stash incoming commands until all invocations are handled.
     /// </summary>
+    [MessagePackObject]
     public sealed class StashingHandlerInvocation : IPendingHandlerInvocation
     {
+        [SerializationConstructor]
         public StashingHandlerInvocation(object evt, Action<object> handler)
         {
             Event = evt;
             Handler = handler;
         }
 
+        [Key(0)]
         public object Event { get; }
 
+        [Key(1)]
         public Action<object> Handler { get; }
     }
 
@@ -44,30 +49,37 @@ namespace Akka.Persistence
     /// Originates from <see cref="Eventsourced.PersistAsync{TEvent}(TEvent,Action{TEvent})"/> 
     /// or <see cref="Eventsourced.DeferAsync{TEvent}"/> method calls.
     /// </summary>
+    [MessagePackObject]
     public sealed class AsyncHandlerInvocation : IPendingHandlerInvocation
     {
+        [SerializationConstructor]
         public AsyncHandlerInvocation(object evt, Action<object> handler)
         {
             Event = evt;
             Handler = handler;
         }
 
+        [Key(0)]
         public object Event { get; }
 
+        [Key(1)]
         public Action<object> Handler { get; }
     }
 
     /// <summary>
     /// Message used to detect that recovery timed out.
     /// </summary>
+    [MessagePackObject]
     public sealed class RecoveryTick
     {
+        [SerializationConstructor]
         public RecoveryTick(bool snapshot)
         {
             Snapshot = snapshot;
         }
 
-        public bool Snapshot { get; }
+        [Key(0)]
+        public readonly bool Snapshot;
     }
 
     /// <summary>

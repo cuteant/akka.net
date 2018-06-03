@@ -14,6 +14,7 @@ using Akka.Event;
 using Akka.Pattern;
 using Akka.Routing;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Actor
 {
@@ -29,6 +30,7 @@ namespace Akka.Actor
         /// before sending any <see cref="Transition{TS}"/> messages.
         /// </summary>
         /// <typeparam name="TS">The type of the state being used in this finite state machine.</typeparam>
+        [MessagePackObject]
         public sealed class CurrentState<TS>
         {
             /// <summary>
@@ -36,6 +38,7 @@ namespace Akka.Actor
             /// </summary>
             /// <param name="fsmRef">TBD</param>
             /// <param name="state">TBD</param>
+            [SerializationConstructor]
             public CurrentState(IActorRef fsmRef, TS state)
             {
                 State = state;
@@ -45,11 +48,13 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public IActorRef FsmRef { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public TS State { get; }
 
             #region Equality
@@ -88,6 +93,7 @@ namespace Akka.Actor
         /// (use <see cref="SubscribeTransitionCallBack"/>)
         /// </summary>
         /// <typeparam name="TS">The type of state used</typeparam>
+        [MessagePackObject]
         public sealed class Transition<TS>
         {
             /// <summary>
@@ -96,6 +102,7 @@ namespace Akka.Actor
             /// <param name="fsmRef">TBD</param>
             /// <param name="from">TBD</param>
             /// <param name="to">TBD</param>
+            [SerializationConstructor]
             public Transition(IActorRef fsmRef, TS from, TS to)
             {
                 To = to;
@@ -106,16 +113,19 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public IActorRef FsmRef { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public TS From { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(2)]
             public TS To { get; }
 
             #region Equality
@@ -158,12 +168,14 @@ namespace Akka.Actor
         /// followed by a series of <see cref="Transition{TS}"/> updates. Cancel the subscription using
         /// <see cref="CurrentState{TS}"/>.
         /// </summary>
+        [MessagePackObject]
         public sealed class SubscribeTransitionCallBack
         {
             /// <summary>
             /// Initializes a new instance of the SubscribeTransitionCallBack
             /// </summary>
             /// <param name="actorRef">TBD</param>
+            [SerializationConstructor]
             public SubscribeTransitionCallBack(IActorRef actorRef)
             {
                 ActorRef = actorRef;
@@ -172,6 +184,7 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public IActorRef ActorRef { get; }
         }
 
@@ -179,12 +192,14 @@ namespace Akka.Actor
         /// Unsubscribe from <see cref="SubscribeTransitionCallBack"/> notifications which were
         /// initialized by sending the corresponding <see cref="Transition{TS}"/>.
         /// </summary>
+        [MessagePackObject]
         public sealed class UnsubscribeTransitionCallBack
         {
             /// <summary>
             /// Initializes a new instance of the UnsubscribeTransitionCallBack
             /// </summary>
             /// <param name="actorRef">TBD</param>
+            [SerializationConstructor]
             public UnsubscribeTransitionCallBack(IActorRef actorRef)
             {
                 ActorRef = actorRef;
@@ -193,18 +208,22 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public IActorRef ActorRef { get; }
         }
 
         /// <summary>
         /// Reason why this <see cref="FSM{T,S}"/> is shutting down
         /// </summary>
+        [Union(0, typeof(Normal))]
+        [Union(1, typeof(Shutdown))]
+        [Union(2, typeof(Failure))]
         public abstract class Reason { }
 
         /// <summary>
         /// Default <see cref="Reason"/> if calling Stop().
         /// </summary>
-        public sealed class Normal : Reason
+        public sealed class Normal : Reason, ISingletonMessage
         {
             /// <summary>
             /// Obsolete. Use <see cref="Normal.Instance"/> instead.
@@ -224,7 +243,7 @@ namespace Akka.Actor
         /// Reason given when someone as calling <see cref="FSM{TState,TData}.Stop()"/> from outside;
         /// also applies to <see cref="ActorSystem"/> supervision directive.
         /// </summary>
-        public sealed class Shutdown : Reason
+        public sealed class Shutdown : Reason, ISingletonMessage
         {
             /// <summary>
             /// Obsolete. Use <see cref="Shutdown.Instance"/> instead.
@@ -245,12 +264,14 @@ namespace Akka.Actor
         /// e.g. if the state to transition into does not exist. You can use this to communicate a more
         /// precise cause to the <see cref="FSM{T,S}.OnTermination"/> block.
         /// </summary>
+        [MessagePackObject]
         public sealed class Failure : Reason
         {
             /// <summary>
             /// Initializes a new instance of the Failure
             /// </summary>
             /// <param name="cause">TBD</param>
+            [SerializationConstructor]
             public Failure(object cause)
             {
                 Cause = cause;
@@ -259,6 +280,7 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public object Cause { get; }
 
             /// <inheritdoc/>
@@ -268,7 +290,7 @@ namespace Akka.Actor
         /// <summary>
         /// Used in the event of a timeout between transitions
         /// </summary>
-        public sealed class StateTimeout
+        public sealed class StateTimeout : ISingletonMessage
         {
             /// <summary>
             /// Obsolete. Use <see cref="StateTimeout.Instance"/> instead.
@@ -287,12 +309,14 @@ namespace Akka.Actor
         /// <summary>
         /// INTERNAL API
         /// </summary>
+        [MessagePackObject]
         internal sealed class TimeoutMarker
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="generation">TBD</param>
+            [SerializationConstructor]
             public TimeoutMarker(long generation)
             {
                 Generation = generation;
@@ -301,6 +325,7 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public long Generation { get; }
         }
 
@@ -308,7 +333,7 @@ namespace Akka.Actor
         /// INTERNAL API
         /// </summary>
         [DebuggerDisplay("Timer {Name,nq}, message: {Message}")]
-        internal class Timer : INoSerializationVerificationNeeded
+        internal class Timer : INoSerializationVerificationNeeded, IObjectReferences
         {
             private ICancelable _ref;
             private readonly IScheduler _scheduler;
@@ -394,6 +419,7 @@ namespace Akka.Actor
         /// </summary>
         /// <typeparam name="TS">The name of the state</typeparam>
         /// <typeparam name="TD">The data of the state</typeparam>
+        [MessagePackObject]
         public sealed class LogEntry<TS, TD>
         {
             /// <summary>
@@ -402,6 +428,7 @@ namespace Akka.Actor
             /// <param name="stateName">TBD</param>
             /// <param name="stateData">TBD</param>
             /// <param name="fsmEvent">TBD</param>
+            [SerializationConstructor]
             public LogEntry(TS stateName, TD stateData, object fsmEvent)
             {
                 FsmEvent = fsmEvent;
@@ -412,16 +439,19 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public TS StateName { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public TD StateData { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(2)]
             public object FsmEvent { get; }
 
             /// <inheritdoc/>
@@ -438,6 +468,7 @@ namespace Akka.Actor
         /// </summary>
         /// <typeparam name="TS">The name of the state</typeparam>
         /// <typeparam name="TD">The data of the state</typeparam>
+        [MessagePackObject]
         public class State<TS, TD> : IEquatable<State<TS, TD>>
         {
             /// <summary>
@@ -449,6 +480,7 @@ namespace Akka.Actor
             /// <param name="stopReason">TBD</param>
             /// <param name="replies">TBD</param>
             /// <param name="notifies">TBD</param>
+            [SerializationConstructor]
             public State(TS stateName, TD stateData, TimeSpan? timeout = null, Reason stopReason = null, IReadOnlyList<object> replies = null, bool notifies = true)
             {
                 Replies = replies ?? new List<object>();
@@ -462,31 +494,37 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public TS StateName { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public TD StateData { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(2)]
             public TimeSpan? Timeout { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(3)]
             public Reason StopReason { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(4)]
             public IReadOnlyList<object> Replies { get; protected set; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(5)]
             internal bool Notifies { get; }
 
             /// <summary>
@@ -603,6 +641,7 @@ namespace Akka.Actor
         /// which allows pattern matching to extract both state and data.
         /// </summary>
         /// <typeparam name="TD">The state data for this event</typeparam>
+        [MessagePackObject]
         public sealed class Event<TD> : INoSerializationVerificationNeeded
         {
             /// <summary>
@@ -610,6 +649,7 @@ namespace Akka.Actor
             /// </summary>
             /// <param name="fsmEvent">TBD</param>
             /// <param name="stateData">TBD</param>
+            [SerializationConstructor]
             public Event(object fsmEvent, TD stateData)
             {
                 StateData = stateData;
@@ -619,11 +659,13 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public object FsmEvent { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public TD StateData { get; }
 
             /// <inheritdoc/>
@@ -638,6 +680,7 @@ namespace Akka.Actor
         /// </summary>
         /// <typeparam name="TS">TBD</typeparam>
         /// <typeparam name="TD">TBD</typeparam>
+        [MessagePackObject]
         public sealed class StopEvent<TS, TD> : INoSerializationVerificationNeeded
         {
             /// <summary>
@@ -646,6 +689,7 @@ namespace Akka.Actor
             /// <param name="reason">TBD</param>
             /// <param name="terminatedState">TBD</param>
             /// <param name="stateData">TBD</param>
+            [SerializationConstructor]
             public StopEvent(Reason reason, TS terminatedState, TD stateData)
             {
                 StateData = stateData;
@@ -656,16 +700,19 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public Reason Reason { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public TS TerminatedState { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(2)]
             public TD StateData { get; }
 
             /// <inheritdoc/>

@@ -272,7 +272,7 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        public class JournalProbeExtension : ExtensionIdProvider<JournalProbe>
+        public class JournalProbeExtension : ExtensionIdProvider<JournalProbe>, ISingletonMessage
         {
             public static readonly JournalProbeExtension Instance = new JournalProbeExtension();
 

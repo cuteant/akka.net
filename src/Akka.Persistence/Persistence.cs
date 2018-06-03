@@ -304,12 +304,12 @@ namespace Akka.Persistence
     /// <summary>
     /// Persistence extension.
     /// </summary>
-    public class Persistence : ExtensionIdProvider<PersistenceExtension>
+    public sealed class Persistence : ExtensionIdProvider<PersistenceExtension>, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static Persistence Instance { get; } = new Persistence();
+        public static readonly Persistence Instance = new Persistence();
 
         /// <summary>
         /// TBD

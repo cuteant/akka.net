@@ -8,7 +8,9 @@
 using System;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Serialization;
 using Akka.TestKit;
+using MessagePack;
 using Xunit;
 
 namespace Akka.Persistence.Tests
@@ -43,27 +45,31 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        internal class Message
+        internal class Message : ISingletonMessage
         {
             public static readonly Message Instance = new Message();
             private Message() { }
         }
 
-        internal class CrashMessage
+        internal class CrashMessage : ISingletonMessage
         {
             public static readonly CrashMessage Instance = new CrashMessage();
             private CrashMessage() { }
         }
 
+        [MessagePackObject]
         internal class SendingMessage
         {
+            [SerializationConstructor]
             public SendingMessage(long deliveryId, bool isRecovering)
             {
                 IsRecovering = isRecovering;
                 DeliveryId = deliveryId;
             }
 
+            [Key(0)]
             public long DeliveryId { get; private set; }
+            [Key(1)]
             public bool IsRecovering { get; private set; }
         }
 

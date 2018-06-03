@@ -19,7 +19,7 @@ namespace Akka.Persistence.Tests
     {
         #region internal classes
 
-        private sealed class TestRequest
+        private sealed class TestRequest : ISingletonMessage
         {
             public static readonly TestRequest Instance = new TestRequest();
 

@@ -38,7 +38,7 @@ namespace Akka.Persistence.Journal
             public Address Address { get; private set; }
         }
 
-        private sealed class InitTimeout
+        private sealed class InitTimeout : ISingletonMessage
         {
             public static readonly InitTimeout Instance = new InitTimeout();
             private InitTimeout() { }
