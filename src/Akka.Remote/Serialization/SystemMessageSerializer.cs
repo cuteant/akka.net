@@ -18,7 +18,6 @@ namespace Akka.Remote.Serialization
 {
     public sealed class SystemMessageSerializer : Akka.Serialization.Serializer
     {
-        private readonly WrappedPayloadSupport _payloadSupport;
         private ExceptionSupport _exceptionSupport;
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
@@ -29,7 +28,6 @@ namespace Akka.Remote.Serialization
         /// <param name="system">The actor system to associate with this serializer. </param>
         public SystemMessageSerializer(ExtendedActorSystem system) : base(system)
         {
-            _payloadSupport = new WrappedPayloadSupport(system);
             _exceptionSupport = new ExceptionSupport(system);
         }
 

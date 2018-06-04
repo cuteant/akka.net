@@ -19,16 +19,11 @@ namespace Akka.Remote.Serialization
     /// </summary>
     public class MessageContainerSerializer : Serializer
     {
-        private readonly WrappedPayloadSupport _payloadSupport;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageContainerSerializer"/> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer. </param>
-        public MessageContainerSerializer(ExtendedActorSystem system) : base(system)
-        {
-            _payloadSupport = new WrappedPayloadSupport(system);
-        }
+        public MessageContainerSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
         public override bool IncludeManifest => false;
@@ -40,7 +35,7 @@ namespace Akka.Remote.Serialization
             {
                 var envelope = new Proto.Msg.SelectionEnvelope
                 {
-                    Payload = _payloadSupport.PayloadToProto(sel.Message)
+                    Payload = WrappedPayloadSupport.PayloadToProto(system, sel.Message)
                 };
 
                 foreach (var element in sel.Elements)
@@ -74,7 +69,7 @@ namespace Akka.Remote.Serialization
         public override object FromBinary(byte[] bytes, Type type)
         {
             var selectionEnvelope = Proto.Msg.SelectionEnvelope.Parser.ParseFrom(bytes);
-            var message = _payloadSupport.PayloadFrom(selectionEnvelope.Payload);
+            var message = WrappedPayloadSupport.PayloadFrom(system, selectionEnvelope.Payload);
 
             var elements = new SelectionPathElement[selectionEnvelope.Pattern.Count];
             for (var i = 0; i < selectionEnvelope.Pattern.Count; i++)

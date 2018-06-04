@@ -42,15 +42,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 
         private readonly IDictionary<string, Func<byte[], object>> _fromBinaryMap;
 
-        private readonly WrappedPayloadSupport _payloadSupport;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedPubSubMessageSerializer"/> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
         public DistributedPubSubMessageSerializer(ExtendedActorSystem system) : base(system)
         {
-            _payloadSupport = new WrappedPayloadSupport(system);
             _fromBinaryMap = new Dictionary<string, Func<byte[], object>>(StringComparer.Ordinal)
             {
                 {StatusManifest, StatusFrom},
@@ -251,7 +248,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             {
                 Path = send.Path,
                 LocalAffinity = send.LocalAffinity,
-                Payload = _payloadSupport.PayloadToProto(send.Message)
+                Payload = WrappedPayloadSupport.PayloadToProto(system, send.Message)
             };
             return protoMessage.ToArray();
         }
@@ -259,7 +256,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         private Send SendFrom(byte[] bytes)
         {
             var sendProto = Proto.Msg.Send.Parser.ParseFrom(bytes);
-            return new Send(sendProto.Path, _payloadSupport.PayloadFrom(sendProto.Payload), sendProto.LocalAffinity);
+            return new Send(sendProto.Path, WrappedPayloadSupport.PayloadFrom(system, sendProto.Payload), sendProto.LocalAffinity);
         }
 
         private byte[] SendToAllToProto(SendToAll sendToAll)
@@ -268,7 +265,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             {
                 Path = sendToAll.Path,
                 AllButSelf = sendToAll.ExcludeSelf,
-                Payload = _payloadSupport.PayloadToProto(sendToAll.Message)
+                Payload = WrappedPayloadSupport.PayloadToProto(system, sendToAll.Message)
             };
             return protoMessage.ToArray();
         }
@@ -276,7 +273,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         private SendToAll SendToAllFrom(byte[] bytes)
         {
             var sendToAllProto = Proto.Msg.SendToAll.Parser.ParseFrom(bytes);
-            return new SendToAll(sendToAllProto.Path, _payloadSupport.PayloadFrom(sendToAllProto.Payload), sendToAllProto.AllButSelf);
+            return new SendToAll(sendToAllProto.Path, WrappedPayloadSupport.PayloadFrom(system, sendToAllProto.Payload), sendToAllProto.AllButSelf);
         }
 
         private byte[] PublishToProto(Publish publish)
@@ -284,7 +281,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             var protoMessage = new Proto.Msg.Publish
             {
                 Topic = publish.Topic,
-                Payload = _payloadSupport.PayloadToProto(publish.Message)
+                Payload = WrappedPayloadSupport.PayloadToProto(system, publish.Message)
             };
             return protoMessage.ToArray();
         }
@@ -292,14 +289,14 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         private Publish PublishFrom(byte[] bytes)
         {
             var publishProto = Proto.Msg.Publish.Parser.ParseFrom(bytes);
-            return new Publish(publishProto.Topic, _payloadSupport.PayloadFrom(publishProto.Payload));
+            return new Publish(publishProto.Topic, WrappedPayloadSupport.PayloadFrom(system, publishProto.Payload));
         }
 
         private byte[] SendToOneSubscriberToProto(SendToOneSubscriber sendToOneSubscriber)
         {
             var protoMessage = new Proto.Msg.SendToOneSubscriber
             {
-                Payload = _payloadSupport.PayloadToProto(sendToOneSubscriber.Message)
+                Payload = WrappedPayloadSupport.PayloadToProto(system, sendToOneSubscriber.Message)
             };
             return protoMessage.ToArray();
         }
@@ -307,7 +304,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         private SendToOneSubscriber SendToOneSubscriberFrom(byte[] bytes)
         {
             var sendToOneSubscriberProto = Proto.Msg.SendToOneSubscriber.Parser.ParseFrom(bytes);
-            return new SendToOneSubscriber(_payloadSupport.PayloadFrom(sendToOneSubscriberProto.Payload));
+            return new SendToOneSubscriber(WrappedPayloadSupport.PayloadFrom(system, sendToOneSubscriberProto.Payload));
         }
 
         //

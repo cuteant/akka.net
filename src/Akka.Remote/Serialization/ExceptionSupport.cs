@@ -13,7 +13,6 @@ using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.Reflection;
-using Google.Protobuf;
 #if SERIALIZATION
 using System.Runtime.Serialization;
 #endif
@@ -22,7 +21,7 @@ namespace Akka.Remote.Serialization
 {
     internal class ExceptionSupport
     {
-        private readonly WrappedPayloadSupport _wrappedPayloadSupport;
+        private readonly ExtendedActorSystem _system;
         private const BindingFlags All = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
         private HashSet<string> DefaultProperties = new HashSet<string>(StringComparer.Ordinal)
         {
@@ -43,10 +42,7 @@ namespace Akka.Remote.Serialization
             "WatsonBuckets"
         };
 
-        public ExceptionSupport(ExtendedActorSystem system)
-        {
-            _wrappedPayloadSupport = new WrappedPayloadSupport(system);
-        }
+        public ExceptionSupport(ExtendedActorSystem system) => _system = system;
 
         public byte[] SerializeException(Exception exception)
         {
@@ -102,7 +98,7 @@ namespace Akka.Remote.Serialization
             foreach (var info in serializationInfo)
             {
                 if (DefaultProperties.Contains(info.Name)) continue;
-                var preparedValue = _wrappedPayloadSupport.PayloadToProto(info.Value);
+                var preparedValue = WrappedPayloadSupport.PayloadToProto(_system, info.Value);
                 message.CustomFields.Add(info.Name, preparedValue);
             }
 
@@ -131,7 +127,7 @@ namespace Akka.Remote.Serialization
 
             foreach (var field in proto.CustomFields)
             {
-                serializationInfo.AddValue(field.Key, _wrappedPayloadSupport.PayloadFrom(field.Value));
+                serializationInfo.AddValue(field.Key, WrappedPayloadSupport.PayloadFrom(_system, field.Value));
             }
 
             Exception obj = null;

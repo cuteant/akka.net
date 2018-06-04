@@ -7,30 +7,23 @@
 
 using Akka.Actor;
 using Akka.Serialization;
-using Akka.Util;
 using CuteAnt.Reflection;
 using Google.Protobuf;
+using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
 
 namespace Akka.Remote.Serialization
 {
-    internal class WrappedPayloadSupport
+    internal static class WrappedPayloadSupport
     {
-        private readonly ExtendedActorSystem _system;
-
-        public WrappedPayloadSupport(ExtendedActorSystem system)
-        {
-            _system = system;
-        }
-
-        public Proto.Msg.Payload PayloadToProto(object payload)
+        public static SerializedMessage PayloadToProto(ActorSystem system, object payload)
         {
             if (payload == null) // TODO: handle null messages
             {
-                return new Proto.Msg.Payload();
+                return new SerializedMessage();
             }
 
-            var payloadProto = new Proto.Msg.Payload();
-            var serializer = _system.Serialization.FindSerializerFor(payload);
+            var payloadProto = new SerializedMessage();
+            var serializer = system.Serialization.FindSerializerFor(payload);
 
             payloadProto.Message = serializer.ToByteString(payload);
             payloadProto.SerializerId = serializer.Identifier;
@@ -64,27 +57,18 @@ namespace Akka.Remote.Serialization
             return payloadProto;
         }
 
-        public object PayloadFrom(Proto.Msg.Payload payload)
+        public static object PayloadFrom(ActorSystem system, SerializedMessage payload)
         {
-            //var manifest = !payload.MessageManifest.IsEmpty
-            //    ? payload.MessageManifest.ToStringUtf8()
-            //    : string.Empty;
-
-            //return _system.Serialization.Deserialize(
-            //    payload.Message.ToByteArray(),
-            //    payload.SerializerId,
-            //    manifest);
-
             if (payload.IsSerializerWithStringManifest)
             {
-                return _system.Serialization.Deserialize(
+                return system.Serialization.Deserialize(
                     ProtobufUtil.GetBuffer(payload.Message),
                     payload.SerializerId,
                     payload.HasManifest ? payload.MessageManifest.ToStringUtf8() : null);
             }
             else if (payload.HasManifest)
             {
-                return _system.Serialization.Deserialize(
+                return system.Serialization.Deserialize(
                     ProtobufUtil.GetBuffer(payload.Message),
                     payload.SerializerId,
                     ProtobufUtil.GetBuffer(payload.MessageManifest), payload.TypeHashCode);
@@ -93,7 +77,7 @@ namespace Akka.Remote.Serialization
             {
                 var msg = payload.Message;
                 if (null == msg || msg.IsEmpty) { return null; }
-                return _system.Serialization.Deserialize(ProtobufUtil.GetBuffer(msg), payload.SerializerId);
+                return system.Serialization.Deserialize(ProtobufUtil.GetBuffer(msg), payload.SerializerId);
             }
         }
     }
