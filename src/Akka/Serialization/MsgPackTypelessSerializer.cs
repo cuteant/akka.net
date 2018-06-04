@@ -6,11 +6,14 @@ using CuteAnt.Extensions.Serialization;
 using Hyperion;
 using MessagePack;
 using MessagePack.Resolvers;
+using Microsoft.Extensions.Logging;
 
 namespace Akka.Serialization
 {
     public sealed class MsgPackTypelessSerializer : Serializer
     {
+        private static readonly ILogger s_logger = TraceLogger.GetLogger<MsgPackTypelessSerializer>();
+
         private readonly MsgPackSerializerSettings _settings;
         private readonly TypelessMessagePackMessageFormatter _formatter;
         private readonly int _initialBufferSize;
@@ -51,10 +54,10 @@ namespace Akka.Serialization
             {
                 return _formatter.SerializeObject(obj, _initialBufferSize);
             }
-            catch(Exception exc)
+            catch (Exception exc)
             {
-                var err = exc.ToString();
-                throw exc;
+                s_logger.LogWarning(exc, $"Cannot serialize object of type{obj?.GetType().TypeQualifiedName()}");
+                throw;
             }
         }
 

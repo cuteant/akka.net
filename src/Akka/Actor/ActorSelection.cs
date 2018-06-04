@@ -306,7 +306,6 @@ namespace Akka.Actor
     /// <summary>
     /// Used to deliver messages via <see cref="ActorSelection"/>.
     /// </summary>
-    [MessagePackObject]
     public class ActorSelectionMessage : IAutoReceivedMessage, IPossiblyHarmful
     {
         /// <summary>
@@ -315,7 +314,6 @@ namespace Akka.Actor
         /// <param name="message">The message.</param>
         /// <param name="elements">The elements.</param>
         /// <param name="wildCardFanOut">TBD</param>
-        [SerializationConstructor]
         public ActorSelectionMessage(object message, SelectionPathElement[] elements, bool wildCardFanOut = false)
         {
             Message = message;
@@ -326,20 +324,16 @@ namespace Akka.Actor
         /// <summary>
         /// The message that should be delivered to this ActorSelection.
         /// </summary>
-        [Key(0)]
-        [MessagePackFormatter(typeof(WrappedPayloadFormatter))]
         public object Message { get; }
 
         /// <summary>
         /// The elements, e.g. "foo/bar/baz".
         /// </summary>
-        [Key(1)]
         public SelectionPathElement[] Elements { get; }
 
         /// <summary>
         /// When <c>true</c>, indicates that this <see cref="ActorSelection"/> includes wildcards.
         /// </summary>
-        [Key(2)]
         public bool WildCardFanOut { get; }
 
         /// <inheritdoc/>

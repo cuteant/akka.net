@@ -33,7 +33,6 @@ namespace Akka.TestKit
         /// TBD
         /// </summary>
         [Key(0)]
-        [MessagePackFormatter(typeof(WrappedPayloadFormatter))]
         public override object Message { get; }
         /// <summary>
         /// TBD

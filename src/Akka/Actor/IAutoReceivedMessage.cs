@@ -72,7 +72,6 @@ namespace Akka.Actor
     /// <summary>
     /// Request to an <see cref="ICanTell"/> to get back the identity of the underlying actors.
     /// </summary>
-    [MessagePackObject]
     public sealed class Identify : IAutoReceivedMessage, INotInfluenceReceiveTimeout, IObjectReferences
     {
         /// <summary>
@@ -87,8 +86,6 @@ namespace Akka.Actor
         /// <summary>
         /// A correlating ID used to distinguish multiple <see cref="Identify"/> requests to the same receiver.
         /// </summary>
-        [Key(0)]
-        [MessagePackFormatter(typeof(WrappedPayloadFormatter))]
         public object MessageId { get; }
 
         #region Equals
@@ -122,7 +119,6 @@ namespace Akka.Actor
     /// <summary>
     /// Response to the <see cref="Identify"/> message, get identity by Sender
     /// </summary>
-    [MessagePackObject]
     public sealed class ActorIdentity : IObjectReferences
     {
         /// <summary>
@@ -139,15 +135,12 @@ namespace Akka.Actor
         /// <summary>
         /// The same correlating ID used in the original <see cref="Identify"/> message.
         /// </summary>
-        [Key(0)]
-        [MessagePackFormatter(typeof(WrappedPayloadFormatter))]
         public object MessageId { get; }
 
         /// <summary>
         /// A reference to the underyling actor.
         /// </summary>
         /// <remarks>Will be <c>null</c> if sent an <see cref="ActorSelection"/> that could not be resolved.</remarks>
-        [Key(1)]
         public IActorRef Subject { get; }
 
         #region Equals

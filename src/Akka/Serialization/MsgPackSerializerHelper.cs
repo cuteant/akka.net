@@ -37,13 +37,6 @@ namespace Akka.Serialization
             );
         }
 
-        private static int _useRemotingSerializer = Unlocked;
-        internal static bool UseRemotingSerializer
-        {
-            get => Volatile.Read(ref _useRemotingSerializer) == Locked;
-            set => Interlocked.Exchange(ref _useRemotingSerializer, value ? Locked : Unlocked);
-        }
-
         internal const string ActorSystem = "ACTORSYSTEM";
         [MethodImpl(InlineMethod.Value)]
         public static ExtendedActorSystem GetActorSystem(this IFormatterResolver formatterResolver)

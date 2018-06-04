@@ -143,117 +143,92 @@ namespace Akka.Serialization.Formatters
 
     #endregion
 
-    #region == ActorConfigFormatter ==
-
-    //internal sealed class ActorConfigFormatter : IMessagePackFormatter<Config>
-    //{
-    //    internal static readonly ActorConfigFormatter Instnace = new ActorConfigFormatter();
-
-    //    public int Serialize(ref byte[] bytes, int offset, Config value, IFormatterResolver formatterResolver)
-    //    {
-    //        if (value == null || value.IsEmpty) { return MessagePackBinary.WriteNil(ref bytes, offset); }
-
-    //        return MessagePackBinary.WriteString(ref bytes, offset, value.Root.ToString());
-    //    }
-
-    //    public Config Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
-    //    {
-    //        if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return Config.Empty; }
-
-    //        var config = MessagePackBinary.ReadString(bytes, offset, out readSize);
-
-    //        return ConfigurationFactory.ParseString(config);
-    //    }
-    //}
-
-    #endregion
-
     #region -- WrappedPayloadFormatter --
 
-    public sealed class WrappedPayloadFormatter : WrappedPayloadFormatter<object> { }
+    //public sealed class WrappedPayloadFormatter : WrappedPayloadFormatter<object> { }
 
-    public class WrappedPayloadFormatter<T> : IMessagePackFormatter<T>
-    {
-        public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
-        {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+    //public class WrappedPayloadFormatter<T> : IMessagePackFormatter<T>
+    //{
+    //    public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+    //    {
+    //        if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
 
-            var startOffset = offset;
+    //        var startOffset = offset;
 
-            var serializerId = MessagePackBinary.ReadInt32(bytes, offset, out readSize);
-            offset += readSize;
-            var isSerializerWithStringManifest = MessagePackBinary.ReadBoolean(bytes, offset, out readSize);
-            offset += readSize;
-            var hasManifest = MessagePackBinary.ReadBoolean(bytes, offset, out readSize);
-            offset += readSize;
-            var manifest = MessagePackBinary.ReadBytes(bytes, offset, out readSize);
-            offset += readSize;
-            var hashCode = MessagePackBinary.ReadInt32(bytes, offset, out readSize);
-            offset += readSize;
-            var message = MessagePackBinary.ReadBytes(bytes, offset, out readSize);
-            offset += readSize;
+    //        var serializerId = MessagePackBinary.ReadInt32(bytes, offset, out readSize);
+    //        offset += readSize;
+    //        var isSerializerWithStringManifest = MessagePackBinary.ReadBoolean(bytes, offset, out readSize);
+    //        offset += readSize;
+    //        var hasManifest = MessagePackBinary.ReadBoolean(bytes, offset, out readSize);
+    //        offset += readSize;
+    //        var manifest = MessagePackBinary.ReadBytes(bytes, offset, out readSize);
+    //        offset += readSize;
+    //        var hashCode = MessagePackBinary.ReadInt32(bytes, offset, out readSize);
+    //        offset += readSize;
+    //        var message = MessagePackBinary.ReadBytes(bytes, offset, out readSize);
+    //        offset += readSize;
 
-            readSize = offset - startOffset;
+    //        readSize = offset - startOffset;
 
-            var system = formatterResolver.GetActorSystem();
-            //if (system == null) { return default; }
+    //        var system = formatterResolver.GetActorSystem();
+    //        //if (system == null) { return default; }
 
-            if (isSerializerWithStringManifest)
-            {
-                return (T)system.Serialization.Deserialize(message, serializerId, hasManifest ? Encoding.UTF8.GetString(manifest) : null);
-            }
-            else if (hasManifest)
-            {
-                return (T)system.Serialization.Deserialize(message, serializerId, manifest, hashCode);
-            }
-            else
-            {
-                return (T)system.Serialization.Deserialize(message, serializerId);
-            }
-        }
+    //        if (isSerializerWithStringManifest)
+    //        {
+    //            return (T)system.Serialization.Deserialize(message, serializerId, hasManifest ? Encoding.UTF8.GetString(manifest) : null);
+    //        }
+    //        else if (hasManifest)
+    //        {
+    //            return (T)system.Serialization.Deserialize(message, serializerId, manifest, hashCode);
+    //        }
+    //        else
+    //        {
+    //            return (T)system.Serialization.Deserialize(message, serializerId);
+    //        }
+    //    }
 
-        public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
-        {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+    //    public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
+    //    {
+    //        if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var system = formatterResolver.GetActorSystem();
-            //if (system == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+    //        var system = formatterResolver.GetActorSystem();
+    //        //if (system == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var serializer = system.Serialization.FindSerializerFor(value);
-            var isSerializerWithStringManifest = false;
-            var hasManifest = false;
-            byte[] manifest = null;
-            var hashCode = 0;
-            // get manifest
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                isSerializerWithStringManifest = true;
-                manifest = manifestSerializer.ManifestBytes(value);
-                if (manifest != null) { hasManifest = true; }
-            }
-            else
-            {
-                if (serializer.IncludeManifest)
-                {
-                    hasManifest = true;
-                    var typeKey = TypeSerializer.GetTypeKeyFromType(value.GetType());
-                    hashCode = typeKey.HashCode;
-                    manifest = typeKey.TypeName;
-                }
-            }
+    //        var serializer = system.Serialization.FindSerializerFor(value);
+    //        var isSerializerWithStringManifest = false;
+    //        var hasManifest = false;
+    //        byte[] manifest = null;
+    //        var hashCode = 0;
+    //        // get manifest
+    //        if (serializer is SerializerWithStringManifest manifestSerializer)
+    //        {
+    //            isSerializerWithStringManifest = true;
+    //            manifest = manifestSerializer.ManifestBytes(value);
+    //            if (manifest != null) { hasManifest = true; }
+    //        }
+    //        else
+    //        {
+    //            if (serializer.IncludeManifest)
+    //            {
+    //                hasManifest = true;
+    //                var typeKey = TypeSerializer.GetTypeKeyFromType(value.GetType());
+    //                hashCode = typeKey.HashCode;
+    //                manifest = typeKey.TypeName;
+    //            }
+    //        }
 
-            var startOffset = offset;
+    //        var startOffset = offset;
 
-            offset += MessagePackBinary.WriteInt32(ref bytes, offset, serializer.Identifier);
-            offset += MessagePackBinary.WriteBoolean(ref bytes, offset, isSerializerWithStringManifest);
-            offset += MessagePackBinary.WriteBoolean(ref bytes, offset, hasManifest);
-            offset += MessagePackBinary.WriteBytes(ref bytes, offset, manifest);
-            offset += MessagePackBinary.WriteInt32(ref bytes, offset, hashCode);
-            offset += MessagePackBinary.WriteBytes(ref bytes, offset, serializer.ToBinary(value));
+    //        offset += MessagePackBinary.WriteInt32(ref bytes, offset, serializer.Identifier);
+    //        offset += MessagePackBinary.WriteBoolean(ref bytes, offset, isSerializerWithStringManifest);
+    //        offset += MessagePackBinary.WriteBoolean(ref bytes, offset, hasManifest);
+    //        offset += MessagePackBinary.WriteBytes(ref bytes, offset, manifest);
+    //        offset += MessagePackBinary.WriteInt32(ref bytes, offset, hashCode);
+    //        offset += MessagePackBinary.WriteBytes(ref bytes, offset, serializer.ToBinary(value));
 
-            return offset - startOffset;
-        }
-    }
+    //        return offset - startOffset;
+    //    }
+    //}
 
     #endregion
 }

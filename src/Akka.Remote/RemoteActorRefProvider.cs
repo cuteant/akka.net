@@ -106,8 +106,6 @@ namespace Akka.Remote
             RemoteSettings = new RemoteSettings(settings.Config);
             Deployer = remoteDeployer;
             _log = _local.Log;
-
-            MsgPackSerializerHelper.UseRemotingSerializer = true;
         }
 
         #endregion

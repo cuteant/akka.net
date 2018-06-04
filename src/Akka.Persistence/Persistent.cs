@@ -110,18 +110,19 @@ namespace Akka.Persistence
         {
         }
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="AtomicWrite"/> class.
-        /// </summary>
-        /// <param name="payload">TBD</param>
-        /// <exception cref="ArgumentException">
-        /// This exception is thrown when either the specified <paramref name="payload"/> is empty
-        /// or the specified <paramref name="payload"/> contains messages from different <see cref="IPersistentRepresentation.PersistenceId"/>.
-        /// </exception>
-        /// <exception cref="ArgumentNullException">
-        /// This exception is thrown when the specified <paramref name="payload"/> is undefined.
-        /// </exception>
-        public AtomicWrite(IImmutableList<IPersistentRepresentation> payload)
+    /// <summary>
+    /// Initializes a new instance of the <see cref="AtomicWrite"/> class.
+    /// </summary>
+    /// <param name="payload">TBD</param>
+    /// <exception cref="ArgumentException">
+    /// This exception is thrown when either the specified <paramref name="payload"/> is empty
+    /// or the specified <paramref name="payload"/> contains messages from different <see cref="IPersistentRepresentation.PersistenceId"/>.
+    /// </exception>
+    /// <exception cref="ArgumentNullException">
+    /// This exception is thrown when the specified <paramref name="payload"/> is undefined.
+    /// </exception>
+    [SerializationConstructor]
+    public AtomicWrite(IImmutableList<IPersistentRepresentation> payload)
         {
             if (payload == null)
                 throw new ArgumentNullException(nameof(payload), "Payload of AtomicWrite must not be null.");

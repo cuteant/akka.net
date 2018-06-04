@@ -58,14 +58,6 @@ namespace Akka.Serialization.Resolvers
                 return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
             }
 
-            //if (MsgPackSerializerHelper.UseRemotingSerializer)
-            //{
-            //    if (typeof(ISurrogated).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
-            //    {
-            //        return ActivatorUtils.FastCreateInstance(typeof(WrappedPayloadFormatter<>).GetCachedGenericType(t));
-            //    }
-            //}
-
             return null;
         }
     }
