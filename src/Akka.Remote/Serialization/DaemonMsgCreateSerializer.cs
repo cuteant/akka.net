@@ -76,12 +76,7 @@ namespace Akka.Remote.Serialization
             };
             foreach (object arg in props.Arguments)
             {
-                var tuple = Serialize(arg);
-
-                propsBuilder.Args.Add(ProtobufUtil.FromBytes(tuple.Item4));
-                propsBuilder.Manifests.Add(tuple.Item3);
-                propsBuilder.SerializerIds.Add(tuple.Item1);
-                propsBuilder.HasManifest.Add(tuple.Item2);
+                propsBuilder.Args.Add(WrappedPayloadSupport.PayloadToProto(system, arg));
             }
 
             return propsBuilder;
@@ -93,11 +88,7 @@ namespace Akka.Remote.Serialization
             var args = new object[protoProps.Args.Count];
             for (int i = 0; i < args.Length; i++)
             {
-                args[i] = system.Serialization.Deserialize(
-                    protoProps.Args[i].ToByteArray(),
-                    protoProps.SerializerIds[i],
-                    protoProps.Manifests[i]
-                );
+                args[i] = WrappedPayloadSupport.PayloadFrom(system, protoProps.Args[i]);
             }
 
             return new Props(DeployFromProto(protoProps.Deploy), actorClass, args);
@@ -113,28 +104,11 @@ namespace Akka.Remote.Serialization
                 Path = deploy.Path
             };
 
-            {
-                var tuple = Serialize(deploy.Config);
-                deployBuilder.ConfigSerializerId = tuple.Item1;
-                deployBuilder.ConfigManifest = tuple.Item3;
-                deployBuilder.Config = ProtobufUtil.FromBytes(tuple.Item4);
-            }
+            deployBuilder.Config = WrappedPayloadSupport.PayloadToProto(system, deploy.Config);
 
-            if (deploy.RouterConfig != NoRouter.Instance)
-            {
-                var tuple = Serialize(deploy.RouterConfig);
-                deployBuilder.RouterConfigSerializerId = tuple.Item1;
-                deployBuilder.RouterConfigManifest = tuple.Item3;
-                deployBuilder.RouterConfig = ProtobufUtil.FromBytes(tuple.Item4);
-            }
+            deployBuilder.RouterConfig = deploy.RouterConfig != NoRouter.Instance ? WrappedPayloadSupport.PayloadToProto(system, deploy.RouterConfig) : WrappedPayloadSupport.Empty;
 
-            if (deploy.Scope != Deploy.NoScopeGiven)
-            {
-                var tuple = Serialize(deploy.Scope);
-                deployBuilder.ScopeSerializerId = tuple.Item1;
-                deployBuilder.ScopeManifest = tuple.Item3;
-                deployBuilder.Scope = ProtobufUtil.FromBytes(tuple.Item4);
-            }
+            deployBuilder.Scope = deploy.Scope != Deploy.NoScopeGiven ? WrappedPayloadSupport.PayloadToProto(system, deploy.Scope) : WrappedPayloadSupport.Empty;
 
             if (deploy.Dispatcher != Deploy.NoDispatcherGiven)
             {
@@ -146,45 +120,11 @@ namespace Akka.Remote.Serialization
 
         private Deploy DeployFromProto(Proto.Msg.DeployData protoDeploy)
         {
-            Config config;
-            if (protoDeploy.ConfigSerializerId > 0) // TODO: should be protoDeploy.Config != null. But it always not null
-            {
-                config = system.Serialization.Deserialize(
-                    protoDeploy.Config.ToByteArray(),
-                    protoDeploy.ConfigSerializerId,
-                    protoDeploy.ConfigManifest).AsInstanceOf<Config>();
-            }
-            else
-            {
-                config = Config.Empty;
-            }
+            var config = WrappedPayloadSupport.PayloadFrom(system, protoDeploy.Config)?.AsInstanceOf<Config>() ?? Config.Empty;
 
-            
-            RouterConfig routerConfig;
-            if (protoDeploy.RouterConfigSerializerId > 0) // TODO: should be protoDeploy.RouterConfig != null. But it always not null
-            {
-                routerConfig = system.Serialization.Deserialize(
-                    protoDeploy.RouterConfig.ToByteArray(),
-                    protoDeploy.RouterConfigSerializerId,
-                    protoDeploy.RouterConfigManifest).AsInstanceOf<RouterConfig>();
-            }
-            else
-            {
-                routerConfig = NoRouter.Instance;
-            }
+            var routerConfig = WrappedPayloadSupport.PayloadFrom(system, protoDeploy.RouterConfig)?.AsInstanceOf<RouterConfig>() ?? NoRouter.Instance;
 
-            Scope scope;
-            if (protoDeploy.ScopeSerializerId > 0) // TODO: should be protoDeploy.Scope != null. But it always not null
-            {
-                scope = system.Serialization.Deserialize(
-                    protoDeploy.Scope.ToByteArray(),
-                    protoDeploy.ScopeSerializerId,
-                    protoDeploy.ScopeManifest).AsInstanceOf<Scope>();
-            }
-            else
-            {
-                scope = Deploy.NoScopeGiven;
-            }
+            var scope = WrappedPayloadSupport.PayloadFrom(system, protoDeploy.Scope)?.AsInstanceOf<Scope>() ?? Deploy.NoScopeGiven;
 
             var dispatcher = !string.IsNullOrEmpty(protoDeploy.Dispatcher)
                 ? protoDeploy.Dispatcher
@@ -207,28 +147,6 @@ namespace Akka.Remote.Serialization
         private IActorRef DeserializeActorRef(Proto.Msg.ActorRefData actorRefData)
         {
             return system.Provider.ResolveActorRef(actorRefData.Path);
-        }
-
-        private Tuple<int, bool, string, byte[]> Serialize(object obj)
-        {
-            var serializer = system.Serialization.FindSerializerFor(obj);
-
-            bool hasManifest;
-            string manifest;
-
-            if (serializer is SerializerWithStringManifest serializerWithStringManifest)
-            {
-                var ser = serializerWithStringManifest;
-                hasManifest = true;
-                manifest = ser.Manifest(obj);
-            }
-            else
-            {
-                hasManifest = serializer.IncludeManifest;
-                manifest = obj == null ? "null" : obj.GetType().TypeQualifiedName();
-            }
-
-            return Tuple.Create(serializer.Identifier, hasManifest, manifest, serializer.ToBinary(obj));
         }
     }
 }

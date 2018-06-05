@@ -40,27 +40,18 @@ message DaemonMsgCreateData {
 
 // Serialization of Akka.Actor.Props
 message PropsData {
-    DeployData deploy = 2;
-    string clazz = 3;
-    repeated bytes args = 4; // serialized props parameters
-    repeated string manifests = 5; // contains string manifest for each arg
-    repeated int32 serializerIds = 6; // serializer id for each arg
-    repeated bool hasManifest = 7;
+    DeployData deploy = 1;
+    string clazz = 2;
+    repeated Payload args = 3; // serialized props parameters
 }
 
 // Serialization of akka.actor.Deploy
 message DeployData {
     string path = 1;
-    bytes config = 2;
-    bytes routerConfig = 3;
-    bytes scope = 4;
+    Payload config = 2;
+    Payload routerConfig = 3;
+    Payload scope = 4;
     string dispatcher = 5;
-    int32 scopeSerializerId = 6;
-    string scopeManifest = 7;
-    int32 configSerializerId = 8;
-    string configManifest = 9;
-    int32 routerConfigSerializerId = 10;
-    string routerConfigManifest = 11;
 }
 
 /******************************************

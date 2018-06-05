@@ -42,16 +42,15 @@ namespace Akka.Remote.Serialization.Proto.Msg {
             "ASgLMi8uQWtrYS5SZW1vdGUuU2VyaWFsaXphdGlvbi5Qcm90by5Nc2cuRGVw",
             "bG95RGF0YRIMCgRwYXRoGAMgASgJEkUKCnN1cGVydmlzb3IYBCABKAsyMS5B",
             "a2thLlJlbW90ZS5TZXJpYWxpemF0aW9uLlByb3RvLk1zZy5BY3RvclJlZkRh",
-            "dGEiqAEKCVByb3BzRGF0YRI/CgZkZXBsb3kYAiABKAsyLy5Ba2thLlJlbW90",
+            "dGEilwEKCVByb3BzRGF0YRI/CgZkZXBsb3kYASABKAsyLy5Ba2thLlJlbW90",
             "ZS5TZXJpYWxpemF0aW9uLlByb3RvLk1zZy5EZXBsb3lEYXRhEg0KBWNsYXp6",
-            "GAMgASgJEgwKBGFyZ3MYBCADKAwSEQoJbWFuaWZlc3RzGAUgAygJEhUKDXNl",
-            "cmlhbGl6ZXJJZHMYBiADKAUSEwoLaGFzTWFuaWZlc3QYByADKAgiiQIKCkRl",
-            "cGxveURhdGESDAoEcGF0aBgBIAEoCRIOCgZjb25maWcYAiABKAwSFAoMcm91",
-            "dGVyQ29uZmlnGAMgASgMEg0KBXNjb3BlGAQgASgMEhIKCmRpc3BhdGNoZXIY",
-            "BSABKAkSGQoRc2NvcGVTZXJpYWxpemVySWQYBiABKAUSFQoNc2NvcGVNYW5p",
-            "ZmVzdBgHIAEoCRIaChJjb25maWdTZXJpYWxpemVySWQYCCABKAUSFgoOY29u",
-            "ZmlnTWFuaWZlc3QYCSABKAkSIAoYcm91dGVyQ29uZmlnU2VyaWFsaXplcklk",
-            "GAogASgFEhwKFHJvdXRlckNvbmZpZ01hbmlmZXN0GAsgASgJInQKE0Fra2FQ",
+            "GAIgASgJEjoKBGFyZ3MYAyADKAsyLC5Ba2thLlJlbW90ZS5TZXJpYWxpemF0",
+            "aW9uLlByb3RvLk1zZy5QYXlsb2FkIu0BCgpEZXBsb3lEYXRhEgwKBHBhdGgY",
+            "ASABKAkSPAoGY29uZmlnGAIgASgLMiwuQWtrYS5SZW1vdGUuU2VyaWFsaXph",
+            "dGlvbi5Qcm90by5Nc2cuUGF5bG9hZBJCCgxyb3V0ZXJDb25maWcYAyABKAsy",
+            "LC5Ba2thLlJlbW90ZS5TZXJpYWxpemF0aW9uLlByb3RvLk1zZy5QYXlsb2Fk",
+            "EjsKBXNjb3BlGAQgASgLMiwuQWtrYS5SZW1vdGUuU2VyaWFsaXphdGlvbi5Q",
+            "cm90by5Nc2cuUGF5bG9hZBISCgpkaXNwYXRjaGVyGAUgASgJInQKE0Fra2FQ",
             "cm90b2NvbE1lc3NhZ2USDwoHcGF5bG9hZBgBIAEoDBJMCgtpbnN0cnVjdGlv",
             "bhgCIAEoCzI3LkFra2EuUmVtb3RlLlNlcmlhbGl6YXRpb24uUHJvdG8uTXNn",
             "LkFra2FDb250cm9sTWVzc2FnZSKqAQoSQWtrYUNvbnRyb2xNZXNzYWdlEkUK",
@@ -94,8 +93,8 @@ namespace Akka.Remote.Serialization.Proto.Msg {
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.RemoteEnvelope), global::Akka.Remote.Serialization.Proto.Msg.RemoteEnvelope.Parser, new[]{ "Recipient", "Message", "Sender", "Seq" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.AcknowledgementInfo), global::Akka.Remote.Serialization.Proto.Msg.AcknowledgementInfo.Parser, new[]{ "CumulativeAck", "Nacks" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.DaemonMsgCreateData), global::Akka.Remote.Serialization.Proto.Msg.DaemonMsgCreateData.Parser, new[]{ "Props", "Deploy", "Path", "Supervisor" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.PropsData), global::Akka.Remote.Serialization.Proto.Msg.PropsData.Parser, new[]{ "Deploy", "Clazz", "Args", "Manifests", "SerializerIds", "HasManifest" }, null, null, null),
-            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.DeployData), global::Akka.Remote.Serialization.Proto.Msg.DeployData.Parser, new[]{ "Path", "Config", "RouterConfig", "Scope", "Dispatcher", "ScopeSerializerId", "ScopeManifest", "ConfigSerializerId", "ConfigManifest", "RouterConfigSerializerId", "RouterConfigManifest" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.PropsData), global::Akka.Remote.Serialization.Proto.Msg.PropsData.Parser, new[]{ "Deploy", "Clazz", "Args" }, null, null, null),
+            new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.DeployData), global::Akka.Remote.Serialization.Proto.Msg.DeployData.Parser, new[]{ "Path", "Config", "RouterConfig", "Scope", "Dispatcher" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.AkkaProtocolMessage), global::Akka.Remote.Serialization.Proto.Msg.AkkaProtocolMessage.Parser, new[]{ "Payload", "Instruction" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.AkkaControlMessage), global::Akka.Remote.Serialization.Proto.Msg.AkkaControlMessage.Parser, new[]{ "CommandType", "HandshakeInfo" }, null, null, null),
             new pbr::GeneratedClrTypeInfo(typeof(global::Akka.Remote.Serialization.Proto.Msg.AkkaHandshakeInfo), global::Akka.Remote.Serialization.Proto.Msg.AkkaHandshakeInfo.Parser, new[]{ "Origin", "Uid", "Cookie" }, null, null, null),
@@ -951,9 +950,6 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       Deploy = other.deploy_ != null ? other.Deploy.Clone() : null;
       clazz_ = other.clazz_;
       args_ = other.args_.Clone();
-      manifests_ = other.manifests_.Clone();
-      serializerIds_ = other.serializerIds_.Clone();
-      hasManifest_ = other.hasManifest_.Clone();
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -963,7 +959,7 @@ namespace Akka.Remote.Serialization.Proto.Msg {
     }
 
     /// <summary>Field number for the "deploy" field.</summary>
-    public const int DeployFieldNumber = 2;
+    public const int DeployFieldNumber = 1;
     private global::Akka.Remote.Serialization.Proto.Msg.DeployData deploy_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public global::Akka.Remote.Serialization.Proto.Msg.DeployData Deploy {
@@ -974,7 +970,7 @@ namespace Akka.Remote.Serialization.Proto.Msg {
     }
 
     /// <summary>Field number for the "clazz" field.</summary>
-    public const int ClazzFieldNumber = 3;
+    public const int ClazzFieldNumber = 2;
     private string clazz_ = "";
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public string Clazz {
@@ -985,52 +981,16 @@ namespace Akka.Remote.Serialization.Proto.Msg {
     }
 
     /// <summary>Field number for the "args" field.</summary>
-    public const int ArgsFieldNumber = 4;
-    private static readonly pb::FieldCodec<pb::ByteString> _repeated_args_codec
-        = pb::FieldCodec.ForBytes(34);
-    private readonly pbc::RepeatedField<pb::ByteString> args_ = new pbc::RepeatedField<pb::ByteString>();
+    public const int ArgsFieldNumber = 3;
+    private static readonly pb::FieldCodec<global::Akka.Remote.Serialization.Proto.Msg.Payload> _repeated_args_codec
+        = pb::FieldCodec.ForMessage(26, global::Akka.Remote.Serialization.Proto.Msg.Payload.Parser);
+    private readonly pbc::RepeatedField<global::Akka.Remote.Serialization.Proto.Msg.Payload> args_ = new pbc::RepeatedField<global::Akka.Remote.Serialization.Proto.Msg.Payload>();
     /// <summary>
     /// serialized props parameters
     /// </summary>
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<pb::ByteString> Args {
+    public pbc::RepeatedField<global::Akka.Remote.Serialization.Proto.Msg.Payload> Args {
       get { return args_; }
-    }
-
-    /// <summary>Field number for the "manifests" field.</summary>
-    public const int ManifestsFieldNumber = 5;
-    private static readonly pb::FieldCodec<string> _repeated_manifests_codec
-        = pb::FieldCodec.ForString(42);
-    private readonly pbc::RepeatedField<string> manifests_ = new pbc::RepeatedField<string>();
-    /// <summary>
-    /// contains string manifest for each arg
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<string> Manifests {
-      get { return manifests_; }
-    }
-
-    /// <summary>Field number for the "serializerIds" field.</summary>
-    public const int SerializerIdsFieldNumber = 6;
-    private static readonly pb::FieldCodec<int> _repeated_serializerIds_codec
-        = pb::FieldCodec.ForInt32(50);
-    private readonly pbc::RepeatedField<int> serializerIds_ = new pbc::RepeatedField<int>();
-    /// <summary>
-    /// serializer id for each arg
-    /// </summary>
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<int> SerializerIds {
-      get { return serializerIds_; }
-    }
-
-    /// <summary>Field number for the "hasManifest" field.</summary>
-    public const int HasManifestFieldNumber = 7;
-    private static readonly pb::FieldCodec<bool> _repeated_hasManifest_codec
-        = pb::FieldCodec.ForBool(58);
-    private readonly pbc::RepeatedField<bool> hasManifest_ = new pbc::RepeatedField<bool>();
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pbc::RepeatedField<bool> HasManifest {
-      get { return hasManifest_; }
     }
 
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
@@ -1049,9 +1009,6 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       if (!object.Equals(Deploy, other.Deploy)) return false;
       if (Clazz != other.Clazz) return false;
       if(!args_.Equals(other.args_)) return false;
-      if(!manifests_.Equals(other.manifests_)) return false;
-      if(!serializerIds_.Equals(other.serializerIds_)) return false;
-      if(!hasManifest_.Equals(other.hasManifest_)) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1061,9 +1018,6 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       if (deploy_ != null) hash ^= Deploy.GetHashCode();
       if (Clazz.Length != 0) hash ^= Clazz.GetHashCode();
       hash ^= args_.GetHashCode();
-      hash ^= manifests_.GetHashCode();
-      hash ^= serializerIds_.GetHashCode();
-      hash ^= hasManifest_.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1078,17 +1032,14 @@ namespace Akka.Remote.Serialization.Proto.Msg {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public void WriteTo(pb::CodedOutputStream output) {
       if (deploy_ != null) {
-        output.WriteRawTag(18);
+        output.WriteRawTag(10);
         output.WriteMessage(Deploy);
       }
       if (Clazz.Length != 0) {
-        output.WriteRawTag(26);
+        output.WriteRawTag(18);
         output.WriteString(Clazz);
       }
       args_.WriteTo(output, _repeated_args_codec);
-      manifests_.WriteTo(output, _repeated_manifests_codec);
-      serializerIds_.WriteTo(output, _repeated_serializerIds_codec);
-      hasManifest_.WriteTo(output, _repeated_hasManifest_codec);
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
       }
@@ -1104,9 +1055,6 @@ namespace Akka.Remote.Serialization.Proto.Msg {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Clazz);
       }
       size += args_.CalculateSize(_repeated_args_codec);
-      size += manifests_.CalculateSize(_repeated_manifests_codec);
-      size += serializerIds_.CalculateSize(_repeated_serializerIds_codec);
-      size += hasManifest_.CalculateSize(_repeated_hasManifest_codec);
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
       }
@@ -1128,9 +1076,6 @@ namespace Akka.Remote.Serialization.Proto.Msg {
         Clazz = other.Clazz;
       }
       args_.Add(other.args_);
-      manifests_.Add(other.manifests_);
-      serializerIds_.Add(other.serializerIds_);
-      hasManifest_.Add(other.hasManifest_);
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
 
@@ -1142,33 +1087,19 @@ namespace Akka.Remote.Serialization.Proto.Msg {
           default:
             _unknownFields = pb::UnknownFieldSet.MergeFieldFrom(_unknownFields, input);
             break;
-          case 18: {
+          case 10: {
             if (deploy_ == null) {
               deploy_ = new global::Akka.Remote.Serialization.Proto.Msg.DeployData();
             }
             input.ReadMessage(deploy_);
             break;
           }
-          case 26: {
+          case 18: {
             Clazz = input.ReadString();
             break;
           }
-          case 34: {
+          case 26: {
             args_.AddEntriesFrom(input, _repeated_args_codec);
-            break;
-          }
-          case 42: {
-            manifests_.AddEntriesFrom(input, _repeated_manifests_codec);
-            break;
-          }
-          case 50:
-          case 48: {
-            serializerIds_.AddEntriesFrom(input, _repeated_serializerIds_codec);
-            break;
-          }
-          case 58:
-          case 56: {
-            hasManifest_.AddEntriesFrom(input, _repeated_hasManifest_codec);
             break;
           }
         }
@@ -1206,16 +1137,10 @@ namespace Akka.Remote.Serialization.Proto.Msg {
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
     public DeployData(DeployData other) : this() {
       path_ = other.path_;
-      config_ = other.config_;
-      routerConfig_ = other.routerConfig_;
-      scope_ = other.scope_;
+      Config = other.config_ != null ? other.Config.Clone() : null;
+      RouterConfig = other.routerConfig_ != null ? other.RouterConfig.Clone() : null;
+      Scope = other.scope_ != null ? other.Scope.Clone() : null;
       dispatcher_ = other.dispatcher_;
-      scopeSerializerId_ = other.scopeSerializerId_;
-      scopeManifest_ = other.scopeManifest_;
-      configSerializerId_ = other.configSerializerId_;
-      configManifest_ = other.configManifest_;
-      routerConfigSerializerId_ = other.routerConfigSerializerId_;
-      routerConfigManifest_ = other.routerConfigManifest_;
       _unknownFields = pb::UnknownFieldSet.Clone(other._unknownFields);
     }
 
@@ -1237,34 +1162,34 @@ namespace Akka.Remote.Serialization.Proto.Msg {
 
     /// <summary>Field number for the "config" field.</summary>
     public const int ConfigFieldNumber = 2;
-    private pb::ByteString config_ = pb::ByteString.Empty;
+    private global::Akka.Remote.Serialization.Proto.Msg.Payload config_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pb::ByteString Config {
+    public global::Akka.Remote.Serialization.Proto.Msg.Payload Config {
       get { return config_; }
       set {
-        config_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        config_ = value;
       }
     }
 
     /// <summary>Field number for the "routerConfig" field.</summary>
     public const int RouterConfigFieldNumber = 3;
-    private pb::ByteString routerConfig_ = pb::ByteString.Empty;
+    private global::Akka.Remote.Serialization.Proto.Msg.Payload routerConfig_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pb::ByteString RouterConfig {
+    public global::Akka.Remote.Serialization.Proto.Msg.Payload RouterConfig {
       get { return routerConfig_; }
       set {
-        routerConfig_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        routerConfig_ = value;
       }
     }
 
     /// <summary>Field number for the "scope" field.</summary>
     public const int ScopeFieldNumber = 4;
-    private pb::ByteString scope_ = pb::ByteString.Empty;
+    private global::Akka.Remote.Serialization.Proto.Msg.Payload scope_;
     [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public pb::ByteString Scope {
+    public global::Akka.Remote.Serialization.Proto.Msg.Payload Scope {
       get { return scope_; }
       set {
-        scope_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
+        scope_ = value;
       }
     }
 
@@ -1276,72 +1201,6 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       get { return dispatcher_; }
       set {
         dispatcher_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
-    /// <summary>Field number for the "scopeSerializerId" field.</summary>
-    public const int ScopeSerializerIdFieldNumber = 6;
-    private int scopeSerializerId_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int ScopeSerializerId {
-      get { return scopeSerializerId_; }
-      set {
-        scopeSerializerId_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "scopeManifest" field.</summary>
-    public const int ScopeManifestFieldNumber = 7;
-    private string scopeManifest_ = "";
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string ScopeManifest {
-      get { return scopeManifest_; }
-      set {
-        scopeManifest_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
-    /// <summary>Field number for the "configSerializerId" field.</summary>
-    public const int ConfigSerializerIdFieldNumber = 8;
-    private int configSerializerId_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int ConfigSerializerId {
-      get { return configSerializerId_; }
-      set {
-        configSerializerId_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "configManifest" field.</summary>
-    public const int ConfigManifestFieldNumber = 9;
-    private string configManifest_ = "";
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string ConfigManifest {
-      get { return configManifest_; }
-      set {
-        configManifest_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
-      }
-    }
-
-    /// <summary>Field number for the "routerConfigSerializerId" field.</summary>
-    public const int RouterConfigSerializerIdFieldNumber = 10;
-    private int routerConfigSerializerId_;
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public int RouterConfigSerializerId {
-      get { return routerConfigSerializerId_; }
-      set {
-        routerConfigSerializerId_ = value;
-      }
-    }
-
-    /// <summary>Field number for the "routerConfigManifest" field.</summary>
-    public const int RouterConfigManifestFieldNumber = 11;
-    private string routerConfigManifest_ = "";
-    [global::System.Diagnostics.DebuggerNonUserCodeAttribute]
-    public string RouterConfigManifest {
-      get { return routerConfigManifest_; }
-      set {
-        routerConfigManifest_ = pb::ProtoPreconditions.CheckNotNull(value, "value");
       }
     }
 
@@ -1359,16 +1218,10 @@ namespace Akka.Remote.Serialization.Proto.Msg {
         return true;
       }
       if (Path != other.Path) return false;
-      if (Config != other.Config) return false;
-      if (RouterConfig != other.RouterConfig) return false;
-      if (Scope != other.Scope) return false;
+      if (!object.Equals(Config, other.Config)) return false;
+      if (!object.Equals(RouterConfig, other.RouterConfig)) return false;
+      if (!object.Equals(Scope, other.Scope)) return false;
       if (Dispatcher != other.Dispatcher) return false;
-      if (ScopeSerializerId != other.ScopeSerializerId) return false;
-      if (ScopeManifest != other.ScopeManifest) return false;
-      if (ConfigSerializerId != other.ConfigSerializerId) return false;
-      if (ConfigManifest != other.ConfigManifest) return false;
-      if (RouterConfigSerializerId != other.RouterConfigSerializerId) return false;
-      if (RouterConfigManifest != other.RouterConfigManifest) return false;
       return Equals(_unknownFields, other._unknownFields);
     }
 
@@ -1376,16 +1229,10 @@ namespace Akka.Remote.Serialization.Proto.Msg {
     public override int GetHashCode() {
       int hash = 1;
       if (Path.Length != 0) hash ^= Path.GetHashCode();
-      if (Config.Length != 0) hash ^= Config.GetHashCode();
-      if (RouterConfig.Length != 0) hash ^= RouterConfig.GetHashCode();
-      if (Scope.Length != 0) hash ^= Scope.GetHashCode();
+      if (config_ != null) hash ^= Config.GetHashCode();
+      if (routerConfig_ != null) hash ^= RouterConfig.GetHashCode();
+      if (scope_ != null) hash ^= Scope.GetHashCode();
       if (Dispatcher.Length != 0) hash ^= Dispatcher.GetHashCode();
-      if (ScopeSerializerId != 0) hash ^= ScopeSerializerId.GetHashCode();
-      if (ScopeManifest.Length != 0) hash ^= ScopeManifest.GetHashCode();
-      if (ConfigSerializerId != 0) hash ^= ConfigSerializerId.GetHashCode();
-      if (ConfigManifest.Length != 0) hash ^= ConfigManifest.GetHashCode();
-      if (RouterConfigSerializerId != 0) hash ^= RouterConfigSerializerId.GetHashCode();
-      if (RouterConfigManifest.Length != 0) hash ^= RouterConfigManifest.GetHashCode();
       if (_unknownFields != null) {
         hash ^= _unknownFields.GetHashCode();
       }
@@ -1403,45 +1250,21 @@ namespace Akka.Remote.Serialization.Proto.Msg {
         output.WriteRawTag(10);
         output.WriteString(Path);
       }
-      if (Config.Length != 0) {
+      if (config_ != null) {
         output.WriteRawTag(18);
-        output.WriteBytes(Config);
+        output.WriteMessage(Config);
       }
-      if (RouterConfig.Length != 0) {
+      if (routerConfig_ != null) {
         output.WriteRawTag(26);
-        output.WriteBytes(RouterConfig);
+        output.WriteMessage(RouterConfig);
       }
-      if (Scope.Length != 0) {
+      if (scope_ != null) {
         output.WriteRawTag(34);
-        output.WriteBytes(Scope);
+        output.WriteMessage(Scope);
       }
       if (Dispatcher.Length != 0) {
         output.WriteRawTag(42);
         output.WriteString(Dispatcher);
-      }
-      if (ScopeSerializerId != 0) {
-        output.WriteRawTag(48);
-        output.WriteInt32(ScopeSerializerId);
-      }
-      if (ScopeManifest.Length != 0) {
-        output.WriteRawTag(58);
-        output.WriteString(ScopeManifest);
-      }
-      if (ConfigSerializerId != 0) {
-        output.WriteRawTag(64);
-        output.WriteInt32(ConfigSerializerId);
-      }
-      if (ConfigManifest.Length != 0) {
-        output.WriteRawTag(74);
-        output.WriteString(ConfigManifest);
-      }
-      if (RouterConfigSerializerId != 0) {
-        output.WriteRawTag(80);
-        output.WriteInt32(RouterConfigSerializerId);
-      }
-      if (RouterConfigManifest.Length != 0) {
-        output.WriteRawTag(90);
-        output.WriteString(RouterConfigManifest);
       }
       if (_unknownFields != null) {
         _unknownFields.WriteTo(output);
@@ -1454,35 +1277,17 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       if (Path.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Path);
       }
-      if (Config.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeBytesSize(Config);
+      if (config_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Config);
       }
-      if (RouterConfig.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeBytesSize(RouterConfig);
+      if (routerConfig_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(RouterConfig);
       }
-      if (Scope.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeBytesSize(Scope);
+      if (scope_ != null) {
+        size += 1 + pb::CodedOutputStream.ComputeMessageSize(Scope);
       }
       if (Dispatcher.Length != 0) {
         size += 1 + pb::CodedOutputStream.ComputeStringSize(Dispatcher);
-      }
-      if (ScopeSerializerId != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ScopeSerializerId);
-      }
-      if (ScopeManifest.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(ScopeManifest);
-      }
-      if (ConfigSerializerId != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(ConfigSerializerId);
-      }
-      if (ConfigManifest.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(ConfigManifest);
-      }
-      if (RouterConfigSerializerId != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeInt32Size(RouterConfigSerializerId);
-      }
-      if (RouterConfigManifest.Length != 0) {
-        size += 1 + pb::CodedOutputStream.ComputeStringSize(RouterConfigManifest);
       }
       if (_unknownFields != null) {
         size += _unknownFields.CalculateSize();
@@ -1498,35 +1303,26 @@ namespace Akka.Remote.Serialization.Proto.Msg {
       if (other.Path.Length != 0) {
         Path = other.Path;
       }
-      if (other.Config.Length != 0) {
-        Config = other.Config;
+      if (other.config_ != null) {
+        if (config_ == null) {
+          config_ = new global::Akka.Remote.Serialization.Proto.Msg.Payload();
+        }
+        Config.MergeFrom(other.Config);
       }
-      if (other.RouterConfig.Length != 0) {
-        RouterConfig = other.RouterConfig;
+      if (other.routerConfig_ != null) {
+        if (routerConfig_ == null) {
+          routerConfig_ = new global::Akka.Remote.Serialization.Proto.Msg.Payload();
+        }
+        RouterConfig.MergeFrom(other.RouterConfig);
       }
-      if (other.Scope.Length != 0) {
-        Scope = other.Scope;
+      if (other.scope_ != null) {
+        if (scope_ == null) {
+          scope_ = new global::Akka.Remote.Serialization.Proto.Msg.Payload();
+        }
+        Scope.MergeFrom(other.Scope);
       }
       if (other.Dispatcher.Length != 0) {
         Dispatcher = other.Dispatcher;
-      }
-      if (other.ScopeSerializerId != 0) {
-        ScopeSerializerId = other.ScopeSerializerId;
-      }
-      if (other.ScopeManifest.Length != 0) {
-        ScopeManifest = other.ScopeManifest;
-      }
-      if (other.ConfigSerializerId != 0) {
-        ConfigSerializerId = other.ConfigSerializerId;
-      }
-      if (other.ConfigManifest.Length != 0) {
-        ConfigManifest = other.ConfigManifest;
-      }
-      if (other.RouterConfigSerializerId != 0) {
-        RouterConfigSerializerId = other.RouterConfigSerializerId;
-      }
-      if (other.RouterConfigManifest.Length != 0) {
-        RouterConfigManifest = other.RouterConfigManifest;
       }
       _unknownFields = pb::UnknownFieldSet.MergeFrom(_unknownFields, other._unknownFields);
     }
@@ -1544,43 +1340,28 @@ namespace Akka.Remote.Serialization.Proto.Msg {
             break;
           }
           case 18: {
-            Config = input.ReadBytes();
+            if (config_ == null) {
+              config_ = new global::Akka.Remote.Serialization.Proto.Msg.Payload();
+            }
+            input.ReadMessage(config_);
             break;
           }
           case 26: {
-            RouterConfig = input.ReadBytes();
+            if (routerConfig_ == null) {
+              routerConfig_ = new global::Akka.Remote.Serialization.Proto.Msg.Payload();
+            }
+            input.ReadMessage(routerConfig_);
             break;
           }
           case 34: {
-            Scope = input.ReadBytes();
+            if (scope_ == null) {
+              scope_ = new global::Akka.Remote.Serialization.Proto.Msg.Payload();
+            }
+            input.ReadMessage(scope_);
             break;
           }
           case 42: {
             Dispatcher = input.ReadString();
-            break;
-          }
-          case 48: {
-            ScopeSerializerId = input.ReadInt32();
-            break;
-          }
-          case 58: {
-            ScopeManifest = input.ReadString();
-            break;
-          }
-          case 64: {
-            ConfigSerializerId = input.ReadInt32();
-            break;
-          }
-          case 74: {
-            ConfigManifest = input.ReadString();
-            break;
-          }
-          case 80: {
-            RouterConfigSerializerId = input.ReadInt32();
-            break;
-          }
-          case 90: {
-            RouterConfigManifest = input.ReadString();
             break;
           }
         }

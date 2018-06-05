@@ -15,12 +15,11 @@ namespace Akka.Remote.Serialization
 {
     internal static class WrappedPayloadSupport
     {
+        internal static readonly SerializedMessage Empty = new SerializedMessage();
+
         public static SerializedMessage PayloadToProto(ActorSystem system, object payload)
         {
-            if (payload == null) // TODO: handle null messages
-            {
-                return new SerializedMessage();
-            }
+            if (payload == null) { return Empty; }
 
             var payloadProto = new SerializedMessage();
             var serializer = system.Serialization.FindSerializerFor(payload);
@@ -57,7 +56,7 @@ namespace Akka.Remote.Serialization
             return payloadProto;
         }
 
-        public static object PayloadFrom(ActorSystem system, SerializedMessage payload)
+        public static object PayloadFrom(ActorSystem system, SerializedMessage payload, object defaultValue = null)
         {
             if (payload.IsSerializerWithStringManifest)
             {
@@ -76,7 +75,7 @@ namespace Akka.Remote.Serialization
             else
             {
                 var msg = payload.Message;
-                if (null == msg || msg.IsEmpty) { return null; }
+                if (null == msg || msg.IsEmpty) { return defaultValue; }
                 return system.Serialization.Deserialize(ProtobufUtil.GetBuffer(msg), payload.SerializerId);
             }
         }
