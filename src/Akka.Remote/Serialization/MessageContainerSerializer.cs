@@ -59,7 +59,7 @@ namespace Akka.Remote.Serialization
                     envelope.Pattern.Add(selection);
                 }
 
-                return envelope.ToArray();
+                return envelope.ToByteArray();
             }
 
             throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");

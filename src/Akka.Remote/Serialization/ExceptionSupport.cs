@@ -9,10 +9,10 @@ using System;
 using System.Collections.Generic;
 using System.Reflection;
 using Akka.Actor;
-using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.Reflection;
+using Google.Protobuf;
 #if SERIALIZATION
 using System.Runtime.Serialization;
 #endif
@@ -46,7 +46,7 @@ namespace Akka.Remote.Serialization
 
         public byte[] SerializeException(Exception exception)
         {
-            return ExceptionToProto(exception).ToArray();
+            return ExceptionToProto(exception).ToByteArray();
         }
 
         internal Proto.Msg.ExceptionData ExceptionToProto(Exception exception)

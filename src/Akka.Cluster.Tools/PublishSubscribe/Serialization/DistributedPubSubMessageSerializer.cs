@@ -14,6 +14,7 @@ using Akka.Cluster.Tools.PublishSubscribe.Internal;
 using Akka.Remote.Serialization;
 using Akka.Serialization;
 using CuteAnt.Text;
+using Google.Protobuf;
 using AddressData = Akka.Remote.Serialization.Proto.Msg.AddressData;
 
 namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
@@ -178,7 +179,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 message.Versions.Add(protoVersion);
             }
 
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static Internal.Status StatusFrom(byte[] bytes)
@@ -218,7 +219,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 message.Buckets.Add(protoBucket);
             }
 
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private Delta DeltaFrom(byte[] bytes)
@@ -250,7 +251,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 LocalAffinity = send.LocalAffinity,
                 Payload = WrappedPayloadSupport.PayloadToProto(system, send.Message)
             };
-            return protoMessage.ToArray();
+            return protoMessage.ToByteArray();
         }
 
         private Send SendFrom(byte[] bytes)
@@ -267,7 +268,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 AllButSelf = sendToAll.ExcludeSelf,
                 Payload = WrappedPayloadSupport.PayloadToProto(system, sendToAll.Message)
             };
-            return protoMessage.ToArray();
+            return protoMessage.ToByteArray();
         }
 
         private SendToAll SendToAllFrom(byte[] bytes)
@@ -283,7 +284,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 Topic = publish.Topic,
                 Payload = WrappedPayloadSupport.PayloadToProto(system, publish.Message)
             };
-            return protoMessage.ToArray();
+            return protoMessage.ToByteArray();
         }
 
         private Publish PublishFrom(byte[] bytes)
@@ -298,7 +299,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             {
                 Payload = WrappedPayloadSupport.PayloadToProto(system, sendToOneSubscriber.Message)
             };
-            return protoMessage.ToArray();
+            return protoMessage.ToByteArray();
         }
 
         private SendToOneSubscriber SendToOneSubscriberFrom(byte[] bytes)

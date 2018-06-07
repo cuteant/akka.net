@@ -333,7 +333,7 @@ namespace Akka.Remote.Transport
         /// </summary>
         /// <param name="payload">The payload to be delivered to the remote endpoint.</param>
         /// <returns>Bool indicating the availability of the association for subsequent writes.</returns>
-        public abstract bool Write(in ByteBufferWrapper payload);
+        public abstract bool Write(ByteString payload);
 
         /// <summary>
         /// Closes the underlying transport link, if needed. Some transports might not need an

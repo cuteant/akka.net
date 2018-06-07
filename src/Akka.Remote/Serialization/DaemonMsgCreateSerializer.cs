@@ -46,7 +46,7 @@ namespace Akka.Remote.Serialization
                     Supervisor = SerializeActorRef(msg.Supervisor)
                 };
 
-                return message.ToArray();
+                return message.ToByteArray();
             }
 
             throw new ArgumentException($"Can't serialize a non-DaemonMsgCreate message using DaemonMsgCreateSerializer [{obj.GetType()}]");

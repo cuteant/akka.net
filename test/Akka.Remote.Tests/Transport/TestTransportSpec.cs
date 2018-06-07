@@ -9,7 +9,6 @@ using System;
 using System.Linq;
 using Akka.Actor;
 using Akka.Remote.Transport;
-using Akka.Serialization;
 using Akka.TestKit;
 using Akka.Util.Internal;
 using Google.Protobuf;
@@ -148,7 +147,7 @@ namespace Akka.Remote.Tests.Transport{
             var exists = registry.ExistsAssociation(addressA, addressB);
             Assert.True(exists);
 
-            handleA.Write(akkaPDU.ToUnpooledByteBuffer());
+            handleA.Write(akkaPDU);
 
             //assert
             ExpectMsgPf(DefaultTimeout, "Expect InboundPayload from A", o =>

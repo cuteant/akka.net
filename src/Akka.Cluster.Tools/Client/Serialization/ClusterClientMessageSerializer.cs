@@ -12,6 +12,7 @@ using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt;
 using CuteAnt.Text;
+using Google.Protobuf;
 
 namespace Akka.Cluster.Tools.Client.Serialization
 {
@@ -148,7 +149,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
             {
                 protoMessage.ContactPoints.Add(contactPoint);
             }
-            return protoMessage.ToArray();
+            return protoMessage.ToByteArray();
         }
 
         private ClusterReceptionist.Contacts ContactsFromBinary(byte[] binary)

@@ -362,7 +362,7 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(in ByteBufferWrapper payload) => WrappedHandle.Write(Codec.ConstructPayload(payload.ToByteString()));
+        public override bool Write(ByteString payload) => WrappedHandle.Write(Codec.ConstructPayload(payload));
 
         /// <summary>TBD</summary>
         public override void Disassociate() => Disassociate(DisassociateInfo.Unknown);

@@ -15,6 +15,7 @@ using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.AsyncEx;
+using Google.Protobuf;
 using MessagePack;
 
 namespace Akka.Remote.Transport
@@ -388,7 +389,7 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(in ByteBufferWrapper payload)
+        public override bool Write(ByteString payload)
         {
             if (!_gremlinAdapter.ShouldDropOutbound(WrappedHandle.RemoteAddress, payload, "handler.write"))
             {

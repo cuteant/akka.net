@@ -9,10 +9,10 @@ using System;
 using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Dispatch.SysMsg;
-using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt;
+using Google.Protobuf;
 
 namespace Akka.Remote.Serialization
 {
@@ -100,7 +100,7 @@ namespace Akka.Remote.Serialization
             {
                 Cause = _exceptionSupport.ExceptionToProto(create.Failure)
             };
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static Create CreateFromProto(SystemMessageSerializer serializer, byte[] bytes)
@@ -119,7 +119,7 @@ namespace Akka.Remote.Serialization
             {
                 Cause = _exceptionSupport.ExceptionToProto(recreate.Cause)
             };
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static Recreate RecreateFromProto(SystemMessageSerializer serializer, byte[] bytes)
@@ -138,7 +138,7 @@ namespace Akka.Remote.Serialization
             {
                 Cause = _exceptionSupport.ExceptionToProto(resume.CausedByFailure)
             };
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static Resume ResumeFromProto(SystemMessageSerializer serializer, byte[] bytes)
@@ -161,7 +161,7 @@ namespace Akka.Remote.Serialization
                 },
                 Async = supervise.Async
             };
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static Supervise SuperviseFromProto(SystemMessageSerializer serializer, byte[] bytes)
@@ -186,7 +186,7 @@ namespace Akka.Remote.Serialization
                     Path = Akka.Serialization.Serialization.SerializedActorPath(watch.Watcher)
                 }
             };
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static Watch WatchFromProto(SystemMessageSerializer serializer, byte[] bytes)
@@ -213,7 +213,7 @@ namespace Akka.Remote.Serialization
                     Path = Akka.Serialization.Serialization.SerializedActorPath(unwatch.Watcher)
                 }
             };
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static Unwatch UnwatchFromProto(SystemMessageSerializer serializer, byte[] bytes)
@@ -238,7 +238,7 @@ namespace Akka.Remote.Serialization
                 },
                 Uid = (ulong)failed.Uid
             };
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static Failed FailedFromProto(SystemMessageSerializer serializer, byte[] bytes)
@@ -265,7 +265,7 @@ namespace Akka.Remote.Serialization
                 AddressTerminated = deathWatchNotification.AddressTerminated,
                 ExistenceConfirmed = deathWatchNotification.ExistenceConfirmed
             };
-            return message.ToArray();
+            return message.ToByteArray();
         }
 
         private static DeathWatchNotification DeathWatchNotificationFromProto(SystemMessageSerializer serializer, byte[] bytes)

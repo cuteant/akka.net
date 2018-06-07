@@ -788,7 +788,7 @@ namespace Akka.Remote.Transport
         }
 
         /// <inheritdoc/>
-        public override bool Write(in ByteBufferWrapper payload)
+        public override bool Write(ByteString payload)
         {
             var tokens = payload.Length;
             //need to declare recursive delegates first before they can self-reference

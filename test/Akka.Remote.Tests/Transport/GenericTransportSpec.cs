@@ -9,9 +9,7 @@ using System;
 using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
-using Akka.Remote.Serialization;
 using Akka.Remote.Transport;
-using Akka.Serialization;
 using Akka.TestKit;
 using Google.Protobuf;
 using Xunit;
@@ -151,11 +149,11 @@ namespace Akka.Remote.Tests.Transport
             handleB.ReadHandlerSource.SetResult(new ActorHandleEventListener(TestActor));
 
             var payload = ByteString.CopyFromUtf8("PDU");
-            var pdu = withAkkaProtocol ? new AkkaPduProtobuffCodec(Sys).ConstructPayload(payload).ToByteString() : payload;
+            var pdu = withAkkaProtocol ? new AkkaPduProtobuffCodec(Sys).ConstructPayload(payload) : payload;
             
             AwaitCondition(() => registry.ExistsAssociation(addressATest, addressBTest));
 
-            handleA.Write(payload.ToUnpooledByteBuffer());
+            handleA.Write(payload);
             ExpectMsgPf(DefaultTimeout, "Expect InboundPayload from A", o =>
             {
                 var inboundPayload = o as InboundPayload;

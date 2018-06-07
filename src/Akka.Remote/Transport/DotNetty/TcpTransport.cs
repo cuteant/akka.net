@@ -351,18 +351,11 @@ namespace Akka.Remote.Transport.DotNetty
         public TcpAssociationHandle(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
             : base(localAddress, remoteAddress) => _channel = channel;
 
-        public override bool Write(in ByteBufferWrapper payload)
+        public override bool Write(ByteString payload)
         {
             if (_channel.Open && _channel.IsWritable)
             {
-                if (payload.IsPooled)
-                {
-                    _channel.WriteAndFlushAsync(BufferManagerUtil.WrappedBuffer(payload.Payload));
-                }
-                else
-                {
-                    _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload.Payload.Array));
-                }
+                _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(ProtobufUtil.GetBuffer(payload)));
                 return true;
             }
             return false;
