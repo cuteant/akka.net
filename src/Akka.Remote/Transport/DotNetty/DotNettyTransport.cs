@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
@@ -49,7 +48,7 @@ namespace Akka.Remote.Transport.DotNetty
             base.ChannelActive(context);
 
             var channel = context.Channel;
-            if (!Transport.ConnectionGroup.TryAdd(channel.Id.AsLongText(), channel))
+            if (!Transport.ConnectionGroup.TryAdd(channel))
             {
                 Log.Warning("Unable to ADD channel [{0}->{1}](Id={2}) to connection group. May not shut down cleanly.",
                     channel.LocalAddress, channel.RemoteAddress, channel.Id);
@@ -61,7 +60,7 @@ namespace Akka.Remote.Transport.DotNetty
             base.ChannelInactive(context);
 
             var channel = context.Channel;
-            if (!Transport.ConnectionGroup.TryRemove(channel.Id.AsLongText(), out var _))
+            if (!Transport.ConnectionGroup.TryRemove(channel))
             {
                 Log.Warning("Unable to REMOVE channel [{0}->{1}](Id={2}) from connection group. May not shut down cleanly.",
                     channel.LocalAddress, channel.RemoteAddress, channel.Id);
@@ -132,7 +131,7 @@ namespace Akka.Remote.Transport.DotNetty
 
     internal abstract class DotNettyTransport : Transport
     {
-        internal readonly ConcurrentDictionary<string, IChannel> ConnectionGroup;
+        internal readonly ConcurrentSet<IChannel> ConnectionGroup;
 
         protected readonly TaskCompletionSource<IAssociationEventListener> AssociationListenerPromise;
         protected readonly ILoggingAdapter Log;
@@ -169,7 +168,7 @@ namespace Akka.Remote.Transport.DotNetty
                 _serverWorkerGroup = new MultithreadEventLoopGroup(Settings.ServerSocketWorkerPoolSize);
                 _clientWorkerGroup = new MultithreadEventLoopGroup(Settings.ClientSocketWorkerPoolSize);
             }
-            ConnectionGroup = new ConcurrentDictionary<string, IChannel>(StringComparer.Ordinal);
+            ConnectionGroup = new ConcurrentSet<IChannel>();
             AssociationListenerPromise = new TaskCompletionSource<IAssociationEventListener>();
 
             SchemeIdentifier = (Settings.EnableSsl ? "ssl." : string.Empty) + Settings.TransportMode.ToString().ToLowerInvariant();
@@ -217,7 +216,7 @@ namespace Akka.Remote.Transport.DotNetty
                 // accepted until this value is reset it's possible that the first incoming
                 // association might come in though
                 newServerChannel.Configuration.AutoRead = false;
-                ConnectionGroup.TryAdd(newServerChannel.Id.AsLongText(), newServerChannel);
+                ConnectionGroup.TryAdd(newServerChannel);
                 ServerChannel = newServerChannel;
 
                 var addr = MapSocketToAddress(
@@ -266,7 +265,7 @@ namespace Akka.Remote.Transport.DotNetty
             try
             {
                 var tasks = new List<Task>();
-                foreach (var channel in ConnectionGroup.Values)
+                foreach (var channel in ConnectionGroup)
                 {
                     tasks.Add(channel.CloseAsync());
                 }
