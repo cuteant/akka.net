@@ -19,7 +19,7 @@ using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt;
 using CuteAnt.Text;
-using Google.Protobuf;
+using MessagePack;
 
 namespace Akka.Remote.Serialization
 {
@@ -67,6 +67,8 @@ namespace Akka.Remote.Serialization
         private static readonly byte[] RemoteRouterConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteRouterConfigManifest);
 
         #endregion
+
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
 
@@ -275,23 +277,12 @@ namespace Akka.Remote.Serialization
         //
         private byte[] IdentifyToProto(Identify identify)
         {
-            var protoIdentify = new Proto.Msg.Identify();
-            if (identify.MessageId != null)
-            {
-                protoIdentify.MessageId = WrappedPayloadSupport.PayloadToProto(system, identify.MessageId);
-            }
-
-            return protoIdentify.ToByteArray();
+            return MessagePackSerializer.Serialize(new Protocol.Identify(WrappedPayloadSupport.PayloadToProto(system, identify.MessageId)), s_defaultResolver);
         }
 
         private Identify IdentifyFromProto(byte[] bytes)
         {
-            var protoMessage = Proto.Msg.Identify.Parser.ParseFrom(bytes);
-            if (protoMessage.MessageId == null)
-            {
-                return new Identify(null);
-            }
-
+            var protoMessage = MessagePackSerializer.Deserialize<Protocol.Identify>(bytes, s_defaultResolver);
             return new Identify(WrappedPayloadSupport.PayloadFrom(system, protoMessage.MessageId));
         }
 
@@ -300,17 +291,16 @@ namespace Akka.Remote.Serialization
         //
         private byte[] ActorIdentityToProto(ActorIdentity actorIdentity)
         {
-            var protoIdentify = new Proto.Msg.ActorIdentity
-            {
-                CorrelationId = WrappedPayloadSupport.PayloadToProto(system, actorIdentity.MessageId),
-                Path = Akka.Serialization.Serialization.SerializedActorPath(actorIdentity.Subject)
-            };
-            return protoIdentify.ToByteArray();
+            var protoIdentify = new Protocol.ActorIdentity(
+                WrappedPayloadSupport.PayloadToProto(system, actorIdentity.MessageId),
+                Akka.Serialization.Serialization.SerializedActorPath(actorIdentity.Subject)
+            );
+            return MessagePackSerializer.Serialize(protoIdentify, s_defaultResolver);
         }
 
         private ActorIdentity ActorIdentityFromProto(byte[] bytes)
         {
-            var protoMessage = Proto.Msg.ActorIdentity.Parser.ParseFrom(bytes);
+            var protoMessage = MessagePackSerializer.Deserialize<Protocol.ActorIdentity>(bytes, s_defaultResolver);
             return new ActorIdentity(WrappedPayloadSupport.PayloadFrom(system, protoMessage.CorrelationId), ResolveActorRef(protoMessage.Path));
         }
 
@@ -320,22 +310,14 @@ namespace Akka.Remote.Serialization
         //
         private static byte[] ActorRefToProto(IActorRef actorRef)
         {
-            var protoActor = new Proto.Msg.ActorRefData();
-            if (actorRef is Nobody) // TODO: this is a hack. Should work without it
-            {
-                protoActor.Path = c_nobody;
-            }
-            else
-            {
-                protoActor.Path = Akka.Serialization.Serialization.SerializedActorPath(actorRef);
-            }
+            var protoActor = new Protocol.ActorRefData(actorRef is Nobody ? c_nobody : Akka.Serialization.Serialization.SerializedActorPath(actorRef));
 
-            return protoActor.ToByteArray();
+            return MessagePackSerializer.Serialize(protoActor, s_defaultResolver);
         }
 
         private IActorRef ActorRefFromProto(byte[] bytes)
         {
-            var protoMessage = Proto.Msg.ActorRefData.Parser.ParseFrom(bytes);
+            var protoMessage = MessagePackSerializer.Deserialize<Protocol.ActorRefData>(bytes, s_defaultResolver);
             if (string.Equals(protoMessage.Path, c_nobody, StringComparison.Ordinal))
             {
                 return Nobody.Instance;
@@ -349,16 +331,12 @@ namespace Akka.Remote.Serialization
         //
         private static byte[] HeartbeatRspToProto(RemoteWatcher.HeartbeatRsp heartbeatRsp)
         {
-            var message = new Proto.Msg.RemoteWatcherHeartbeatResponse
-            {
-                Uid = (ulong)heartbeatRsp.AddressUid // TODO: change to uint32
-            };
-            return message.ToByteArray();
+            return MessagePackSerializer.Serialize(new Protocol.RemoteWatcherHeartbeatResponse((ulong)heartbeatRsp.AddressUid), s_defaultResolver);
         }
 
         private static RemoteWatcher.HeartbeatRsp HearthbeatRspFromProto(byte[] bytes)
         {
-            var message = Proto.Msg.RemoteWatcherHeartbeatResponse.Parser.ParseFrom(bytes);
+            var message = MessagePackSerializer.Deserialize<Protocol.RemoteWatcherHeartbeatResponse>(bytes, s_defaultResolver);
             return new RemoteWatcher.HeartbeatRsp((int)message.Uid);
         }
 
@@ -367,16 +345,12 @@ namespace Akka.Remote.Serialization
         //
         private static byte[] RemoteScopeToProto(RemoteScope remoteScope)
         {
-            var message = new Proto.Msg.RemoteScope
-            {
-                Node = AddressMessageBuilder(remoteScope.Address)
-            };
-            return message.ToByteArray();
+            return MessagePackSerializer.Serialize(new Protocol.RemoteScope(AddressMessageBuilder(remoteScope.Address)), s_defaultResolver);
         }
 
         private static RemoteScope RemoteScopeFromProto(byte[] bytes)
         {
-            var message = Proto.Msg.RemoteScope.Parser.ParseFrom(bytes);
+            var message = MessagePackSerializer.Deserialize<Protocol.RemoteScope>(bytes, s_defaultResolver);
             return new RemoteScope(AddressFrom(message.Node));
         }
 
@@ -387,7 +361,7 @@ namespace Akka.Remote.Serialization
         {
             if (config.IsEmpty) { return EmptyBytes; }
 
-            return Encoding.UTF8.GetBytes(config.Root.ToString());
+            return StringHelper.UTF8NoBOM.GetBytes(config.Root.ToString());
         }
 
         private static Config ConfigFromProto(byte[] bytes)
@@ -402,28 +376,20 @@ namespace Akka.Remote.Serialization
         //
         private byte[] FromConfigToProto(FromConfig fromConfig)
         {
-            if (fromConfig == FromConfig.Instance) { return EmptyBytes; }
-
-            var message = new Proto.Msg.FromConfig();
-
-            if (fromConfig.Resizer != null)
+            Protocol.FromConfig message = null;
+            if (fromConfig != FromConfig.Instance)
             {
-                message.Resizer = WrappedPayloadSupport.PayloadToProto(system, fromConfig.Resizer);
+                message = new Protocol.FromConfig(WrappedPayloadSupport.PayloadToProto(system, fromConfig.Resizer), fromConfig.RouterDispatcher);
             }
 
-            if (!string.IsNullOrEmpty(fromConfig.RouterDispatcher))
-            {
-                message.RouterDispatcher = fromConfig.RouterDispatcher;
-            }
-
-            return message.ToByteArray();
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
         private FromConfig FromConfigFromProto(byte[] bytes)
         {
-            if (bytes.Length == 0) { return FromConfig.Instance; }
+            var fromConfig = MessagePackSerializer.Deserialize<Protocol.FromConfig>(bytes, s_defaultResolver);
 
-            var fromConfig = Proto.Msg.FromConfig.Parser.ParseFrom(bytes);
+            if (null == fromConfig) { return FromConfig.Instance; }
 
             Resizer resizer = fromConfig.Resizer != null
                 ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, fromConfig.Resizer)
@@ -441,22 +407,21 @@ namespace Akka.Remote.Serialization
         //
         private static byte[] DefaultResizerToProto(DefaultResizer defaultResizer)
         {
-            var message = new Proto.Msg.DefaultResizer
-            {
-                LowerBound = (uint)defaultResizer.LowerBound,
-                UpperBound = (uint)defaultResizer.UpperBound,
-                PressureThreshold = (uint)defaultResizer.PressureThreshold,
-                RampupRate = defaultResizer.RampupRate,
-                BackoffThreshold = defaultResizer.BackoffThreshold,
-                BackoffRate = defaultResizer.BackoffRate,
-                MessagesPerResize = (uint)defaultResizer.MessagesPerResize
-            };
-            return message.ToByteArray();
+            var message = new Protocol.DefaultResizer(
+                (uint)defaultResizer.LowerBound,
+                (uint)defaultResizer.UpperBound,
+                (uint)defaultResizer.PressureThreshold,
+                defaultResizer.RampupRate,
+                defaultResizer.BackoffThreshold,
+                defaultResizer.BackoffRate,
+                (uint)defaultResizer.MessagesPerResize
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
         private static DefaultResizer DefaultResizerFromProto(byte[] bytes)
         {
-            var resizer = Proto.Msg.DefaultResizer.Parser.ParseFrom(bytes);
+            var resizer = MessagePackSerializer.Deserialize<Protocol.DefaultResizer>(bytes, s_defaultResolver);
             return new DefaultResizer(
                 (int)resizer.LowerBound,
                 (int)resizer.UpperBound,
@@ -470,23 +435,14 @@ namespace Akka.Remote.Serialization
         //
         // Generic Routing Pool
         //
-        private Proto.Msg.GenericRoutingPool GenericRoutingPoolBuilder(Pool pool)
+        private Protocol.GenericRoutingPool GenericRoutingPoolBuilder(Pool pool)
         {
-            var message = new Proto.Msg.GenericRoutingPool
-            {
-                NrOfInstances = (uint)pool.NrOfInstances
-            };
-            if (!string.IsNullOrEmpty(pool.RouterDispatcher))
-            {
-                message.RouterDispatcher = pool.RouterDispatcher;
-            }
-            if (pool.Resizer != null)
-            {
-                message.Resizer = WrappedPayloadSupport.PayloadToProto(system, pool.Resizer);
-            }
-
-            message.UsePoolDispatcher = pool.UsePoolDispatcher;
-            return message;
+            return new Protocol.GenericRoutingPool(
+                (uint)pool.NrOfInstances,
+                pool.RouterDispatcher,
+                pool.UsePoolDispatcher,
+                WrappedPayloadSupport.PayloadToProto(system, pool.Resizer)
+            );
         }
 
         //
@@ -494,12 +450,12 @@ namespace Akka.Remote.Serialization
         //
         private byte[] RoundRobinPoolToProto(RoundRobinPool roundRobinPool)
         {
-            return GenericRoutingPoolBuilder(roundRobinPool).ToByteArray();
+            return MessagePackSerializer.Serialize(GenericRoutingPoolBuilder(roundRobinPool), s_defaultResolver);
         }
 
         private RoundRobinPool RoundRobinPoolFromProto(byte[] bytes)
         {
-            var broadcastPool = Proto.Msg.GenericRoutingPool.Parser.ParseFrom(bytes);
+            var broadcastPool = MessagePackSerializer.Deserialize<Protocol.GenericRoutingPool>(bytes, s_defaultResolver);
 
             Resizer resizer = broadcastPool.Resizer != null
                 ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, broadcastPool.Resizer)
@@ -522,12 +478,12 @@ namespace Akka.Remote.Serialization
         //
         private byte[] BroadcastPoolToProto(BroadcastPool broadcastPool)
         {
-            return GenericRoutingPoolBuilder(broadcastPool).ToByteArray();
+            return MessagePackSerializer.Serialize(GenericRoutingPoolBuilder(broadcastPool), s_defaultResolver);
         }
 
         private BroadcastPool BroadcastPoolFromProto(byte[] bytes)
         {
-            var broadcastPool = Proto.Msg.GenericRoutingPool.Parser.ParseFrom(bytes);
+            var broadcastPool = MessagePackSerializer.Deserialize<Protocol.GenericRoutingPool>(bytes, s_defaultResolver);
 
             Resizer resizer = broadcastPool.Resizer != null
                 ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, broadcastPool.Resizer)
@@ -549,12 +505,12 @@ namespace Akka.Remote.Serialization
         //
         private byte[] RandomPoolToProto(RandomPool randomPool)
         {
-            return GenericRoutingPoolBuilder(randomPool).ToByteArray();
+            return MessagePackSerializer.Serialize(GenericRoutingPoolBuilder(randomPool), s_defaultResolver);
         }
 
         private RandomPool RandomPoolFromProto(byte[] bytes)
         {
-            var randomPool = Proto.Msg.GenericRoutingPool.Parser.ParseFrom(bytes);
+            var randomPool = MessagePackSerializer.Deserialize<Protocol.GenericRoutingPool>(bytes, s_defaultResolver);
 
             Resizer resizer = randomPool.Resizer != null
                 ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, randomPool.Resizer)
@@ -577,17 +533,16 @@ namespace Akka.Remote.Serialization
         //
         private byte[] ScatterGatherFirstCompletedPoolToProto(ScatterGatherFirstCompletedPool scatterGatherFirstCompletedPool)
         {
-            var message = new Proto.Msg.ScatterGatherPool
-            {
-                Generic = GenericRoutingPoolBuilder(scatterGatherFirstCompletedPool),
-                Within = Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(scatterGatherFirstCompletedPool.Within)
-            };
-            return message.ToByteArray();
+            var message = new Protocol.ScatterGatherPool(
+                GenericRoutingPoolBuilder(scatterGatherFirstCompletedPool),
+                Protocol.Duration.FromTimeSpan(scatterGatherFirstCompletedPool.Within)
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
         private ScatterGatherFirstCompletedPool ScatterGatherFirstCompletedPoolFromProto(byte[] bytes)
         {
-            var scatterGatherFirstCompletedPool = Proto.Msg.ScatterGatherPool.Parser.ParseFrom(bytes);
+            var scatterGatherFirstCompletedPool = MessagePackSerializer.Deserialize<Protocol.ScatterGatherPool>(bytes, s_defaultResolver);
 
             Resizer resizer = scatterGatherFirstCompletedPool.Generic.Resizer != null
                 ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, scatterGatherFirstCompletedPool.Generic.Resizer)
@@ -611,18 +566,17 @@ namespace Akka.Remote.Serialization
         //
         private byte[] TailChoppingPoolToProto(TailChoppingPool tailChoppingPool)
         {
-            var message = new Proto.Msg.TailChoppingPool
-            {
-                Generic = GenericRoutingPoolBuilder(tailChoppingPool),
-                Within = Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(tailChoppingPool.Within),
-                Interval = Google.Protobuf.WellKnownTypes.Duration.FromTimeSpan(tailChoppingPool.Interval)
-            };
-            return message.ToByteArray();
+            var message = new Protocol.TailChoppingPool(
+                GenericRoutingPoolBuilder(tailChoppingPool),
+                Protocol.Duration.FromTimeSpan(tailChoppingPool.Within),
+                Protocol.Duration.FromTimeSpan(tailChoppingPool.Interval)
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
         private TailChoppingPool TailChoppingPoolFromProto(byte[] bytes)
         {
-            var tailChoppingPool = Proto.Msg.TailChoppingPool.Parser.ParseFrom(bytes);
+            var tailChoppingPool = MessagePackSerializer.Deserialize<Protocol.TailChoppingPool>(bytes, s_defaultResolver);
 
             Resizer resizer = tailChoppingPool.Generic.Resizer != null
                 ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, tailChoppingPool.Generic.Resizer)
@@ -647,12 +601,12 @@ namespace Akka.Remote.Serialization
         //
         private byte[] ConsistentHashingPoolToProto(ConsistentHashingPool hashingPool)
         {
-            return GenericRoutingPoolBuilder(hashingPool).ToByteArray();
+            return MessagePackSerializer.Serialize(GenericRoutingPoolBuilder(hashingPool), s_defaultResolver);
         }
 
         private object ConsistentHashingPoolFromProto(byte[] bytes)
         {
-            var consistentHashingPool = Proto.Msg.GenericRoutingPool.Parser.ParseFrom(bytes);
+            var consistentHashingPool = MessagePackSerializer.Deserialize<Protocol.GenericRoutingPool>(bytes, s_defaultResolver);
 
             Resizer resizer = consistentHashingPool.Resizer != null
                 ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, consistentHashingPool.Resizer)
@@ -674,36 +628,33 @@ namespace Akka.Remote.Serialization
         //
         private byte[] RemoteRouterConfigToProto(RemoteRouterConfig remoteRouterConfig)
         {
-            var protoRemoteRouterConfig = new Proto.Msg.RemoteRouterConfig
-            {
-                Local = WrappedPayloadSupport.PayloadToProto(system, remoteRouterConfig.Local)
-            };
-            protoRemoteRouterConfig.Nodes.AddRange(remoteRouterConfig.Nodes.Select(AddressMessageBuilder));
-            return protoRemoteRouterConfig.ToByteArray();
+            var protoRemoteRouterConfig = new Protocol.RemoteRouterConfig(
+                WrappedPayloadSupport.PayloadToProto(system, remoteRouterConfig.Local),
+                remoteRouterConfig.Nodes.Select(AddressMessageBuilder).ToArray()
+            );
+            return MessagePackSerializer.Serialize(protoRemoteRouterConfig, s_defaultResolver);
         }
 
         private RemoteRouterConfig RemoteRouterConfigFromProto(byte[] bytes)
         {
-            var protoMessage = Proto.Msg.RemoteRouterConfig.Parser.ParseFrom(bytes);
+            var protoMessage = MessagePackSerializer.Deserialize<Protocol.RemoteRouterConfig>(bytes, s_defaultResolver);
             return new RemoteRouterConfig(WrappedPayloadSupport.PayloadFrom(system, protoMessage.Local).AsInstanceOf<Pool>(), protoMessage.Nodes.Select(AddressFrom));
         }
 
         //
         // Address
         //
-        private static Proto.Msg.AddressData AddressMessageBuilder(Address address)
+        private static Protocol.AddressData AddressMessageBuilder(Address address)
         {
-            var message = new Proto.Msg.AddressData
-            {
-                System = address.System,
-                Hostname = address.Host,
-                Port = (uint)(address.Port ?? 0),
-                Protocol = address.Protocol
-            };
+            var message = new Protocol.AddressData(
+                address.System,
+                address.Host,
+                (uint)(address.Port ?? 0),
+                address.Protocol);
             return message;
         }
 
-        private static Address AddressFrom(Proto.Msg.AddressData addressProto)
+        private static Address AddressFrom(Protocol.AddressData addressProto)
         {
             return new Address(
                 addressProto.Protocol,

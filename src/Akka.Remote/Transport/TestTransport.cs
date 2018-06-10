@@ -12,7 +12,6 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
-using Google.Protobuf;
 
 namespace Akka.Remote.Transport
 {
@@ -50,7 +49,7 @@ namespace Akka.Remote.Transport
         public readonly SwitchableLoggedBehavior<bool, bool> ShutdownBehavior;
 
         /// <summary>TBD</summary>
-        public readonly SwitchableLoggedBehavior<Tuple<TestAssociationHandle, ByteString>, bool> WriteBehavior;
+        public readonly SwitchableLoggedBehavior<Tuple<TestAssociationHandle, byte[]>, bool> WriteBehavior;
 
         /// <summary>TBD</summary>
         /// <param name="system">TBD</param>
@@ -87,7 +86,7 @@ namespace Akka.Remote.Transport
                 x => registry.LogActivity(new ShutdownAttempt(LocalAddress)));
             DisassociateBehavior = new SwitchableLoggedBehavior<TestAssociationHandle, bool>(DefaultDisassociate, remote => _registry.LogActivity(new DisassociateAttempt(remote.LocalAddress, remote.RemoteAddress)));
 
-            WriteBehavior = new SwitchableLoggedBehavior<Tuple<TestAssociationHandle, ByteString>, bool>(
+            WriteBehavior = new SwitchableLoggedBehavior<Tuple<TestAssociationHandle, byte[]>, bool>(
                 args => DefaultWriteBehavior(args.Item1, args.Item2),
                 data =>
                     _registry.LogActivity(new WriteAttempt(data.Item1.LocalAddress, data.Item1.RemoteAddress, data.Item2)));
@@ -237,12 +236,12 @@ namespace Akka.Remote.Transport
         /// <param name="handle">TBD</param>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public Task<bool> Write(TestAssociationHandle handle, ByteString payload)
+        public Task<bool> Write(TestAssociationHandle handle, byte[] payload)
         {
-            return WriteBehavior.Apply(new Tuple<TestAssociationHandle, ByteString>(handle, payload));
+            return WriteBehavior.Apply(new Tuple<TestAssociationHandle, byte[]>(handle, payload));
         }
 
-        private Task<bool> DefaultWriteBehavior(TestAssociationHandle handle, ByteString payload)
+        private Task<bool> DefaultWriteBehavior(TestAssociationHandle handle, byte[] payload)
         {
             var remoteReadHandler = _registry.GetRemoteReadHandlerFor(handle);
 
@@ -336,7 +335,7 @@ namespace Akka.Remote.Transport
         /// <param name="sender">TBD</param>
         /// <param name="recipient">TBD</param>
         /// <param name="payload">TBD</param>
-        public WriteAttempt(Address sender, Address recipient, ByteString payload)
+        public WriteAttempt(Address sender, Address recipient, byte[] payload)
         {
             Payload = payload;
             Recipient = recipient;
@@ -350,7 +349,7 @@ namespace Akka.Remote.Transport
         public Address Recipient { get; }
 
         /// <summary>TBD</summary>
-        public ByteString Payload { get; }
+        public byte[] Payload { get; }
     }
 
     #endregion
@@ -673,7 +672,7 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(ByteString payload)
+        public override bool Write(byte[] payload)
         {
             if (Writeable)
             {

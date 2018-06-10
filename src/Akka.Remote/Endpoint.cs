@@ -18,9 +18,8 @@ using Akka.Pattern;
 using Akka.Remote.Transport;
 using Akka.Util;
 using Akka.Util.Internal;
-using Google.Protobuf;
 using MessagePack;
-using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
+using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
 
 namespace Akka.Remote
 {
@@ -1922,7 +1921,7 @@ namespace Akka.Remote
             deliverable.Deliverables.ForEach(msg => _msgDispatch.Dispatch(msg.Recipient, msg.RecipientAddress, msg.SerializedMessage, msg.SenderOptional));
         }
 
-        private AckAndMessage TryDecodeMessageAndAck(ByteString pdu)
+        private AckAndMessage TryDecodeMessageAndAck(byte[] pdu)
         {
             try
             {

@@ -1,0 +1,114 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Core", "Core", "{01167D3C-49C4-4CDE-9787-C176D139ACDD}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Contrib", "Contrib", "{588C1513-FAB6-42C3-B6FC-3485F13620CF}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Serializers", "Serializers", "{0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka", "src\Akka\Akka.csproj", "{A85BEFFB-20AA-4AC6-97FA-CB0C4067B2DA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Remote", "src\Akka.Remote\Akka.Remote.csproj", "{4C80D280-208E-437C-9EF6-3CEACF2597E4}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.Hyperion", "src\Akka.Serialization.Hyperion\Akka.Serialization.Hyperion.csproj", "{14947A2F-EB68-41E4-814F-143041DA6D77}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A21675C8-61E0-413F-99FF-CF26BABF2E85}"
+	ProjectSection(SolutionItems) = preProject
+		clean.cmd = clean.cmd
+		Dependencies.Akka.props = Dependencies.Akka.props
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		Directory.Signed.props = Directory.Signed.props
+		LICENSE = LICENSE
+		NuGet.Config = NuGet.Config
+		nuget.props = nuget.props
+		version.props = version.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{F56F2926-46FD-4F02-A4A1-FB45C52C7571}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CuteAnt.Extensions.Logging.Sources", "..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.shproj", "{8DBB7DC8-2B90-4A8C-A60D-D41466174BDE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.Protobuf", "src\Akka.Serialization.Protobuf\Akka.Serialization.Protobuf.csproj", "{F67F69CC-2C13-41DF-8234-D4907830DF59}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.Json", "src\Akka.Serialization.Json\Akka.Serialization.Json.csproj", "{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Abstractions", "src\Akka.Abstractions\Akka.Abstractions.csproj", "{387645F4-BBF1-4623-B990-F8E4234BE41E}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "benchmark", "benchmark", "{B605990A-4A3C-4A77-BB47-2C5DD9DE6E7C}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "RemotePingPong", "benchmark\RemotePingPong\RemotePingPong.csproj", "{90FD998B-EBB3-4A9F-86E3-193A3713AF85}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PingPong", "benchmark\PingPong\PingPong.csproj", "{43B98A28-64EE-4445-9588-7CA102DFEDCF}"
+EndProject
+Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.projitems*{8dbb7dc8-2b90-4a8c-a60d-d41466174bde}*SharedItemsImports = 13
+	EndGlobalSection
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{A85BEFFB-20AA-4AC6-97FA-CB0C4067B2DA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A85BEFFB-20AA-4AC6-97FA-CB0C4067B2DA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A85BEFFB-20AA-4AC6-97FA-CB0C4067B2DA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A85BEFFB-20AA-4AC6-97FA-CB0C4067B2DA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{4C80D280-208E-437C-9EF6-3CEACF2597E4}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{4C80D280-208E-437C-9EF6-3CEACF2597E4}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{4C80D280-208E-437C-9EF6-3CEACF2597E4}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{4C80D280-208E-437C-9EF6-3CEACF2597E4}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14947A2F-EB68-41E4-814F-143041DA6D77}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14947A2F-EB68-41E4-814F-143041DA6D77}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14947A2F-EB68-41E4-814F-143041DA6D77}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14947A2F-EB68-41E4-814F-143041DA6D77}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F67F69CC-2C13-41DF-8234-D4907830DF59}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F67F69CC-2C13-41DF-8234-D4907830DF59}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F67F69CC-2C13-41DF-8234-D4907830DF59}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F67F69CC-2C13-41DF-8234-D4907830DF59}.Release|Any CPU.Build.0 = Release|Any CPU
+		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{387645F4-BBF1-4623-B990-F8E4234BE41E}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{387645F4-BBF1-4623-B990-F8E4234BE41E}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{387645F4-BBF1-4623-B990-F8E4234BE41E}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{387645F4-BBF1-4623-B990-F8E4234BE41E}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90FD998B-EBB3-4A9F-86E3-193A3713AF85}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90FD998B-EBB3-4A9F-86E3-193A3713AF85}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90FD998B-EBB3-4A9F-86E3-193A3713AF85}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90FD998B-EBB3-4A9F-86E3-193A3713AF85}.Release|Any CPU.Build.0 = Release|Any CPU
+		{43B98A28-64EE-4445-9588-7CA102DFEDCF}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{43B98A28-64EE-4445-9588-7CA102DFEDCF}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{43B98A28-64EE-4445-9588-7CA102DFEDCF}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{43B98A28-64EE-4445-9588-7CA102DFEDCF}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{01167D3C-49C4-4CDE-9787-C176D139ACDD} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
+		{588C1513-FAB6-42C3-B6FC-3485F13620CF} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
+		{0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7} = {588C1513-FAB6-42C3-B6FC-3485F13620CF}
+		{A85BEFFB-20AA-4AC6-97FA-CB0C4067B2DA} = {01167D3C-49C4-4CDE-9787-C176D139ACDD}
+		{4C80D280-208E-437C-9EF6-3CEACF2597E4} = {01167D3C-49C4-4CDE-9787-C176D139ACDD}
+		{14947A2F-EB68-41E4-814F-143041DA6D77} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
+		{8DBB7DC8-2B90-4A8C-A60D-D41466174BDE} = {F56F2926-46FD-4F02-A4A1-FB45C52C7571}
+		{F67F69CC-2C13-41DF-8234-D4907830DF59} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
+		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
+		{387645F4-BBF1-4623-B990-F8E4234BE41E} = {01167D3C-49C4-4CDE-9787-C176D139ACDD}
+		{90FD998B-EBB3-4A9F-86E3-193A3713AF85} = {B605990A-4A3C-4A77-BB47-2C5DD9DE6E7C}
+		{43B98A28-64EE-4445-9588-7CA102DFEDCF} = {B605990A-4A3C-4A77-BB47-2C5DD9DE6E7C}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}
+	EndGlobalSection
+EndGlobal

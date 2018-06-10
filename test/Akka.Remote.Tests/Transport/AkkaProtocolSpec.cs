@@ -7,19 +7,19 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Remote.Transport;
 using Akka.TestKit;
 using Akka.Util.Internal;
-using Google.Protobuf;
 using Xunit;
-using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
+using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
 
 namespace Akka.Remote.Tests.Transport
 {
-    
+
     public class AkkaProtocolSpec : AkkaSpec
     {
         #region Setup / Config
@@ -33,10 +33,10 @@ namespace Akka.Remote.Tests.Transport
         private AkkaPduCodec codec;
 
         SerializedMessage testMsg =
-            new SerializedMessage { SerializerId = 0, Message = ByteString.CopyFromUtf8("foo") };
+            new SerializedMessage { SerializerId = 0, Message = Encoding.UTF8.GetBytes("foo") };
 
-        private ByteString testEnvelope;
-        private ByteString testMsgPdu;
+        private byte[] testEnvelope;
+        private byte[] testMsgPdu;
 
         private IHandleEvent testHeartbeat;
         private IHandleEvent testPayload;

@@ -12,12 +12,10 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
-using Akka.Serialization;
 using DotNetty.Buffers;
 using DotNetty.Common.Utilities;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Libuv.Native;
-using Google.Protobuf;
 
 namespace Akka.Remote.Transport.DotNetty
 {
@@ -50,12 +48,33 @@ namespace Akka.Remote.Transport.DotNetty
             if (buf.ReadableBytes > 0)
             {
                 // no need to copy the byte buffer contents; ByteString does that automatically
-                var bytes = ByteString.CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
+                var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
                 NotifyListener(new InboundPayload(bytes));
             }
 
             // decrease the reference count to 0 (releases buffer)
             ReferenceCountUtil.SafeRelease(message);
+        }
+
+
+        private
+#if !NET451
+            unsafe
+#endif
+            static byte[] CopyFrom(byte[] buffer, int offset, int count)
+        {
+            var bytes = new byte[count];
+#if NET451
+            Buffer.BlockCopy(buffer, offset, bytes, 0, count);
+#else
+
+            fixed (byte* pSrc = &buffer[offset])
+            fixed (byte* pDst = &bytes[0])
+            {
+                Buffer.MemoryCopy(pSrc, pDst, bytes.Length, count);
+            }
+#endif
+            return bytes;
         }
 
         /// <summary>TBD</summary>
@@ -351,11 +370,11 @@ namespace Akka.Remote.Transport.DotNetty
         public TcpAssociationHandle(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
             : base(localAddress, remoteAddress) => _channel = channel;
 
-        public override bool Write(ByteString payload)
+        public override bool Write(byte[] payload)
         {
             if (_channel.Open && _channel.IsWritable)
             {
-                _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(ProtobufUtil.GetBuffer(payload)));
+                _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload));
                 return true;
             }
             return false;

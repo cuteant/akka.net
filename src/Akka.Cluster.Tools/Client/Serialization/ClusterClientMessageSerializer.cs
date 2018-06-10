@@ -8,11 +8,12 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Linq;
 using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt;
 using CuteAnt.Text;
-using Google.Protobuf;
+using MessagePack;
 
 namespace Akka.Cluster.Tools.Client.Serialization
 {
@@ -36,6 +37,8 @@ namespace Akka.Cluster.Tools.Client.Serialization
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
         private readonly IDictionary<string, Func<byte[], IClusterClientMessage>> _fromBinaryMap;
+
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterClientMessageSerializer"/> class.
@@ -144,17 +147,13 @@ namespace Akka.Cluster.Tools.Client.Serialization
 
         private byte[] ContactsToProto(ClusterReceptionist.Contacts message)
         {
-            var protoMessage = new Proto.Msg.Contacts();
-            foreach (var contactPoint in message.ContactPoints)
-            {
-                protoMessage.ContactPoints.Add(contactPoint);
-            }
-            return protoMessage.ToByteArray();
+            var protoMessage = new Protocol.Contacts(message.ContactPoints.ToArray());
+            return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
         private ClusterReceptionist.Contacts ContactsFromBinary(byte[] binary)
         {
-            var proto = Proto.Msg.Contacts.Parser.ParseFrom(binary);
+            var proto = MessagePackSerializer.Deserialize<Protocol.Contacts>(binary, s_defaultResolver);
             return new ClusterReceptionist.Contacts(proto.ContactPoints.ToImmutableList());
         }
     }

@@ -13,8 +13,6 @@ using Akka.Actor;
 using Akka.Dispatch.SysMsg;
 using Akka.Util;
 using Akka.Util.Internal;
-using Akka.Serialization;
-using Google.Protobuf;
 
 namespace Akka.Remote.Transport
 {
@@ -788,7 +786,7 @@ namespace Akka.Remote.Transport
         }
 
         /// <inheritdoc/>
-        public override bool Write(ByteString payload)
+        public override bool Write(byte[] payload)
         {
             var tokens = payload.Length;
             //need to declare recursive delegates first before they can self-reference
@@ -917,7 +915,7 @@ namespace Akka.Remote.Transport
         protected ThrottleMode InboundThrottleMode;
 
         /// <summary>TBD</summary>
-        protected Queue<ByteString> ThrottledMessages = new Queue<ByteString>();
+        protected Queue<byte[]> ThrottledMessages = new Queue<byte[]>();
 
         /// <summary>TBD</summary>
         protected IHandleEventListener UpstreamListener;
@@ -992,7 +990,7 @@ namespace Akka.Remote.Transport
                     {
                         if (mode is Blackhole)
                         {
-                            ThrottledMessages = new Queue<ByteString>();
+                            ThrottledMessages = new Queue<byte[]>();
                             exposedHandle.Disassociate();
                             return Stop();
                         }
@@ -1062,7 +1060,7 @@ namespace Akka.Remote.Transport
                 {
                     var mode = @event.FsmEvent.AsInstanceOf<ThrottleMode>();
                     InboundThrottleMode = mode;
-                    if (mode is Blackhole) { ThrottledMessages = new Queue<ByteString>(); }
+                    if (mode is Blackhole) { ThrottledMessages = new Queue<byte[]>(); }
                     CancelTimer(DequeueTimerName);
                     if (ThrottledMessages.Any())
                     {
@@ -1130,9 +1128,9 @@ namespace Akka.Remote.Transport
         }
 
         /// <summary>This method captures ASSOCIATE packets and extracts the origin <see cref="Address"/>.</summary>
-        /// <param name="b">Inbound <see cref="ByteString"/> received from network.</param>
+        /// <param name="b">Inbound <see cref="T:System.byte[]"/> received from network.</param>
         /// <returns></returns>
-        private Address PeekOrigin(ByteString b)
+        private Address PeekOrigin(byte[] b)
         {
             try
             {
@@ -1167,7 +1165,7 @@ namespace Akka.Remote.Transport
             }
         }
 
-        private void ForwardOrDelay(ByteString payload)
+        private void ForwardOrDelay(byte[] payload)
         {
             if (InboundThrottleMode is Blackhole)
             {

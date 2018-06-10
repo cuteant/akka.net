@@ -203,8 +203,29 @@ namespace Akka.Persistence.Fsm
         /// <summary>
         /// FSM state and data snapshot
         /// </summary>
+        public interface IPersistentFSMSnapshot
+        {
+            /// <summary>
+            /// FSM state identifier.
+            /// </summary>
+            string StateIdentifier { get; }
+
+            /// <summary>
+            /// FSM state data.
+            /// </summary>
+            object Data { get; }
+
+            /// <summary>
+            /// FSM state timeout.
+            /// </summary>
+            TimeSpan? Timeout { get; }
+        }
+
+        /// <summary>
+        /// FSM state and data snapshot
+        /// </summary>
         [MessagePackObject]
-        public class PersistentFSMSnapshot<TD> : IMessage 
+        public class PersistentFSMSnapshot<TD> : IMessage, IPersistentFSMSnapshot
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="PersistentFSMSnapshot{TD}"/> class.
@@ -231,6 +252,9 @@ namespace Akka.Persistence.Fsm
             /// </summary>
             [Key(1)]
             public TD Data { get; }
+
+            [IgnoreMember]
+            object IPersistentFSMSnapshot.Data => this.Data;
 
             /// <summary>
             /// FSM state timeout.

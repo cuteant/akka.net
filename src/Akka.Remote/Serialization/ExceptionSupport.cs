@@ -12,15 +12,17 @@ using Akka.Actor;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.Reflection;
-using Google.Protobuf;
+using MessagePack;
 #if SERIALIZATION
 using System.Runtime.Serialization;
 #endif
 
 namespace Akka.Remote.Serialization
 {
-    internal class ExceptionSupport
+    internal sealed class ExceptionSupport
     {
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+
         private readonly ExtendedActorSystem _system;
         private const BindingFlags All = BindingFlags.Instance | BindingFlags.NonPublic | BindingFlags.Public;
         private HashSet<string> DefaultProperties = new HashSet<string>(StringComparer.Ordinal)
@@ -46,10 +48,10 @@ namespace Akka.Remote.Serialization
 
         public byte[] SerializeException(Exception exception)
         {
-            return ExceptionToProto(exception).ToByteArray();
+            return MessagePackSerializer.Serialize(ExceptionToProto(exception), s_defaultResolver);
         }
 
-        internal Proto.Msg.ExceptionData ExceptionToProto(Exception exception)
+        internal Protocol.ExceptionData ExceptionToProto(Exception exception)
         {
 #if SERIALIZATION
             return ExceptionToProtoNet(exception);
@@ -60,11 +62,11 @@ namespace Akka.Remote.Serialization
 
         public Exception DeserializeException(byte[] bytes)
         {
-            var proto = Proto.Msg.ExceptionData.Parser.ParseFrom(bytes);
+            var proto = MessagePackSerializer.Deserialize<Protocol.ExceptionData>(bytes, s_defaultResolver);
             return ExceptionFromProto(proto);
         }
 
-        internal Exception ExceptionFromProto(Proto.Msg.ExceptionData proto)
+        internal Exception ExceptionFromProto(Protocol.ExceptionData proto)
         {
 #if SERIALIZATION
             return ExceptionFromProtoNet(proto);
@@ -76,12 +78,11 @@ namespace Akka.Remote.Serialization
 #if SERIALIZATION
         private readonly FormatterConverter DefaultFormatterConverter = new FormatterConverter();
 
-        public Proto.Msg.ExceptionData ExceptionToProtoNet(Exception exception)
+        public Protocol.ExceptionData ExceptionToProtoNet(Exception exception)
         {
-            var message = new Proto.Msg.ExceptionData();
+            if (exception == null) { return null; }
 
-            if (exception == null)
-                return message;
+            var message = new Protocol.ExceptionData();
 
             var exceptionType = exception.GetType();
 
@@ -95,20 +96,22 @@ namespace Akka.Remote.Serialization
             var serializationInfo = new SerializationInfo(exceptionType, DefaultFormatterConverter);
             serializable.GetObjectData(serializationInfo, new StreamingContext());
 
+            var customFields = new Dictionary<string, Protocol.Payload>();
+
             foreach (var info in serializationInfo)
             {
                 if (DefaultProperties.Contains(info.Name)) continue;
                 var preparedValue = WrappedPayloadSupport.PayloadToProto(_system, info.Value);
-                message.CustomFields.Add(info.Name, preparedValue);
+                customFields.Add(info.Name, preparedValue);
             }
+            if (customFields.Count > 0) { message.CustomFields = customFields; }
 
             return message;
         }
 
-        public Exception ExceptionFromProtoNet(Proto.Msg.ExceptionData proto)
+        public Exception ExceptionFromProtoNet(Protocol.ExceptionData proto)
         {
-            if (string.IsNullOrEmpty(proto.TypeName))
-                return null;
+            if (null == proto || string.IsNullOrEmpty(proto.TypeName)) { return null; }
 
             Type exceptionType = TypeUtils.ResolveType(proto.TypeName);
 
@@ -125,9 +128,13 @@ namespace Akka.Remote.Serialization
             serializationInfo.AddValue("ExceptionMethod", string.Empty);
             serializationInfo.AddValue("HResult", int.MinValue);
 
-            foreach (var field in proto.CustomFields)
+            var customFields = proto.CustomFields;
+            if (customFields != null)
             {
-                serializationInfo.AddValue(field.Key, WrappedPayloadSupport.PayloadFrom(_system, field.Value));
+                foreach (var field in customFields)
+                {
+                    serializationInfo.AddValue(field.Key, WrappedPayloadSupport.PayloadFrom(_system, field.Value));
+                }
             }
 
             Exception obj = null;

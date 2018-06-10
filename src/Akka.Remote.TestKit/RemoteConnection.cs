@@ -11,7 +11,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Akka.Remote.TestKit.Proto;
+using Akka.Remote.TestKit.Protocol;
 using Akka.Remote.Transport.DotNetty;
 using DotNetty.Buffers;
 using DotNetty.Codecs;
@@ -51,7 +51,7 @@ namespace Akka.Remote.TestKit
         {
             var encoders = new IChannelHandler[]
                 {new LengthFieldPrepender(ByteOrder.LittleEndian, 4, 0, false), new LengthFieldBasedFrameDecoder(ByteOrder.LittleEndian, 10000, 0, 4, 0, 4, true)};
-            var protobuf = new IChannelHandler[] { new ProtobufEncoder(), new ProtobufDecoder(Proto.Msg.Wrapper.Parser) };
+            var protobuf = new IChannelHandler[] { new ProtobufEncoder(), new ProtobufDecoder() };
             var msg = new IChannelHandler[] { new MsgEncoder(), new MsgDecoder() };
             var pipeline = encoders.Concat(protobuf).Concat(msg);
             foreach (var h in pipeline)

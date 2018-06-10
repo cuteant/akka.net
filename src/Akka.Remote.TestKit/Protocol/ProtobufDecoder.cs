@@ -12,10 +12,12 @@ using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
-using Google.Protobuf;
 using Microsoft.Extensions.Logging;
+using CuteAnt.Extensions.Serialization;
+using MessagePack;
+using MessagePack.Resolvers;
 
-namespace Akka.Remote.TestKit.Proto
+namespace Akka.Remote.TestKit.Protocol
 {
     /// <summary>
     /// Decodes a message from a <see cref="IByteBuffer"/> into a Google protobuff wire format
@@ -23,11 +25,11 @@ namespace Akka.Remote.TestKit.Proto
     internal sealed class ProtobufDecoder : MessageToMessageDecoder<IByteBuffer>
     {
         private readonly ILogger _logger = InternalLoggerFactory.DefaultFactory.CreateLogger<ProtobufDecoder>();
-        readonly MessageParser _messageParser;
 
-        public ProtobufDecoder(MessageParser messageParser)
+        private static readonly TypelessMessagePackMessageFormatter s_formatter = TypelessMessagePackMessageFormatter.DefaultInstance;
+
+        public ProtobufDecoder()
         {
-            _messageParser = messageParser;
         }
 
         protected override void Decode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
@@ -42,16 +44,14 @@ namespace Akka.Remote.TestKit.Proto
             Stream inputStream = null;
             try
             {
-                CodedInputStream codedInputStream;
                 if (message.IoBufferCount == 1)
                 {
                     ArraySegment<byte> bytes = message.GetIoBuffer(message.ReaderIndex, length);
-                    codedInputStream = new CodedInputStream(bytes.Array, bytes.Offset, length);
+                    inputStream = new MemoryStream(bytes.Array, bytes.Offset, length);
                 }
                 else
                 {
                     inputStream = new ReadOnlyByteBufferStream(message, false);
-                    codedInputStream = new CodedInputStream(inputStream);
                 }
 
                 //
@@ -62,7 +62,7 @@ namespace Akka.Remote.TestKit.Proto
                 // 
                 // In this case it is ok because the CodedInputStream does not own the byte data.
                 //
-                IMessage decoded = _messageParser.ParseFrom(codedInputStream);
+                IMessage decoded = (IMessage)MessagePackSerializer.Deserialize<object>(inputStream, TypelessDefaultResolver.Instance);
                 if (decoded != null)
                 {
                     output.Add(decoded);

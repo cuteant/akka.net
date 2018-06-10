@@ -11,8 +11,6 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
-using Akka.Serialization;
-using Google.Protobuf;
 
 namespace Akka.Remote.Transport
 {
@@ -123,10 +121,10 @@ namespace Akka.Remote.Transport
     {
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
-        public InboundPayload(ByteString payload) => Payload = payload;
+        public InboundPayload(byte[] payload) => Payload = payload;
 
         /// <summary>TBD</summary>
-        public ByteString Payload { get; }
+        public byte[] Payload { get; }
 
         /// <inheritdoc/>
         public override string ToString() => $"InboundPayload(size = {Payload.Length} bytes)";
@@ -333,7 +331,7 @@ namespace Akka.Remote.Transport
         /// </summary>
         /// <param name="payload">The payload to be delivered to the remote endpoint.</param>
         /// <returns>Bool indicating the availability of the association for subsequent writes.</returns>
-        public abstract bool Write(ByteString payload);
+        public abstract bool Write(byte[] payload);
 
         /// <summary>
         /// Closes the underlying transport link, if needed. Some transports might not need an

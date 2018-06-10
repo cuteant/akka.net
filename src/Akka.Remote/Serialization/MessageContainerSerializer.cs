@@ -6,11 +6,11 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Serialization;
 using Akka.Util;
-using Google.Protobuf;
+using MessagePack;
 
 namespace Akka.Remote.Serialization
 {
@@ -19,6 +19,8 @@ namespace Akka.Remote.Serialization
     /// </summary>
     public class MessageContainerSerializer : Serializer
     {
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="MessageContainerSerializer"/> class.
         /// </summary>
@@ -33,33 +35,31 @@ namespace Akka.Remote.Serialization
         {
             if (obj is ActorSelectionMessage sel)
             {
-                var envelope = new Proto.Msg.SelectionEnvelope
-                {
-                    Payload = WrappedPayloadSupport.PayloadToProto(system, sel.Message)
-                };
-
+                //List<Protocol.Selection> pattern = null;
+                //if (sel.Elements != null)
+                //{
+                var pattern = new List<Protocol.Selection>(sel.Elements.Length);
                 foreach (var element in sel.Elements)
                 {
-                    Proto.Msg.Selection selection = null;
                     switch (element)
                     {
                         case SelectChildName childName:
-                            selection = BuildPattern(childName.Name, Proto.Msg.Selection.Types.PatternType.ChildName);
+                            pattern.Add(BuildPattern(childName.Name, Protocol.Selection.PatternType.ChildName));
                             break;
                         case SelectChildPattern childPattern:
-                            selection = BuildPattern(childPattern.PatternStr, Proto.Msg.Selection.Types.PatternType.ChildPattern);
+                            pattern.Add(BuildPattern(childPattern.PatternStr, Protocol.Selection.PatternType.ChildPattern));
                             break;
                         case SelectParent parent:
-                            selection = BuildPattern(null, Proto.Msg.Selection.Types.PatternType.Parent);
+                            pattern.Add(BuildPattern(null, Protocol.Selection.PatternType.Parent));
                             break;
                         default:
                             break;
                     }
-
-                    envelope.Pattern.Add(selection);
                 }
+                //}
 
-                return envelope.ToByteArray();
+                return MessagePackSerializer.Serialize(new Protocol.SelectionEnvelope(
+                    WrappedPayloadSupport.PayloadToProto(system, sel.Message), pattern), s_defaultResolver);
             }
 
             throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
@@ -68,7 +68,7 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            var selectionEnvelope = Proto.Msg.SelectionEnvelope.Parser.ParseFrom(bytes);
+            var selectionEnvelope = MessagePackSerializer.Deserialize<Protocol.SelectionEnvelope>(bytes, s_defaultResolver);
             var message = WrappedPayloadSupport.PayloadFrom(system, selectionEnvelope.Payload);
 
             var elements = new SelectionPathElement[selectionEnvelope.Pattern.Count];
@@ -77,16 +77,16 @@ namespace Akka.Remote.Serialization
                 var p = selectionEnvelope.Pattern[i];
                 switch (p.Type)
                 {
-                    case Proto.Msg.Selection.Types.PatternType.ChildName:
+                    case Protocol.Selection.PatternType.ChildName:
                         elements[i] = new SelectChildName(p.Matcher);
                         break;
-                    case Proto.Msg.Selection.Types.PatternType.ChildPattern:
+                    case Protocol.Selection.PatternType.ChildPattern:
                         elements[i] = new SelectChildPattern(p.Matcher);
                         break;
-                    case Proto.Msg.Selection.Types.PatternType.Parent:
+                    case Protocol.Selection.PatternType.Parent:
                         elements[i] = new SelectParent();
                         break;
-                    case Proto.Msg.Selection.Types.PatternType.NoPatern:
+                    case Protocol.Selection.PatternType.NoPatern:
                     default:
                         break;
                 }
@@ -95,12 +95,9 @@ namespace Akka.Remote.Serialization
             return new ActorSelectionMessage(message, elements);
         }
 
-        private static Proto.Msg.Selection BuildPattern(string matcher, Proto.Msg.Selection.Types.PatternType tpe)
+        private static Protocol.Selection BuildPattern(string matcher, Protocol.Selection.PatternType patternType)
         {
-            var selection = new Proto.Msg.Selection { Type = tpe };
-            if (matcher != null) { selection.Matcher = matcher; }
-
-            return selection;
+            return new Protocol.Selection(patternType, matcher);
         }
     }
 }

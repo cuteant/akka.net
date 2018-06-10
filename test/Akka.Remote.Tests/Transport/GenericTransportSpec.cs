@@ -7,11 +7,11 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Remote.Transport;
 using Akka.TestKit;
-using Google.Protobuf;
 using Xunit;
 
 namespace Akka.Remote.Tests.Transport
@@ -148,7 +148,7 @@ namespace Akka.Remote.Tests.Transport
             handleA.ReadHandlerSource.SetResult(new ActorHandleEventListener(TestActor));
             handleB.ReadHandlerSource.SetResult(new ActorHandleEventListener(TestActor));
 
-            var payload = ByteString.CopyFromUtf8("PDU");
+            var payload = Encoding.UTF8.GetBytes("PDU");
             var pdu = withAkkaProtocol ? new AkkaPduProtobuffCodec(Sys).ConstructPayload(payload) : payload;
             
             AwaitCondition(() => registry.ExistsAssociation(addressATest, addressBTest));

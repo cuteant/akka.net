@@ -7,16 +7,17 @@
 
 using System;
 using System.Linq;
+using System.Text;
 using Akka.Actor;
 using Akka.Remote.Transport;
 using Akka.TestKit;
 using Akka.Util.Internal;
-using Google.Protobuf;
 using Xunit;
 
-namespace Akka.Remote.Tests.Transport{
+namespace Akka.Remote.Tests.Transport
+{
 
-    
+
     public class TestTransportSpec : AkkaSpec
     {
         #region Setup / Teardown
@@ -142,7 +143,7 @@ namespace Akka.Remote.Tests.Transport{
             //Initialize handles
             handleA.ReadHandlerSource.SetResult(new ActorHandleEventListener(Self));
 
-            var akkaPDU = ByteString.CopyFromUtf8("AkkaPDU");
+            var akkaPDU = Encoding.UTF8.GetBytes("AkkaPDU");
 
             var exists = registry.ExistsAssociation(addressA, addressB);
             Assert.True(exists);

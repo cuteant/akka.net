@@ -6,14 +6,11 @@ using CuteAnt.Extensions.Serialization;
 using Hyperion;
 using MessagePack;
 using MessagePack.Resolvers;
-using Microsoft.Extensions.Logging;
 
 namespace Akka.Serialization
 {
     public sealed class LZ4MsgPackSerializer : Serializer
     {
-        private static readonly ILogger s_logger = TraceLogger.GetLogger<LZ4MsgPackSerializer>();
-
         private readonly MsgPackSerializerSettings _settings;
         private readonly LZ4MessagePackMessageFormatter _formatter;
         private readonly int _initialBufferSize;
@@ -48,18 +45,7 @@ namespace Akka.Serialization
             _formatter = new LZ4MessagePackMessageFormatter(resolver);
         }
 
-        public override byte[] ToBinary(object obj)
-        {
-            try
-            {
-                return _formatter.SerializeObject(obj, _initialBufferSize);
-            }
-            catch (Exception exc)
-            {
-                s_logger.LogWarning(exc, $"Cannot serialize object of type{obj?.GetType().TypeQualifiedName()}");
-                throw;
-            }
-        }
+        public override byte[] ToBinary(object obj) => _formatter.SerializeObject(obj, _initialBufferSize);
 
         public override object FromBinary(byte[] bytes, Type type) => _formatter.Deserialize(type, bytes);
 

@@ -5,78 +5,63 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System.Text;
 using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt.Reflection;
-using Google.Protobuf;
-using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
+using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
 
 namespace Akka.Remote.Serialization
 {
     internal static class WrappedPayloadSupport
     {
-        internal static readonly SerializedMessage Empty = new SerializedMessage();
-
         public static SerializedMessage PayloadToProto(ActorSystem system, object payload)
         {
-            if (payload == null) { return Empty; }
+            if (null == payload) { return null; }
 
-            var payloadProto = new SerializedMessage();
-            var serializer = system.Serialization.FindSerializerFor(payload);
+            var payloadType = payload.GetType();
+            var serializer = system.Serialization.FindSerializerForType(payloadType);
 
-            payloadProto.Message = serializer.ToByteString(payload);
-            payloadProto.SerializerId = serializer.Identifier;
+            var payloadProto = new SerializedMessage
+            {
+                Message = serializer.ToBinary(payload),
+                SerializerId = serializer.Identifier
+            };
 
             // get manifest
             if (serializer is SerializerWithStringManifest manifestSerializer)
             {
-                payloadProto.IsSerializerWithStringManifest = true;
-                var manifest = manifestSerializer.ManifestBytes(payload);
-                if (manifest != null)
-                {
-                    payloadProto.HasManifest = true;
-                    payloadProto.MessageManifest = ProtobufUtil.FromBytes(manifest);
-                }
-                else
-                {
-                    payloadProto.MessageManifest = ByteString.Empty;
-                }
+                payloadProto.ManifestMode = Protocol.MessageManifestMode.WithStringManifest;
+                payloadProto.MessageManifest = manifestSerializer.ManifestBytes(payload);
             }
-            else
+            else if (serializer.IncludeManifest)
             {
-                if (serializer.IncludeManifest)
-                {
-                    payloadProto.HasManifest = true;
-                    var typeKey = TypeSerializer.GetTypeKeyFromType(payload.GetType());
-                    payloadProto.TypeHashCode = typeKey.HashCode;
-                    payloadProto.MessageManifest = ProtobufUtil.FromBytes(typeKey.TypeName);
-                }
+                payloadProto.ManifestMode = Protocol.MessageManifestMode.IncludeManifest;
+                var typeKey = TypeSerializer.GetTypeKeyFromType(payloadType);
+                payloadProto.TypeHashCode = typeKey.HashCode;
+                payloadProto.MessageManifest = typeKey.TypeName;
             }
 
             return payloadProto;
         }
 
-        public static object PayloadFrom(ActorSystem system, SerializedMessage payload, object defaultValue = null)
+        public static object PayloadFrom(ActorSystem system, SerializedMessage payload)
         {
-            if (payload.IsSerializerWithStringManifest)
+            if (null == payload) { return null; }
+
+            switch (payload.ManifestMode)
             {
-                return system.Serialization.Deserialize(
-                    ProtobufUtil.GetBuffer(payload.Message),
-                    payload.SerializerId,
-                    payload.HasManifest ? payload.MessageManifest.ToStringUtf8() : null);
-            }
-            else if (payload.HasManifest)
-            {
-                return system.Serialization.Deserialize(
-                    ProtobufUtil.GetBuffer(payload.Message),
-                    payload.SerializerId,
-                    ProtobufUtil.GetBuffer(payload.MessageManifest), payload.TypeHashCode);
-            }
-            else
-            {
-                var msg = payload.Message;
-                if (null == msg || msg.IsEmpty) { return defaultValue; }
-                return system.Serialization.Deserialize(ProtobufUtil.GetBuffer(msg), payload.SerializerId);
+                case Protocol.MessageManifestMode.IncludeManifest:
+                    return system.Serialization.Deserialize(payload.Message, payload.SerializerId, payload.MessageManifest, payload.TypeHashCode);
+
+                case Protocol.MessageManifestMode.WithStringManifest:
+                    return system.Serialization.Deserialize(payload.Message, payload.SerializerId, Encoding.UTF8.GetString(payload.MessageManifest));
+
+                case Protocol.MessageManifestMode.None:
+                default:
+                    var msg = payload.Message;
+                    if (null == msg || msg.Length == 0) { return null; }
+                    return system.Serialization.Deserialize(msg, payload.SerializerId);
             }
         }
     }

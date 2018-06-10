@@ -6,16 +6,19 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Text;
 using Akka.Actor;
-using Akka.Persistence.Serialization.Proto.Msg;
+using Akka.Persistence.Serialization.Protocol;
 using Akka.Serialization;
 using CuteAnt.Reflection;
-using Google.Protobuf;
+using MessagePack;
 
 namespace Akka.Persistence.Serialization
 {
     public class PersistenceSnapshotSerializer : Serializer
     {
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+
         public PersistenceSnapshotSerializer(ExtendedActorSystem system) : base(system)
         {
             IncludeManifest = true;
@@ -25,42 +28,34 @@ namespace Akka.Persistence.Serialization
 
         public override byte[] ToBinary(object obj)
         {
-            if (obj is Snapshot snapShot) return GetPersistentPayload(snapShot).ToByteArray();
+            if (obj is Snapshot snapShot) return MessagePackSerializer.Serialize(GetPersistentPayload(snapShot), s_defaultResolver);
 
             throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{GetType()}]");
         }
 
         private PersistentPayload GetPersistentPayload(Snapshot snapshot)
         {
-            var serializer = system.Serialization.FindSerializerFor(snapshot.Data);
+            var snapshotData = snapshot.Data;
+            if (null == snapshotData) { return null; }
+
+            var snapshotDataType = snapshotData.GetType();
+            var serializer = system.Serialization.FindSerializerForType(snapshotDataType);
             var payload = new PersistentPayload();
 
             if (serializer is SerializerWithStringManifest manifestSerializer)
             {
-                payload.IsSerializerWithStringManifest = true;
-                var manifest = manifestSerializer.ManifestBytes(snapshot.Data);
-                if (manifest != null)
-                {
-                    payload.HasManifest = true;
-                    payload.PayloadManifest = ProtobufUtil.FromBytes(manifest);
-                }
-                else
-                {
-                    payload.PayloadManifest = ByteString.Empty;
-                }
+                payload.ManifestMode = MessageManifestMode.WithStringManifest;
+                payload.PayloadManifest = manifestSerializer.ManifestBytes(snapshotData);
             }
-            else
+            else if (serializer.IncludeManifest)
             {
-                if (serializer.IncludeManifest)
-                {
-                    payload.HasManifest = true;
-                    var typeKey = TypeSerializer.GetTypeKeyFromType(snapshot.Data.GetType());
-                    payload.TypeHashCode = typeKey.HashCode;
-                    payload.PayloadManifest = ProtobufUtil.FromBytes(typeKey.TypeName);
-                }
+                payload.ManifestMode = MessageManifestMode.IncludeManifest;
+                var typeKey = TypeSerializer.GetTypeKeyFromType(snapshotDataType);
+                payload.TypeHashCode = typeKey.HashCode;
+                payload.PayloadManifest = typeKey.TypeName;
             }
 
-            payload.Payload = serializer.ToByteString(snapshot.Data);
+            payload.Payload = serializer.ToBinary(snapshotData);
             payload.SerializerId = serializer.Identifier;
 
             return payload;
@@ -75,26 +70,23 @@ namespace Akka.Persistence.Serialization
 
         private Snapshot GetSnapshot(byte[] bytes)
         {
-            var payload = PersistentPayload.Parser.ParseFrom(bytes);
+            var payload = MessagePackSerializer.Deserialize<PersistentPayload>(bytes, s_defaultResolver);
 
-            if (payload.IsSerializerWithStringManifest)
+            object data;
+            switch (payload.ManifestMode)
             {
-                return new Snapshot(system.Serialization.Deserialize(
-                    ProtobufUtil.GetBuffer(payload.Payload),
-                    payload.SerializerId,
-                    payload.HasManifest ? payload.PayloadManifest.ToStringUtf8() : null));
+                case MessageManifestMode.IncludeManifest:
+                    data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId, payload.PayloadManifest, payload.TypeHashCode);
+                    break;
+                case MessageManifestMode.WithStringManifest:
+                    data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId, Encoding.UTF8.GetString(payload.PayloadManifest));
+                    break;
+                case MessageManifestMode.None:
+                default:
+                    data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId);
+                    break;
             }
-            else if (payload.HasManifest)
-            {
-                return new Snapshot(system.Serialization.Deserialize(
-                    ProtobufUtil.GetBuffer(payload.Payload),
-                    payload.SerializerId,
-                    ProtobufUtil.GetBuffer(payload.PayloadManifest), payload.TypeHashCode));
-            }
-            else
-            {
-                return new Snapshot(system.Serialization.Deserialize(ProtobufUtil.GetBuffer(payload.Payload), payload.SerializerId));
-            }
+            return new Snapshot(data);
         }
     }
 }

@@ -13,11 +13,10 @@ using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Cluster.Routing;
 using Akka.Serialization;
-using Akka.Util;
+using Akka.Remote.Serialization;
 using Akka.Util.Internal;
-using CuteAnt.Reflection;
-using Google.Protobuf;
-using AddressData = Akka.Remote.Serialization.Proto.Msg.AddressData;
+using MessagePack;
+using AddressData = Akka.Remote.Serialization.Protocol.AddressData;
 
 namespace Akka.Cluster.Serialization
 {
@@ -25,22 +24,24 @@ namespace Akka.Cluster.Serialization
     {
         private readonly Dictionary<Type, Func<byte[], object>> _fromBinaryMap;
 
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+
         public ClusterMessageSerializer(ExtendedActorSystem system) : base(system)
         {
             _fromBinaryMap = new Dictionary<Type, Func<byte[], object>>
             {
-                [typeof(ClusterHeartbeatSender.Heartbeat)] = bytes => new ClusterHeartbeatSender.Heartbeat(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
-                [typeof(ClusterHeartbeatSender.HeartbeatRsp)] = bytes => new ClusterHeartbeatSender.HeartbeatRsp(UniqueAddressFrom(Proto.Msg.UniqueAddress.Parser.ParseFrom(bytes))),
+                [typeof(ClusterHeartbeatSender.Heartbeat)] = bytes => new ClusterHeartbeatSender.Heartbeat(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
+                [typeof(ClusterHeartbeatSender.HeartbeatRsp)] = bytes => new ClusterHeartbeatSender.HeartbeatRsp(UniqueAddressFrom(MessagePackSerializer.Deserialize<Protocol.UniqueAddress>(bytes, s_defaultResolver))),
                 [typeof(GossipEnvelope)] = GossipEnvelopeFrom,
                 [typeof(GossipStatus)] = GossipStatusFrom,
                 [typeof(InternalClusterAction.Join)] = JoinFrom,
                 [typeof(InternalClusterAction.Welcome)] = WelcomeFrom,
-                [typeof(ClusterUserAction.Leave)] = bytes => new ClusterUserAction.Leave(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
-                [typeof(ClusterUserAction.Down)] = bytes => new ClusterUserAction.Down(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
+                [typeof(ClusterUserAction.Leave)] = bytes => new ClusterUserAction.Leave(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
+                [typeof(ClusterUserAction.Down)] = bytes => new ClusterUserAction.Down(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
                 [typeof(InternalClusterAction.InitJoin)] = bytes => InternalClusterAction.InitJoin.Instance,
-                [typeof(InternalClusterAction.InitJoinAck)] = bytes => new InternalClusterAction.InitJoinAck(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
-                [typeof(InternalClusterAction.InitJoinNack)] = bytes => new InternalClusterAction.InitJoinNack(AddressFrom(AddressData.Parser.ParseFrom(bytes))),
-                [typeof(InternalClusterAction.ExitingConfirmed)] = bytes => new InternalClusterAction.ExitingConfirmed(UniqueAddressFrom(Proto.Msg.UniqueAddress.Parser.ParseFrom(bytes))),
+                [typeof(InternalClusterAction.InitJoinAck)] = bytes => new InternalClusterAction.InitJoinAck(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
+                [typeof(InternalClusterAction.InitJoinNack)] = bytes => new InternalClusterAction.InitJoinNack(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
+                [typeof(InternalClusterAction.ExitingConfirmed)] = bytes => new InternalClusterAction.ExitingConfirmed(UniqueAddressFrom(MessagePackSerializer.Deserialize<Protocol.UniqueAddress>(bytes, s_defaultResolver))),
                 [typeof(ClusterRouterPool)] = ClusterRouterPoolFrom
             };
         }
@@ -52,9 +53,9 @@ namespace Akka.Cluster.Serialization
             switch (obj)
             {
                 case ClusterHeartbeatSender.Heartbeat heartbeat:
-                    return AddressToProto(heartbeat.From).ToByteArray();
+                    return MessagePackSerializer.Serialize(AddressToProto(heartbeat.From), s_defaultResolver);
                 case ClusterHeartbeatSender.HeartbeatRsp heartbeatRsp:
-                    return UniqueAddressToProto(heartbeatRsp.From).ToByteArray();
+                    return MessagePackSerializer.Serialize(UniqueAddressToProto(heartbeatRsp.From), s_defaultResolver);
                 case GossipEnvelope gossipEnvelope:
                     return GossipEnvelopeToProto(gossipEnvelope);
                 case GossipStatus gossipStatus:
@@ -64,17 +65,17 @@ namespace Akka.Cluster.Serialization
                 case InternalClusterAction.Welcome welcome:
                     return WelcomeMessageBuilder(welcome);
                 case ClusterUserAction.Leave leave:
-                    return AddressToProto(leave.Address).ToByteArray();
+                    return MessagePackSerializer.Serialize(AddressToProto(leave.Address), s_defaultResolver);
                 case ClusterUserAction.Down down:
-                    return AddressToProto(down.Address).ToByteArray();
+                    return MessagePackSerializer.Serialize(AddressToProto(down.Address), s_defaultResolver);
                 case InternalClusterAction.InitJoin _:
-                    return new Google.Protobuf.WellKnownTypes.Empty().ToByteArray();
+                    return CuteAnt.EmptyArray<byte>.Instance; // new Google.Protobuf.WellKnownTypes.Empty().ToByteArray();
                 case InternalClusterAction.InitJoinAck initJoinAck:
-                    return AddressToProto(initJoinAck.Address).ToByteArray();
+                    return MessagePackSerializer.Serialize(AddressToProto(initJoinAck.Address), s_defaultResolver);
                 case InternalClusterAction.InitJoinNack initJoinNack:
-                    return AddressToProto(initJoinNack.Address).ToByteArray();
+                    return MessagePackSerializer.Serialize(AddressToProto(initJoinNack.Address), s_defaultResolver);
                 case InternalClusterAction.ExitingConfirmed exitingConfirmed:
-                    return UniqueAddressToProto(exitingConfirmed.Address).ToByteArray();
+                    return MessagePackSerializer.Serialize(UniqueAddressToProto(exitingConfirmed.Address), s_defaultResolver);
                 case ClusterRouterPool pool:
                     return ClusterRouterPoolToByteArray(pool);
                 default:
@@ -97,33 +98,31 @@ namespace Akka.Cluster.Serialization
         //
         private static byte[] JoinToByteArray(InternalClusterAction.Join join)
         {
-            var message = new Proto.Msg.Join
-            {
-                Node = UniqueAddressToProto(join.Node)
-            };
-            message.Roles.AddRange(join.Roles);
-            return message.ToByteArray();
+            var message = new Protocol.Join(
+                UniqueAddressToProto(join.Node),
+                join.Roles.ToArray()
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
         private static InternalClusterAction.Join JoinFrom(byte[] bytes)
         {
-            var join = Proto.Msg.Join.Parser.ParseFrom(bytes);
+            var join = MessagePackSerializer.Deserialize<Protocol.Join>(bytes, s_defaultResolver);
             return new InternalClusterAction.Join(UniqueAddressFrom(join.Node), join.Roles.ToImmutableHashSet());
         }
 
         private static byte[] WelcomeMessageBuilder(InternalClusterAction.Welcome welcome)
         {
-            var welcomeProto = new Proto.Msg.Welcome
-            {
-                From = UniqueAddressToProto(welcome.From),
-                Gossip = GossipToProto(welcome.Gossip)
-            };
-            return welcomeProto.ToByteArray();
+            var welcomeProto = new Protocol.Welcome(
+                UniqueAddressToProto(welcome.From),
+                GossipToProto(welcome.Gossip)
+            );
+            return MessagePackSerializer.Serialize(welcomeProto, s_defaultResolver);
         }
 
         private static InternalClusterAction.Welcome WelcomeFrom(byte[] bytes)
         {
-            var welcomeProto = Proto.Msg.Welcome.Parser.ParseFrom(bytes);
+            var welcomeProto = MessagePackSerializer.Deserialize<Protocol.Welcome>(bytes, s_defaultResolver);
             return new InternalClusterAction.Welcome(UniqueAddressFrom(welcomeProto.From), GossipFrom(welcomeProto.Gossip));
         }
 
@@ -132,43 +131,41 @@ namespace Akka.Cluster.Serialization
         //
         private static byte[] GossipEnvelopeToProto(GossipEnvelope gossipEnvelope)
         {
-            var message = new Proto.Msg.GossipEnvelope
-            {
-                From = UniqueAddressToProto(gossipEnvelope.From),
-                To = UniqueAddressToProto(gossipEnvelope.To),
-                SerializedGossip = ProtobufUtil.FromBytes(GossipToProto(gossipEnvelope.Gossip).ToByteArray())
-            };
+            var message = new Protocol.GossipEnvelope(
+                UniqueAddressToProto(gossipEnvelope.From),
+                UniqueAddressToProto(gossipEnvelope.To),
+                MessagePackSerializer.Serialize(GossipToProto(gossipEnvelope.Gossip), s_defaultResolver)
+            );
 
-            return message.ToByteArray();
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
         private static GossipEnvelope GossipEnvelopeFrom(byte[] bytes)
         {
-            var gossipEnvelopeProto = Proto.Msg.GossipEnvelope.Parser.ParseFrom(bytes);
+            var gossipEnvelopeProto = MessagePackSerializer.Deserialize<Protocol.GossipEnvelope>(bytes, s_defaultResolver);
 
             return new GossipEnvelope(
                 UniqueAddressFrom(gossipEnvelopeProto.From),
                 UniqueAddressFrom(gossipEnvelopeProto.To),
-                GossipFrom(Proto.Msg.Gossip.Parser.ParseFrom(gossipEnvelopeProto.SerializedGossip)));
+                GossipFrom(MessagePackSerializer.Deserialize<Protocol.Gossip>(gossipEnvelopeProto.SerializedGossip, s_defaultResolver)));
         }
 
         private static byte[] GossipStatusToProto(GossipStatus gossipStatus)
         {
-            var allHashes = gossipStatus.Version.Versions.Keys.Select(x => x.ToString()).ToList();
+            var allHashes = gossipStatus.Version.Versions.Keys.Select(x => x.ToString()).ToArray();
             var hashMapping = allHashes.ZipWithIndex();
 
-            var message = new Proto.Msg.GossipStatus
-            {
-                From = UniqueAddressToProto(gossipStatus.From)
-            };
-            message.AllHashes.AddRange(allHashes);
-            message.Version = VectorClockToProto(gossipStatus.Version, hashMapping);
-            return message.ToByteArray();
+            var message = new Protocol.GossipStatus(
+                UniqueAddressToProto(gossipStatus.From),
+                allHashes,
+                VectorClockToProto(gossipStatus.Version, hashMapping)
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
         private static GossipStatus GossipStatusFrom(byte[] bytes)
         {
-            var gossipStatusProto = Proto.Msg.GossipStatus.Parser.ParseFrom(bytes);
+            var gossipStatusProto = MessagePackSerializer.Deserialize<Protocol.GossipStatus>(bytes, s_defaultResolver);
             return new GossipStatus(UniqueAddressFrom(gossipStatusProto.From), VectorClockFrom(gossipStatusProto.Version, gossipStatusProto.AllHashes));
         }
 
@@ -178,85 +175,32 @@ namespace Akka.Cluster.Serialization
 
         private byte[] ClusterRouterPoolToByteArray(ClusterRouterPool clusterRouterPool)
         {
-            var message = new Proto.Msg.ClusterRouterPool
-            {
-                Pool = PoolToProto(clusterRouterPool.Local),
-                Settings = ClusterRouterPoolSettingsToProto(clusterRouterPool.Settings)
-            };
-            return message.ToByteArray();
+            var message = new Protocol.ClusterRouterPool(
+                WrappedPayloadSupport.PayloadToProto(system, clusterRouterPool.Local),
+                ClusterRouterPoolSettingsToProto(clusterRouterPool.Settings)
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
         private ClusterRouterPool ClusterRouterPoolFrom(byte[] bytes)
         {
-            var clusterRouterPool = Proto.Msg.ClusterRouterPool.Parser.ParseFrom(bytes);
-            return new ClusterRouterPool(PoolFrom(clusterRouterPool.Pool), ClusterRouterPoolSettingsFrom(clusterRouterPool.Settings));
+            var clusterRouterPool = MessagePackSerializer.Deserialize<Protocol.ClusterRouterPool>(bytes, s_defaultResolver);
+            return new ClusterRouterPool(
+                (Akka.Routing.Pool)WrappedPayloadSupport.PayloadFrom(system, clusterRouterPool.Pool),
+                ClusterRouterPoolSettingsFrom(clusterRouterPool.Settings));
         }
 
-        private Proto.Msg.Pool PoolToProto(Akka.Routing.Pool pool)
+        private static Protocol.ClusterRouterPoolSettings ClusterRouterPoolSettingsToProto(ClusterRouterPoolSettings clusterRouterPoolSettings)
         {
-            var message = new Proto.Msg.Pool();
-            var serializer = system.Serialization.FindSerializerFor(pool);
-            message.SerializerId = (uint)serializer.Identifier;
-            message.Data = serializer.ToByteString(pool);
-            #region ## 苦竹 修改 ##
-            //message.Manifest = GetObjectManifest(serializer, pool);
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                message.IsSerializerWithStringManifest = true;
-                var manifest = manifestSerializer.ManifestBytes(pool);
-                if (manifest != null)
-                {
-                    message.HasManifest = true;
-                    message.Manifest = ProtobufUtil.FromBytes(manifest);
-                }
-                else
-                {
-                    message.Manifest = ByteString.Empty;
-                }
-            }
-            else
-            {
-                if (serializer.IncludeManifest)
-                {
-                    message.HasManifest = true;
-                    var typeKey = TypeSerializer.GetTypeKeyFromType(typeof(Akka.Routing.Pool));
-                    message.TypeHashCode = typeKey.HashCode;
-                    message.Manifest = ProtobufUtil.FromBytes(typeKey.TypeName);
-                }
-            }
-            #endregion
-            return message;
+            return new Protocol.ClusterRouterPoolSettings(
+                (uint)clusterRouterPoolSettings.TotalInstances,
+                (uint)clusterRouterPoolSettings.MaxInstancesPerNode,
+                clusterRouterPoolSettings.AllowLocalRoutees,
+                clusterRouterPoolSettings.UseRole ?? string.Empty
+            );
         }
 
-        private Akka.Routing.Pool PoolFrom(Proto.Msg.Pool poolProto)
-        {
-            if (poolProto.IsSerializerWithStringManifest)
-            {
-                return (Akka.Routing.Pool)system.Serialization.Deserialize(ProtobufUtil.GetBuffer(poolProto.Data), (int)poolProto.SerializerId, poolProto.HasManifest ? poolProto.Manifest.ToStringUtf8() : null);
-            }
-            else if (poolProto.HasManifest)
-            {
-                return (Akka.Routing.Pool)system.Serialization.Deserialize(ProtobufUtil.GetBuffer(poolProto.Data), (int)poolProto.SerializerId, ProtobufUtil.GetBuffer(poolProto.Manifest), poolProto.TypeHashCode);
-            }
-            else
-            {
-                return (Akka.Routing.Pool)system.Serialization.Deserialize(ProtobufUtil.GetBuffer(poolProto.Data), (int)poolProto.SerializerId);
-            }
-        }
-
-        private static Proto.Msg.ClusterRouterPoolSettings ClusterRouterPoolSettingsToProto(ClusterRouterPoolSettings clusterRouterPoolSettings)
-        {
-            var message = new Proto.Msg.ClusterRouterPoolSettings
-            {
-                TotalInstances = (uint)clusterRouterPoolSettings.TotalInstances,
-                MaxInstancesPerNode = (uint)clusterRouterPoolSettings.MaxInstancesPerNode,
-                AllowLocalRoutees = clusterRouterPoolSettings.AllowLocalRoutees,
-                UseRole = clusterRouterPoolSettings.UseRole ?? string.Empty
-            };
-            return message;
-        }
-
-        private static ClusterRouterPoolSettings ClusterRouterPoolSettingsFrom(Proto.Msg.ClusterRouterPoolSettings clusterRouterPoolSettingsProto)
+        private static ClusterRouterPoolSettings ClusterRouterPoolSettingsFrom(Protocol.ClusterRouterPoolSettings clusterRouterPoolSettingsProto)
         {
             return new ClusterRouterPoolSettings(
                 (int)clusterRouterPoolSettingsProto.TotalInstances,
@@ -269,55 +213,51 @@ namespace Akka.Cluster.Serialization
         // Gossip
         //
 
-        private static Proto.Msg.Gossip GossipToProto(Gossip gossip)
+        private static Protocol.Gossip GossipToProto(Gossip gossip)
         {
-            var allMembers = gossip.Members.ToList();
-            var allAddresses = gossip.Members.Select(x => x.UniqueAddress).ToList();
+            var allMembers = gossip.Members.ToArray();
+            var allAddresses = gossip.Members.Select(x => x.UniqueAddress).ToArray();
             var addressMapping = allAddresses.ZipWithIndex();
-            var allRoles = allMembers.Aggregate(ImmutableHashSet.Create<string>(), (set, member) => set.Union(member.Roles));
+            var allRoles = allMembers.Aggregate(ImmutableHashSet.Create<string>(), (set, member) => set.Union(member.Roles)).ToArray();
             var roleMapping = allRoles.ZipWithIndex();
-            var allHashes = gossip.Version.Versions.Keys.Select(x => x.ToString()).ToList();
+            var allHashes = gossip.Version.Versions.Keys.Select(x => x.ToString()).ToArray();
             var hashMapping = allHashes.ZipWithIndex();
 
             int MapUniqueAddress(UniqueAddress address) => MapWithErrorMessage(addressMapping, address, "address");
 
-            Proto.Msg.Member MemberToProto(Member m)
+            Protocol.Member MemberToProto(Member m)
             {
-                var protoMember = new Proto.Msg.Member
-                {
-                    AddressIndex = MapUniqueAddress(m.UniqueAddress),
-                    UpNumber = m.UpNumber,
-                    Status = (Proto.Msg.Member.Types.MemberStatus)m.Status
-                };
-                protoMember.RolesIndexes.AddRange(m.Roles.Select(s => MapWithErrorMessage(roleMapping, s, "role")));
-                return protoMember;
+                return new Protocol.Member(
+                    MapUniqueAddress(m.UniqueAddress),
+                    m.UpNumber,
+                    (Protocol.MemberStatus)m.Status,
+                    m.Roles.Select(s => MapWithErrorMessage(roleMapping, s, "role")).ToArray()
+                );
             }
 
             var reachabilityProto = ReachabilityToProto(gossip.Overview.Reachability, addressMapping);
-            var membersProtos = gossip.Members.Select((Func<Member, Proto.Msg.Member>)MemberToProto);
-            var seenProtos = gossip.Overview.Seen.Select((Func<UniqueAddress, int>)MapUniqueAddress);
+            var membersProtos = gossip.Members.Select(MemberToProto).ToArray();
+            var seenProtos = gossip.Overview.Seen.Select(MapUniqueAddress).ToArray();
 
-            var overview = new Proto.Msg.GossipOverview();
-            overview.Seen.AddRange(seenProtos);
-            overview.ObserverReachability.AddRange(reachabilityProto);
+            var overview = new Protocol.GossipOverview(seenProtos, reachabilityProto);
 
-            var message = new Proto.Msg.Gossip();
-            message.AllAddresses.AddRange(allAddresses.Select(UniqueAddressToProto));
-            message.AllRoles.AddRange(allRoles);
-            message.AllHashes.AddRange(allHashes);
-            message.Members.AddRange(membersProtos);
+            var message = new Protocol.Gossip();
+            message.AllAddresses = allAddresses.Select(UniqueAddressToProto).ToArray();
+            message.AllRoles = allRoles;
+            message.AllHashes = allHashes;
+            message.Members = membersProtos;
             message.Overview = overview;
             message.Version = VectorClockToProto(gossip.Version, hashMapping);
             return message;
         }
 
-        private static Gossip GossipFrom(Proto.Msg.Gossip gossip)
+        private static Gossip GossipFrom(Protocol.Gossip gossip)
         {
             var addressMapping = gossip.AllAddresses.Select(UniqueAddressFrom).ToList();
             var roleMapping = gossip.AllRoles.ToList();
             var hashMapping = gossip.AllHashes.ToList();
 
-            Member MemberFromProto(Proto.Msg.Member member) =>
+            Member MemberFromProto(Protocol.Member member) =>
                 Member.Create(
                     addressMapping[member.AddressIndex],
                     member.UpNumber,
@@ -332,35 +272,33 @@ namespace Akka.Cluster.Serialization
             return new Gossip(members, overview, VectorClockFrom(gossip.Version, hashMapping));
         }
 
-        private static IEnumerable<Proto.Msg.ObserverReachability> ReachabilityToProto(Reachability reachability, Dictionary<UniqueAddress, int> addressMapping)
+        private static List<Protocol.ObserverReachability> ReachabilityToProto(Reachability reachability, Dictionary<UniqueAddress, int> addressMapping)
         {
-            var builderList = new List<Proto.Msg.ObserverReachability>();
+            var builderList = new List<Protocol.ObserverReachability>(reachability.Versions.Count);
             foreach (var version in reachability.Versions)
             {
                 var subjectReachability = reachability.RecordsFrom(version.Key).Select(
                     r =>
                     {
-                        var sr = new Proto.Msg.SubjectReachability
-                        {
-                            AddressIndex = MapWithErrorMessage(addressMapping, r.Subject, "address"),
-                            Status = (Proto.Msg.SubjectReachability.Types.ReachabilityStatus)r.Status,
-                            Version = r.Version
-                        };
+                        var sr = new Protocol.SubjectReachability(
+                            MapWithErrorMessage(addressMapping, r.Subject, "address"),
+                            (Protocol.ReachabilityStatus)r.Status,
+                            r.Version
+                        );
                         return sr;
-                    });
+                    }).ToArray();
 
-                var observerReachability = new Proto.Msg.ObserverReachability
-                {
-                    AddressIndex = MapWithErrorMessage(addressMapping, version.Key, "address"),
-                    Version = version.Value
-                };
-                observerReachability.SubjectReachability.AddRange(subjectReachability);
+                var observerReachability = new Protocol.ObserverReachability(
+                    MapWithErrorMessage(addressMapping, version.Key, "address"),
+                    version.Value,
+                    subjectReachability
+                );
                 builderList.Add(observerReachability);
             }
             return builderList;
         }
 
-        private static Reachability ReachabilityFromProto(IEnumerable<Proto.Msg.ObserverReachability> reachabilityProto, List<UniqueAddress> addressMapping)
+        private static Reachability ReachabilityFromProto(IEnumerable<Protocol.ObserverReachability> reachabilityProto, List<UniqueAddress> addressMapping)
         {
             var recordBuilder = ImmutableList.CreateBuilder<Reachability.Record>();
             var versionsBuilder = ImmutableDictionary.CreateBuilder<UniqueAddress, long>();
@@ -380,25 +318,16 @@ namespace Akka.Cluster.Serialization
             return new Reachability(recordBuilder.ToImmutable(), versionsBuilder.ToImmutable());
         }
 
-        private static Proto.Msg.VectorClock VectorClockToProto(VectorClock vectorClock, Dictionary<string, int> hashMapping)
+        private static Protocol.VectorClock VectorClockToProto(VectorClock vectorClock, Dictionary<string, int> hashMapping)
         {
-            var message = new Proto.Msg.VectorClock();
-
-            foreach (var clock in vectorClock.Versions)
-            {
-                var version = new Proto.Msg.VectorClock.Types.Version
-                {
-                    HashIndex = MapWithErrorMessage(hashMapping, clock.Key.ToString(), "hash"),
-                    Timestamp = clock.Value
-                };
-                message.Versions.Add(version);
-            }
-            message.Timestamp = 0L;
-
-            return message;
+            var versions = vectorClock.Versions.Select(clock => new Protocol.Version(
+                    MapWithErrorMessage(hashMapping, clock.Key.ToString(), "hash"),
+                    clock.Value
+                )).ToArray();
+            return new Protocol.VectorClock(0L, versions);
         }
 
-        private static VectorClock VectorClockFrom(Proto.Msg.VectorClock version, IList<string> hashMapping)
+        private static VectorClock VectorClockFrom(Protocol.VectorClock version, IList<string> hashMapping)
         {
             return VectorClock.Create(version.Versions.ToImmutableSortedDictionary(version1 =>
                     VectorClock.Node.FromHash(hashMapping[version1.HashIndex]), version1 => version1.Timestamp));
@@ -419,14 +348,12 @@ namespace Akka.Cluster.Serialization
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static AddressData AddressToProto(Address address)
         {
-            var message = new AddressData
-            {
-                System = address.System,
-                Hostname = address.Host,
-                Port = (uint)(address.Port ?? 0),
-                Protocol = address.Protocol
-            };
-            return message;
+            return new AddressData(
+                address.System,
+                address.Host,
+                (uint)(address.Port ?? 0),
+                address.Protocol
+            );
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -440,18 +367,13 @@ namespace Akka.Cluster.Serialization
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Proto.Msg.UniqueAddress UniqueAddressToProto(UniqueAddress uniqueAddress)
+        private static Protocol.UniqueAddress UniqueAddressToProto(UniqueAddress uniqueAddress)
         {
-            var message = new Proto.Msg.UniqueAddress
-            {
-                Address = AddressToProto(uniqueAddress.Address),
-                Uid = (uint)uniqueAddress.Uid
-            };
-            return message;
+            return new Protocol.UniqueAddress(AddressToProto(uniqueAddress.Address), (uint)uniqueAddress.Uid);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static UniqueAddress UniqueAddressFrom(Proto.Msg.UniqueAddress uniqueAddressProto)
+        private static UniqueAddress UniqueAddressFrom(Protocol.UniqueAddress uniqueAddressProto)
         {
             return new UniqueAddress(AddressFrom(uniqueAddressProto.Address), (int)uniqueAddressProto.Uid);
         }

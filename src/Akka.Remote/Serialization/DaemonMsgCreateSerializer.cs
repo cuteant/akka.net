@@ -6,14 +6,16 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Routing;
 using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt;
 using CuteAnt.Reflection;
-using Google.Protobuf;
+using MessagePack;
 
 namespace Akka.Remote.Serialization
 {
@@ -22,6 +24,8 @@ namespace Akka.Remote.Serialization
     /// </summary>
     public class DaemonMsgCreateSerializer : Serializer
     {
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DaemonMsgCreateSerializer"/> class.
         /// </summary>
@@ -38,15 +42,7 @@ namespace Akka.Remote.Serialization
         {
             if (obj is DaemonMsgCreate msg)
             {
-                var message = new Proto.Msg.DaemonMsgCreateData
-                {
-                    Props = PropsToProto(msg.Props),
-                    Deploy = DeployToProto(msg.Deploy),
-                    Path = msg.Path,
-                    Supervisor = SerializeActorRef(msg.Supervisor)
-                };
-
-                return message.ToByteArray();
+                return MessagePackSerializer.Serialize(new Protocol.DaemonMsgCreateData(PropsToProto(msg.Props), DeployToProto(msg.Deploy), msg.Path, SerializeActorRef(msg.Supervisor)), s_defaultResolver);
             }
 
             throw new ArgumentException($"Can't serialize a non-DaemonMsgCreate message using DaemonMsgCreateSerializer [{obj.GetType()}]");
@@ -55,7 +51,7 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            var proto = Proto.Msg.DaemonMsgCreateData.Parser.ParseFrom(bytes);
+            var proto = MessagePackSerializer.Deserialize<Protocol.DaemonMsgCreateData>(bytes, s_defaultResolver);
 
             return new DaemonMsgCreate(
                 PropsFromProto(proto.Props),
@@ -67,58 +63,49 @@ namespace Akka.Remote.Serialization
         //
         // Props
         //
-        private Proto.Msg.PropsData PropsToProto(Props props)
+        private Protocol.PropsData PropsToProto(Props props)
         {
-            var propsBuilder = new Proto.Msg.PropsData
-            {
-                Clazz = props.Type.TypeQualifiedName(),
-                Deploy = DeployToProto(props.Deploy)
-            };
-            foreach (object arg in props.Arguments)
-            {
-                propsBuilder.Args.Add(WrappedPayloadSupport.PayloadToProto(system, arg));
-            }
+            return new Protocol.PropsData(
+                DeployToProto(props.Deploy),
+                props.Type.TypeQualifiedName(),
+                props.Arguments.Select(_ => WrappedPayloadSupport.PayloadToProto(system, _)).ToArray());
 
-            return propsBuilder;
         }
 
-        private Props PropsFromProto(Proto.Msg.PropsData protoProps)
+        private Props PropsFromProto(Protocol.PropsData protoProps)
         {
             var actorClass = TypeUtils.ResolveType(protoProps.Clazz);
-            var args = new object[protoProps.Args.Count];
-            for (int i = 0; i < args.Length; i++)
+            var propsArgs = protoProps.Args;
+            if (propsArgs != null)
             {
-                args[i] = WrappedPayloadSupport.PayloadFrom(system, protoProps.Args[i]);
+                var args = new object[propsArgs.Length];
+                for (int i = 0; i < args.Length; i++)
+                {
+                    args[i] = WrappedPayloadSupport.PayloadFrom(system, propsArgs[i]);
+                }
+                return new Props(DeployFromProto(protoProps.Deploy), actorClass, args);
             }
-
-            return new Props(DeployFromProto(protoProps.Deploy), actorClass, args);
+            else
+            {
+                return new Props(DeployFromProto(protoProps.Deploy), actorClass, EmptyArray<object>.Instance);
+            }
         }
 
         //
         // Deploy
         //
-        private Proto.Msg.DeployData DeployToProto(Deploy deploy)
+        private Protocol.DeployData DeployToProto(Deploy deploy)
         {
-            var deployBuilder = new Proto.Msg.DeployData
-            {
-                Path = deploy.Path
-            };
-
-            deployBuilder.Config = WrappedPayloadSupport.PayloadToProto(system, deploy.Config);
-
-            deployBuilder.RouterConfig = deploy.RouterConfig != NoRouter.Instance ? WrappedPayloadSupport.PayloadToProto(system, deploy.RouterConfig) : WrappedPayloadSupport.Empty;
-
-            deployBuilder.Scope = deploy.Scope != Deploy.NoScopeGiven ? WrappedPayloadSupport.PayloadToProto(system, deploy.Scope) : WrappedPayloadSupport.Empty;
-
-            if (deploy.Dispatcher != Deploy.NoDispatcherGiven)
-            {
-                deployBuilder.Dispatcher = deploy.Dispatcher;
-            }
-
-            return deployBuilder;
+            return new Protocol.DeployData(
+                deploy.Path,
+                WrappedPayloadSupport.PayloadToProto(system, deploy.Config),
+                deploy.RouterConfig != NoRouter.Instance ? WrappedPayloadSupport.PayloadToProto(system, deploy.RouterConfig) : null,
+                deploy.Scope != Deploy.NoScopeGiven ? WrappedPayloadSupport.PayloadToProto(system, deploy.Scope) : null,
+                deploy.Dispatcher != Deploy.NoDispatcherGiven ? deploy.Dispatcher : null
+                );
         }
 
-        private Deploy DeployFromProto(Proto.Msg.DeployData protoDeploy)
+        private Deploy DeployFromProto(Protocol.DeployData protoDeploy)
         {
             var config = WrappedPayloadSupport.PayloadFrom(system, protoDeploy.Config)?.AsInstanceOf<Config>() ?? Config.Empty;
 
@@ -136,15 +123,12 @@ namespace Akka.Remote.Serialization
         //
         // IActorRef
         //
-        private static Proto.Msg.ActorRefData SerializeActorRef(IActorRef actorRef)
+        private static Protocol.ActorRefData SerializeActorRef(IActorRef actorRef)
         {
-            return new Proto.Msg.ActorRefData
-            {
-                Path = Akka.Serialization.Serialization.SerializedActorPath(actorRef)
-            };
+            return new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(actorRef));
         }
 
-        private IActorRef DeserializeActorRef(Proto.Msg.ActorRefData actorRefData)
+        private IActorRef DeserializeActorRef(Protocol.ActorRefData actorRefData)
         {
             return system.Provider.ResolveActorRef(actorRefData.Path);
         }

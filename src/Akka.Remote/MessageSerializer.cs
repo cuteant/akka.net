@@ -5,40 +5,48 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System;
+using System.Text;
 using Akka.Actor;
 using Akka.Serialization;
+using Akka.Util;
 using CuteAnt.Reflection;
-using Google.Protobuf;
-using SerializedMessage = Akka.Remote.Serialization.Proto.Msg.Payload;
+using Microsoft.Extensions.Logging;
+using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
 
 namespace Akka.Remote
 {
     /// <summary>Class MessageSerializer.</summary>
     internal static class MessageSerializer
     {
+        private static readonly ILogger s_logger = TraceLogger.GetLogger(typeof(MessageSerializer));
+
         /// <summary>Deserializes the specified message.</summary>
         /// <param name="system">The system.</param>
         /// <param name="messageProtocol">The message protocol.</param>
         /// <returns>System.Object.</returns>
         public static object Deserialize(ActorSystem system, SerializedMessage messageProtocol)
         {
-            if (messageProtocol.IsSerializerWithStringManifest)
+            try
             {
-                return system.Serialization.Deserialize(
-                    ProtobufUtil.GetBuffer(messageProtocol.Message),
-                    messageProtocol.SerializerId,
-                    messageProtocol.HasManifest ? messageProtocol.MessageManifest.ToStringUtf8() : null);
+                var manifest = messageProtocol.MessageManifest;
+                switch (messageProtocol.ManifestMode)
+                {
+                    case Serialization.Protocol.MessageManifestMode.IncludeManifest:
+                        return system.Serialization.Deserialize(messageProtocol.Message, messageProtocol.SerializerId, manifest, messageProtocol.TypeHashCode);
+
+                    case Serialization.Protocol.MessageManifestMode.WithStringManifest:
+                        return system.Serialization.Deserialize(messageProtocol.Message, messageProtocol.SerializerId, Encoding.UTF8.GetString(manifest));
+
+                    case Serialization.Protocol.MessageManifestMode.None:
+                    default:
+                        return system.Serialization.Deserialize(messageProtocol.Message, messageProtocol.SerializerId);
+                }
             }
-            else if (messageProtocol.HasManifest)
+            catch (Exception exc)
             {
-                return system.Serialization.Deserialize(
-                    ProtobufUtil.GetBuffer(messageProtocol.Message),
-                    messageProtocol.SerializerId,
-                    ProtobufUtil.GetBuffer(messageProtocol.MessageManifest), messageProtocol.TypeHashCode);
-            }
-            else
-            {
-                return system.Serialization.Deserialize(ProtobufUtil.GetBuffer(messageProtocol.Message), messageProtocol.SerializerId);
+                s_logger.LogWarning(exc, $"Unimplemented deserialization of message with serializerId [{messageProtocol.SerializerId}]");
+                throw;
             }
         }
 
@@ -49,43 +57,37 @@ namespace Akka.Remote
         /// <returns>SerializedMessage.</returns>
         public static SerializedMessage Serialize(ActorSystem system, Address address, object message)
         {
-            var objectType = message.GetType();
-            Serializer serializer = system.Serialization.FindSerializerForType(objectType);
+            try
+            {
+                var objectType = message.GetType();
+                var serializer = system.Serialization.FindSerializerForType(objectType);
 
-            var serializedMsg = new SerializedMessage
-            {
-                // ## 苦竹 修改 ##
-                //Message = ByteString.CopyFrom(serializer.ToBinaryWithAddress(address, message)),
-                Message = serializer.ToByteStringWithAddress(address, message),
-                SerializerId = serializer.Identifier
-            };
+                var serializedMsg = new SerializedMessage
+                {
+                    Message = serializer.ToBinaryWithAddress(address, message),
+                    SerializerId = serializer.Identifier
+                };
 
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                serializedMsg.IsSerializerWithStringManifest = true;
-                var manifest = manifestSerializer.ManifestBytes(message);
-                if (manifest != null)
+                if (serializer is SerializerWithStringManifest manifestSerializer)
                 {
-                    serializedMsg.HasManifest = true;
-                    serializedMsg.MessageManifest = ProtobufUtil.FromBytes(manifest);
+                    serializedMsg.ManifestMode = Serialization.Protocol.MessageManifestMode.WithStringManifest;
+                    serializedMsg.MessageManifest = manifestSerializer.ManifestBytes(message);
                 }
-                else
+                else if (serializer.IncludeManifest)
                 {
-                    serializedMsg.MessageManifest = ByteString.Empty;
-                }
-            }
-            else
-            {
-                if (serializer.IncludeManifest)
-                {
-                    serializedMsg.HasManifest = true;
+                    serializedMsg.ManifestMode = Serialization.Protocol.MessageManifestMode.IncludeManifest;
                     var typeKey = TypeSerializer.GetTypeKeyFromType(objectType);
                     serializedMsg.TypeHashCode = typeKey.HashCode;
-                    serializedMsg.MessageManifest = ProtobufUtil.FromBytes(typeKey.TypeName);
+                    serializedMsg.MessageManifest = typeKey.TypeName;
                 }
-            }
 
-            return serializedMsg;
+                return serializedMsg;
+            }
+            catch (Exception exc)
+            {
+                s_logger.LogWarning(exc, $"Cannot serialize object of type{message?.GetType().TypeQualifiedName()}");
+                throw;
+            }
         }
     }
 }
