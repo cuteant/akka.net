@@ -52,7 +52,7 @@ namespace Akka.Remote.Serialization
             switch (payload.ManifestMode)
             {
                 case Protocol.MessageManifestMode.IncludeManifest:
-                    return system.Serialization.Deserialize(payload.Message, payload.SerializerId, payload.MessageManifest, payload.TypeHashCode);
+                    return system.Serialization.Deserialize(payload.Message, payload.SerializerId, new TypeKey(payload.TypeHashCode, payload.MessageManifest));
 
                 case Protocol.MessageManifestMode.WithStringManifest:
                     return system.Serialization.Deserialize(payload.Message, payload.SerializerId, Encoding.UTF8.GetString(payload.MessageManifest));

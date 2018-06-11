@@ -76,7 +76,7 @@ namespace Akka.Persistence.Serialization
             switch (payload.ManifestMode)
             {
                 case MessageManifestMode.IncludeManifest:
-                    data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId, payload.PayloadManifest, payload.TypeHashCode);
+                    data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId, new TypeKey(payload.TypeHashCode, payload.PayloadManifest));
                     break;
                 case MessageManifestMode.WithStringManifest:
                     data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId, Encoding.UTF8.GetString(payload.PayloadManifest));

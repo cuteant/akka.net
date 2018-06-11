@@ -195,30 +195,29 @@ namespace Akka.Serialization
         /// optional type hint to the Serializer.</summary>
         /// <param name="bytes">TBD</param>
         /// <param name="serializerId">TBD</param>
-        /// <param name="typeName">TBD</param>
-        /// <param name="hashCode">TBD</param>
+        /// <param name="typeKey">TBD</param>
         /// <exception cref="SerializationException">
         /// This exception is thrown if the system cannot find the serializer with the given
-        /// <paramref name="serializerId"/> or it couldn't find the given <paramref name="typeName"/>
+        /// <paramref name="serializerId"/> or it couldn't find the given <paramref name="typeKey"/>
         /// with the given <paramref name="serializerId"/>.</exception>
         /// <returns>The resulting object</returns>
-        public object Deserialize(byte[] bytes, int serializerId, byte[] typeName, int hashCode)
+        public object Deserialize(byte[] bytes, int serializerId, in TypeKey typeKey)
         {
             if (_serializersById.TryGetValue(serializerId, out var serializer))
             {
-                if (null == typeName)
-                {
-                    return serializer.FromBinary(bytes, null);
-                }
+                //if (null == typeName)
+                //{
+                //    return serializer.FromBinary(bytes, null);
+                //}
 
                 Type type;
                 try
                 {
-                    type = TypeSerializer.GetTypeFromTypeKey(new TypeKey(hashCode, typeName));
+                    type = TypeSerializer.GetTypeFromTypeKey(typeKey);
                 }
                 catch (Exception ex)
                 {
-                    throw new SerializationException($"Cannot find manifest class [{Encoding.UTF8.GetString(typeName)}] for serializer with id [{serializerId}].", ex);
+                    throw new SerializationException($"Cannot find manifest class [{Encoding.UTF8.GetString(typeKey.TypeName)}] for serializer with id [{serializerId}].", ex);
                 }
                 return serializer.FromBinary(bytes, type);
             }
