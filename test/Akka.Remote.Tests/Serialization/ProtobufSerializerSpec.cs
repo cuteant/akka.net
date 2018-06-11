@@ -10,8 +10,9 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Remote.Configuration;
 using Akka.Serialization;
-using Akka.Remote.Serialization.Proto.Msg;
+using Akka.Remote.Serialization.Protocol;
 using Akka.TestKit;
+using MessagePack;
 using FluentAssertions;
 using Xunit;
 
@@ -26,12 +27,15 @@ namespace Akka.Remote.Tests.Serialization
         [Fact]
         public void Can_serialize_ProtobufMessage()
         {
-            var message = new AddressData();
-            message.System = "sys";
-            message.Hostname = "localhost";
-            message.Protocol = "akka.tcp";
-            message.Port = 54645;
-            AssertEqual(message);
+            var message = new AddressData("sys", "localhost", 54645, "akka.tcp");
+            //AssertEqual(message);
+
+            var serializedBytes = MessagePackSerializer.Serialize(message);
+            var deserialized =MessagePackSerializer.Deserialize<AddressData>(serializedBytes);
+            Assert.Equal(message.System, deserialized.System);
+            Assert.Equal(message.Hostname, deserialized.Hostname);
+            Assert.Equal(message.Port, deserialized.Port);
+            Assert.Equal(message.Protocol, deserialized.Protocol);
         }
 
         private T AssertAndReturn<T>(T message)

@@ -737,23 +737,25 @@ namespace Akka.Remote
 
             protected override void TellInternal(object message, IActorRef sender)
             {
-                if (message is EndpointManager.Send send)
+                switch (message)
                 {
-                    if (send.Seq == null)
-                    {
-                        base.TellInternal(send.Message, send.SenderOption ?? ActorRefs.NoSender);
-                    }
-                }
-                else if (message is DeadLetter deadLetter && deadLetter.Message is EndpointManager.Send deadSend)
-                {
-                    if (deadSend.Seq == null)
-                    {
-                        base.TellInternal(deadSend.Message, deadSend.SenderOption ?? ActorRefs.NoSender);
-                    }
-                }
-                else
-                {
-                    base.TellInternal(message, sender);
+                    case EndpointManager.Send send:
+                        if (send.Seq == null)
+                        {
+                            base.TellInternal(send.Message, send.SenderOption ?? ActorRefs.NoSender);
+                        }
+                        break;
+
+                    case DeadLetter deadLetter when deadLetter.Message is EndpointManager.Send deadSend:
+                        if (deadSend.Seq == null)
+                        {
+                            base.TellInternal(deadSend.Message, deadSend.SenderOption ?? ActorRefs.NoSender);
+                        }
+                        break;
+
+                    default:
+                        base.TellInternal(message, sender);
+                        break;
                 }
             }
         }

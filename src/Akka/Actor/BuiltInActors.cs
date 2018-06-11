@@ -41,12 +41,20 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            if(message is Terminated)
-                Context.Stop(Self);
-            else if(message is StopChild)
-                Context.Stop(((StopChild)message).Child);
-            else
-                Context.System.DeadLetters.Tell(new DeadLetter(message, Sender, Self), Sender);
+            switch (message)
+            {
+                case Terminated _:
+                    Context.Stop(Self);
+                    break;
+
+                case StopChild stopChild:
+                    Context.Stop(stopChild.Child);
+                    break;
+
+                default:
+                    Context.System.DeadLetters.Tell(new DeadLetter(message, Sender, Self), Sender);
+                    break;
+            }
             return true;
         }
 
@@ -86,63 +94,63 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            if (message is Terminated terminated)
-            {
-                var terminatedActor = terminated.ActorRef;
-                if (_userGuardian.Equals(terminatedActor))
-                {
-                    // time for the systemGuardian to stop, but first notify all the
-                    // termination hooks, they will reply with TerminationHookDone
-                    // and when all are done the systemGuardian is stopped
-                    Context.Become(Terminating);
-                    foreach (var terminationHook in _terminationHooks)
-                    {
-                        terminationHook.Tell(TerminationHook.Instance);
-                    }
-                    StopWhenAllTerminationHooksDone();
-                }
-                else
-                {
-                    // a registered, and watched termination hook terminated before
-                    // termination process of guardian has started
-                    _terminationHooks.Remove(terminatedActor);
-                }
-                return true;
-            }
-
-            if (message is StopChild stopChild)
-            {
-                Context.Stop(stopChild.Child);
-                return true;
-            }
             var sender = Sender;
-
-            if (message is RegisterTerminationHook registerTerminationHook && !ReferenceEquals(sender, Context.System.DeadLetters))
+            switch (message)
             {
-                _terminationHooks.Add(sender);
-                Context.Watch(sender);
-                return true;
+                case Terminated terminated:
+                    var terminatedActor = terminated.ActorRef;
+                    if (_userGuardian.Equals(terminatedActor))
+                    {
+                        // time for the systemGuardian to stop, but first notify all the
+                        // termination hooks, they will reply with TerminationHookDone
+                        // and when all are done the systemGuardian is stopped
+                        Context.Become(Terminating);
+                        foreach (var terminationHook in _terminationHooks)
+                        {
+                            terminationHook.Tell(TerminationHook.Instance);
+                        }
+                        StopWhenAllTerminationHooksDone();
+                    }
+                    else
+                    {
+                        // a registered, and watched termination hook terminated before
+                        // termination process of guardian has started
+                        _terminationHooks.Remove(terminatedActor);
+                    }
+                    return true;
+
+                case StopChild stopChild:
+                    Context.Stop(stopChild.Child);
+                    return true;
+
+                case RegisterTerminationHook registerTerminationHook when !ReferenceEquals(sender, Context.System.DeadLetters):
+                    _terminationHooks.Add(sender);
+                    Context.Watch(sender);
+                    return true;
+
+                default:
+                    Context.System.DeadLetters.Tell(new DeadLetter(message, sender, Self), sender);
+                    return true;
             }
-            Context.System.DeadLetters.Tell(new DeadLetter(message, sender, Self), sender);
-            return true;
         }
 
         private bool Terminating(object message)
         {
-            if (message is Terminated terminated)
-            {
-                StopWhenAllTerminationHooksDone(terminated.ActorRef);
-                return true;
-            }
             var sender = Sender;
-
-            if (message is TerminationHookDone terminationHookDone)
+            switch (message)
             {
-                StopWhenAllTerminationHooksDone(sender);
-                return true;
+                case Terminated terminated:
+                    StopWhenAllTerminationHooksDone(terminated.ActorRef);
+                    return true;
+
+                case TerminationHookDone terminationHookDone:
+                    StopWhenAllTerminationHooksDone(sender);
+                    return true;
+
+                default:
+                    Context.System.DeadLetters.Tell(new DeadLetter(message, sender, Self), sender);
+                    return true;
             }
-            Context.System.DeadLetters.Tell(new DeadLetter(message, sender, Self), sender);
-            return true;
         }
 
         private void StopWhenAllTerminationHooksDone(IActorRef terminatedActor)
@@ -200,18 +208,22 @@ namespace Akka.Actor
         /// <exception cref="InvalidMessageException">This exception is thrown if the given <paramref name="message"/> is undefined.</exception>
         protected override void TellInternal(object message, IActorRef sender)
         {
-            if (message == null) throw new InvalidMessageException("Message is null");
-            if (message is Identify i)
+            switch (message)
             {
-                sender.Tell(new ActorIdentity(i.MessageId, ActorRefs.Nobody));
-                return;
+                case null:
+                    throw new InvalidMessageException("Message is null");
+
+                case Identify i:
+                    sender.Tell(new ActorIdentity(i.MessageId, ActorRefs.Nobody));
+                    return;
+                case DeadLetter d:
+                    if (!SpecialHandle(d.Message, d.Sender)) { _eventStream.Publish(d); }
+                    return;
+
+                default:
+                    if (!SpecialHandle(message, sender)) { _eventStream.Publish(new DeadLetter(message, sender.IsNobody() ? Provider.DeadLetters : sender, this)); }
+                    return;
             }
-            if (message is DeadLetter d)
-            {
-                if (!SpecialHandle(d.Message, d.Sender)) { _eventStream.Publish(d); }
-                return;
-            }
-            if (!SpecialHandle(message, sender)) { _eventStream.Publish(new DeadLetter(message, sender.IsNobody() ? Provider.DeadLetters : sender, this)); }
         }
 
         /// <summary>
