@@ -2,7 +2,7 @@
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
-using CuteAnt.Extensions.Serialization;
+using CuteAnt;
 using Hyperion;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -12,7 +12,7 @@ namespace Akka.Serialization
     public sealed class LZ4MsgPackSerializer : Serializer
     {
         private readonly MsgPackSerializerSettings _settings;
-        private readonly LZ4MessagePackMessageFormatter _formatter;
+        private readonly IFormatterResolver _resolver;
         private readonly int _initialBufferSize;
 
         static LZ4MsgPackSerializer() => MsgPackSerializerHelper.Register();
@@ -39,15 +39,18 @@ namespace Akka.Serialization
                     surrogates: new[] { akkaSurrogate }
                 ));
 
-            var resolver = new DefaultResolver();
-            resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
-            resolver.Context.Add(MsgPackSerializerHelper.ActorSystem, system);
-            _formatter = new LZ4MessagePackMessageFormatter(resolver);
+            _resolver = new DefaultResolver();
+            _resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
+            _resolver.Context.Add(MsgPackSerializerHelper.ActorSystem, system);
         }
 
-        public override byte[] ToBinary(object obj) => _formatter.SerializeObject(obj, _initialBufferSize);
+        public override byte[] ToBinary(object obj)
+        {
+            if (null == obj) { return EmptyArray<byte>.Instance; }
+            return LZ4MessagePackSerializer.Serialize(obj, _resolver);
+        }
 
-        public override object FromBinary(byte[] bytes, Type type) => _formatter.Deserialize(type, bytes);
+        public override object FromBinary(byte[] bytes, Type type) => LZ4MessagePackSerializer.NonGeneric.Deserialize(type, new ArraySegment<byte>(bytes, 0, bytes.Length), _resolver);
 
         public override int Identifier => -2;
 

@@ -2,7 +2,7 @@
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
-using CuteAnt.Extensions.Serialization;
+using CuteAnt;
 using Hyperion;
 using MessagePack;
 using MessagePack.Resolvers;
@@ -12,7 +12,7 @@ namespace Akka.Serialization
     public sealed class MsgPackSerializer : Serializer
     {
         private readonly MsgPackSerializerSettings _settings;
-        private readonly MessagePackMessageFormatter _formatter;
+        private readonly IFormatterResolver _resolver;
         private readonly int _initialBufferSize;
 
         static MsgPackSerializer() => MsgPackSerializerHelper.Register();
@@ -39,15 +39,18 @@ namespace Akka.Serialization
                     surrogates: new[] { akkaSurrogate }
                 ));
 
-            var resolver = new DefaultResolver();
-            resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
-            resolver.Context.Add(MsgPackSerializerHelper.ActorSystem, system);
-            _formatter = new MessagePackMessageFormatter(resolver);
+            _resolver = new DefaultResolver();
+            _resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
+            _resolver.Context.Add(MsgPackSerializerHelper.ActorSystem, system);
         }
 
-        public override byte[] ToBinary(object obj) => _formatter.SerializeObject(obj, _initialBufferSize);
+        public override byte[] ToBinary(object obj)
+        {
+            if (null == obj) { return EmptyArray<byte>.Instance; }
+            return MessagePackSerializer.Serialize(obj, _resolver);
+        }
 
-        public override object FromBinary(byte[] bytes, Type type) => _formatter.Deserialize(type, bytes);
+        public override object FromBinary(byte[] bytes, Type type) => MessagePackSerializer.NonGeneric.Deserialize(type, bytes, _resolver);
 
         public override int Identifier => -1;
 
