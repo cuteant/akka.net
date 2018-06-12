@@ -43,9 +43,9 @@ namespace Akka.Remote.Serialization
                 case string str:
                     return s_encodingUtf8.GetBytes(str);
                 case int intValue:
-                    return BitConverter.GetBytes((int)obj);
+                    return BitConverter.GetBytes(intValue);
                 case long longValue:
-                    return BitConverter.GetBytes((long)obj);
+                    return BitConverter.GetBytes(longValue);
                 default:
                     throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
             }

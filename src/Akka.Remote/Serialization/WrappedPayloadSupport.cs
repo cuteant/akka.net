@@ -59,9 +59,10 @@ namespace Akka.Remote.Serialization
 
                 case Protocol.MessageManifestMode.None:
                 default:
-                    var msg = payload.Message;
-                    if (null == msg || msg.Length == 0) { return null; }
-                    return system.Serialization.Deserialize(msg, payload.SerializerId);
+                    //var msg = payload.Message;
+                    //if (null == msg || msg.Length == 0) { return null; }
+                    //return system.Serialization.Deserialize(msg, payload.SerializerId);
+                    return system.Serialization.Deserialize(payload.Message, payload.SerializerId);
             }
         }
     }
