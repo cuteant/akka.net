@@ -662,57 +662,65 @@ namespace Akka.Remote
             {
                 //Stop writers
                 var policy = Tuple.Create(_endpoints.WritableEndpointWithPolicyFor(quarantine.RemoteAddress), quarantine.Uid);
-                if (policy.Item1 is Pass && policy.Item2 == null)
+                if(policy.Item2 != null)
                 {
-                    var endpoint = policy.Item1.AsInstanceOf<Pass>().Endpoint;
-                    Context.Stop(endpoint);
-                    _log.Warning("Association to [{0}] with unknown UID is reported as quarantined, but " +
-                    "address cannot be quarantined without knowing the UID, gating instead for {1} ms.", quarantine.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds);
-                    _endpoints.MarkAsFailed(endpoint, Deadline.Now + _settings.RetryGateClosedFor);
-                }
-                else if (policy.Item1 is Pass pass && policy.Item2 != null)
-                {
-                    var uidOption = pass.Uid;
-                    var quarantineUid = policy.Item2;
-                    if (uidOption == quarantineUid)
+                    switch (policy.Item1)
                     {
-                        _endpoints.MarkAsQuarantined(quarantine.RemoteAddress, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
-                        _eventPublisher.NotifyListeners(new QuarantinedEvent(quarantine.RemoteAddress, quarantineUid.Value));
-                        Context.Stop(pass.Endpoint);
+                        case Pass pass:
+                            var uidOption = pass.Uid;
+                            var quarantineUid = policy.Item2;
+                            if (uidOption == quarantineUid)
+                            {
+                                _endpoints.MarkAsQuarantined(quarantine.RemoteAddress, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
+                                _eventPublisher.NotifyListeners(new QuarantinedEvent(quarantine.RemoteAddress, quarantineUid.Value));
+                                Context.Stop(pass.Endpoint);
+                            }
+                            // or it does not match with the UID to be quarantined
+                            else if (!uidOption.HasValue && pass.RefuseUid != quarantineUid)
+                            {
+                                // the quarantine uid may be got fresh by cluster gossip, so update refuseUid
+                                // for late handle when the writer got uid
+                                _endpoints.RegisterWritableEndpointRefuseUid(quarantine.RemoteAddress, quarantineUid.Value);
+                            }
+                            else
+                            {
+                                //the quarantine uid has lost the race with some failure, do nothing
+                            }
+                            break;
+
+                        case WasGated wg:
+                            if (wg.RefuseUid == policy.Item2)
+                            {
+                                _endpoints.RegisterWritableEndpointRefuseUid(quarantine.RemoteAddress, policy.Item2.Value);
+                            }
+                            break;
+
+                        case Quarantined quarantined when quarantined.Uid == policy.Item2.Value:
+                            // the UID to be quarantined already exists, do nothing
+                            break;
+
+                        default:
+                            // the current state is gated or quarantined, and we know the UID, update
+                            _endpoints.MarkAsQuarantined(quarantine.RemoteAddress, policy.Item2.Value, Deadline.Now + _settings.QuarantineDuration);
+                            _eventPublisher.NotifyListeners(new QuarantinedEvent(quarantine.RemoteAddress, policy.Item2.Value));
+                            break;
                     }
-                    // or it does not match with the UID to be quarantined
-                    else if (!uidOption.HasValue && pass.RefuseUid != quarantineUid)
-                    {
-                        // the quarantine uid may be got fresh by cluster gossip, so update refuseUid
-                        // for late handle when the writer got uid
-                        _endpoints.RegisterWritableEndpointRefuseUid(quarantine.RemoteAddress, quarantineUid.Value);
-                    }
-                    else
-                    {
-                        //the quarantine uid has lost the race with some failure, do nothing
-                    }
-                }
-                else if (policy.Item1 is WasGated wg && policy.Item2 != null)
-                {
-                    if (wg.RefuseUid == policy.Item2)
-                    {
-                        _endpoints.RegisterWritableEndpointRefuseUid(quarantine.RemoteAddress, policy.Item2.Value);
-                    }
-                }
-                else if (policy.Item1 is Quarantined && policy.Item2 != null && policy.Item1.AsInstanceOf<Quarantined>().Uid == policy.Item2.Value)
-                {
-                    // the UID to be quarantined already exists, do nothing
-                }
-                else if (policy.Item2 != null)
-                {
-                    // the current state is gated or quarantined, and we know the UID, update
-                    _endpoints.MarkAsQuarantined(quarantine.RemoteAddress, policy.Item2.Value, Deadline.Now + _settings.QuarantineDuration);
-                    _eventPublisher.NotifyListeners(new QuarantinedEvent(quarantine.RemoteAddress, policy.Item2.Value));
                 }
                 else
                 {
-                    // the current state is Gated, WasGated, or Quarantined and we don't know the
-                    // UID, do nothing.
+                    if (policy.Item1 is Pass pass)
+                    {
+                        var endpoint = pass.Endpoint;
+                        Context.Stop(endpoint);
+                        _log.Warning("Association to [{0}] with unknown UID is reported as quarantined, but " +
+                        "address cannot be quarantined without knowing the UID, gating instead for {1} ms.", quarantine.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds);
+                        _endpoints.MarkAsFailed(endpoint, Deadline.Now + _settings.RetryGateClosedFor);
+                    }
+                    else
+                    {
+                        // the current state is Gated, WasGated, or Quarantined and we don't know the
+                        // UID, do nothing.
+                    }
                 }
 
                 // Stop inbound read-only associations
@@ -804,38 +812,38 @@ namespace Akka.Remote
             Receive<ReliableDeliverySupervisor.GotUid>(gotuid =>
             {
                 var policy = _endpoints.WritableEndpointWithPolicyFor(gotuid.RemoteAddress);
-                if (policy is Pass pass)
+                switch (policy)
                 {
-                    if (pass.RefuseUid == gotuid.Uid)
-                    {
-                        _endpoints.MarkAsQuarantined(gotuid.RemoteAddress, gotuid.Uid,
-                            Deadline.Now + _settings.QuarantineDuration);
-                        _eventPublisher.NotifyListeners(new QuarantinedEvent(gotuid.RemoteAddress, gotuid.Uid));
-                        Context.Stop(pass.Endpoint);
-                    }
-                    else
-                    {
-                        _endpoints.RegisterWritableEndpointUid(gotuid.RemoteAddress, gotuid.Uid);
-                    }
-                    HandleStashedInbound(Sender, writerIsIdle: false);
-                }
-                else if (policy is WasGated wg)
-                {
-                    if (wg.RefuseUid == gotuid.Uid)
-                    {
-                        _endpoints.MarkAsQuarantined(gotuid.RemoteAddress, gotuid.Uid,
-                            Deadline.Now + _settings.QuarantineDuration);
-                        _eventPublisher.NotifyListeners(new QuarantinedEvent(gotuid.RemoteAddress, gotuid.Uid));
-                    }
-                    else
-                    {
-                        _endpoints.RegisterWritableEndpointUid(gotuid.RemoteAddress, gotuid.Uid);
-                    }
-                    HandleStashedInbound(Sender, writerIsIdle: false);
-                }
-                else
-                {
-                    // the GotUid might have lost the race with some failure
+                    case Pass pass:
+                        if (pass.RefuseUid == gotuid.Uid)
+                        {
+                            _endpoints.MarkAsQuarantined(gotuid.RemoteAddress, gotuid.Uid,
+                                Deadline.Now + _settings.QuarantineDuration);
+                            _eventPublisher.NotifyListeners(new QuarantinedEvent(gotuid.RemoteAddress, gotuid.Uid));
+                            Context.Stop(pass.Endpoint);
+                        }
+                        else
+                        {
+                            _endpoints.RegisterWritableEndpointUid(gotuid.RemoteAddress, gotuid.Uid);
+                        }
+                        HandleStashedInbound(Sender, writerIsIdle: false);
+                        break;
+                    case WasGated wg:
+                        if (wg.RefuseUid == gotuid.Uid)
+                        {
+                            _endpoints.MarkAsQuarantined(gotuid.RemoteAddress, gotuid.Uid,
+                                Deadline.Now + _settings.QuarantineDuration);
+                            _eventPublisher.NotifyListeners(new QuarantinedEvent(gotuid.RemoteAddress, gotuid.Uid));
+                        }
+                        else
+                        {
+                            _endpoints.RegisterWritableEndpointUid(gotuid.RemoteAddress, gotuid.Uid);
+                        }
+                        HandleStashedInbound(Sender, writerIsIdle: false);
+                        break;
+                    default:
+                        // the GotUid might have lost the race with some failure
+                        break;
                 }
             });
             Receive<ReliableDeliverySupervisor.Idle>(idle =>
