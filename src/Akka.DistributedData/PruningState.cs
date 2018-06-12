@@ -52,7 +52,7 @@ namespace Akka.DistributedData
             return Equals(Owner, other.Owner) && Seen.SetEquals(other.Seen);
         }
 
-        public override bool Equals(object obj) => obj is PruningInitialized && Equals((PruningInitialized)obj);
+        public override bool Equals(object obj) => obj is PruningInitialized pruningInitialized && Equals(pruningInitialized);
 
         public override int GetHashCode()
         {
@@ -91,7 +91,7 @@ namespace Akka.DistributedData
             return ObsoleteTime.Equals(other.ObsoleteTime);
         }
 
-        public override bool Equals(object obj) => obj is PruningPerformed && Equals((PruningPerformed)obj);
+        public override bool Equals(object obj) => obj is PruningPerformed pruningPerformed && Equals(pruningPerformed);
 
         public override int GetHashCode() => ObsoleteTime.GetHashCode();
     }

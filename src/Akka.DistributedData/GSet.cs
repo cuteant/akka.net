@@ -167,7 +167,7 @@ namespace Akka.DistributedData
         public IEnumerator<T> GetEnumerator() => Elements.GetEnumerator();
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is GSet<T> && Equals((GSet<T>)obj);
+        public override bool Equals(object obj) => obj is GSet<T> gset && Equals(gset);
 
         /// <inheritdoc/>
         public override int GetHashCode()

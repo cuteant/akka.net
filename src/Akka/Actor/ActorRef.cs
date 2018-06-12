@@ -338,7 +338,7 @@ namespace Akka.Actor
         /// </exception>
         public int CompareTo(object obj)
         {
-            if (obj != null && !(obj is IActorRef))
+            if (obj != null && !(obj is IActorRef actorRef))
                 throw new ArgumentException("Object must be of type IActorRef.", nameof(obj));
             return CompareTo((IActorRef)obj);
         }

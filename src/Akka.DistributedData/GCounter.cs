@@ -189,7 +189,7 @@ namespace Akka.DistributedData
         public override int GetHashCode() => State.GetHashCode();
 
         /// <inheritdoc/>
-        public int CompareTo(object obj) => obj is GCounter ? CompareTo((GCounter)obj) : -1;
+        public int CompareTo(object obj) => obj is GCounter counter ? CompareTo(counter) : -1;
 
         /// <inheritdoc/>
         public bool Equals(GCounter other)
@@ -201,7 +201,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is GCounter && Equals((GCounter)obj);
+        public override bool Equals(object obj) => obj is GCounter counter && Equals(counter);
 
         /// <inheritdoc/>
         public int CompareTo(GCounter other)

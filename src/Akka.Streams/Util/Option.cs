@@ -56,9 +56,8 @@ namespace Akka.Streams.Util
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj))
-                return false;
-            return obj is Option<T> && Equals((Option<T>)obj);
+            if (obj is null) { return false; }
+            return obj is Option<T> option && Equals(option);
         }
 
         /// <inheritdoc/>

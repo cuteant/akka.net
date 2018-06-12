@@ -55,7 +55,7 @@ namespace Akka.Persistence.Query
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is Sequence && Equals((Sequence)obj);
+            return obj is Sequence sequence && Equals(sequence);
         }
 
         public override int GetHashCode() => Value.GetHashCode();

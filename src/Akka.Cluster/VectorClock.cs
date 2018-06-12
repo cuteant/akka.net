@@ -42,7 +42,7 @@ namespace Akka.Cluster
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is VectorClock && Equals((VectorClock)obj);
+            return obj is VectorClock vectorClock && Equals(vectorClock);
         }
 
         public override int GetHashCode()

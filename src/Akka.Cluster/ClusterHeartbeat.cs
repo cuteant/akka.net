@@ -250,7 +250,7 @@ namespace Akka.Cluster
             {
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return obj is Heartbeat && Equals((Heartbeat)obj);
+                return obj is Heartbeat heartbeat && Equals(heartbeat);
             }
 
             private bool Equals(Heartbeat other)
@@ -285,7 +285,7 @@ namespace Akka.Cluster
             {
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return obj is HeartbeatRsp && Equals((HeartbeatRsp)obj);
+                return obj is HeartbeatRsp heartbeatRsp && Equals(heartbeatRsp);
             }
 
             private bool Equals(HeartbeatRsp other)

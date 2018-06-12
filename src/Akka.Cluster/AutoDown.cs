@@ -64,7 +64,7 @@ namespace Akka.Cluster
             {
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return obj is UnreachableTimeout && Equals((UnreachableTimeout)obj);
+                return obj is UnreachableTimeout unreachableTimeout && Equals(unreachableTimeout);
             }
 
             /// <inheritdoc/>

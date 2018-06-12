@@ -919,7 +919,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is DataDeleted && Equals((DataDeleted)obj);
+        public override bool Equals(object obj) => obj is DataDeleted dataDeleted && Equals(dataDeleted);
 
         /// <inheritdoc/>
         public override int GetHashCode() => Key.GetHashCode();
@@ -966,7 +966,7 @@ namespace Akka.DistributedData
         public bool Equals(ReplicaCount other) => other != null && N == other.N;
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is ReplicaCount && Equals((ReplicaCount)obj);
+        public override bool Equals(object obj) => obj is ReplicaCount replicaCount && Equals(replicaCount);
 
         /// <inheritdoc/>
         public override int GetHashCode() => N.GetHashCode();

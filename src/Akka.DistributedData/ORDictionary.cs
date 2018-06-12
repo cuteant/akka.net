@@ -337,7 +337,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            return obj is ORDictionary<TKey, TValue> && Equals((ORDictionary<TKey, TValue>)obj);
+            return obj is ORDictionary<TKey, TValue> dict && Equals(dict);
         }
 
         /// <inheritdoc/>
@@ -645,10 +645,10 @@ namespace Akka.DistributedData
                 }
             }
 
-            public IDeltaReplicatedData Zero => ((IReplicatedDelta)Operations.FirstOrDefault())?.Zero;
+            public IDeltaReplicatedData Zero => Operations.FirstOrDefault()?.Zero;
             public int DeltaSize => Operations.Length;
 
-            public override bool Equals(object obj) => obj is IDeltaOperation && Equals((IDeltaOperation)obj);
+            public override bool Equals(object obj) => obj is IDeltaOperation operation && Equals(operation);
 
             public bool Equals(IDeltaOperation op)
             {

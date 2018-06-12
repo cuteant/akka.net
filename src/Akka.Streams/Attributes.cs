@@ -57,7 +57,7 @@ namespace Akka.Streams
             public bool Equals(Name other) => !(other is null) && Equals(Value, other.Value);
 
             /// <inheritdoc/>
-            public override bool Equals(object obj) => obj is Name && Equals((Name)obj);
+            public override bool Equals(object obj) => obj is Name name && Equals(name);
 
             /// <inheritdoc/>
             public override int GetHashCode() => Value.GetHashCode();
@@ -100,7 +100,7 @@ namespace Akka.Streams
             }
 
             /// <inheritdoc/>
-            public override bool Equals(object obj) => obj is InputBuffer && Equals((InputBuffer) obj);
+            public override bool Equals(object obj) => obj is InputBuffer inputBuffer && Equals(inputBuffer);
 
             /// <inheritdoc/>
             public override int GetHashCode()
@@ -163,7 +163,7 @@ namespace Akka.Streams
             }
 
             /// <inheritdoc/>
-            public override bool Equals(object obj) => obj is LogLevels && Equals((LogLevels) obj);
+            public override bool Equals(object obj) => obj is LogLevels logLevels && Equals(logLevels);
 
             /// <inheritdoc/>
             public override int GetHashCode()
@@ -418,7 +418,7 @@ namespace Akka.Streams
             }
 
             /// <inheritdoc/>
-            public override bool Equals(object obj) => obj is Dispatcher && Equals((Dispatcher) obj);
+            public override bool Equals(object obj) => obj is Dispatcher dispatcher && Equals(dispatcher);
 
             /// <inheritdoc/>
             public override int GetHashCode() => Name?.GetHashCode() ?? 0;

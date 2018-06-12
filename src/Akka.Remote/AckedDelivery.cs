@@ -73,7 +73,7 @@ namespace Akka.Remote
         /// <inheritdoc/>
         public bool Equals(SeqNo other)
         {
-            if (ReferenceEquals(null, other)) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
             return RawValue == other.RawValue;
         }
@@ -117,9 +117,9 @@ namespace Akka.Remote
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (ReferenceEquals(null, obj)) return false;
+            if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            return obj is SeqNo && Equals((SeqNo)obj);
+            return obj is SeqNo seqNo && Equals(seqNo);
         }
 
         /// <inheritdoc/>

@@ -171,8 +171,7 @@ namespace Akka.DistributedData
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) =>
-            obj is PNCounterDictionary<TKey> && Equals((PNCounterDictionary<TKey>)obj);
+        public override bool Equals(object obj) => obj is PNCounterDictionary<TKey> dict && Equals(dict);
 
         /// <inheritdoc/>
         public override int GetHashCode() => _underlying.GetHashCode();

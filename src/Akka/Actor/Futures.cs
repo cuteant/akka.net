@@ -326,7 +326,7 @@ namespace Akka.Actor
             {
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return obj is StoppedWithPath && Equals((StoppedWithPath)obj);
+                return obj is StoppedWithPath stoppedWithPath && Equals(stoppedWithPath);
             }
 
             /// <inheritdoc/>

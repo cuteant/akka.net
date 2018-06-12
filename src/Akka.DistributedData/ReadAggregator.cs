@@ -168,7 +168,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is ReadFrom && Equals((ReadFrom)obj);
+        public override bool Equals(object obj) => obj is ReadFrom readFrom && Equals(readFrom);
 
         /// <inheritdoc/>
         public bool Equals(ReadFrom other)
@@ -205,7 +205,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            return obj is ReadMajority && Equals((ReadMajority)obj);
+            return obj is ReadMajority readMajority && Equals(readMajority);
         }
 
         /// <inheritdoc/>
@@ -241,7 +241,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            return obj is ReadAll && Equals((ReadAll)obj);
+            return obj is ReadAll readAll && Equals(readAll);
         }
 
         /// <inheritdoc/>

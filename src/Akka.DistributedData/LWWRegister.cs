@@ -176,7 +176,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is LWWRegister<T> && Equals((LWWRegister<T>)obj);
+        public override bool Equals(object obj) => obj is LWWRegister<T> reg && Equals(reg);
 
         /// <inheritdoc/>
         public override int GetHashCode()

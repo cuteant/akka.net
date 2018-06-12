@@ -68,7 +68,7 @@ namespace Akka.Actor
             {
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return obj is CurrentState<TS> && Equals((CurrentState<TS>)obj);
+                return obj is CurrentState<TS> state && Equals(state);
             }
 
             /// <inheritdoc/>
@@ -139,7 +139,7 @@ namespace Akka.Actor
             {
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return obj is Transition<TS> && Equals((Transition<TS>)obj);
+                return obj is Transition<TS> transition && Equals(transition);
             }
 
             /// <inheritdoc/>

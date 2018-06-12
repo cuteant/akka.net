@@ -388,7 +388,7 @@ namespace Akka.DistributedData
         IEnumerator IEnumerable.GetEnumerator() => GetEnumerator();
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is ORSet<T> && Equals((ORSet<T>)obj);
+        public override bool Equals(object obj) => obj is ORSet<T> orSet && Equals(orSet);
 
         /// <inheritdoc/>
         public override int GetHashCode()
@@ -592,7 +592,7 @@ namespace Akka.DistributedData
             {
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                return obj is DeltaGroup && Equals((DeltaGroup)obj);
+                return obj is DeltaGroup deltaGroup && Equals(deltaGroup);
             }
 
             public override int GetHashCode()

@@ -97,7 +97,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is VersionVector && Equals((VersionVector)obj);
+        public override bool Equals(object obj) => obj is VersionVector versionVector && Equals(versionVector);
 
         /// <summary>
         /// Returns true if this VersionVector has the same history

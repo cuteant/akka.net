@@ -72,7 +72,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public sealed override bool Equals(object obj) => obj is IKey && Equals((IKey) obj);
+        public sealed override bool Equals(object obj) => obj is IKey key && Equals(key);
 
         /// <inheritdoc/>
         public override int GetHashCode() => Id.GetHashCode();
