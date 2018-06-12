@@ -5,7 +5,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using CuteAnt.Pool;
+using System.Text;
 using CuteAnt.Text;
 
 namespace Akka.Util
@@ -27,15 +27,15 @@ namespace Akka.Util
         /// <returns>TBD</returns>
         public static string Base64Encode(this long value)
         {
-            var sb = StringBuilderManager.Allocate();
+            var sb = StringBuilderCache.Acquire();
             var next = value;
             do
             {
                 var index = (int)(next & 63);
                 sb.Append(Base64Chars[index]);
                 next = next >> 6;
-            } while(next != 0);
-            return StringBuilderManager.ReturnAndFree(sb);
+            } while (next != 0);
+            return StringBuilderCache.GetStringAndRelease(sb);
         }
 
         /// <summary>
@@ -45,7 +45,7 @@ namespace Akka.Util
         /// <returns>TBD</returns>
         public static string Base64Encode(this string s)
         {
-            var bytes = StringHelper.UTF8NoBOM.GetBytes(s);
+            var bytes = System.Text.Encoding.UTF8.GetBytes(s);
             return System.Convert.ToBase64String(bytes);
         }
     }
