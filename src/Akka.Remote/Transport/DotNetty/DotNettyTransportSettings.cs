@@ -40,7 +40,7 @@ namespace Akka.Remote.Transport.DotNetty
             var publicHost = config.GetString("public-hostname", null);
             var publicPort = config.GetInt("public-port", 0);
 
-            var order = ByteOrder.BigEndian;
+            var order = ByteOrder.LittleEndian;
             var byteOrderString = config.GetString("byte-order", "little-endian").ToLowerInvariant();
             switch (byteOrderString)
             {

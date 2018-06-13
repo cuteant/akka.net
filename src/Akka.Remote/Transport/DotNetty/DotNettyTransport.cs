@@ -164,7 +164,7 @@ namespace Akka.Remote.Transport.DotNetty
             }
             else
             {
-                _serverBossGroup = new MultithreadEventLoopGroup(1);
+                _serverBossGroup = new MultithreadEventLoopGroup(Settings.ServerSocketWorkerPoolSize);
                 _serverWorkerGroup = new MultithreadEventLoopGroup(Settings.ServerSocketWorkerPoolSize);
                 _clientWorkerGroup = new MultithreadEventLoopGroup(Settings.ClientSocketWorkerPoolSize);
             }
@@ -298,11 +298,11 @@ namespace Akka.Remote.Transport.DotNetty
 
             var client = new Bootstrap()
                 .Group(_clientWorkerGroup)
-                //.Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
+                .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr)
                 //.Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
                 .Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
                 .Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
-                .Option(ChannelOption.SoLinger, Settings.TcpLinger)
+                //.Option(ChannelOption.SoLinger, Settings.TcpLinger)
                 .Option(ChannelOption.ConnectTimeout, Settings.ConnectTimeout)
                 .Option(ChannelOption.AutoRead, false)
                 .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)PooledByteBufferAllocator.Default : UnpooledByteBufferAllocator.Default)
@@ -430,19 +430,17 @@ namespace Akka.Remote.Transport.DotNetty
                 server.Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr);
             }
 
-            server.Option(ChannelOption.SoBacklog, Settings.Backlog)
-                  .Option(ChannelOption.SoLinger, Settings.TcpLinger)
-
-                  .ChildOption(ChannelOption.SoLinger, Settings.TcpLinger)
-                  .ChildOption(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
-                  .ChildOption(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
-
+            server.Option(ChannelOption.SoKeepalive, Settings.TcpKeepAlive)
+                  .Option(ChannelOption.TcpNodelay, Settings.TcpNoDelay)
                   .Option(ChannelOption.AutoRead, false)
-                  .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)new PooledByteBufferAllocator() : new UnpooledByteBufferAllocator())
+                  .Option(ChannelOption.SoBacklog, Settings.Backlog)
+                  //.Option(ChannelOption.SoLinger, Settings.TcpLinger)
+
+                  .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)PooledByteBufferAllocator.Default : UnpooledByteBufferAllocator.Default)
                   .ChildHandler(new ActionChannelInitializer<ISocketChannel>(SetServerPipeline));
 
-            if (Settings.ReceiveBufferSize.HasValue) server.ChildOption(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
-            if (Settings.SendBufferSize.HasValue) server.ChildOption(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
+            if (Settings.ReceiveBufferSize.HasValue) { server.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value); }
+            if (Settings.SendBufferSize.HasValue) { server.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value); }
 
             if (Settings.WriteBufferHighWaterMark.HasValue) server.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value);
             if (Settings.WriteBufferLowWaterMark.HasValue) server.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value);
