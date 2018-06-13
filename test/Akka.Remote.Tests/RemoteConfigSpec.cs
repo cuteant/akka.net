@@ -96,8 +96,8 @@ namespace Akka.Remote.Tests
             Assert.Equal(TimeSpan.FromSeconds(15), s.ConnectTimeout);
             Assert.Null(s.WriteBufferHighWaterMark);
             Assert.Null(s.WriteBufferLowWaterMark);
-            Assert.Null(s.SendBufferSize);
-            Assert.Null(s.ReceiveBufferSize);
+            Assert.Equal(256000, s.SendBufferSize.Value);
+            Assert.Equal(256000, s.ReceiveBufferSize.Value);
             Assert.Equal(128000, s.MaxFrameSize);
             Assert.Equal(4096, s.Backlog);
             Assert.True(s.TcpNoDelay);

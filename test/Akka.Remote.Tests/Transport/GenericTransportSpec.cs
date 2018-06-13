@@ -47,7 +47,7 @@ namespace Akka.Remote.Tests.Transport
             if (withAkkaProtocol) {
                 var provider = (RemoteActorRefProvider)((ExtendedActorSystem)Sys).Provider;
 
-                return new AkkaProtocolTransport(transport, Sys, new AkkaProtocolSettings(provider.RemoteSettings.Config), new AkkaPduProtobuffCodec(Sys));
+                return new AkkaProtocolTransport(transport, Sys, new AkkaProtocolSettings(provider.RemoteSettings.Config), new AkkaPduMessagePackCodec(Sys));
             }
 
             return transport;
@@ -149,7 +149,7 @@ namespace Akka.Remote.Tests.Transport
             handleB.ReadHandlerSource.SetResult(new ActorHandleEventListener(TestActor));
 
             var payload = Encoding.UTF8.GetBytes("PDU");
-            var pdu = withAkkaProtocol ? new AkkaPduProtobuffCodec(Sys).ConstructPayload(payload) : payload;
+            var pdu = withAkkaProtocol ? new AkkaPduMessagePackCodec(Sys).ConstructPayload(payload) : payload;
             
             AwaitCondition(() => registry.ExistsAssociation(addressATest, addressBTest));
 

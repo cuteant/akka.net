@@ -861,7 +861,7 @@ namespace Akka.Remote
                 Context.ActorOf(RARP.For(Context.System)
                     .ConfigureDispatcher(
                         EndpointWriter.EndpointWriterProps(_currentHandle, _localAddress, _remoteAddress, _refuseUid, _transport,
-                            _settings, new AkkaPduProtobuffCodec(Context.System), _receiveBuffers, Self)
+                            _settings, new AkkaPduMessagePackCodec(Context.System), _receiveBuffers, Self)
                             .WithDeploy(Deploy.Local)),
                     "endpointWriter");
             Context.Watch(writer);

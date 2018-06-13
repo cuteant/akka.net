@@ -908,7 +908,7 @@ namespace Akka.Remote.Transport
         protected IHandleEventListener UpstreamListener;
 
         /// <summary>Used for decoding certain types of throttled messages on-the-fly</summary>
-        private readonly AkkaPduProtobuffCodec _codec;
+        private readonly AkkaPduMessagePackCodec _codec;
 
         /// <summary>TBD</summary>
         /// <param name="manager">TBD</param>
@@ -917,7 +917,7 @@ namespace Akka.Remote.Transport
         /// <param name="inbound">TBD</param>
         public ThrottledAssociation(IActorRef manager, IAssociationEventListener associationHandler, AssociationHandle originalHandle, bool inbound)
         {
-            _codec = new AkkaPduProtobuffCodec(Context.System);
+            _codec = new AkkaPduMessagePackCodec(Context.System);
             Manager = manager;
             AssociationHandler = associationHandler;
             OriginalHandle = originalHandle;

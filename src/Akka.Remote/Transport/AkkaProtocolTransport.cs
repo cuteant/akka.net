@@ -212,7 +212,7 @@ namespace Akka.Remote.Transport
                         handle,
                         stateActorAssociationListener,
                         stateActorSettings,
-                        new AkkaPduProtobuffCodec(Context.System),
+                        new AkkaPduMessagePackCodec(Context.System),
                         failureDetector)), ActorNameFor(handle.RemoteAddress));
                 })
                 .With<AssociateUnderlying>(au => CreateOutboundStateActor(au.RemoteAddress, au.StatusPromise, null)) //need to create an Outbound ProtocolStateActor
@@ -239,7 +239,7 @@ namespace Akka.Remote.Transport
                 statusPromise,
                 stateActorWrappedTransport,
                 stateActorSettings,
-                new AkkaPduProtobuffCodec(Context.System), failureDetector, refuseUid)),
+                new AkkaPduMessagePackCodec(Context.System), failureDetector, refuseUid)),
                 ActorNameFor(remoteAddress));
         }
 

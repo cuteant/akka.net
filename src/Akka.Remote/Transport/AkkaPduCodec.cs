@@ -265,10 +265,10 @@ namespace Akka.Remote.Transport
 
     #endregion
 
-    #region == class AkkaPduProtobuffCodec ==
+    #region == class AkkaPduMessagePackCodec ==
 
     /// <summary>TBD</summary>
-    internal sealed class AkkaPduProtobuffCodec : AkkaPduCodec
+    internal sealed class AkkaPduMessagePackCodec : AkkaPduCodec
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
@@ -500,7 +500,7 @@ namespace Akka.Remote.Transport
 
         #endregion
 
-        public AkkaPduProtobuffCodec(ActorSystem system) : base(system) { }
+        public AkkaPduMessagePackCodec(ActorSystem system) : base(system) { }
     }
 
     #endregion
