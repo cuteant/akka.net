@@ -160,7 +160,7 @@ namespace Akka.Remote.Transport.DotNetty
                 var dispatcher = new DispatcherEventLoopGroup();
                 _serverBossGroup = dispatcher;
                 _serverWorkerGroup = new WorkerEventLoopGroup(dispatcher, Settings.ServerSocketWorkerPoolSize);
-                _clientWorkerGroup = new MultithreadEventLoopGroup(Settings.ClientSocketWorkerPoolSize);
+                _clientWorkerGroup = new EventLoopGroup(Settings.ClientSocketWorkerPoolSize);
             }
             else
             {
@@ -305,16 +305,23 @@ namespace Akka.Remote.Transport.DotNetty
                 //.Option(ChannelOption.SoLinger, Settings.TcpLinger)
                 .Option(ChannelOption.ConnectTimeout, Settings.ConnectTimeout)
                 .Option(ChannelOption.AutoRead, false)
-                .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)PooledByteBufferAllocator.Default : UnpooledByteBufferAllocator.Default)
-                .ChannelFactory(() => Settings.EnforceIpFamily
+                .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)PooledByteBufferAllocator.Default : UnpooledByteBufferAllocator.Default);
+            if (Settings.EnableLibuv)
+            {
+                client.Channel<TcpChannel>();
+            }
+            else
+            {
+                client.ChannelFactory(() => Settings.EnforceIpFamily
                     ? new TcpSocketChannel(addressFamily)
-                    : new TcpSocketChannel())
-                .Handler(new ActionChannelInitializer<TcpSocketChannel>(channel => SetClientPipeline(channel, remoteAddress)));
+                    : new TcpSocketChannel());
+            }
+            client.Handler(new ActionChannelInitializer<ISocketChannel>(channel => SetClientPipeline(channel, remoteAddress)));
 
-            if (Settings.ReceiveBufferSize.HasValue) client.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value);
-            if (Settings.SendBufferSize.HasValue) client.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value);
-            if (Settings.WriteBufferHighWaterMark.HasValue) client.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value);
-            if (Settings.WriteBufferLowWaterMark.HasValue) client.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value);
+            if (Settings.ReceiveBufferSize.HasValue) { client.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value); }
+            if (Settings.SendBufferSize.HasValue) { client.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value); }
+            if (Settings.WriteBufferHighWaterMark.HasValue) { client.Option(ChannelOption.WriteBufferHighWaterMark, Settings.WriteBufferHighWaterMark.Value); }
+            if (Settings.WriteBufferLowWaterMark.HasValue) { client.Option(ChannelOption.WriteBufferLowWaterMark, Settings.WriteBufferLowWaterMark.Value); }
 
             return client;
         }
@@ -419,11 +426,18 @@ namespace Akka.Remote.Transport.DotNetty
                     ? new TcpServerSocketChannel(addressFamily)
                     : new TcpServerSocketChannel());
             }
-            if (Settings.EnableLibuv && RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+            if (Settings.EnableLibuv)
             {
-                server
-                    .Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
-                    .Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr);
+                if (RuntimeInformation.IsOSPlatform(OSPlatform.Linux) || RuntimeInformation.IsOSPlatform(OSPlatform.OSX))
+                {
+                    server
+                        .Option(ChannelOption.SoReuseport, Settings.TcpReusePort)
+                        .ChildOption(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr);
+                }
+                else
+                {
+                    server.Option(ChannelOption.SoReuseaddr, Settings.TcpReuseAddr);
+                }
             }
             else
             {
