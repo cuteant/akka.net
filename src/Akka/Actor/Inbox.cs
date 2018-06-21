@@ -8,9 +8,11 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor.Internal;
+using Akka.Util;
 using MessagePack;
 
 namespace Akka.Actor
@@ -195,7 +197,7 @@ namespace Akka.Actor
         // a specific predicate (even if it's in middle of queue), and current queue implementation won't provide that in easy way.
 
 
-        private readonly LinkedList<T> _inner = new LinkedList<T>();
+        private readonly Deque<T> _inner = new Deque<T>();
 
         /// <inheritdoc/>
         public IEnumerator<T> GetEnumerator()
@@ -214,7 +216,7 @@ namespace Akka.Actor
         /// <param name="item">TBD</param>
         public void Add(T item)
         {
-            _inner.AddLast(item);
+            _inner.AddToBack(item);
         }
 
         /// <summary>
@@ -262,17 +264,18 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public int RemoveAll(Predicate<T> predicate)
         {
-            var i = 0;
-            var node = _inner.First;
-            while (!(node == null || predicate(node.Value)))
-            {
-                var n = node;
-                node = node.Next;
-                _inner.Remove(n);
-                i++;
-            }
-
-            return i;
+            // TODO4ME
+            return _inner.RemoveAll(_ => null == _ || predicate(_));
+            //var i = 0;
+            //var node = _inner.First;
+            //while (!(node == null || predicate(node.Value)))
+            //{
+            //    var n = node;
+            //    node = node.Next;
+            //    _inner.Remove(n);
+            //    i++;
+            //}
+            //return i;
         }
 
         /// <summary>
@@ -281,7 +284,7 @@ namespace Akka.Actor
         /// <param name="item">TBD</param>
         public void Enqueue(T item)
         {
-            _inner.AddLast(item);
+            _inner.AddToBack(item);
         }
 
         /// <summary>
@@ -290,9 +293,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public T Dequeue()
         {
-            var item = _inner.First.Value;
-            _inner.RemoveFirst();
-            return item;
+            return _inner.RemoveFromFront();
         }
 
         /// <summary>
@@ -302,20 +303,39 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public T DequeueFirstOrDefault(Predicate<T> predicate)
         {
-            var node = _inner.First;
-            while (!(node == null || predicate(node.Value)))
-            {
-                node = node.Next;
-            }
+            if (_inner.Count <= 0) { return default; }
 
-            if (node != null)
+            T first = default;
+            int idx;
+            for (idx = 0; idx < _inner.Count; idx++)
             {
-                var item = node.Value;
-                _inner.Remove(node);
-                return item;
+                var item = _inner[idx];
+                if (item == null || predicate(item))
+                {
+                    first = item;
+                    break;
+                }
             }
+            if (first != null)
+            {
+                _inner.RemoveAt(idx);
+            }
+            return first;
 
-            return default;
+            //var node = _inner.First;
+            //while (!(node == null || predicate(node.Value)))
+            //{
+            //    node = node.Next;
+            //}
+
+            //if (node != null)
+            //{
+            //    var item = node.Value;
+            //    _inner.Remove(node);
+            //    return item;
+            //}
+
+            //return default;
         }
 
         /// <summary>

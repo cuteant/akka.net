@@ -32,6 +32,7 @@ namespace Akka.Remote.Tests.Transport
                         port = 0
                         hostname = ""127.0.0.1""
                         log-transport = true
+                        enable-libuv = false
                     }
                 }
             }");

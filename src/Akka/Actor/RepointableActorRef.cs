@@ -15,6 +15,7 @@ using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
 using Akka.Pattern;
+using Akka.Util;
 
 namespace Akka.Actor
 {
@@ -341,7 +342,7 @@ namespace Akka.Actor
         private readonly object _lock = new object();
 
        /* Both queues must be accessed via lock */
-        private readonly LinkedList<Envelope> _messageQueue = new LinkedList<Envelope>();
+        private readonly Deque<Envelope> _messageQueue = new Deque<Envelope>();
         private LatestFirstSystemMessageList _sysMsgQueue = SystemMessageList.LNil;
 
         private readonly TimeSpan _timeout;
@@ -390,11 +391,8 @@ namespace Akka.Actor
                 {
                     DrainSysMsgQueue(cell);
 
-                    while (_messageQueue.Count > 0)
+                    while (_messageQueue.TryRemoveFromBack(out var e))
                     {
-                        // roughly equal to what "poll" does
-                        var e = _messageQueue.First.Value;
-                        _messageQueue.RemoveFirst();
                         cell.SendMessage(e.Sender, e.Message);
 
                         // drain sysmsgQueue in case a msg enqueues a sys msg
@@ -537,7 +535,7 @@ namespace Akka.Actor
                     }
                     else
                     {
-                        _messageQueue.AddLast(new Envelope(message, sender));
+                        _messageQueue.AddToFront(new Envelope(message, sender));
                         Mailbox.DebugPrint("{0} temp queueing {1} from {2}", Self, message, sender);
                     }
                 }
@@ -611,7 +609,7 @@ namespace Akka.Actor
                     var cell = _self.Underlying;
                     return CellIsReady(cell)
                         ? cell.HasMessages
-                        : _messageQueue.Count > 0;
+                        : _messageQueue.IsNotEmpty;
                 }
             }
         }

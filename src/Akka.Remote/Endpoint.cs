@@ -1019,10 +1019,10 @@ namespace Akka.Remote
         // Use an internal buffer instead of Stash for efficiency stash/unstashAll is slow when many
         // messages are stashed
         // IMPORTANT: sender is not stored, so .Sender and forward must not be used in EndpointWriter
-        private readonly LinkedList<object> _buffer = new LinkedList<object>();
+        private readonly Deque<object> _buffer = new Deque<object>();
 
         //buffer for IPriorityMessages - ensures that heartbeats get delivered before user-defined messages
-        private readonly LinkedList<EndpointManager.Send> _prioBuffer = new LinkedList<EndpointManager.Send>();
+        private readonly Deque<EndpointManager.Send> _prioBuffer = new Deque<EndpointManager.Send>();
 
         private long _largeBufferLogTimestamp = MonotonicClock.GetNanos();
 
@@ -1082,17 +1082,15 @@ namespace Akka.Remote
         {
             _ackIdleTimerCancelable.CancelIfNotNull();
 
-            foreach (var msg in _prioBuffer)
+            while(_prioBuffer.TryRemoveFromBack( out var msg))
             {
                 _system.DeadLetters.Tell(msg);
             }
-            _prioBuffer.Clear();
 
-            foreach (var msg in _buffer)
+            while (_buffer.TryRemoveFromBack(out var msg))
             {
                 _system.DeadLetters.Tell(msg);
             }
-            _buffer.Clear();
 
             if (_handle != null) _handle.Disassociate(_stopReason);
             EventPublisher.NotifyListeners(new DisassociatedEvent(LocalAddress, RemoteAddress, Inbound));
@@ -1135,7 +1133,7 @@ namespace Akka.Remote
             Receive<BackoffTimer>(backoff => SendBufferedMessages());
             Receive<FlushAndStop>(stop =>
             {
-                _buffer.AddLast(stop); //Flushing is postponed after the pending writes
+                _buffer.AddToFront(stop); //Flushing is postponed after the pending writes
                 Context.System.Scheduler.ScheduleTellOnce(Settings.FlushWait, Self, FlushAndStopTimeout.Instance, Self);
             });
             Receive<FlushAndStopTimeout>(timeout =>
@@ -1349,22 +1347,22 @@ namespace Akka.Remote
             var send = message as EndpointManager.Send;
             if (send != null && send.Message is IPriorityMessage)
             {
-                _prioBuffer.AddLast(send);
+                _prioBuffer.AddToFront(send);
             }
             else if (send != null && send.Message is ActorSelectionMessage &&
                      send.Message.AsInstanceOf<ActorSelectionMessage>().Message is IPriorityMessage)
             {
-                _prioBuffer.AddLast(send);
+                _prioBuffer.AddToFront(send);
             }
             else
             {
-                _buffer.AddLast(message);
+                _buffer.AddToFront(message);
             }
         }
 
         private void BecomeWritingOrSendBufferedMessages()
         {
-            if (!_buffer.Any())
+            if (_buffer.IsEmpty)
             {
                 Become(Writing);
             }
@@ -1462,11 +1460,10 @@ namespace Akka.Remote
 
             bool WriteLoop(int count)
             {
-                if (count > 0 && _buffer.Any())
+                if (count > 0 && _buffer.IsNotEmpty)
                 {
-                    if (SendDelegate(_buffer.First.Value))
+                    if(_buffer.TryRemoveFromBackIf(SendDelegate, out var _))
                     {
-                        _buffer.RemoveFirst();
                         _writeCount += 1;
                         return WriteLoop(count - 1);
                     }
@@ -1478,19 +1475,16 @@ namespace Akka.Remote
 
             bool WritePrioLoop()
             {
-                if (!_prioBuffer.Any()) { return true; }
-                if (WriteSend(_prioBuffer.First.Value))
+                if (_prioBuffer.IsEmpty) { return true; }
+                if(_prioBuffer.TryRemoveFromBackIf(WriteSend, out var _))
                 {
-                    _prioBuffer.RemoveFirst();
                     return WritePrioLoop();
                 }
                 return false;
             }
 
-            var size = _buffer.Count;
-
             var ok = WritePrioLoop() && WriteLoop(SendBufferBatchSize);
-            if (!_buffer.Any() && !_prioBuffer.Any())
+            if (_buffer.IsEmpty && _prioBuffer.IsEmpty)
             {
                 // FIXME remove this when testing/tuning is completed
                 if (_log.IsDebugEnabled)
@@ -1513,6 +1507,7 @@ namespace Akka.Remote
             }
             else
             {
+                var size = _buffer.Count;
                 if (size > Settings.LogBufferSizeExceeding)
                 {
                     var now = MonotonicClock.GetNanos();

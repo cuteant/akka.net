@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Dispatch;
 using Akka.Dispatch.MessageQueues;
-using Akka.Util.Internal;
+using Akka.Util;
 
 namespace Akka.Actor.Internal
 {
@@ -20,7 +20,7 @@ namespace Akka.Actor.Internal
     /// </summary>
     public abstract class AbstractStash : IStash
     {
-        private LinkedList<Envelope> _theStash;
+        private Deque<Envelope> _theStash;
         private readonly ActorCell _actorCell;
         private readonly int _capacity;
 
@@ -44,7 +44,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
     }}";
                 throw new NotSupportedException(message);
             }
-            _theStash = new LinkedList<Envelope>();
+            _theStash = new Deque<Envelope>();
             _actorCell = actorCell;
 
             // TODO: capacity needs to come from dispatcher or mailbox config
@@ -73,9 +73,13 @@ An (unbounded) deque-based mailbox can be configured as follows:
                 throw new IllegalActorStateException($"Can't stash the same message {currMsg} more than once");
             }
             _currentEnvelopeId = _actorCell.CurrentEnvelopeId;
-            
-            if(_capacity <= 0 || _theStash.Count < _capacity)
-                _theStash.AddLast(new Envelope(currMsg, sender));
+
+            if (_capacity <= 0 || _theStash.Count < _capacity)
+            {
+                // 这儿反着来
+                //_theStash.AddLast(new Envelope(currMsg, sender));
+                _theStash.AddToFront(new Envelope(currMsg, sender));
+            }
             else throw new StashOverflowException($"Couldn't enqueue message {currMsg} to stash of {_actorCell.Self}");
         }
 
@@ -84,16 +88,20 @@ An (unbounded) deque-based mailbox can be configured as follows:
         /// </summary>
         public void Unstash()
         {
-            if(_theStash.Count > 0)
+            //if (_theStash.Count > 0)
+            //{
+            //    try
+            //    {
+            //        EnqueueFirst(_theStash.Head());
+            //    }
+            //    finally
+            //    {
+            //        _theStash.RemoveFirst();
+            //    }
+            //}
+            if (_theStash.TryRemoveFromBack(out var item))
             {
-                try
-                {
-                    EnqueueFirst(_theStash.Head());
-                }
-                finally
-                {
-                    _theStash.RemoveFirst();
-                }
+                EnqueueFirst(item);
             }
         }
 
@@ -115,14 +123,16 @@ An (unbounded) deque-based mailbox can be configured as follows:
             {
                 try
                 {
-                    foreach(var item in _theStash.Reverse().Where(predicate))
+                    //foreach (var item in _theStash.Reverse().Where(predicate))
+                    // AddToFront & RemoveFromBack，不需要 Reverse
+                    foreach (var item in _theStash.Where(predicate))
                     {
                         EnqueueFirst(item);
                     }
                 }
                 finally
                 {
-                    _theStash = new LinkedList<Envelope>();
+                    _theStash = new Deque<Envelope>();
                 }
             }
         }
@@ -138,7 +148,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
                 return Enumerable.Empty<Envelope>();
 
             var stashed = _theStash;
-            _theStash = new LinkedList<Envelope>();
+            _theStash = new Deque<Envelope>();
             return stashed;
         }
 
@@ -152,7 +162,8 @@ An (unbounded) deque-based mailbox can be configured as follows:
             // we must enumerate envelopes in reversed order
             foreach (var envelope in envelopes.Distinct().Reverse())
             {
-                _theStash.AddFirst(envelope);
+                //_theStash.AddFirst(envelope);
+                _theStash.AddToBack(envelope);
             }
         }
 
