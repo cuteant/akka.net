@@ -411,6 +411,10 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 throw new InvalidAssociationException(cause.Message);
             }
+            catch (AggregateException e) when (e.InnerException is ChannelException cause)
+            {
+                throw new InvalidAssociationException(cause.InnerException?.Message ?? cause.Message);
+            }
             catch (ConnectException exc)
             {
                 throw HandleConnectException(remoteAddress, exc, null);
@@ -418,6 +422,10 @@ namespace Akka.Remote.Transport.DotNetty
             catch (ConnectTimeoutException exc)
             {
                 throw new InvalidAssociationException(exc.Message);
+            }
+            catch (ChannelException exc)
+            {
+                throw new InvalidAssociationException(exc.InnerException?.Message ?? exc.Message);
             }
         }
 
