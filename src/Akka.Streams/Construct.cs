@@ -20,12 +20,36 @@ namespace Akka.Streams
         /// </summary>
         /// <param name="genericType">TBD</param>
         /// <param name="genericParam">TBD</param>
+        /// <returns>TBD</returns>
+        public static object Instantiate(this Type genericType, Type genericParam)
+        {
+            var gen = genericType.GetCachedGenericType(genericParam);
+            return ActivatorUtils.FastCreateInstance(gen);
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="genericType">TBD</param>
+        /// <param name="genericParam">TBD</param>
         /// <param name="constructorArgs">TBD</param>
         /// <returns>TBD</returns>
         public static object Instantiate(this Type genericType, Type genericParam, params object[] constructorArgs)
         {
             var gen = genericType.GetCachedGenericType(genericParam);
             return Activator.CreateInstance(gen, constructorArgs);
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="genericType">TBD</param>
+        /// <param name="genericParams">TBD</param>
+        /// <returns>TBD</returns>
+        public static object Instantiate(this Type genericType, Type[] genericParams)
+        {
+            var gen = genericType.GetCachedGenericType(genericParams);
+            return ActivatorUtils.FastCreateInstance(gen);
         }
 
         /// <summary>

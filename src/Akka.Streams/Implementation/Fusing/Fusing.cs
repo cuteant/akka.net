@@ -13,6 +13,7 @@ using System.Reflection;
 using Akka.Pattern;
 using Akka.Streams.Stage;
 using Akka.Streams.Util;
+using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.Reflection;
 using Microsoft.Extensions.Logging;
@@ -50,7 +51,7 @@ namespace Akka.Streams.Implementation.Fusing
             var structInfo = new BuildStructuralInfo();
 
             // First perform normalization by descending the module tree and recording information in the BuildStructuralInfo instance.
-            LinkedList<KeyValuePair<IModule, IMaterializedValueNode>> materializedValue;
+            Deque<KeyValuePair<IModule, IMaterializedValueNode>> materializedValue;
 
             try
             {
@@ -83,7 +84,7 @@ namespace Akka.Streams.Implementation.Fusing
                 shape,
                 ImmutableDictionary.CreateRange(structInfo.Downstreams),
                 ImmutableDictionary.CreateRange(structInfo.Upstreams),
-                materializedValue.First().Value,
+                materializedValue.PeekFromFront().Value, // First()
                 Attributes.None,
                 info);
 
@@ -319,7 +320,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// correspondence is then used during materialization to trigger these sources
         /// when "their" node has received its value.
         /// </summary>
-        private static LinkedList<KeyValuePair<IModule, IMaterializedValueNode>> Descend<T>(
+        private static Deque<KeyValuePair<IModule, IMaterializedValueNode>> Descend<T>(
             IModule module,
             Attributes inheritedAttributes,
             BuildStructuralInfo structInfo,
@@ -346,7 +347,7 @@ namespace Akka.Streams.Implementation.Fusing
                         //        $"dissolving graph module {module.ToString().Replace("\n", $"\n{string.Empty.PadLeft(indent*2)}")}");
                         // need to dissolve previously fused GraphStages to allow further fusion
                         var attributes = inheritedAttributes.And(module.Attributes);
-                        return new LinkedList<KeyValuePair<IModule, IMaterializedValueNode>>(
+                        return new Deque<KeyValuePair<IModule, IMaterializedValueNode>>(
                             graphModule.MaterializedValueIds.SelectMany(
                                 sub => Descend<T>(sub, attributes, structInfo, localGroup, indent + 1)));
                     }
@@ -408,12 +409,12 @@ namespace Akka.Streams.Implementation.Fusing
                         // make sure to add all the port mappings from old GraphModule Shape to new shape
                         structInfo.AddModule(newGraphModule, localGroup, inheritedAttributes, indent, oldShape);
                         // now compute the list of all materialized value computation updates
-                        var result = new LinkedList<KeyValuePair<IModule, IMaterializedValueNode>>(
+                        var result = new Deque<KeyValuePair<IModule, IMaterializedValueNode>>(
                             mvids.Select(
                                 (t, i) =>
                                     new KeyValuePair<IModule, IMaterializedValueNode>(t,
                                         new Atomic(newIds[i]))));
-                        result.AddLast(new KeyValuePair<IModule, IMaterializedValueNode>(module,
+                        result.AddToBack(new KeyValuePair<IModule, IMaterializedValueNode>(module,
                             new Atomic(newGraphModule)));
                         return result;
                     }
@@ -421,8 +422,8 @@ namespace Akka.Streams.Implementation.Fusing
                 else
                 {
                     //if (IsDebug) Log(indent, $"atomic module {module}");
-                    var result = new LinkedList<KeyValuePair<IModule, IMaterializedValueNode>>();
-                    result.AddFirst(
+                    var result = new Deque<KeyValuePair<IModule, IMaterializedValueNode>>();
+                    result.AddToFront(
                         new KeyValuePair<IModule, IMaterializedValueNode>(module,
                             structInfo.AddModule(module, localGroup, inheritedAttributes, indent))
                         );
@@ -438,7 +439,7 @@ namespace Akka.Streams.Implementation.Fusing
                     if (result.Count == 0)
                         throw new IllegalStateException("Descend returned empty result from CopiedModule");
 
-                    result.AddFirst(new KeyValuePair<IModule, IMaterializedValueNode>(copied, result.First.Value.Value));
+                    result.AddToFront(new KeyValuePair<IModule, IMaterializedValueNode>(copied, result.PeekFromFront().Value));
 
                     structInfo.Rewire(copied.CopyOf.Shape, copied.Shape, indent);
                     return result;
@@ -502,8 +503,8 @@ namespace Akka.Streams.Implementation.Fusing
                     }
 
                     // the result for each level is the materialized value computation
-                    var result = new LinkedList<KeyValuePair<IModule, IMaterializedValueNode>>();
-                    result.AddFirst(new KeyValuePair<IModule, IMaterializedValueNode>(module, newMat));
+                    var result = new Deque<KeyValuePair<IModule, IMaterializedValueNode>>();
+                    result.AddToFront(new KeyValuePair<IModule, IMaterializedValueNode>(module, newMat));
                     return result;
                 }
             }
@@ -517,26 +518,26 @@ namespace Akka.Streams.Implementation.Fusing
         /// </summary>
         private static IMaterializedValueNode RewriteMaterializer(IDictionary<IModule, IMaterializedValueNode> subMat, IMaterializedValueNode mat, Dictionary<IMaterializedValueNode, IMaterializedValueNode> mapping)
         {
-            if (mat is Atomic atomic)
+            switch (mat)
             {
-                var result = subMat[atomic.Module];
-                mapping.Put(atomic, result);
-                return result;
-            }
-            if (mat is Combine combine)
-            {
-                var result = new Combine(combine.Combinator, RewriteMaterializer(subMat, combine.Left, mapping), RewriteMaterializer(subMat, combine.Right, mapping));
-                mapping.Put(combine, result);
-                return result;
-            }
-            if (mat is Transform transform)
-            {
-                var result = new Transform(transform.Transformator, RewriteMaterializer(subMat, transform.Node, mapping));
-                mapping.Put(transform, result);
-                return result;
-            }
+                case Atomic atomic:
+                    var result = subMat[atomic.Module];
+                    mapping.Put(atomic, result);
+                    return result;
 
-            return mat;
+                case Combine combine:
+                    var result1 = new Combine(combine.Combinator, RewriteMaterializer(subMat, combine.Left, mapping), RewriteMaterializer(subMat, combine.Right, mapping));
+                    mapping.Put(combine, result1);
+                    return result1;
+
+                case Transform transform:
+                    var result2 = new Transform(transform.Transformator, RewriteMaterializer(subMat, transform.Node, mapping));
+                    mapping.Put(transform, result2);
+                    return result2;
+
+                default:
+                    return mat;
+            }
         }
 
         private static bool IsAsync(CopiedModule module)
@@ -581,7 +582,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// The list of all groups of modules that are within each async boundary.
         /// </summary>
-        public readonly LinkedList<ISet<IModule>> Groups = new LinkedList<ISet<IModule>>();
+        public readonly Deque<ISet<IModule>> Groups = new Deque<ISet<IModule>>();
 
         /// <summary>
         /// A mapping from OutPort to its containing group, needed when determining whether an upstream connection is internal or not.
@@ -591,12 +592,12 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// A stack of mappings for a given non-copied InPort.
         /// </summary>
-        public readonly IDictionary<InPort, LinkedList<InPort>> NewInputs = new Dictionary<InPort, LinkedList<InPort>>();
+        public readonly IDictionary<InPort, Deque<InPort>> NewInputs = new Dictionary<InPort, Deque<InPort>>();
 
         /// <summary>
         /// A stack of mappings for a given non-copied OutPort.
         /// </summary>
-        public readonly IDictionary<OutPort, LinkedList<OutPort>> NewOutputs = new Dictionary<OutPort, LinkedList<OutPort>>();
+        public readonly IDictionary<OutPort, Deque<OutPort>> NewOutputs = new Dictionary<OutPort, Deque<OutPort>>();
 
         /// <summary>
         /// The downstreams relationships of the original module rewritten in terms of the copied ports.
@@ -626,12 +627,12 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// A stack of materialized value sources, grouped by materialized computation context.
         /// </summary>
-        private readonly LinkedList<LinkedList<CopiedModule>> _materializedSources = new LinkedList<LinkedList<CopiedModule>>();
+        private readonly Deque<Deque<CopiedModule>> _materializedSources = new Deque<Deque<CopiedModule>>();
 
         /// <summary>
         /// TBD
         /// </summary>
-        public void EnterMaterializationContext() => _materializedSources.AddFirst(new LinkedList<CopiedModule>());
+        public void EnterMaterializationContext() => _materializedSources.AddToFront(new Deque<CopiedModule>());
 
         /// <summary>
         /// TBD
@@ -643,8 +644,7 @@ namespace Akka.Streams.Implementation.Fusing
         public IImmutableList<CopiedModule> ExitMaterializationContext()
         {
             if (_materializedSources.Count == 0) throw new ArgumentException("ExitMaterializationContext with empty stack");
-            var x = _materializedSources.First.Value;
-            _materializedSources.RemoveFirst();
+            var x = _materializedSources.RemoveFromFront();
             return x.ToImmutableList();
         }
 
@@ -658,7 +658,7 @@ namespace Akka.Streams.Implementation.Fusing
         public void PushMaterializationSource(CopiedModule module)
         {
             if (_materializedSources.Count == 0) throw new ArgumentException("PushMaterializationSource without context");
-            _materializedSources.First.Value.AddFirst(module);
+            _materializedSources.PeekFromFront().AddToFront(module);
         }
 
         /// <summary>
@@ -698,7 +698,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </summary>
         public void BreakUpGroupsByDispatcher()
         {
-            var newGroups = new LinkedList<ISet<IModule>>();
+            var newGroups = new Deque<ISet<IModule>>();
             var it = Groups.GetEnumerator();
             while (it.MoveNext())
             {
@@ -710,13 +710,13 @@ namespace Akka.Streams.Implementation.Fusing
                     {
                         group.Clear();
                         foreach (var subgroup in subgroups)
-                            newGroups.AddLast(new HashSet<IModule>(subgroup));
+                            newGroups.AddToBack(new HashSet<IModule>(subgroup));
                     }
                 }
             }
 
             foreach (var group in newGroups)
-                Groups.AddLast(group);
+                Groups.AddToBack(group);
         }
 
         /// <summary>
@@ -758,7 +758,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             var group = new HashSet<IModule>();
             //if (Fusing.IsDebug) Fusing.Log(indent, $"creating new group {Hash(group)}");
-            Groups.AddLast(group);
+            Groups.AddToBack(group);
             return group;
         }
 
@@ -886,14 +886,14 @@ namespace Akka.Streams.Implementation.Fusing
         /// </summary>
         /// <param name="old">TBD</param>
         /// <returns>TBD</returns>
-        public ImmutableArray<Inlet> NewInlets(IEnumerable<Inlet> old) => old.Select(i => (Inlet)NewInputs[i].First.Value).ToImmutableArray();
+        public ImmutableArray<Inlet> NewInlets(IEnumerable<Inlet> old) => old.Select(i => (Inlet)NewInputs[i].PeekFromFront()).ToImmutableArray();
 
         /// <summary>
         /// Transform original into copied Outlets.
         /// </summary>
         /// <param name="old">TBD</param>
         /// <returns>TBD</returns>
-        public ImmutableArray<Outlet> NewOutlets(IEnumerable<Outlet> old) => old.Select(o => (Outlet)NewOutputs[o].First.Value).ToImmutableArray();
+        public ImmutableArray<Outlet> NewOutlets(IEnumerable<Outlet> old) => old.Select(o => (Outlet)NewOutputs[o].PeekFromFront()).ToImmutableArray();
 
         private bool IsCopiedModuleWithGraphStageAndMaterializedValue(IModule module)
         {
@@ -905,15 +905,15 @@ namespace Akka.Streams.Implementation.Fusing
                 && stageType.GetGenericTypeDefinition() == typeof(MaterializedValueSource<>);
         }
 
-        private void AddMapping<T>(T orig, T mapd, IDictionary<T, LinkedList<T>> map)
+        private void AddMapping<T>(T orig, T mapd, IDictionary<T, Deque<T>> map)
         {
             if (map.TryGetValue(orig, out var values))
-                values.AddLast(mapd);
+                values.AddToBack(mapd);
             else
-                map.Add(orig, new LinkedList<T>(new[] { mapd }));
+                map.Add(orig, new Deque<T>(new[] { mapd }));
         }
 
-        private Option<T> RemoveMapping<T>(T orig, IDictionary<T, LinkedList<T>> map)
+        private Option<T> RemoveMapping<T>(T orig, IDictionary<T, Deque<T>> map)
         {
             if (map.TryGetValue(orig, out var values))
             {
@@ -921,9 +921,7 @@ namespace Akka.Streams.Implementation.Fusing
                     map.Remove(orig);
                 else
                 {
-                    var x = values.First.Value;
-                    values.RemoveFirst();
-                    return x;
+                    return values.RemoveFromFront();
                 }
             }
             return Option<T>.None;

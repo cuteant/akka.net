@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
+using Akka.Util;
 
 namespace Akka.Streams.Implementation
 {
@@ -26,7 +27,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         public readonly Action<object> Unhandled;
 
-        private readonly LinkedList<object> _stash = new LinkedList<object>();
+        private readonly Deque<object> _stash = new Deque<object>();
 
         /// <summary>
         /// TBD
@@ -55,15 +56,20 @@ namespace Akka.Streams.Implementation
             if (message is ExposedPublisher publisher)
             {
                 ReceiveExposedPublisher(publisher);
-                if (_stash.Any())
+                if (_stash.NonEmpty)
                 {
                     // we don't use sender() so this is alright
-                    foreach (var msg in _stash)
+                    void ProcessMsg(object msg)
+                    {
                         if (!ActiveReceive(msg)) Unhandled(msg);
+                    }
+                    _stash.Reverse(ProcessMsg);
                 }
             }
             else
-                _stash.AddLast(message);
+            {
+                _stash.AddToFront(message);
+            }
 
             return true;
         }

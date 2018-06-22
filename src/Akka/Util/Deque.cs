@@ -14,7 +14,7 @@ namespace Akka.Util
     /// <typeparam name="T">The type of elements contained in the deque.</typeparam>
     [DebuggerDisplay("Count = {Count}, Capacity = {Capacity}")]
     [DebuggerTypeProxy(typeof(Deque<>.DebugView))]
-    public sealed class Deque<T> : IList<T>, IReadOnlyList<T>, System.Collections.IList
+    public class Deque<T> : IList<T>, IReadOnlyList<T>, System.Collections.IList
     {
         /// <summary>The default capacity.</summary>
         private const int DefaultCapacity = 8;
@@ -386,14 +386,14 @@ namespace Akka.Util
             get { return _count == 0; }
         }
 
-        public bool IsNotEmpty
+        public bool NonEmpty
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _count > 0; }
         }
 
         /// <summary>Gets a value indicating whether this instance is at full capacity.</summary>
-        internal bool IsFull
+        public bool IsFull
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _count == Capacity; }
@@ -1038,7 +1038,7 @@ namespace Akka.Util
         /// <summary>Removes all items from this deque.</summary>
         public void Clear()
         {
-            if (IsNotEmpty)
+            if (NonEmpty)
             {
 #if NETCOREAPP
                 if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())

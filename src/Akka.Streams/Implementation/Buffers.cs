@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Akka.Annotations;
+using Akka.Util;
 
 namespace Akka.Streams.Implementation
 {
@@ -412,33 +413,31 @@ namespace Akka.Streams.Implementation
             }
         }
 
-        private sealed class DynamicQueue : LinkedList<T>, IBuffer<T>
+        private sealed class DynamicQueue : Deque<T>, IBuffer<T>
         {
             public DynamicQueue(int capacity)
             {
                 Capacity = capacity;
             }
 
-            public int Capacity { get; }
+            //public int Capacity { get; }
             public int Used => Count;
-            public bool IsFull => Count == Capacity;
-            public bool IsEmpty => Count == 0;
-            public bool NonEmpty => !IsEmpty;
+            //public bool IsFull => Count == Capacity;
+            //public bool IsEmpty => Count == 0;
+            //public bool NonEmpty => !IsEmpty;
 
-            public void Enqueue(T element) => AddLast(element);
+            public void Enqueue(T element) => AddToFront(element);
 
             public T Dequeue()
             {
-                var result = First.Value;
-                RemoveFirst();
-                return result;
+                return RemoveFromBack();
             }
 
-            public T Peek() => First.Value;
+            public T Peek() => PeekFromBack();
 
-            public void DropHead() => RemoveFirst();
+            public void DropHead() => RemoveFromBack();
 
-            public void DropTail() => RemoveLast();
+            public void DropTail() => RemoveFromFront();
         }
 
         #endregion

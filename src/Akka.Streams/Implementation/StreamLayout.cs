@@ -2146,15 +2146,15 @@ namespace Akka.Streams.Implementation
         /// </summary>
         protected readonly Attributes InitialAttributes;
 
-        private readonly LinkedList<IDictionary<InPort, object>> _subscribersStack =
-            new LinkedList<IDictionary<InPort, object>>();
+        private readonly Deque<IDictionary<InPort, object>> _subscribersStack =
+            new Deque<IDictionary<InPort, object>>();
 
-        private readonly LinkedList<IDictionary<OutPort, IUntypedPublisher>> _publishersStack =
-            new LinkedList<IDictionary<OutPort, IUntypedPublisher>>();
+        private readonly Deque<IDictionary<OutPort, IUntypedPublisher>> _publishersStack =
+            new Deque<IDictionary<OutPort, IUntypedPublisher>>();
 
-        private readonly LinkedList<IDictionary<StreamLayout.IMaterializedValueNode, LinkedList<IMaterializedValueSource>>>
+        private readonly Deque<IDictionary<StreamLayout.IMaterializedValueNode, Deque<IMaterializedValueSource>>>
             _materializedValueSources =
-                new LinkedList<IDictionary<StreamLayout.IMaterializedValueNode, LinkedList<IMaterializedValueSource>>>();
+                new Deque<IDictionary<StreamLayout.IMaterializedValueNode, Deque<IMaterializedValueSource>>>();
 
         /// <summary>
         /// Please note that this stack keeps track of the scoped modules wrapped in CopiedModule but not the CopiedModule
@@ -2164,7 +2164,7 @@ namespace Akka.Streams.Implementation
         /// The reason why the encapsulated (copied) modules are stored as mutable state to save subclasses of this class
         /// from passing the current scope around or even knowing about it.
         /// </summary>
-        private readonly LinkedList<IModule> _moduleStack = new LinkedList<IModule>();
+        private readonly Deque<IModule> _moduleStack = new Deque<IModule>();
 
         /// <summary>
         /// TBD
@@ -2175,18 +2175,18 @@ namespace Akka.Streams.Implementation
         {
             TopLevel = topLevel;
             InitialAttributes = initialAttributes;
-            _subscribersStack.AddFirst(new Dictionary<InPort, object>());
-            _publishersStack.AddFirst(new Dictionary<OutPort, IUntypedPublisher>());
-            _materializedValueSources.AddFirst(
-                new Dictionary<StreamLayout.IMaterializedValueNode, LinkedList<IMaterializedValueSource>>());
-            _moduleStack.AddFirst(TopLevel);
+            _subscribersStack.AddToFront(new Dictionary<InPort, object>());
+            _publishersStack.AddToFront(new Dictionary<OutPort, IUntypedPublisher>());
+            _materializedValueSources.AddToFront(
+                new Dictionary<StreamLayout.IMaterializedValueNode, Deque<IMaterializedValueSource>>());
+            _moduleStack.AddToFront(TopLevel);
         }
 
-        private IDictionary<InPort, object> Subscribers => _subscribersStack.First.Value;
-        private IDictionary<OutPort, IUntypedPublisher> Publishers => _publishersStack.First.Value;
-        private IModule CurrentLayout => _moduleStack.First.Value;
+        private IDictionary<InPort, object> Subscribers => _subscribersStack.PeekFromFront();
+        private IDictionary<OutPort, IUntypedPublisher> Publishers => _publishersStack.PeekFromFront();
+        private IModule CurrentLayout => _moduleStack.PeekFromFront();
 
-        private IDictionary<StreamLayout.IMaterializedValueNode, LinkedList<IMaterializedValueSource>> MaterializedValueSource => _materializedValueSources.First.Value;
+        private IDictionary<StreamLayout.IMaterializedValueNode, Deque<IMaterializedValueSource>> MaterializedValueSource => _materializedValueSources.PeekFromFront();
         ///<summary>
         /// Enters a copied module and establishes a scope that prevents internals to leak out and interfere with copies
         /// of the same module.
@@ -2197,10 +2197,10 @@ namespace Akka.Streams.Implementation
         {
             //if(IsDebug)
             //    Console.WriteLine($"entering scope [{GetHashCode()}%08x]");
-            _subscribersStack.AddFirst(new Dictionary<InPort, object>());
-            _publishersStack.AddFirst(new Dictionary<OutPort, IUntypedPublisher>());
-            _materializedValueSources.AddFirst(new Dictionary<StreamLayout.IMaterializedValueNode, LinkedList<IMaterializedValueSource>>());
-            _moduleStack.AddFirst(enclosing.CopyOf);
+            _subscribersStack.AddToFront(new Dictionary<InPort, object>());
+            _publishersStack.AddToFront(new Dictionary<OutPort, IUntypedPublisher>());
+            _materializedValueSources.AddToFront(new Dictionary<StreamLayout.IMaterializedValueNode, Deque<IMaterializedValueSource>>());
+            _moduleStack.AddToFront(enclosing.CopyOf);
         }
 
         /// <summary>
@@ -2215,10 +2215,10 @@ namespace Akka.Streams.Implementation
             var scopeSubscribers = Subscribers;
             var scopePublishers = Publishers;
 
-            _subscribersStack.RemoveFirst();
-            _publishersStack.RemoveFirst();
-            _materializedValueSources.RemoveFirst();
-            _moduleStack.RemoveFirst();
+            _subscribersStack.RemoveFromFront();
+            _publishersStack.RemoveFromFront();
+            _materializedValueSources.RemoveFromFront();
+            _moduleStack.RemoveFromFront();
 
             //if(IsDebug)
             //    Console.WriteLine($"   subscribers = {scopeSubscribers}\n publishers = {scopePublishers}");
@@ -2266,7 +2266,7 @@ namespace Akka.Streams.Implementation
                 // (This is an attempt to clean up after an exception during materialization)
                 var ex = new MaterializationPanicException(cause);
 
-                foreach (var subMap in _subscribersStack)
+                void ProcessSubscribers(IDictionary<InPort, object> subMap)
                 {
                     foreach (var value in subMap.Values)
                     {
@@ -2291,8 +2291,9 @@ namespace Akka.Streams.Implementation
                         }
                     }
                 }
+                _subscribersStack.ForEach(ProcessSubscribers);
 
-                foreach (var pubMap in _publishersStack)
+                void ProcessPublishers(IDictionary<OutPort, IUntypedPublisher> pubMap)
                 {
                     foreach (var publisher in pubMap.Values)
                     {
@@ -2302,6 +2303,7 @@ namespace Akka.Streams.Implementation
                         publisher.Subscribe(UntypedSubscriber.FromTyped(subscriber));
                     }
                 }
+                _publishersStack.ForEach(ProcessPublishers);
 
                 throw;
             }
@@ -2324,10 +2326,10 @@ namespace Akka.Streams.Implementation
             //if (IsDebug) Console.WriteLine($"Registering source {materializedSource}");
 
             if (MaterializedValueSource.TryGetValue(materializedSource.Computation, out var list))
-                list.AddFirst(materializedSource);
+                list.AddToFront(materializedSource);
             else
                 MaterializedValueSource.Add(materializedSource.Computation,
-                    new LinkedList<IMaterializedValueSource>(new[] { materializedSource }));
+                    new Deque<IMaterializedValueSource>(new[] { materializedSource }));
         }
 
         /// <summary>

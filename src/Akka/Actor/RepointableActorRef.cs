@@ -609,7 +609,7 @@ namespace Akka.Actor
                     var cell = _self.Underlying;
                     return CellIsReady(cell)
                         ? cell.HasMessages
-                        : _messageQueue.IsNotEmpty;
+                        : _messageQueue.NonEmpty;
                 }
             }
         }

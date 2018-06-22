@@ -228,75 +228,75 @@ namespace Akka.Streams.Implementation
 
             private Action<IInput> Callback()
             {
-                return GetAsyncCallback<IInput>(
-                    input =>
+                void Handle(IInput input)
+                {
+                    switch (input)
                     {
-                        switch (input)
-                        {
-                            case Offer<TOut> offer:
-                                if (_stage._maxBuffer != 0)
+                        case Offer<TOut> offer:
+                            if (_stage._maxBuffer != 0)
+                            {
+                                BufferElement(offer);
+                                if (IsAvailable(_stage.Out))
+                                    Push(_stage.Out, _buffer.Dequeue());
+                            }
+                            else if (IsAvailable(_stage.Out))
+                            {
+                                Push(_stage.Out, offer.Element);
+                                offer.CompletionSource.SetResult(QueueOfferResult.Enqueued.Instance);
+                            }
+                            else if (_pendingOffer == null)
+                                _pendingOffer = offer;
+                            else
+                            {
+                                switch (_stage._overflowStrategy)
                                 {
-                                    BufferElement(offer);
-                                    if (IsAvailable(_stage.Out))
-                                        Push(_stage.Out, _buffer.Dequeue());
+                                    case OverflowStrategy.DropHead:
+                                    case OverflowStrategy.DropBuffer:
+                                        _pendingOffer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
+                                        _pendingOffer = offer;
+                                        break;
+                                    case OverflowStrategy.DropTail:
+                                    case OverflowStrategy.DropNew:
+                                        offer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
+                                        break;
+                                    case OverflowStrategy.Backpressure:
+                                        offer.CompletionSource.SetException(
+                                            new IllegalStateException(
+                                                "You have to wait for previous offer to be resolved to send another request"));
+                                        break;
+                                    case OverflowStrategy.Fail:
+                                        var bufferOverflowException =
+                                            new BufferOverflowException(
+                                                $"Buffer overflow (max capacity was: {_stage._maxBuffer})!");
+                                        offer.CompletionSource.SetResult(new QueueOfferResult.Failure(bufferOverflowException));
+                                        _completion.SetException(bufferOverflowException);
+                                        FailStage(bufferOverflowException);
+                                        break;
+                                    default:
+                                        throw new ArgumentOutOfRangeException();
                                 }
-                                else if (IsAvailable(_stage.Out))
-                                {
-                                    Push(_stage.Out, offer.Element);
-                                    offer.CompletionSource.SetResult(QueueOfferResult.Enqueued.Instance);
-                                }
-                                else if (_pendingOffer == null)
-                                    _pendingOffer = offer;
-                                else
-                                {
-                                    switch (_stage._overflowStrategy)
-                                    {
-                                        case OverflowStrategy.DropHead:
-                                        case OverflowStrategy.DropBuffer:
-                                            _pendingOffer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
-                                            _pendingOffer = offer;
-                                            break;
-                                        case OverflowStrategy.DropTail:
-                                        case OverflowStrategy.DropNew:
-                                            offer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
-                                            break;
-                                        case OverflowStrategy.Backpressure:
-                                            offer.CompletionSource.SetException(
-                                                new IllegalStateException(
-                                                    "You have to wait for previous offer to be resolved to send another request"));
-                                            break;
-                                        case OverflowStrategy.Fail:
-                                            var bufferOverflowException =
-                                                new BufferOverflowException(
-                                                    $"Buffer overflow (max capacity was: {_stage._maxBuffer})!");
-                                            offer.CompletionSource.SetResult(new QueueOfferResult.Failure(bufferOverflowException));
-                                            _completion.SetException(bufferOverflowException);
-                                            FailStage(bufferOverflowException);
-                                            break;
-                                        default:
-                                            throw new ArgumentOutOfRangeException();
-                                    }
-                                }
-                                break;
-                            case Completion completion:
-                                if (_stage._maxBuffer != 0 && _buffer.NonEmpty || _pendingOffer != null)
-                                {
-                                    _terminating = true;
-                                }
-                                else
-                                {
-                                    _completion.SetResult(new object());
-                                    CompleteStage();
-                                }
-                                break;
-                            case Failure failure:
-                                _completion.SetException(failure.Ex);
-                                FailStage(failure.Ex);
-                                break;
-                            default:
-                                break;
-                        }
-                    });
+                            }
+                            break;
+                        case Completion completion:
+                            if (_stage._maxBuffer != 0 && _buffer.NonEmpty || _pendingOffer != null)
+                            {
+                                _terminating = true;
+                            }
+                            else
+                            {
+                                _completion.SetResult(new object());
+                                CompleteStage();
+                            }
+                            break;
+                        case Failure failure:
+                            _completion.SetException(failure.Ex);
+                            FailStage(failure.Ex);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                return GetAsyncCallback<IInput>(Handle);
             }
 
             internal void Invoke(IInput offer) => InvokeCallbacks(offer);
@@ -961,14 +961,14 @@ namespace Akka.Streams.Implementation
         private class Logic : OutGraphStageLogic
         {
             private readonly EventSourceStage<TDelegate, TEventArgs> _stage;
-            private readonly LinkedList<TEventArgs> _buffer;
+            private readonly Deque<TEventArgs> _buffer;
             private readonly TDelegate _handler;
             private readonly Action<TEventArgs> _onOverflow;
 
             public Logic(EventSourceStage<TDelegate, TEventArgs> stage) : base(stage.Shape)
             {
                 _stage = stage;
-                _buffer = new LinkedList<TEventArgs>();
+                _buffer = new Deque<TEventArgs>();
                 var bufferCapacity = stage._maxBuffer;
                 var onEvent = GetAsyncCallback<TEventArgs>(e =>
                 {
@@ -979,7 +979,7 @@ namespace Akka.Streams.Implementation
                     else
                     {
                         if (_buffer.Count >= bufferCapacity) _onOverflow(e);
-                        else Enqueue(e);
+                        else _buffer.AddToFront(e);
                     }
                 });
 
@@ -987,20 +987,20 @@ namespace Akka.Streams.Implementation
                 _onOverflow = SetupOverflowStrategy(stage._overflowStrategy);
                 SetHandler(stage.Out, this);
             }
-            private void Enqueue(TEventArgs e) => _buffer.AddLast(e);
+            //private void Enqueue(TEventArgs e) => _buffer.AddToFront(e);
 
-            private TEventArgs Dequeue()
-            {
-                var element = _buffer.First.Value;
-                _buffer.RemoveFirst();
-                return element;
-            }
+            //private TEventArgs Dequeue()
+            //{
+            //    var element = _buffer.First.Value;
+            //    _buffer.RemoveFirst();
+            //    return element;
+            //}
 
             public override void OnPull()
             {
                 if (_buffer.Count > 0)
                 {
-                    var element = Dequeue();
+                    var element = _buffer.RemoveFromBack();
                     Push(_stage.Out, element);
                 }
             }
@@ -1026,14 +1026,14 @@ namespace Akka.Streams.Implementation
                     case OverflowStrategy.DropHead:
                         return message =>
                         {
-                            _buffer.RemoveFirst();
-                            Enqueue(message);
+                            _buffer.RemoveFromBack();
+                            _buffer.AddToFront(message);
                         };
                     case OverflowStrategy.DropTail:
                         return message =>
                         {
-                            _buffer.RemoveLast();
-                            Enqueue(message);
+                            _buffer.RemoveFromFront();
+                            _buffer.AddToFront(message);
                         };
                     case OverflowStrategy.DropNew:
                         return message =>
@@ -1043,7 +1043,7 @@ namespace Akka.Streams.Implementation
                     case OverflowStrategy.DropBuffer:
                         return message => {
                             _buffer.Clear();
-                            Enqueue(message);
+                            _buffer.AddToFront(message);
                         };
                     case OverflowStrategy.Fail:
                         return message =>

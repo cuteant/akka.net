@@ -6,7 +6,7 @@ namespace Akka.Util
     partial class StackX<T>
     {
         public bool IsEmpty => _size <= 0;
-        public bool IsNotEmpty => _size > 0;
+        public bool NonEmpty => _size > 0;
 
         public bool TryPopIf(Predicate<T> predicate, out T result)
         {

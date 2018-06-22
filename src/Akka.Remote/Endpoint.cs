@@ -1460,7 +1460,7 @@ namespace Akka.Remote
 
             bool WriteLoop(int count)
             {
-                if (count > 0 && _buffer.IsNotEmpty)
+                if (count > 0 && _buffer.NonEmpty)
                 {
                     if(_buffer.TryRemoveFromBackIf(SendDelegate, out var _))
                     {

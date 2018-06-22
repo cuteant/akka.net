@@ -6,7 +6,7 @@ namespace Akka.Util
     partial class QueueX<T>
     {
         public bool IsEmpty => _size <= 0;
-        public bool IsNotEmpty => _size > 0;
+        public bool NonEmpty => _size > 0;
 
         public bool TryDequeueIf(Predicate<T> predicate, out T result)
         {
