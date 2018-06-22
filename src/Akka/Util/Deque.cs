@@ -393,14 +393,14 @@ namespace Akka.Util
         }
 
         /// <summary>Gets a value indicating whether this instance is at full capacity.</summary>
-        public bool IsFull
+        internal bool IsFull
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get { return _count == Capacity; }
         }
 
         /// <summary>Gets a value indicating whether the buffer is "split" (meaning the beginning of the view is at a later index in <see cref="_buffer"/> than the end).</summary>
-        public bool IsSplit
+        internal bool IsSplit
         {
             // Overflow-safe version of "(offset + Count) > Capacity"
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -509,8 +509,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void PostIncrement(int value)
         {
-            _offset += value;
-            _offset %= Capacity;
+            _offset = (_offset + value) % Capacity;
         }
 
         /// <summary>Decrements <see cref="_offset"/> by <paramref name="value"/> using modulo-<see cref="Capacity"/> arithmetic.</summary>
@@ -730,9 +729,9 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureCapacityForOneElement()
         {
-            if (IsFull)
+            var capacity = _buffer.Length; // Capacity
+            if (_count == capacity) // IsFull
             {
-                var capacity = Capacity;
                 Capacity = (capacity == 0) ? 1 : capacity * 2;
             }
         }
@@ -781,9 +780,9 @@ namespace Akka.Util
         /// <exception cref="ArgumentException">The range [<paramref name="offset"/>, <paramref name="offset"/> + <paramref name="count"/>) is not within the range [0, <see cref="Count"/>).</exception>
         public void RemoveRange(int offset, int count)
         {
-            CheckRangeArguments(_count, offset, count);
-
             if (count == 0) { return; }
+
+            CheckRangeArguments(_count, offset, count);
 
             DoRemoveRange(offset, count);
         }
@@ -827,6 +826,47 @@ namespace Akka.Util
             return result;
         }
 
+        public void ForEach(Action<T> action)
+        {
+            if (null == action) { throw new ArgumentNullException(nameof(action)); }
+            if (IsEmpty) { return; }
+
+            var idx = 0;
+            while (idx < _count)
+            {
+                action(DoGetItem(idx));
+                idx++;
+            }
+        }
+
+        public void Reverse(Action<T> action)
+        {
+            if (null == action) { throw new ArgumentNullException(nameof(action)); }
+            if (IsEmpty) { return; }
+
+            var idx = _count - 1;
+            while (idx >= 0)
+            {
+                action(DoGetItem(idx));
+                idx--;
+            }
+        }
+
+        public T PeekFromBack()
+        {
+            if (IsEmpty) { throw new InvalidOperationException("The deque is empty."); }
+
+            return _buffer[DequeIndexToBufferIndex(_count - 1)];
+        }
+
+        public bool TryPeekFromBack(out T result)
+        {
+            if (IsEmpty) { result = default; return false; }
+
+            result = _buffer[DequeIndexToBufferIndex(_count - 1)];
+            return true;
+        }
+
         /// <summary>Removes and returns the last element of this deque.</summary>
         /// <returns>The former last element.</returns>
         /// <exception cref="InvalidOperationException">The deque is empty.</exception>
@@ -844,16 +884,7 @@ namespace Akka.Util
         {
             if (IsEmpty) { result = default; return false; }
 
-            var index = DequeIndexToBufferIndex(--_count);
-            result = _buffer[index];
-#if NETCOREAPP
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            {
-                _buffer[index] = default;
-            }
-#else
-            _buffer[index] = default;
-#endif
+            result = DoRemoveFromBack();
             return true;
         }
 
@@ -889,6 +920,20 @@ namespace Akka.Util
             }
         }
 
+        public T PeekFromFront()
+        {
+            if (IsEmpty) { throw new InvalidOperationException("The deque is empty."); }
+            return _buffer[_offset];
+        }
+
+        public bool TryPeekFromFront(out T result)
+        {
+            if (IsEmpty) { result = default; return false; }
+
+            result = _buffer[_offset];
+            return true;
+        }
+
         /// <summary>Removes and returns the first element of this deque.</summary>
         /// <returns>The former first element.</returns>
         /// <exception cref="InvalidOperationException">The deque is empty.</exception>
@@ -906,17 +951,7 @@ namespace Akka.Util
         {
             if (IsEmpty) { result = default; return false; }
 
-            --_count;
-            var index = _offset; PostIncrement(1);
-            result = _buffer[index];
-#if NETCOREAPP
-            if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
-            {
-                _buffer[index] = default;
-            }
-#else
-            _buffer[index] = default;
-#endif
+            result = DoRemoveFromFront();
             return true;
         }
 
@@ -954,7 +989,7 @@ namespace Akka.Util
         /// <summary>Removes all items from this deque.</summary>
         public void Clear()
         {
-            if (_count > 0)
+            if (IsNotEmpty)
             {
 #if NETCOREAPP
                 if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())

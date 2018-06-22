@@ -12,15 +12,13 @@ namespace QueuePerformance
         static void Main(string[] args)
         {
             //var deque1 = new Deque<int>();
-            //for(var idx = 1; idx <= 10; idx++)
+            //for (var idx = 1; idx <= 10; idx++)
             //{
             //    deque1.AddToFront(idx);
             //}
 
-            //foreach (var item in deque1)
-            //{
-            //    Console.WriteLine(item);
-            //}
+            //deque1.ForEach(_ => Console.WriteLine(_));
+            //deque1.Reverse(_ => Console.WriteLine(_));
 
             //Console.WriteLine("Queue");
             //var queue1 = new Queue<int>();
@@ -40,6 +38,17 @@ namespace QueuePerformance
             //    stack1.Push(idx);
             //}
             //foreach (var item in stack1)
+            //{
+            //    Console.WriteLine(item);
+            //}
+
+            //Console.WriteLine("LinkedList");
+            //var linkedlist = new LinkedList<int>();
+            //for (var idx = 1; idx <= 10; idx++)
+            //{
+            //    linkedlist.AddFirst(idx);
+            //}
+            //foreach (var item in linkedlist)
             //{
             //    Console.WriteLine(item);
             //}
