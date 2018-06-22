@@ -231,6 +231,22 @@ namespace Akka.Tests.Util
             Assert.Equal(2, first);
             deque.TryPeekFromBack(out last);
             Assert.Equal(2, last);
+
+            deque = new Deque<int>(new[] { 1, 2, 3, 4 });
+            deque.TryRemoveFromFrontUntil(_ => _ == 2, out first);
+            Assert.Equal(2, first);
+            Assert.Equal(1, deque.PeekFromFront());
+            Assert.Equal(4, deque.PeekFromBack());
+            Assert.Equal(3, deque.Count); ;
+            Assert.False(deque.TryRemoveFromFrontUntil(_ => _ == 10, out first));
+
+            deque = new Deque<int>(new[] { 1, 2, 3, 4 });
+            deque.TryRemoveFromBackUntil(_ => _ == 3, out last);
+            Assert.Equal(3, last);
+            Assert.Equal(1, deque.PeekFromFront());
+            Assert.Equal(4, deque.PeekFromBack());
+            Assert.Equal(3, deque.Count); ;
+            Assert.False(deque.TryRemoveFromBackUntil(_ => _ == 10, out first));
         }
 
         [Fact]

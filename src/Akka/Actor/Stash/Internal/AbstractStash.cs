@@ -121,14 +121,18 @@ An (unbounded) deque-based mailbox can be configured as follows:
         {
             if(_theStash.Count > 0)
             {
+                void Enqueue(Envelope item)
+                {
+                    if (predicate(item)) { EnqueueFirst(item); }
+                }
                 try
                 {
                     //foreach (var item in _theStash.Reverse().Where(predicate))
+                    //{
+                    //    EnqueueFirst(item);
+                    //}
                     // AddToFront & RemoveFromBack，不需要 Reverse
-                    foreach (var item in _theStash.Where(predicate))
-                    {
-                        EnqueueFirst(item);
-                    }
+                    _theStash.ForEach(Enqueue);
                 }
                 finally
                 {

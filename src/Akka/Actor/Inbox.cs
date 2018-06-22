@@ -264,8 +264,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public int RemoveAll(Predicate<T> predicate)
         {
-            // TODO4ME
-            return _inner.RemoveAll(_ => null == _ || predicate(_));
+            return _inner.RemoveAll(predicate);
             //var i = 0;
             //var node = _inner.First;
             //while (!(node == null || predicate(node.Value)))
@@ -303,24 +302,8 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public T DequeueFirstOrDefault(Predicate<T> predicate)
         {
-            if (_inner.Count <= 0) { return default; }
-
-            T first = default;
-            int idx;
-            for (idx = 0; idx < _inner.Count; idx++)
-            {
-                var item = _inner[idx];
-                if (item == null || predicate(item))
-                {
-                    first = item;
-                    break;
-                }
-            }
-            if (first != null)
-            {
-                _inner.RemoveAt(idx);
-            }
-            return first;
+            _inner.TryRemoveFromFrontUntil(predicate, out var item);
+            return item;
 
             //var node = _inner.First;
             //while (!(node == null || predicate(node.Value)))

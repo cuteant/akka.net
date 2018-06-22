@@ -920,6 +920,30 @@ namespace Akka.Util
             }
         }
 
+        public bool TryRemoveFromBackUntil(Predicate<T> predicate, out T result)
+        {
+            if (IsEmpty) { result = default; return false; }
+
+            var found = false;
+            T item = default;
+            var idx = _count - 1;
+            while (idx >= 0)
+            {
+                item = DoGetItem(idx);
+                if (predicate(item))
+                {
+                    found = true;
+                    break;
+                }
+                idx--;
+            }
+
+            if (found) { DoRemoveAt(idx); }
+
+            result = item;
+            return found;
+        }
+
         public T PeekFromFront()
         {
             if (IsEmpty) { throw new InvalidOperationException("The deque is empty."); }
@@ -986,6 +1010,31 @@ namespace Akka.Util
                 return false;
             }
         }
+
+        public bool TryRemoveFromFrontUntil(Predicate<T> predicate, out T result)
+        {
+            if (IsEmpty) { result = default; return false; }
+
+            var found = false;
+            T item = default;
+            var idx = 0;
+            while (idx < _count)
+            {
+                item = DoGetItem(idx);
+                if (predicate(item))
+                {
+                    found = true;
+                    break;
+                }
+                idx++;
+            }
+
+            if (found) { DoRemoveAt(idx); }
+
+            result = item;
+            return found;
+        }
+
         /// <summary>Removes all items from this deque.</summary>
         public void Clear()
         {
