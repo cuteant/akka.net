@@ -449,6 +449,7 @@ namespace Akka.Util
         /// <summary>Gets an element at the specified view index.</summary>
         /// <param name="index">The zero-based view index of the element to get. This index is guaranteed to be valid.</param>
         /// <returns>The element at the specified index.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T DoGetItem(int index)
         {
             return _buffer[DequeIndexToBufferIndex(index)];
@@ -457,6 +458,7 @@ namespace Akka.Util
         /// <summary>Sets an element at the specified view index.</summary>
         /// <param name="index">The zero-based view index of the element to get. This index is guaranteed to be valid.</param>
         /// <param name="item">The element to store in the list.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void DoSetItem(int index, T item)
         {
             _buffer[DequeIndexToBufferIndex(index)] = item;
@@ -504,17 +506,17 @@ namespace Akka.Util
         /// <summary>Increments <see cref="_offset"/> by <paramref name="value"/> using modulo-<see cref="Capacity"/> arithmetic.</summary>
         /// <param name="value">The value by which to increase <see cref="_offset"/>. May not be negative.</param>
         /// <returns>The value of <see cref="_offset"/> after it was incremented.</returns>
-        private int PostIncrement(int value)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private void PostIncrement(int value)
         {
-            int ret = _offset;
             _offset += value;
             _offset %= Capacity;
-            return ret;
         }
 
         /// <summary>Decrements <see cref="_offset"/> by <paramref name="value"/> using modulo-<see cref="Capacity"/> arithmetic.</summary>
         /// <param name="value">The value by which to reduce <see cref="_offset"/>. May not be negative or greater than <see cref="Capacity"/>.</param>
         /// <returns>The value of <see cref="_offset"/> before it was decremented.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private int PreDecrement(int value)
         {
             _offset -= value;
@@ -524,6 +526,7 @@ namespace Akka.Util
 
         /// <summary>Inserts a single element to the back of the view. <see cref="IsFull"/> must be false when this method is called.</summary>
         /// <param name="value">The element to insert.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void DoAddToBack(T value)
         {
             _buffer[DequeIndexToBufferIndex(_count++)] = value;
@@ -531,6 +534,7 @@ namespace Akka.Util
 
         /// <summary>Inserts a single element to the front of the view. <see cref="IsFull"/> must be false when this method is called.</summary>
         /// <param name="value">The element to insert.</param>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void DoAddToFront(T value)
         {
             _buffer[PreDecrement(1)] = value;
@@ -539,6 +543,7 @@ namespace Akka.Util
 
         /// <summary>Removes and returns the last element in the view. <see cref="IsEmpty"/> must be false when this method is called.</summary>
         /// <returns>The former last element.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T DoRemoveFromBack()
         {
             var index = DequeIndexToBufferIndex(--_count);
@@ -556,10 +561,11 @@ namespace Akka.Util
 
         /// <summary>Removes and returns the first element in the view. <see cref="IsEmpty"/> must be false when this method is called.</summary>
         /// <returns>The former first element.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private T DoRemoveFromFront()
         {
             --_count;
-            var index = PostIncrement(1);
+            var index = _offset; PostIncrement(1);
             var ret = _buffer[index];
 #if NETCOREAPP
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())
@@ -721,6 +727,7 @@ namespace Akka.Util
         }
 
         /// <summary>Doubles the capacity if necessary to make room for one more element. When this method returns, <see cref="IsFull"/> is false.</summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureCapacityForOneElement()
         {
             if (IsFull)
@@ -900,7 +907,7 @@ namespace Akka.Util
             if (IsEmpty) { result = default; return false; }
 
             --_count;
-            var index = PostIncrement(1);
+            var index = _offset; PostIncrement(1);
             result = _buffer[index];
 #if NETCOREAPP
             if (RuntimeHelpers.IsReferenceOrContainsReferences<T>())

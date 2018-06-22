@@ -11,38 +11,23 @@ namespace QueuePerformance
     {
         static void Main(string[] args)
         {
-            //var deque1 = new Deque<int>(new int[] { 1, 2, 3 });
-            //deque1.AddToFront(1);
-            //deque1.AddToFront(2);
-            //deque1.AddToFront(3);
-            //deque1.AddToFront(4);
-            //deque1.AddToFront(5);
-            //deque1.AddToFront(6);
-            //deque1.AddToFront(7);
-            //deque1.AddToFront(8);
-            //deque1.AddToFront(9);
-            //deque1.AddToFront(10);
+            //var deque1 = new Deque<int>();
+            //for(var idx = 1; idx <= 10; idx++)
+            //{
+            //    deque1.AddToFront(idx);
+            //}
 
             //foreach (var item in deque1)
             //{
             //    Console.WriteLine(item);
             //}
-            //Console.WriteLine(deque1.RemoveFromBack());
-            //Console.WriteLine(deque1.RemoveFromBack());
-            //Console.WriteLine(deque1.RemoveFromBack());
 
             //Console.WriteLine("Queue");
             //var queue1 = new Queue<int>();
-            //queue1.Enqueue(1);
-            //queue1.Enqueue(2);
-            //queue1.Enqueue(3);
-            //queue1.Enqueue(4);
-            //queue1.Enqueue(5);
-            //queue1.Enqueue(6);
-            //queue1.Enqueue(7);
-            //queue1.Enqueue(8);
-            //queue1.Enqueue(9);
-            //queue1.Enqueue(10);
+            //for (var idx = 1; idx <= 10; idx++)
+            //{
+            //    queue1.Enqueue(idx);
+            //}
             //foreach (var item in queue1)
             //{
             //    Console.WriteLine(item);
@@ -50,16 +35,10 @@ namespace QueuePerformance
 
             //Console.WriteLine("Stack");
             //var stack1 = new Stack<int>();
-            //stack1.Push(1);
-            //stack1.Push(2);
-            //stack1.Push(3);
-            //stack1.Push(4);
-            //stack1.Push(5);
-            //stack1.Push(6);
-            //stack1.Push(7);
-            //stack1.Push(8);
-            //stack1.Push(9);
-            //stack1.Push(10);
+            //for (var idx = 1; idx <= 10; idx++)
+            //{
+            //    stack1.Push(idx);
+            //}
             //foreach (var item in stack1)
             //{
             //    Console.WriteLine(item);
@@ -75,6 +54,7 @@ namespace QueuePerformance
             Stack<int> stack = new Stack<int>(8);
             StackX<int> akkaStack = new StackX<int>(8);
             QueueX<int> akkaQueue = new QueueX<int>(8);
+            var list = new List<int>(8);
             Deque<int> deque = new Deque<int>();
             SingleProducerSingleConsumerQueue<int> spscQueue = new SingleProducerSingleConsumerQueue<int>();
             LinkedList<int> linkedlist1 = new LinkedList<int>();
@@ -119,7 +99,7 @@ namespace QueuePerformance
             for (int i = 0; i < 100000; i++)
             {
                 //var count = akkaStack.Count;
-                var isEmpty = akkaStack.Count <= 0;
+                var isEmpty = akkaStack.IsEmpty;
                 dummy = akkaStack.Pop();
                 dummy++;
             }
@@ -164,7 +144,7 @@ namespace QueuePerformance
             sw.Start();
             for (int i = 0; i < 100000; i++)
             {
-                var isEmpty = akkaQueue.Count <= 0;
+                var isEmpty = akkaQueue.IsEmpty;
                 dummy = akkaQueue.Dequeue();
                 dummy++;
             }
@@ -187,7 +167,7 @@ namespace QueuePerformance
             for (int i = 0; i < 100000; i++)
             {
                 //var count = deque.Count;
-                var isEmpty = deque.Count <= 0;
+                var isEmpty = deque.IsEmpty;
                 dummy = deque.RemoveFromFront();
                 dummy++;
             }
@@ -211,7 +191,7 @@ namespace QueuePerformance
             for (int i = 0; i < 100000; i++)
             {
                 //var count = deque.Count;
-                var isEmpty = deque.Count <= 0;
+                var isEmpty = deque.IsEmpty;
                 dummy = deque.RemoveFromBack();
                 dummy++;
             }
@@ -243,6 +223,16 @@ namespace QueuePerformance
 
 
             sw.Reset();
+            Console.Write("{0,40}", "Add to List...");
+            sw.Start();
+            for (int i = 0; i < 100000; i++)
+            {
+                list.Add(rand.Next());
+            }
+            sw.Stop();
+            Console.WriteLine("  Time used: {0,9} ticks", sw.ElapsedTicks);
+            sw.Reset();
+
             Console.Write("{0,40}", "AddLast to LinkedList...");
             sw.Start();
             for (int i = 0; i < 100000; i++)
