@@ -3,7 +3,7 @@
 
 Issue.001 ☆ 优化只读结构
 
-Issue.002 ☆ 
+Issue.002 ☆ Throw
 
 Issue.003 ☆ 
 

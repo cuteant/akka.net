@@ -11,50 +11,50 @@ namespace QueuePerformance
     {
         static void Main(string[] args)
         {
-            var deque1 = new Deque<int>(new int[] { 1, 2, 3, 4 });
-            for (var idx = 5; idx <= 10; idx++)
-            {
-                deque1.AddToFront(idx);
-            }
+            //var deque1 = new Deque<int>(new int[] { 1, 2, 3, 4 });
+            //for (var idx = 5; idx <= 10; idx++)
+            //{
+            //    deque1.AddToFront(idx);
+            //}
 
-            deque1.ForEach(_ => Console.WriteLine(_));
-            //deque1.Reverse(_ => Console.WriteLine(_));
+            //deque1.ForEach(_ => Console.WriteLine(_));
+            ////deque1.Reverse(_ => Console.WriteLine(_));
 
-            Console.WriteLine("Queue");
-            var queue1 = new Queue<int>(new int[] { 1, 2, 3, 4 });
-            for (var idx = 5; idx <= 10; idx++)
-            {
-                queue1.Enqueue(idx);
-            }
-            foreach (var item in queue1)
-            {
-                Console.WriteLine(item);
-            }
+            //Console.WriteLine("Queue");
+            //var queue1 = new Queue<int>(new int[] { 1, 2, 3, 4 });
+            //for (var idx = 5; idx <= 10; idx++)
+            //{
+            //    queue1.Enqueue(idx);
+            //}
+            //foreach (var item in queue1)
+            //{
+            //    Console.WriteLine(item);
+            //}
 
-            Console.WriteLine("Stack");
-            var stack1 = new Stack<int>(new int[] { 1, 2, 3, 4 });
-            for (var idx = 5; idx <= 10; idx++)
-            {
-                stack1.Push(idx);
-            }
-            foreach (var item in stack1)
-            {
-                Console.WriteLine(item);
-            }
+            //Console.WriteLine("Stack");
+            //var stack1 = new Stack<int>(new int[] { 1, 2, 3, 4 });
+            //for (var idx = 5; idx <= 10; idx++)
+            //{
+            //    stack1.Push(idx);
+            //}
+            //foreach (var item in stack1)
+            //{
+            //    Console.WriteLine(item);
+            //}
 
-            Console.WriteLine("LinkedList");
-            var linkedlist = new LinkedList<int>(new int[] { 1, 2, 3, 4 });
-            for (var idx = 5; idx <= 10; idx++)
-            {
-                linkedlist.AddFirst(idx);
-            }
-            foreach (var item in linkedlist)
-            {
-                Console.WriteLine(item);
-            }
+            //Console.WriteLine("LinkedList");
+            //var linkedlist = new LinkedList<int>(new int[] { 1, 2, 3, 4 });
+            //for (var idx = 5; idx <= 10; idx++)
+            //{
+            //    linkedlist.AddFirst(idx);
+            //}
+            //foreach (var item in linkedlist)
+            //{
+            //    Console.WriteLine(item);
+            //}
 
-            Console.WriteLine("按任意键继续");
-            Console.ReadKey();
+            //Console.WriteLine("按任意键继续");
+            //Console.ReadKey();
             //return;
 
             Random rand = new Random();

@@ -167,9 +167,7 @@ namespace Akka.Serialization
                 return serializer.FromBinary(bytes, type);
             }
 
-            throw new SerializationException(
-                $"Cannot find serializer with id [{serializerId}]. The most probable reason" +
-                " is that the configuration entry 'akka.actor.serializers' is not in sync between the two systems.");
+            ThrowSerializationException(serializerId); return null;
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -186,9 +184,7 @@ namespace Akka.Serialization
                 return serializer.FromBinary(bytes, null);
             }
 
-            throw new SerializationException(
-                $"Cannot find serializer with id [{serializerId}]. The most probable reason" +
-                " is that the configuration entry 'akka.actor.serializers' is not in sync between the two systems.");
+            ThrowSerializationException(serializerId); return null;
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -222,9 +218,7 @@ namespace Akka.Serialization
                 return serializer.FromBinary(bytes, type);
             }
 
-            throw new SerializationException(
-                $"Cannot find serializer with id [{serializerId}]. The most probable reason" +
-                " is that the configuration entry 'akka.actor.serializers' is not in sync between the two systems.");
+            ThrowSerializationException(serializerId); return null;
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -263,9 +257,7 @@ namespace Akka.Serialization
                 return serializer.FromBinary(bytes, type);
             }
 
-            throw new SerializationException(
-                $"Cannot find serializer with id [{serializerId}]. The most probable reason" +
-                " is that the configuration entry 'akka.actor.serializers' is not in sync between the two systems.");
+            ThrowSerializationException(serializerId); return null;
         }
 
         /// <summary>Returns the Serializer configured for the given object, returns the NullSerializer if it's null.</summary>
@@ -325,7 +317,7 @@ namespace Akka.Serialization
 
             if (serializer == null)
             {
-                throw new SerializationException($"Serializer not found for type {objectType.Name}");
+                ThrowSerializationException(objectType.Name);
             }
 
             AddSerializationMap(type, serializer);
@@ -379,5 +371,31 @@ namespace Akka.Serialization
         }
 
         internal Serializer GetSerializerById(int serializerId) => _serializersById[serializerId];
+
+        #region ** ThrowHelper **
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowSerializationException(int serializerId)
+        {
+            throw GetSerializationException();
+            SerializationException GetSerializationException()
+            {
+                return new SerializationException(
+                    $"Cannot find serializer with id [{serializerId}]. The most probable reason" +
+                    " is that the configuration entry 'akka.actor.serializers' is not in sync between the two systems.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowSerializationException(string typeName)
+        {
+            throw GetSerializationException();
+            SerializationException GetSerializationException()
+            {
+                return new SerializationException($"Serializer not found for type {typeName}");
+            }
+        }
+
+        #endregion
     }
 }

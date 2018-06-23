@@ -16,6 +16,8 @@ namespace Akka.Util
     [DebuggerTypeProxy(typeof(Deque<>.DebugView))]
     public class Deque<T> : IList<T>, IReadOnlyList<T>, System.Collections.IList
     {
+        #region @@ Fields @@
+
         /// <summary>The default capacity.</summary>
         private const int DefaultCapacity = 8;
 
@@ -24,6 +26,13 @@ namespace Akka.Util
 
         /// <summary>The offset into <see cref="_buffer"/> where the view begins.</summary>
         private int _offset;
+
+        #endregion
+
+        #region -- Constructors --
+
+        /// <summary>Initializes a new instance of the <see cref="Deque&lt;T&gt;"/> class.</summary>
+        public Deque() : this(DefaultCapacity) { }
 
         /// <summary>Initializes a new instance of the <see cref="Deque&lt;T&gt;"/> class with the specified capacity.</summary>
         /// <param name="capacity">The initial capacity. Must be greater than <c>0</c>.</param>
@@ -55,13 +64,9 @@ namespace Akka.Util
             }
         }
 
-        /// <summary>Initializes a new instance of the <see cref="Deque&lt;T&gt;"/> class.</summary>
-        public Deque()
-          : this(DefaultCapacity)
-        {
-        }
+        #endregion
 
-        #region GenericListImplementations
+        #region -- GenericListImplementations --
 
         /// <summary>Gets a value indicating whether this list is read-only. This implementation always returns <c>false</c>.</summary>
         /// <returns>true if this list is read-only; otherwise, false.</returns>
@@ -124,11 +129,12 @@ namespace Akka.Util
         public int IndexOf(T item)
         {
             var comparer = EqualityComparer<T>.Default;
-            int ret = 0;
-            foreach (var sourceItem in this)
+
+            var idx = 0;
+            while (idx < _count)
             {
-                if (comparer.Equals(item, sourceItem)) { return ret; }
-                ++ret;
+                if (comparer.Equals(item, DoGetItem(idx))) { return idx; }
+                idx++;
             }
 
             return -1;
@@ -147,12 +153,16 @@ namespace Akka.Util
         /// <summary>Determines whether this list contains a specific value.</summary>
         /// <param name="item">The object to locate in this list.</param>
         /// <returns>true if <paramref name="item"/> is found in this list; otherwise, false.</returns>
-        bool ICollection<T>.Contains(T item)
+        public bool Contains(T item)
         {
+            if (IsEmpty) { return false; }
+
             var comparer = EqualityComparer<T>.Default;
-            foreach (var entry in this)
+            var idx = 0;
+            while (idx < _count)
             {
-                if (comparer.Equals(item, entry)) { return true; }
+                if (comparer.Equals(item, DoGetItem(idx))) { return true; }
+                idx++;
             }
             return false;
         }
@@ -219,10 +229,11 @@ namespace Akka.Util
         /// <returns>A <see cref="T:System.Collections.Generic.IEnumerator`1"/> that can be used to iterate through the collection.</returns>
         public IEnumerator<T> GetEnumerator()
         {
-            int count = _count;
-            for (int i = 0; i != count; ++i)
+            var idx = 0;
+            while (idx < _count)
             {
-                yield return DoGetItem(i);
+                yield return DoGetItem(idx);
+                idx++;
             }
         }
 
@@ -235,8 +246,9 @@ namespace Akka.Util
 
         #endregion
 
-        #region ObjectListImplementations
+        #region -- ObjectListImplementations --
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsT(object value)
         {
             if (value is T) { return true; }
@@ -327,17 +339,22 @@ namespace Akka.Util
 
         #endregion
 
-        #region GenericListHelpers
+        #region ** ThrowHelper **
 
         /// <summary>Checks the <paramref name="index"/> argument to see if it refers to a valid insertion point in a source of a given length.</summary>
         /// <param name="sourceLength">The length of the source. This parameter is not checked for validity.</param>
         /// <param name="index">The index into the source.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index to an insertion point for the source.</exception>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void CheckNewIndexArgument(int sourceLength, int index)
         {
             if (index < 0 || index > sourceLength)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), "Invalid new index " + index + " for source length " + sourceLength);
+                throw GetArgumentOutOfRangeException();
+                ArgumentOutOfRangeException GetArgumentOutOfRangeException()
+                {
+                    return new ArgumentOutOfRangeException(nameof(index), "Invalid new index " + index + " for source length " + sourceLength);
+                }
             }
         }
 
@@ -345,11 +362,16 @@ namespace Akka.Util
         /// <param name="sourceLength">The length of the source. This parameter is not checked for validity.</param>
         /// <param name="index">The index into the source.</param>
         /// <exception cref="ArgumentOutOfRangeException"><paramref name="index"/> is not a valid index to an existing element for the source.</exception>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void CheckExistingIndexArgument(int sourceLength, int index)
         {
             if (index < 0 || index >= sourceLength)
             {
-                throw new ArgumentOutOfRangeException(nameof(index), "Invalid existing index " + index + " for source length " + sourceLength);
+                throw GetArgumentOutOfRangeException();
+                ArgumentOutOfRangeException GetArgumentOutOfRangeException()
+                {
+                    return new ArgumentOutOfRangeException(nameof(index), "Invalid existing index " + index + " for source length " + sourceLength);
+                }
             }
         }
 
@@ -359,25 +381,95 @@ namespace Akka.Util
         /// <param name="count">The number of elements in the range.</param>
         /// <exception cref="ArgumentOutOfRangeException">Either <paramref name="offset"/> or <paramref name="count"/> is less than 0.</exception>
         /// <exception cref="ArgumentException">The range [offset, offset + count) is not within the range [0, sourceLength).</exception>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private static void CheckRangeArguments(int sourceLength, int offset, int count)
         {
             if (offset < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(offset), "Invalid offset " + offset);
+                throw GetArgumentOutOfRangeException0();
+                ArgumentOutOfRangeException GetArgumentOutOfRangeException0()
+                {
+                    return new ArgumentOutOfRangeException(nameof(offset), "Invalid offset " + offset);
+                }
             }
 
             if (count < 0)
             {
-                throw new ArgumentOutOfRangeException(nameof(count), "Invalid count " + count);
+                throw GetArgumentOutOfRangeException1();
+                ArgumentOutOfRangeException GetArgumentOutOfRangeException1()
+                {
+                    return new ArgumentOutOfRangeException(nameof(count), "Invalid count " + count);
+                }
             }
 
             if (sourceLength - offset < count)
             {
-                throw new ArgumentException("Invalid offset (" + offset + ") or count + (" + count + ") for source length " + sourceLength);
+                throw GetArgumentException();
+                ArgumentException GetArgumentException()
+                {
+                    return new ArgumentException("Invalid offset (" + offset + ") or count + (" + count + ") for source length " + sourceLength);
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowArgumentNullException(string paramName)
+        {
+            throw GetArgumentNullException();
+
+            ArgumentNullException GetArgumentNullException()
+            {
+                return new ArgumentNullException(paramName);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowArgumentNullException_Action()
+        {
+            throw GetArgumentNullException();
+
+            ArgumentNullException GetArgumentNullException()
+            {
+                return new ArgumentNullException("action");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowArgumentNullException_Match()
+        {
+            throw GetArgumentNullException();
+
+            ArgumentNullException GetArgumentNullException()
+            {
+                return new ArgumentNullException("match");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowInvalidOperationException()
+        {
+            throw GetInvalidOperationException();
+
+            InvalidOperationException GetInvalidOperationException()
+            {
+                return new InvalidOperationException("The deque is empty.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowArgumentOutOfRangeException_Capacity()
+        {
+            throw GetArgumentOutOfRangeException();
+
+            ArgumentOutOfRangeException GetArgumentOutOfRangeException()
+            {
+                return new ArgumentOutOfRangeException("value", "Capacity cannot be set to a value less than Count");
             }
         }
 
         #endregion
+
+        #region @@ Properties @@
 
         /// <summary>Gets a value indicating whether this instance is empty.</summary>
         public bool IsEmpty
@@ -415,10 +507,7 @@ namespace Akka.Util
             get { return _buffer.Length; }
             set
             {
-                if (value < _count)
-                {
-                    throw new ArgumentOutOfRangeException(nameof(value), "Capacity cannot be set to a value less than Count");
-                }
+                if (value < _count) { ThrowArgumentOutOfRangeException_Capacity(); }
 
                 if (value == _buffer.Length) { return; }
 
@@ -436,6 +525,10 @@ namespace Akka.Util
         /// <summary>Gets the number of elements contained in this deque.</summary>
         /// <returns>The number of elements contained in this deque.</returns>
         public int Count => _count;
+
+        #endregion
+
+        #region ** Private methods **
 
         /// <summary>Applies the offset to <paramref name="index"/>, resulting in a buffer index.</summary>
         /// <param name="index">The deque index.</param>
@@ -736,6 +829,10 @@ namespace Akka.Util
             }
         }
 
+        #endregion
+
+        #region -- AddToBack --
+
         /// <summary>Inserts a single element at the back of this deque.</summary>
         /// <param name="value">The element to insert.</param>
         public void AddToBack(T value)
@@ -744,6 +841,10 @@ namespace Akka.Util
             DoAddToBack(value);
         }
 
+        #endregion
+
+        #region -- AddToFront --
+
         /// <summary>Inserts a single element at the front of this deque.</summary>
         /// <param name="value">The element to insert.</param>
         public void AddToFront(T value)
@@ -751,6 +852,10 @@ namespace Akka.Util
             EnsureCapacityForOneElement();
             DoAddToFront(value);
         }
+
+        #endregion
+
+        #region -- InsertRange --
 
         /// <summary>Inserts a collection of elements into this deque.</summary>
         /// <param name="index">The index at which the collection is inserted.</param>
@@ -773,6 +878,10 @@ namespace Akka.Util
             DoInsertRange(index, source);
         }
 
+        #endregion
+
+        #region -- RemoveRange --
+
         /// <summary>Removes a range of elements from this deque.</summary>
         /// <param name="offset">The index into the deque at which the range begins.</param>
         /// <param name="count">The number of elements to remove.</param>
@@ -787,9 +896,13 @@ namespace Akka.Util
             DoRemoveRange(offset, count);
         }
 
+        #endregion
+
+        #region -- RemoveAll --
+
         public int RemoveAll(Predicate<T> match)
         {
-            if (null == match) { throw new ArgumentNullException(nameof(match)); }
+            if (null == match) { ThrowArgumentNullException_Match(); }
 
             if (IsEmpty) { return 0; }
 
@@ -826,9 +939,13 @@ namespace Akka.Util
             return result;
         }
 
+        #endregion
+
+        #region -- ForEach --
+
         public void ForEach(Action<T> action)
         {
-            if (null == action) { throw new ArgumentNullException(nameof(action)); }
+            if (null == action) { ThrowArgumentNullException_Action(); }
             if (IsEmpty) { return; }
 
             var idx = 0;
@@ -839,9 +956,79 @@ namespace Akka.Util
             }
         }
 
+        public void ForEach<TArg>(Action<T, TArg> action, TArg arg)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = 0;
+            while (idx < _count)
+            {
+                action(DoGetItem(idx), arg);
+                idx++;
+            }
+        }
+
+        public void ForEach<TArg1, TArg2>(Action<T, TArg1, TArg2> action, TArg1 arg1, TArg2 arg2)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = 0;
+            while (idx < _count)
+            {
+                action(DoGetItem(idx), arg1, arg2);
+                idx++;
+            }
+        }
+
+
+        public void ForEach(Action<T, int> action)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = 0;
+            while (idx < _count)
+            {
+                action(DoGetItem(idx), idx);
+                idx++;
+            }
+        }
+
+        public void ForEach<TArg>(Action<T, int, TArg> action, TArg arg)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = 0;
+            while (idx < _count)
+            {
+                action(DoGetItem(idx), idx, arg);
+                idx++;
+            }
+        }
+
+        public void ForEach<TArg1, TArg2>(Action<T, int, TArg1, TArg2> action, TArg1 arg1, TArg2 arg2)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = 0;
+            while (idx < _count)
+            {
+                action(DoGetItem(idx), idx, arg1, arg2);
+                idx++;
+            }
+        }
+
+        #endregion
+
+        #region -- Reverse --
+
         public void Reverse(Action<T> action)
         {
-            if (null == action) { throw new ArgumentNullException(nameof(action)); }
+            if (null == action) { ThrowArgumentNullException_Action(); }
             if (IsEmpty) { return; }
 
             var idx = _count - 1;
@@ -852,9 +1039,78 @@ namespace Akka.Util
             }
         }
 
+        public void Reverse<TArg>(Action<T, TArg> action, TArg arg)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = _count - 1;
+            while (idx >= 0)
+            {
+                action(DoGetItem(idx), arg);
+                idx--;
+            }
+        }
+
+        public void Reverse<TArg1, TArg2>(Action<T, TArg1, TArg2> action, TArg1 arg1, TArg2 arg2)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = _count - 1;
+            while (idx >= 0)
+            {
+                action(DoGetItem(idx), arg1, arg2);
+                idx--;
+            }
+        }
+
+        public void Reverse(Action<T, int> action)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = _count - 1;
+            while (idx >= 0)
+            {
+                action(DoGetItem(idx), idx);
+                idx--;
+            }
+        }
+
+        public void Reverse<TArg>(Action<T, int, TArg> action, TArg arg)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = _count - 1;
+            while (idx >= 0)
+            {
+                action(DoGetItem(idx), idx, arg);
+                idx--;
+            }
+        }
+
+        public void Reverse<TArg1, TArg2>(Action<T, int, TArg1, TArg2> action, TArg1 arg1, TArg2 arg2)
+        {
+            if (null == action) { ThrowArgumentNullException_Action(); }
+            if (IsEmpty) { return; }
+
+            var idx = _count - 1;
+            while (idx >= 0)
+            {
+                action(DoGetItem(idx), idx, arg1, arg2);
+                idx--;
+            }
+        }
+
+        #endregion
+
+        #region -- PeekFromBack --
+
         public T PeekFromBack()
         {
-            if (IsEmpty) { throw new InvalidOperationException("The deque is empty."); }
+            if (IsEmpty) { ThrowInvalidOperationException(); }
 
             return _buffer[DequeIndexToBufferIndex(_count - 1)];
         }
@@ -867,12 +1123,16 @@ namespace Akka.Util
             return true;
         }
 
+        #endregion
+
+        #region -- RemoveFromBack --
+
         /// <summary>Removes and returns the last element of this deque.</summary>
         /// <returns>The former last element.</returns>
         /// <exception cref="InvalidOperationException">The deque is empty.</exception>
         public T RemoveFromBack()
         {
-            if (IsEmpty) { throw new InvalidOperationException("The deque is empty."); }
+            if (IsEmpty) { ThrowInvalidOperationException(); }
 
             return DoRemoveFromBack();
         }
@@ -944,9 +1204,13 @@ namespace Akka.Util
             return found;
         }
 
+        #endregion
+
+        #region -- PeekFromFront --
+
         public T PeekFromFront()
         {
-            if (IsEmpty) { throw new InvalidOperationException("The deque is empty."); }
+            if (IsEmpty) { ThrowInvalidOperationException(); }
             return _buffer[_offset];
         }
 
@@ -958,12 +1222,16 @@ namespace Akka.Util
             return true;
         }
 
+        #endregion
+
+        #region -- RemoveFromFront --
+
         /// <summary>Removes and returns the first element of this deque.</summary>
         /// <returns>The former first element.</returns>
         /// <exception cref="InvalidOperationException">The deque is empty.</exception>
         public T RemoveFromFront()
         {
-            if (IsEmpty) { throw new InvalidOperationException("The deque is empty."); }
+            if (IsEmpty) { ThrowInvalidOperationException(); }
 
             return DoRemoveFromFront();
         }
@@ -1035,6 +1303,10 @@ namespace Akka.Util
             return found;
         }
 
+        #endregion
+
+        #region -- Clear --
+
         /// <summary>Removes all items from this deque.</summary>
         public void Clear()
         {
@@ -1064,6 +1336,10 @@ namespace Akka.Util
             _count = 0;
         }
 
+        #endregion
+
+        #region -- ToArray --
+
         /// <summary>Creates and returns a new array containing the elements in this deque.</summary>
         public T[] ToArray()
         {
@@ -1071,6 +1347,10 @@ namespace Akka.Util
             CopyTo(result, 0);
             return result;
         }
+
+        #endregion
+
+        #region ** class DebugView **
 
         [DebuggerNonUserCode]
         private sealed class DebugView
@@ -1088,5 +1368,7 @@ namespace Akka.Util
                 get { return deque.ToArray(); }
             }
         }
+
+        #endregion
     }
 }
