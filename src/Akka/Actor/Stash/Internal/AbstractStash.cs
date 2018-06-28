@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Dispatch;
 using Akka.Dispatch.MessageQueues;
-using Akka.Util;
+using CuteAnt.Collections;
 
 namespace Akka.Actor.Internal
 {

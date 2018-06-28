@@ -16,6 +16,7 @@ using Akka.Streams.Stage;
 using Akka.Streams.Supervision;
 using Akka.Streams.Util;
 using Akka.Util;
+using CuteAnt.Collections;
 
 namespace Akka.Streams.Implementation
 {

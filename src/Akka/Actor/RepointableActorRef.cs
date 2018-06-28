@@ -15,7 +15,7 @@ using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
 using Akka.Pattern;
-using Akka.Util;
+using CuteAnt.Collections;
 
 namespace Akka.Actor
 {

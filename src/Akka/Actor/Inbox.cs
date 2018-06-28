@@ -12,7 +12,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor.Internal;
-using Akka.Util;
+using CuteAnt.Collections;
 using MessagePack;
 
 namespace Akka.Actor

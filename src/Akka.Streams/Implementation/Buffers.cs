@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using Akka.Annotations;
-using Akka.Util;
+using CuteAnt.Collections;
 
 namespace Akka.Streams.Implementation
 {
