@@ -969,7 +969,7 @@ namespace Akka.Streams.Implementation
             public Logic(EventSourceStage<TDelegate, TEventArgs> stage) : base(stage.Shape)
             {
                 _stage = stage;
-                _buffer = new Deque<TEventArgs>();
+                _buffer = new Deque<TEventArgs>(true);
                 var bufferCapacity = stage._maxBuffer;
                 var onEvent = GetAsyncCallback<TEventArgs>(e =>
                 {

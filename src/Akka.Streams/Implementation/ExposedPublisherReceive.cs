@@ -27,7 +27,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         public readonly Action<object> Unhandled;
 
-        private readonly Deque<object> _stash = new Deque<object>();
+        private readonly Deque<object> _stash = new Deque<object>(true);
 
         /// <summary>
         /// TBD

@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Pattern;
+using CuteAnt.Collections;
 
 namespace Akka.Persistence.Journal
 {
@@ -42,8 +43,8 @@ namespace Akka.Persistence.Journal
     /// </summary>
     public class ReplayFilter : ActorBase
     {
-        private readonly LinkedList<ReplayedMessage> _buffer = new LinkedList<ReplayedMessage>();
-        private readonly LinkedList<string> _oldWriters = new LinkedList<string>();
+        private readonly Deque<ReplayedMessage> _buffer = new Deque<ReplayedMessage>(true);
+        private readonly Deque<string> _oldWriters = new Deque<string>(true, StringComparer.Ordinal);
         private string _writerUuid = string.Empty;
         private long _sequenceNr = -1;
         private readonly ILoggingAdapter _log = Context.GetLogger();
@@ -140,9 +141,8 @@ namespace Akka.Persistence.Journal
                     {
                         if (_buffer.Count == WindowSize)
                         {
-                            var msg = _buffer.First;
-                            _buffer.RemoveFirst();
-                            PersistentActor.Tell(msg.Value, ActorRefs.NoSender);
+                            var msg = _buffer.RemoveFromBack(); // RemoveFirst
+                            PersistentActor.Tell(msg, ActorRefs.NoSender);
                         }
 
                         if (r.Persistent.WriterGuid.Equals(_writerUuid))
@@ -162,7 +162,7 @@ namespace Akka.Persistence.Journal
                                     case ReplayFilterMode.Fail:
                                         throw new IllegalStateException(errMsg);
                                     case ReplayFilterMode.Warn:
-                                        _buffer.AddLast(r);
+                                        _buffer.AddToFront(r); // AddLast
                                         break;
                                     case ReplayFilterMode.Disabled:
                                         throw new ArgumentException("Mode must not be Disabled");
@@ -171,7 +171,7 @@ namespace Akka.Persistence.Journal
                             else
                             {
                                 // note that it is alright with == _sequenceNr, since such may be emitted by EventSeq
-                                _buffer.AddLast(r);
+                                _buffer.AddToFront(r); // AddLast
                                 _sequenceNr = r.Persistent.SequenceNr;
                             }
                         }
@@ -190,7 +190,7 @@ namespace Akka.Persistence.Journal
                                 case ReplayFilterMode.Fail:
                                     throw new IllegalStateException(errMsg);
                                 case ReplayFilterMode.Warn:
-                                    _buffer.AddLast(r);
+                                    _buffer.AddToFront(r); // AddLast
                                     break;
                                 case ReplayFilterMode.Disabled:
                                     throw new ArgumentException("Mode must not be Disabled");
@@ -200,42 +200,55 @@ namespace Akka.Persistence.Journal
                         {
                             // from new writer
                             if (!string.IsNullOrEmpty(_writerUuid))
-                                _oldWriters.AddLast(_writerUuid);
+                                _oldWriters.AddToFront(_writerUuid); // AddLast
                             if (_oldWriters.Count > MaxOldWriters)
-                                _oldWriters.RemoveFirst();
+                                _oldWriters.RemoveFromBack(); // RemoveFirst
                             _writerUuid = r.Persistent.WriterGuid;
                             _sequenceNr = r.Persistent.SequenceNr;
 
                             // clear the buffer from messages from other writers with higher SequenceNr
-                            var node = _buffer.First;
-                            while (node != null)
+
+                            string LogError(ReplayedMessage msg)
                             {
-                                var next = node.Next;
-                                var msg = node.Value;
-                                if (msg.Persistent.SequenceNr >= _sequenceNr)
-                                {
-                                    var errMsg = $@"Invalid replayed event [sequenceNr=${r.Persistent.SequenceNr}, writerUUID=${r.Persistent.WriterGuid}] from a new writer.
+                                var errMsg = $@"Invalid replayed event [sequenceNr=${r.Persistent.SequenceNr}, writerUUID=${r.Persistent.WriterGuid}] from a new writer.
                                                 An older writer already sent an event [sequenceNr=${msg.Persistent.SequenceNr}, writerUUID=${msg.Persistent.WriterGuid}] whose sequence number was equal or greater for the same persistenceId [${r.Persistent.PersistenceId}].
                                                 Perhaps, the new writer journaled the event out of sequence, or duplicate PersistentId for different entities?";
-                                    LogIssue(errMsg);
-                                    switch (Mode)
-                                    {
-                                        case ReplayFilterMode.RepairByDiscardOld:
-                                            _buffer.Remove(node);
-                                            //discard
-                                            break;
-                                        case ReplayFilterMode.Fail:
-                                            throw new IllegalStateException(errMsg);
-                                        case ReplayFilterMode.Warn:
-                                            // keep
-                                            break;
-                                        case ReplayFilterMode.Disabled:
-                                            throw new ArgumentException("Mode must not be Disabled");
-                                    }
-                                }
-                                node = next;
+                                LogIssue(errMsg);
+                                return errMsg;
                             }
-                            _buffer.AddLast(r);
+                            if (Mode == ReplayFilterMode.RepairByDiscardOld)
+                            {
+                                _buffer.Reverse(msg =>
+                                {
+                                    if (msg.Persistent.SequenceNr >= _sequenceNr) { LogError(msg); }
+                                });
+                                _buffer.RemoveAll(msg => msg.Persistent.SequenceNr >= _sequenceNr);
+                            }
+                            else
+                            {
+                                _buffer.Reverse(msg =>
+                                {
+                                    if (msg.Persistent.SequenceNr >= _sequenceNr)
+                                    {
+                                        var errMsg = LogError(msg);
+                                        switch (Mode)
+                                        {
+                                            //case ReplayFilterMode.RepairByDiscardOld:
+                                            //    _buffer.Remove(node);
+                                            //    //discard
+                                            //    break;
+                                            case ReplayFilterMode.Fail:
+                                                throw new IllegalStateException(errMsg);
+                                            case ReplayFilterMode.Warn:
+                                                // keep
+                                                break;
+                                            case ReplayFilterMode.Disabled:
+                                                throw new ArgumentException("Mode must not be Disabled");
+                                        }
+                                    }
+                                });
+                            }
+                            _buffer.AddToFront(r); // AddLast
                         }
                     }
                     catch (IllegalStateException ex)
@@ -261,10 +274,7 @@ namespace Akka.Persistence.Journal
 
         private void SendBuffered()
         {
-            foreach (var message in _buffer)
-            {
-                PersistentActor.Tell(message, ActorRefs.NoSender);
-            }
+            _buffer.Reverse(message => PersistentActor.Tell(message, ActorRefs.NoSender));
             _buffer.Clear();
         }
 

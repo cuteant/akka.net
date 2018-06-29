@@ -84,7 +84,7 @@ namespace Akka.Streams.Implementation
         /// <param name="size">TBD</param>
         /// <param name="settings">TBD</param>
         /// <returns>TBD</returns>
-        public static IBuffer<T> Create<T>(int size, ActorMaterializerSettings settings) 
+        public static IBuffer<T> Create<T>(int size, ActorMaterializerSettings settings)
             => Create<T>(size, settings.MaxFixedBufferSize);
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    internal static class FixedSizeBuffer 
+    internal static class FixedSizeBuffer
     {
         /// <summary>
         /// INTERNAL API
@@ -318,7 +318,7 @@ namespace Akka.Streams.Implementation
     /// TBD
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    internal class PowerOfTwoFixedSizeBuffer<T> : FixedSizeBuffer<T> 
+    internal class PowerOfTwoFixedSizeBuffer<T> : FixedSizeBuffer<T>
     {
         private readonly int _mask;
 
@@ -352,7 +352,7 @@ namespace Akka.Streams.Implementation
         {
             private const int Size = 16;
             private const int Mask = 15;
-            
+
             private readonly T[] _queue = new T[Size];
             private readonly BoundedBuffer<T> _boundedBuffer;
             private int _head;
@@ -415,10 +415,7 @@ namespace Akka.Streams.Implementation
 
         private sealed class DynamicQueue : Deque<T>, IBuffer<T>
         {
-            public DynamicQueue(int capacity)
-            {
-                Capacity = capacity;
-            }
+            public DynamicQueue(int capacity) : base(capacity) { }
 
             //public int Capacity { get; }
             public int Used => Count;

@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Util.Internal;
+using CuteAnt.Collections;
 using MessagePack;
 
 namespace Akka.Persistence
@@ -98,14 +99,14 @@ namespace Akka.Persistence
         private bool _isWriteInProgress;
         private long _sequenceNr;
         private EventsourcedState _currentState;
-        private LinkedList<IPersistentEnvelope> _eventBatch = new LinkedList<IPersistentEnvelope>();
+        private Deque<IPersistentEnvelope> _eventBatch = new Deque<IPersistentEnvelope>();
         private bool _asyncTaskRunning = false;
 
         /// Used instead of iterating `pendingInvocations` in order to check if safe to revert to processing commands
         private long _pendingStashingPersistInvocations = 0L;
 
         /// Holds user-supplied callbacks for persist/persistAsync calls
-        private readonly LinkedList<IPendingHandlerInvocation> _pendingInvocations = new LinkedList<IPendingHandlerInvocation>();
+        private readonly Deque<IPendingHandlerInvocation> _pendingInvocations = new Deque<IPendingHandlerInvocation>();
 
         /// <summary>
         /// TBD
@@ -310,8 +311,8 @@ namespace Akka.Persistence
         public void Persist<TEvent>(TEvent @event, Action<TEvent> handler)
         {
             _pendingStashingPersistInvocations++;
-            _pendingInvocations.AddLast(new StashingHandlerInvocation(@event, o => handler((TEvent)o)));
-            _eventBatch.AddFirst(new AtomicWrite(new Persistent(@event, persistenceId: PersistenceId,
+            _pendingInvocations.AddToFront(new StashingHandlerInvocation(@event, o => handler((TEvent)o))); // AddLast
+            _eventBatch.AddToFront(new AtomicWrite(new Persistent(@event, persistenceId: PersistenceId,
                 sequenceNr: NextSequenceNr(), writerGuid: _writerGuid, sender: Sender)));
         }
 
@@ -332,12 +333,12 @@ namespace Akka.Persistence
             foreach (var @event in events)
             {
                 _pendingStashingPersistInvocations++;
-                _pendingInvocations.AddLast(new StashingHandlerInvocation(@event, inv));
+                _pendingInvocations.AddToFront(new StashingHandlerInvocation(@event, inv)); // AddLast
                 persistents.Add(new Persistent(@event, persistenceId: PersistenceId,
                     sequenceNr: NextSequenceNr(), writerGuid: _writerGuid, sender: Sender));
             }
             if (persistents.Count > 0)
-                _eventBatch.AddFirst(new AtomicWrite(persistents.ToImmutable()));
+                _eventBatch.AddToFront(new AtomicWrite(persistents.ToImmutable()));
         }
 
         /// <summary> 
@@ -370,8 +371,8 @@ namespace Akka.Persistence
         /// <param name="handler">TBD</param>
         public void PersistAsync<TEvent>(TEvent @event, Action<TEvent> handler)
         {
-            _pendingInvocations.AddLast(new AsyncHandlerInvocation(@event, o => handler((TEvent)o)));
-            _eventBatch.AddFirst(new AtomicWrite(new Persistent(@event, persistenceId: PersistenceId,
+            _pendingInvocations.AddToFront(new AsyncHandlerInvocation(@event, o => handler((TEvent)o))); // AddLast
+            _eventBatch.AddToFront(new AtomicWrite(new Persistent(@event, persistenceId: PersistenceId,
                 sequenceNr: NextSequenceNr(), writerGuid: _writerGuid, sender: Sender)));
         }
 
@@ -388,9 +389,9 @@ namespace Akka.Persistence
             void inv(object o) => handler((TEvent)o);
             foreach (var @event in events)
             {
-                _pendingInvocations.AddLast(new AsyncHandlerInvocation(@event, inv));
+                _pendingInvocations.AddToFront(new AsyncHandlerInvocation(@event, inv)); // AddLast
             }
-            _eventBatch.AddFirst(new AtomicWrite(events.Select(e => new Persistent(e, persistenceId: PersistenceId,
+            _eventBatch.AddToFront(new AtomicWrite(events.Select(e => new Persistent(e, persistenceId: PersistenceId,
                 sequenceNr: NextSequenceNr(), writerGuid: _writerGuid, sender: Sender))
                 .ToImmutableList<IPersistentRepresentation>()));
         }
@@ -424,8 +425,8 @@ namespace Akka.Persistence
             }
             else
             {
-                _pendingInvocations.AddLast(new AsyncHandlerInvocation(evt, o => handler((TEvent)o)));
-                _eventBatch.AddFirst(new NonPersistentMessage(evt, Sender));
+                _pendingInvocations.AddToFront(new AsyncHandlerInvocation(evt, o => handler((TEvent)o))); // AddLast
+                _eventBatch.AddToFront(new NonPersistentMessage(evt, Sender));
             }
         }
 

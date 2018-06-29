@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Persistence.Internal;
+using CuteAnt.Collections;
 
 namespace Akka.Persistence
 {
@@ -265,7 +266,7 @@ namespace Akka.Persistence
             {
                 void onWriteMessageComplete(bool err)
                 {
-                    _pendingInvocations.Pop();
+                    _pendingInvocations.RemoveFromBack(); // Pop
                     UnstashInternally(err);
                 }
                 var handled = CommonProcessingStateBehavior(message, onWriteMessageComplete);
@@ -304,11 +305,9 @@ namespace Akka.Persistence
         {
             if (_eventBatch.Count > 0)
             {
-                foreach (var p in _eventBatch.Reverse())
-                {
-                    _journalBatch.Add(p);
-                }
-                _eventBatch = new LinkedList<IPersistentEnvelope>();
+                _eventBatch.Reverse(_ => _journalBatch.Add(_));
+                _eventBatch.Clear();
+                _eventBatch = new Deque<IPersistentEnvelope>();
             }
 
             FlushJournalBatch();
@@ -324,7 +323,7 @@ namespace Akka.Persistence
             {
                 void onWriteMessageComplete(bool err)
                 {
-                    var invocation = _pendingInvocations.Pop();
+                    var invocation = _pendingInvocations.RemoveFromBack(); // Pop
 
                     // enables an early return to `processingCommands`, because if this counter hits `0`,
                     // we know the remaining pendingInvocations are all `persistAsync` created, which
@@ -348,7 +347,7 @@ namespace Akka.Persistence
         {
             try
             {
-                _pendingInvocations.First.Value.Handler(payload);
+                _pendingInvocations.Last.Handler(payload); // First.Value
             }
             finally
             {

@@ -1020,10 +1020,10 @@ namespace Akka.Remote
         // Use an internal buffer instead of Stash for efficiency stash/unstashAll is slow when many
         // messages are stashed
         // IMPORTANT: sender is not stored, so .Sender and forward must not be used in EndpointWriter
-        private readonly Deque<object> _buffer = new Deque<object>();
+        private readonly Deque<object> _buffer = new Deque<object>(true);
 
         //buffer for IPriorityMessages - ensures that heartbeats get delivered before user-defined messages
-        private readonly Deque<EndpointManager.Send> _prioBuffer = new Deque<EndpointManager.Send>();
+        private readonly Deque<EndpointManager.Send> _prioBuffer = new Deque<EndpointManager.Send>(true);
 
         private long _largeBufferLogTimestamp = MonotonicClock.GetNanos();
 

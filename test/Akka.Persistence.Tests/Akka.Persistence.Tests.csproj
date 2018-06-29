@@ -6,6 +6,17 @@
     <AssemblyName>Akka.Persistence.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netcore' ">
+    <PackageReference Include="System.ObjectModel" Version="$(SystemObjectModelPackageVersion)" />
+    <PackageReference Include="System.Runtime.Serialization.Primitives" Version="$(SystemRuntimeSerializationPrimitivesPackageVersion)" />
+    <PackageReference Include="System.Runtime.Serialization.Xml" Version="$(SystemRuntimeSerializationXmlPackageVersion)" />
+    <PackageReference Include="System.Runtime.Serialization.Formatters" Version="$(SystemRuntimeSerializationFormattersPackageVersion)" />
+    <PackageReference Include="System.Xml.XmlSerializer" Version="$(SystemXmlXmlSerializerPackageVersion)" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Serialization.Hyperion\Akka.Serialization.Hyperion.csproj" />

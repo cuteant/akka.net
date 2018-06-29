@@ -11,6 +11,7 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.Pattern;
 using Akka.Persistence.Internal;
+using CuteAnt.Collections;
 
 namespace Akka.Persistence
 {
@@ -38,7 +39,7 @@ namespace Akka.Persistence
     /// </summary>
     internal class RecoveryPermitter : UntypedActor
     {
-        private readonly LinkedList<IActorRef> pending = new LinkedList<IActorRef>();
+        private readonly Deque<IActorRef> pending = new Deque<IActorRef>(true);
         private readonly ILoggingAdapter Log = Context.GetLogger();
         private int _usedPermits;
         private int _maxPendingStats;
@@ -65,7 +66,7 @@ namespace Akka.Persistence
                         {
                             Log.Debug("Exceeded max-concurrent-recoveries [{0}]. First pending {1}", MaxPermits, Sender);
                         }
-                        pending.AddLast(Sender);
+                        pending.AddToFront(Sender); // AddLast
                         _maxPendingStats = Math.Max(_maxPendingStats, pending.Count);
                     }
                     else
@@ -98,7 +99,7 @@ namespace Akka.Persistence
 
             if (pending.Count > 0)
             {
-                var popRef = pending.Pop();
+                var popRef = pending.RemoveFromBack(); // Pop
                 RecoveryPermitGranted(popRef);
             }
 

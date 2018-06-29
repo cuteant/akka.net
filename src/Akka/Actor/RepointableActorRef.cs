@@ -342,7 +342,7 @@ namespace Akka.Actor
         private readonly object _lock = new object();
 
        /* Both queues must be accessed via lock */
-        private readonly Deque<Envelope> _messageQueue = new Deque<Envelope>();
+        private readonly Deque<Envelope> _messageQueue = new Deque<Envelope>(true);
         private LatestFirstSystemMessageList _sysMsgQueue = SystemMessageList.LNil;
 
         private readonly TimeSpan _timeout;

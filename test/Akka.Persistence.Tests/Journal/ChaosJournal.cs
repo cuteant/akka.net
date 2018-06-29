@@ -13,10 +13,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Persistence.Journal;
+using CuteAnt.Collections;
 
 namespace Akka.Persistence.Tests.Journal
 {
-    using Messages = IDictionary<string, LinkedList<IPersistentRepresentation>>;
+    using Messages = IDictionary<string, Deque<IPersistentRepresentation>>;
 
     internal class WriteFailedException : TestException
     {
@@ -37,7 +38,7 @@ namespace Akka.Persistence.Tests.Journal
 
     public class ChaosJournal : AsyncWriteJournal, IMemoryMessages
     {
-        private readonly ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> _messages = new ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>>();
+        private readonly ConcurrentDictionary<string, Deque<IPersistentRepresentation>> _messages = new ConcurrentDictionary<string, Deque<IPersistentRepresentation>>();
 
         private readonly Random _random = new Random();
 
@@ -138,8 +139,8 @@ namespace Akka.Persistence.Tests.Journal
 
         public Messages Add(IPersistentRepresentation persistent)
         {
-            var list = _messages.GetOrAdd(persistent.PersistenceId, new LinkedList<IPersistentRepresentation>());
-            list.AddLast(persistent);
+            var list = _messages.GetOrAdd(persistent.PersistenceId, new Deque<IPersistentRepresentation>(true));
+            list.AddToFront(persistent); // AddLast
             return _messages;
         }
 
@@ -147,14 +148,7 @@ namespace Akka.Persistence.Tests.Journal
         {
             if (_messages.TryGetValue(pid, out var persistents))
             {
-                var node = persistents.First;
-                while (node != null)
-                {
-                    if (node.Value.SequenceNr == seqNr)
-                        node.Value = updater(node.Value);
-
-                    node = node.Next;
-                }
+                persistents.UpdateAll(_ => _.SequenceNr == seqNr, updater);
             }
 
             return _messages;
@@ -164,14 +158,7 @@ namespace Akka.Persistence.Tests.Journal
         {
             if (_messages.TryGetValue(pid, out var persistents))
             {
-                var node = persistents.First;
-                while (node != null)
-                {
-                    if (node.Value.SequenceNr == seqNr)
-                        persistents.Remove(node);
-
-                    node = node.Next;
-                }
+                persistents.RemoveAll(_ => _.SequenceNr == seqNr);
             }
 
             return _messages;
@@ -193,7 +180,7 @@ namespace Akka.Persistence.Tests.Journal
         {
             if (_messages.TryGetValue(pid, out var persistents))
             {
-                var last = persistents.LastOrDefault();
+                var last = persistents.FirstOrDefault(); // LastOrDefault
                 return last?.SequenceNr ?? 0L;
             }
 

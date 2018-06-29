@@ -10,13 +10,15 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Util.Internal;
+using CuteAnt.Collections;
 
 namespace Akka.Persistence.Journal
 {
-    using Messages = IDictionary<string, LinkedList<IPersistentRepresentation>>;
+    using Messages = IDictionary<string, Deque<IPersistentRepresentation>>;
 
     /// <summary>
     /// TBD
@@ -66,13 +68,17 @@ namespace Akka.Persistence.Journal
     /// </summary>
     public class MemoryJournal : AsyncWriteJournal
     {
-        private readonly ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> _messages = new ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>>(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, Deque<IPersistentRepresentation>> _messages = new ConcurrentDictionary<string, Deque<IPersistentRepresentation>>(StringComparer.Ordinal);
         private readonly ConcurrentDictionary<string, long> _meta = new ConcurrentDictionary<string, long>(StringComparer.Ordinal);
 
         /// <summary>
         /// TBD
         /// </summary>
-        protected virtual ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> Messages { get { return _messages; } }
+        protected virtual ConcurrentDictionary<string, Deque<IPersistentRepresentation>> Messages
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _messages; }
+        }
 
         /// <summary>
         /// TBD
@@ -88,7 +94,7 @@ namespace Akka.Persistence.Journal
                     Add(p);
                 }
             }
-            return Task.FromResult((IImmutableList<Exception>) null); // all good
+            return Task.FromResult((IImmutableList<Exception>)null); // all good
         }
 
         /// <summary>
@@ -147,9 +153,10 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public Messages Add(IPersistentRepresentation persistent)
         {
-            var list = Messages.GetOrAdd(persistent.PersistenceId, pid => new LinkedList<IPersistentRepresentation>());
-            list.AddLast(persistent);
-            return Messages;
+            var messages = Messages;
+            var list = messages.GetOrAdd(persistent.PersistenceId, pid => new Deque<IPersistentRepresentation>(true));
+            list.AddToFront(persistent); // AddLast
+            return messages;
         }
 
         /// <summary>
@@ -161,19 +168,13 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public Messages Update(string pid, long seqNr, Func<IPersistentRepresentation, IPersistentRepresentation> updater)
         {
-            if (Messages.TryGetValue(pid, out LinkedList<IPersistentRepresentation> persistents))
+            var messages = Messages;
+            if (messages.TryGetValue(pid, out Deque<IPersistentRepresentation> persistents))
             {
-                var node = persistents.First;
-                while (node != null)
-                {
-                    if (node.Value.SequenceNr == seqNr)
-                        node.Value = updater(node.Value);
-
-                    node = node.Next;
-                }
+                persistents.UpdateAll(_ => _.SequenceNr == seqNr, updater);
             }
 
-            return Messages;
+            return messages;
         }
 
         /// <summary>
@@ -184,19 +185,13 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public Messages Delete(string pid, long seqNr)
         {
-            if (Messages.TryGetValue(pid, out LinkedList<IPersistentRepresentation> persistents))
+            var messages = Messages;
+            if (messages.TryGetValue(pid, out Deque<IPersistentRepresentation> persistents))
             {
-                var node = persistents.First;
-                while (node != null)
-                {
-                    if (node.Value.SequenceNr == seqNr)
-                        persistents.Remove(node);
-
-                    node = node.Next;
-                }
+                persistents.RemoveAll(_ => _.SequenceNr == seqNr);
             }
 
-            return Messages;
+            return messages;
         }
 
         /// <summary>
@@ -209,7 +204,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public IEnumerable<IPersistentRepresentation> Read(string pid, long fromSeqNr, long toSeqNr, long max)
         {
-            if (Messages.TryGetValue(pid, out LinkedList<IPersistentRepresentation> persistents))
+            if (Messages.TryGetValue(pid, out Deque<IPersistentRepresentation> persistents))
             {
                 return persistents
                     .Where(x => x.SequenceNr >= fromSeqNr && x.SequenceNr <= toSeqNr)
@@ -226,9 +221,9 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public long HighestSequenceNr(string pid)
         {
-            if (Messages.TryGetValue(pid, out LinkedList<IPersistentRepresentation> persistents))
+            if (Messages.TryGetValue(pid, out Deque<IPersistentRepresentation> persistents))
             {
-                var last = persistents.LastOrDefault();
+                var last = persistents.FirstOrDefault(); // LastOrDefault
                 return last?.SequenceNr ?? 0L;
             }
 
@@ -243,12 +238,16 @@ namespace Akka.Persistence.Journal
     /// </summary>
     public class SharedMemoryJournal : MemoryJournal
     {
-        private static readonly ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> SharedMessages = new ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>>(StringComparer.Ordinal);
+        private static readonly ConcurrentDictionary<string, Deque<IPersistentRepresentation>> SharedMessages = new ConcurrentDictionary<string, Deque<IPersistentRepresentation>>(StringComparer.Ordinal);
 
         /// <summary>
         /// TBD
         /// </summary>
-        protected override ConcurrentDictionary<string, LinkedList<IPersistentRepresentation>> Messages { get { return SharedMessages; } }
+        protected override ConcurrentDictionary<string, Deque<IPersistentRepresentation>> Messages
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return SharedMessages; }
+        }
     }
 }
 

@@ -44,7 +44,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
     }}";
                 throw new NotSupportedException(message);
             }
-            _theStash = new Deque<Envelope>();
+            _theStash = new Deque<Envelope>(true);
             _actorCell = actorCell;
 
             // TODO: capacity needs to come from dispatcher or mailbox config
@@ -119,8 +119,8 @@ An (unbounded) deque-based mailbox can be configured as follows:
         /// <param name="predicate">A predicate function to determine which messages to select.</param>
         public void UnstashAll(Func<Envelope, bool> predicate)
         {
-            if(_theStash.Count > 0)
-            {
+            //if(_theStash.Count > 0)
+            //{
                 void Enqueue(Envelope item)
                 {
                     if (predicate(item)) { EnqueueFirst(item); }
@@ -136,9 +136,9 @@ An (unbounded) deque-based mailbox can be configured as follows:
                 }
                 finally
                 {
-                    _theStash = new Deque<Envelope>();
+                    _theStash = new Deque<Envelope>(true);
                 }
-            }
+            //}
         }
      
         /// <summary>
@@ -152,7 +152,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
                 return Enumerable.Empty<Envelope>();
 
             var stashed = _theStash;
-            _theStash = new Deque<Envelope>();
+            _theStash = new Deque<Envelope>(true);
             return stashed;
         }
 
