@@ -1035,7 +1035,13 @@ namespace Akka.Cluster
         {
             var sys = Context.System;
             var self = Self;
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "wait-exiting", () => _selfExiting.Task);
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "wait-exiting", () =>
+            {
+                if (_latestGossip.Members.IsEmpty)
+                    return Task.FromResult(Done.Instance); // not joined yet
+                else
+                    return _selfExiting.Task;
+            });
             _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExitingDone, "exiting-completed", () =>
             {
                 if (Cluster.Get(sys).IsTerminated)
@@ -2573,7 +2579,7 @@ namespace Akka.Cluster
         /// <param name="seeds">TBD</param>
         /// <exception cref="ArgumentException">
         /// This exception is thrown when either the list of specified <paramref name="seeds"/> is empty
-        /// or the first listed seed is a reference to the <see cref="IUntypedActorContext.System"/>'s address.
+        /// or the first listed seed is a reference to the <see cref="IActorContext.System">IUntypedActorContext.System</see>'s address.
         /// </exception>
         public JoinSeedNodeProcess(ImmutableList<Address> seeds)
         {
@@ -2682,7 +2688,7 @@ namespace Akka.Cluster
         /// <param name="seeds">TBD</param>
         /// <exception cref="ArgumentException">
         /// This exception is thrown when either the number of specified <paramref name="seeds"/> is less than or equal to 1
-        /// or the first listed seed is a reference to the <see cref="IUntypedActorContext.System"/>'s address.
+        /// or the first listed seed is a reference to the <see cref="IActorContext.System">IUntypedActorContext.System</see>'s address.
         /// </exception>
         public FirstSeedNodeProcess(ImmutableList<Address> seeds)
         {

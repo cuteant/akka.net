@@ -132,7 +132,7 @@ namespace Akka.Event
         /// </summary>
         /// <param name="format">The message that is being logged.</param>
         /// <param name="args">An optional list of items used to format the message.</param>
-        public void Debug(string format, params object[] args)
+        public virtual void Debug(string format, params object[] args)
         {
             if (!IsDebugEnabled) 
                 return;
@@ -152,7 +152,7 @@ namespace Akka.Event
         /// </summary>
         /// <param name="format">N/A</param>
         /// <param name="args">N/A</param>
-        public void Warn(string format, params object[] args)
+        public virtual void Warn(string format, params object[] args)
         {
             Warning(format, args);
         }
@@ -162,7 +162,7 @@ namespace Akka.Event
         /// </summary>
         /// <param name="format">The message that is being logged.</param>
         /// <param name="args">An optional list of items used to format the message.</param>
-        public void Warning(string format, params object[] args)
+        public virtual void Warning(string format, params object[] args)
         {
             if (!IsWarningEnabled) 
                 return;
@@ -183,7 +183,7 @@ namespace Akka.Event
         /// <param name="cause">The exception associated with this message.</param>
         /// <param name="format">The message that is being logged.</param>
         /// <param name="args">An optional list of items used to format the message.</param>
-        public void Error(Exception cause, string format, params object[] args)
+        public virtual void Error(Exception cause, string format, params object[] args)
         {
             if (!IsErrorEnabled) 
                 return;
@@ -203,7 +203,7 @@ namespace Akka.Event
         /// </summary>
         /// <param name="format">The message that is being logged.</param>
         /// <param name="args">An optional list of items used to format the message.</param>
-        public void Error(string format, params object[] args)
+        public virtual void Error(string format, params object[] args)
         {
             if (!IsErrorEnabled) 
                 return;
@@ -223,7 +223,7 @@ namespace Akka.Event
         /// </summary>
         /// <param name="format">The message that is being logged.</param>
         /// <param name="args">An optional list of items used to format the message.</param>
-        public void Info(string format, params object[] args)
+        public virtual void Info(string format, params object[] args)
         {
             if (!IsInfoEnabled) 
                 return;
@@ -244,7 +244,7 @@ namespace Akka.Event
         /// <param name="logLevel">The level used to log the message.</param>
         /// <param name="format">The message that is being logged.</param>
         /// <param name="args">An optional list of items used to format the message.</param>
-        public void Log(LogLevel logLevel, string format, params object[] args)
+        public virtual void Log(LogLevel logLevel, string format, params object[] args)
         {
             if (args == null || args.Length == 0)
             {

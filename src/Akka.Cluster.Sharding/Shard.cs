@@ -18,7 +18,7 @@ namespace Akka.Cluster.Sharding
     using ShardId = String;
     using EntityId = String;
     using Msg = Object;
-    
+
     internal interface IShard
     {
         IActorContext Context { get; }
@@ -26,7 +26,7 @@ namespace Akka.Cluster.Sharding
         IActorRef Sender { get; }
         string TypeName { get; }
         ShardId ShardId { get; }
-        Props EntityProps { get; }
+        Func<string, Props> EntityProps { get; }
         ClusterShardingSettings Settings { get; }
         ExtractEntityId ExtractEntityId { get; }
         ExtractShardId ExtractShardId { get; }
@@ -360,7 +360,7 @@ namespace Akka.Cluster.Sharding
         public ILoggingAdapter Log { get; } = Context.GetLogger();
         public string TypeName { get; }
         public string ShardId { get; }
-        public Props EntityProps { get; }
+        public Func<string, Props> EntityProps { get; }
         public ClusterShardingSettings Settings { get; }
         public ExtractEntityId ExtractEntityId { get; }
         public ExtractShardId ExtractShardId { get; }
@@ -377,7 +377,7 @@ namespace Akka.Cluster.Sharding
         public Shard(
             string typeName,
             string shardId,
-            Props entityProps,
+            Func<string, Props> entityProps,
             ClusterShardingSettings settings,
             ExtractEntityId extractEntityId,
             ExtractShardId extractShardId,
@@ -417,14 +417,14 @@ namespace Akka.Cluster.Sharding
         {
             shard.Context.Parent.Tell(new ShardInitialized(shard.ShardId));
         }
-        
+
         public static void BaseProcessChange<TShard, T>(this TShard shard, T evt, Action<T> handler)
             where TShard : IShard
             where T : Shard.StateChange
         {
             handler(evt);
         }
-        
+
         public static bool HandleCommand<TShard>(this TShard shard, object message) where TShard : IShard
         {
             switch (message)
@@ -450,6 +450,8 @@ namespace Akka.Cluster.Sharding
                 case Shard.IShardQuery sq:
                     shard.HandleShardRegionQuery(sq);
                     return true;
+                case ShardRegion.RestartShard _:
+                    return true;
                 case var _ when shard.ExtractEntityId(message) != null:
                     shard.DeliverMessage(message, shard.Context.Sender);
                     return true;
@@ -469,7 +471,7 @@ namespace Akka.Cluster.Sharding
                     break;
             }
         }
-        
+
         public static void BaseEntityTerminated<TShard>(this TShard shard, IActorRef tref) where TShard : IShard
         {
             if (shard.IdByRef.TryGetValue(tref, out var id))
@@ -698,7 +700,7 @@ namespace Akka.Cluster.Sharding
             {
                 if (shard.Log.IsDebugEnabled) shard.Log.Debug("Starting entity [{0}] in shard [{1}]", id, shard.ShardId);
 
-                child = shard.Context.Watch(shard.Context.ActorOf(shard.EntityProps, name));
+                child = shard.Context.Watch(shard.Context.ActorOf(shard.EntityProps(id), name));
                 shard.IdByRef = shard.IdByRef.SetItem(child, id);
                 shard.RefById = shard.RefById.SetItem(id, child);
                 shard.State = new Shard.ShardState(shard.State.Entries.Add(id));
@@ -707,12 +709,12 @@ namespace Akka.Cluster.Sharding
             return child;
         }
 
-        internal static int TotalBufferSize<TShard>(this TShard shard) where TShard : IShard => 
+        internal static int TotalBufferSize<TShard>(this TShard shard) where TShard : IShard =>
             shard.MessageBuffers.Aggregate(0, (sum, entity) => sum + entity.Value.Count);
 
         #endregion
 
-        public static Props Props(string typeName, ShardId shardId, Props entityProps, ClusterShardingSettings settings, ExtractEntityId extractEntityId, ExtractShardId extractShardId, object handOffStopMessage, IActorRef replicator, int majorityMinCap)
+        public static Props Props(string typeName, ShardId shardId, Func<string, Props> entityProps, ClusterShardingSettings settings, ExtractEntityId extractEntityId, ExtractShardId extractShardId, object handOffStopMessage, IActorRef replicator, int majorityMinCap)
         {
             switch (settings.StateStoreMode)
             {

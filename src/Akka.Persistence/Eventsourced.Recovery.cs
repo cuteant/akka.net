@@ -18,7 +18,7 @@ namespace Akka.Persistence
 
     internal class EventsourcedState
     {
-        public EventsourcedState(string name, bool isRecoveryRunning, StateReceive stateReceive)
+        public EventsourcedState(string name, Func<bool> isRecoveryRunning, StateReceive stateReceive)
         {
             Name = name;
             IsRecoveryRunning = isRecoveryRunning;
@@ -27,7 +27,7 @@ namespace Akka.Persistence
 
         public string Name { get; }
 
-        public bool IsRecoveryRunning { get; }
+        public Func<bool> IsRecoveryRunning { get; }
 
         public StateReceive StateReceive { get; }
 
@@ -39,6 +39,9 @@ namespace Akka.Persistence
     /// </summary>
     public abstract partial class Eventsourced
     {
+        private static readonly Func<bool> s_trueIsRecoveryRunning = () => true;
+        private static readonly Func<bool> s_falseIsRecoveryRunning = () => false;
+
         /// <summary>
         /// Initial state. Before starting the actual recovery it must get a permit from the `RecoveryPermitter`.
         /// When starting many persistent actors at the same time the journal and its data store is protected from
@@ -55,13 +58,13 @@ namespace Akka.Persistence
                 else
                     StashInternally(message);
             }
-            return new EventsourcedState("waiting for recovery permit", true, stateReceive);
+            return new EventsourcedState("waiting for recovery permit", s_trueIsRecoveryRunning, stateReceive);
         }
 
         /// <summary>
         /// Processes a loaded snapshot, if any. A loaded snapshot is offered with a <see cref="SnapshotOffer"/>
         /// message to the actor's <see cref="ReceiveRecover"/>. Then initiates a message replay, either starting
-        /// from the loaded snapshot or from scratch, and switches to <see cref="ReplayStarted"/> state.
+        /// from the loaded snapshot or from scratch, and switches to <see cref="RecoveryStarted"/> state.
         /// All incoming messages are stashed.
         /// </summary>
         /// <param name="maxReplays">Maximum number of messages to replay</param>
@@ -143,12 +146,7 @@ namespace Akka.Persistence
                 }
             }
 
-            return new EventsourcedState("recovery started - replay max: " + maxReplays, true, stateReceive);
-        }
-
-        private void ReturnRecoveryPermit()
-        {
-            Extension.RecoveryPermitter().Tell(Akka.Persistence.ReturnRecoveryPermit.Instance, Self);
+            return new EventsourcedState("recovery started - replay max: " + maxReplays, s_trueIsRecoveryRunning, stateReceive);
         }
 
         /// <summary>
@@ -166,6 +164,7 @@ namespace Akka.Persistence
             // protect against event replay stalling forever because of journal overloaded and such
             var timeoutCancelable = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(timeout, timeout, Self, new RecoveryTick(false), Self);
             var eventSeenInInterval = false;
+            var recoveryRunning = true;
 
             void stateReceive(Receive receive, object message)
             {
@@ -173,19 +172,19 @@ namespace Akka.Persistence
                 {
                     switch (message)
                     {
-                        case ReplayedMessage replayedMsg:
+                        case ReplayedMessage replayed:
                             try
                             {
                                 eventSeenInInterval = true;
-                                UpdateLastSequenceNr(replayedMsg.Persistent);
-                                base.AroundReceive(recoveryBehavior, replayedMsg.Persistent);
+                                UpdateLastSequenceNr(replayed.Persistent);
+                                base.AroundReceive(recoveryBehavior, replayed.Persistent);
                             }
                             catch (Exception cause)
                             {
                                 timeoutCancelable.Cancel();
                                 try
                                 {
-                                    OnRecoveryFailure(cause, replayedMsg.Persistent.Payload);
+                                    OnRecoveryFailure(cause, replayed.Persistent.Payload);
                                 }
                                 finally
                                 {
@@ -194,24 +193,28 @@ namespace Akka.Persistence
                                 ReturnRecoveryPermit();
                             }
                             break;
-
-                        case RecoverySuccess recovery:
+                        case RecoverySuccess success:
                             timeoutCancelable.Cancel();
                             OnReplaySuccess();
-                            ChangeState(ProcessingCommands());
-                            _sequenceNr = recovery.HighestSequenceNr;
-                            LastSequenceNr = recovery.HighestSequenceNr;
-                            _internalStash.UnstashAll();
-
-                            base.AroundReceive(recoveryBehavior, RecoveryCompleted.Instance);
+                            _sequenceNr = success.HighestSequenceNr;
+                            LastSequenceNr = success.HighestSequenceNr;
+                            recoveryRunning = false;
+                            try
+                            {
+                                base.AroundReceive(recoveryBehavior, RecoveryCompleted.Instance);
+                            }
+                            finally
+                            {
+                                // in finally in case exception and resume strategy
+                                TransitToProcessingState();
+                            }
                             ReturnRecoveryPermit();
                             break;
-
                         case ReplayMessagesFailure failure:
                             timeoutCancelable.Cancel();
                             try
                             {
-                                OnRecoveryFailure(failure.Cause, message: null);
+                                OnRecoveryFailure(failure.Cause);
                             }
                             finally
                             {
@@ -219,8 +222,7 @@ namespace Akka.Persistence
                             }
                             ReturnRecoveryPermit();
                             break;
-
-                        case RecoveryTick tick when (!tick.Snapshot):
+                        case RecoveryTick tick when !tick.Snapshot:
                             if (!eventSeenInInterval)
                             {
                                 timeoutCancelable.Cancel();
@@ -228,7 +230,7 @@ namespace Akka.Persistence
                                 {
                                     OnRecoveryFailure(
                                         new RecoveryTimedOutException(
-                                            $"Recovery timed out, didn't get event within {timeout.TotalSeconds}s, highest sequence number seen {_sequenceNr}."));
+                                            $"Recovery timed out, didn't get event within {timeout.TotalSeconds}s, highest sequence number seen {LastSequenceNr}."));
                                 }
                                 finally
                                 {
@@ -241,7 +243,6 @@ namespace Akka.Persistence
                                 eventSeenInInterval = false;
                             }
                             break;
-
                         default:
                             StashInternally(message);
                             break;
@@ -253,11 +254,32 @@ namespace Akka.Persistence
                     throw;
                 }
             }
-            return new EventsourcedState("replay started", true, stateReceive);
+
+            bool isRecoveryRunning() => recoveryRunning;
+
+            return new EventsourcedState("replay started", isRecoveryRunning, stateReceive);
+        }
+
+        private void ReturnRecoveryPermit() =>
+            Extension.RecoveryPermitter().Tell(Akka.Persistence.ReturnRecoveryPermit.Instance, Self);
+
+        private void TransitToProcessingState()
+        {
+            if (_eventBatch.Count > 0) FlushBatch();
+
+            if (_pendingStashingPersistInvocations > 0)
+            {
+                ChangeState(PersistingEvents());
+            }
+            else
+            {
+                ChangeState(ProcessingCommands());
+                _internalStash.UnstashAll();
+            }
         }
 
         /// <summary>
-        /// If event persistence is pending after processing a command, event persistence
+        /// Command processing state. If event persistence is pending after processing a command, event persistence
         /// is triggered and the state changes to <see cref="PersistingEvents"/>.
         /// </summary>
         private EventsourcedState ProcessingCommands()
@@ -284,7 +306,7 @@ namespace Akka.Persistence
                     }
                 }
             }
-            return new EventsourcedState("processing commands", false, stateReceive);
+            return new EventsourcedState("processing commands", s_falseIsRecoveryRunning, stateReceive);
         }
 
         private void OnProcessingCommandsAroundReceiveComplete(bool err)
@@ -314,7 +336,7 @@ namespace Akka.Persistence
         }
 
         /// <summary>
-        /// Remains until pending events are persisted and then changes state to <see cref="ProcessingCommands"/>.
+        /// Event persisting state. Remains until pending events are persisted and then changes state to <see cref="ProcessingCommands"/>.
         /// Only events to be persisted are processed. All other messages are stashed internally.
         /// </summary>
         private EventsourcedState PersistingEvents()
@@ -340,7 +362,7 @@ namespace Akka.Persistence
 
                 if (!handled) { StashInternally(message); }
             }
-            return new EventsourcedState("persisting events", false, stateReceive);
+            return new EventsourcedState("persisting events", s_falseIsRecoveryRunning, stateReceive);
         }
 
         private void PeekApplyHandler(object payload)

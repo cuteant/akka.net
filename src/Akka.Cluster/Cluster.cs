@@ -296,7 +296,7 @@ namespace Akka.Cluster
         /// actor system is manually restarted.
         /// </summary>
         /// <param name="seedNodes">TBD</param>
-        /// <param name="token"></param>
+        /// <param name="token">TBD</param>
         public Task JoinSeedNodesAsync(IEnumerable<Address> seedNodes, CancellationToken token = default)
         {
             var completion = new TaskCompletionSource<NotUsed>();
