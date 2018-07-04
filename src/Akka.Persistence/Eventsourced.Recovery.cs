@@ -328,8 +328,7 @@ namespace Akka.Persistence
             if (_eventBatch.Count > 0)
             {
                 _eventBatch.Reverse(_ => _journalBatch.Add(_));
-                _eventBatch.Clear();
-                _eventBatch = new Deque<IPersistentEnvelope>();
+                _eventBatch.Clear(); // = new Deque<IPersistentEnvelope>();
             }
 
             FlushJournalBatch();

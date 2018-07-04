@@ -15,6 +15,7 @@ using Akka.Annotations;
 using Akka.Event;
 using Akka.Pattern;
 using Akka.Streams.Stage;
+using CuteAnt.Collections;
 using CuteAnt.Pool;
 using Reactive.Streams;
 using static Akka.Streams.Implementation.Fusing.GraphInterpreter;
@@ -1314,7 +1315,7 @@ namespace Akka.Streams.Implementation.Fusing
         public static Props Props(GraphInterpreterShell shell) => Actor.Props.Create(() => new ActorGraphInterpreter(shell)).WithDeploy(Deploy.Local);
 
         private ISet<GraphInterpreterShell> _activeInterpreters = new HashSet<GraphInterpreterShell>();
-        private readonly Queue<GraphInterpreterShell> _newShells = new Queue<GraphInterpreterShell>();
+        private readonly QueueX<GraphInterpreterShell> _newShells = new QueueX<GraphInterpreterShell>();
         private readonly SubFusingActorMaterializerImpl _subFusingMaterializerImpl;
         private readonly GraphInterpreterShell _initial;
         private ILoggingAdapter _log;
@@ -1385,7 +1386,7 @@ namespace Akka.Streams.Implementation.Fusing
         // within RegisterShell in order to avoid unbounded recursion.
         private void FinishShellRegistration()
         {
-            if (_newShells.Count == 0)
+            if (_newShells.IsEmpty)
             {
                 if (_activeInterpreters.Count == 0)
                     Context.Stop(Self);
@@ -1450,7 +1451,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if (shell.IsTerminated)
                 {
                     _activeInterpreters.Remove(shell);
-                    if (_activeInterpreters.Count == 0 && _newShells.Count == 0)
+                    if (_activeInterpreters.Count == 0 && _newShells.IsEmpty)
                         Context.Stop(Self);
                 }
             }
@@ -1489,11 +1490,11 @@ namespace Akka.Streams.Implementation.Fusing
 
                         builder.AppendLine("NewShells:\n");
 
-                        foreach (var shell in _newShells)
+                        _newShells.ForEach((shell, sb) =>
                         {
-                            builder.Append("  " + shell.ToString().Replace("\n", "\n  "));
-                            builder.Append(shell.Interpreter);
-                        }
+                            sb.Append("  " + shell.ToString().Replace("\n", "\n  "));
+                            sb.Append(shell.Interpreter);
+                        }, builder);
 
                         _log.Debug(StringBuilderManager.ReturnAndFree(builder));
                     }
@@ -1510,12 +1511,18 @@ namespace Akka.Streams.Implementation.Fusing
             var ex = new AbruptTerminationException(Self);
             foreach (var shell in _activeInterpreters)
                 shell.TryAbort(ex);
-            _activeInterpreters = new HashSet<GraphInterpreterShell>();
-            foreach (var shell in _newShells)
+            _activeInterpreters.Clear();// = new HashSet<GraphInterpreterShell>();
+
+            void processItem(GraphInterpreterShell shell)
             {
-                if (TryInit(shell))
-                    shell.TryAbort(ex);
+                if (TryInit(shell)) { shell.TryAbort(ex); }
             }
+            _newShells.ForEach(processItem);
+            //foreach (var shell in _newShells)
+            //{
+            //    if (TryInit(shell))
+            //        shell.TryAbort(ex);
+            //}
         }
     }
 }

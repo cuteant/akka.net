@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Event;
+using CuteAnt.Collections;
 using CuteAnt.Reflection;
 
 namespace Akka.Remote.Transport
@@ -463,7 +464,7 @@ namespace Akka.Remote.Transport
     internal abstract class ActorTransportAdapterManager : UntypedActor
     {
         /// <summary>Lightweight Stash implementation</summary>
-        protected Queue<object> DelayedEvents = new Queue<object>();
+        protected QueueX<object> DelayedEvents = new QueueX<object>();
 
         /// <summary>TBD</summary>
         protected IAssociationEventListener AssociationListener;
@@ -482,26 +483,52 @@ namespace Akka.Remote.Transport
         /// <param name="message">TBD</param>
         protected override void OnReceive(object message)
         {
-            PatternMatch.Match(message)
-                .With<ListenUnderlying>(listen =>
-                {
+            switch (message)
+            {
+                case ListenUnderlying listen:
                     LocalAddress = listen.ListenAddress;
                     var capturedSelf = Self;
                     listen.UpstreamListener.ContinueWith(
                         listenerRegistered => capturedSelf.Tell(new ListenerRegistered(listenerRegistered.Result)),
                         TaskContinuationOptions.ExecuteSynchronously);
-                })
-                .With<ListenerRegistered>(listener =>
-                {
+                    break;
+
+                case ListenerRegistered listener:
                     AssociationListener = listener.Listener;
-                    foreach (var dEvent in DelayedEvents)
+                    void SendEvent(object dEvent)
                     {
                         Self.Tell(dEvent, ActorRefs.NoSender);
                     }
-                    DelayedEvents = new Queue<object>();
+                    DelayedEvents.ForEach(SendEvent);
+                    DelayedEvents.Clear();
                     Context.Become(Ready);
-                })
-                .Default(m => DelayedEvents.Enqueue(m));
+                    break;
+
+                default:
+                    DelayedEvents.Enqueue(message);
+                    break;
+            }
+            //PatternMatch.Match(message)
+            //    .With<ListenUnderlying>(listen =>
+            //    {
+            //        LocalAddress = listen.ListenAddress;
+            //        var capturedSelf = Self;
+            //        listen.UpstreamListener.ContinueWith(
+            //            listenerRegistered => capturedSelf.Tell(new ListenerRegistered(listenerRegistered.Result)),
+            //            TaskContinuationOptions.ExecuteSynchronously);
+            //    })
+            //    .With<ListenerRegistered>(listener =>
+            //    {
+            //        AssociationListener = listener.Listener;
+            //        foreach (var dEvent in DelayedEvents)
+            //        {
+            //            Self.Tell(dEvent, ActorRefs.NoSender);
+            //        }
+
+            //        DelayedEvents = new QueueX<object>();
+            //        Context.Become(Ready);
+            //    })
+            //    .Default(m => DelayedEvents.Enqueue(m));
         }
 
         /// <summary>Method to be implemented for child classes - processes messages once the transport is

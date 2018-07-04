@@ -19,7 +19,11 @@ namespace Akka.Dispatch.MessageQueues
     {
         private readonly ListPriorityQueue _prioQueue;
         // doesn't need to be threadsafe - only called from within actor
+#if NETCOREAPP
         private readonly Stack<Envelope> _prependBuffer = new Stack<Envelope>();
+#else
+        private readonly CuteAnt.Collections.StackX<Envelope> _prependBuffer = new CuteAnt.Collections.StackX<Envelope>();
+#endif
 
         /// <summary>
         /// DEPRECATED. Use <see cref="UnboundedPriorityMessageQueue(Func{object,int}, int)"/> instead.
@@ -74,18 +78,19 @@ namespace Akka.Dispatch.MessageQueues
         /// </remarks>
         protected override bool LockedTryDequeue(out Envelope envelope)
         {
-            if (_prependBuffer.Count > 0)
-            {
-                envelope = _prependBuffer.Pop();
-                return true;
-            }
+            //if (_prependBuffer.Count > 0)
+            //{
+            //    envelope = _prependBuffer.Pop();
+            //    return true;
+            //}
+            if (_prependBuffer.TryPop(out envelope)) { return true; }
 
             if (_prioQueue.Count() > 0)
             {
                 envelope = _prioQueue.Dequeue();
                 return true;
             }
-            envelope = default (Envelope);
+            envelope = default;
             return false;
         }
 

@@ -18,7 +18,11 @@ namespace Akka.Dispatch.MessageQueues
     public class DequeWrapperMessageQueue : IMessageQueue, IDequeBasedMessageQueueSemantics
     {
         // doesn't need to be threadsafe - only called from within actor
+#if NETCOREAPP
         private readonly Stack<Envelope> _prependBuffer = new Stack<Envelope>();
+#else
+        private readonly CuteAnt.Collections.StackX<Envelope> _prependBuffer = new CuteAnt.Collections.StackX<Envelope>();
+#endif
 
         /// <summary>
         /// The underlying <see cref="IMessageQueue"/>.
@@ -68,11 +72,12 @@ namespace Akka.Dispatch.MessageQueues
         /// <returns><c>true</c> if a message was available, <c>false</c> otherwise.</returns>
         public bool TryDequeue(out Envelope envelope)
         {
-            if (_prependBuffer.Count > 0)
-            {
-                envelope = _prependBuffer.Pop();
-                return true;
-            }
+            //if (_prependBuffer.Count > 0)
+            //{
+            //    envelope = _prependBuffer.Pop();
+            //    return true;
+            //}
+            if (_prependBuffer.TryPop(out envelope)) { return true; }
 
             return MessageQueue.TryDequeue(out envelope);
         }

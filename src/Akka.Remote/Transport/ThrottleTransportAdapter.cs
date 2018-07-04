@@ -929,29 +929,27 @@ namespace Akka.Remote.Transport
         {
             When(ThrottlerState.WaitExposedHandle, @event =>
             {
-                if (@event.FsmEvent is ThrottlerManager.Handle && @event.StateData is Uninitialized)
+                if (@event.FsmEvent is ThrottlerManager.Handle throttlerManagerHandle && @event.StateData is Uninitialized)
                 {
                     // register to downstream layer and wait for origin
                     OriginalHandle.ReadHandlerSource.SetResult(new ActorHandleEventListener(Self));
                     return
                         GoTo(ThrottlerState.WaitOrigin)
-                            .Using(
-                                new ExposedHandle(
-                                    @event.FsmEvent.AsInstanceOf<ThrottlerManager.Handle>().ThrottlerHandle));
+                            .Using(new ExposedHandle(throttlerManagerHandle.ThrottlerHandle));
                 }
                 return null;
             });
 
             When(ThrottlerState.WaitOrigin, @event =>
             {
-                if (@event.FsmEvent is InboundPayload && @event.StateData is ExposedHandle)
+                if (@event.FsmEvent is InboundPayload inboundPayload && @event.StateData is ExposedHandle exposedHandle)
                 {
-                    var b = @event.FsmEvent.AsInstanceOf<InboundPayload>().Payload;
+                    var b = inboundPayload.Payload;
                     ThrottledMessages.Enqueue(b);
                     var origin = PeekOrigin(b);
                     if (origin != null)
                     {
-                        Manager.Tell(new ThrottlerManager.Checkin(origin, @event.StateData.AsInstanceOf<ExposedHandle>().Handle));
+                        Manager.Tell(new ThrottlerManager.Checkin(origin, exposedHandle.Handle));
                         return GoTo(ThrottlerState.WaitMode);
                     }
                     return Stay();
@@ -961,23 +959,22 @@ namespace Akka.Remote.Transport
 
             When(ThrottlerState.WaitMode, @event =>
             {
-                if (@event.FsmEvent is InboundPayload)
+                if (@event.FsmEvent is InboundPayload inboundPayload)
                 {
-                    var b = @event.FsmEvent.AsInstanceOf<InboundPayload>().Payload;
+                    var b = inboundPayload.Payload;
                     ThrottledMessages.Enqueue(b);
                     return Stay();
                 }
 
-                if (@event.FsmEvent is ThrottleMode && @event.StateData is ExposedHandle)
+                if (@event.FsmEvent is ThrottleMode mode && @event.StateData is ExposedHandle exposedHandler)
                 {
-                    var mode = @event.FsmEvent.AsInstanceOf<ThrottleMode>();
-                    var exposedHandle = @event.StateData.AsInstanceOf<ExposedHandle>().Handle;
+                    var exposedHandle = exposedHandler.Handle;
                     InboundThrottleMode = mode;
                     try
                     {
                         if (mode is Blackhole)
                         {
-                            ThrottledMessages = new Queue<byte[]>();
+                            ThrottledMessages.Clear();// = new Queue<byte[]>();
                             exposedHandle.Disassociate();
                             return Stop();
                         }
@@ -1003,16 +1000,15 @@ namespace Akka.Remote.Transport
 
             When(ThrottlerState.WaitUpstreamListener, @event =>
             {
-                if (@event.FsmEvent is InboundPayload)
+                if (@event.FsmEvent is InboundPayload inboundPayload)
                 {
-                    var b = @event.FsmEvent.AsInstanceOf<InboundPayload>();
-                    ThrottledMessages.Enqueue(b.Payload);
+                    ThrottledMessages.Enqueue(inboundPayload.Payload);
                     return Stay();
                 }
 
-                if (@event.FsmEvent is ThrottlerManager.Listener)
+                if (@event.FsmEvent is ThrottlerManager.Listener throttlerManagerListener)
                 {
-                    UpstreamListener = @event.FsmEvent.AsInstanceOf<ThrottlerManager.Listener>().HandleEventListener;
+                    UpstreamListener = throttlerManagerListener.HandleEventListener;
                     Self.Tell(new Dequeue());
                     return GoTo(ThrottlerState.Throttling);
                 }
@@ -1022,19 +1018,17 @@ namespace Akka.Remote.Transport
 
             When(ThrottlerState.WaitModeAndUpstreamListener, @event =>
             {
-                if (@event.FsmEvent is ThrottlerManager.ListenerAndMode)
+                if (@event.FsmEvent is ThrottlerManager.ListenerAndMode listenerAndMode)
                 {
-                    var listenerAndMode = @event.FsmEvent.AsInstanceOf<ThrottlerManager.ListenerAndMode>();
                     UpstreamListener = listenerAndMode.HandleEventListener;
                     InboundThrottleMode = listenerAndMode.Mode;
                     Self.Tell(new Dequeue());
                     return GoTo(ThrottlerState.Throttling);
                 }
 
-                if (@event.FsmEvent is InboundPayload)
+                if (@event.FsmEvent is InboundPayload inboundPayload)
                 {
-                    var b = @event.FsmEvent.AsInstanceOf<InboundPayload>();
-                    ThrottledMessages.Enqueue(b.Payload);
+                    ThrottledMessages.Enqueue(inboundPayload.Payload);
                     return Stay();
                 }
 
@@ -1043,13 +1037,12 @@ namespace Akka.Remote.Transport
 
             When(ThrottlerState.Throttling, @event =>
             {
-                if (@event.FsmEvent is ThrottleMode)
+                if (@event.FsmEvent is ThrottleMode mode)
                 {
-                    var mode = @event.FsmEvent.AsInstanceOf<ThrottleMode>();
                     InboundThrottleMode = mode;
-                    if (mode is Blackhole) { ThrottledMessages = new Queue<byte[]>(); }
+                    if (mode is Blackhole) { ThrottledMessages.Clear(); /*= new Queue<byte[]>();*/ }
                     CancelTimer(DequeueTimerName);
-                    if (ThrottledMessages.Any())
+                    if (ThrottledMessages.Count > 0)
                     {
                         ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), ThrottledMessages.Peek().Length));
                     }
@@ -1057,21 +1050,21 @@ namespace Akka.Remote.Transport
                     return Stay();
                 }
 
-                if (@event.FsmEvent is InboundPayload)
+                if (@event.FsmEvent is InboundPayload inboundPayload)
                 {
-                    ForwardOrDelay(@event.FsmEvent.AsInstanceOf<InboundPayload>().Payload);
+                    ForwardOrDelay(inboundPayload.Payload);
                     return Stay();
                 }
 
                 if (@event.FsmEvent is Dequeue)
                 {
-                    if (ThrottledMessages.Any())
+                    if (ThrottledMessages.Count > 0)
                     {
                         var payload = ThrottledMessages.Dequeue();
                         UpstreamListener.Notify(new InboundPayload(payload));
                         InboundThrottleMode = InboundThrottleMode.TryConsumeTokens(MonotonicClock.GetNanos(),
                             payload.Length).Item1;
-                        if (ThrottledMessages.Any())
+                        if (ThrottledMessages.Count > 0)
                             ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), ThrottledMessages.Peek().Length));
                     }
                     return Stay();
@@ -1083,9 +1076,9 @@ namespace Akka.Remote.Transport
             WhenUnhandled(@event =>
             {
                 // we should always set the throttling mode
-                if (@event.FsmEvent is ThrottleMode)
+                if (@event.FsmEvent is ThrottleMode throttleMode)
                 {
-                    InboundThrottleMode = @event.FsmEvent.AsInstanceOf<ThrottleMode>();
+                    InboundThrottleMode = throttleMode;
                     Sender.Tell(SetThrottleAck.Instance);
                     return Stay();
                 }
@@ -1095,9 +1088,9 @@ namespace Akka.Remote.Transport
                     return Stop(); // not notifying the upstream handler is intentional: we are relying on heartbeating
                 }
 
-                if (@event.FsmEvent is FailWith)
+                if (@event.FsmEvent is FailWith failWith)
                 {
-                    var reason = @event.FsmEvent.AsInstanceOf<FailWith>().FailReason;
+                    var reason = failWith.FailReason;
                     if (UpstreamListener != null) UpstreamListener.Notify(new Disassociated(reason));
                     return Stop();
                 }
@@ -1122,9 +1115,9 @@ namespace Akka.Remote.Transport
             try
             {
                 var pdu = _codec.DecodePdu(b);
-                if (pdu is Associate)
+                if (pdu is Associate associate)
                 {
-                    return pdu.AsInstanceOf<Associate>().Info.Origin;
+                    return associate.Info.Origin;
                 }
                 return null;
             }
@@ -1160,7 +1153,7 @@ namespace Akka.Remote.Transport
             }
             else
             {
-                if (!ThrottledMessages.Any())
+                if (ThrottledMessages.Count <= 0)
                 {
                     var tokens = payload.Length;
                     var res = InboundThrottleMode.TryConsumeTokens(MonotonicClock.GetNanos(), tokens);
