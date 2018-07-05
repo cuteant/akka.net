@@ -128,17 +128,17 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         {
             switch (o)
             {
-                case Internal.Status status:
+                case Internal.Status _:
                     return StatusManifest;
-                case Internal.Delta delta:
+                case Internal.Delta _:
                     return DeltaManifest;
-                case Send send:
+                case Send _:
                     return SendManifest;
-                case SendToAll sendToAll:
+                case SendToAll _:
                     return SendToAllManifest;
-                case Publish publish:
+                case Publish _:
                     return PublishManifest;
-                case SendToOneSubscriber sub:
+                case SendToOneSubscriber _:
                     return SendToOneSubscriberManifest;
                 default:
                     throw new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
@@ -149,17 +149,17 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         {
             switch (o)
             {
-                case Internal.Status status:
+                case Internal.Status _:
                     return StatusManifestBytes;
-                case Internal.Delta delta:
+                case Internal.Delta _:
                     return DeltaManifestBytes;
-                case Send send:
+                case Send _:
                     return SendManifestBytes;
-                case SendToAll sendToAll:
+                case SendToAll _:
                     return SendToAllManifestBytes;
-                case Publish publish:
+                case Publish _:
                     return PublishManifestBytes;
-                case SendToOneSubscriber sub:
+                case SendToOneSubscriber _:
                     return SendToOneSubscriberManifestBytes;
                 default:
                     throw new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");

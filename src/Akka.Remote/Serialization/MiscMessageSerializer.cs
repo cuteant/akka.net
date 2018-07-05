@@ -114,10 +114,10 @@ namespace Akka.Remote.Serialization
                 case RemoteRouterConfig remoteRouterConfig:
                     return RemoteRouterConfigToProto(remoteRouterConfig);
 
-                case PoisonPill poisonPill:
-                case Kill kill:
-                case RemoteWatcher.Heartbeat heartbeat:
-                case LocalScope localScope:
+                case PoisonPill _:
+                case Kill _:
+                case RemoteWatcher.Heartbeat _:
+                case LocalScope _:
                     return EmptyBytes;
 
                 default:
@@ -130,43 +130,43 @@ namespace Akka.Remote.Serialization
         {
             switch (obj)
             {
-                case Identify identify:
+                case Identify _:
                     return IdentifyManifest;
-                case ActorIdentity actorIdentity:
+                case ActorIdentity _:
                     return ActorIdentityManifest;
-                case IActorRef actorRef:
+                case IActorRef _:
                     return ActorRefManifest;
-                case PoisonPill poisonPill:
+                case PoisonPill _:
                     return PoisonPillManifest;
-                case Kill kill:
+                case Kill _:
                     return KillManifest;
-                case RemoteWatcher.Heartbeat heartbeat:
+                case RemoteWatcher.Heartbeat _:
                     return RemoteWatcherHearthbeatManifest;
-                case RemoteWatcher.HeartbeatRsp heartbeatRsp:
+                case RemoteWatcher.HeartbeatRsp _:
                     return RemoteWatcherHearthbeatRspManifest;
-                case RemoteScope remoteScope:
+                case RemoteScope _:
                     return RemoteScopeManifest;
-                case LocalScope localScope:
+                case LocalScope _:
                     return LocalScopeManifest;
-                case Config config:
+                case Config _:
                     return ConfigManifest;
-                case FromConfig fromConfig:
+                case FromConfig _:
                     return FromConfigManifest;
-                case DefaultResizer defaultResizer:
+                case DefaultResizer _:
                     return DefaultResizerManifest;
-                case RoundRobinPool roundRobinPool:
+                case RoundRobinPool _:
                     return RoundRobinPoolManifest;
-                case BroadcastPool broadcastPool:
+                case BroadcastPool _:
                     return BroadcastPoolManifest;
-                case RandomPool randomPool:
+                case RandomPool _:
                     return RandomPoolManifest;
-                case ScatterGatherFirstCompletedPool scatterPool:
+                case ScatterGatherFirstCompletedPool _:
                     return ScatterGatherPoolManifest;
-                case TailChoppingPool tailChoppingPool:
+                case TailChoppingPool _:
                     return TailChoppingPoolManifest;
-                case ConsistentHashingPool hashingPool:
+                case ConsistentHashingPool _:
                     return ConsistentHashingPoolManifest;
-                case RemoteRouterConfig remoteRouterConfig:
+                case RemoteRouterConfig _:
                     return RemoteRouterConfigManifest;
 
                 default:
@@ -179,43 +179,43 @@ namespace Akka.Remote.Serialization
         {
             switch (obj)
             {
-                case Identify identify:
+                case Identify _:
                     return IdentifyManifestBytes;
-                case ActorIdentity actorIdentity:
+                case ActorIdentity _:
                     return ActorIdentityManifestBytes;
-                case IActorRef actorRef:
+                case IActorRef _:
                     return ActorRefManifestBytes;
-                case PoisonPill poisonPill:
+                case PoisonPill _:
                     return PoisonPillManifestBytes;
-                case Kill kill:
+                case Kill _:
                     return KillManifestBytes;
-                case RemoteWatcher.Heartbeat heartbeat:
+                case RemoteWatcher.Heartbeat _:
                     return RemoteWatcherHearthbeatManifestBytes;
-                case RemoteWatcher.HeartbeatRsp heartbeatRsp:
+                case RemoteWatcher.HeartbeatRsp _:
                     return RemoteWatcherHearthbeatRspManifestBytes;
-                case RemoteScope remoteScope:
+                case RemoteScope _:
                     return RemoteScopeManifestBytes;
-                case LocalScope localScope:
+                case LocalScope _:
                     return LocalScopeManifestBytes;
-                case Config config:
+                case Config _:
                     return ConfigManifestBytes;
-                case FromConfig fromConfig:
+                case FromConfig _:
                     return FromConfigManifestBytes;
-                case DefaultResizer defaultResizer:
+                case DefaultResizer _:
                     return DefaultResizerManifestBytes;
-                case RoundRobinPool roundRobinPool:
+                case RoundRobinPool _:
                     return RoundRobinPoolManifestBytes;
-                case BroadcastPool broadcastPool:
+                case BroadcastPool _:
                     return BroadcastPoolManifestBytes;
-                case RandomPool randomPool:
+                case RandomPool _:
                     return RandomPoolManifestBytes;
-                case ScatterGatherFirstCompletedPool scatterPool:
+                case ScatterGatherFirstCompletedPool _:
                     return ScatterGatherPoolManifestBytes;
-                case TailChoppingPool tailChoppingPool:
+                case TailChoppingPool _:
                     return TailChoppingPoolManifestBytes;
-                case ConsistentHashingPool hashingPool:
+                case ConsistentHashingPool _:
                     return ConsistentHashingPoolManifestBytes;
-                case RemoteRouterConfig remoteRouterConfig:
+                case RemoteRouterConfig _:
                     return RemoteRouterConfigManifestBytes;
 
                 default:

@@ -63,10 +63,10 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         {
             switch (obj)
             {
-                case HandOverToMe toMe:
-                case HandOverInProgress inProgress:
-                case HandOverDone done:
-                case TakeOverFromMe fromMe:
+                case HandOverToMe _:
+                case HandOverInProgress _:
+                case HandOverDone _:
+                case TakeOverFromMe _:
                     return EmptyBytes;
                 default:
                     throw new ArgumentException($"Cannot serialize object of type [{obj.GetType()}] in [{GetType()}]");
@@ -107,13 +107,13 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         {
             switch (o)
             {
-                case HandOverToMe toMe:
+                case HandOverToMe _:
                     return HandOverToMeManifest;
-                case HandOverInProgress inProgress:
+                case HandOverInProgress _:
                     return HandOverInProgressManifest;
-                case HandOverDone done:
+                case HandOverDone _:
                     return HandOverDoneManifest;
-                case TakeOverFromMe fromMe:
+                case TakeOverFromMe _:
                     return TakeOverFromMeManifest;
                 default:
                     throw new ArgumentException($"Cannot serialize object of type [{o.GetType()}] in [{GetType()}]");
@@ -124,13 +124,13 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         {
             switch (o)
             {
-                case HandOverToMe toMe:
+                case HandOverToMe _:
                     return HandOverToMeManifestBytes;
-                case HandOverInProgress inProgress:
+                case HandOverInProgress _:
                     return HandOverInProgressManifestBytes;
-                case HandOverDone done:
+                case HandOverDone _:
                     return HandOverDoneManifestBytes;
-                case TakeOverFromMe fromMe:
+                case TakeOverFromMe _:
                     return TakeOverFromMeManifestBytes;
                 default:
                     throw new ArgumentException($"Cannot serialize object of type [{o.GetType()}] in [{GetType()}]");

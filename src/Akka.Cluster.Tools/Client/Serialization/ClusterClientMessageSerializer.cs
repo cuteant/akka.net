@@ -71,9 +71,9 @@ namespace Akka.Cluster.Tools.Client.Serialization
             {
                 case ClusterReceptionist.Contacts contacts:
                     return ContactsToProto(contacts);
-                case ClusterReceptionist.GetContacts getContacts:
-                case ClusterReceptionist.Heartbeat heartbeat:
-                case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
+                case ClusterReceptionist.GetContacts _:
+                case ClusterReceptionist.Heartbeat _:
+                case ClusterReceptionist.HeartbeatRsp _:
                     return EmptyBytes;
                 default:
                     throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
@@ -114,13 +114,13 @@ namespace Akka.Cluster.Tools.Client.Serialization
         {
             switch (o)
             {
-                case ClusterReceptionist.Contacts contacts:
+                case ClusterReceptionist.Contacts _:
                     return ContactsManifest;
-                case ClusterReceptionist.GetContacts getContacts:
+                case ClusterReceptionist.GetContacts _:
                     return GetContactsManifest;
-                case ClusterReceptionist.Heartbeat heartbeat:
+                case ClusterReceptionist.Heartbeat _:
                     return HeartbeatManifest;
-                case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
+                case ClusterReceptionist.HeartbeatRsp _:
                     return HeartbeatRspManifest;
                 default:
                     throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
@@ -132,13 +132,13 @@ namespace Akka.Cluster.Tools.Client.Serialization
         {
             switch (o)
             {
-                case ClusterReceptionist.Contacts contacts:
+                case ClusterReceptionist.Contacts _:
                     return ContactsManifestBytes;
-                case ClusterReceptionist.GetContacts getContacts:
+                case ClusterReceptionist.GetContacts _:
                     return GetContactsManifestBytes;
-                case ClusterReceptionist.Heartbeat heartbeat:
+                case ClusterReceptionist.Heartbeat _:
                     return HeartbeatManifestBytes;
-                case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
+                case ClusterReceptionist.HeartbeatRsp _:
                     return HeartbeatRspManifestBytes;
                 default:
                     throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
