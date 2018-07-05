@@ -28,7 +28,7 @@ namespace Akka.Routing
         /// <returns>A <see cref="Routee"/> that contains all the given <paramref name="routees"/> that receives the <paramref name="message"/>.</returns>
         public override Routee Select(object message, Routee[] routees)
         {
-            if (routees == null || !routees.Any())
+            if (routees == null || routees.Length <= 0)
                 return Routee.NoRoutee;
             return new SeveralRoutees(routees);
         }

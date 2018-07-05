@@ -139,8 +139,8 @@ namespace Akka.Persistence.Tests.Journal
 
         public Messages Add(IPersistentRepresentation persistent)
         {
-            var list = _messages.GetOrAdd(persistent.PersistenceId, new Deque<IPersistentRepresentation>(true));
-            list.AddToFront(persistent); // AddLast
+            var list = _messages.GetOrAdd(persistent.PersistenceId, new Deque<IPersistentRepresentation>());
+            list.AddToBack(persistent);
             return _messages;
         }
 
@@ -180,7 +180,7 @@ namespace Akka.Persistence.Tests.Journal
         {
             if (_messages.TryGetValue(pid, out var persistents))
             {
-                var last = persistents.FirstOrDefault(); // LastOrDefault
+                var last = persistents.LastOrDefault;
                 return last?.SequenceNr ?? 0L;
             }
 

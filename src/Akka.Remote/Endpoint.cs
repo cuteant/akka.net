@@ -443,7 +443,7 @@ namespace Akka.Remote
                 UidConfirmed = false; // Need confirmation of UID again
                 if (_bufferWasInUse)
                 {
-                    if ((_resendBuffer.Nacked.Any() || _resendBuffer.NonAcked.Any()) && _bailoutAt == null)
+                    if ((_resendBuffer.Nacked.Count > 0 || _resendBuffer.NonAcked.Count > 0) && _bailoutAt == null)
                     {
                         _bailoutAt = Deadline.Now + _settings.InitialSysMsgDeliveryTimeout;
                     }
@@ -560,7 +560,7 @@ namespace Akka.Remote
             {
                 _currentHandle = null;
                 Context.Parent.Tell(new EndpointWriter.StoppedReading(Self));
-                if (_resendBuffer.NonAcked.Any() || _resendBuffer.Nacked.Any())
+                if (_resendBuffer.NonAcked.Count > 0 || _resendBuffer.Nacked.Count > 0)
                     Context.System.Scheduler.ScheduleTellOnce(_settings.SysResendTimeout, Self,
                         new AttemptSysMsgRedelivery(), Self);
                 GoToIdle();
@@ -634,7 +634,7 @@ namespace Akka.Remote
                     // Ungate was sent from EndpointManager, but we must wait for Terminated first.
                     Become(() => Gated(false, true));
                 }
-                else if (_resendBuffer.NonAcked.Any() || _resendBuffer.Nacked.Any())
+                else if (_resendBuffer.NonAcked.Count > 0 || _resendBuffer.Nacked.Count > 0)
                 {
                     // If we talk to a system we have not talked to before (or has given up talking
                     // to in the past) stop system delivery attempts after the specified time. This
@@ -686,7 +686,7 @@ namespace Akka.Remote
 
             Receive<AttemptSysMsgRedelivery>(sys =>
             {
-                if (_resendBuffer.Nacked.Any() || _resendBuffer.NonAcked.Any())
+                if (_resendBuffer.Nacked.Count > 0 || _resendBuffer.NonAcked.Count > 0)
                 {
                     _writer = CreateWriter();
                     //Resending will be triggered by the incoming GotUid message after the connection finished

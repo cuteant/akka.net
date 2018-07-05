@@ -135,7 +135,7 @@ namespace Akka.Routing
         /// </summary>
         public bool IsEmpty
         {
-            get { return !_nodes.Any(); }
+            get { return _nodes.Count <= 0; }
         }
 
         /// <summary>

@@ -122,7 +122,7 @@ namespace Akka.IO
             public Cache Cleanup()
             {
                 var now = _clock();
-                while (_queue.Any() && !_queue.First().IsValid(now))
+                while (_queue.Count > 0 && !_queue.First().IsValid(now))
                 {
                     var minEntry = _queue.First();
                     var name = minEntry.Name;

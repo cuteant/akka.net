@@ -276,9 +276,9 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public override Shape CopyFromPorts(ImmutableArray<Inlet> inlets, ImmutableArray<Outlet> outlets)
         {
-            if (inlets.Any())
+            if (inlets.Length > 0)
                 throw new ArgumentException("Proposed inlets do not fit ClosedShape", nameof(inlets));
-            if (outlets.Any())
+            if (outlets.Length > 0)
                 throw new ArgumentException("Proposed outlets do not fit ClosedShape", nameof(outlets));
 
             return this;

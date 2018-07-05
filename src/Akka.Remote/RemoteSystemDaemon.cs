@@ -126,7 +126,7 @@ namespace Akka.Remote
                                 case SelectChildName n:
                                     acc = ImmutableList.Create(n.Name).AddRange(acc);
                                     continue;
-                                case SelectParent p when !acc.Any():
+                                case SelectParent p when acc.Count <= 0:
                                     continue;
                                 case SelectParent p:
                                     acc = acc.Skip(1).ToImmutableList();

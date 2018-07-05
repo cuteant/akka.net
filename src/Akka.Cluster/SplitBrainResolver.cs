@@ -315,7 +315,7 @@ namespace Akka.Cluster
 
         private void HandleStabilityReached()
         {
-            if (Log.IsInfoEnabled && _unreachable.Any())
+            if (Log.IsInfoEnabled && _unreachable.Count > 0)
             {
                 Log.Info("A network partition detected - unreachable nodes: [{0}], remaining: [{1}]", string.Join(", ", _unreachable.Select(m => m.Address)), string.Join(", ", _reachable.Select(m => m.Address)));
             }

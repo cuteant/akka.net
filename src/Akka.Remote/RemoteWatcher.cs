@@ -273,13 +273,13 @@ namespace Akka.Remote
             {
                 string FormatWatchingRefs()
                 {
-                    if (!WatchingRefs.Any()) return "";
+                    if (WatchingRefs.Count <= 0) return "";
                     return $"{string.Join(", ", WatchingRefs.Select(r => r.Item2.Path.Name + "-> " + r.Item1.Path.Name))}";
                 }
 
                 string FormatWatchingAddresses()
                 {
-                    if (!WatchingAddresses.Any()) return "";
+                    if (WatchingAddresses.Count <= 0) return "";
                     return string.Join(",", WatchingAddresses);
                 }
 
@@ -583,7 +583,7 @@ namespace Akka.Remote
             if (Watching.TryGetValue(watchee, out var watchers))
             {
                 watchers.Remove(watcher);
-                if (!watchers.Any())
+                if (watchers.Count <= 0)
                 {
                     // clean up self watch when no more watchers of this watchee
                     if (Log.IsDebugEnabled) { Log.Debug("Cleanup self watch of [{0}]", watchee.Path); }
@@ -606,7 +606,7 @@ namespace Akka.Remote
             if (WatcheeByNodes.TryGetValue(watcheeAddress, out var watchees))
             {
                 watchees.Remove(watchee);
-                if (!watchees.Any())
+                if (watchees.Count <= 0)
                 {
                     // unwatched last watchee on that node
                     if (Log.IsDebugEnabled) Log.Debug("Unwatched last watchee of node: [{0}]", watcheeAddress);

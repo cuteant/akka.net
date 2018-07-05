@@ -209,7 +209,7 @@ namespace Akka.Streams.Implementation
                     $"shape has extra {ins(inset.Except(inPorts))}, module has extra {ins(inPorts.Except(inset))}");
 
             var connectedInlets = inset.Intersect(module.Upstreams.Keys).ToArray();
-            if (connectedInlets.Any())
+            if (connectedInlets.Length > 0)
                 problems.Add("found connected inlets " + ins(connectedInlets));
             if (outset.Count != shape.Outlets.Count())
                 problems.Add("shape has duplicate outlets " + outs(shape.Outlets));
@@ -218,7 +218,7 @@ namespace Akka.Streams.Implementation
                     $"shape has extra {outs(outset.Except(outPorts))}, module has extra {outs(outPorts.Except(outset))}");
 
             var connectedOutlets = outset.Intersect(module.Downstreams.Keys).ToArray();
-            if (connectedOutlets.Any())
+            if (connectedOutlets.Length > 0)
                 problems.Add("found connected outlets " + outs(connectedOutlets));
 
             var ups = module.Upstreams.ToImmutableHashSet();
@@ -253,17 +253,19 @@ namespace Akka.Streams.Implementation
                 problems.Add("duplicate ports in submodules " + ins(duplicateIn));
             if (!duplicateOut.IsEmpty)
                 problems.Add("duplicate ports in submodules " + outs(duplicateOut));
-            if (!module.IsSealed && inset.Except(allIn).Any())
-                problems.Add("foreign inlets " + ins(inset.Except(allIn)));
-            if (!module.IsSealed && outset.Except(allOut).Any())
-                problems.Add("foreign outlets " + outs(outset.Except(allOut)));
+            var insetExceptAllIn = inset.Except(allIn);
+            if (!module.IsSealed && insetExceptAllIn.Any())
+                problems.Add("foreign inlets " + ins(insetExceptAllIn));
+            var outsetExceptAllOut = outset.Except(allOut);
+            if (!module.IsSealed && outsetExceptAllOut.Any())
+                problems.Add("foreign outlets " + outs(outsetExceptAllOut));
 
             var unIn = allIn.Except(inset).Except(module.Upstreams.Keys);
-            if (unIn.Any() && !module.IsCopied)
+            if (unIn.Count > 0 && !module.IsCopied)
                 problems.Add("unconnected inlets " + ins(unIn));
 
             var unOut = allOut.Except(outset).Except(module.Downstreams.Keys);
-            if (unOut.Any() && !module.IsCopied)
+            if (unOut.Count > 0 && !module.IsCopied)
                 problems.Add("unconnected outlets " + outs(unOut));
 
             var atomics = Atomics(module.MaterializedValueComputation);
@@ -271,10 +273,10 @@ namespace Akka.Streams.Implementation
                 module.SubModules.SelectMany(
                     m => m is GraphModule gm ? gm.MaterializedValueIds : Enumerable.Empty<IModule>());
             var nonExistent = atomics.Except(module.SubModules).Except(graphValues).Except(new[] { module });
-            if (nonExistent.Any())
+            if (nonExistent.Count > 0)
                 problems.Add("computation refers to non-existent modules " + string.Join(", ", nonExistent));
 
-            var print = shouldPrint || problems.Any();
+            var print = shouldPrint || problems.Count > 0;
 
             if (print)
             {
@@ -290,7 +292,7 @@ namespace Akka.Streams.Implementation
             foreach (var subModule in module.SubModules)
                 Validate(subModule, level + 1, print, idMap);
 
-            if (problems.Any() && !shouldPrint)
+            if (problems.Count > 0 && !shouldPrint)
                 throw new IllegalStateException(
                     $"module inconsistent, found {problems.Count} problems:\n - {string.Join("\n - ", problems)}");
         }
@@ -602,7 +604,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public virtual bool IsAtomic => !SubModules.Any();
+        public virtual bool IsAtomic => SubModules.Length <= 0;
 
         /// <summary>
         /// TBD

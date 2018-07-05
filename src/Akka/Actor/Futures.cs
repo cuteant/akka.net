@@ -606,7 +606,7 @@ namespace Akka.Actor
         {
             _promise.TrySetResult(ActorStopResult);
             var watchers = ClearWatchers();
-            if (watchers.Any())
+            if (watchers.Count > 0)
             {
                 foreach (var watcher in watchers)
                 {

@@ -54,7 +54,7 @@ namespace Akka.Streams.Dsl
                 }, onUpstreamFinish: () =>
                 {
                     var result = _buffer.ToArray();
-                    if (result.Any())
+                    if (result.Length > 0)
                         Emit(accumulateWhileUnchanged.Out, result);
                     CompleteStage();
                 });

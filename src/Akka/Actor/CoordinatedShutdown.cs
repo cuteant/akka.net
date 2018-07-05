@@ -395,7 +395,7 @@ namespace Akka.Actor
                         phaseResult = Task.WhenAny<Done>(result, timeoutFunction).Unwrap();
                     }
 
-                    if (!remaining.Any())
+                    if (remaining.Count <= 0)
                         return phaseResult;
                     return phaseResult.ContinueWith(tr =>
                         {
@@ -497,7 +497,7 @@ namespace Akka.Actor
                 if (unmarked.Contains(u))
                 {
                     tempMark.Add(u);
-                    if (phases.TryGetValue(u, out var p) && p.DependsOn.Any())
+                    if (phases.TryGetValue(u, out var p) && p.DependsOn.Count > 0)
                         p.DependsOn.ForEach(DepthFirstSearch);
                     unmarked.Remove(u); //permanent mark
                     tempMark.Remove(u);
@@ -505,7 +505,7 @@ namespace Akka.Actor
                 }
             }
 
-            while (unmarked.Any())
+            while (unmarked.Count > 0)
             {
                 DepthFirstSearch(unmarked.Head());
             }

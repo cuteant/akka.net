@@ -1150,7 +1150,7 @@ namespace Akka.Cluster
         private void CleanupExitingConfirmed()
         {
             // in case the actual removal was performed by another leader node
-            if (_exitingConfirmed.Any())
+            if (_exitingConfirmed.Count > 0)
             {
                 _exitingConfirmed = new HashSet<UniqueAddress>(_exitingConfirmed.Where(n => _latestGossip.Members.Any(m => m.UniqueAddress.Equals(n))));
             }

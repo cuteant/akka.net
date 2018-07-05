@@ -154,8 +154,8 @@ namespace Akka.Persistence.Journal
         public Messages Add(IPersistentRepresentation persistent)
         {
             var messages = Messages;
-            var list = messages.GetOrAdd(persistent.PersistenceId, pid => new Deque<IPersistentRepresentation>(true));
-            list.AddToFront(persistent); // AddLast
+            var list = messages.GetOrAdd(persistent.PersistenceId, pid => new Deque<IPersistentRepresentation>());
+            list.AddToBack(persistent);
             return messages;
         }
 
@@ -223,7 +223,7 @@ namespace Akka.Persistence.Journal
         {
             if (Messages.TryGetValue(pid, out Deque<IPersistentRepresentation> persistents))
             {
-                var last = persistents.FirstOrDefault(); // LastOrDefault
+                var last = persistents.LastOrDefault;
                 return last?.SequenceNr ?? 0L;
             }
 

@@ -186,7 +186,7 @@ namespace Akka.Actor
                 .GetWatching()
                 .ToList();
 
-            if (!watching.Any()) return;
+            if (watching.Count <= 0) return;
 
             MaintainAddressTerminatedSubscription(() =>
             {

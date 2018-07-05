@@ -365,7 +365,7 @@ namespace Akka.Cluster
                     .Where(m => m.Status != MemberStatus.Down && Overview.Reachability.IsReachable(m.UniqueAddress) || m.UniqueAddress == selfUniqueAddress))
                     .ToImmutableSortedSet();
 
-            if (!reachableMembers.Any()) return null;
+            if (reachableMembers.Count <= 0) return null;
 
             var member = reachableMembers.FirstOrDefault(m => LeaderMemberStatus.Contains(m.Status)) ??
                          reachableMembers.Min(Member.LeaderStatusOrdering);
@@ -425,7 +425,7 @@ namespace Akka.Cluster
             get
             {
                 //TODO: Akka exception?
-                if (!Members.Any()) throw new Exception("No youngest when no members");
+                if (Members.Count <= 0) throw new Exception("No youngest when no members");
                 return Members.MaxBy(m => m.UpNumber == int.MaxValue ? 0 : m.UpNumber);
             }
         }
