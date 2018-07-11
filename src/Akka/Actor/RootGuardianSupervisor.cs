@@ -52,7 +52,7 @@ namespace Akka.Actor
         {
             if (IsWalking)
             {
-                if (message == null) throw new InvalidMessageException("Message is null");
+                if (message == null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
                 _log.Error("{0} received unexpected message [{1}]", _path, message);
             }
         }

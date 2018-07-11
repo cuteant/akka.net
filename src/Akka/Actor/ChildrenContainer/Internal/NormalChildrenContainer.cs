@@ -74,8 +74,8 @@ namespace Akka.Actor.Internal
         /// <returns>TBD</returns>
         public override IChildrenContainer Reserve(string name)
         {
-            if (InternalChildren.ContainsKey(name))
-                throw new InvalidActorNameException($@"Actor name ""{name}"" is not unique!");
+            if (InternalChildren.ContainsKey(name)) { AkkaThrowHelper.ThrowInvalidActorNameException_NeedUnique(name); }
+
             return new NormalChildrenContainer(InternalChildren.SetItem(name, ChildNameReserved.Instance));
         }
 

@@ -41,7 +41,7 @@ namespace Akka.Remote
 
             if (existing is EndpointManager.Pass pass) // if we already have a writable endpoint....
             {
-                throw new ArgumentException($"Attempting to overwrite existing endpoint {pass.Endpoint} with {endpoint}");
+                ThrowHelper.ThrowArgumentException_Endpoint_Reg(pass, endpoint);
             }
 
             _addressToWritable[address] = new EndpointManager.Pass(endpoint, uid, refuseUid);

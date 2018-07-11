@@ -345,7 +345,7 @@ namespace Akka.Remote
                 //check for correct scope configuration
                 if (props.Deploy.Scope is LocalScope)
                 {
-                    throw new ConfigurationException($"configuration requested remote deployment for local-only Props at {path}");
+                    ThrowHelper.ThrowConfigurationException_RequesteRemoteDeployment(path);
                 }
 
                 try
@@ -358,8 +358,16 @@ namespace Akka.Remote
                     }
                     catch (Exception ex)
                     {
-                        throw new ConfigurationException(
-                            $"Configuration problem while creating {path} with dispatcher [{props.Dispatcher}] and mailbox [{props.Mailbox}]", ex);
+                        ConfigurationException GetConfigurationException()
+                        {
+                            return new ConfigurationException(
+                                $"Configuration problem while creating {path} with dispatcher [{props.Dispatcher}] and mailbox [{props.Mailbox}]", ex);
+                        }
+                        void ThrowConfigurationException()
+                        {
+                            throw GetConfigurationException();
+                        }
+                        ThrowConfigurationException();
                     }
                     var localAddress = Transport.LocalAddressForRemote(addr);
                     var rpath = (new RootActorPath(addr) / "remote" / localAddress.Protocol / localAddress.HostPort() /
@@ -370,7 +378,15 @@ namespace Akka.Remote
                 }
                 catch (Exception ex)
                 {
-                    throw new ActorInitializationException($"Remote deployment failed for [{path}]", ex);
+                    ActorInitializationException GetActorInitializationException()
+                    {
+                        return new ActorInitializationException($"Remote deployment failed for [{path}]", ex);
+                    }
+                    IInternalActorRef ThrowActorInitializationException()
+                    {
+                        throw GetActorInitializationException();
+                    }
+                    return ThrowActorInitializationException();
                 }
             }
             else

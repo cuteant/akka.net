@@ -150,7 +150,7 @@ namespace Akka.Remote
         /// <exception cref="InvalidMessageException">TBD</exception>
         protected override void TellInternal(object message, IActorRef sender)
         {
-            if (message == null) { throw new InvalidMessageException("Message is null."); }
+            if (message == null) { ThrowHelper.ThrowInvalidMessageException(); }
             try { Remote.Send(message, sender, this); } catch (Exception ex) { HandleException(ex); }
         }
 

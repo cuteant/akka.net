@@ -62,9 +62,9 @@ namespace Akka.Remote.Serialization
                 case DeathWatchNotification deathWatchNotification:
                     return DeathWatchNotificationToProto(deathWatchNotification);
                 case NoMessage noMessage:
-                    throw new ArgumentException("NoMessage should never be serialized or deserialized");
+                    return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg_NoMessage();
                 default:
-                    throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
             }
         }
 
@@ -85,12 +85,11 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (s_fromBinaryMap.TryGetValue(type, out var factory))
+            if (!s_fromBinaryMap.TryGetValue(type, out var factory))
             {
-                return factory(this, bytes);
+                ThrowHelper.ThrowArgumentException_Serializer_SystemMsg(type);
             }
-
-            throw new ArgumentException($"Unimplemented deserialization of message with manifest [{type.TypeQualifiedName()}] in [${nameof(SystemMessageSerializer)}]");
+            return factory(this, bytes);
         }
 
         //

@@ -133,8 +133,7 @@ namespace Akka.Dispatch
         {
             var context = ActorCell.Current;
 
-            if (context == null)
-                throw new InvalidOperationException("RunTask must be called from an actor context.");
+            if (context == null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorTaskScheduler_RunTask);
 
             var dispatcher = context.Dispatcher;
 

@@ -271,8 +271,8 @@ namespace Akka.Tools.MatchHandler
                         AddFuncHandlerExpressions(predicateAndHandler, bodyExpressions, valueExpression, returnTarget);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException(
-                            $"This should not happen. The value {typeof(HandlerKind)}.{predicateAndHandler.HandlerKind} is a new enum value that has been added without updating the code in this method.");
+                        AkkaThrowHelper.ThrowArgumentOutOfRangeException_MatchExpressionBuilder_Add(predicateAndHandler.HandlerKind);
+                        break;
                 }
             }
         }

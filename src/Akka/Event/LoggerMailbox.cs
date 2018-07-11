@@ -38,8 +38,8 @@ namespace Akka.Event
         /// <returns>TBD</returns>
         public override IMessageQueue Create(IActorRef owner, ActorSystem system)
         {
-            if(owner != null && system != null) return new LoggerMailbox(owner, system);
-            throw new ArgumentNullException(nameof(owner), "no mailbox owner or system given");
+            if (null == owner || null == system) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.owner, AkkaExceptionResource.ArgumentNull_LogMailbox); }
+            return new LoggerMailbox(owner, system);
         }
     }
 

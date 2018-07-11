@@ -383,11 +383,11 @@ namespace Akka.Actor
 
         private static string CheckName(string name)
         {
-            if (name == null) throw new InvalidActorNameException("Actor name must not be null.");
-            if (name.Length == 0) throw new InvalidActorNameException("Actor name must not be empty.");
+            if (name == null) AkkaThrowHelper.ThrowInvalidActorNameException(AkkaExceptionResource.InvalidActorName_Null);
+            if (name.Length == 0) AkkaThrowHelper.ThrowInvalidActorNameException(AkkaExceptionResource.InvalidActorName_Empty);
             if (!ActorPath.IsValidPathElement(name))
             {
-                throw new InvalidActorNameException($"Illegal actor name [{name}]. Actor paths MUST: not start with `$`, include only ASCII letters and can only contain these special characters: ${new string(ActorPath.ValidSymbols)}.");
+                AkkaThrowHelper.ThrowInvalidActorNameException_Path(name);
             }
             return name;
         }
@@ -410,7 +410,7 @@ namespace Akka.Actor
                                 var manifest = manifestSerializer.Manifest(argument);
                                 if (ser.Deserialize(bytes, manifestSerializer.Identifier, manifest) == null)
                                 {
-                                    throw new ArgumentException($"Pre-creation serialization check failed at [${_self.Path}/{name}]", nameof(name));
+                                    AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name);
                                 }
                             }
                             else
@@ -418,7 +418,7 @@ namespace Akka.Actor
                                 // ## 苦竹 修改 前面已经判断了是否 SerializerWithStringManifest，所以这儿改为类型参数，反序列化时减少些判断 ##
                                 if (ser.Deserialize(bytes, serializer.Identifier, argument.GetType()) == null) // argument.GetType().TypeQualifiedName()
                                 {
-                                    throw new ArgumentException($"Pre-creation serialization check failed at [${_self.Path}/{name}]", nameof(name));
+                                    AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name);
                                 }
                             }
                         }
@@ -430,10 +430,10 @@ namespace Akka.Actor
             // (internal calls cannot happen anyway because we are suspended)
             if (ChildrenContainer.IsTerminating)
             {
-                throw new InvalidOperationException("Cannot create child while terminating or terminated");
+                AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorCell_IsTerminating);
             }
-            else
-            {
+            //else
+            //{
                 // this name will either be unreserved or overwritten with a real child below
                 ReserveChild(name);
                 IInternalActorRef actor;
@@ -460,7 +460,7 @@ namespace Akka.Actor
                 InitChild(actor);
                 actor.Start();
                 return actor;
-            }
+            //}
         }
     }
 }

@@ -110,8 +110,8 @@ namespace Akka.Util
         /// </exception>
         public FastLazy(Func<S, T> producer, S state)
         {
-            if(producer == null) throw new ArgumentNullException(nameof(producer), "Producer cannot be null");
-            if(state == null) throw new ArgumentNullException(nameof(state), "State cannot be null");
+            if (producer == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.producer, AkkaExceptionResource.ArgumentNull_FastLazyProducer);
+            if (state == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.state, AkkaExceptionResource.ArgumentNull_FastLazyState);
             _producer = producer;
             _state = state;
         }

@@ -24,8 +24,10 @@ namespace Akka.Routing
         {
             get
             {
-                return Context is RoutedActorCell routedActorCell
-                    ? routedActorCell : throw new ActorInitializationException($"Router actor can only be used in RoutedActorRef, not in {Context.GetType()}");
+                var context = Context;
+                var routedActorCell = Context as RoutedActorCell;
+                if (null == routedActorCell) { AkkaThrowHelper.ThrowActorInitializationException_RouterActor(context); }
+                return routedActorCell;
             }
         }
 
@@ -33,8 +35,10 @@ namespace Akka.Routing
         {
             get
             {
-                return Context.ActorOf(Cell.RouterConfig.RoutingLogicController(Cell.Router.RoutingLogic).
-                    WithDispatcher(Context.Props.Dispatcher), "routingLogicController");
+                var context = Context;
+                var cell = Cell;
+                return context.ActorOf(cell.RouterConfig.RoutingLogicController(cell.Router.RoutingLogic).
+                    WithDispatcher(context.Props.Dispatcher), "routingLogicController");
             }
         }
 
@@ -71,7 +75,8 @@ namespace Akka.Routing
         /// </summary>
         protected virtual void StopIfAllRouteesRemoved()
         {
-            if (!Cell.Router.Routees.Any() && Cell.RouterConfig.StopRouterWhenAllRouteesRemoved)
+            var cell = Cell;
+            if (!cell.Router.Routees.Any() && cell.RouterConfig.StopRouterWhenAllRouteesRemoved)
             {
                 Context.Stop(Self);
             }

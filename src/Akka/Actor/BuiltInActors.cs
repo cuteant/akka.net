@@ -211,7 +211,8 @@ namespace Akka.Actor
             switch (message)
             {
                 case null:
-                    throw new InvalidMessageException("Message is null");
+                    AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
+                    return;
 
                 case Identify i:
                     sender.Tell(new ActorIdentity(i.MessageId, ActorRefs.Nobody));

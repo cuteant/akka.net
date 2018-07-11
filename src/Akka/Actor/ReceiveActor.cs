@@ -51,7 +51,7 @@ namespace Akka.Actor
 
         private void EnsureMayConfigureMessageHandlers()
         {
-            if(_matchHandlerBuilders.Count <= 0) throw new InvalidOperationException("You may only call Receive-methods when constructing the actor and inside Become().");
+            if (_matchHandlerBuilders.Count <= 0) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ReceiveActor_Ensure);
         }
 
         /// <summary>

@@ -39,13 +39,13 @@ namespace Akka.Remote
         {
             ushort[] m_Numbers = GetInstanceField(typeof(IPAddress), ipa, "m_Numbers") as ushort[];
 
-            if (m_Numbers == null) { throw new Exception("IPAddress.m_Numbers not found"); }
+            if (m_Numbers == null) { ThrowHelper.ThrowException_IPAddress_Num(); }
 
             if (ipa.AddressFamily == AddressFamily.InterNetwork) { return ipa; }
 
             if (ipa.AddressFamily != AddressFamily.InterNetworkV6)
             {
-                throw new Exception("Only AddressFamily.InterNetworkV6 can be converted to IPv4");
+                ThrowHelper.ThrowException_IPAddress_OnlyIpV6();
             }
 
             // Cast the ushort values to a uint and mask with unsigned literal before bit shifting.
@@ -65,7 +65,7 @@ namespace Akka.Remote
             if (ipa.AddressFamily == AddressFamily.InterNetworkV6) { return ipa; }
             if (ipa.AddressFamily != AddressFamily.InterNetwork)
             {
-                throw new Exception("Only AddressFamily.InterNetworkV4 can be converted to IPv6");
+                ThrowHelper.ThrowException_IPAddress_OnlyIpV4();
             }
 
             byte[] ipv4Bytes = ipa.GetAddressBytes();

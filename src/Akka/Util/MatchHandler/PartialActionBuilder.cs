@@ -60,8 +60,7 @@ namespace Akka.Tools.MatchHandler
             var arguments = handlerAndArgs.DelegateArguments;
             var handler = handlerAndArgs.CompiledDelegate;
             var numberOfArguments = arguments.Length; //This is except the required value parameter
-            if(numberOfArguments > MaxNumberOfArguments)
-                throw new ArgumentException($"Too many arguments. Max {MaxNumberOfArguments} arguments allowed.", nameof(handlerAndArgs));
+            if (numberOfArguments > MaxNumberOfArguments) AkkaThrowHelper.ThrowArgumentException_PartialActionBuilder(MaxNumberOfArguments);
             var baseType = _types[numberOfArguments];
             var argumentTypes = new Type[numberOfArguments +1];
             argumentTypes[0] = typeof(T);

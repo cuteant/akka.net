@@ -36,7 +36,7 @@ namespace Akka.Actor
                 Status = status;
             }
         }
-        
+
         /// <summary>
         /// Indicates the failure of some operation that was requested and includes an
         /// <see cref="Exception"/> describing the underlying cause of the problem.
@@ -101,8 +101,7 @@ namespace Akka.Actor
         /// </exception>
         protected ActorBase()
         {
-            if (ActorCell.Current == null)
-                throw new ActorInitializationException("Do not create actors using 'new', always create them using an ActorContext/System");
+            if (ActorCell.Current == null) AkkaThrowHelper.ThrowActorInitializationException(AkkaExceptionResource.ActorInitialization_Actor_Ctor);
             Context.Become(Receive);
         }
 
@@ -139,9 +138,7 @@ namespace Akka.Actor
             get
             {
                 var context = InternalCurrentActorCellKeeper.Current;
-                if (context == null)
-                    throw new NotSupportedException(
-                        "There is no active ActorContext, this is most likely due to use of async operations from within this actor.");
+                if (context == null) { AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_Actor_Context); }
 
                 return context.ActorHasBeenCleared ? null : context;
             }
@@ -189,7 +186,7 @@ namespace Akka.Actor
         {
             if (message is Terminated terminatedMessage)
             {
-                throw new DeathPactException(terminatedMessage.ActorRef);
+                AkkaThrowHelper.ThrowDeathPactException(terminatedMessage);
             }
             Context.System.EventStream.Publish(new UnhandledMessage(message, Sender, Self));
         }

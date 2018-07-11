@@ -153,14 +153,14 @@ namespace Akka.Actor
             try
             {
                 var identity = await this.Ask<ActorIdentity>(new Identify(null), timeout, ct).ConfigureAwait(false);
-                if (identity.Subject == null)
-                    throw new ActorNotFoundException("subject was null");
+                if (identity.Subject == null) AkkaThrowHelper.ThrowActorNotFoundException(AkkaExceptionResource.ActorNotFound_ActorSel_Sub);
 
                 return identity.Subject;
             }
             catch (Exception ex)
             {
                 throw new ActorNotFoundException("Exception occurred while resolving ActorSelection", ex);
+                //ThrowHelper.ThrowActorNotFoundException(ExceptionResource.ActorNotFound_ActorSel_Exc, ex);
             }
         }
 

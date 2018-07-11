@@ -41,7 +41,7 @@ namespace Akka.Dispatch.MessageQueues
             PushTimeOut = pushTimeOut;
             if (boundedCapacity < 0)
             {
-                throw new ArgumentException("The capacity for BoundedMessageQueue can not be negative", nameof(boundedCapacity));
+                AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_BoundedMessageQueue, AkkaExceptionArgument.boundedCapacity);
             }
             else if (boundedCapacity == 0)
             {

@@ -180,8 +180,7 @@ namespace Akka.Dispatch
         /// </exception>
         public override void Execute(IRunnable run)
         {
-            if (Volatile.Read(ref _shuttingDown) == 1)
-                throw new RejectedExecutionException("ForkJoinExecutor is shutting down");
+            if (Volatile.Read(ref _shuttingDown) == 1) AkkaThrowHelper.ThrowRejectedExecutionException();
             _dedicatedThreadPool.QueueUserWorkItem(run.Run);
         }
 
@@ -304,11 +303,11 @@ namespace Akka.Dispatch
                 // It doesn't matter if we create a dispatcher configurator that isn't used due to concurrent lookup.
                 // That shouldn't happen often and in case it does the actual ExecutorService isn't
                 // created until used, i.e. cheap.
-                MessageDispatcherConfigurator newConfigurator;
-                if (_cachingConfig.HasPath(id))
-                    newConfigurator = ConfiguratorFrom(Config(id));
-                else
-                    throw new ConfigurationException($"Dispatcher {id} not configured.");
+                if (!_cachingConfig.HasPath(id))
+                {
+                    AkkaThrowHelper.ThrowConfigurationException_Dispatcher_None(id);
+                }
+                var newConfigurator = ConfiguratorFrom(Config(id));
 
                 return _dispatcherConfigurators.TryAdd(id, newConfigurator) ? newConfigurator : _dispatcherConfigurators[id];
             }
@@ -389,7 +388,7 @@ namespace Akka.Dispatch
         private static readonly Config TaskExecutorConfig = ConfigurationFactory.ParseString(@"executor=task-executor");
         private MessageDispatcherConfigurator ConfiguratorFrom(Config cfg)
         {
-            if (!cfg.HasPath("id")) throw new ConfigurationException($"Missing dispatcher `id` property in config: {cfg.Root}");
+            if (!cfg.HasPath("id")) AkkaThrowHelper.ThrowConfigurationException_Dispatcher_Id(cfg);
 
             var id = cfg.GetString("id");
             var type = cfg.GetString("type");
@@ -418,12 +417,14 @@ namespace Akka.Dispatch
                     dispatcher = new CurrentSynchronizationContextDispatcherConfigurator(cfg, Prerequisites);
                     break;
                 case null:
-                    throw new ConfigurationException($"Could not resolve dispatcher for path {id}. type is null");
+                    AkkaThrowHelper.ThrowConfigurationException_Dispatcher_TypeIsNull(id);
+                    dispatcher = null;
+                    break;
                 default:
                     TypeUtils.TryResolveType(type, out var dispatcherType);
                     if (dispatcherType == null)
                     {
-                        throw new ConfigurationException($"Could not resolve dispatcher type {type} for path {id}");
+                        AkkaThrowHelper.ThrowConfigurationException_Dispatcher_InvalidType(type, id);
                     }
                     dispatcher = (MessageDispatcherConfigurator)Activator.CreateInstance(dispatcherType, cfg, Prerequisites);
                     break;

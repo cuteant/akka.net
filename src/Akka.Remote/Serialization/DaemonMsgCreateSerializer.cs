@@ -40,12 +40,9 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
-            if (obj is DaemonMsgCreate msg)
-            {
-                return MessagePackSerializer.Serialize(new Protocol.DaemonMsgCreateData(PropsToProto(msg.Props), DeployToProto(msg.Deploy), msg.Path, SerializeActorRef(msg.Supervisor)), s_defaultResolver);
-            }
-
-            throw new ArgumentException($"Can't serialize a non-DaemonMsgCreate message using DaemonMsgCreateSerializer [{obj.GetType()}]");
+            var msg = obj as DaemonMsgCreate;
+            if (null == msg) { ThrowHelper.ThrowArgumentException_Serializer_DaemonMsg(obj); }
+            return MessagePackSerializer.Serialize(new Protocol.DaemonMsgCreateData(PropsToProto(msg.Props), DeployToProto(msg.Deploy), msg.Path, SerializeActorRef(msg.Supervisor)), s_defaultResolver);
         }
 
         /// <inheritdoc />

@@ -326,9 +326,10 @@ namespace Akka.Remote
         /// <returns>An updated buffer containing the remaining unacknowledged messages</returns>
         public AckedSendBuffer<T> Acknowledge(Ack ack)
         {
-            var newNacked = new List<T>(Nacked.Concat(NonAcked)).Where(x => ack.Nacks.Contains(x.Seq)).ToList();
-            if (newNacked.Count < ack.Nacks.Count) throw new ResendUnfulfillableException();
-            else return Copy(nonAcked: NonAcked.Where(x => x.Seq > ack.CumulativeAck).ToList(), nacked: newNacked);
+            //var newNacked = new List<T>(Nacked.Concat(NonAcked)).Where(x => ack.Nacks.Contains(x.Seq)).ToList();
+            var newNacked = Nacked.Concat(NonAcked).Where(x => ack.Nacks.Contains(x.Seq)).ToList();
+            if (newNacked.Count < ack.Nacks.Count) ThrowHelper.ThrowResendUnfulfillableException();
+            return Copy(nonAcked: NonAcked.Where(x => x.Seq > ack.CumulativeAck).ToList(), nacked: newNacked);
         }
 
         /// <summary>Puts a new message in the buffer.</summary>
@@ -338,9 +339,9 @@ namespace Akka.Remote
         /// <returns>The updated buffer.</returns>
         public AckedSendBuffer<T> Buffer(T msg)
         {
-            if (msg.Seq <= MaxSeq) throw new ArgumentException($"Sequence number must be monotonic. Received {msg.Seq} which is smaller than {MaxSeq}", nameof(msg));
+            if (msg.Seq <= MaxSeq) ThrowHelper.ThrowArgumentException_SeqNo(msg, MaxSeq);
 
-            if (NonAcked.Count == Capacity) throw new ResendBufferCapacityReachedException(Capacity);
+            if (NonAcked.Count == Capacity) ThrowHelper.ThrowResendBufferCapacityReachedException(Capacity);
 
             return Copy(nonAcked: new List<T>(NonAcked) { msg }, maxSeq: msg.Seq);
         }

@@ -121,7 +121,7 @@ namespace Akka.Remote.Serialization
                     return EmptyBytes;
 
                 default:
-                    throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
             }
         }
 
@@ -170,7 +170,7 @@ namespace Akka.Remote.Serialization
                     return RemoteRouterConfigManifest;
 
                 default:
-                    throw new ArgumentException($"Cannot deserialize object of type [{obj.GetType().TypeQualifiedName()}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_D<string>(obj);
             }
         }
 
@@ -219,7 +219,7 @@ namespace Akka.Remote.Serialization
                     return RemoteRouterConfigManifestBytes;
 
                 default:
-                    throw new ArgumentException($"Cannot deserialize object of type [{obj.GetType().TypeQualifiedName()}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_D<byte[]>(obj);
             }
         }
 
@@ -268,7 +268,7 @@ namespace Akka.Remote.Serialization
                     return RemoteRouterConfigFromProto(bytes);
 
                 default:
-                    throw new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(MiscMessageSerializer)}]");
+                    return ThrowHelper.ThrowSerializationException_Serializer_MiscFrom(manifest);
             }
         }
 

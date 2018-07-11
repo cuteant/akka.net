@@ -80,8 +80,8 @@ namespace Akka.Event
         /// </exception>
         public DeadLetter(object message, IActorRef sender, IActorRef recipient) : base(message, sender, recipient)
         {
-            if (sender == null) throw new ArgumentNullException(nameof(sender), "DeadLetter sender may not be null");
-            if (recipient == null) throw new ArgumentNullException(nameof(recipient), "DeadLetter recipient may not be null");
+            if (sender == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.sender, AkkaExceptionResource.ArgumentNull_DeadLetterS);
+            if (recipient == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.recipient, AkkaExceptionResource.ArgumentNull_DeadLetterR);
         }
     }
 
@@ -102,8 +102,8 @@ namespace Akka.Event
         /// </exception>
         public SuppressedDeadLetter(IDeadLetterSuppression message, IActorRef sender, IActorRef recipient) : base(message, sender, recipient)
         {
-            if (sender == null) throw new ArgumentNullException(nameof(sender), "SuppressedDeadLetter sender may not be null");
-            if (recipient == null) throw new ArgumentNullException(nameof(recipient), "SuppressedDeadLetter recipient may not be null");
+            if (sender == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.sender, AkkaExceptionResource.ArgumentNull_SuppressedDeadLetterS);
+            if (recipient == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.recipient, AkkaExceptionResource.ArgumentNull_SuppressedDeadLetterR);
         }
     }
 }

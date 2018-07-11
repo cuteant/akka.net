@@ -45,7 +45,7 @@ namespace Akka.Actor.Internal
         /// <exception cref="InvalidOperationException">This exception is automatically thrown since the name belongs to an actor that is already terminated.</exception>
         public override IChildrenContainer Reserve(string name)
         {
-            throw new InvalidOperationException($"Cannot reserve actor name '{name}': already terminated");
+            return AkkaThrowHelper.ThrowInvalidOperationException_TerminatedChildrenContainer_Reserve(name);
         }
 
         /// <summary>

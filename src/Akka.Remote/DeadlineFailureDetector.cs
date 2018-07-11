@@ -55,12 +55,12 @@ namespace Akka.Remote
         {
             if (acceptableHeartbeatPause <= TimeSpan.Zero)
             {
-                throw new ArgumentOutOfRangeException(nameof(acceptableHeartbeatPause), "failure-detector.acceptable-heartbeat-pause must be >= 0s");
+                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.acceptableHeartbeatPause, ExceptionResource.ArgumentOutOfRange_AcceptableHeartbeatPause);
             }
 
             if (heartbeatInterval <= TimeSpan.Zero)
             {
-                throw new ArgumentOutOfRangeException(nameof(heartbeatInterval), "failure-detector.heartbeat-interval must be > 0s");
+                ThrowHelper.ThrowArgumentOutOfRangeException(ExceptionArgument.heartbeatInterval, ExceptionResource.ArgumentOutOfRange_HeartbeatInterval);
             }
 
             _clock = clock ?? DefaultClock;

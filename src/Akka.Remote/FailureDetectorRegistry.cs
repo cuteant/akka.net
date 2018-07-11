@@ -67,7 +67,7 @@ namespace Akka.Remote
             var failureDetectorClass = TypeUtil.ResolveType(fqcn);
             if (failureDetectorClass == null)
             {
-                throw new ConfigurationException($"Could not create custom FailureDetector {fqcn}");
+                ThrowHelper.ThrowConfigurationException_FailureDetector_Load(fqcn);
             }
             var failureDetector = (FailureDetector)Activator.CreateInstance(failureDetectorClass, config, system.EventStream);
             return failureDetector;

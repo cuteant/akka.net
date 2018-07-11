@@ -42,53 +42,53 @@ namespace Akka.Actor
 
         void ITellScheduler.ScheduleTellOnce(TimeSpan delay, ICanTell receiver, object message, IActorRef sender)
         {
-            ValidateDelay(delay, "delay");
+            if (delay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(delay);
             InternalScheduleTellOnce(delay, receiver, message, sender, null);
         }
 
         void ITellScheduler.ScheduleTellOnce(TimeSpan delay, ICanTell receiver, object message, IActorRef sender, ICancelable cancelable)
         {
-            ValidateDelay(delay, "delay");
+            if (delay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(delay);
             InternalScheduleTellOnce(delay, receiver, message, sender, cancelable);
         }
 
         void ITellScheduler.ScheduleTellRepeatedly(TimeSpan initialDelay, TimeSpan interval, ICanTell receiver, object message, IActorRef sender)
         {
-            ValidateDelay(initialDelay, "initialDelay");
-            ValidateInterval(interval, "interval");
+            if (initialDelay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(initialDelay, AkkaExceptionArgument.initialDelay);
+            if (interval <= TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateInterval(interval);
             InternalScheduleTellRepeatedly(initialDelay, interval, receiver, message, sender, null);
         }
 
         void ITellScheduler.ScheduleTellRepeatedly(TimeSpan initialDelay, TimeSpan interval, ICanTell receiver, object message, IActorRef sender, ICancelable cancelable)
         {
-            ValidateDelay(initialDelay, "initialDelay");
-            ValidateInterval(interval, "interval");
+            if (initialDelay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(initialDelay, AkkaExceptionArgument.initialDelay);
+            if (interval <= TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateInterval(interval);
             InternalScheduleTellRepeatedly(initialDelay, interval, receiver, message, sender, cancelable);
         }
 
         void IActionScheduler.ScheduleOnce(TimeSpan delay, Action action)
         {
-            ValidateDelay(delay, "delay");
+            if (delay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(delay);
             InternalScheduleOnce(delay, action, null);
         }
 
         void IActionScheduler.ScheduleOnce(TimeSpan delay, Action action, ICancelable cancelable)
         {
-            ValidateDelay(delay, "delay");
+            if (delay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(delay);
             InternalScheduleOnce(delay, action, cancelable);
         }
 
         void IActionScheduler.ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action)
         {
-            ValidateDelay(initialDelay, "initialDelay");
-            ValidateInterval(interval, "interval");
+            if (initialDelay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(initialDelay, AkkaExceptionArgument.initialDelay);
+            if (interval <= TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateInterval(interval);
             InternalScheduleRepeatedly(initialDelay, interval, action, null);
         }
 
         void IActionScheduler.ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action, ICancelable cancelable)
         {
-            ValidateDelay(initialDelay, "initialDelay");
-            ValidateInterval(interval, "interval");
+            if (initialDelay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(initialDelay, AkkaExceptionArgument.initialDelay);
+            if (interval <= TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateInterval(interval);
             InternalScheduleRepeatedly(initialDelay, interval, action, cancelable);
         }
 
@@ -153,30 +153,6 @@ namespace Akka.Actor
         /// <param name="action">TBD</param>
         /// <param name="cancelable">TBD</param>
         protected abstract void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action, ICancelable cancelable);
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <param name="interval">TBD</param>
-        /// <param name="parameterName">TBD</param>
-        /// <exception cref="ArgumentOutOfRangeException">This exception is thrown if the given <paramref name="interval"/> is negative or zero.</exception>
-        protected static void ValidateInterval(TimeSpan interval, string parameterName)
-        {
-            if(interval <= TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException(nameof(parameterName), $"Interval must be >0. It was {interval}");
-        }
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <param name="delay">TBD</param>
-        /// <param name="parameterName">TBD</param>
-        /// <exception cref="ArgumentOutOfRangeException">This exception is thrown if the given <paramref name="delay"/> is negative.</exception>
-        protected static void ValidateDelay(TimeSpan delay, string parameterName)
-        {
-            if(delay < TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException(nameof(parameterName), $"Delay must be >=0. It was {delay}");
-        }
     }
 }
 

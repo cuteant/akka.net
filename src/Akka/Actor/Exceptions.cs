@@ -187,7 +187,7 @@ namespace Akka.Actor
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            if (info == null) throw new ArgumentNullException(nameof(info));
+            if (info == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.info);
             info.AddValue("Actor", Actor);
             base.GetObjectData(info, context);
         }

@@ -206,14 +206,14 @@ namespace Akka.Serialization
                 //    return serializer.FromBinary(bytes, null);
                 //}
 
-                Type type;
+                Type type = null;
                 try
                 {
                     type = TypeSerializer.GetTypeFromTypeKey(typeKey);
                 }
                 catch (Exception ex)
                 {
-                    throw new SerializationException($"Cannot find manifest class [{Encoding.UTF8.GetString(typeKey.TypeName)}] for serializer with id [{serializerId}].", ex);
+                    ThrowSerializationException_D(typeKey, serializerId, ex);
                 }
                 return serializer.FromBinary(bytes, type);
             }
@@ -245,14 +245,14 @@ namespace Akka.Serialization
                     return serializer.FromBinary(bytes, null);
                 }
 
-                Type type;
+                Type type = null;
                 try
                 {
                     type = TypeUtils.ResolveType(manifest);
                 }
                 catch (Exception ex)
                 {
-                    throw new SerializationException($"Cannot find manifest class [{manifest}] for serializer with id [{serializerId}].", ex);
+                    ThrowSerializationException_D(manifest, serializerId, ex);
                 }
                 return serializer.FromBinary(bytes, type);
             }
@@ -393,6 +393,26 @@ namespace Akka.Serialization
             SerializationException GetSerializationException()
             {
                 return new SerializationException($"Serializer not found for type {typeName}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowSerializationException_D(string manifest, int serializerId, Exception ex)
+        {
+            throw GetSerializationException();
+            SerializationException GetSerializationException()
+            {
+                return new SerializationException($"Cannot find manifest class [{manifest}] for serializer with id [{serializerId}].", ex);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowSerializationException_D(TypeKey typeKey, int serializerId, Exception ex)
+        {
+            throw GetSerializationException();
+            SerializationException GetSerializationException()
+            {
+                return new SerializationException($"Cannot find manifest class [{Encoding.UTF8.GetString(typeKey.TypeName)}] for serializer with id [{serializerId}].", ex);
             }
         }
 

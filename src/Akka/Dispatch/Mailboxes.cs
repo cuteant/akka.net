@@ -119,7 +119,9 @@ namespace Akka.Dispatch
         private string LookupId(Type queueType)
         {
             if (!_mailboxBindings.TryGetValue(queueType, out string id))
-                throw new ConfigurationException($"Mailbox Mapping for [{queueType}] not configured");
+            {
+                AkkaThrowHelper.ThrowConfigurationException_Mailboxes_Lookup(queueType);
+            }
             return id;
         }
 
@@ -162,24 +164,21 @@ namespace Akka.Dispatch
                     configurator = new BoundedMailbox(Settings, Config(id));
                 else
                 {
-                    if (!Settings.Config.HasPath(id)) throw new ConfigurationException($"Mailbox Type [{id}] not configured");
+                    if (!Settings.Config.HasPath(id)) AkkaThrowHelper.ThrowConfigurationException_Mailboxes_None(id);
                     var conf = Config(id);
 
                     var mailboxTypeName = conf.GetString("mailbox-type");
-                    if (string.IsNullOrEmpty(mailboxTypeName))
-                        throw new ConfigurationException($"The setting mailbox-type defined in [{id}] is empty");
+                    if (string.IsNullOrEmpty(mailboxTypeName)) { AkkaThrowHelper.ThrowConfigurationException_Mailboxes_TypeName(id); }
                     var type = TypeUtil.ResolveType(mailboxTypeName);
-                    if (type == null)
-                        throw new ConfigurationException($"Found mailbox-type [{mailboxTypeName}] in configuration for [{id}], but could not find that type in any loaded assemblies.");
-                    var args = new object[] {Settings, conf};
+                    if (type == null) AkkaThrowHelper.ThrowConfigurationException_Mailboxes_Type(mailboxTypeName, id);
+                    var args = new object[] { Settings, conf };
                     try
                     {
-                        configurator = (MailboxType) Activator.CreateInstance(type, args);
+                        configurator = (MailboxType)Activator.CreateInstance(type, args);
                     }
                     catch (Exception ex)
                     {
-                        throw new ArgumentException($"Cannot instantiate MailboxType {type}, defined in [{id}]. Make sure it has a public " +
-                                                     "constructor with [Akka.Actor.Settings, Akka.Configuration.Config] parameters", ex);
+                        AkkaThrowHelper.ThrowArgumentException_Mailboxes_Instantiate(type, id, ex);
                     }
 
                     // TODO: check for blocking mailbox with a non-zero pushtimeout and issue a warning
@@ -204,7 +203,7 @@ namespace Akka.Dispatch
                 .WithFallback(_defaultMailboxConfig);
         }
 
-        private static readonly Type RequiresMessageQueueGenericType = typeof (IRequiresMessageQueue<>);
+        private static readonly Type RequiresMessageQueueGenericType = typeof(IRequiresMessageQueue<>);
 
         /// <summary>
         /// TBD
@@ -226,7 +225,7 @@ namespace Akka.Dispatch
             return null;
         }
 
-        private static readonly Type ProducesMessageQueueGenericType = typeof (IProducesMessageQueue<>);
+        private static readonly Type ProducesMessageQueueGenericType = typeof(IProducesMessageQueue<>);
         private Type GetProducedMessageQueueType(MailboxType mailboxType)
         {
             var interfaces = mailboxType.GetType().GetTypeInfo().GetInterfaces();
@@ -239,7 +238,7 @@ namespace Akka.Dispatch
                 }
             }
 
-            throw new ArgumentException(nameof(mailboxType), $"No IProducesMessageQueue<TQueue> supplied for {mailboxType}; illegal mailbox type definition.");
+            return AkkaThrowHelper.ThrowArgumentException_Mailboxes_ProducedMessageQueueType(mailboxType);
         }
 
         private Type GetMailboxRequirement(Config config)
@@ -282,9 +281,9 @@ namespace Akka.Dispatch
             {
                 var mqType = new Lazy<Type>(() => GetProducedMessageQueueType(mailboxType));
                 if (hasMailboxRequirement && !mailboxRequirement.IsAssignableFrom(mqType.Value))
-                    throw new ArgumentException($"produced message queue type [{mqType.Value}] does not fulfill requirement for dispatcher [{id}]." + $"Must be a subclass of [{mailboxRequirement}]");
+                    AkkaThrowHelper.ThrowArgumentException_Mailboxes_VerifyRequirements_Dispatcher(mqType, id, mailboxRequirement);
                 if (HasRequiredType(actorType) && !actorRequirement.Value.IsAssignableFrom(mqType.Value))
-                    throw new ArgumentException($"produced message queue type of [{mqType.Value}] does not fulfill requirement for actor class [{actorType}]." + $"Must be a subclass of [{mqType.Value}]");
+                    AkkaThrowHelper.ThrowArgumentException_Mailboxes_VerifyRequirements_Actor(mqType, actorType);
                 return mailboxType;
             }
 
@@ -320,7 +319,7 @@ namespace Akka.Dispatch
             //TODO: this should not exist, its a temp hack because we are not serializing mailbox info when doing remote deploy..
             if (string.IsNullOrEmpty(path))
             {
-                return typeof (UnboundedMailbox);
+                return typeof(UnboundedMailbox);
             }
 
             var config = _system.Settings.Config.GetConfig(path);
@@ -339,7 +338,7 @@ stash-capacity = -1
 
         private void Warn(string msg)
         {
-           _system.EventStream.Publish(new Warning("mailboxes", GetType(), msg));
+            _system.EventStream.Publish(new Warning("mailboxes", GetType(), msg));
         }
     }
 }

@@ -26,7 +26,7 @@ namespace Akka.Event
         private const string Warning = "WARNING";
         private const string Error = "ERROR";
         private const string Off = "OFF";
-        private const LogLevel OffLogLevel = (LogLevel) int.MaxValue;
+        private const LogLevel OffLogLevel = (LogLevel)int.MaxValue;
 
         /// <summary>
         /// Returns a singleton instance of the standard out logger.
@@ -44,13 +44,13 @@ namespace Akka.Event
             switch (logLevel)
             {
                 case LogLevel.DebugLevel:
-                    return typeof (Debug);
+                    return typeof(Debug);
                 case LogLevel.InfoLevel:
-                    return typeof (Info);
+                    return typeof(Info);
                 case LogLevel.WarningLevel:
-                    return typeof (Warning);
+                    return typeof(Warning);
                 case LogLevel.ErrorLevel:
-                    return typeof (Error);
+                    return typeof(Error);
                 default:
                     throw new ArgumentException("Unknown LogLevel", nameof(logLevel));
             }
@@ -119,16 +119,16 @@ namespace Akka.Event
             //TODO: refine this
             string logSource;
             Type logClass;
-            if(logSourceObj is string)
+            if (logSourceObj is string str)
             {
-                logSource = (string) logSourceObj;
+                logSource = str;
                 logClass = typeof(DummyClassForStringSources);
             }
             else
             {
                 logSource = logSourceObj.ToString();
-                if(logSourceObj is Type)
-                    logClass = (Type) logSourceObj;
+                if (logSourceObj is Type t)
+                    logClass = t;
                 else
                     logClass = logSourceObj.GetType();
             }
@@ -171,16 +171,24 @@ namespace Akka.Event
         /// <typeparam name="T">The type of the log event.</typeparam>
         /// <exception cref="ArgumentException">The exception is thrown if the given <typeparamref name="T">log event</typeparamref> is unknown.</exception>
         /// <returns>The log level associated with the specified <see cref="LogEvent"/> type.</returns>
-        public static LogLevel LogLevelFor<T>() where T:LogEvent
+        public static LogLevel LogLevelFor<T>() where T : LogEvent
         {
-            var type = typeof(T);
-            if(type == typeof(Debug)) return LogLevel.DebugLevel;
-            if(type == typeof(Info)) return LogLevel.InfoLevel;
-            if(type == typeof(Warning)) return LogLevel.WarningLevel;
-            if(type == typeof(Error)) return LogLevel.ErrorLevel;
+            return LogLevelShim<T>.Value;
+        }
+        private sealed class LogLevelShim<T> where T : LogEvent
+        {
+            internal static readonly LogLevel Value;
 
-            throw new ArgumentException($@"Unknown LogEvent type: ""{type.FullName}"". Valid types are: ""{typeof(Debug).FullName}"", ""{typeof(Info).FullName}"", ""{typeof(Warning).FullName}"", ""{typeof(Error).FullName}""");
-            
+            static LogLevelShim()
+            {
+                var type = typeof(T);
+                if (type == typeof(Debug)) Value = LogLevel.DebugLevel;
+                if (type == typeof(Info)) Value = LogLevel.InfoLevel;
+                if (type == typeof(Warning)) Value = LogLevel.WarningLevel;
+                if (type == typeof(Error)) Value = LogLevel.ErrorLevel;
+
+                throw new ArgumentException($@"Unknown LogEvent type: ""{type.FullName}"". Valid types are: ""{typeof(Debug).FullName}"", ""{typeof(Info).FullName}"", ""{typeof(Warning).FullName}"", ""{typeof(Error).FullName}""");
+            }
         }
     }
 }

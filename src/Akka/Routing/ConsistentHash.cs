@@ -42,7 +42,7 @@ namespace Akka.Routing
         {
             _nodes = nodes;
 
-            if (virtualNodesFactor < 1) throw new ArgumentException("virtualNodesFactor must be >= 1", nameof(virtualNodesFactor));
+            if (virtualNodesFactor < 1) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_ConsistentHash_VirtualNodesFactor, AkkaExceptionArgument.virtualNodesFactor);
 
             _virtualNodesFactor = virtualNodesFactor;
         }
@@ -110,7 +110,7 @@ namespace Akka.Routing
         /// <returns>The node associated with the data key</returns>
         public T NodeFor(byte[] key)
         {
-            if (IsEmpty) throw new InvalidOperationException($"Can't get node for [{key}] from an empty node ring");
+            if (IsEmpty) AkkaThrowHelper.ThrowInvalidOperationException_ConsistentHash_IsEmpty(key);
 
             return NodeRing[Idx(Array.BinarySearch(NodeHashRing, ConsistentHash.HashFor(key)))];
         }
@@ -125,7 +125,7 @@ namespace Akka.Routing
         /// <returns>The node associated with the data key</returns>
         public T NodeFor(string key)
         {
-            if (IsEmpty) throw new InvalidOperationException($"Can't get node for [{key}] from an empty node ring");
+            if (IsEmpty) AkkaThrowHelper.ThrowInvalidOperationException_ConsistentHash_IsEmpty(key);
 
             return NodeRing[Idx(Array.BinarySearch(NodeHashRing, ConsistentHash.HashFor(key)))];
         }
@@ -217,7 +217,7 @@ namespace Akka.Routing
                 var nodeHash = HashFor(node.ToString());
                 var vnodes = Enumerable.Range(1, virtualNodesFactor)
                     .Select(x => ConcatenateNodeHash(nodeHash, x)).ToList();
-                foreach(var vnode in vnodes)
+                foreach (var vnode in vnodes)
                     sortedDict.Add(vnode, node);
             }
 
@@ -261,24 +261,24 @@ namespace Akka.Routing
             /// <summary>
             /// The number of routees associated with this pool.
             /// </summary>
-             public int NrOfInstances { get; set; }
+            public int NrOfInstances { get; set; }
             /// <summary>
             /// Determine whether or not to use the pool dispatcher. The dispatcher is defined in the
             /// 'pool-dispatcher' configuration property in the deployment section of the router.
             /// </summary>
-             public bool UsePoolDispatcher { get; set; }
+            public bool UsePoolDispatcher { get; set; }
             /// <summary>
             /// The resizer to use when dynamically allocating routees to the pool.
             /// </summary>
-             public Resizer Resizer { get; set; }
+            public Resizer Resizer { get; set; }
             /// <summary>
             /// The strategy to use when supervising the pool.
             /// </summary>
-             public SupervisorStrategy SupervisorStrategy { get; set; }
+            public SupervisorStrategy SupervisorStrategy { get; set; }
             /// <summary>
             /// The dispatcher to use when passing messages to the routees.
             /// </summary>
-             public string RouterDispatcher { get; set; }
+            public string RouterDispatcher { get; set; }
         }
 
         /// <summary>

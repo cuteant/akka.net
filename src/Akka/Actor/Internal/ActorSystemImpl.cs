@@ -553,8 +553,7 @@ namespace Akka.Actor.Internal
         {
             var previous = _atomicRef.Value;
 
-            if (_atomicRef.Value == null)
-                throw new InvalidOperationException("ActorSystem already terminated.");
+            if (_atomicRef.Value == null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorSystem_AlreadyTerminated);
 
             var t = new Task(code);
 

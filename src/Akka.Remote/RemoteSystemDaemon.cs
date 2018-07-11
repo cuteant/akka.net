@@ -134,7 +134,8 @@ namespace Akka.Remote
                                 case SelectChildPattern pat:
                                     return Tuple.Create<IEnumerable<string>, object>(acc.Reverse(), sel.Copy(elements: new[] { pat }.Concat(iter.ToVector()).ToArray()));
                                 default: // compiler ceremony - should never be hit
-                                    throw new InvalidOperationException("Unknown ActorSelectionPart []");
+                                    ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Unknown_ActorSelPart);
+                                    break;
                             }
                         }
                     }

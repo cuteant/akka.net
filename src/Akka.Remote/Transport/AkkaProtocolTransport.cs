@@ -901,7 +901,7 @@ namespace Akka.Remote.Transport
                                     })
                                     .Default(msg =>
                                     {
-                                        throw new AkkaProtocolException($"Unhandled message in state Open(InboundPayload) with type {msg.GetType()}");
+                                        ThrowHelper.ThrowAkkaProtocolException_InboundPayload(msg);
                                     });
                             })
                             .Default(d =>
@@ -920,7 +920,7 @@ namespace Akka.Remote.Transport
                             .With<AssociatedWaitHandler>(awh => handle = awh.WrappedHandle)
                             .Default(msg =>
                             {
-                                throw new AkkaProtocolException($"unhandled message in state Open(DisassociateUnderlying) with type {msg.GetType()}");
+                                ThrowHelper.ThrowAkkaProtocolException_DisassociateUnderlying(msg);
                             });
                         SendDisassociate(handle, du.Info);
                         nextState = Stop();
@@ -1119,7 +1119,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                throw new AkkaProtocolException($"Error while decoding incoming Akka PDU of length {pdu.Length}", ex);
+                return ThrowHelper.ThrowAkkaProtocolException_DecodePdu(pdu.Length, ex);
             }
         }
 
@@ -1136,7 +1136,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                throw new AkkaProtocolException("Error writing ASSOCIATE to transport", ex);
+                return ThrowHelper.ThrowAkkaProtocolException_Associate(ex);
             }
         }
 
@@ -1148,7 +1148,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                throw new AkkaProtocolException("Error writing DISASSOCIATE to transport", ex);
+                ThrowHelper.ThrowAkkaProtocolException_Disassociate(ex);
             }
         }
 
@@ -1160,7 +1160,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                throw new AkkaProtocolException("Error writing HEARTBEAT to transport", ex);
+                return ThrowHelper.ThrowAkkaProtocolException_HeartBeat(ex);
             }
         }
 

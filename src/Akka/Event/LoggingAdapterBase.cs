@@ -74,7 +74,8 @@ namespace Akka.Event
         /// <exception cref="ArgumentNullException">This exception is thrown when the given <paramref name="logMessageFormatter"/> is undefined.</exception>
         protected LoggingAdapterBase(ILogMessageFormatter logMessageFormatter)
         {
-            _logMessageFormatter = logMessageFormatter ?? throw new ArgumentNullException(nameof(logMessageFormatter), "The message formatter must not be null.");
+            if (null == logMessageFormatter) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.logMessageFormatter, AkkaExceptionResource.ArgumentNull_LogMessageFormatter);
+            _logMessageFormatter = logMessageFormatter;
         }
 
         /// <summary>
@@ -85,7 +86,7 @@ namespace Akka.Event
         /// <returns><c>true</c> if the supplied log level is enabled; otherwise <c>false</c></returns>
         public bool IsEnabled(LogLevel logLevel)
         {
-            switch(logLevel)
+            switch (logLevel)
             {
                 case LogLevel.DebugLevel:
                     return IsDebugEnabled;
@@ -108,19 +109,19 @@ namespace Akka.Event
         /// <exception cref="NotSupportedException">This exception is thrown when the given <paramref name="logLevel"/> is unknown.</exception>
         protected void NotifyLog(LogLevel logLevel, object message)
         {
-            switch(logLevel)
+            switch (logLevel)
             {
                 case LogLevel.DebugLevel:
-                    if(IsDebugEnabled) NotifyDebug(message);
+                    if (IsDebugEnabled) NotifyDebug(message);
                     break;
                 case LogLevel.InfoLevel:
-                    if(IsInfoEnabled) NotifyInfo(message);
+                    if (IsInfoEnabled) NotifyInfo(message);
                     break;
                 case LogLevel.WarningLevel:
-                    if(IsWarningEnabled) NotifyWarning(message);
+                    if (IsWarningEnabled) NotifyWarning(message);
                     break;
                 case LogLevel.ErrorLevel:
-                    if(IsErrorEnabled) NotifyError(message);
+                    if (IsErrorEnabled) NotifyError(message);
                     break;
                 default:
                     throw new NotSupportedException($"Unknown LogLevel {logLevel}");
@@ -134,7 +135,7 @@ namespace Akka.Event
         /// <param name="args">An optional list of items used to format the message.</param>
         public virtual void Debug(string format, params object[] args)
         {
-            if (!IsDebugEnabled) 
+            if (!IsDebugEnabled)
                 return;
 
             if (args == null || args.Length == 0)
@@ -164,7 +165,7 @@ namespace Akka.Event
         /// <param name="args">An optional list of items used to format the message.</param>
         public virtual void Warning(string format, params object[] args)
         {
-            if (!IsWarningEnabled) 
+            if (!IsWarningEnabled)
                 return;
 
             if (args == null || args.Length == 0)
@@ -185,7 +186,7 @@ namespace Akka.Event
         /// <param name="args">An optional list of items used to format the message.</param>
         public virtual void Error(Exception cause, string format, params object[] args)
         {
-            if (!IsErrorEnabled) 
+            if (!IsErrorEnabled)
                 return;
 
             if (args == null || args.Length == 0)
@@ -205,7 +206,7 @@ namespace Akka.Event
         /// <param name="args">An optional list of items used to format the message.</param>
         public virtual void Error(string format, params object[] args)
         {
-            if (!IsErrorEnabled) 
+            if (!IsErrorEnabled)
                 return;
 
             if (args == null || args.Length == 0)
@@ -225,7 +226,7 @@ namespace Akka.Event
         /// <param name="args">An optional list of items used to format the message.</param>
         public virtual void Info(string format, params object[] args)
         {
-            if (!IsInfoEnabled) 
+            if (!IsInfoEnabled)
                 return;
 
             if (args == null || args.Length == 0)
@@ -234,7 +235,7 @@ namespace Akka.Event
             }
             else
             {
-                NotifyInfo(new LogMessage(_logMessageFormatter, format, args)); 
+                NotifyInfo(new LogMessage(_logMessageFormatter, format, args));
             }
         }
 

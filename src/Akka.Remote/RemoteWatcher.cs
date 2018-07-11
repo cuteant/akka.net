@@ -524,7 +524,7 @@ namespace Akka.Remote
         protected void AddWatching(IInternalActorRef watchee, IInternalActorRef watcher)
         {
             // TODO: replace with Code Contracts assertion
-            if (watcher.Equals(Self)) { throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!"); }
+            if (watcher.Equals(Self)) { ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Watcher); }
             if (Log.IsDebugEnabled) { Log.Debug("Watching: [{0} -> {1}]", watcher.Path, watchee.Path); }
 
             if (Watching.TryGetValue(watchee, out var watching))
@@ -578,7 +578,7 @@ namespace Akka.Remote
         /// <exception cref="InvalidOperationException">TBD</exception>
         protected void RemoveWatch(IInternalActorRef watchee, IInternalActorRef watcher)
         {
-            if (watcher.Equals(Self)) { throw new InvalidOperationException("Watcher cannot be the RemoteWatcher!"); }
+            if (watcher.Equals(Self)) { ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Watcher); }
             if (Log.IsDebugEnabled) { Log.Debug($"Unwatching: [{watcher.Path} -> {watchee.Path}]"); }
             if (Watching.TryGetValue(watchee, out var watchers))
             {

@@ -1,0 +1,285 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ActorInitialization_Actor_Ctor" xml:space="preserve">
+    <value>Do not create actors using 'new', always create them using an ActorContext/System</value>
+  </data>
+  <data name="ActorNotFound_ActorSel_Exc" xml:space="preserve">
+    <value>Exception occurred while resolving ActorSelection</value>
+  </data>
+  <data name="ActorNotFound_ActorSel_Sub" xml:space="preserve">
+    <value>subject was null</value>
+  </data>
+  <data name="ArgumentNull_Compiler" xml:space="preserve">
+    <value>Compiler cannot be null</value>
+  </data>
+  <data name="ArgumentNull_CopyAndAdd" xml:space="preserve">
+    <value>CopyAndAdd cause exception cannot be null</value>
+  </data>
+  <data name="ArgumentNull_CopyAndRemove" xml:space="preserve">
+    <value>CopyAndRemove cause exception cannot be null</value>
+  </data>
+  <data name="ArgumentNull_DeadLetterR" xml:space="preserve">
+    <value>DeadLetter recipient may not be null</value>
+  </data>
+  <data name="ArgumentNull_DeadLetterS" xml:space="preserve">
+    <value>DeadLetter sender may not be null</value>
+  </data>
+  <data name="ArgumentNull_EnvelopeMsg" xml:space="preserve">
+    <value>The message cannot be null.</value>
+  </data>
+  <data name="ArgumentNull_EsSubscriber" xml:space="preserve">
+    <value>The subscriber cannot be a null actor.</value>
+  </data>
+  <data name="ArgumentNull_FastLazyProducer" xml:space="preserve">
+    <value>Producer cannot be null</value>
+  </data>
+  <data name="ArgumentNull_FastLazyState" xml:space="preserve">
+    <value>State cannot be null</value>
+  </data>
+  <data name="ArgumentNull_LogMailbox" xml:space="preserve">
+    <value>no mailbox owner or system given</value>
+  </data>
+  <data name="ArgumentNull_LogMessage" xml:space="preserve">
+    <value>The message to log must not be null.</value>
+  </data>
+  <data name="ArgumentNull_LogMessageFormatter" xml:space="preserve">
+    <value>The message formatter must not be null.</value>
+  </data>
+  <data name="ArgumentNull_Mapping" xml:space="preserve">
+    <value>The mapping cannot be null.</value>
+  </data>
+  <data name="ArgumentNull_SuppressedDeadLetterR" xml:space="preserve">
+    <value>SuppressedDeadLetter recipient may not be null</value>
+  </data>
+  <data name="ArgumentNull_SuppressedDeadLetterS" xml:space="preserve">
+    <value>SuppressedDeadLetter sender may not be null</value>
+  </data>
+  <data name="ArgumentNull_Type" xml:space="preserve">
+    <value>Type cannot be null</value>
+  </data>
+  <data name="ArgumentNull_WatchWithMsg" xml:space="preserve">
+    <value>message must not be null</value>
+  </data>
+  <data name="Argument_ActorRefCompareTo" xml:space="preserve">
+    <value>Object must be of type IActorRef.</value>
+  </data>
+  <data name="Argument_BackoffOptions_Max" xml:space="preserve">
+    <value>MaxBackoff must be greater than MinBackoff</value>
+  </data>
+  <data name="Argument_BackoffOptions_Min" xml:space="preserve">
+    <value>MinBackoff must be greater than 0</value>
+  </data>
+  <data name="Argument_BackoffOptions_Random" xml:space="preserve">
+    <value>RandomFactor must be between 0.0 and 1.0</value>
+  </data>
+  <data name="Argument_BoundedMailbox_Capacity" xml:space="preserve">
+    <value>The capacity for BoundedMailbox cannot be negative</value>
+  </data>
+  <data name="Argument_BoundedMailbox_PushTimeout" xml:space="preserve">
+    <value>The push time-out for BoundedMailbox cannot be be negative</value>
+  </data>
+  <data name="Argument_BoundedMessageQueue" xml:space="preserve">
+    <value>The capacity for BoundedMessageQueue can not be negative</value>
+  </data>
+  <data name="Argument_ConsistentHash_VirtualNodesFactor" xml:space="preserve">
+    <value>virtualNodesFactor must be &gt;= 1</value>
+  </data>
+  <data name="Argument_Futures_Ask" xml:space="preserve">
+    <value>Unable to resolve the target Provider</value>
+  </data>
+  <data name="Argument_PropsCreate" xml:space="preserve">
+    <value>The create function must be a 'new T (args)' expression</value>
+  </data>
+  <data name="Argument_ResizablePoolCell_Pool" xml:space="preserve">
+    <value>RouterConfig must be a Pool with defined resizer</value>
+  </data>
+  <data name="IllegalState_FSM_Initialize" xml:space="preserve">
+    <value>You must call StartWith before calling Initialize.</value>
+  </data>
+  <data name="IllegalState_FSM_StateData" xml:space="preserve">
+    <value>You must call StartWith before calling StateData.</value>
+  </data>
+  <data name="IllegalState_FSM_StateName" xml:space="preserve">
+    <value>You must call StartWith before calling StateName.</value>
+  </data>
+  <data name="IllegalState_RepointableActorRef_Initialize" xml:space="preserve">
+    <value>initialize called more than once!</value>
+  </data>
+  <data name="IllegalState_RepointableActorRef_IsStarted" xml:space="preserve">
+    <value>IsStarted called before initialized</value>
+  </data>
+  <data name="IllegalState_RepointableActorRef_Underlying" xml:space="preserve">
+    <value>Underlying cell is null</value>
+  </data>
+  <data name="InvalidActorName_Empty" xml:space="preserve">
+    <value>Actor name must not be empty.</value>
+  </data>
+  <data name="InvalidActorName_Null" xml:space="preserve">
+    <value>Actor name must not be null.</value>
+  </data>
+  <data name="InvalidMessage_MsgIsNull" xml:space="preserve">
+    <value>Message is null</value>
+  </data>
+  <data name="InvalidOperation_ActorCell_IsTerminating" xml:space="preserve">
+    <value>Cannot create child while terminating or terminated</value>
+  </data>
+  <data name="InvalidOperation_ActorRefProvider_Reg" xml:space="preserve">
+    <value>Cannot RegisterTempActor() with anything not obtained from tempPath()</value>
+  </data>
+  <data name="InvalidOperation_ActorRefProvider_Unreg" xml:space="preserve">
+    <value>Cannot UnregisterTempActor() with anything not obtained from tempPath()</value>
+  </data>
+  <data name="InvalidOperation_ActorSystem_AlreadyTerminated" xml:space="preserve">
+    <value>ActorSystem already terminated.</value>
+  </data>
+  <data name="InvalidOperation_ActorTaskScheduler_RunTask" xml:space="preserve">
+    <value>RunTask must be called from an actor context.</value>
+  </data>
+  <data name="InvalidOperation_FSM_NextStateData" xml:space="preserve">
+    <value>NextStateData is only available during OnTransition</value>
+  </data>
+  <data name="InvalidOperation_MatchBuilder_Built" xml:space="preserve">
+    <value>The partial action has been built. No handler can be added after that.</value>
+  </data>
+  <data name="InvalidOperation_MatchBuilder_MatchAnyAdded" xml:space="preserve">
+    <value>A handler that catches all messages has been added. No handler can be added after that.</value>
+  </data>
+  <data name="InvalidOperation_ReceiveActor_Ensure" xml:space="preserve">
+    <value>You may only call Receive-methods when constructing the actor and inside Become().</value>
+  </data>
+  <data name="InvalidOperation_Resolve_Produce" xml:space="preserve">
+    <value>Resolver is not initialized</value>
+  </data>
+  <data name="NotSupported_ActorPath_Uid" xml:space="preserve">
+    <value>RootActorPath must have undefined Uid</value>
+  </data>
+  <data name="NotSupported_Actor_Context" xml:space="preserve">
+    <value>There is no active ActorContext, this is most likely due to use of async operations from within this actor.</value>
+  </data>
+  <data name="NotSupported_Can_Not_Serialize_LocalOnlyDecider" xml:space="preserve">
+    <value>Can not serialize LocalOnlyDecider</value>
+  </data>
+  <data name="NotSupported_IsNotByteArray" xml:space="preserve">
+    <value>The object to convert is not a byte array.</value>
+  </data>
+  <data name="NotSupported_LocalActorRef_Bug" xml:space="preserve">
+    <value>Bug, we should not get here</value>
+  </data>
+</root>

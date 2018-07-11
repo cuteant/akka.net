@@ -108,20 +108,13 @@ namespace Akka.Routing
             double backoffRate = 0.1d,
             int messagesPerResize = 10)
         {
-            if (lower < 0)
-                throw new ArgumentException($"lowerBound must be >= 0, was: {lower}", nameof(lower));
-            if (upper < 0)
-                throw new ArgumentException($"upperBound must be >= 0, was: {upper}", nameof(upper));
-            if (upper < lower)
-                throw new ArgumentException($"upperBound must be >= lowerBound, was: {upper} < {lower}", nameof(upper));
-            if (rampupRate < 0.0)
-                throw new ArgumentException($"rampupRate must be >= 0.0, was {rampupRate}", nameof(rampupRate));
-            if (backoffThreshold > 1.0)
-                throw new ArgumentException($"backoffThreshold must be <= 1.0, was {backoffThreshold}", nameof(backoffThreshold));
-            if (backoffRate < 0.0)
-                throw new ArgumentException($"backoffRate must be >= 0.0, was {backoffRate}", nameof(backoffRate));
-            if (messagesPerResize <= 0)
-                throw new ArgumentException($"messagesPerResize must be > 0, was {messagesPerResize}", nameof(messagesPerResize));
+            if (lower < 0) AkkaThrowHelper.ThrowArgumentException_DefaultResizer_Lower(lower);
+            if (upper < 0) AkkaThrowHelper.ThrowArgumentException_DefaultResizer_Upper(upper);
+            if (upper < lower) AkkaThrowHelper.ThrowArgumentException_DefaultResizer_UpperLessthanLower(lower, upper);
+            if (rampupRate < 0.0) AkkaThrowHelper.ThrowArgumentException_DefaultResizer_RampupRate(rampupRate);
+            if (backoffThreshold > 1.0) AkkaThrowHelper.ThrowArgumentException_DefaultResizer_BackoffThreshold(backoffThreshold);
+            if (backoffRate < 0.0) AkkaThrowHelper.ThrowArgumentException_DefaultResizer_BackoffRate(backoffRate);
+            if (messagesPerResize <= 0) AkkaThrowHelper.ThrowArgumentException_DefaultResizer_MessagesPerResize(messagesPerResize);
 
             LowerBound = lower;
             UpperBound = upper;

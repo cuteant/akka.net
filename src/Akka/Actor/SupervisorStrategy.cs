@@ -472,8 +472,7 @@ namespace Akka.Actor
         /// <returns>The surrogate representation of the current <see cref="OneForOneStrategy"/>.</returns>
         public override ISurrogate ToSurrogate(ActorSystem system)
         {
-            if (Decider is LocalOnlyDecider)
-                throw new NotSupportedException("Can not serialize LocalOnlyDecider");
+            if (Decider is LocalOnlyDecider) AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_Can_Not_Serialize_LocalOnlyDecider);
             return new OneForOneStrategySurrogate
             {
                 Decider = Decider,

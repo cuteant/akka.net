@@ -437,9 +437,11 @@ namespace Akka.Actor
         /// <returns>Returns the timeout if ti exists.</returns>
         public TimeSpan Timeout(string phase)
         {
-            if (Phases.TryGetValue(phase, out var p))
-                return p.Timeout;
-            throw new ArgumentException($"Unknown phase [{phase}]. All phases must be defined in configuration.");
+            if (!Phases.TryGetValue(phase, out var p))
+            {
+                AkkaThrowHelper.ThrowArgumentException_CoordinatedShutdownTimeout(phase);
+            }
+            return p.Timeout;
         }
 
         /// <summary>
@@ -492,8 +494,7 @@ namespace Akka.Actor
 
             void DepthFirstSearch(string u)
             {
-                if (tempMark.Contains(u))
-                    throw new ArgumentException("Cycle detected in graph of phases. It must be a DAG. " + $"phase [{u}] depepends transitively on itself. All dependencies: {phases}");
+                if (tempMark.Contains(u)) { AkkaThrowHelper.ThrowArgumentException_CoordinatedShutdownSort(u, phases); }
                 if (unmarked.Contains(u))
                 {
                     tempMark.Add(u);

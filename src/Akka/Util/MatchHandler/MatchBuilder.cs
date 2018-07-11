@@ -7,8 +7,11 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
+#if !CORECLR
 using System.Reflection;
 using System.Reflection.Emit;
+#endif
 
 namespace Akka.Tools.MatchHandler
 {
@@ -54,7 +57,8 @@ namespace Akka.Tools.MatchHandler
         /// </exception>
         public MatchBuilder(IMatchCompiler<TItem> compiler)
         {
-            _compiler = compiler ?? throw new ArgumentNullException(nameof(compiler), "Compiler cannot be null");
+            if (null == compiler) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.compiler, AkkaExceptionResource.ArgumentNull_Compiler);
+            _compiler = compiler;
         }
 
         /// <summary>
@@ -76,7 +80,7 @@ namespace Akka.Tools.MatchHandler
             EnsureCanAdd();
             var handlesType = typeof(T);
             AddHandler(handlesType, PredicateAndHandler.CreateAction(handler, shouldHandle));
-            if(handlesType == _itemType && shouldHandle == null)
+            if (handlesType == _itemType && shouldHandle == null)
                 _state = State.MatchAnyAdded;
         }
 
@@ -102,7 +106,7 @@ namespace Akka.Tools.MatchHandler
             EnsureCanAdd();
             EnsureCanHandleType(handlesType);
             AddHandler(handlesType, PredicateAndHandler.CreateAction(handler, shouldHandle, true));
-            if(handlesType == _itemType && shouldHandle == null)
+            if (handlesType == _itemType && shouldHandle == null)
                 _state = State.MatchAnyAdded;
         }
 
@@ -185,25 +189,48 @@ namespace Akka.Tools.MatchHandler
         }
 #endif
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static void EnsureCanHandleType(Type handlesType)
         {
-            if(!_itemType.IsAssignableFrom(handlesType))
-                throw new ArgumentException($"The specified type ({handlesType}) must implement {_itemType}", nameof(handlesType));
+            if (!_itemType.IsAssignableFrom(handlesType)) { ThrowArgumentException_MatchBuilder_EnsureCanHandleType(handlesType); }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowArgumentException_MatchBuilder_EnsureCanHandleType(Type handlesType)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"The specified type ({handlesType}) must implement {_itemType}", nameof(handlesType));
+            }
         }
 
         //Throws an exception if a MatchAny handler has been added or the partial handler has been created.
         private void EnsureCanAdd()
         {
-            switch(_state)
+            switch (_state)
             {
                 case State.Adding:
                     return;
                 case State.MatchAnyAdded:
-                    throw new InvalidOperationException("A handler that catches all messages has been added. No handler can be added after that.");
+                    AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_MatchBuilder_MatchAnyAdded);
+                    break;
                 case State.Built:
-                    throw new InvalidOperationException("The partial action has been built. No handler can be added after that.");
+                    AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_MatchBuilder_Built);
+                    break;
                 default:
-                    throw new ArgumentOutOfRangeException($"Whoa, this should not happen! Unknown state value={_state}");
+                    ThrowArgumentOutOfRangeException(_state);
+                    break;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowArgumentOutOfRangeException(State state)
+        {
+            throw GetException();
+            ArgumentOutOfRangeException GetException()
+            {
+                return new ArgumentOutOfRangeException($"Whoa, this should not happen! Unknown state value={state}");
             }
         }
 
@@ -211,7 +238,7 @@ namespace Akka.Tools.MatchHandler
         {
             //if the previous handler handles the same type, we don't need an entirely new TypeHandler,
             //we can just add the handler to its' list of handlers
-            if(!TryGetPreviousTypeHandlerIfItHandlesSameType(handlesType, out var typeHandler))
+            if (!TryGetPreviousTypeHandlerIfItHandlesSameType(handlesType, out var typeHandler))
             {
                 //Either no previous handler had been added, or it handled a different type.
                 //Create a new handler and store it.
@@ -236,10 +263,10 @@ namespace Akka.Tools.MatchHandler
         private bool TryGetPreviousTypeHandlerIfItHandlesSameType(Type type, out TypeHandler typeHandler)
         {
             var existingNumberOfHandlers = _typeHandlers.Count;
-            if(existingNumberOfHandlers > 0)
+            if (existingNumberOfHandlers > 0)
             {
                 var lastHandlerInfo = _typeHandlers[existingNumberOfHandlers - 1];
-                if(lastHandlerInfo.HandlesType == type)
+                if (lastHandlerInfo.HandlesType == type)
                 {
                     typeHandler = lastHandlerInfo;
                     return true;

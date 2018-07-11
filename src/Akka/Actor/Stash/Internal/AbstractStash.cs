@@ -70,7 +70,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
 
             if (_actorCell.CurrentEnvelopeId == _currentEnvelopeId)
             {
-                throw new IllegalActorStateException($"Can't stash the same message {currMsg} more than once");
+                AkkaThrowHelper.ThrowIllegalActorStateException_Stash(currMsg);
             }
             _currentEnvelopeId = _actorCell.CurrentEnvelopeId;
 
@@ -80,7 +80,10 @@ An (unbounded) deque-based mailbox can be configured as follows:
                 //_theStash.AddLast(new Envelope(currMsg, sender));
                 _theStash.AddToFront(new Envelope(currMsg, sender));
             }
-            else throw new StashOverflowException($"Couldn't enqueue message {currMsg} to stash of {_actorCell.Self}");
+            else
+            {
+                AkkaThrowHelper.ThrowStashOverflowException_Stash(currMsg, _actorCell);
+            }
         }
 
         /// <summary>

@@ -33,36 +33,34 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
-            if (obj is ActorSelectionMessage sel)
+            var sel = obj as ActorSelectionMessage;
+            if (null == sel) { ThrowHelper.ThrowArgumentException_Serializer_ActorSel(obj); }
+
+            //List<Protocol.Selection> pattern = null;
+            //if (sel.Elements != null)
+            //{
+            var pattern = new List<Protocol.Selection>(sel.Elements.Length);
+            foreach (var element in sel.Elements)
             {
-                //List<Protocol.Selection> pattern = null;
-                //if (sel.Elements != null)
-                //{
-                var pattern = new List<Protocol.Selection>(sel.Elements.Length);
-                foreach (var element in sel.Elements)
+                switch (element)
                 {
-                    switch (element)
-                    {
-                        case SelectChildName childName:
-                            pattern.Add(BuildPattern(childName.Name, Protocol.Selection.PatternType.ChildName));
-                            break;
-                        case SelectChildPattern childPattern:
-                            pattern.Add(BuildPattern(childPattern.PatternStr, Protocol.Selection.PatternType.ChildPattern));
-                            break;
-                        case SelectParent parent:
-                            pattern.Add(BuildPattern(null, Protocol.Selection.PatternType.Parent));
-                            break;
-                        default:
-                            break;
-                    }
+                    case SelectChildName childName:
+                        pattern.Add(BuildPattern(childName.Name, Protocol.Selection.PatternType.ChildName));
+                        break;
+                    case SelectChildPattern childPattern:
+                        pattern.Add(BuildPattern(childPattern.PatternStr, Protocol.Selection.PatternType.ChildPattern));
+                        break;
+                    case SelectParent parent:
+                        pattern.Add(BuildPattern(null, Protocol.Selection.PatternType.Parent));
+                        break;
+                    default:
+                        break;
                 }
-                //}
-
-                return MessagePackSerializer.Serialize(new Protocol.SelectionEnvelope(
-                    WrappedPayloadSupport.PayloadToProto(system, sel.Message), pattern), s_defaultResolver);
             }
+            //}
 
-            throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+            return MessagePackSerializer.Serialize(new Protocol.SelectionEnvelope(
+                WrappedPayloadSupport.PayloadToProto(system, sel.Message), pattern), s_defaultResolver);
         }
 
         /// <inheritdoc />

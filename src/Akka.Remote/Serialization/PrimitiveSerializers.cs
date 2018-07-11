@@ -47,7 +47,7 @@ namespace Akka.Remote.Serialization
                 case long longValue:
                     return BitConverter.GetBytes(longValue);
                 default:
-                    throw new ArgumentException($"Cannot serialize object of type [{obj.GetType().TypeQualifiedName()}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
             }
         }
 
@@ -62,12 +62,11 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (s_fromBinaryMap.TryGetValue(type, out var factory))
+            if (!s_fromBinaryMap.TryGetValue(type, out var factory))
             {
-                return factory(bytes);
+                ThrowHelper.ThrowArgumentException_Serializer_Primitive(type);
             }
-
-            throw new ArgumentException($"Unimplemented deserialization of message with manifest [{type.TypeQualifiedName()}] in [${nameof(PrimitiveSerializers)}]");
+            return factory(bytes);
         }
     }
 }

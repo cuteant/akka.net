@@ -89,7 +89,7 @@ namespace Akka.Util
         {
             if (Resolver == null)
             {
-                throw new InvalidOperationException("Resolver is not initialized");
+                AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_Resolve_Produce);
             }
             return Resolver.Resolve<TActor>(Arguments);
         }

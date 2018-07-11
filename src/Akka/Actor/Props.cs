@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Dispatch;
 using Akka.Util.Internal;
@@ -32,7 +33,7 @@ namespace Akka.Actor
     /// </code>
     /// </example>
     /// </summary>
-    public class Props : IEquatable<Props> , ISurrogated
+    public class Props : IEquatable<Props>, ISurrogated
     {
         private const string NullActorTypeExceptionText = "Props must be instantiated with an actor type.";
 
@@ -138,7 +139,7 @@ namespace Akka.Actor
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != this.GetType()) return false;
-            return Equals((Props) obj);
+            return Equals((Props)obj);
         }
 
         /// <inheritdoc/>
@@ -147,9 +148,9 @@ namespace Akka.Actor
             unchecked
             {
                 int hashCode = (Deploy != null ? Deploy.GetHashCode() : 0);
-              //  hashCode = (hashCode*397) ^ (SupervisorStrategy != null ? SupervisorStrategy.GetHashCode() : 0);
-              //  hashCode = (hashCode*397) ^ (Arguments != null ? Arguments.GetHashCode() : 0);
-                hashCode = (hashCode*397) ^ (inputType != null ? inputType.GetHashCode() : 0);
+                //  hashCode = (hashCode*397) ^ (SupervisorStrategy != null ? SupervisorStrategy.GetHashCode() : 0);
+                //  hashCode = (hashCode*397) ^ (Arguments != null ? Arguments.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (inputType != null ? inputType.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -204,8 +205,7 @@ namespace Akka.Actor
         public Props(Type type, object[] args)
             : this(defaultDeploy, type, args)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type), NullActorTypeExceptionText);
+            if (type == null) ThrowArgumentNullException();
         }
 
         /// <summary>
@@ -223,8 +223,7 @@ namespace Akka.Actor
         public Props(Type type)
             : this(defaultDeploy, type, noArgs)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type), NullActorTypeExceptionText);
+            if (type == null) ThrowArgumentNullException();
         }
 
         /// <summary>
@@ -240,8 +239,7 @@ namespace Akka.Actor
         public Props(Type type, SupervisorStrategy supervisorStrategy, IEnumerable<object> args)
             : this(defaultDeploy, type, args.ToArray())
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type), NullActorTypeExceptionText);
+            if (type == null) ThrowArgumentNullException();
 
             SupervisorStrategy = supervisorStrategy;
         }
@@ -259,8 +257,7 @@ namespace Akka.Actor
         public Props(Type type, SupervisorStrategy supervisorStrategy, params object[] args)
             : this(defaultDeploy, type, args)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type), NullActorTypeExceptionText);
+            if (type == null) ThrowArgumentNullException();
 
             SupervisorStrategy = supervisorStrategy;
         }
@@ -278,8 +275,7 @@ namespace Akka.Actor
         public Props(Deploy deploy, Type type, IEnumerable<object> args)
             : this(deploy, type, args.ToArray())
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type), NullActorTypeExceptionText);
+            if (type == null) ThrowArgumentNullException();
         }
 
         /// <summary>
@@ -306,7 +302,8 @@ namespace Akka.Actor
         {
             get
             {
-                if (outputType == null) {
+                if (outputType == null)
+                {
                     outputType = producer.ActorType;
                 }
                 return outputType;
@@ -391,18 +388,17 @@ namespace Akka.Actor
         /// <param name="supervisorStrategy">Optional: The supervisor strategy used to manage the actor.</param>
         /// <returns>The newly created <see cref="Akka.Actor.Props" />.</returns>
         /// <exception cref="ArgumentException">The create function must be a 'new T (args)' expression</exception>
-        public static Props Create<TActor>(Expression<Func<TActor>> factory, SupervisorStrategy supervisorStrategy=null) where TActor : ActorBase
+        public static Props Create<TActor>(Expression<Func<TActor>> factory, SupervisorStrategy supervisorStrategy = null) where TActor : ActorBase
         {
             if (factory.Body is UnaryExpression)
                 return new DynamicProps<TActor>(factory.Compile());
 
             var newExpression = factory.Body.AsInstanceOf<NewExpression>();
-            if (newExpression == null)
-                throw new ArgumentException("The create function must be a 'new T (args)' expression");
+            if (newExpression == null) { AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_PropsCreate); }
 
             object[] args = newExpression.GetArguments().ToArray();
 
-            return new Props(typeof (TActor), supervisorStrategy, args);
+            return new Props(typeof(TActor), supervisorStrategy, args);
         }
 
         /// <summary>
@@ -447,8 +443,7 @@ namespace Akka.Actor
         /// <exception cref="ArgumentNullException">Props must be instantiated with an actor type.</exception>
         public static Props Create(Type type, params object[] args)
         {
-            if (type == null)
-                throw new ArgumentNullException(nameof(type), NullActorTypeExceptionText);
+            if (type == null) ThrowArgumentNullException();
 
             return new Props(type, args);
         }
@@ -535,7 +530,7 @@ namespace Akka.Actor
             //{
             //    copy.Deploy = deploy;
             //}
-            
+
             return copy;
         }
 
@@ -573,9 +568,12 @@ namespace Akka.Actor
         {
             var type = Type;
             var arguments = Arguments;
-            try {
+            try
+            {
                 return producer.Produce();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 throw new TypeLoadException($"Error while creating actor instance of type {type} with {arguments.Length} args: ({StringFormat.SafeJoin(",", arguments)})", e);
             }
         }
@@ -683,16 +681,20 @@ namespace Akka.Actor
 
         private static IIndirectActorProducer CreateProducer(Type type, object[] args)
         {
-            if (type == null) {
+            if (type == null)
+            {
                 return defaultProducer;
             }
-            if (typeof(IIndirectActorProducer).IsAssignableFrom(type)) {
+            if (typeof(IIndirectActorProducer).IsAssignableFrom(type))
+            {
                 return Activator.CreateInstance(type, args).AsInstanceOf<IIndirectActorProducer>();
             }
-            if (typeof(ActorBase).IsAssignableFrom(type)) {
+            if (typeof(ActorBase).IsAssignableFrom(type))
+            {
                 return new ActivatorProducer(type, args);
             }
-            throw new ArgumentException($"Unknown actor producer [{type.FullName}]", nameof(type));
+
+            return AkkaThrowHelper.ThrowArgumentException_PropsCreateProducer(type);
         }
 
         /// <summary>
@@ -708,6 +710,16 @@ namespace Akka.Actor
             finally
             {
                 actor = null;
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowArgumentNullException()
+        {
+            throw GetArgumentNullException();
+            ArgumentNullException GetArgumentNullException()
+            {
+                return new ArgumentNullException("type", NullActorTypeExceptionText);
             }
         }
     }

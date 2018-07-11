@@ -40,7 +40,7 @@ namespace Akka.Routing
             }
             else
             {
-                throw new ActorInitializationException($"RouterPoolActor can only be used with Pool, not {Cell.RouterConfig.GetType()}");
+                AkkaThrowHelper.ThrowActorInitializationException_RouterPoolActor(Cell.RouterConfig);
             }
         }
 

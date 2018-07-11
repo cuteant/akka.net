@@ -89,7 +89,7 @@ namespace Akka.Dispatch
         internal override void Register(ActorCell actor)
         {
             var current = _owner;
-            if(current != null && actor != current) throw new InvalidOperationException($"Cannot register to anyone but {_owner}");
+            if(current != null && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(_owner);
             _owner = actor;
             base.Register(actor);
         }

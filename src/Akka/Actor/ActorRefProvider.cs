@@ -332,8 +332,7 @@ namespace Akka.Actor
         /// <exception cref="InvalidOperationException">This exception is thrown if the given <paramref name="path"/> is not on the temp path.</exception>
         public void RegisterTempActor(IInternalActorRef actorRef, ActorPath path)
         {
-            if (path.Parent != _tempNode)
-                throw new InvalidOperationException("Cannot RegisterTempActor() with anything not obtained from tempPath()");
+            if (path.Parent != _tempNode) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorRefProvider_Reg);
             _tempContainer.AddChild(path.Name, actorRef);
         }
 
@@ -344,8 +343,7 @@ namespace Akka.Actor
         /// <exception cref="InvalidOperationException">This exception is thrown if the given <paramref name="path"/> is not on the temp path.</exception>
         public void UnregisterTempActor(ActorPath path)
         {
-            if (path.Parent != _tempNode)
-                throw new InvalidOperationException("Cannot UnregisterTempActor() with anything not obtained from tempPath()");
+            if (path.Parent != _tempNode) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorRefProvider_Unreg);
             _tempContainer.RemoveChild(path.Name);
         }
 

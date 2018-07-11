@@ -8,6 +8,7 @@
 using System;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
@@ -314,7 +315,8 @@ namespace Akka.Actor
                             break;
 
                         default:
-                            throw new NotSupportedException($"Unknown message {m.GetType().Name}");
+                            AkkaThrowHelper.ThrowNotSupportedException_ActorCell_SysMsgInvokeAll(m);
+                            break;
                     }
                 }
                 catch (Exception cause)
@@ -468,7 +470,7 @@ namespace Akka.Actor
                     ClearActor(_actor);
                     _actor = null; // ensure that we know that we failed during creation
                 }
-                throw new ActorInitializationException(_self, "Exception during creation", e);
+                AkkaThrowHelper.ThrowActorInitializationException_ActorCell_CreateEx(_self, e);
             }
         }
 
@@ -524,7 +526,15 @@ namespace Akka.Actor
             }
         }
 
-        private void Kill() => throw new ActorKilledException("Kill");
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void Kill()
+        {
+            throw GetActorKilledException();
+            ActorKilledException GetActorKilledException()
+            {
+                return new ActorKilledException("Kill");
+            }
+        }
     }
 }
 

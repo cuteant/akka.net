@@ -60,7 +60,7 @@ namespace Akka.Actor
                 return new UnboundedStashImpl(context);
             }
 
-            throw new ArgumentException($"Actor {actorType} implements an unrecognized subclass of {typeof(IActorStash)} - cannot instantiate", nameof(actorType));
+            return AkkaThrowHelper.ThrowArgumentException_StashFactoryCreate(actorType);
         }
     }
 }

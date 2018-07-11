@@ -730,7 +730,7 @@ namespace Akka.Actor
     /// </summary>
     /// <typeparam name="TState">The state name type</typeparam>
     /// <typeparam name="TData">The state data type</typeparam>
-    public abstract class FSM<TState, TData> : FSMBase, IListeners, IInternalSupportsTestFSMRef<TState,TData>
+    public abstract class FSM<TState, TData> : FSMBase, IListeners, IInternalSupportsTestFSMRef<TState, TData>
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
@@ -989,10 +989,8 @@ namespace Akka.Actor
         /// </exception>
         public void Initialize()
         {
-            if (_currentState != null)
-                MakeTransition(_currentState);
-            else
-                throw new IllegalStateException("You must call StartWith before calling Initialize.");
+            if (null == _currentState) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_Initialize); }
+            MakeTransition(_currentState);
         }
 
         /// <summary>
@@ -1005,9 +1003,8 @@ namespace Akka.Actor
         {
             get
             {
-                if (_currentState != null)
-                    return _currentState.StateName;
-                throw new IllegalStateException("You must call StartWith before calling StateName.");
+                if (null == _currentState) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_StateName); }
+                return _currentState.StateName;
             }
         }
 
@@ -1021,9 +1018,8 @@ namespace Akka.Actor
         {
             get
             {
-                if (_currentState != null)
-                    return _currentState.StateData;
-                throw new IllegalStateException("You must call StartWith before calling StateData.");
+                if (null == _currentState) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_StateData); }
+                return _currentState.StateData;
             }
         }
 
@@ -1037,9 +1033,8 @@ namespace Akka.Actor
         {
             get
             {
-                if (_nextState != null)
-                    return _nextState.StateData;
-                throw new InvalidOperationException("NextStateData is only available during OnTransition");
+                if (null == _nextState) { AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_FSM_NextStateData); }
+                return _nextState.StateData;
             }
         }
 
@@ -1099,7 +1094,7 @@ namespace Akka.Actor
         {
             get
             {
-                return delegate(Event<TData> @event)
+                return delegate (Event<TData> @event)
                 {
                     _log.Warning("unhandled event {0} in state {1}", @event.FsmEvent, StateName);
                     return Stay();
@@ -1119,7 +1114,7 @@ namespace Akka.Actor
         /// <summary>
         /// Termination handling
         /// </summary>
-        private Action<StopEvent<TState, TData>> _terminateEvent = @event =>{};
+        private Action<StopEvent<TState, TData>> _terminateEvent = @event => { };
 
         /// <summary>
         /// Transition handling
@@ -1144,7 +1139,7 @@ namespace Akka.Actor
         /// <returns>A <see cref="StateFunction"/> which combines both the results of <paramref name="original"/> and <paramref name="fallback"/></returns>
         private static StateFunction OrElse(StateFunction original, StateFunction fallback)
         {
-            StateFunction chained = delegate(Event<TData> @event)
+            StateFunction chained = delegate (Event<TData> @event)
             {
                 var originalResult = original.Invoke(@event);
                 if (originalResult == null) return fallback.Invoke(@event);

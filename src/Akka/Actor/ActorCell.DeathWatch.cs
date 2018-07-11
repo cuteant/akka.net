@@ -46,7 +46,7 @@ namespace Akka.Actor
         {
             if (message == null)
             {
-                throw new ArgumentNullException(nameof(message), "message must not be null");
+                AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.message, AkkaExceptionResource.ArgumentNull_WatchWithMsg);
             }
 
             var a = (IInternalActorRef)subject;

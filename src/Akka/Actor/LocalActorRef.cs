@@ -206,8 +206,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override IInternalActorRef GetSingleChild(string name)
         {
-            IInternalActorRef child;
-            return _cell.TryGetSingleChild(name, out child) ? child : ActorRefs.Nobody;
+            return _cell.TryGetSingleChild(name, out var child) ? child : ActorRefs.Nobody;
         }
 
         /// <inheritdoc/>
@@ -239,7 +238,7 @@ namespace Akka.Actor
                         var rest = name.Skip(index).ToList();
                         return current.AsInstanceOf<IInternalActorRef>().GetChild(rest);
                     }
-                    throw new NotSupportedException("Bug, we should not get here");
+                    AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_LocalActorRef_Bug);
                 }
                 index++;
             }

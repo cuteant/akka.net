@@ -36,8 +36,8 @@ namespace Akka.Actor
         {
             public int Compare(Address x, Address y)
             {
-                if (x == null) throw new ArgumentNullException(nameof(x));
-                if (y == null) throw new ArgumentNullException(nameof(y));
+                if (x == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.x);
+                if (y == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.y);
 
                 if (ReferenceEquals(x, y)) return 0;
 
@@ -177,9 +177,9 @@ namespace Akka.Actor
 
         int IComparable.CompareTo(object obj)
         {
-            if (obj is Address address) return CompareTo(address);
-
-            throw new ArgumentException($"Cannot compare {nameof(Address)} with instance of type '{obj?.GetType().FullName ?? "null"}'.");
+            var address = obj as Address;
+            if (null == address) { AkkaThrowHelper.ThrowArgumentException_AddrCompareTo(obj); }
+            return CompareTo(address);
         }
 
         /// <summary>
@@ -288,7 +288,7 @@ namespace Akka.Actor
             if (string.IsNullOrEmpty(uri.UserInfo))
             {
                 var systemName = uri.Host;
-                
+
                 return new Address(protocol, systemName);
             }
             else

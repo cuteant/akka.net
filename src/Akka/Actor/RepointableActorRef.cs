@@ -119,21 +119,15 @@ namespace Akka.Actor
         public RepointableActorRef Initialize(bool async)
         {
             var underlying = Underlying;
-            if (underlying == null)
-            {
-                var newCell = new UnstartedCell(System, this, Props, Supervisor);
-                SwapUnderlying(newCell);
-                SwapLookup(newCell);
-                Supervisor.SendSystemMessage(new Supervise(this, async));
-                if (!async)
-                    Point();
+            if (underlying != null) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_Initialize); }
 
-                return this;
-            }
-            else
-            {
-                throw new IllegalStateException("initialize called more than once!");
-            }
+            var newCell = new UnstartedCell(System, this, Props, Supervisor);
+            SwapUnderlying(newCell);
+            SwapLookup(newCell);
+            Supervisor.SendSystemMessage(new Supervise(this, async));
+            if (!async) { Point(); }
+
+            return this;
         }
 
         /// <summary>
@@ -146,8 +140,7 @@ namespace Akka.Actor
         public void Point()
         {
             var underlying = Underlying;
-            if (underlying == null)
-                throw new IllegalStateException("Underlying cell is null");
+            if (underlying == null) AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_Underlying);
 
             if (underlying is UnstartedCell unstartedCell)
             {
@@ -257,8 +250,7 @@ namespace Akka.Actor
         {
             get
             {
-                if (Underlying == null)
-                    throw new IllegalStateException("IsStarted called before initialized");
+                if (Underlying == null) AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_IsStarted);
                 return !(Underlying is UnstartedCell);
             }
         }
@@ -341,7 +333,7 @@ namespace Akka.Actor
         private readonly IInternalActorRef _supervisor;
         private readonly object _lock = new object();
 
-       /* Both queues must be accessed via lock */
+        /* Both queues must be accessed via lock */
         private readonly Deque<Envelope> _messageQueue = new Deque<Envelope>(true);
         private LatestFirstSystemMessageList _sysMsgQueue = SystemMessageList.LNil;
 

@@ -108,12 +108,10 @@ namespace Akka.Actor
                     foreach (var t in path)
                     {
                         var curPath = t;
-                        if (string.IsNullOrEmpty(curPath))
-                            throw new IllegalActorNameException($"Actor name in deployment [{d.Path}] must not be empty");
+                        if (string.IsNullOrEmpty(curPath)) AkkaThrowHelper.ThrowIllegalActorNameException(d);
                         if (!ActorPath.IsValidPathElement(t))
                         {
-                            throw new IllegalActorNameException(
-                                $"Illegal actor name [{t}] in deployment [${d.Path}]. Actor paths MUST: not start with `$`, include only ASCII letters and can only contain these special characters: ${new string(ActorPath.ValidSymbols)}.");
+                            AkkaThrowHelper.ThrowIllegalActorNameException(t, d);
                         }
                     }
                     set = _deployments.CompareAndSet(w, w.Insert(path.GetEnumerator(), d));

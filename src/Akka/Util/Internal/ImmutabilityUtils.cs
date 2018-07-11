@@ -34,7 +34,7 @@ namespace Akka.Util.Internal
         /// <returns>TBD</returns>
         public static HashSet<T> CopyAndAdd<T>(this HashSet<T> set, T item)
         {
-            if (set == null) throw new ArgumentNullException(nameof(set), "CopyAndAdd cause exception cannot be null");
+            if (set == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.set, AkkaExceptionResource.ArgumentNull_CopyAndAdd);
             // ReSharper disable once PossibleNullReferenceException
             var copy = new T[set.Count + 1];
             set.CopyTo(copy);
@@ -54,7 +54,7 @@ namespace Akka.Util.Internal
         /// <returns>TBD</returns>
         public static HashSet<T> CopyAndRemove<T>(this HashSet<T> set, T item)
         {
-            if (set == null) throw new ArgumentNullException(nameof(set), "CopyAndRemove cause exception cannot be null");
+            if (set == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.set, AkkaExceptionResource.ArgumentNull_CopyAndRemove);
             // ReSharper disable once PossibleNullReferenceException
             var copy = new T[set.Count];
             set.CopyTo(copy);

@@ -104,7 +104,7 @@ namespace Akka.Actor
 
             #endregion
         }
-        
+
         /// <summary>
         /// INTERNAL API
         /// </summary>
@@ -301,11 +301,11 @@ namespace Akka.Actor
         /// <returns>A newly created <see cref="ActorPath"/></returns>
         public static ActorPath Parse(string path)
         {
-            if (TryParse(path, out var actorPath))
+            if (!TryParse(path, out var actorPath))
             {
-                return actorPath;
+                AkkaThrowHelper.ThrowUriFormatException_ActorPath(path);
             }
-            throw new UriFormatException($"Can not parse an ActorPath: {path}");
+            return actorPath;
         }
 
         /// <summary>
@@ -579,9 +579,8 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override ActorPath WithUid(long uid)
         {
-            if (uid == 0)
-                return this;
-            throw new NotSupportedException("RootActorPath must have undefined Uid");
+            if (uid != 0) AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_ActorPath_Uid);
+            return this;
         }
 
         /// <inheritdoc/>

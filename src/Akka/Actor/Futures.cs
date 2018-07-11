@@ -123,8 +123,7 @@ namespace Akka.Actor
             await SynchronizationContextManager.RemoveContext;
 
             IActorRefProvider provider = ResolveProvider(self);
-            if (provider == null)
-                throw new ArgumentException("Unable to resolve the target Provider", nameof(self));
+            if (provider == null) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_Futures_Ask, AkkaExceptionArgument.self);
 
             return (T)await Ask(self, messageFactory, provider, timeout, cancellationToken);
         }
@@ -490,18 +489,23 @@ namespace Akka.Actor
         /// <inheritdoc cref="InternalActorRefBase.TellInternal"/>
         protected override void TellInternal(object message, IActorRef sender)
         {
-            if (State is Stopped || State is StoppedWithPath) Provider.DeadLetters.Tell(message);
-            else
+            switch (State)
             {
-                if (message == null) throw new InvalidMessageException("Message is null");
-                // @Aaronontheweb note: not using any of the Status stuff here. Seems like it's extraneous in CLR
-                //var wrappedMessage = message;
-                //if (!(message is Status.Success || message is Status.Failure))
-                //{
-                //    wrappedMessage = new Status.Success(message);
-                //}
-                if (!(_promise.TrySetResult(message)))
+                case Stopped _:
+                case StoppedWithPath _:
                     Provider.DeadLetters.Tell(message);
+                    break;
+
+                default:
+                    if (message == null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
+                    // @Aaronontheweb note: not using any of the Status stuff here. Seems like it's extraneous in CLR
+                    //var wrappedMessage = message;
+                    //if (!(message is Status.Success || message is Status.Failure))
+                    //{
+                    //    wrappedMessage = new Status.Success(message);
+                    //}
+                    if (!(_promise.TrySetResult(message))) { Provider.DeadLetters.Tell(message); }
+                    break;
             }
         }
 

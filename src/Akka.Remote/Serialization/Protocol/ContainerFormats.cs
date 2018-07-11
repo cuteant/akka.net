@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using MessagePack;
 
 namespace Akka.Remote.Serialization.Protocol
@@ -230,7 +231,7 @@ namespace Akka.Remote.Serialization.Protocol
             {
                 if (!IsNormalized(Seconds, Nanos))
                 {
-                    throw new InvalidOperationException("Duration was not a valid normalized duration");
+                    ThrowInvalidOperationExceptionn();
                 }
                 long ticks = Seconds * TimeSpan.TicksPerSecond + Nanos / NanosecondsPerTick;
                 return TimeSpan.FromTicks(ticks);
@@ -263,6 +264,16 @@ namespace Akka.Remote.Serialization.Protocol
                 long seconds = ticks / TimeSpan.TicksPerSecond;
                 int nanos = (int)(ticks % TimeSpan.TicksPerSecond) * NanosecondsPerTick;
                 return new Duration(seconds, nanos);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowInvalidOperationExceptionn()
+        {
+            throw GetException();
+            InvalidOperationException GetException()
+            {
+                return new InvalidOperationException("Duration was not a valid normalized duration");
             }
         }
     }

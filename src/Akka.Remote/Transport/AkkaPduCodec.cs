@@ -285,13 +285,22 @@ namespace Akka.Remote.Transport
             try
             {
                 var pdu = MessagePackSerializer.Deserialize<AkkaProtocolMessage>(raw, s_defaultResolver);
-                if (pdu.Instruction != null) return DecodeControlPdu(pdu.Instruction);
-                else if (pdu.Payload != null) return new Payload(pdu.Payload); // TODO HasPayload
-                else throw new PduCodecException("Error decoding Akka PDU: Neither message nor control message were contained");
+                if (pdu.Instruction != null)
+                {
+                    return DecodeControlPdu(pdu.Instruction);
+                }
+                else if (pdu.Payload != null)
+                {
+                    return new Payload(pdu.Payload); // TODO HasPayload
+                }
+                else
+                {
+                    return ThrowHelper.ThrowPduCodecException_Decode();
+                }
             }
             catch (FormatterNotRegisteredException ex) // InvalidProtocolBufferException
             {
-                throw new PduCodecException("Decoding PDU failed", ex);
+                return ThrowHelper.ThrowPduCodecException_Decode(ex);
             }
         }
 
@@ -461,7 +470,7 @@ namespace Akka.Remote.Transport
                     return new Heartbeat();
             }
 
-            throw new PduCodecException($"Decoding of control PDU failed, invalid format, unexpected {controlPdu}");
+            return ThrowHelper.ThrowPduCodecException_Decode(controlPdu);
         }
 
         private static byte[] DISASSOCIATE => ConstructControlMessagePdu(CommandType.Disassociate);
@@ -492,7 +501,7 @@ namespace Akka.Remote.Transport
         {
             if (string.IsNullOrEmpty(address.Host) || !address.Port.HasValue)
             {
-                throw new ArgumentException($"Address {address} could not be serialized: host or port missing");
+                ThrowHelper.ThrowArgumentException_Pdu_InvalidAddr(address);
             }
 
             return new AddressData(address.System, address.Host, (uint)address.Port.Value, address.Protocol);

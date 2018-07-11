@@ -7,6 +7,7 @@
 
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 
 namespace Akka.Actor
@@ -129,7 +130,7 @@ namespace Akka.Actor
         /// </exception>
         public void Cancel(bool throwOnFirstException)
         {
-            ThrowIfDisposed();
+            if (_isDisposed) { ThrowObjectDisposedException(); }
             _source.Cancel(throwOnFirstException);
         }
 
@@ -142,8 +143,7 @@ namespace Akka.Actor
         /// <exception cref="ObjectDisposedException">This exception is thrown if this cancelable has already been disposed.</exception>
         public void CancelAfter(TimeSpan delay)
         {
-            if(delay < TimeSpan.Zero)
-                throw new ArgumentOutOfRangeException(nameof(delay), $"The delay must be >0, it was {delay}");
+            if (delay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_Cancelable_Delay(delay);
             InternalCancelAfter(delay);
         }
 
@@ -155,19 +155,17 @@ namespace Akka.Actor
         /// <exception cref="ObjectDisposedException">This exception is thrown if this cancelable has already been disposed.</exception>
         public void CancelAfter(int millisecondsDelay)
         {
-            if(millisecondsDelay < 0)
-                throw new ArgumentOutOfRangeException(nameof(millisecondsDelay), $"The delay must be >0, it was {millisecondsDelay}");
+            if (millisecondsDelay < 0) AkkaThrowHelper.ThrowArgumentOutOfRangeException_Cancelable_MillDelay(millisecondsDelay);
             InternalCancelAfter(TimeSpan.FromMilliseconds(millisecondsDelay));
         }
 
         private void InternalCancelAfter(TimeSpan delay)
         {
-            ThrowIfDisposed();
-            if(_source.IsCancellationRequested)
-                return;
+            if (_isDisposed) { ThrowObjectDisposedException(); }
+            if (_source.IsCancellationRequested) { return; }
 
             //If the scheduler is using the system time, we can optimize for that
-            if(_scheduler is IDateTimeOffsetNowTimeProvider)
+            if (_scheduler is IDateTimeOffsetNowTimeProvider)
             {
                 //Use the built in functionality on CancellationTokenSource which is
                 //likely more lightweight than using the scheduler
@@ -217,12 +215,14 @@ namespace Akka.Actor
             return new Cancelable(scheduler, cts);
         }
 
-
-
-        private void ThrowIfDisposed()
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ThrowObjectDisposedException()
         {
-            if(_isDisposed)
-                throw new ObjectDisposedException(null, "The cancelable has been disposed");
+            throw GetObjectDisposedException();
+            ObjectDisposedException GetObjectDisposedException()
+            {
+                return new ObjectDisposedException(null, "The cancelable has been disposed");
+            }
         }
 
         //  Dispose ---------------------------------------------------------------
@@ -253,12 +253,12 @@ namespace Akka.Actor
             try
             {
                 //Make sure Dispose does not get called more than once, by checking the disposed field
-                if(!_isDisposed)
+                if (!_isDisposed)
                 {
-                    if(disposing)
+                    if (disposing)
                     {
                         //Clean up managed resources
-                        if(_source != null)
+                        if (_source != null)
                         {
                             _source.Dispose();
                         }

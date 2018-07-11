@@ -103,11 +103,10 @@ namespace Akka.Actor.Internal
         /// <returns>TBD</returns>
         public override IChildrenContainer Reserve(string name)
         {
-            if (_reason is SuspendReason.Termination) throw new InvalidOperationException($@"Cannot reserve actor name ""{name}"". It is terminating.");
-            if (InternalChildren.ContainsKey(name))
-                throw new InvalidActorNameException($@"Actor name ""{name}"" is not unique!");
-            else
-                return new TerminatingChildrenContainer(InternalChildren.SetItem(name, ChildNameReserved.Instance), _toDie, _reason);
+            if (_reason is SuspendReason.Termination) AkkaThrowHelper.ThrowInvalidOperationException_TerminatingChildrenContainer_Reserve(name);
+            if (InternalChildren.ContainsKey(name)) { AkkaThrowHelper.ThrowInvalidActorNameException_NeedUnique(name); }
+
+            return new TerminatingChildrenContainer(InternalChildren.SetItem(name, ChildNameReserved.Instance), _toDie, _reason);
         }
 
         /// <summary>

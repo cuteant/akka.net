@@ -83,10 +83,8 @@ namespace Akka.Actor
 
         private static Bucket[] CreateWheel(int ticksPerWheel, ILoggingAdapter log)
         {
-            if (ticksPerWheel <= 0)
-                throw new ArgumentOutOfRangeException(nameof(ticksPerWheel), ticksPerWheel, "Must be greater than 0.");
-            if (ticksPerWheel > 1073741824)
-                throw new ArgumentOutOfRangeException(nameof(ticksPerWheel), ticksPerWheel, "Cannot be greater than 2^30.");
+            if (ticksPerWheel <= 0) AkkaThrowHelper.ThrowArgumentOutOfRangeException_HashedWheelTimerScheduler_Min(ticksPerWheel);
+            if (ticksPerWheel > 1073741824) AkkaThrowHelper.ThrowArgumentOutOfRangeException_HashedWheelTimerScheduler_Max(ticksPerWheel);
 
             ticksPerWheel = NormalizeTicksPerWheel(ticksPerWheel);
             var wheel = new Bucket[ticksPerWheel];
@@ -130,11 +128,11 @@ namespace Akka.Actor
 
             else if (_workerState == WORKER_STATE_SHUTDOWN)
             {
-                throw new SchedulerException("cannot enqueue after timer shutdown");
+                AkkaThrowHelper.ThrowSchedulerException();
             }
             else
             {
-                throw new InvalidOperationException($"Worker in invalid state: {_workerState}");
+                AkkaThrowHelper.ThrowInvalidOperationException_HashedWheelTimerScheduler_Start(_workerState);
             }
 
             while (_startTime == 0)
@@ -213,7 +211,7 @@ namespace Akka.Actor
             var deadline = _tickDuration * (_tick + 1);
             unchecked // just to avoid trouble with long-running applications
             {
-                for (;;)
+                for (; ; )
                 {
                     long currentTime = HighResMonotonicClock.Ticks - _startTime;
                     var sleepMs = ((deadline - currentTime + TimeSpan.TicksPerMillisecond - 1) / TimeSpan.TicksPerMillisecond);
@@ -550,7 +548,7 @@ namespace Akka.Actor
             /// <param name="registrations">A set of registrations to populate.</param>
             public void ClearRegistrations(HashSet<SchedulerRegistration> registrations)
             {
-                for (;;)
+                for (; ; )
                 {
                     var reg = Poll();
                     if (reg == null)
@@ -567,7 +565,7 @@ namespace Akka.Actor
             /// <param name="registrations">A set of registrations to populate.</param>
             public void ClearReschedule(HashSet<SchedulerRegistration> registrations)
             {
-                for (;;)
+                for (; ; )
                 {
                     var reg = PollReschedule();
                     if (reg == null)
@@ -624,8 +622,7 @@ namespace Akka.Actor
                         else
                         {
                             // Registration was placed into the wrong bucket. This should never happen.
-                            throw new InvalidOperationException(
-                                $"SchedulerRegistration.Deadline [{current.Deadline}] > Timer.Deadline [{deadline}]");
+                            AkkaThrowHelper.ThrowInvalidOperationException_Execute_Deadline(current.Deadline, deadline);
                         }
                     }
                     else

@@ -155,7 +155,7 @@ namespace Akka.Remote
                     var akkaProtocolTransports = addressPromise.Task.Result;
                     if (akkaProtocolTransports.Count == 0)
                     {
-                        throw new ConfigurationException(@"No transports enabled under ""akka.remote.enabled-transports""");
+                        ThrowHelper.ThrowConfigurationException();
                     }
                     _addresses = new HashSet<Address>(akkaProtocolTransports.Select(a => a.Address));
 
@@ -253,10 +253,7 @@ namespace Akka.Remote
         /// <exception cref="RemoteTransportException">TBD</exception>
         public override void Send(object message, IActorRef sender, RemoteActorRef recipient)
         {
-            if (_endpointManager == null)
-            {
-                throw new RemoteTransportException("Attempted to send remote message but Remoting is not running.", null);
-            }
+            if (null == _endpointManager) { ThrowHelper.ThrowRemoteTransportException_EndpointManager(); }
 
             _endpointManager.Tell(new EndpointManager.Send(message, recipient, sender), sender ?? ActorRefs.NoSender);
         }
@@ -271,10 +268,7 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         public override Task<bool> ManagementCommand(object cmd)
         {
-            if (_endpointManager == null)
-            {
-                throw new RemoteTransportException("Attempted to send management command but Remoting is not running.", null);
-            }
+            if (null == _endpointManager) { ThrowHelper.ThrowRemoteTransportException_EndpointManager_Cmd(); }
 
             return
                 _endpointManager.Ask<EndpointManager.ManagementCommandAck>(new EndpointManager.ManagementCommand(cmd),
@@ -311,10 +305,7 @@ namespace Akka.Remote
         /// </exception>
         public override void Quarantine(Address address, int? uid)
         {
-            if (_endpointManager == null)
-            {
-                throw new RemoteTransportException($"Attempted to quarantine address {address} with uid {uid} but Remoting is not running");
-            }
+            if (null == _endpointManager) { ThrowHelper.ThrowRemoteTransportException_EndpointManager(address, uid); }
 
             _endpointManager.Tell(new EndpointManager.Quarantine(address, uid));
         }
@@ -343,34 +334,22 @@ namespace Akka.Remote
         internal static Address LocalAddressForRemote(
             IDictionary<string, HashSet<ProtocolTransportAddressPair>> transportMapping, Address remote)
         {
-            if (transportMapping.TryGetValue(remote.Protocol, out var transports))
+            if (!transportMapping.TryGetValue(remote.Protocol, out var transports))
             {
-                var responsibleTransports = transports.Where(t => t.ProtocolTransport.IsResponsibleFor(remote)).ToArray();
-                if (responsibleTransports.Length == 0)
-                {
-                    throw new RemoteTransportException(
-                        "No transport is responsible for address:[" + remote + "] although protocol [" + remote.Protocol +
-                        "] is available." +
-                        " Make sure at least one transport is configured to be responsible for the address.",
-                        null);
-                }
-
-                if (responsibleTransports.Length == 1)
-                {
-                    return responsibleTransports.First().Address;
-                }
-
-                throw new RemoteTransportException(
-                    "Multiple transports are available for [" + remote + ": " +
-                    string.Join(",", responsibleTransports.Select(t => t.ToString())) + "] " +
-                    "Remoting cannot decide which transport to use to reach the remote system. Change your configuration " +
-                    "so that only one transport is responsible for the address.",
-                    null);
+                ThrowHelper.ThrowRemoteTransportException_LocalAddressForRemote(remote, transportMapping);
             }
 
-            throw new RemoteTransportException(
-                "No transport is loaded for protocol: [" + remote.Protocol + "], available protocols: [" +
-                string.Join(",", transportMapping.Keys.Select(t => t.ToString())) + "]", null);
+            var responsibleTransports = transports.Where(t => t.ProtocolTransport.IsResponsibleFor(remote)).ToArray();
+            if (responsibleTransports.Length == 0)
+            {
+                ThrowHelper.ThrowRemoteTransportException_LocalAddressForRemote(remote);
+            }
+
+            if (responsibleTransports.Length > 1)
+            {
+                ThrowHelper.ThrowRemoteTransportException_LocalAddressForRemote(remote, responsibleTransports);
+            }
+            return responsibleTransports[0].Address; //.First().Address;
         }
 
         #endregion

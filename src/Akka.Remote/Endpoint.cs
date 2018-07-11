@@ -545,8 +545,16 @@ namespace Akka.Remote
                     }
                     catch (Exception ex)
                     {
-                        throw new HopelessAssociation(_localAddress, _remoteAddress, Uid,
-                            new IllegalStateException($"Error encountered while processing system message acknowledgement buffer: {_resendBuffer} ack: {ack}", ex));
+                        void ThrowHopelessAssociation()
+                        {
+                            throw GetHopelessAssociation();
+                        }
+                        HopelessAssociation GetHopelessAssociation()
+                        {
+                            return new HopelessAssociation(_localAddress, _remoteAddress, Uid,
+                                new IllegalStateException($"Error encountered while processing system message acknowledgement buffer: {_resendBuffer} ack: {ack}", ex));
+                        }
+                        ThrowHopelessAssociation();
                     }
 
                     ResendNacked();
@@ -644,8 +652,16 @@ namespace Akka.Remote
                     // message buffer and becomes quarantined. In other words, this action is safe.
                     if (_bailoutAt != null && _bailoutAt.IsOverdue)
                     {
-                        throw new HopelessAssociation(_localAddress, _remoteAddress, Uid,
-                            new TimeoutException("Delivery of system messages timed out and they were dropped"));
+                        void ThrowHopelessAssociation()
+                        {
+                            throw GetHopelessAssociation();
+                        }
+                        HopelessAssociation GetHopelessAssociation()
+                        {
+                            return new HopelessAssociation(_localAddress, _remoteAddress, Uid,
+                                new TimeoutException("Delivery of system messages timed out and they were dropped"));
+                        }
+                        ThrowHopelessAssociation();
                     }
 
                     _writer = CreateWriter();
@@ -788,8 +804,12 @@ namespace Akka.Remote
         // Extracted this method to solve a compiler issue with `Receive<TooLongIdle>`
         private void HandleTooLongIdle()
         {
-            throw new HopelessAssociation(_localAddress, _remoteAddress, Uid,
-                new TimeoutException("Delivery of system messages timed out and they were dropped"));
+            throw GetHopelessAssociation();
+            HopelessAssociation GetHopelessAssociation()
+            {
+                return new HopelessAssociation(_localAddress, _remoteAddress, Uid,
+                    new TimeoutException("Delivery of system messages timed out and they were dropped"));
+            }
         }
 
         #endregion
@@ -848,7 +868,15 @@ namespace Akka.Remote
             }
             catch (Exception ex)
             {
-                throw new HopelessAssociation(_localAddress, _remoteAddress, Uid, ex);
+                void ThrowHopelessAssociation()
+                {
+                    throw GetHopelessAssociation();
+                }
+                HopelessAssociation GetHopelessAssociation()
+                {
+                    return new HopelessAssociation(_localAddress, _remoteAddress, Uid, ex);
+                }
+                ThrowHopelessAssociation();
             }
         }
 
@@ -1271,7 +1299,7 @@ namespace Akka.Remote
         {
             if (_handle == null)
             {
-                throw new EndpointException("Internal error: No handle was present during serialization of outbound message.");
+                ThrowHelper.ThrowEndpointException_SerializeMessage();
             }
             return MessageSerializer.Serialize(_system, _handle.LocalAddress, msg);
         }
@@ -1380,8 +1408,7 @@ namespace Akka.Remote
             {
                 if (_handle == null)
                 {
-                    throw new EndpointException(
-                        "Internal error: Endpoint is in state Writing, but no association handle is present.");
+                    ThrowHelper.ThrowEndpointException_WriteSend();
                 }
 
                 if (_provider.RemoteSettings.LogSend)
@@ -1896,14 +1923,24 @@ namespace Akka.Remote
             switch (info)
             {
                 case DisassociateInfo.Quarantined:
-                    throw new InvalidAssociation("The remote system has quarantined this system. No further associations " +
-                                                   "to the remote system are possible until this system is restarted.", LocalAddress, RemoteAddress, disassociateInfo: DisassociateInfo.Quarantined);
+                    throw GetInvalidAssociation();
                 case DisassociateInfo.Shutdown:
-                    throw new ShutDownAssociation($"The remote system terminated the association because it is shutting down. Shut down address: {RemoteAddress}", LocalAddress, RemoteAddress);
+                    throw GetShutDownAssociation();
                 case DisassociateInfo.Unknown:
                 default:
                     Context.Stop(Self);
                     break;
+            }
+
+            InvalidAssociation GetInvalidAssociation()
+            {
+                return new InvalidAssociation("The remote system has quarantined this system. No further associations " +
+                                              "to the remote system are possible until this system is restarted.", LocalAddress, RemoteAddress, disassociateInfo: DisassociateInfo.Quarantined);
+            }
+
+            ShutDownAssociation GetShutDownAssociation()
+            {
+                return new ShutDownAssociation($"The remote system terminated the association because it is shutting down. Shut down address: {RemoteAddress}", LocalAddress, RemoteAddress); ;
             }
         }
 
@@ -1925,7 +1962,7 @@ namespace Akka.Remote
             }
             catch (Exception ex)
             {
-                throw new EndpointException("Error while decoding incoming Akka PDU", ex);
+                return ThrowHelper.ThrowEndpointException_DecodeMessageAndAck(ex);
             }
         }
 

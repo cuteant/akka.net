@@ -285,12 +285,9 @@ namespace Akka.Remote
             _intervalSum = intervalSum;
             _squaredIntervalSum = squaredIntervalSum;
 
-            if (maxSampleSize < 1)
-                throw new ArgumentOutOfRangeException(nameof(maxSampleSize), $"maxSampleSize must be >= 1, got {maxSampleSize}");
-            if (intervalSum < 0L)
-                throw new ArgumentOutOfRangeException(nameof(intervalSum), $"intervalSum must be >= 0, got {intervalSum}");
-            if (squaredIntervalSum < 0L)
-                throw new ArgumentOutOfRangeException(nameof(squaredIntervalSum), $"squaredIntervalSum must be >= 0, got {squaredIntervalSum}");
+            if (maxSampleSize < 1) ThrowHelper.ThrowArgumentOutOfRangeException_MaxSampleSize(maxSampleSize);
+            if (intervalSum < 0L) ThrowHelper.ThrowArgumentOutOfRangeException_IntervalSum(intervalSum);
+            if (squaredIntervalSum < 0L) ThrowHelper.ThrowArgumentOutOfRangeException_SquaredIntervalSum(squaredIntervalSum);
         }
 
         #endregion

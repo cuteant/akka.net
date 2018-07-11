@@ -38,8 +38,8 @@ namespace Akka.Serialization
         public override byte[] ToBinary(object obj)
         {
             if (obj is byte[] bts) { return bts; }
-            if (obj == null) { return null; }
-            throw new NotSupportedException("The object to convert is not a byte array.");
+            if (obj != null) { AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_IsNotByteArray); }
+            return null;
         }
 
         /// <summary>

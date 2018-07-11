@@ -593,8 +593,10 @@ namespace Akka.Actor
         private object AwaitResult(Task<object> task, TimeSpan timeout)
         {
             if (!task.Wait(timeout))
+            {
                 throw new TimeoutException(
                     $"Inbox {Receiver.Path} didn't receive a response message in specified timeout {timeout}");
+            }
 
             if (task.Result is Status.Failure received && received.Cause is TimeoutException)
             {

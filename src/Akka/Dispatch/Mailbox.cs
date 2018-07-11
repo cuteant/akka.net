@@ -668,8 +668,8 @@ namespace Akka.Dispatch
             Capacity = config.GetInt("mailbox-capacity");
             PushTimeout = config.GetTimeSpan("mailbox-push-timeout-time", TimeSpan.FromSeconds(-1));
 
-            if (Capacity < 0) throw new ArgumentException("The capacity for BoundedMailbox cannot be negative", nameof(config));
-            if (PushTimeout.TotalSeconds < 0) throw new ArgumentException("The push time-out for BoundedMailbox cannot be be negative", nameof(config));
+            if (Capacity < 0) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_BoundedMailbox_Capacity, AkkaExceptionArgument.config);
+            if (PushTimeout.TotalSeconds < 0) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_BoundedMailbox_PushTimeout, AkkaExceptionArgument.config);
         }
 
         /// <inheritdoc cref="MailboxType"/>
@@ -762,8 +762,8 @@ namespace Akka.Dispatch
             Capacity = config.GetInt("mailbox-capacity");
             PushTimeout = config.GetTimeSpan("mailbox-push-timeout-time", TimeSpan.FromSeconds(-1));
 
-            if (Capacity < 0) throw new ArgumentException("The capacity for BoundedMailbox cannot be negative", nameof(config));
-            if (PushTimeout.TotalSeconds < 0) throw new ArgumentException("The push time-out for BoundedMailbox cannot be null", nameof(config));
+            if (Capacity < 0) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_BoundedMailbox_Capacity, AkkaExceptionArgument.config);
+            if (PushTimeout.TotalSeconds < 0) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_BoundedMailbox_PushTimeout, AkkaExceptionArgument.config);
         }
 
         /// <inheritdoc cref="MailboxType"/>

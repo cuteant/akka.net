@@ -226,7 +226,8 @@ namespace Akka.Remote.Transport.DotNetty
                     hostName: Settings.PublicHostname,
                     publicPort: Settings.PublicPort);
 
-                LocalAddress = addr ?? throw new ConfigurationException($"Unknown local address type {newServerChannel.LocalAddress}");
+                if (null == addr) { ThrowHelper.ThrowConfigurationException(newServerChannel); }
+                LocalAddress = addr;
 
                 // resume accepting incoming connections
 #pragma warning disable 4014 // we WANT this task to run without waiting
@@ -253,7 +254,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override async Task<AssociationHandle> Associate(Address remoteAddress)
         {
-            if (!ServerChannel.Open) { throw new ChannelException("Transport is not open"); }
+            if (!ServerChannel.Open) { ThrowHelper.ThrowChannelException(); }
 
             return await AssociateInternal(remoteAddress).ConfigureAwait(false);
         }
@@ -514,7 +515,7 @@ namespace Akka.Remote.Transport.DotNetty
         /// <returns> <see cref="IPEndPoint"/> for IP-based addresses, <see cref="DnsEndPoint"/> for named addresses.</returns>
         public static EndPoint AddressToSocketAddress(Address address)
         {
-            if (address.Port == null) throw new ArgumentException($"address port must not be null: {address}");
+            if (address.Port == null) ThrowHelper.ThrowArgumentException_Transport_AddrPortIsNull(address);
             EndPoint listenAddress;
             if (IPAddress.TryParse(address.Host, out var ip))
             {

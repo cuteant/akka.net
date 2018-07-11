@@ -245,8 +245,7 @@ namespace Akka.Routing
         /// <returns>A new router logic with the provided <paramref name="mapping"/>.</returns>
         public ConsistentHashingRoutingLogic WithHashMapping(ConsistentHashMapping mapping)
         {
-            if (mapping == null)
-                throw new ArgumentNullException(nameof(mapping), "The mapping cannot be null.");
+            if (mapping == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.mapping, AkkaExceptionResource.ArgumentNull_Mapping);
 
             return new ConsistentHashingRoutingLogic(_system, _vnodes, mapping);
         }
@@ -501,17 +500,17 @@ namespace Akka.Routing
         /// <returns>The router configured with the auxiliary information.</returns>
         public override RouterConfig WithFallback(RouterConfig routerConfig)
         {
-            if (routerConfig is FromConfig || routerConfig is NoRouter)
+            switch (routerConfig)
             {
-                return OverrideUnsetConfig(routerConfig);
-            }
-            else if (routerConfig is ConsistentHashingPool other)
-            {
-                return WithHashMapping(other._hashMapping).OverrideUnsetConfig(other);
-            }
-            else
-            {
-                throw new ArgumentException($"Expected ConsistentHashingPool, got {routerConfig}", nameof(routerConfig));
+                case FromConfig _:
+                case NoRouter _:
+                    return OverrideUnsetConfig(routerConfig);
+
+                case ConsistentHashingPool other:
+                    return WithHashMapping(other._hashMapping).OverrideUnsetConfig(other);
+
+                default:
+                    throw new ArgumentException($"Expected ConsistentHashingPool, got {routerConfig}", nameof(routerConfig));
             }
         }
 
@@ -763,17 +762,17 @@ namespace Akka.Routing
         /// <returns>The router configured with the auxiliary information.</returns>
         public override RouterConfig WithFallback(RouterConfig routerConfig)
         {
-            if (routerConfig is FromConfig || routerConfig is NoRouter)
+            switch (routerConfig)
             {
-                return base.WithFallback(routerConfig);
-            }
-            else if (routerConfig is ConsistentHashingGroup other)
-            {
-                return WithHashMapping(other._hashMapping);
-            }
-            else
-            {
-                throw new ArgumentException($"Expected ConsistentHashingGroup, got {routerConfig}", nameof(routerConfig));
+                case FromConfig _:
+                case NoRouter _:
+                    return base.WithFallback(routerConfig);
+
+                case ConsistentHashingGroup other:
+                    return WithHashMapping(other._hashMapping);
+
+                default:
+                    throw new ArgumentException($"Expected ConsistentHashingGroup, got {routerConfig}", nameof(routerConfig));
             }
         }
 

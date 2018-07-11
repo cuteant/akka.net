@@ -48,7 +48,7 @@ namespace Akka.Remote
 
             if (!string.IsNullOrWhiteSpace(remote))
             {
-                throw new ConfigurationException($"unparseable remote node name [{remote}]");
+                ThrowHelper.ThrowConfigurationException_RemoteDeployer_ParseConfig(remote);
             }
 
             return CheckRemoteRouterConfig(deploy);

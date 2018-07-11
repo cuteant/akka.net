@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
@@ -79,8 +80,13 @@ namespace Akka.Remote.Transport
         private readonly RemoteSettings Settings;
 
         private Dictionary<string, ITransportAdapterProvider> _adaptersTable;
+        private Dictionary<string, ITransportAdapterProvider> AdaptersTable
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _adaptersTable ?? GetAdaptersTable(); }
+        }
 
-        private Dictionary<string, ITransportAdapterProvider> AdaptersTable()
+        private Dictionary<string, ITransportAdapterProvider> GetAdaptersTable()
         {
             if (_adaptersTable != null) return _adaptersTable;
             _adaptersTable = new Dictionary<string, ITransportAdapterProvider>(StringComparer.Ordinal);
@@ -95,7 +101,7 @@ namespace Akka.Remote.Transport
                 }
                 catch (Exception ex)
                 {
-                    throw new ArgumentException($"Cannot initiate transport adapter {adapter.Value}", ex);
+                    ThrowHelper.ThrowArgumentException_Transport_Initiate(adapter.Value, ex);
                 }
             }
 
@@ -108,9 +114,11 @@ namespace Akka.Remote.Transport
         /// <returns>TBD</returns>
         public ITransportAdapterProvider GetAdapterProvider(string name)
         {
-            if (AdaptersTable().TryGetValue(name, out var provider)) { return provider; }
-
-            throw new ArgumentException($"There is no registered transport adapter provider with name {name}");
+            if (!AdaptersTable.TryGetValue(name, out var provider))
+            {
+                ThrowHelper.ThrowArgumentException_TransportAdapter_IsNoReg(name);
+            }
+            return provider;
         }
     }
 
