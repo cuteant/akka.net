@@ -123,7 +123,7 @@ namespace Akka.Actor
                     Context.Stop(stopChild.Child);
                     return true;
 
-                case RegisterTerminationHook registerTerminationHook when !ReferenceEquals(sender, Context.System.DeadLetters):
+                case RegisterTerminationHook _ when !ReferenceEquals(sender, Context.System.DeadLetters):
                     _terminationHooks.Add(sender);
                     Context.Watch(sender);
                     return true;
@@ -143,7 +143,7 @@ namespace Akka.Actor
                     StopWhenAllTerminationHooksDone(terminated.ActorRef);
                     return true;
 
-                case TerminationHookDone terminationHookDone:
+                case TerminationHookDone _:
                     StopWhenAllTerminationHooksDone(sender);
                     return true;
 

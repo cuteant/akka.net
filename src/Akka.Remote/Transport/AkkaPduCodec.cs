@@ -177,7 +177,7 @@ namespace Akka.Remote.Transport
 
     /// <summary>INTERNAL API
     ///
-    /// A codec that is able to convert Akka PDUs from and to <see cref="ByteString"/>
+    /// A codec that is able to convert Akka PDUs from and to <see cref="T:System.Byte{T}"/>
     /// </summary>
     internal abstract class AkkaPduCodec
     {
@@ -190,13 +190,13 @@ namespace Akka.Remote.Transport
             AddressCache = AddressThreadLocalCache.For(system);
         }
 
-        /// <summary>Return an <see cref="IAkkaPdu"/> instance that represents a PDU contained in the raw <see cref="ByteString"/>.</summary>
+        /// <summary>Return an <see cref="IAkkaPdu"/> instance that represents a PDU contained in the raw <see cref="T:System.Byte{T}"/>.</summary>
         /// <param name="raw">Encoded raw byte representation of an Akka PDU</param>
         /// <returns>Class representation of a PDU that can be used in a <see cref="PatternMatch"/>.</returns>
         public abstract IAkkaPdu DecodePdu(byte[] raw);
 
         /// <summary>Takes an <see cref="IAkkaPdu"/> representation of an Akka PDU and returns its encoded
-        /// form as a <see cref="ByteString"/>.</summary>
+        /// form as a <see cref="T:System.Byte{T}"/>.</summary>
         /// <param name="pdu">TBD</param>
         /// <returns>TBD</returns>
         public virtual byte[] EncodePdu(IAkkaPdu pdu)
@@ -206,7 +206,7 @@ namespace Akka.Remote.Transport
                 case Payload p:
                     return ConstructPayload(p.Bytes);
 
-                case Heartbeat h:
+                case Heartbeat _:
                     return ConstructHeartbeat();
 
                 case Associate a:

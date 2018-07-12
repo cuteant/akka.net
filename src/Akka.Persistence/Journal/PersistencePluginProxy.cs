@@ -332,7 +332,7 @@ namespace Akka.Persistence.Journal
                         // exhaustive match
                         switch (message)
                         {
-                            case LoadSnapshot l:
+                            case LoadSnapshot _:
                                 Sender.Tell(new LoadSnapshotFailed(TimeoutException()));
                                 break;
                             case SaveSnapshot s:

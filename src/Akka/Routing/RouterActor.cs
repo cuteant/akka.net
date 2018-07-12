@@ -50,7 +50,7 @@ namespace Akka.Routing
         {
             switch (message)
             {
-                case GetRoutees getRoutees:
+                case GetRoutees _:
                     Sender.Tell(new Routees(Cell.Router.Routees));
                     break;
                 case AddRoutee addRoutee:
