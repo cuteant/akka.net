@@ -252,7 +252,7 @@ namespace Akka.Remote.Transport
         /// <param name="ev">TBD</param>
         public void Notify(IAssociationEvent ev)
         {
-            if (ev is InboundAssociation && ShouldDropInbound(ev.AsInstanceOf<InboundAssociation>().Association.RemoteAddress, ev, "notify"))
+            if (ev is InboundAssociation inboundAssociation && ShouldDropInbound(inboundAssociation.Association.RemoteAddress, ev, "notify"))
             {
                 //ignore
             }
@@ -333,9 +333,9 @@ namespace Akka.Remote.Transport
 
         private IAssociationEvent InterceptInboundAssociation(IAssociationEvent ev)
         {
-            if (ev is InboundAssociation)
+            if (ev is InboundAssociation inboundAssociation)
             {
-                return new InboundAssociation(new FailureInjectorHandle(ev.AsInstanceOf<InboundAssociation>().Association, this));
+                return new InboundAssociation(new FailureInjectorHandle(inboundAssociation.Association, this));
             }
 
             return ev;

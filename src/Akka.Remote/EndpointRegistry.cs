@@ -284,15 +284,13 @@ namespace Akka.Remote
                             // don't overwrite Quarantined with Gated
                             break;
 
-                        case EndpointManager.Pass _:
-                            _addressToWritable[address] = new EndpointManager.Gated(timeOfRelease,
-                                policy.AsInstanceOf<EndpointManager.Pass>().RefuseUid);
+                        case EndpointManager.Pass pass:
+                            _addressToWritable[address] = new EndpointManager.Gated(timeOfRelease, pass.RefuseUid);
                             _writableToAddress.Remove(endpoint);
                             break;
 
-                        case EndpointManager.WasGated _:
-                            _addressToWritable[address] = new EndpointManager.Gated(timeOfRelease,
-                                policy.AsInstanceOf<EndpointManager.WasGated>().RefuseUid);
+                        case EndpointManager.WasGated wasGated:
+                            _addressToWritable[address] = new EndpointManager.Gated(timeOfRelease, wasGated.RefuseUid);
                             _writableToAddress.Remove(endpoint);
                             break;
 

@@ -1004,13 +1004,13 @@ namespace Akka.Remote
             _codec = codec;
             _reliableDeliverySupervisor = reliableDeliverySupervisor;
             _system = Context.System;
-            _provider = RARP.For(Context.System).Provider;
+            _provider = RARP.For(_system).Provider;
             _msgDispatcher = new DefaultMessageDispatcher(_system, _provider, _log);
             _receiveBuffers = receiveBuffers;
             Inbound = handleOrActive != null;
             _ackDeadline = NewAckDeadline();
             _handle = handleOrActive;
-            _remoteMetrics = RemoteMetricsExtension.Create(Context.System.AsInstanceOf<ExtendedActorSystem>());
+            _remoteMetrics = RemoteMetricsExtension.Create(_system.AsInstanceOf<ExtendedActorSystem>());
 
             if (_handle == null)
             {
@@ -1111,7 +1111,7 @@ namespace Akka.Remote
         {
             _ackIdleTimerCancelable.CancelIfNotNull();
 
-            while(_prioBuffer.TryRemoveFromBack( out var msg))
+            while (_prioBuffer.TryRemoveFromBack(out var msg))
             {
                 _system.DeadLetters.Tell(msg);
             }
@@ -1381,18 +1381,16 @@ namespace Akka.Remote
         private void EnqueueInBuffer(object message)
         {
             var send = message as EndpointManager.Send;
-            if (send != null && send.Message is IPriorityMessage)
+            switch (send.Message)
             {
-                _prioBuffer.AddToFront(send);
-            }
-            else if (send != null && send.Message is ActorSelectionMessage &&
-                     send.Message.AsInstanceOf<ActorSelectionMessage>().Message is IPriorityMessage)
-            {
-                _prioBuffer.AddToFront(send);
-            }
-            else
-            {
-                _buffer.AddToFront(message);
+                case IPriorityMessage _:
+                case ActorSelectionMessage selMsg when selMsg.Message is IPriorityMessage:
+                    _prioBuffer.AddToFront(send);
+                    break;
+
+                default:
+                    _buffer.AddToFront(message);
+                    break;
             }
         }
 
@@ -1497,7 +1495,7 @@ namespace Akka.Remote
             {
                 if (count > 0 && _buffer.NonEmpty)
                 {
-                    if(_buffer.TryRemoveFromBackIf(SendDelegate, out var _))
+                    if (_buffer.TryRemoveFromBackIf(SendDelegate, out var _))
                     {
                         _writeCount += 1;
                         return WriteLoop(count - 1);
@@ -1511,7 +1509,7 @@ namespace Akka.Remote
             bool WritePrioLoop()
             {
                 if (_prioBuffer.IsEmpty) { return true; }
-                if(_prioBuffer.TryRemoveFromBackIf(WriteSend, out var _))
+                if (_prioBuffer.TryRemoveFromBackIf(WriteSend, out var _))
                 {
                     return WritePrioLoop();
                 }

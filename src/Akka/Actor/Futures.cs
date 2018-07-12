@@ -118,7 +118,7 @@ namespace Akka.Actor
         /// This exception is thrown if the system can't resolve the target provider.
         /// </exception>
         /// <returns>TBD</returns>
-        public static async Task<T> Ask<T>(this ICanTell self, Func<IActorRef,object> messageFactory, TimeSpan? timeout, CancellationToken cancellationToken)
+        public static async Task<T> Ask<T>(this ICanTell self, Func<IActorRef, object> messageFactory, TimeSpan? timeout, CancellationToken cancellationToken)
         {
             await SynchronizationContextManager.RemoveContext;
 
@@ -138,13 +138,17 @@ namespace Akka.Actor
             if (ActorCell.Current != null)
                 return InternalCurrentActorCellKeeper.Current.SystemImpl.Provider;
 
-            if (self is IInternalActorRef)
-                return self.AsInstanceOf<IInternalActorRef>().Provider;
+            switch (self)
+            {
+                case IInternalActorRef actorRef:
+                    return actorRef.Provider;
 
-            if (self is ActorSelection)
-                return ResolveProvider(self.AsInstanceOf<ActorSelection>().Anchor);
+                case ActorSelection actorSel:
+                    return ResolveProvider(actorSel.Anchor);
 
-            return null;
+                default:
+                    return null;
+            }
         }
 
         private static async Task<object> Ask(ICanTell self, Func<IActorRef, object> messageFactory, IActorRefProvider provider,
@@ -472,8 +476,8 @@ namespace Akka.Actor
 
                     case ActorPath actorPath:
                         return actorPath;
-                    case StoppedWithPath _:
-                        return State.AsInstanceOf<StoppedWithPath>().Path;
+                    case StoppedWithPath  stoppedWithPath:
+                        return stoppedWithPath.Path;
                     case Stopped _:
                         //even if we are already stopped we still need to produce a proper path
                         UpdateState(Stopped.Instance, new StoppedWithPath(Provider.TempPath()));

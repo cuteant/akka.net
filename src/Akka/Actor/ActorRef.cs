@@ -134,9 +134,9 @@ namespace Akka.Actor
         protected override void TellInternal(object message, IActorRef sender)
         {
 
-            if (message is ISystemMessage) //we have special handling for system messages
+            if (message is ISystemMessage sysMsg) //we have special handling for system messages
             {
-                SendSystemMessage(message.AsInstanceOf<ISystemMessage>());
+                SendSystemMessage(sysMsg);
             }
             else
             {
