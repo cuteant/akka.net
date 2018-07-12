@@ -37,17 +37,27 @@ namespace Akka.Event
         /// <param name="message">TBD</param>
         protected override void OnReceive(object message)
         {
-            message.Match()
-                 .With<InitializeLogger>(m => Sender.Tell(new LoggerInitialized()))
-                 .With<Error>(m => Trace.TraceError(m.ToString()))
-                 .With<Warning>(m => Trace.TraceWarning(m.ToString()))
-                 .With<DeadLetter>(m => Trace.TraceWarning(string.Format("Deadletter - unable to send message {0} from {1} to {2}", m.Message, m.Sender, m.Sender), typeof(DeadLetter).ToString()))
-                 .With<UnhandledMessage>(m => Trace.TraceWarning("Unhandled message!"))
-                 .Default(m =>
-                 {
-                     if (m != null)
-                         Trace.TraceInformation(m.ToString());
-                 });
+            switch (message)
+            {
+                case InitializeLogger m:
+                    Sender.Tell(new LoggerInitialized());
+                    break;
+                case Error m:
+                    Trace.TraceError(m.ToString());
+                    break;
+                case Warning m:
+                    Trace.TraceWarning(m.ToString());
+                    break;
+                case DeadLetter m:
+                    Trace.TraceWarning(string.Format("Deadletter - unable to send message {0} from {1} to {2}", m.Message, m.Sender, m.Sender), typeof(DeadLetter).ToString());
+                    break;
+                case UnhandledMessage m:
+                    Trace.TraceWarning("Unhandled message!");
+                    break;
+                default:
+                    if (message != null) Trace.TraceInformation(message.ToString());
+                    break;
+            }
         }
     }
 }

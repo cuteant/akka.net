@@ -53,35 +53,29 @@ namespace Akka.Event
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            void HandleRegister(Register register)
+            switch (message)
             {
-                if (_debug)
-                    _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
-                       string.Format("watching {0} in order to unsubscribe from EventStream when it terminates", register.Actor)));
-                Context.Watch(register.Actor);
+                case Register register:
+                    if (_debug)
+                        _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
+                           string.Format("watching {0} in order to unsubscribe from EventStream when it terminates", register.Actor)));
+                    Context.Watch(register.Actor);
+                    return true;
+                case UnregisterIfNoMoreSubscribedChannels unregister:
+                    if (_debug)
+                        _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
+                            string.Format("unwatching {0} since has no subscriptions", unregister.Actor)));
+                    Context.Unwatch(unregister.Actor);
+                    return true;
+                case Terminated terminated:
+                    if (_debug)
+                        _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
+                            string.Format("unsubscribe {0} from {1}, because it was terminated", terminated.Actor, _eventStream)));
+                    _eventStream.Unsubscribe(terminated.Actor);
+                    return true;
+                default:
+                    return false;
             }
-
-            void HandleUnregister(UnregisterIfNoMoreSubscribedChannels unregister)
-            {
-                if (_debug)
-                    _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
-                        string.Format("unwatching {0} since has no subscriptions", unregister.Actor)));
-                Context.Unwatch(unregister.Actor);
-            }
-
-            void HandleTerminated(Terminated terminated)
-            {
-                if (_debug)
-                    _eventStream.Publish(new Debug(this.GetType().Name, GetType(),
-                        string.Format("unsubscribe {0} from {1}, because it was terminated", terminated.Actor, _eventStream)));
-                _eventStream.Unsubscribe(terminated.Actor);
-            }
-
-            return message.Match()
-                .With<Register>(HandleRegister)
-                .With<UnregisterIfNoMoreSubscribedChannels>(HandleUnregister)
-                .With<Terminated>(HandleTerminated)
-                .WasHandled;
         }
 
         /// <summary>

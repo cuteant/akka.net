@@ -50,7 +50,7 @@ namespace Akka.Streams.Implementation.IO
         {
             if (chunkSize <= 0)
                 throw new ArgumentException($"chunkSize must be > 0 (was {chunkSize})", nameof(chunkSize));
-            if(startPosition < 0)
+            if (startPosition < 0)
                 throw new ArgumentException($"startPosition must be >= 0 (was {startPosition})", nameof(startPosition));
             if (initialBuffer <= 0)
                 throw new ArgumentException($"initialBuffer must be > 0 (was {initialBuffer})", nameof(initialBuffer));
@@ -127,11 +127,20 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="message">TBD</param>
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
-            => message.Match()
-                .With<Request>(() => ReadAndSignal(_maxBuffer))
-                .With<Continue>(() => ReadAndSignal(_maxBuffer))
-                .With<Cancel>(() => Context.Stop(Self))
-                .WasHandled;
+        {
+            switch (message)
+            {
+                case Request _:
+                case Continue _:
+                    ReadAndSignal(_maxBuffer);
+                    return true;
+                case Cancel _:
+                    Context.Stop(Self);
+                    return true;
+                default:
+                    return false;
+            }
+        }
 
         private void ReadAndSignal(int maxReadAhead)
         {

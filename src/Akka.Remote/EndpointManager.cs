@@ -442,13 +442,11 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         protected override SupervisorStrategy SupervisorStrategy()
         {
-            return new OneForOneStrategy(ex =>
+            Directive localOnlyDecider(Exception ex)
             {
-                var directive = Directive.Stop;
-
-                ex.Match()
-                    .With<InvalidAssociation>(ia =>
-                    {
+                switch (ex)
+                {
+                    case InvalidAssociation ia:
                         KeepQuarantinedOr(ia.RemoteAddress, () =>
                         {
                             var causedBy = ia.InnerException == null
@@ -462,20 +460,18 @@ namespace Akka.Remote
                         if (ia.DisassociationInfo.HasValue && ia.DisassociationInfo == DisassociateInfo.Quarantined)
                             Context.System.EventStream.Publish(new ThisActorSystemQuarantinedEvent(ia.LocalAddress, ia.RemoteAddress));
 
-                        directive = Directive.Stop;
-                    })
-                    .With<ShutDownAssociation>(shutdown =>
-                    {
+                        return Directive.Stop;
+
+                    case ShutDownAssociation shutdown:
                         KeepQuarantinedOr(shutdown.RemoteAddress, () =>
                         {
                             if (_log.IsDebugEnabled) _log.Debug("Remote system with address [{0}] has shut down. Address is now gated for {1}ms, all messages to this address will be delivered to dead letters.",
                                   shutdown.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds);
                             _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
                         });
-                        directive = Directive.Stop;
-                    })
-                    .With<HopelessAssociation>(hopeless =>
-                    {
+                        return Directive.Stop;
+
+                    case HopelessAssociation hopeless:
                         if (hopeless.Uid.HasValue)
                         {
                             _log.Error(hopeless.InnerException, "Association to [{0}] with UID [{1}] is irrecoverably failed. Quarantining address.",
@@ -494,11 +490,10 @@ namespace Akka.Remote
                                 hopeless.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds);
                             _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
                         }
-                        directive = Directive.Stop;
-                    })
-                    .Default(msg =>
-                    {
-                        switch (msg)
+                        return Directive.Stop;
+
+                    default:
+                        switch (ex)
                         {
                             case EndpointDisassociatedException _:
                             case EndpointAssociationException _:
@@ -510,11 +505,11 @@ namespace Akka.Remote
                                 break;
                         }
                         _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
-                        directive = Directive.Stop;
-                    });
+                        return Directive.Stop;
+                }
+            }
 
-                return directive;
-            }, false);
+            return new OneForOneStrategy(localOnlyDecider, false);
         }
 
         #endregion
@@ -661,7 +656,7 @@ namespace Akka.Remote
             {
                 //Stop writers
                 var policy = Tuple.Create(_endpoints.WritableEndpointWithPolicyFor(quarantine.RemoteAddress), quarantine.Uid);
-                if(policy.Item2 != null)
+                if (policy.Item2 != null)
                 {
                     switch (policy.Item1)
                     {
@@ -769,14 +764,13 @@ namespace Akka.Remote
                 IActorRef CreateAndRegisterWritingEndpoint(int? refuseUid) => _endpoints.RegisterWritableEndpoint(recipientAddress, CreateEndpoint(recipientAddress, send.Recipient.LocalAddressToUse, _transportMapping[send.Recipient.LocalAddressToUse], _settings, writing: true, handleOption: null, refuseUid: refuseUid), uid: null, refuseUid: refuseUid);
 
                 // pattern match won't throw a NullReferenceException if one is returned by WritableEndpointWithPolicyFor
-                _endpoints.WritableEndpointWithPolicyFor(recipientAddress).Match()
-                    .With<Pass>(
-                        pass =>
-                        {
-                            pass.Endpoint.Tell(send);
-                        })
-                    .With<Gated>(gated =>
-                    {
+                var endpointPolicy = _endpoints.WritableEndpointWithPolicyFor(recipientAddress);
+                switch (endpointPolicy)
+                {
+                    case Pass pass:
+                        pass.Endpoint.Tell(send);
+                        break;
+                    case Gated gated:
                         if (gated.TimeOfRelease.IsOverdue)
                         {
                             CreateAndRegisterWritingEndpoint(gated.RefuseUid).Tell(send);
@@ -785,19 +779,20 @@ namespace Akka.Remote
                         {
                             Context.System.DeadLetters.Tell(send);
                         }
-                    })
-                    .With<WasGated>(wasGated =>
-                    {
+                        break;
+                    case WasGated wasGated:
                         CreateAndRegisterWritingEndpoint(wasGated.RefuseUid).Tell(send);
-                    })
-                    .With<Quarantined>(quarantined =>
-                    {
+                        break;
+                    case Quarantined quarantined:
                         // timeOfRelease is only used for garbage collection reasons, therefore it is
                         // ignored here. We still have the Quarantined tombstone and we know what UID
                         // we don't want to accept, so use it.
                         CreateAndRegisterWritingEndpoint(quarantined.Uid).Tell(send);
-                    })
-                    .Default(msg => CreateAndRegisterWritingEndpoint(null).Tell(send));
+                        break;
+                    default:
+                        CreateAndRegisterWritingEndpoint(null).Tell(send);
+                        break;
+                }
             });
             Receive<InboundAssociation>(ia => HandleInboundAssociation(ia, false));
             Receive<EndpointWriter.StoppedReading>(endpoint => AcceptPendingReader(endpoint.Writer));
@@ -926,11 +921,11 @@ namespace Akka.Remote
 
                 _pendingReadHandoffs.AddOrSet(endpoint, handle);
                 endpoint.Tell(new EndpointWriter.TakeOver(handle, Self));
-                _endpoints.WritableEndpointWithPolicyFor(handle.RemoteAddress).Match()
-                    .With<Pass>(pass =>
-                    {
-                        pass.Endpoint.Tell(new ReliableDeliverySupervisor.Ungate());
-                    });
+                var policy = _endpoints.WritableEndpointWithPolicyFor(handle.RemoteAddress);
+                if (policy is Pass pass)
+                {
+                    pass.Endpoint.Tell(new ReliableDeliverySupervisor.Ungate());
+                }
             }
             else
             {

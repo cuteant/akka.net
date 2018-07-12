@@ -78,26 +78,37 @@ namespace Akka.DistributedData
                 Reply(false);
         }
 
-        protected override bool Receive(object message) => message.Match()
-            .With<ReadResult>(x =>
+        protected override bool Receive(object message)
+        {
+            switch (message)
             {
-                if (x.Envelope != null)
-                {
-                    _result = _result?.Merge(x.Envelope) ?? x.Envelope;
-                }
+                case ReadResult x:
+                    if (x.Envelope != null)
+                    {
+                        _result = _result?.Merge(x.Envelope) ?? x.Envelope;
+                    }
 
-                Remaining = Remaining.Remove(Sender.Path.Address);
-                var done = DoneWhenRemainingSize;
-                if (Log.IsDebugEnabled) Log.Debug("remaining: {0}, done when: {1}, current state: {2}", Remaining.Count, done, _result);
-                if (Remaining.Count == done) Reply(true);
-            })
-            .With<SendToSecondary>(x =>
-            {
-                foreach (var n in SecondaryNodes)
-                    Replica(n).Tell(_read);
-            })
-            .With<ReceiveTimeout>(_ => Reply(false))
-            .WasHandled;
+                    Remaining = Remaining.Remove(Sender.Path.Address);
+                    var done = DoneWhenRemainingSize;
+                    if (Log.IsDebugEnabled) Log.Debug("remaining: {0}, done when: {1}, current state: {2}", Remaining.Count, done, _result);
+                    if (Remaining.Count == done) Reply(true);
+                    return true;
+
+                case SendToSecondary _:
+                    foreach (var n in SecondaryNodes)
+                    {
+                        Replica(n).Tell(_read);
+                    }
+                    return true;
+
+                case ReceiveTimeout _:
+                    Reply(false);
+                    return true;
+
+                default:
+                    return false;
+            }
+        }
 
         private void Reply(bool ok)
         {
@@ -118,19 +129,34 @@ namespace Akka.DistributedData
             }
         }
 
-        private Receive WaitRepairAck(DataEnvelope envelope) => msg => msg.Match()
-            .With<ReadRepairAck>(x =>
+        private Receive WaitRepairAck(DataEnvelope envelope)
+        {
+            bool ReceiveFunc(object msg)
             {
-                var reply = envelope.Data is DeletedData
-                    ? (object)new DataDeleted(_key, null)
-                    : new GetSuccess(_key, _req, envelope.Data);
-                _replyTo.Tell(reply, Context.Parent);
-                Context.Stop(Self);
-            })
-            .With<ReadResult>(x => Remaining = Remaining.Remove(Sender.Path.Address))
-            .With<SendToSecondary>(_ => { })
-            .With<ReceiveTimeout>(_ => { })
-            .WasHandled;
+                switch (msg)
+                {
+                    case ReadRepairAck _:
+                        var reply = envelope.Data is DeletedData
+                            ? (object)new DataDeleted(_key, null)
+                            : new GetSuccess(_key, _req, envelope.Data);
+                        _replyTo.Tell(reply, Context.Parent);
+                        Context.Stop(Self);
+                        return true;
+
+                    case ReadResult _:
+                        Remaining = Remaining.Remove(Sender.Path.Address);
+                        return true;
+
+                    case SendToSecondary _:
+                    case ReceiveTimeout _:
+                        return true;
+
+                    default:
+                        return false;
+                }
+            }
+            return ReceiveFunc;
+        }
     }
 
     public interface IReadConsistency

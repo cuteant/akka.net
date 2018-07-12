@@ -107,31 +107,30 @@ namespace Akka.Cluster
 
                 Receive<ClusterEvent.IClusterDomainEvent>(clusterDomainEvent =>
                 {
-                    clusterDomainEvent.Match()
-                        .With<ClusterEvent.SeenChanged>(changed =>
-                        {
+                    switch (clusterDomainEvent)
+                    {
+                        case ClusterEvent.SeenChanged changed:
                             State = State.Copy(seenBy: changed.SeenBy);
-                        })
-                        .With<ClusterEvent.ReachabilityChanged>(changed =>
-                        {
+                            break;
+
+                        case ClusterEvent.ReachabilityChanged changed:
                             _readView._reachability = changed.Reachability;
-                        })
-                        .With<ClusterEvent.MemberRemoved>(removed =>
-                        {
-                            State = State.Copy(members: State.Members.Remove(removed.Member),
-                                unreachable: State.Unreachable.Remove(removed.Member));
-                        })
-                        .With<ClusterEvent.UnreachableMember>(member =>
-                        {
+                            break;
+
+                        case ClusterEvent.MemberRemoved removed:
+                            State = State.Copy(members: State.Members.Remove(removed.Member), unreachable: State.Unreachable.Remove(removed.Member));
+                            break;
+
+                        case ClusterEvent.UnreachableMember member:
                             // replace current member with new member (might have different status, only address is used in == comparison)
                             State = State.Copy(unreachable: State.Unreachable.Remove(member.Member).Add(member.Member));
-                        })
-                        .With<ClusterEvent.ReachableMember>(member =>
-                        {
+                            break;
+
+                        case ClusterEvent.ReachableMember member:
                             State = State.Copy(unreachable: State.Unreachable.Remove(member.Member));
-                        })
-                        .With<ClusterEvent.IMemberEvent>(memberEvent =>
-                        {
+                            break;
+
+                        case ClusterEvent.IMemberEvent memberEvent:
                             var newUnreachable = State.Unreachable;
                             // replace current member with new member (might have different status, only address is used in == comparison)
                             if (State.Unreachable.Contains(memberEvent.Member))
@@ -139,20 +138,24 @@ namespace Akka.Cluster
                             State = State.Copy(
                                 members: State.Members.Remove(memberEvent.Member).Add(memberEvent.Member),
                                 unreachable: newUnreachable);
-                        })
-                        .With<ClusterEvent.LeaderChanged>(changed =>
-                        {
+                            break;
+
+                        case ClusterEvent.LeaderChanged changed:
                             State = State.Copy(leader: changed.Leader);
-                        })
-                        .With<ClusterEvent.RoleLeaderChanged>(changed =>
-                        {
+                            break;
+
+                        case ClusterEvent.RoleLeaderChanged changed:
                             State = State.Copy(roleLeaderMap: State.RoleLeaderMap.SetItem(changed.Role, changed.Leader));
-                        })
-                        .With<ClusterEvent.CurrentInternalStats>(stats =>
-                        {
+                            break;
+
+                        case ClusterEvent.CurrentInternalStats stats:
                             readView._latestStats = stats;
-                        })
-                        .With<ClusterEvent.ClusterShuttingDown>(_ => { });
+                            break;
+
+                        case ClusterEvent.ClusterShuttingDown _:
+                        default:
+                            break;
+                    }
                 });
 
                 Receive<ClusterEvent.CurrentClusterState>(state =>
@@ -164,7 +167,7 @@ namespace Akka.Cluster
             protected override void PreStart()
             {
                 //subscribe to all cluster domain events
-                _cluster.Subscribe(Self, new []{ typeof(ClusterEvent.IClusterDomainEvent) });
+                _cluster.Subscribe(Self, new[] { typeof(ClusterEvent.IClusterDomainEvent) });
             }
 
             protected override void PostStop()

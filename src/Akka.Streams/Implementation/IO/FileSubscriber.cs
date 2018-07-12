@@ -34,12 +34,12 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         public static Props Props(FileInfo f, TaskCompletionSource<IOResult> completionPromise, int bufferSize, long startPosition, FileMode fileMode)
         {
-            if(bufferSize <= 0)
+            if (bufferSize <= 0)
                 throw new ArgumentException($"bufferSize must be > 0 (was {bufferSize})", nameof(bufferSize));
-            if(startPosition < 0)
+            if (startPosition < 0)
                 throw new ArgumentException($"startPosition must be >= 0 (was {startPosition})", nameof(startPosition));
 
-            return Actor.Props.Create(()=> new FileSubscriber(f, completionPromise, bufferSize, startPosition, fileMode)).WithDeploy(Deploy.Local);
+            return Actor.Props.Create(() => new FileSubscriber(f, completionPromise, bufferSize, startPosition, fileMode)).WithDeploy(Deploy.Local);
         }
 
         private readonly FileInfo _f;
@@ -100,14 +100,14 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            return message.Match()
-                .With<OnNext>(next =>
-                {
+            switch (message)
+            {
+                case OnNext next:
                     try
                     {
-                        var byteString = (ByteString) next.Element;
+                        var byteString = (ByteString)next.Element;
                         var bytes = byteString.ToArray();
-                         _chan.Write(bytes, 0, bytes.Length);
+                        _chan.Write(bytes, 0, bytes.Length);
                         _bytesWritten += bytes.Length;
                     }
                     catch (Exception ex)
@@ -115,15 +115,15 @@ namespace Akka.Streams.Implementation.IO
                         _completionPromise.TrySetResult(IOResult.Failed(_bytesWritten, ex));
                         Cancel();
                     }
-                })
-                .With<OnError>(error =>
-                {
+                    return true;
+
+                case OnError error:
                     _log.Error(error.Cause, $"Tearing down FileSink({_f.FullName}) due to upstream error");
                     _completionPromise.TrySetResult(IOResult.Failed(_bytesWritten, error.Cause));
                     Context.Stop(Self);
-                })
-                .With<OnComplete>(() =>
-                {
+                    return true;
+
+                case OnComplete _:
                     try
                     {
                         _chan.Flush(true);
@@ -131,10 +131,13 @@ namespace Akka.Streams.Implementation.IO
                     catch (Exception ex)
                     {
                         _completionPromise.TrySetResult(IOResult.Failed(_bytesWritten, ex));
-                    } 
+                    }
                     Context.Stop(Self);
-                })
-                .WasHandled;
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

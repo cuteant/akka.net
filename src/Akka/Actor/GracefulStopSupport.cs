@@ -68,21 +68,14 @@ namespace Akka.Actor
             {
                 if (t.Status == TaskStatus.RanToCompletion)
                 {
-                    var returnResult = false;
-
-                    void terminatedAction(Terminated terminated)
+                    switch (t.Result)
                     {
-                        returnResult = (terminated.ActorRef.Path.Equals(target.Path));
+                        case Terminated terminated:
+                            return (terminated.ActorRef.Path.Equals(target.Path));
+                        default:
+                            internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
+                            return false;
                     }
-                    void defaultAction(object m)
-                    {
-                        internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
-                        returnResult = false;
-                    }
-                    PatternMatch.Match(t.Result)
-                        .With<Terminated>(terminatedAction)
-                        .Default(defaultAction);
-                    return returnResult;
                 }
                 else
                 {

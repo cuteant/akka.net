@@ -373,14 +373,15 @@ namespace Akka.Remote
         /// past their deadlines.</summary>
         private static bool PruneFilterFunction(EndpointManager.EndpointPolicy policy)
         {
-            var rValue = true;
-
-            policy.Match()
-                .With<EndpointManager.Gated>(g => rValue = g.TimeOfRelease.HasTimeLeft)
-                .With<EndpointManager.Quarantined>(q => rValue = q.Deadline.HasTimeLeft)
-                .Default(msg => rValue = true);
-
-            return rValue;
+            switch (policy)
+            {
+                case EndpointManager.Gated g:
+                    return g.TimeOfRelease.HasTimeLeft;
+                case EndpointManager.Quarantined q:
+                    return q.Deadline.HasTimeLeft;
+                default:
+                    return true;
+            }
         }
 
         #endregion

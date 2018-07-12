@@ -89,37 +89,47 @@ namespace Akka.Streams.Implementation
                 isCompleted: () => _markedDepleted == _markCount && _markedPending == 0,
                 isReady: () => _markedPending > 0);
 
+            bool receiveFucn(object msg)
+            {
+                switch (msg)
+                {
+                    case FanIn.OnSubscribe subscribe:
+                        _inputs[subscribe.Id].SubReceive.CurrentReceive(new Actors.OnSubscribe(subscribe.Subscription));
+                        return true;
+
+                    case FanIn.OnNext next:
+                        var id = next.Id;
+                        if (IsMarked(id) && !IsPending(id)) { _markedPending++; }
+                        Pending(id, on: true);
+                        _receivedInput = true;
+                        _inputs[id].SubReceive.CurrentReceive(new Actors.OnNext(next.Element));
+                        return true;
+
+                    case FanIn.OnComplete complete:
+                        var id0 = complete.Id;
+                        if (!IsPending(id0))
+                        {
+                            if (IsMarked(id0) && !IsDepleted(id0)) { _markedDepleted++; }
+                            Depleted(id0, on: true);
+                            OnDepleted(id0);
+                        }
+
+                        RegisterCompleted(id0);
+                        _inputs[id0].SubReceive.CurrentReceive(Actors.OnComplete.Instance);
+
+                        if (!_receivedInput && IsAllCompleted) { OnCompleteWhenNoInput(); }
+                        return true;
+
+                    case FanIn.OnError error:
+                        OnError(error.Id, error.Cause);
+                        return true;
+
+                    default:
+                        return false;
+                }
+            }
             // FIXME: Eliminate re-wraps
-            SubReceive = new SubReceive(msg => msg.Match()
-                .With<FanIn.OnSubscribe>(subscribe => _inputs[subscribe.Id].SubReceive.CurrentReceive(new Actors.OnSubscribe(subscribe.Subscription)))
-                .With<FanIn.OnNext>(next =>
-                {
-                    var id = next.Id;
-                    if (IsMarked(id) && !IsPending(id))
-                        _markedPending++;
-                    Pending(id, on: true);
-                    _receivedInput = true;
-                    _inputs[id].SubReceive.CurrentReceive(new Actors.OnNext(next.Element));
-                })
-                .With<FanIn.OnComplete>(complete =>
-                {
-                    var id = complete.Id;
-                    if (!IsPending(id))
-                    {
-                        if (IsMarked(id) && !IsDepleted(id))
-                            _markedDepleted++;
-                        Depleted(id, on: true);
-                        OnDepleted(id);
-                    }
-
-                    RegisterCompleted(id);
-                    _inputs[id].SubReceive.CurrentReceive(Actors.OnComplete.Instance);
-
-                    if (!_receivedInput && IsAllCompleted)
-                        OnCompleteWhenNoInput();
-                })
-                .With<FanIn.OnError>(error => OnError(error.Id, error.Cause))
-                .WasHandled);
+            SubReceive = new SubReceive(receiveFucn);
         }
 
         /// <summary>

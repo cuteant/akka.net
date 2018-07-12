@@ -31,7 +31,7 @@ namespace Akka.DistributedData
         private bool _gotLocalStoreReply;
         private ImmutableHashSet<Address> _gotNackFrom;
 
-        public WriteAggregator(IKey key, DataEnvelope envelope, Delta delta, IWriteConsistency consistency, object req, IImmutableSet<Address> nodes, 
+        public WriteAggregator(IKey key, DataEnvelope envelope, Delta delta, IWriteConsistency consistency, object req, IImmutableSet<Address> nodes,
             IImmutableSet<Address> unreachable, IActorRef replyTo, bool durable)
             : base(nodes, unreachable, consistency.Timeout)
         {
@@ -51,7 +51,7 @@ namespace Akka.DistributedData
             _gotNackFrom = ImmutableHashSet<Address>.Empty;
             DoneWhenRemainingSize = GetDoneWhenRemainingSize();
         }
-        
+
         protected bool IsDone => _gotLocalStoreReply && (Remaining.Count <= DoneWhenRemainingSize || (Remaining.Except(_gotNackFrom).Count == 0) || NotEnoughNodes);
 
         protected bool NotEnoughNodes => DoneWhenRemainingSize < 0 || Nodes.Count < DoneWhenRemainingSize;
@@ -87,50 +87,61 @@ namespace Akka.DistributedData
             if (IsDone) Reply(isTimeout: false);
         }
 
-        protected override bool Receive(object message) => message.Match()
-            .With<WriteAck>(x =>
+        protected override bool Receive(object message)
+        {
+            switch (message)
             {
-                Remaining = Remaining.Remove(SenderAddress);
-                if (IsDone) Reply(isTimeout: false);
-            })
-            .With<WriteNack>(x =>
-            {
-                _gotNackFrom = _gotNackFrom.Add(SenderAddress);
-                if (IsDone) Reply(isTimeout: false);
-            })
-            .With<DeltaNack>(_ =>
-            {
-                // ok, will be retried with full state
-            })
-            .With<UpdateSuccess>(x =>
-            {
-                _gotLocalStoreReply = true;
-                if (IsDone) Reply(isTimeout: false);
-            })
-            .With<StoreFailure>(x =>
-            {
-                _gotLocalStoreReply = true;
-                _gotNackFrom = _gotNackFrom.Remove(_selfUniqueAddress.Address);
-                if (IsDone) Reply(isTimeout: false);
-            })
-            .With<SendToSecondary>(x =>
-            {
-                // Deltas must be applied in order and we can't keep track of ordering of
-                // simultaneous updates so there is a chance that the delta could not be applied.
-                // Try again with the full state to the primary nodes that have not acked.
-                if (_delta != null)
-                {
-                    foreach (var address in PrimaryNodes.Intersect(Remaining))
-                    {
-                        Replica(address).Tell(_write);
-                    }
-                }
+                case WriteAck _:
+                    Remaining = Remaining.Remove(SenderAddress);
+                    if (IsDone) Reply(isTimeout: false);
+                    return true;
 
-                foreach (var n in SecondaryNodes)
-                    Replica(n).Tell(_write);
-            })
-            .With<ReceiveTimeout>(x => Reply(isTimeout: true))
-            .WasHandled;
+                case WriteNack _:
+                    _gotNackFrom = _gotNackFrom.Add(SenderAddress);
+                    if (IsDone) Reply(isTimeout: false);
+                    return true;
+
+                case DeltaNack _:
+                    // ok, will be retried with full state
+                    return true;
+
+                case UpdateSuccess _:
+                    _gotLocalStoreReply = true;
+                    if (IsDone) Reply(isTimeout: false);
+                    return true;
+
+                case StoreFailure _:
+                    _gotLocalStoreReply = true;
+                    _gotNackFrom = _gotNackFrom.Remove(_selfUniqueAddress.Address);
+                    if (IsDone) Reply(isTimeout: false);
+                    return true;
+
+                case SendToSecondary _:
+                    // Deltas must be applied in order and we can't keep track of ordering of
+                    // simultaneous updates so there is a chance that the delta could not be applied.
+                    // Try again with the full state to the primary nodes that have not acked.
+                    if (_delta != null)
+                    {
+                        foreach (var address in PrimaryNodes.Intersect(Remaining))
+                        {
+                            Replica(address).Tell(_write);
+                        }
+                    }
+
+                    foreach (var n in SecondaryNodes)
+                    {
+                        Replica(n).Tell(_write);
+                    }
+                    return true;
+
+                case ReceiveTimeout _:
+                    Reply(isTimeout: true);
+                    return true;
+
+                default:
+                    return false; ;
+            }
+        }
 
         private void Reply(bool isTimeout)
         {

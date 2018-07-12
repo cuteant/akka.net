@@ -75,9 +75,9 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            return message.Match()
-                .With<OnNext>(next =>
-                {
+            switch (message)
+            {
+                case OnNext next:
                     try
                     {
                         var bytes = next.Element as ByteString;
@@ -92,20 +92,23 @@ namespace Akka.Streams.Implementation.IO
                         _completionPromise.TrySetResult(IOResult.Failed(_bytesWritten, ex));
                         Cancel();
                     }
-                })
-                .With<OnError>(error =>
-                {
+                    return true;
+
+                case OnError error:
                     _log.Error(error.Cause,
                         $"Tearing down OutputStreamSink due to upstream error, wrote bytes: {_bytesWritten}");
                     _completionPromise.TrySetResult(IOResult.Failed(_bytesWritten, error.Cause));
                     Context.Stop(Self);
-                })
-                .With<OnComplete>(() =>
-                {
+                    return true;
+
+                case OnComplete _:
                     Context.Stop(Self);
                     _outputStream.Flush();
-                })
-                .WasHandled;
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
