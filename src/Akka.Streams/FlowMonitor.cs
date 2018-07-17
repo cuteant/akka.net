@@ -41,7 +41,7 @@ namespace Akka.Streams
             /// <summary>
             /// TBD
             /// </summary>
-            public static Initialized Instance { get; } = new Initialized();
+            public static readonly Initialized Instance = new Initialized();
 
             private Initialized()
             {
@@ -98,7 +98,7 @@ namespace Akka.Streams
             /// <summary>
             /// TBD
             /// </summary>
-            public static Finished Instance { get; } = new Finished();
+            public static readonly Finished Instance = new Finished();
 
             private Finished()
             {

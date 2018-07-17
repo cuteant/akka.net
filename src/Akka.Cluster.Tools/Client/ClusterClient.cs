@@ -127,12 +127,12 @@ namespace Akka.Cluster.Tools.Client
         /// TBD
         /// </summary>
         [Serializable]
-        internal sealed class RefreshContactsTick
+        internal sealed class RefreshContactsTick : ISingletonMessage
         {
             /// <summary>
             /// TBD
             /// </summary>
-            public static RefreshContactsTick Instance { get; } = new RefreshContactsTick();
+            public static readonly RefreshContactsTick Instance = new RefreshContactsTick();
             private RefreshContactsTick() { }
         }
 
@@ -140,12 +140,12 @@ namespace Akka.Cluster.Tools.Client
         /// TBD
         /// </summary>
         [Serializable]
-        internal sealed class HeartbeatTick
+        internal sealed class HeartbeatTick : ISingletonMessage
         {
             /// <summary>
             /// TBD
             /// </summary>
-            public static HeartbeatTick Instance { get; } = new HeartbeatTick();
+            public static readonly HeartbeatTick Instance = new HeartbeatTick();
             private HeartbeatTick() { }
         }
 
@@ -153,12 +153,12 @@ namespace Akka.Cluster.Tools.Client
         /// TBD
         /// </summary>
         [Serializable]
-        internal sealed class ReconnectTimeout
+        internal sealed class ReconnectTimeout : ISingletonMessage
         {
             /// <summary>
             /// TBD
             /// </summary>
-            public static ReconnectTimeout Instance { get; } = new ReconnectTimeout();
+            public static readonly ReconnectTimeout Instance = new ReconnectTimeout();
             private ReconnectTimeout() { }
         }
 

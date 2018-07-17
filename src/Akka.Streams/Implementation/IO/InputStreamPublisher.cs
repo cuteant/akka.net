@@ -42,7 +42,7 @@ namespace Akka.Streams.Implementation.IO
 
         private struct Continue : IDeadLetterSuppression
         {
-            public static Continue Instance { get; } = new Continue();
+            public static readonly Continue Instance = new Continue();
         }
         
         private readonly Stream _inputstream;

@@ -12,7 +12,6 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Event;
-using Akka.Serialization;
 using Akka.Util;
 using Akka.Util.Internal;
 
@@ -83,7 +82,7 @@ namespace Akka.Routing
     /// that is going to be used for a given hash, but doesn't actually return the hash values themselves.
     /// 
     /// If returning a byte[] or string it will be used as is, otherwise the configured
-    /// <see cref="Serializer"/> will be applied to the returned data.
+    /// <see cref="Akka.Serialization.Serializer"/> will be applied to the returned data.
     /// </summary>
     public delegate object ConsistentHashMapping(object msg);
 

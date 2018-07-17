@@ -70,7 +70,7 @@ namespace Akka.Streams.Implementation
             /// <summary>
             /// TBD
             /// </summary>
-            public static Completion Instance { get; } = new Completion();
+            public static readonly Completion Instance = new Completion();
 
             private Completion()
             {

@@ -447,7 +447,7 @@ namespace Akka.Routing
         /// This router is set to use the default dispatcher <see cref="Dispatchers.DefaultDispatcherId"/>.
         /// </note>
         /// </summary>
-        public static FromConfig Instance { get; } = new FromConfig();
+        public static readonly FromConfig Instance = new FromConfig();
 
         /// <summary>
         /// N/A

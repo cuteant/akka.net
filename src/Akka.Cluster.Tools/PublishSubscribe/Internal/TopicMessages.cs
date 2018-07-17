@@ -19,12 +19,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class Prune
+    internal sealed class Prune : ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static Prune Instance { get; } = new Prune();
+        public static readonly Prune Instance = new Prune();
         private Prune() { }
     }
 
@@ -32,12 +32,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    internal sealed class Count
+    internal sealed class Count : ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static Count Instance { get; } = new Count();
+        public static readonly Count Instance = new Count();
         private Count() { }
     }
 
@@ -281,7 +281,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class DeltaCount
+    internal sealed class DeltaCount : ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -295,12 +295,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class GossipTick
+    internal sealed class GossipTick : ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static GossipTick Instance { get; } = new GossipTick();
+        public static readonly GossipTick Instance = new GossipTick();
 
         private GossipTick() { }
     }
@@ -440,12 +440,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// Passivate-like message sent from child to parent, used to signal that sender has no subscribers and no child actors.
     /// </summary>
-    internal sealed class NoMoreSubscribers : IChildActorTerminationProtocol
+    internal sealed class NoMoreSubscribers : IChildActorTerminationProtocol, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static NoMoreSubscribers Instance { get; } = new NoMoreSubscribers();
+        public static readonly NoMoreSubscribers Instance = new NoMoreSubscribers();
         private NoMoreSubscribers() { }
     }
 
@@ -453,12 +453,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// Sent from parent to child actor to signalize that messages are being buffered. When received by child actor
     /// if no <see cref="Subscribe"/> message has been received after sending <see cref="NoMoreSubscribers"/> message child actor will stop itself.
     /// </summary>
-    internal sealed class TerminateRequest : IChildActorTerminationProtocol
+    internal sealed class TerminateRequest : IChildActorTerminationProtocol, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static TerminateRequest Instance { get; } = new TerminateRequest();
+        public static readonly TerminateRequest Instance = new TerminateRequest();
         private TerminateRequest() { }
     }
 
@@ -467,12 +467,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// after sending <see cref="NoMoreSubscribers"/> but before receiving <see cref="TerminateRequest"/>.
     /// When received by the parent buffered messages will be forwarded to child actor for processing.
     /// </summary>
-    internal sealed class NewSubscriberArrived : IChildActorTerminationProtocol
+    internal sealed class NewSubscriberArrived : IChildActorTerminationProtocol, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static NewSubscriberArrived Instance { get; } = new NewSubscriberArrived();
+        public static readonly NewSubscriberArrived Instance = new NewSubscriberArrived();
         private NewSubscriberArrived() { }
     }
 

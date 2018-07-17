@@ -21,7 +21,7 @@ namespace Akka.DistributedData.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class GossipTick
+    internal sealed class GossipTick : ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -39,12 +39,12 @@ namespace Akka.DistributedData.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class DeltaPropagationTick
+    internal sealed class DeltaPropagationTick : ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static DeltaPropagationTick Instance { get; } = new DeltaPropagationTick();
+        public static readonly DeltaPropagationTick Instance = new DeltaPropagationTick();
 
         private DeltaPropagationTick() { }
     }
@@ -53,7 +53,7 @@ namespace Akka.DistributedData.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal class RemovedNodePruningTick
+    internal class RemovedNodePruningTick : ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -71,7 +71,7 @@ namespace Akka.DistributedData.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal class ClockTick
+    internal class ClockTick : ISingletonMessage
     {
         /// <summary>
         /// TBD

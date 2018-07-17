@@ -235,7 +235,7 @@ namespace Akka.Actor
             /// Singleton instance of Normal
             /// </summary>
 #pragma warning disable 618
-            public static Normal Instance { get; } = new Normal();
+            public static readonly Normal Instance = new Normal();
 #pragma warning restore 618
         }
 
@@ -255,7 +255,7 @@ namespace Akka.Actor
             /// Singleton instance of Shutdown
             /// </summary>
 #pragma warning disable 618
-            public static Shutdown Instance { get; } = new Shutdown();
+            public static readonly Shutdown Instance = new Shutdown();
 #pragma warning restore 618
         }
 
@@ -302,7 +302,7 @@ namespace Akka.Actor
             /// Singleton instance of StateTimeout
             /// </summary>
 #pragma warning disable 618
-            public static StateTimeout Instance { get; } = new StateTimeout();
+            public static readonly StateTimeout Instance = new StateTimeout();
 #pragma warning restore 618
         }
 

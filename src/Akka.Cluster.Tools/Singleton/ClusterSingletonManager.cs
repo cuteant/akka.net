@@ -153,12 +153,12 @@ namespace Akka.Cluster.Tools.Singleton
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class Uninitialized : IClusterSingletonData
+    internal sealed class Uninitialized : IClusterSingletonData, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static Uninitialized Instance { get; } = new Uninitialized();
+        public static readonly Uninitialized Instance = new Uninitialized();
         private Uninitialized() { }
     }
 
@@ -321,12 +321,12 @@ namespace Akka.Cluster.Tools.Singleton
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class EndData : IClusterSingletonData
+    internal sealed class EndData : IClusterSingletonData, ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static EndData Instance { get; } = new EndData();
+        public static readonly EndData Instance = new EndData();
         private EndData() { }
     }
 
@@ -356,14 +356,14 @@ namespace Akka.Cluster.Tools.Singleton
     ///
     /// Used for graceful termination as part of <see cref="CoordinatedShutdown"/>.
     /// </summary>
-    internal sealed class SelfExiting
+    internal sealed class SelfExiting : ISingletonMessage
     {
         private SelfExiting() { }
 
         /// <summary>
         /// Singleton instance
         /// </summary>
-        public static SelfExiting Instance { get; } = new SelfExiting();
+        public static readonly SelfExiting Instance = new SelfExiting();
     }
 
     /// <summary>

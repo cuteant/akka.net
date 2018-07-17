@@ -64,12 +64,12 @@ namespace Akka.Persistence.Query
     /// <summary>
     /// Used when retrieving all events.
     /// </summary>
-    public sealed class NoOffset : Offset
+    public sealed class NoOffset : Offset, ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="NoOffset"/>.
         /// </summary>
-        public static NoOffset Instance { get; } = new NoOffset();
+        public static readonly NoOffset Instance = new NoOffset();
         private NoOffset() { }
     }
 }

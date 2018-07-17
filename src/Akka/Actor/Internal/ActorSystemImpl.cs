@@ -16,7 +16,6 @@ using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
-using Akka.Serialization;
 using Akka.Util;
 using CuteAnt.Reflection;
 

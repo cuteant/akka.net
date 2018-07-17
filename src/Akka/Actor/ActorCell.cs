@@ -12,7 +12,6 @@ using Akka.Actor.Internal;
 using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
-using System.Reflection;
 using Akka.Serialization;
 using Akka.Util;
 using Assert = System.Diagnostics.Debug;
@@ -534,8 +533,8 @@ namespace Akka.Actor
 
         private object SerializeAndDeserializePayload(object obj)
         {
-            Serializer serializer = _systemImpl.Serialization.FindSerializerFor(obj);
-            byte[] bytes = serializer.ToBinary(obj);
+            var serializer = _systemImpl.Serialization.FindSerializerFor(obj);
+            var bytes = serializer.ToBinary(obj);
 
             if (serializer is SerializerWithStringManifest manifestSerializer)
             {

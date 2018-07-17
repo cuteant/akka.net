@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------
 
 using Akka.Event;
-using Akka.Serialization.Formatters;
 using MessagePack;
 
 namespace Akka.Actor

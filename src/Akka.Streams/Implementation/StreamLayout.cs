@@ -1911,7 +1911,7 @@ namespace Akka.Streams.Implementation
 
         private sealed class PassThrough : ISubscriptionState
         {
-            public static PassThrough Instance { get; } = new PassThrough();
+            public static readonly PassThrough Instance = new PassThrough();
 
             private PassThrough() { }
 

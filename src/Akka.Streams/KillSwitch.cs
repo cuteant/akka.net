@@ -113,7 +113,7 @@ namespace Akka.Streams
 
             #endregion
 
-            public static UniqueKillSwitchStage<T> Instance { get; } = new UniqueKillSwitchStage<T>();
+            public static readonly UniqueKillSwitchStage<T> Instance = new UniqueKillSwitchStage<T>();
 
             private UniqueKillSwitchStage() => Shape = new FlowShape<T, T>(In, Out);
 
@@ -176,7 +176,7 @@ namespace Akka.Streams
 
             #endregion
 
-            public static UniqueBidiKillSwitchStage<T1, T2> Instance { get; } = new UniqueBidiKillSwitchStage<T1, T2>();
+            public static readonly UniqueBidiKillSwitchStage<T1, T2> Instance = new UniqueBidiKillSwitchStage<T1, T2>();
 
             private UniqueBidiKillSwitchStage() => Shape = new BidiShape<T1, T1, T2, T2>(In1, Out1, In2, Out2);
 

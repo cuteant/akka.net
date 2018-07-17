@@ -12,7 +12,6 @@ using System.Runtime.Serialization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
-using Akka.Serialization.Formatters;
 using Akka.Util;
 using Akka.Util.Internal;
 using Akka.Util.Internal.Collections;

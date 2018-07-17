@@ -534,7 +534,7 @@ namespace Akka.Streams.Dsl
 
         private sealed class RegistrationPending : IHubEvent
         {
-            public static RegistrationPending Instance { get; } = new RegistrationPending();
+            public static readonly RegistrationPending Instance = new RegistrationPending();
 
             private RegistrationPending()
             {
@@ -603,7 +603,7 @@ namespace Akka.Streams.Dsl
 
         private sealed class Completed
         {
-            public static Completed Instance { get; } = new Completed();
+            public static readonly Completed Instance = new Completed();
 
             private Completed()
             {
@@ -642,7 +642,7 @@ namespace Akka.Streams.Dsl
 
         private sealed class Wakeup : IConsumerEvent
         {
-            public static Wakeup Instance { get; } = new Wakeup();
+            public static readonly Wakeup Instance = new Wakeup();
 
             private Wakeup()
             {
@@ -1406,14 +1406,14 @@ namespace Akka.Streams.Dsl
 
         private sealed class Wakeup : IConsumerEvent
         {
-            public static Wakeup Instance { get; } = new Wakeup();
+            public static readonly Wakeup Instance = new Wakeup();
 
             private Wakeup() { }
         }
 
         private sealed class Initialize : IConsumerEvent
         {
-            public static Initialize Instance { get; } = new Initialize();
+            public static readonly Initialize Instance = new Initialize();
 
             private Initialize() { }
         }
@@ -1433,7 +1433,7 @@ namespace Akka.Streams.Dsl
 
         private sealed class RegistrationPending : IHubEvent
         {
-            public static RegistrationPending Instance { get; } = new RegistrationPending();
+            public static readonly RegistrationPending Instance = new RegistrationPending();
 
             private RegistrationPending() { }
         }
@@ -1473,14 +1473,14 @@ namespace Akka.Streams.Dsl
 
         private sealed class TryPull : IHubEvent
         {
-            public static TryPull Instance { get; } = new TryPull();
+            public static readonly TryPull Instance = new TryPull();
 
             private TryPull() { }
         }
 
         private sealed class Completed
         {
-            public static Completed Instance { get; } = new Completed();
+            public static readonly Completed Instance = new Completed();
 
             private Completed() { }
         }

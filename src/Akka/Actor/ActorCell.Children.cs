@@ -12,7 +12,6 @@ using System.Threading;
 using Akka.Actor.Internal;
 using Akka.Serialization;
 using Akka.Util;
-using Akka.Util.Internal;
 
 namespace Akka.Actor
 {

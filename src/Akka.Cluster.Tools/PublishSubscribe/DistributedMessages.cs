@@ -556,12 +556,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// TBD
     /// </summary>
     [Serializable]
-    public sealed class GetTopics
+    public sealed class GetTopics : ISingletonMessage
     {
         /// <summary>
         /// TBD
         /// </summary>
-        public static GetTopics Instance { get; } = new GetTopics();
+        public static readonly GetTopics Instance = new GetTopics();
         private GetTopics() { }
     }
 

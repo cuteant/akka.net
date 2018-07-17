@@ -25,7 +25,6 @@
 
   <ItemGroup>
     <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
-    <ProjectReference Include="..\Akka.Serialization.Protobuf\Akka.Serialization.Protobuf.csproj" />
     <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
 </Project>
