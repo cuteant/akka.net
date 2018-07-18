@@ -81,6 +81,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.Protobuf
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.Json", "src\Akka.Serialization.Json\Akka.Serialization.Json.csproj", "{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Core", "src\Akka.Core\Akka.Core.csproj", "{BA29929A-7560-467F-8229-4D5FA0CA1A09}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.projitems*{8dbb7dc8-2b90-4a8c-a60d-d41466174bde}*SharedItemsImports = 13
@@ -174,6 +176,10 @@ Global
 		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BA29929A-7560-467F-8229-4D5FA0CA1A09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BA29929A-7560-467F-8229-4D5FA0CA1A09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BA29929A-7560-467F-8229-4D5FA0CA1A09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BA29929A-7560-467F-8229-4D5FA0CA1A09}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -208,6 +214,7 @@ Global
 		{8DBB7DC8-2B90-4A8C-A60D-D41466174BDE} = {F56F2926-46FD-4F02-A4A1-FB45C52C7571}
 		{F67F69CC-2C13-41DF-8234-D4907830DF59} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
 		{5866C6B3-6C0C-4A7E-9401-5BB7DE5A259D} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
+		{BA29929A-7560-467F-8229-4D5FA0CA1A09} = {01167D3C-49C4-4CDE-9787-C176D139ACDD}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

@@ -87,5 +87,6 @@
         delay,
         ticksPerWheel,
         self,
+        logLevel,
     }
 }

@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using Akka.Actor;
 
 namespace Akka.Event
@@ -135,6 +136,15 @@ namespace Akka.Event
             return new BusLogging(loggingBus, logSource, logClass, logMessageFormatter ?? new DefaultLogMessageFormatter());
         }
 
+        private static readonly Dictionary<string, LogLevel> s_logLevelMap = new Dictionary<string, LogLevel>(StringComparer.OrdinalIgnoreCase)
+        {
+            { Debug, LogLevel.DebugLevel },
+            { Info, LogLevel.InfoLevel },
+            { Warning, LogLevel.WarningLevel },
+            { Error, LogLevel.ErrorLevel },
+            { Off, OffLogLevel },
+        };
+
         /// <summary>
         /// Retrieves the log level from the specified string.
         /// </summary>
@@ -143,26 +153,13 @@ namespace Akka.Event
         /// <returns>The log level that matches the specified string.</returns>
         public static LogLevel LogLevelFor(string logLevel)
         {
-            if (!string.IsNullOrEmpty(logLevel))
-            {
-                logLevel = logLevel.ToUpperInvariant();
-            }
+            if (null == logLevel) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.logLevel); }
 
-            switch (logLevel)
+            if(!s_logLevelMap.TryGetValue(logLevel, out var v))
             {
-                case Debug:
-                    return LogLevel.DebugLevel;
-                case Info:
-                    return LogLevel.InfoLevel;
-                case Warning:
-                    return LogLevel.WarningLevel;
-                case Error:
-                    return LogLevel.ErrorLevel;
-                case Off:
-                    return OffLogLevel;
-                default:
-                    throw new ArgumentException($@"Unknown LogLevel: ""{logLevel}"". Valid values are: ""{Debug}"", ""{Info}"", ""{Warning}"", ""{Error}""", nameof(logLevel));
+                AkkaThrowHelper.ThrowArgumentException_LogLevel(logLevel);
             }
+            return v;
         }
 
         /// <summary>
@@ -182,10 +179,10 @@ namespace Akka.Event
             static LogLevelShim()
             {
                 var type = typeof(T);
-                if (type == typeof(Debug)) Value = LogLevel.DebugLevel;
-                if (type == typeof(Info)) Value = LogLevel.InfoLevel;
-                if (type == typeof(Warning)) Value = LogLevel.WarningLevel;
-                if (type == typeof(Error)) Value = LogLevel.ErrorLevel;
+                if (type == typeof(Debug)) { Value = LogLevel.DebugLevel; return; }
+                if (type == typeof(Info)) { Value = LogLevel.InfoLevel; return; }
+                if (type == typeof(Warning)) { Value = LogLevel.WarningLevel; return; }
+                if (type == typeof(Error)) { Value = LogLevel.ErrorLevel; return; }
 
                 throw new ArgumentException($@"Unknown LogEvent type: ""{type.FullName}"". Valid types are: ""{typeof(Debug).FullName}"", ""{typeof(Info).FullName}"", ""{typeof(Warning).FullName}"", ""{typeof(Error).FullName}""");
             }

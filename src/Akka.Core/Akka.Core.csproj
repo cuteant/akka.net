@@ -1,0 +1,65 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netcoreapp2.1;netstandard2.0;net471;net451</TargetFrameworks>
+    <RootNamespace>Akka</RootNamespace>
+    <AssemblyName>Akka.Core</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);CLONEABLE;CONFIGURATION;SERIALIZATION;UNSAFE_THREADING;APPDOMAIN</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Core.Unofficial</PackageId>
+    <Title>Akka.Core (Unofficial)</Title>
+    <Description>Akka.NET is a port of the popular Java/Scala framework Akka to .NET</Description>
+    <PackageTags>$(AkkaPackageTags)</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netcore' ">
+    <PackageReference Include="System.Configuration.ConfigurationManager" Version="$(SystemConfigurationConfigurationManagerPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CuteAnt.Core.Abstractions" Version="$(CuteAntCoreAbstractionsPackageVersion)" />
+    <PackageReference Include="CuteAnt.Core" Version="$(CuteAntCorePackageVersion)" />
+    <PackageReference Include="MessagePack.Abstractions" Version="$(MessagePackAbstractionsPackageVersion)" />
+    <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="Configuration\Pigeon.conf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Util\MatchHandler\PartialHandlerArgumentsCapture.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>PartialHandlerArgumentsCapture.cs</LastGenOutput>
+    </None>
+    <Compile Update="Internal\Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Util\MatchHandler\PartialHandlerArgumentsCapture.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>PartialHandlerArgumentsCapture.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Internal\Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+  </ItemGroup>
+
+</Project>

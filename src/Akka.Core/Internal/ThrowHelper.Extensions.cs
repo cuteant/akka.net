@@ -51,12 +51,22 @@ namespace Akka
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_LogLevel(string logLevel)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($@"Unknown LogLevel: ""{logLevel}"". Valid values are: ""Debug"", ""Info"", ""Warning"", ""Error""", nameof(logLevel));
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IStash ThrowArgumentException_StashFactoryCreate(Type actorType)
         {
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"Actor {actorType} implements an unrecognized subclass of {typeof(IActorStash)} - cannot instantiate", nameof(actorType)); ;
+                return new ArgumentException($"Actor {actorType} implements an unrecognized subclass of {typeof(IActorStash)} - cannot instantiate", nameof(actorType)); 
             }
         }
 

@@ -19,7 +19,7 @@ namespace Akka.Event
     /// <code>
     /// akka {
     ///   ...
-    ///   loggers = [""Akka.Event.TraceLogger, Akka""]
+    ///   loggers = [""Akka.Event.TraceLogger, Akka.Core""]
     ///   ...
     /// }
     /// </code>
