@@ -306,8 +306,7 @@ namespace Akka.Remote.Transport
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((AbstractTransportAdapterHandle)obj);
+            return obj is AbstractTransportAdapterHandle handle && Equals(handle);
         }
 
         /// <inheritdoc/>

@@ -122,20 +122,19 @@ namespace Akka.Remote
             try
             {
                 //send to remote, unless watch message is intercepted by the remoteWatcher
-                if (message is Watch watch && IsWatchIntercepted(watch.Watchee, watch.Watcher))
+                switch (message)
                 {
-                    RemoteProvider.RemoteWatcher.Tell(new RemoteWatcher.WatchRemote(watch.Watchee, watch.Watcher));
-                }
-                else
-                {
-                    if (message is Unwatch unwatch && IsWatchIntercepted(unwatch.Watchee, unwatch.Watcher))
-                    {
+                    case Watch watch when IsWatchIntercepted(watch.Watchee, watch.Watcher):
+                        RemoteProvider.RemoteWatcher.Tell(new RemoteWatcher.WatchRemote(watch.Watchee, watch.Watcher));
+                        break;
+
+                    case Unwatch unwatch when IsWatchIntercepted(unwatch.Watchee, unwatch.Watcher):
                         RemoteProvider.RemoteWatcher.Tell(new RemoteWatcher.UnwatchRemote(unwatch.Watchee, unwatch.Watcher));
-                    }
-                    else
-                    {
+                        break;
+
+                    default:
                         Remote.Send(message, null, this);
-                    }
+                        break;
                 }
             }
             catch (Exception ex)

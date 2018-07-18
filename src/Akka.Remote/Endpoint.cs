@@ -886,14 +886,16 @@ namespace Akka.Remote
 
         private IActorRef CreateWriter()
         {
+            var context = Context;
+            var actorSystem = context.System;
             var writer =
-                Context.ActorOf(RARP.For(Context.System)
+                context.ActorOf(RARP.For(actorSystem)
                     .ConfigureDispatcher(
                         EndpointWriter.EndpointWriterProps(_currentHandle, _localAddress, _remoteAddress, _refuseUid, _transport,
-                            _settings, new AkkaPduMessagePackCodec(Context.System), _receiveBuffers, Self)
+                            _settings, new AkkaPduMessagePackCodec(actorSystem), _receiveBuffers, Self)
                             .WithDeploy(Deploy.Local)),
                     "endpointWriter");
-            Context.Watch(writer);
+            context.Watch(writer);
             return writer;
         }
 
@@ -1823,21 +1825,25 @@ namespace Akka.Remote
                 else
                 {
                     var ackAndMessage = TryDecodeMessageAndAck(payload);
-                    if (ackAndMessage.AckOption != null && _reliableDeliverySupervisor != null)
-                        _reliableDeliverySupervisor.Tell(ackAndMessage.AckOption);
-                    if (ackAndMessage.MessageOption != null)
+                    var ackOption = ackAndMessage.AckOption;
+                    if (ackOption != null && _reliableDeliverySupervisor != null)
                     {
-                        if (ackAndMessage.MessageOption.ReliableDeliveryEnabled)
+                        _reliableDeliverySupervisor.Tell(ackOption);
+                    }
+                    var messageOption = ackAndMessage.MessageOption;
+                    if (messageOption != null)
+                    {
+                        if (messageOption.ReliableDeliveryEnabled)
                         {
-                            _ackedReceiveBuffer = _ackedReceiveBuffer.Receive(ackAndMessage.MessageOption);
+                            _ackedReceiveBuffer = _ackedReceiveBuffer.Receive(messageOption);
                             DeliverAndAck();
                         }
                         else
                         {
-                            _msgDispatch.Dispatch(ackAndMessage.MessageOption.Recipient,
-                                ackAndMessage.MessageOption.RecipientAddress,
-                                ackAndMessage.MessageOption.SerializedMessage,
-                                ackAndMessage.MessageOption.SenderOptional);
+                            _msgDispatch.Dispatch(messageOption.Recipient,
+                                messageOption.RecipientAddress,
+                                messageOption.SerializedMessage,
+                                messageOption.SenderOptional);
                         }
                     }
                 }
@@ -1861,9 +1867,10 @@ namespace Akka.Remote
             Receive<InboundPayload>(payload =>
             {
                 var ackAndMessage = TryDecodeMessageAndAck(payload.Payload);
-                if (ackAndMessage.AckOption != null && _reliableDeliverySupervisor != null)
+                var ackOption = ackAndMessage.AckOption;
+                if (ackOption != null && _reliableDeliverySupervisor != null)
                 {
-                    _reliableDeliverySupervisor.Tell(ackAndMessage.AckOption);
+                    _reliableDeliverySupervisor.Tell(ackOption);
                 }
             });
             ReceiveAny(o => { }); // ignore

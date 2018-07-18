@@ -7,6 +7,7 @@
 
 using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Remote.Serialization;
@@ -53,57 +54,57 @@ namespace Akka.Remote.Transport
 
     #endregion
 
-    #region == class Associate ==
+    #region == struct Associate ==
 
     /// <summary>TBD</summary>
-    internal sealed class Associate : IAkkaPdu
+    internal readonly struct Associate : IAkkaPdu
     {
         /// <summary>TBD</summary>
         /// <param name="info">TBD</param>
         public Associate(HandshakeInfo info) => Info = info;
 
         /// <summary>TBD</summary>
-        public HandshakeInfo Info { get; }
+        public readonly HandshakeInfo Info;
     }
 
     #endregion
 
-    #region == class Disassociate ==
+    #region == struct Disassociate ==
 
     /// <summary>TBD</summary>
-    internal sealed class Disassociate : IAkkaPdu
+    internal readonly struct Disassociate : IAkkaPdu
     {
         /// <summary>TBD</summary>
         /// <param name="reason">TBD</param>
         public Disassociate(DisassociateInfo reason) => Reason = reason;
 
         /// <summary>TBD</summary>
-        public DisassociateInfo Reason { get; }
+        public readonly DisassociateInfo Reason;
     }
 
     #endregion
 
-    #region == class Heartbeat ==
+    #region == struct Heartbeat ==
 
     /// <summary>INTERNAL API.
     ///
     /// Represents a heartbeat on the wire.
     /// </summary>
-    internal sealed class Heartbeat : IAkkaPdu { }
+    internal readonly struct Heartbeat : IAkkaPdu { }
 
     #endregion
 
-    #region == class Payload ==
+    #region == struct Payload ==
 
     /// <summary>TBD</summary>
-    internal sealed class Payload : IAkkaPdu
+    internal readonly struct Payload : IAkkaPdu
     {
         /// <summary>TBD</summary>
         /// <param name="bytes">TBD</param>
         public Payload(byte[] bytes) => Bytes = bytes;
 
         /// <summary>TBD</summary>
-        public byte[] Bytes { get; }
+        public readonly byte[] Bytes;
     }
 
     #endregion
@@ -149,10 +150,10 @@ namespace Akka.Remote.Transport
 
     #endregion
 
-    #region == class AckAndMessage ==
+    #region == struct AckAndMessage ==
 
     /// <summary>INTERNAL API</summary>
-    internal sealed class AckAndMessage
+    internal readonly struct AckAndMessage
     {
         /// <summary>TBD</summary>
         /// <param name="ackOption">TBD</param>
@@ -164,10 +165,10 @@ namespace Akka.Remote.Transport
         }
 
         /// <summary>TBD</summary>
-        public Ack AckOption { get; }
+        public readonly Ack AckOption;
 
         /// <summary>TBD</summary>
-        public Message MessageOption { get; }
+        public readonly Message MessageOption;
     }
 
     #endregion
@@ -199,7 +200,7 @@ namespace Akka.Remote.Transport
         /// form as a <see cref="T:System.Byte{T}"/>.</summary>
         /// <param name="pdu">TBD</param>
         /// <returns>TBD</returns>
-        public virtual byte[] EncodePdu(IAkkaPdu pdu)
+        public virtual byte[] EncodePdu(in IAkkaPdu pdu)
         {
             switch (pdu)
             {
@@ -282,26 +283,20 @@ namespace Akka.Remote.Transport
         /// <returns>TBD</returns>
         public override IAkkaPdu DecodePdu(byte[] raw)
         {
-            try
-            {
-                var pdu = MessagePackSerializer.Deserialize<AkkaProtocolMessage>(raw, s_defaultResolver);
-                if (pdu.Instruction != null)
-                {
-                    return DecodeControlPdu(pdu.Instruction);
-                }
-                else if (pdu.Payload != null)
-                {
-                    return new Payload(pdu.Payload); // TODO HasPayload
-                }
-                else
-                {
-                    return ThrowHelper.ThrowPduCodecException_Decode();
-                }
-            }
-            catch (FormatterNotRegisteredException ex) // InvalidProtocolBufferException
-            {
-                return ThrowHelper.ThrowPduCodecException_Decode(ex);
-            }
+            //try
+            //{
+            var pdu = MessagePackSerializer.Deserialize<AkkaProtocolMessage>(raw, s_defaultResolver);
+
+            if (pdu.Instruction != null) { return DecodeControlPdu(pdu.Instruction); }
+
+            if (pdu.Payload != null) { return new Payload(pdu.Payload); }
+
+            return ThrowHelper.ThrowPduCodecException_Decode();
+            //}
+            //catch (FormatterNotRegisteredException ex) // InvalidProtocolBufferException
+            //{
+            //    return ThrowHelper.ThrowPduCodecException_Decode(ex);
+            //}
         }
 
         /// <summary>TBD</summary>
@@ -346,7 +341,7 @@ namespace Akka.Remote.Transport
          * into the heartbeat messages themselves (i.e. no handshake info,) there's no harm in caching in the
          * same heartbeat byte buffer and re-using it.
          */
-        private static readonly byte[] HeartbeatPdu = ConstructControlMessagePdu(CommandType.Heartbeat, null);
+        private static readonly byte[] HeartbeatPdu = ConstructControlMessagePdu(CommandType.Heartbeat);
 
         /// <summary>Creates a new Heartbeat message instance.</summary>
         /// <returns>The Heartbeat message.</returns>
@@ -365,47 +360,49 @@ namespace Akka.Remote.Transport
             var ackAndEnvelope = MessagePackSerializer.Deserialize<AckAndEnvelopeContainer>(raw, s_defaultResolver);
 
             Ack ackOption = null;
-
-            if (ackAndEnvelope.Ack != null)
+            var aeAck = ackAndEnvelope.Ack;
+            if (aeAck != null)
             {
-                ackOption = new Ack(new SeqNo((long)ackAndEnvelope.Ack.CumulativeAck), ackAndEnvelope.Ack.Nacks.Select(x => new SeqNo((long)x)));
+                ackOption = new Ack(new SeqNo((long)aeAck.CumulativeAck), aeAck.Nacks.Select(x => new SeqNo((long)x)));
             }
 
             Message messageOption = null;
-
-            if (ackAndEnvelope.Envelope != null)
+            //if (ackAndEnvelope.Envelope != null)
+            //{
+            var envelopeContainer = ackAndEnvelope.Envelope;
+            if (envelopeContainer != null)
             {
-                var envelopeContainer = ackAndEnvelope.Envelope;
-                if (envelopeContainer != null)
+                var recipientPath = envelopeContainer.Recipient.Path;
+                var recipient = provider.ResolveActorRefWithLocalAddress(recipientPath, localAddress);
+                Address recipientAddress;
+                if (AddressCache != null)
                 {
-                    var recipient = provider.ResolveActorRefWithLocalAddress(envelopeContainer.Recipient.Path, localAddress);
-                    Address recipientAddress;
-                    if (AddressCache != null)
-                    {
-                        recipientAddress = AddressCache.Cache.GetOrCompute(envelopeContainer.Recipient.Path);
-                    }
-                    else
-                    {
-                        ActorPath.TryParseAddress(envelopeContainer.Recipient.Path, out recipientAddress);
-                    }
-
-                    var serializedMessage = envelopeContainer.Message;
-                    IActorRef senderOption = null;
-                    if (envelopeContainer.Sender != null)
-                    {
-                        senderOption = provider.ResolveActorRefWithLocalAddress(envelopeContainer.Sender.Path, localAddress);
-                    }
-                    SeqNo seqOption = null;
-                    if (envelopeContainer.Seq != SeqUndefined)
-                    {
-                        unchecked
-                        {
-                            seqOption = new SeqNo((long)envelopeContainer.Seq); //proto takes a ulong
-                        }
-                    }
-                    messageOption = new Message(recipient, recipientAddress, serializedMessage, senderOption, seqOption);
+                    recipientAddress = AddressCache.Cache.GetOrCompute(recipientPath);
                 }
+                else
+                {
+                    ActorPath.TryParseAddress(recipientPath, out recipientAddress);
+                }
+
+                var serializedMessage = envelopeContainer.Message;
+                IActorRef senderOption = null;
+                var ecSender = envelopeContainer.Sender;
+                if (ecSender != null)
+                {
+                    senderOption = provider.ResolveActorRefWithLocalAddress(ecSender.Path, localAddress);
+                }
+                SeqNo seqOption = null;
+                var ecSeq = envelopeContainer.Seq;
+                if (ecSeq != SeqUndefined)
+                {
+                    unchecked
+                    {
+                        seqOption = new SeqNo((long)ecSeq); //proto takes a ulong
+                    }
+                }
+                messageOption = new Message(recipient, recipientAddress, serializedMessage, senderOption, seqOption);
             }
+            //}
 
             return new AckAndMessage(ackOption, messageOption);
         }
@@ -473,12 +470,13 @@ namespace Akka.Remote.Transport
             return ThrowHelper.ThrowPduCodecException_Decode(controlPdu);
         }
 
-        private static byte[] DISASSOCIATE => ConstructControlMessagePdu(CommandType.Disassociate);
+        private static readonly byte[] DISASSOCIATE = ConstructControlMessagePdu(CommandType.Disassociate);
 
-        private static byte[] DISASSOCIATE_SHUTTING_DOWN => ConstructControlMessagePdu(CommandType.DisassociateShuttingDown);
+        private static readonly byte[] DISASSOCIATE_SHUTTING_DOWN = ConstructControlMessagePdu(CommandType.DisassociateShuttingDown);
 
-        private static byte[] DISASSOCIATE_QUARANTINED => ConstructControlMessagePdu(CommandType.DisassociateQuarantined);
+        private static readonly byte[] DISASSOCIATE_QUARANTINED = ConstructControlMessagePdu(CommandType.DisassociateQuarantined);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static byte[] ConstructControlMessagePdu(CommandType code, AkkaHandshakeInfo handshakeInfo = null)
         {
             var controlMessage = new AkkaControlMessage(code, handshakeInfo);
@@ -486,17 +484,21 @@ namespace Akka.Remote.Transport
             return MessagePackSerializer.Serialize(new AkkaProtocolMessage(null, controlMessage), s_defaultResolver);
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static Address DecodeAddress(AddressData origin)
             => new Address(origin.Protocol, origin.System, origin.Hostname, (int)origin.Port);
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static ActorRefData SerializeActorRef(Address defaultAddress, IActorRef actorRef)
         {
+            var path = actorRef.Path;
             return new ActorRefData(
-                (!string.IsNullOrEmpty(actorRef.Path.Address.Host))
-                    ? actorRef.Path.ToSerializationFormat()
-                    : actorRef.Path.ToSerializationFormatWithAddress(defaultAddress));
+                (!string.IsNullOrEmpty(path.Address.Host))
+                    ? path.ToSerializationFormat()
+                    : path.ToSerializationFormatWithAddress(defaultAddress));
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static AddressData SerializeAddress(Address address)
         {
             if (string.IsNullOrEmpty(address.Host) || !address.Port.HasValue)

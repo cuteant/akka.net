@@ -685,7 +685,7 @@ namespace Akka.Remote
 
             private void InitFSM()
             {
-                When(TerminatorState.Uninitialized, @event =>
+                State<TerminatorState, Internals> UninitializedFunc(Event<Internals> @event)
                 {
                     if (@event.FsmEvent is Internals internals)
                     {
@@ -693,9 +693,10 @@ namespace Akka.Remote
                         return GoTo(TerminatorState.Idle).Using(internals);
                     }
                     return null;
-                });
+                }
+                When(TerminatorState.Uninitialized, UninitializedFunc);
 
-                When(TerminatorState.Idle, @event =>
+                State<TerminatorState, Internals> IdleFunc(Event<Internals> @event)
                 {
                     if (@event.StateData != null && @event.FsmEvent is TerminationHook)
                     {
@@ -704,10 +705,11 @@ namespace Akka.Remote
                         return GoTo(TerminatorState.WaitDaemonShutdown);
                     }
                     return null;
-                });
+                }
+                When(TerminatorState.Idle, IdleFunc);
 
                 // TODO: state timeout
-                When(TerminatorState.WaitDaemonShutdown, @event =>
+                State<TerminatorState, Internals> WaitDaemonShutdownFunc(Event<Internals> @event)
                 {
                     if (@event.StateData != null && @event.FsmEvent is TerminationHookDone)
                     {
@@ -720,14 +722,16 @@ namespace Akka.Remote
                     }
 
                     return null;
-                });
+                }
+                When(TerminatorState.WaitDaemonShutdown, WaitDaemonShutdownFunc);
 
-                When(TerminatorState.WaitTransportShutdown, @event =>
+                State<TerminatorState, Internals> WaitTransportShutdownFunc(Event<Internals> @event)
                 {
                     if (_log.IsInfoEnabled) _log.Info("Remoting shut down.");
                     _systemGuardian.Tell(TerminationHookDone.Instance);
                     return Stop();
-                });
+                }
+                When(TerminatorState.WaitTransportShutdown, WaitTransportShutdownFunc);
 
                 StartWith(TerminatorState.Uninitialized, null);
             }

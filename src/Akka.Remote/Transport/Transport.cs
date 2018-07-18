@@ -348,8 +348,7 @@ namespace Akka.Remote.Transport
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != this.GetType()) return false;
-            return Equals((AssociationHandle)obj);
+            return obj is AssociationHandle associationHandle && Equals(associationHandle);
         }
 
         /// <inheritdoc/>

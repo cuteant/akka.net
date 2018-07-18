@@ -10,7 +10,6 @@
   <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Cluster.Sharding\Akka.Cluster.Sharding.csproj" />
     <ProjectReference Include="..\..\src\Akka.Persistence\Akka.Persistence.csproj" />
-    <ProjectReference Include="..\..\src\Akka.Persistence.Sql.Common\Akka.Persistence.Sql.Common.csproj" />
     <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
   </ItemGroup>
 
