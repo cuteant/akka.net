@@ -57,14 +57,21 @@ namespace Akka.Persistence.Snapshot
             switch (message)
             {
                 case LoadSnapshot loadSnapshot:
-                    _breaker.WithCircuitBreaker(() => LoadAsync(loadSnapshot.PersistenceId, loadSnapshot.Criteria.Limit(loadSnapshot.ToSequenceNr)))
-                        .ContinueWith(t => (!t.IsFaulted && !t.IsCanceled)
-                            ? new LoadSnapshotResult(t.Result, loadSnapshot.ToSequenceNr) as ISnapshotResponse
-                            : new LoadSnapshotFailed(t.IsFaulted
-                                    ? TryUnwrapException(t.Exception)
-                                    : new OperationCanceledException("LoadAsync canceled, possibly due to timing out.")),
-                            _continuationOptions)
-                        .PipeTo(senderPersistentActor);
+                    if (loadSnapshot.Criteria == SnapshotSelectionCriteria.None)
+                    {
+                        senderPersistentActor.Tell(new LoadSnapshotResult(null, loadSnapshot.ToSequenceNr));
+                    }
+                    else
+                    {
+                        _breaker.WithCircuitBreaker(() => LoadAsync(loadSnapshot.PersistenceId, loadSnapshot.Criteria.Limit(loadSnapshot.ToSequenceNr)))
+                            .ContinueWith(t => (!t.IsFaulted && !t.IsCanceled)
+                                ? new LoadSnapshotResult(t.Result, loadSnapshot.ToSequenceNr) as ISnapshotResponse
+                                : new LoadSnapshotFailed(t.IsFaulted
+                                        ? TryUnwrapException(t.Exception)
+                                        : new OperationCanceledException("LoadAsync canceled, possibly due to timing out.")),
+                                _continuationOptions)
+                            .PipeTo(senderPersistentActor);
+                    }
                     break;
                 case SaveSnapshot saveSnapshot:
                     var metadata = new SnapshotMetadata(saveSnapshot.Metadata.PersistenceId, saveSnapshot.Metadata.SequenceNr, DateTime.UtcNow);

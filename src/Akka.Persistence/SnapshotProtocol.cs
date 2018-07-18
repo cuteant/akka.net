@@ -500,12 +500,12 @@ namespace Akka.Persistence
         /// <summary>
         /// The latest saved snapshot.
         /// </summary>
-        public static SnapshotSelectionCriteria Latest { get; } = new SnapshotSelectionCriteria(long.MaxValue, DateTime.MaxValue);
+        public static readonly SnapshotSelectionCriteria Latest = new SnapshotSelectionCriteria(long.MaxValue, DateTime.MaxValue);
 
         /// <summary>
         /// No saved snapshot matches.
         /// </summary>
-        public static SnapshotSelectionCriteria None { get; } = new SnapshotSelectionCriteria(0L, DateTime.MinValue);
+        public static readonly SnapshotSelectionCriteria None = new SnapshotSelectionCriteria(0L, DateTime.MinValue);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SnapshotSelectionCriteria"/> class.
