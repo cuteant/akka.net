@@ -177,6 +177,7 @@ namespace Akka.Remote.Transport.DotNetty
         public DotNettyTransportSettings Settings { get; }
         public sealed override string SchemeIdentifier { get; protected set; }
         public override long MaximumPayloadBytes => Settings.MaxFrameSize;
+        public override int TransferBatchSize => Settings.TransferBatchSize;
         private TransportMode InternalTransport => Settings.TransportMode;
 
         public sealed override bool IsResponsibleFor(Address remote) => true;

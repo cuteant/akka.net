@@ -60,7 +60,8 @@ namespace Akka.Remote.Transport.DotNetty
                 publicPort: publicPort > 0 ? publicPort : (int?)null,
                 serverSocketWorkerPoolSize: ComputeWorkerPoolSize(config.GetConfig("server-socket-worker-pool")),
                 clientSocketWorkerPoolSize: ComputeWorkerPoolSize(config.GetConfig("client-socket-worker-pool")),
-                maxFrameSize: ToNullableInt(config.GetByteSize("maximum-frame-size")) ?? 128000,
+                maxFrameSize: ToNullableInt(config.GetByteSize("maximum-frame-size")) ?? 10485760, // 128000
+                transferBatchSize: config.GetInt("transfer-batch-size", 1000),
                 ssl: config.HasPath("ssl") ? SslSettings.Create(config.GetConfig("ssl")) : SslSettings.Empty,
                 dnsUseIpv6: config.GetBoolean("dns-use-ipv6", false),
                 tcpReuseAddr: config.GetBoolean("tcp-reuse-addr", true),
@@ -126,6 +127,7 @@ namespace Akka.Remote.Transport.DotNetty
         public readonly int ServerSocketWorkerPoolSize;
         public readonly int ClientSocketWorkerPoolSize;
         public readonly int MaxFrameSize;
+        public readonly int TransferBatchSize;
         public readonly SslSettings Ssl;
 
         /// <summary>If set to true, we will use IPv6 addresses upon DNS resolution for host names. Otherwise
@@ -178,7 +180,7 @@ namespace Akka.Remote.Transport.DotNetty
         public readonly bool EnableBufferPooling;
 
         public DotNettyTransportSettings(TransportMode transportMode, bool enableLibuv, bool enableSsl, TimeSpan connectTimeout, string hostname, string publicHostname,
-            int port, int? publicPort, int serverSocketWorkerPoolSize, int clientSocketWorkerPoolSize, int maxFrameSize, SslSettings ssl,
+            int port, int? publicPort, int serverSocketWorkerPoolSize, int clientSocketWorkerPoolSize, int maxFrameSize, int transferBatchSize, SslSettings ssl,
             bool dnsUseIpv6, bool tcpReuseAddr, bool tcpReusePort, bool tcpKeepAlive, bool tcpNoDelay, int tcpLinger, int backlog, bool enforceIpFamily,
             int? receiveBufferSize, int? sendBufferSize, int? writeBufferHighWaterMark, int? writeBufferLowWaterMark, bool backwardsCompatibilityModeEnabled, 
             bool logTransport, ByteOrder byteOrder, bool enableBufferPooling)
@@ -196,6 +198,7 @@ namespace Akka.Remote.Transport.DotNetty
             ServerSocketWorkerPoolSize = serverSocketWorkerPoolSize;
             ClientSocketWorkerPoolSize = clientSocketWorkerPoolSize;
             MaxFrameSize = maxFrameSize;
+            TransferBatchSize = transferBatchSize;
             Ssl = ssl;
             DnsUseIpv6 = dnsUseIpv6;
             TcpReuseAddr = tcpReuseAddr;

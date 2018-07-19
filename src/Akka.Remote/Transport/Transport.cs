@@ -32,6 +32,9 @@ namespace Akka.Remote.Transport
         public virtual long MaximumPayloadBytes { get; protected set; }
 
         /// <summary>TBD</summary>
+        public virtual int TransferBatchSize { get; protected set; }
+
+        /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         public abstract Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> Listen();
 

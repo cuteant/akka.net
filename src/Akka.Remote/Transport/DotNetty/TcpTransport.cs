@@ -6,16 +6,21 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
+using CuteAnt.Collections;
 using DotNetty.Buffers;
 using DotNetty.Common.Utilities;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Libuv.Native;
+using MessagePack;
 
 namespace Akka.Remote.Transport.DotNetty
 {
@@ -23,6 +28,7 @@ namespace Akka.Remote.Transport.DotNetty
 
     internal abstract class TcpHandlers : CommonHandlers
     {
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
         private IHandleEventListener _listener;
 
         protected void NotifyListener(IHandleEvent msg) => _listener?.Notify(msg);
@@ -49,7 +55,11 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 // no need to copy the byte buffer contents; ByteString does that automatically
                 var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
-                NotifyListener(new InboundPayload(bytes));
+
+                var pdus = MessagePackSerializer.Deserialize<List<byte[]>>(bytes, s_defaultResolver);
+                pdus.ForEach(raw => NotifyListener(new InboundPayload(raw)));
+
+                //NotifyListener(new InboundPayload(bytes));
             }
 
             // decrease the reference count to 0 (releases buffer)
@@ -365,22 +375,91 @@ namespace Akka.Remote.Transport.DotNetty
 
     internal sealed class TcpAssociationHandle : AssociationHandle
     {
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+
         private readonly IChannel _channel;
 
+        private readonly int _batchSize;
+        private readonly object _gate = new object();
+        private int _status = TransportStatus.Idle;
+        private readonly Deque<byte[]> _deque = new Deque<byte[]>(2 * 1024);
+
+        private int _channelStatus = ChannelStatus.Unknow;
+        private bool IsWritable
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return Volatile.Read(ref _channelStatus) < ChannelStatus.Closed; }
+        }
+
         public TcpAssociationHandle(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
-            : base(localAddress, remoteAddress) => _channel = channel;
+            : base(localAddress, remoteAddress)
+        {
+            _channel = channel;
+            _batchSize = transport.TransferBatchSize;
+        }
 
         public override bool Write(byte[] payload)
         {
-            if (_channel.Open && _channel.IsWritable)
+            if (IsWritable)
             {
-                _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload));
+                lock (_gate)
+                {
+                    _deque.AddToBack(payload);
+                }
+                if (TransportStatus.Idle == Interlocked.CompareExchange(ref _status, TransportStatus.Busy, TransportStatus.Idle))
+                {
+                    Task.Run(ProcessMessagesAsync);
+                }
                 return true;
             }
             return false;
         }
 
         public override void Disassociate() => _channel.CloseAsync();
+
+        private async Task<bool> ProcessMessagesAsync()
+        {
+            var batch = new List<byte[]>(_batchSize);
+            while (true)
+            {
+                batch.Clear();
+
+                lock (_gate)
+                {
+                    if (!_deque.TryRemoveFromFront(batch, _batchSize))
+                    {
+                        Interlocked.Exchange(ref _status, TransportStatus.Idle);
+                        return true;
+                    }
+                }
+
+                var payload = MessagePackSerializer.Serialize(batch, s_defaultResolver);
+                if (_channel.Open && _channel.IsWritable)
+                {
+                    await _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload));
+                    Interlocked.Exchange(ref _channelStatus, ChannelStatus.Open);
+                }
+                else
+                {
+                    Interlocked.Exchange(ref _channelStatus, ChannelStatus.Closed);
+                    Interlocked.Exchange(ref _status, TransportStatus.Idle);
+                    return false;
+                }
+            }
+        }
+
+        static class TransportStatus
+        {
+            public const int Idle = 0;
+            public const int Busy = 1;
+        }
+
+        static class ChannelStatus
+        {
+            public const int Unknow = 0;
+            public const int Open = 1;
+            public const int Closed = 2;
+        }
     }
 
     #endregion
