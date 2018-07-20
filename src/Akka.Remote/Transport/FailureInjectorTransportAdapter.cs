@@ -387,7 +387,7 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(byte[] payload)
+        public override bool Write(object payload)
         {
             if (!_gremlinAdapter.ShouldDropOutbound(WrappedHandle.RemoteAddress, payload, "handler.write"))
             {

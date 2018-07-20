@@ -12,6 +12,7 @@ using Akka.Actor;
 using Akka.Remote.Transport;
 using Akka.TestKit;
 using Akka.Util.Internal;
+using MessagePack;
 using Xunit;
 
 namespace Akka.Remote.Tests.Transport
@@ -21,6 +22,8 @@ namespace Akka.Remote.Tests.Transport
     public class TestTransportSpec : AkkaSpec
     {
         #region Setup / Teardown
+
+        private static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
 
         protected Address addressA = new Address("test", "testsystemA", "testhostA", 4321);
         protected Address addressB = new Address("test", "testsystemB", "testhostB", 5432);
@@ -159,8 +162,8 @@ namespace Akka.Remote.Tests.Transport
             });
 
             var writeAttempt = (registry.LogSnapshot().Single(x => x is WriteAttempt)).AsInstanceOf<WriteAttempt>();
-            Assert.True(writeAttempt.Sender.Equals(addressA) && writeAttempt.Recipient.Equals(addressB)
-                && writeAttempt.Payload.Equals(akkaPDU));
+            Assert.True(writeAttempt.Sender.Equals(addressA) && writeAttempt.Recipient.Equals(addressB));
+            Assert.Equal((byte[])MessagePackSerializer.Deserialize<object>(writeAttempt.Payload, s_defaultResolver), akkaPDU);
         }
 
         [Fact]

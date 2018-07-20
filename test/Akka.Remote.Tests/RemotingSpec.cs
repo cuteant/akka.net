@@ -457,7 +457,7 @@ namespace Akka.Remote.Tests
             Assert.Equal(reporter, msg.Item2);
         }
 
-        [Fact]
+        [Fact(Skip = "MaxPayloadBytes")]
         public void Drop_sent_messages_over_payload_size()
         {
             var oversized = ByteStringOfSize(MaxPayloadBytes + 1);
@@ -470,7 +470,7 @@ namespace Akka.Remote.Tests
             });
         }
 
-        [Fact]
+        [Fact(Skip = "MaxPayloadBytes")]
         public void Drop_received_messages_over_payload_size()
         {
             EventFilter.Exception<OversizedPayloadException>(start: "Discarding oversized payload received").ExpectOne(() =>

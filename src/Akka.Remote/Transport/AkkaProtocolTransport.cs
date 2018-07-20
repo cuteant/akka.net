@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Util.Internal;
+using Akka.Remote.Serialization.Protocol;
 
 namespace Akka.Remote.Transport
 {
@@ -370,7 +371,7 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(byte[] payload) => WrappedHandle.Write(Codec.ConstructPayload(payload));
+        public override bool Write(object payload) => WrappedHandle.Write(Codec.ConstructPayload(payload));
 
         /// <summary>TBD</summary>
         public override void Disassociate() => Disassociate(DisassociateInfo.Unknown);
@@ -558,7 +559,7 @@ namespace Akka.Remote.Transport
         /// <param name="handlerListener">TBD</param>
         /// <param name="wrappedHandle">TBD</param>
         /// <param name="queue">TBD</param>
-        public AssociatedWaitHandler(Task<IHandleEventListener> handlerListener, AssociationHandle wrappedHandle, Queue<byte[]> queue)
+        public AssociatedWaitHandler(Task<IHandleEventListener> handlerListener, AssociationHandle wrappedHandle, Queue<object> queue)
         {
             Queue = queue;
             WrappedHandle = wrappedHandle;
@@ -572,7 +573,7 @@ namespace Akka.Remote.Transport
         public AssociationHandle WrappedHandle { get; }
 
         /// <summary>TBD</summary>
-        public Queue<byte[]> Queue { get; }
+        public Queue<object> Queue { get; }
     }
 
     #endregion
@@ -818,7 +819,7 @@ namespace Akka.Remote.Transport
                                                         new AssociatedWaitHandler(
                                                             NotifyOutboundHandler(wrappedHandle, handshakeInfo,
                                                                 statusCompletionSource), wrappedHandle,
-                                                            new Queue<byte[]>()));
+                                                            new Queue<object>()));
                                         }
                                         break;
                                     case Disassociate d:
@@ -857,7 +858,7 @@ namespace Akka.Remote.Transport
                                                 .Using(
                                                     new AssociatedWaitHandler(
                                                         NotifyInboundHandler(wrappedHandle0, a.Info, associationHandler),
-                                                        wrappedHandle0, new Queue<byte[]>()));
+                                                        wrappedHandle0, new Queue<object>()));
                                         break;
                                     default:
                                         SendDisassociate(wrappedHandle0, DisassociateInfo.Unknown);
@@ -913,7 +914,7 @@ namespace Akka.Remote.Transport
                                 switch (@event.StateData)
                                 {
                                     case AssociatedWaitHandler awh:
-                                        var nQueue = new Queue<byte[]>(awh.Queue);
+                                        var nQueue = new Queue<object>(awh.Queue);
                                         nQueue.Enqueue(p.Bytes);
                                         nextState =
                                             Stay()
@@ -1182,15 +1183,15 @@ namespace Akka.Remote.Transport
             return readHandlerPromise.Task;
         }
 
-        private IAkkaPdu DecodePdu(byte[] pdu)
+        private IAkkaPdu DecodePdu(object pdu)
         {
             try
             {
-                return _codec.DecodePdu(pdu);
+                return _codec.DecodePdu((AkkaProtocolMessage)pdu);
             }
             catch (Exception ex)
             {
-                return ThrowHelper.ThrowAkkaProtocolException_DecodePdu(pdu.Length, ex);
+                return ThrowHelper.ThrowAkkaProtocolException_DecodePdu(pdu, ex);
             }
         }
 

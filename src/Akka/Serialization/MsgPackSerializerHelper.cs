@@ -16,6 +16,9 @@ namespace Akka.Serialization
 
         private static int _registered = Unlocked;
 
+        internal static IFormatterResolver DefaultResolver;
+
+
         static MsgPackSerializerHelper()
         {
             MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance);

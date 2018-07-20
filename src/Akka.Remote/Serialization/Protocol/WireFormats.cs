@@ -132,13 +132,13 @@ namespace Akka.Remote.Serialization.Protocol
     public readonly struct AkkaProtocolMessage
     {
         [Key(0)]
-        public readonly byte[] Payload;
+        public readonly object Payload;
 
         [Key(1)]
         public readonly AkkaControlMessage Instruction;
 
         [SerializationConstructor]
-        public AkkaProtocolMessage(byte[] payload, AkkaControlMessage instruction)
+        public AkkaProtocolMessage(object payload, AkkaControlMessage instruction)
         {
             Payload = payload;
             Instruction = instruction;

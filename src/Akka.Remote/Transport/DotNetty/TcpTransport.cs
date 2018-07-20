@@ -28,7 +28,7 @@ namespace Akka.Remote.Transport.DotNetty
 
     internal abstract class TcpHandlers : CommonHandlers
     {
-        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+        private static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
         private IHandleEventListener _listener;
 
         protected void NotifyListener(IHandleEvent msg) => _listener?.Notify(msg);
@@ -56,7 +56,11 @@ namespace Akka.Remote.Transport.DotNetty
                 // no need to copy the byte buffer contents; ByteString does that automatically
                 var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
 
-                var pdus = MessagePackSerializer.Deserialize<List<byte[]>>(bytes, s_defaultResolver);
+#if DEBUG
+                var pdus = (List<object>)MessagePackSerializer.Deserialize<object>(bytes, Akka.Serialization.MsgPackSerializerHelper.DefaultResolver);
+#else
+                var pdus = (List<object>)MessagePackSerializer.Deserialize<object>(bytes, s_defaultResolver);
+#endif
                 pdus.ForEach(raw => NotifyListener(new InboundPayload(raw)));
 
                 //NotifyListener(new InboundPayload(bytes));
@@ -375,20 +379,40 @@ namespace Akka.Remote.Transport.DotNetty
 
     internal sealed class TcpAssociationHandle : AssociationHandle
     {
-        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+        private static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
 
         private readonly IChannel _channel;
 
         private readonly int _batchSize;
         private readonly object _gate = new object();
         private int _status = TransportStatus.Idle;
-        private readonly Deque<byte[]> _deque = new Deque<byte[]>(2 * 1024);
+        private readonly Deque<object> _deque = new Deque<object>(2 * 1024);
 
         private int _channelStatus = ChannelStatus.Unknow;
         private bool IsWritable
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get { return Volatile.Read(ref _channelStatus) < ChannelStatus.Closed; }
+            get
+            {
+                switch (Volatile.Read(ref _channelStatus))
+                {
+                    case ChannelStatus.Open:
+                        return true;
+                    case ChannelStatus.Closed:
+                        return false;
+                    default:
+                        if (_channel.Active) // _channel.Open && _channel.IsWritable)
+                        {
+                            Interlocked.Exchange(ref _channelStatus, ChannelStatus.Open);
+                            return true;
+                        }
+                        else
+                        {
+                            Interlocked.Exchange(ref _channelStatus, ChannelStatus.Unknow);
+                            return false;
+                        }
+                }
+            }
         }
 
         public TcpAssociationHandle(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
@@ -398,7 +422,7 @@ namespace Akka.Remote.Transport.DotNetty
             _batchSize = transport.TransferBatchSize;
         }
 
-        public override bool Write(byte[] payload)
+        public override bool Write(object payload)
         {
             if (IsWritable)
             {
@@ -415,14 +439,20 @@ namespace Akka.Remote.Transport.DotNetty
             return false;
         }
 
-        public override void Disassociate() => _channel.CloseAsync();
+        public override void Disassociate()
+        {
+            Interlocked.Exchange(ref _channelStatus, ChannelStatus.Closed);
+            _channel.CloseAsync();
+        }
 
         private async Task<bool> ProcessMessagesAsync()
         {
-            var batch = new List<byte[]>(_batchSize);
+            var batch = new List<object>(_batchSize);
+            //var tasks = new List<Task>(_batchSize);
             while (true)
             {
                 batch.Clear();
+                //tasks.Clear();
 
                 lock (_gate)
                 {
@@ -433,11 +463,19 @@ namespace Akka.Remote.Transport.DotNetty
                     }
                 }
 
-                var payload = MessagePackSerializer.Serialize(batch, s_defaultResolver);
-                if (_channel.Open && _channel.IsWritable)
+#if DEBUG
+                var payload = MessagePackSerializer.Serialize<object>(batch, Akka.Serialization.MsgPackSerializerHelper.DefaultResolver);
+#else
+                var payload = MessagePackSerializer.Serialize<object>(batch, s_defaultResolver);
+#endif
+                if (_channel.Active) // _channel.Open && _channel.IsWritable
                 {
                     await _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload));
-                    Interlocked.Exchange(ref _channelStatus, ChannelStatus.Open);
+                    //batch.ForEach(payload => tasks.Add(_channel.WriteAsync(Unpooled.WrappedBuffer(payload))));
+                    //_channel.Flush();
+                    //await Task.WhenAll(tasks).ConfigureAwait(false);
+
+                    Interlocked.CompareExchange(ref _channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
                 }
                 else
                 {

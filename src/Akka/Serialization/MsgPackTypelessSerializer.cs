@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Threading;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
@@ -42,6 +43,8 @@ namespace Akka.Serialization
             _resolver = new TypelessDefaultResolver();
             _resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
             _resolver.Context.Add(MsgPackSerializerHelper.ActorSystem, system);
+
+            Interlocked.Exchange(ref MsgPackSerializerHelper.DefaultResolver, _resolver);
         }
 
         public override byte[] ToBinary(object obj)

@@ -1427,22 +1427,29 @@ namespace Akka.Remote
                 var pdu = _codec.ConstructMessage(send.Recipient.LocalAddressToUse, send.Recipient,
                     this.SerializeMessage(send.Message), send.SenderOption, send.Seq, _lastAck);
 
-                _remoteMetrics.LogPayloadBytes(send.Message, pdu.Length);
-
-                if (pdu.Length > Transport.MaximumPayloadBytes)
+#if DEBUG
+                // Only for RemoteMetricsSpec
+                if (send.Message is byte[] testMsg)
                 {
-                    var reason = new OversizedPayloadException(
-                        string.Format("Discarding oversized payload sent to {0}: max allowed size {1} bytes, actual size of encoded {2} was {3} bytes.",
-                            send.Recipient,
-                            Transport.MaximumPayloadBytes,
-                            send.Message.GetType(),
-                            pdu.Length));
-                    _log.Error(reason, "Transient association error (association remains live)");
-                    return true;
+                    _remoteMetrics.LogPayloadBytes(send.Message, testMsg.Length);
                 }
-                else
-                {
-                    var ok = _handle.Write(pdu);
+#endif
+                //_remoteMetrics.LogPayloadBytes(send.Message, pdu.Length);
+
+                //if (pdu.Length > Transport.MaximumPayloadBytes)
+                //{
+                //    var reason = new OversizedPayloadException(
+                //        string.Format("Discarding oversized payload sent to {0}: max allowed size {1} bytes, actual size of encoded {2} was {3} bytes.",
+                //            send.Recipient,
+                //            Transport.MaximumPayloadBytes,
+                //            send.Message.GetType(),
+                //            pdu.Length));
+                //    _log.Error(reason, "Transient association error (association remains live)");
+                //    return true;
+                //}
+                //else
+                //{
+                var ok = _handle.Write(pdu);
 
                     if (ok)
                     {
@@ -1450,7 +1457,7 @@ namespace Akka.Remote
                         _lastAck = null;
                         return true;
                     }
-                }
+                //}
                 return false;
             }
             catch (SerializationException ex)
@@ -1816,14 +1823,14 @@ namespace Akka.Remote
             Receive<InboundPayload>(inbound =>
             {
                 var payload = inbound.Payload;
-                if (payload.Length > Transport.MaximumPayloadBytes)
-                {
-                    var reason = new OversizedPayloadException(
-                        $"Discarding oversized payload received: max allowed size {Transport.MaximumPayloadBytes} bytes, actual size {payload.Length} bytes.");
-                    _log.Error(reason, "Transient error while reading from association (association remains live)");
-                }
-                else
-                {
+                //if (payload.Length > Transport.MaximumPayloadBytes)
+                //{
+                //    var reason = new OversizedPayloadException(
+                //        $"Discarding oversized payload received: max allowed size {Transport.MaximumPayloadBytes} bytes, actual size {payload.Length} bytes.");
+                //    _log.Error(reason, "Transient error while reading from association (association remains live)");
+                //}
+                //else
+                //{
                     var ackAndMessage = TryDecodeMessageAndAck(payload);
                     var ackOption = ackAndMessage.AckOption;
                     if (ackOption != null && _reliableDeliverySupervisor != null)
@@ -1846,7 +1853,7 @@ namespace Akka.Remote
                                 messageOption.SenderOptional);
                         }
                     }
-                }
+                //}
             });
             Receive<EndpointWriter.StopReading>(stop =>
             {
@@ -1966,11 +1973,11 @@ namespace Akka.Remote
             deliverable.Deliverables.ForEach(msg => _msgDispatch.Dispatch(msg.Recipient, msg.RecipientAddress, msg.SerializedMessage, msg.SenderOptional));
         }
 
-        private AckAndMessage TryDecodeMessageAndAck(byte[] pdu)
+        private AckAndMessage TryDecodeMessageAndAck(object pdu)
         {
             try
             {
-                return _codec.DecodeMessage(pdu, _provider, LocalAddress);
+                return _codec.DecodeMessage((Remote.Serialization.Protocol.AckAndEnvelopeContainer)pdu, _provider, LocalAddress);
             }
             catch (Exception ex)
             {

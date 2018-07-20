@@ -124,13 +124,13 @@ namespace Akka.Remote.Transport
     {
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
-        public InboundPayload(byte[] payload) => Payload = payload;
+        public InboundPayload(object payload) => Payload = payload;
 
         /// <summary>TBD</summary>
-        public byte[] Payload { get; }
+        public object Payload { get; }
 
         /// <inheritdoc/>
-        public override string ToString() => $"InboundPayload(size = {Payload.Length} bytes)";
+        public override string ToString() => $"InboundPayload(type = {Payload.GetType().FullName})";
     }
 
     #endregion
@@ -334,7 +334,7 @@ namespace Akka.Remote.Transport
         /// </summary>
         /// <param name="payload">The payload to be delivered to the remote endpoint.</param>
         /// <returns>Bool indicating the availability of the association for subsequent writes.</returns>
-        public abstract bool Write(byte[] payload);
+        public abstract bool Write(object payload);
 
         /// <summary>
         /// Closes the underlying transport link, if needed. Some transports might not need an

@@ -42,7 +42,7 @@ namespace Akka.Persistence.Tests
         internal sealed class PersistFromRecoveryCompleted
         {
             public static PersistFromRecoveryCompleted Instance { get; } = new PersistFromRecoveryCompleted();
-            private PersistFromRecoveryCompleted() { }
+            public PersistFromRecoveryCompleted() { }
         }
 
         internal class TestPersistentActor : NamedPersistentActor

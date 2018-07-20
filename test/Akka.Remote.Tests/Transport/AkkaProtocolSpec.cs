@@ -14,6 +14,7 @@ using Akka.Configuration;
 using Akka.Remote.Transport;
 using Akka.TestKit;
 using Akka.Util.Internal;
+using MessagePack;
 using Xunit;
 using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
 
@@ -23,6 +24,8 @@ namespace Akka.Remote.Tests.Transport
     public class AkkaProtocolSpec : AkkaSpec
     {
         #region Setup / Config
+
+        private static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
 
         Address localAddress = new Address("test", "testsystem", "testhost", 1234);
         Address localAkkaAddress = new Address("akka.test", "testsystem", "testhost", 1234);
@@ -36,7 +39,7 @@ namespace Akka.Remote.Tests.Transport
             new SerializedMessage { SerializerId = 0, Message = Encoding.UTF8.GetBytes("foo") };
 
         private byte[] testEnvelope;
-        private byte[] testMsgPdu;
+        private object testMsgPdu;
 
         private IHandleEvent testHeartbeat;
         private IHandleEvent testPayload;
@@ -48,8 +51,9 @@ namespace Akka.Remote.Tests.Transport
             : base(@"akka.test.default-timeout = 1.5 s")
         {
             codec = new AkkaPduMessagePackCodec(Sys);
-            testEnvelope = codec.ConstructMessage(localAkkaAddress, TestActor, testMsg);
-            testMsgPdu = codec.ConstructPayload(testEnvelope);
+            var testEnvelopeObj = codec.ConstructMessage(localAkkaAddress, TestActor, testMsg);
+            testEnvelope = MessagePackSerializer.Serialize<object>(testEnvelopeObj, s_defaultResolver);
+            testMsgPdu = codec.ConstructPayload(testEnvelopeObj);
 
             testHeartbeat = new InboundPayload(codec.ConstructHeartbeat());
             testPayload = new InboundPayload(testMsgPdu);
@@ -175,7 +179,7 @@ namespace Akka.Remote.Tests.Transport
             reader.Tell(testPayload, Self);
             ExpectMsg<InboundPayload>(inbound =>
             {
-                Assert.Equal(testEnvelope, inbound.Payload);
+                Assert.Equal(testEnvelope, MessagePackSerializer.Serialize<object>(inbound.Payload, s_defaultResolver));
             }, hint: "expected InboundPayload");
         }
 
@@ -233,7 +237,7 @@ namespace Akka.Remote.Tests.Transport
                     Assert.Equal(localAkkaAddress, h.LocalAddress);
                     Assert.Equal(33, h.HandshakeInfo.Uid);
                 })
-                .Default(msg => Assert.True(false,"Did not receive expected AkkaProtocolHandle from handshake"));
+                .Default(msg => Assert.True(false, "Did not receive expected AkkaProtocolHandle from handshake"));
         }
 
         [Fact]
@@ -259,7 +263,7 @@ namespace Akka.Remote.Tests.Transport
                     Assert.Equal(remoteAkkaAddress, h.RemoteAddress);
                     Assert.Equal(localAkkaAddress, h.LocalAddress);
                 })
-                .Default(msg => Assert.True(false,"Did not receive expected AkkaProtocolHandle from handshake"));
+                .Default(msg => Assert.True(false, "Did not receive expected AkkaProtocolHandle from handshake"));
             var wrappedHandle = statusPromise.Task.Result.AsInstanceOf<AkkaProtocolHandle>();
 
             wrappedHandle.ReadHandlerSource.SetResult(new ActorHandleEventListener(TestActor));
@@ -300,7 +304,7 @@ namespace Akka.Remote.Tests.Transport
                     Assert.Equal(remoteAkkaAddress, h.RemoteAddress);
                     Assert.Equal(localAkkaAddress, h.LocalAddress);
                 })
-                .Default(msg => Assert.True(false,"Did not receive expected AkkaProtocolHandle from handshake"));
+                .Default(msg => Assert.True(false, "Did not receive expected AkkaProtocolHandle from handshake"));
             var wrappedHandle = statusPromise.Task.Result.AsInstanceOf<AkkaProtocolHandle>();
 
             wrappedHandle.ReadHandlerSource.SetResult(new ActorHandleEventListener(TestActor));
@@ -385,7 +389,7 @@ namespace Akka.Remote.Tests.Transport
                     Assert.Equal(remoteAkkaAddress, h.RemoteAddress);
                     Assert.Equal(localAkkaAddress, h.LocalAddress);
                 })
-                .Default(msg => Assert.True(false,"Did not receive expected AkkaProtocolHandle from handshake"));
+                .Default(msg => Assert.True(false, "Did not receive expected AkkaProtocolHandle from handshake"));
             var wrappedHandle = statusPromise.Task.Result.AsInstanceOf<AkkaProtocolHandle>();
 
             stateActor.Tell(new Disassociated(DisassociateInfo.Unknown), Self);
@@ -414,10 +418,10 @@ namespace Akka.Remote.Tests.Transport
             var rValue = false;
             if (associationRegistry.LogSnapshot().Last() is WriteAttempt)
             {
-                var attempt = (WriteAttempt) associationRegistry.LogSnapshot().Last();
+                var attempt = (WriteAttempt)associationRegistry.LogSnapshot().Last();
                 if (attempt.Sender.Equals(localAddress) && attempt.Recipient.Equals(remoteAddress))
                 {
-                    codec.DecodePdu(attempt.Payload)
+                    codec.DecodePdu((Remote.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
                         .Match()
                         .With<Heartbeat>(h => rValue = true)
                         .Default(msg => rValue = false);
@@ -433,10 +437,10 @@ namespace Akka.Remote.Tests.Transport
             var rValue = false;
             if (associationRegistry.LogSnapshot().Last() is WriteAttempt)
             {
-                var attempt = (WriteAttempt) associationRegistry.LogSnapshot().Last();
+                var attempt = (WriteAttempt)associationRegistry.LogSnapshot().Last();
                 if (attempt.Sender.Equals(localAddress) && attempt.Recipient.Equals(remoteAddress))
                 {
-                    codec.DecodePdu(attempt.Payload)
+                    codec.DecodePdu((Remote.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
                         .Match()
                         .With<Associate>(h => rValue = h.Info.Origin.Equals(localAddress) && h.Info.Uid == uid)
                         .Default(msg => rValue = false);
@@ -452,9 +456,9 @@ namespace Akka.Remote.Tests.Transport
             var rValue = false;
             if (associationRegistry.LogSnapshot().Last() is WriteAttempt)
             {
-                var attempt = (WriteAttempt) associationRegistry.LogSnapshot().Last();
+                var attempt = (WriteAttempt)associationRegistry.LogSnapshot().Last();
                 if (attempt.Sender.Equals(localAddress) && attempt.Recipient.Equals(remoteAddress))
-                    codec.DecodePdu(attempt.Payload)
+                    codec.DecodePdu((Remote.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
                         .Match()
                         .With<Disassociate>(h => rValue = true)
                         .Default(msg => rValue = false);

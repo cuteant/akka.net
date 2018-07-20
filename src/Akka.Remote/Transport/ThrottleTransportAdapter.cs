@@ -13,6 +13,12 @@ using Akka.Actor;
 using Akka.Dispatch.SysMsg;
 using Akka.Util;
 using Akka.Util.Internal;
+using MessagePack;
+
+/*
+ * 注意：
+ * Throttler 保留现只是为了单元测试，没有什么实际用处了
+ */
 
 namespace Akka.Remote.Transport
 {
@@ -776,6 +782,7 @@ namespace Akka.Remote.Transport
     /// <summary>INTERNAL API</summary>
     internal sealed class ThrottlerHandle : AbstractTransportAdapterHandle
     {
+        private static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
         internal readonly IActorRef ThrottlerActor;
 
         internal AtomicReference<ThrottleMode> OutboundThrottleMode = new AtomicReference<ThrottleMode>(Unthrottled.Instance);
@@ -789,9 +796,10 @@ namespace Akka.Remote.Transport
         }
 
         /// <inheritdoc/>
-        public override bool Write(byte[] payload)
+        public override bool Write(object payload)
         {
-            var tokens = payload.Length;
+            var bts = MessagePackSerializer.Serialize<object>(payload, s_defaultResolver);
+            var tokens = bts.Length;
             //need to declare recursive delegates first before they can self-reference
             //might want to consider making this consumer function strongly typed: http://blogs.msdn.com/b/wesdyer/archive/2007/02/02/anonymous-recursion-in-c.aspx
             bool TryConsume(ThrottleMode currentBucket)
@@ -829,6 +837,8 @@ namespace Akka.Remote.Transport
     /// <summary>INTERNAL API</summary>
     internal class ThrottledAssociation : FSM<ThrottledAssociation.ThrottlerState, ThrottledAssociation.IThrottlerData>, ILoggingFSM
     {
+        private static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
+
         #region - ThrottledAssociation FSM state and data classes -
 
         private const string DequeueTimerName = "dequeue";
@@ -918,7 +928,7 @@ namespace Akka.Remote.Transport
         protected ThrottleMode InboundThrottleMode;
 
         /// <summary>TBD</summary>
-        protected Queue<byte[]> ThrottledMessages = new Queue<byte[]>();
+        protected Queue<object> ThrottledMessages = new Queue<object>();
 
         /// <summary>TBD</summary>
         protected IHandleEventListener UpstreamListener;
@@ -1088,7 +1098,8 @@ namespace Akka.Remote.Transport
                         CancelTimer(DequeueTimerName);
                         if (ThrottledMessages.Count > 0)
                         {
-                            ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), ThrottledMessages.Peek().Length));
+                            var bts = MessagePackSerializer.Serialize<object>(ThrottledMessages.Peek(), s_defaultResolver);
+                            ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), bts.Length));
                         }
                         Sender.Tell(SetThrottleAck.Instance);
                         return Stay();
@@ -1102,10 +1113,12 @@ namespace Akka.Remote.Transport
                         {
                             var payload = ThrottledMessages.Dequeue();
                             UpstreamListener.Notify(new InboundPayload(payload));
-                            InboundThrottleMode = InboundThrottleMode.TryConsumeTokens(MonotonicClock.GetNanos(), payload.Length).Item1;
+                            var bts = MessagePackSerializer.Serialize<object>(payload, s_defaultResolver);
+                            InboundThrottleMode = InboundThrottleMode.TryConsumeTokens(MonotonicClock.GetNanos(), bts.Length).Item1;
                             if (ThrottledMessages.Count > 0)
                             {
-                                ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), ThrottledMessages.Peek().Length));
+                                bts = MessagePackSerializer.Serialize<object>(ThrottledMessages.Peek(), s_defaultResolver);
+                                ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), bts.Length));
                             }
                         }
                         return Stay();
@@ -1160,11 +1173,11 @@ namespace Akka.Remote.Transport
         /// <summary>This method captures ASSOCIATE packets and extracts the origin <see cref="Address"/>.</summary>
         /// <param name="b">Inbound <see cref="T:System.byte[]"/> received from network.</param>
         /// <returns></returns>
-        private Address PeekOrigin(byte[] b)
+        private Address PeekOrigin(object b)
         {
             try
             {
-                var pdu = _codec.DecodePdu(b);
+                var pdu = _codec.DecodePdu((Remote.Serialization.Protocol.AkkaProtocolMessage)b);
                 if (pdu is Associate associate)
                 {
                     return associate.Info.Origin;
@@ -1195,7 +1208,7 @@ namespace Akka.Remote.Transport
             }
         }
 
-        private void ForwardOrDelay(byte[] payload)
+        private void ForwardOrDelay(object payload)
         {
             if (InboundThrottleMode is Blackhole)
             {
@@ -1205,7 +1218,8 @@ namespace Akka.Remote.Transport
             {
                 if (ThrottledMessages.Count <= 0)
                 {
-                    var tokens = payload.Length;
+                    var bts = MessagePackSerializer.Serialize<object>(payload, s_defaultResolver);
+                    var tokens = bts.Length;
                     var res = InboundThrottleMode.TryConsumeTokens(MonotonicClock.GetNanos(), tokens);
                     var newBucket = res.Item1;
                     var success = res.Item2;

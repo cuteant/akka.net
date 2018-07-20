@@ -530,12 +530,12 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IAkkaPdu ThrowAkkaProtocolException_DecodePdu(int pduLen, Exception ex)
+        internal static IAkkaPdu ThrowAkkaProtocolException_DecodePdu(object pdu, Exception ex)
         {
             throw GetException();
             AkkaProtocolException GetException()
             {
-                return new AkkaProtocolException($"Error while decoding incoming Akka PDU of length {pduLen}", ex);
+                return new AkkaProtocolException($"Error while decoding incoming Akka PDU of type {pdu.GetType()}", ex);
             }
         }
 

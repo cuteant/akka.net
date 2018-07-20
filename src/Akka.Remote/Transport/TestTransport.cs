@@ -12,6 +12,8 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
+using Akka.Serialization;
+using MessagePack;
 
 namespace Akka.Remote.Transport
 {
@@ -247,7 +249,8 @@ namespace Akka.Remote.Transport
 
             if (remoteReadHandler != null)
             {
-                remoteReadHandler.Notify(new InboundPayload(payload));
+                //remoteReadHandler.Notify(new InboundPayload(payload));
+                remoteReadHandler.Notify(new InboundPayload(MessagePackSerializer.Deserialize<object>(payload, MsgPackSerializerHelper.DefaultResolver)));
                 return Task.FromResult(true);
             }
 
@@ -672,11 +675,11 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         /// <param name="payload">TBD</param>
         /// <returns>TBD</returns>
-        public override bool Write(byte[] payload)
+        public override bool Write(object payload)
         {
             if (Writeable)
             {
-                var result = _transport.Write(this, payload);
+                var result = _transport.Write(this, MessagePackSerializer.Serialize<object>(payload, MsgPackSerializerHelper.DefaultResolver));
                 result.Wait(TimeSpan.FromSeconds(3));
                 return result.Result;
             }
