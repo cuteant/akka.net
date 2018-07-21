@@ -273,10 +273,8 @@ namespace Akka.Persistence.Fsm
         /// </summary>
         internal void Initialize()
         {
-            if (_currentState != null)
-                MakeTransition(_currentState);
-            else
-                throw new IllegalStateException("You must call StartWith before calling Initialize.");
+            if (null == _currentState) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_Init); }
+            MakeTransition(_currentState);
         }
 
         /// <summary>
@@ -289,9 +287,8 @@ namespace Akka.Persistence.Fsm
         {
             get
             {
-                if (_currentState != null)
-                    return _currentState.StateName;
-                throw new IllegalStateException("You must call StartWith before calling StateName.");
+                if (null == _currentState) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_SN); }
+                return _currentState.StateName;
             }
         }
 
@@ -305,9 +302,8 @@ namespace Akka.Persistence.Fsm
         {
             get
             {
-                if (_currentState != null)
-                    return _currentState.StateData;
-                throw new IllegalStateException("You must call StartWith before calling StateData.");
+                if (null == _currentState) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_SD); }
+                return _currentState.StateData;
             }
         }
 
@@ -326,9 +322,8 @@ namespace Akka.Persistence.Fsm
         {
             get
             {
-                if (_nextState != null)
-                    return _nextState.StateData;
-                throw new IllegalStateException("NextStateData is only available during OnTransition");
+                if (null == _nextState) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_NextStateData); }
+                return _nextState.StateData;
             }
         }
 

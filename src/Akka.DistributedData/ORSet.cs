@@ -192,8 +192,6 @@ namespace Akka.DistributedData
                         }
                     }
                     break;
-                default:
-                    break;
             }
             throw new NotSupportedException();
         });
@@ -468,7 +466,7 @@ namespace Akka.DistributedData
                             ConcatElementsMap(u.ElementsMap),
                             Underlying._versionVector.Merge(u._versionVector)));
                         
-                    case AtomicDeltaOperation op:
+                    case AtomicDeltaOperation _:
                         return new DeltaGroup(ImmutableArray.Create(this, other));
                         
                     case DeltaGroup deltaGroup:

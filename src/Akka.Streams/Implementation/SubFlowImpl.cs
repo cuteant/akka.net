@@ -133,7 +133,7 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public SubFlowImpl<TIn, TOut, TMat, TClosed> WithAttributes(Attributes attributes)
         {
-            throw new NotSupportedException();
+            ThrowHelper.ThrowNotSupportedException(); return null;
         }
     }
 }

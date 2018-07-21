@@ -308,7 +308,7 @@ namespace Akka.Persistence.Snapshot
                 }
                 if (exception != null || ((_dir.Attributes & FileAttributes.Directory) == 0))
                 {
-                    throw new IOException("Failed to create snapshot directory " + _dir.FullName, exception);
+                    ThrowHelper.ThrowIOException(_dir, exception);
                 }
             }
             return _dir;

@@ -19,12 +19,13 @@ namespace Akka.Logger.Serilog
 
         public MessageTemplateCache(MessageTemplateParser innerParser)
         {
-            _innerParser = innerParser ?? throw new ArgumentNullException(nameof(innerParser));
+            if (null == innerParser) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.innerParser); }
+            _innerParser = innerParser;
         }
 
         public MessageTemplate Parse(string messageTemplate)
         {
-            if (messageTemplate == null) throw new ArgumentNullException(nameof(messageTemplate));
+            if (null == messageTemplate) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.messageTemplate); }
 
             if (_templates.TryGetValue(messageTemplate, out var result)) { return result; }
 

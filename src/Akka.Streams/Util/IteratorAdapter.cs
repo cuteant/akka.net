@@ -80,10 +80,8 @@ namespace Akka.Streams.Util
         /// <returns>TBD</returns>
         public T Next()
         {
-            if (!HasNext())
-                throw new InvalidOperationException();
-            if (_exception != null)
-                throw new AggregateException(_exception);
+            if (!HasNext()) ThrowHelper.ThrowInvalidOperationException();
+            if (_exception != null) ThrowHelper.ThrowAggregateException(_exception);
 
             _hasNext = null;
             _exception = null;

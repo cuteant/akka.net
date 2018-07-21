@@ -95,7 +95,7 @@ namespace Akka.Cluster.Sharding
                     // On rebalance, we send ourselves a GetShardHome message to reallocate a
                     // shard. This receive handles the "response" from that message. i.e. Ignores it.
                     return true;
-                case ClusterEvent.ClusterShuttingDown msg:
+                case ClusterEvent.ClusterShuttingDown _:
                     if (coordinator.Log.IsDebugEnabled) coordinator.Log.Debug("Shutting down shard coordinator");
                     // can't stop because supervisor will start it again,
                     // it will soon be stopped when singleton is stopped

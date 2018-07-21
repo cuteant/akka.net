@@ -91,7 +91,7 @@ namespace Akka.Streams.Implementation.Fusing
             //if (StreamLayout.IsDebug) StreamLayout.Validate(module);
             //if (IsDebug) s_logger.LogDebug(module.ToString());
 
-            return new Streams.Fusing.FusedGraph<TShape, TMat>(module, (TShape) shape);
+            return new Streams.Fusing.FusedGraph<TShape, TMat>(module, (TShape)shape);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace Akka.Streams.Implementation.Fusing
                     structuralInfo.NewOutlets(graph.Shape.Outlets));
 
                 // Extract the full topological information from the builder
-                return structuralInfo.ToInfo(shape, materializedValue.Select(pair=> Tuple.Create(pair.Key, pair.Value)).ToList(), attributes);
+                return structuralInfo.ToInfo(shape, materializedValue.Select(pair => Tuple.Create(pair.Key, pair.Value)).ToList(), attributes);
             }
             catch (Exception)
             {
@@ -139,8 +139,8 @@ namespace Akka.Streams.Implementation.Fusing
             return info.Groups.SelectMany(group =>
             {
                 if (group.Count == 0) return Enumerable.Empty<IModule>();
-                if (group.Count == 1) return new[] {group.First()};
-                return new[] {FuseGroup(info, group)};
+                if (group.Count == 1) return new[] { group.First() };
+                return new[] { FuseGroup(info, group) };
             }).ToImmutableArray();
         }
 
@@ -224,7 +224,9 @@ namespace Akka.Streams.Implementation.Fusing
                     pos++;
                 }
                 else
-                    throw new ArgumentException("unexpected module structure");
+                {
+                    ThrowHelper.ThrowArgumentException_UnexpectedModule();
+                }
             }
 
             var outsB2 = new Outlet[insB2.Count];
@@ -262,7 +264,9 @@ namespace Akka.Streams.Implementation.Fusing
                     pos++;
                 }
                 else
-                    throw new ArgumentException("unexpected module structure");
+                {
+                    ThrowHelper.ThrowArgumentException_UnexpectedModule();
+                }
             }
 
             /*
@@ -293,9 +297,12 @@ namespace Akka.Streams.Implementation.Fusing
             outOwnersB3.CopyTo(outOwners, outStart);
 
             var firstModule = group.First();
-            if(!(firstModule is CopiedModule))
-                throw new ArgumentException("unexpected module structure");
-            var asyncAttrs = IsAsync((CopiedModule) firstModule) ? new Attributes(Attributes.AsyncBoundary.Instance) : Attributes.None;
+            var copiedModule = firstModule as CopiedModule;
+            if (null == copiedModule)
+            {
+                ThrowHelper.ThrowArgumentException_UnexpectedModule();
+            }
+            var asyncAttrs = IsAsync(copiedModule) ? new Attributes(Attributes.AsyncBoundary.Instance) : Attributes.None;
             var dispatcher = GetDispatcher(firstModule);
             var dispatcherAttrs = dispatcher == null ? Attributes.None : new Attributes(dispatcher);
             var attr = asyncAttrs.And(dispatcherAttrs);
@@ -436,8 +443,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if (module is CopiedModule copied)
                 {
                     var result = Descend<T>(copied.CopyOf, allAttributes, structInfo, localGroup, indent + 1);
-                    if (result.Count == 0)
-                        throw new IllegalStateException("Descend returned empty result from CopiedModule");
+                    if (result.Count == 0) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Descend_EmptyResult);
 
                     result.AddToFront(new KeyValuePair<IModule, IMaterializedValueNode>(copied, result.PeekFromFront().Value));
 
@@ -485,7 +491,7 @@ namespace Akka.Streams.Implementation.Fusing
                     foreach (var c in materializedSources)
                     {
                         //if (IsDebug) Log(indent, $"materialized value source: {structInfo.Hash(c)}");
-                        var ms = (IMaterializedValueSource) ((GraphStageModule) c.CopyOf).Stage;
+                        var ms = (IMaterializedValueSource)((GraphStageModule)c.CopyOf).Stage;
 
                         IMaterializedValueNode mapped;
                         if (ms.Computation is Atomic atomic)
@@ -497,7 +503,7 @@ namespace Akka.Streams.Implementation.Fusing
 
                         var outputType = ms.Outlet.GetType().GetGenericArguments().First();
                         var materializedValueSourceType = typeof(MaterializedValueSource<>).GetCachedGenericType(outputType);
-                        var newSrc = (IMaterializedValueSource) Activator.CreateInstance(materializedValueSourceType, mapped, ms.Outlet);
+                        var newSrc = (IMaterializedValueSource)Activator.CreateInstance(materializedValueSourceType, mapped, ms.Outlet);
                         var replacement = new CopiedModule(c.Shape, c.Attributes, newSrc.Module);
                         structInfo.Replace(c, replacement, localGroup);
                     }
@@ -566,7 +572,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </summary>
         /// <param name="indent">TBD</param>
         /// <param name="msg">TBD</param>
-        internal static void Log(int indent, string msg) => s_logger.LogDebug("{0}{1}", string.Empty.PadLeft(indent*2), msg);
+        internal static void Log(int indent, string msg) => s_logger.LogDebug("{0}{1}", string.Empty.PadLeft(indent * 2), msg);
     }
 
     /// <summary>
@@ -643,7 +649,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <returns>TBD</returns>
         public IImmutableList<CopiedModule> ExitMaterializationContext()
         {
-            if (_materializedSources.Count == 0) throw new ArgumentException("ExitMaterializationContext with empty stack");
+            if (_materializedSources.Count == 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_EMC_with_empty_stack);
             var x = _materializedSources.RemoveFromFront();
             return x.ToImmutableList();
         }
@@ -657,7 +663,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </exception>
         public void PushMaterializationSource(CopiedModule module)
         {
-            if (_materializedSources.Count == 0) throw new ArgumentException("PushMaterializationSource without context");
+            if (_materializedSources.Count == 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_PMS_without_context);
             _materializedSources.PeekFromFront().AddToFront(module);
         }
 
@@ -665,17 +671,17 @@ namespace Akka.Streams.Implementation.Fusing
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public StructuralInfoModule ToInfo<TShape>(TShape shape, IList<Tuple<IModule, IMaterializedValueNode>> materializedValues ,Attributes attributes = null) where TShape : Shape
+        public StructuralInfoModule ToInfo<TShape>(TShape shape, IList<Tuple<IModule, IMaterializedValueNode>> materializedValues, Attributes attributes = null) where TShape : Shape
         {
             attributes = attributes ?? Attributes.None;
 
-            return new StructuralInfoModule(Modules.ToImmutableArray(), shape, 
+            return new StructuralInfoModule(Modules.ToImmutableArray(), shape,
                 Downstreams.ToImmutableDictionary(),
-                Upstreams.ToImmutableDictionary(), 
-                InOwners.ToImmutableDictionary(), 
+                Upstreams.ToImmutableDictionary(),
+                InOwners.ToImmutableDictionary(),
                 OutOwners.ToImmutableDictionary(),
-                materializedValues.ToImmutableList(), 
-                materializedValues.First().Item2, 
+                materializedValues.ToImmutableList(),
+                materializedValues.First().Item2,
                 attributes);
         }
 
@@ -814,14 +820,14 @@ namespace Akka.Streams.Implementation.Fusing
                     InternalOuts.Remove(outlet);
 
             if (IsCopiedModuleWithGraphStageAndMaterializedValue(copy))
-                PushMaterializationSource((CopiedModule) copy);
+                PushMaterializationSource((CopiedModule)copy);
             else if (copy is GraphModule)
             {
-                var mvids = ((GraphModule) copy).MaterializedValueIds;
+                var mvids = ((GraphModule)copy).MaterializedValueIds;
                 foreach (IModule mvid in mvids)
                 {
                     if (IsCopiedModuleWithGraphStageAndMaterializedValue(mvid))
-                        PushMaterializationSource((CopiedModule) mvid);
+                        PushMaterializationSource((CopiedModule)mvid);
                 }
             }
 
@@ -839,9 +845,9 @@ namespace Akka.Streams.Implementation.Fusing
         {
             //if (Fusing.IsDebug) Fusing.Log(indent, $"wiring {outPort} ({Hash(outPort)}) -> {inPort} ({Hash(inPort)})");
             var newOut = RemoveMapping(outPort, NewOutputs);
-            if (!newOut.HasValue) throw new ArgumentException($"wiring {outPort} -> {inPort}", nameof(outPort));
+            if (!newOut.HasValue) ThrowHelper.ThrowArgumentException_Fusing_WireOut(outPort, inPort);
             var newIn = RemoveMapping(inPort, NewInputs);
-            if (!newIn.HasValue) throw new ArgumentException($"wiring {outPort} -> {inPort}", nameof(inPort));
+            if (!newIn.HasValue) ThrowHelper.ThrowArgumentException_Fusing_WireIn(outPort, inPort);
             Downstreams.Add(newOut.Value, newIn.Value);
             Upstreams.Add(newIn.Value, newOut.Value);
         }
@@ -861,10 +867,11 @@ namespace Akka.Streams.Implementation.Fusing
                 var nins = newShape.Inlets.GetEnumerator();
                 while (oins.MoveNext() && nins.MoveNext())
                 {
-                    var x = RemoveMapping(oins.Current, NewInputs);
-                    if (!x.HasValue)
-                        throw new ArgumentException($"rewiring {oins.Current} -> {nins.Current}", nameof(oldShape));
-                    AddMapping(nins.Current, x.Value, NewInputs);
+                    var oinsCurrent = oins.Current;
+                    var ninsCurrent = nins.Current;
+                    var x = RemoveMapping(oinsCurrent, NewInputs);
+                    if (!x.HasValue) ThrowHelper.ThrowArgumentException_Fusing_RewireIn(oinsCurrent, ninsCurrent);
+                    AddMapping(ninsCurrent, x.Value, NewInputs);
                 }
             }
             {
@@ -872,10 +879,11 @@ namespace Akka.Streams.Implementation.Fusing
                 var nouts = newShape.Outlets.GetEnumerator();
                 while (oouts.MoveNext() && nouts.MoveNext())
                 {
-                    var x = RemoveMapping(oouts.Current, NewOutputs);
-                    if (!x.HasValue)
-                        throw new ArgumentException($"rewiring {oouts.Current} -> {nouts.Current}", nameof(oldShape));
-                    AddMapping(nouts.Current, x.Value, NewOutputs);
+                    var ooutsCurrent = oouts.Current;
+                    var noutsCurrent = nouts.Current;
+                    var x = RemoveMapping(ooutsCurrent, NewOutputs);
+                    if (!x.HasValue) ThrowHelper.ThrowArgumentException_Fusing_RewireOut(ooutsCurrent, noutsCurrent);
+                    AddMapping(noutsCurrent, x.Value, NewOutputs);
                 }
             }
         }

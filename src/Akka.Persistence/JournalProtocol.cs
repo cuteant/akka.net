@@ -86,7 +86,8 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public DeleteMessagesFailure(Exception cause, long toSequenceNr)
         {
-            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "DeleteMessagesFailure cause exception cannot be null");
+            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_DeleteMessagesFailure);; }
+            Cause = cause;
             ToSequenceNr = toSequenceNr;
         }
 
@@ -145,8 +146,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public DeleteMessagesTo(string persistenceId, long toSequenceNr, IActorRef persistentActor)
         {
-            if (string.IsNullOrEmpty(persistenceId))
-                throw new ArgumentNullException(nameof(persistenceId), "DeleteMessagesTo requires persistence id to be provided");
+            if (string.IsNullOrEmpty(persistenceId)) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.persistenceId, ExceptionResource.ArgumentNull_DeleteMessagesTo);
 
             PersistenceId = persistenceId;
             ToSequenceNr = toSequenceNr;
@@ -300,7 +300,8 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public WriteMessagesFailed(Exception cause)
         {
-            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "WriteMessagesFailed cause exception cannot be null");
+            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessagesFailed); }
+            Cause = cause;
         }
 
         /// <summary>
@@ -405,7 +406,8 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public WriteMessageRejected(IPersistentRepresentation persistent, Exception cause, int actorInstanceId)
         {
-            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "WriteMessageRejected cause exception cannot be null");
+            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessageRejected); }
+            Cause = cause;
             Persistent = persistent;
             ActorInstanceId = actorInstanceId;
         }
@@ -477,7 +479,8 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public WriteMessageFailure(IPersistentRepresentation persistent, Exception cause, int actorInstanceId)
         {
-            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "WriteMessageFailure cause exception cannot be null");
+            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessageFailure); }
+            Cause = cause;
             Persistent = persistent;
             ActorInstanceId = actorInstanceId;
         }
@@ -777,7 +780,8 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public ReplayMessagesFailure(Exception cause)
         {
-            Cause = cause ?? throw new ArgumentNullException(nameof(cause), "ReplayMessagesFailure cause exception cannot be null");
+            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_ReplayMessagesFailure); }
+            Cause = cause;
         }
 
         /// <summary>

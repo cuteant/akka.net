@@ -48,7 +48,7 @@ namespace Akka.Persistence.Journal
             var extension = Persistence.Instance.Apply(Context.System);
             if (extension == null)
             {
-                throw new ArgumentException("Couldn't initialize SyncWriteJournal instance, because associated Persistence extension has not been used in current actor system context.");
+                ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Init_SyncWJ);
             }
 
             CanPublish = extension.Settings.Internal.PublishPluginCommands;
@@ -74,7 +74,8 @@ namespace Akka.Persistence.Journal
                     _replayFilterMode = ReplayFilterMode.Warn;
                     break;
                 default:
-                    throw new Akka.Configuration.ConfigurationException($"Invalid replay-filter.mode [{replayFilterMode}], supported values [off, repair-by-discard-old, fail, warn]");
+                    ThrowHelper.ThrowConfigurationException(replayFilterMode);
+                    break;
             }
             _isReplayFilterEnabled = _replayFilterMode != ReplayFilterMode.Disabled;
             _replayFilterWindowSize = config.GetInt("replay-filter.window-size");
@@ -342,7 +343,7 @@ namespace Akka.Persistence.Journal
                 }
                 catch (Exception e)
                 {
-                    writeResult = Task.FromResult((IImmutableList<Exception>) null);
+                    writeResult = Task.FromResult((IImmutableList<Exception>)null);
                     writeMessagesAsyncException = e;
                 }
             }
@@ -388,7 +389,9 @@ namespace Akka.Persistence.Journal
                     if (!t.IsFaulted && !t.IsCanceled && writeMessagesAsyncException == null)
                     {
                         if (t.Result != null && t.Result.Count != atomicWriteCount)
-                            throw new IllegalStateException($"AsyncWriteMessages return invalid number or results. Expected [{atomicWriteCount}], but got [{t.Result.Count}].");
+                        {
+                            ThrowHelper.ThrowIllegalStateException(atomicWriteCount, t.Result.Count);
+                        }
 
                         _resequencer.Tell(new Desequenced(WriteMessagesSuccessful.Instance, counter, message.PersistentActor, self));
                         resequence((x, exception) => exception == null

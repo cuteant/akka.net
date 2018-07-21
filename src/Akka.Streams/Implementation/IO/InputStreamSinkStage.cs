@@ -176,8 +176,7 @@ namespace Akka.Streams.Implementation.IO
             public override void OnPush()
             {
                 //1 is buffer for Finished or Failed callback
-                if (_stage._dataQueue.Count + 1 == _stage._dataQueue.BoundedCapacity)
-                    throw new BufferOverflowException("Queue is full");
+                if (_stage._dataQueue.Count + 1 == _stage._dataQueue.BoundedCapacity) ThrowHelper.ThrowBufferOverflowException_Queue();
 
                 _stage._dataQueue.Add(new Data(Grab(_stage._in)));
                 if (_stage._dataQueue.BoundedCapacity - _stage._dataQueue.Count > 1)
@@ -257,8 +256,7 @@ namespace Akka.Streams.Implementation.IO
             Attributes inheritedAttributes)
         {
             var maxBuffer = inheritedAttributes.GetAttribute(new Attributes.InputBuffer(16, 16)).Max;
-            if (maxBuffer <= 0)
-                throw new ArgumentException("Buffer size must be greater than 0");
+            if (maxBuffer <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.maxBuffer);
 
             _dataQueue = new BlockingCollection<IStreamToAdapterMessage>(maxBuffer + 2);
 
@@ -274,13 +272,13 @@ namespace Akka.Streams.Implementation.IO
     /// </summary>
     internal class InputStreamAdapter : Stream
     {
-#region not supported 
+        #region not supported 
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <exception cref="NotSupportedException">TBD</exception>
-        public override void Flush() => throw new NotSupportedException("This stream can only read");
+        public override void Flush() => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_R);
 
         /// <summary>
         /// TBD
@@ -289,8 +287,7 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="origin">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
         /// <returns>TBD</returns>
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException(
-            "This stream can only read");
+        public override long Seek(long offset, SeekOrigin origin) => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_R);
 
         /// <summary>
         /// TBD
@@ -298,7 +295,7 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="value">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
         /// <returns>TBD</returns>
-        public override void SetLength(long value) => throw new NotSupportedException("This stream can only read");
+        public override void SetLength(long value) => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_R);
 
         /// <summary>
         /// TBD
@@ -308,14 +305,13 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="count">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
         /// <returns>TBD</returns>
-        public override void Write(byte[] buffer, int offset, int count) => throw new NotSupportedException(
-            "This stream can only read");
+        public override void Write(byte[] buffer, int offset, int count) => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_R);
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <exception cref="NotSupportedException">TBD</exception>
-        public override long Length => throw new NotSupportedException("This stream can only read");
+        public override long Length => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_R);
 
         /// <summary>
         /// TBD
@@ -323,14 +319,12 @@ namespace Akka.Streams.Implementation.IO
         /// <exception cref="NotSupportedException">TBD</exception>
         public override long Position
         {
-            get => throw new NotSupportedException("This stream can only read");
-            set => throw new NotSupportedException("This stream can only read");
+            get => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_R);
+            set => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_R);
         }
 
-#endregion
-        
-        private static readonly Exception SubscriberClosedException =
-            new IOException("Reactive stream is terminated, no reads are possible");
+        #endregion
+
 
         private readonly BlockingCollection<IStreamToAdapterMessage> _sharedBuffer;
         private readonly IStageWithCallback _sendToStage;
@@ -413,74 +407,71 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (buffer.Length <= 0) throw new ArgumentException("array size must be > 0", nameof(buffer));
-            if (offset < 0) throw new ArgumentException("offset must be >= 0", nameof(offset));
-            if (count <= 0) throw new ArgumentException("count must be > 0", nameof(count));
-            if (offset + count > buffer.Length)
-                throw new ArgumentException("offset + count must be smaller or equal to the array length");
+            if (buffer.Length <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.buffer);
+            if (offset < 0) ThrowHelper.ThrowArgumentException_GreaterThanEqualZero(ExceptionArgument.offset);
+            if (count <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.count);
+            if (offset + count > buffer.Length) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Offset_Count_Length);
 
-            return ExecuteIfNotClosed(() =>
+            int ExecuteFunc()
             {
-                if (!_isStageAlive)
-                    return 0;
+                if (!_isStageAlive) { return 0; }
 
-                if (_detachedChunk != null)
-                    return ReadBytes(buffer, offset, count);
+                if (_detachedChunk != null) { return ReadBytes(buffer, offset, count); }
 
                 var success = _sharedBuffer.TryTake(out var msg, _readTimeout);
-                if (!success)
-                    throw new IOException("Timeout on waiting for new data");
+                if (!success) { ThrowHelper.ThrowIOException_Timeout(); }
 
-                if (msg is Data data)
+                switch (msg)
                 {
-                    _detachedChunk = data.Bytes;
-                    return ReadBytes(buffer, offset, count);
-                }
-                if (msg is Finished)
-                {
-                    _isStageAlive = false;
-                    return 0;
-                }
-                if (msg is Failed failed)
-                {
-                    _isStageAlive = false;
-                    throw failed.Cause;
-                }
+                    case Data data:
+                        _detachedChunk = data.Bytes;
+                        return ReadBytes(buffer, offset, count);
 
-                throw new IllegalStateException("message 'Initialized' must come first");
-            });
+                    case Finished _:
+                        _isStageAlive = false;
+                        return 0;
+
+                    case Failed failed:
+                        _isStageAlive = false;
+                        throw failed.Cause;
+                }
+                return ThrowHelper.ThrowIllegalStateException<int>(ExceptionResource.IllegalState_init_mus_first);
+            }
+            return ExecuteIfNotClosed(ExecuteFunc);
         }
 
         private T ExecuteIfNotClosed<T>(Func<T> f)
         {
-            if (_isActive)
-            {
-                WaitIfNotInitialized();
-                return f();
-            }
-            throw SubscriberClosedException;
+            if (!_isActive) { ThrowHelper.ThrowIOException_SubscriberClosed(); }
+
+            WaitIfNotInitialized();
+            return f();
         }
 
         private void WaitIfNotInitialized()
         {
-            if (_isInitialized)
-                return;
+            if (_isInitialized) { return; }
 
             if (_sharedBuffer.TryTake(out var message, _readTimeout))
             {
                 if (message is Initialized)
+                {
                     _isInitialized = true;
+                }
                 else
-                    throw new IllegalStateException("First message must be Initialized notification");
+                {
+                    ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_first_msg_init);
+                }
             }
             else
-                throw new IOException($"Timeout after {_readTimeout} waiting  Initialized message from stage");
+            {
+                ThrowHelper.ThrowIOException_Timeout(_readTimeout);
+            }
         }
 
         private int ReadBytes(byte[] buffer, int offset, int count)
         {
-            if (_detachedChunk == null || _detachedChunk.IsEmpty)
-                throw new InvalidOperationException("Chunk must be pulled from shared buffer");
+            if (_detachedChunk == null || _detachedChunk.IsEmpty) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Chunk_be_pulled);
 
             var availableInChunk = _detachedChunk.Count;
             var readBytes = GetData(buffer, offset, count, 0);

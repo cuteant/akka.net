@@ -650,8 +650,7 @@ namespace Akka.Streams.Dsl
         /// <returns>TBD</returns>
         public static Source<T, IActorRef> ActorPublisher<T>(Props props)
         {
-            if (!typeof(Actors.ActorPublisher<T>).IsAssignableFrom(props.Type))
-                throw new ArgumentException("Actor must be ActorPublisher");
+            if (!typeof(Actors.ActorPublisher<T>).IsAssignableFrom(props.Type)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Actor_must_be_publisher);
 
             return new Source<T, IActorRef>(new ActorPublisherSource<T>(props, DefaultAttributes.ActorPublisherSource, Shape<T>("ActorPublisherSource")));
         }
@@ -696,8 +695,8 @@ namespace Akka.Streams.Dsl
         /// <returns>TBD</returns>
         public static Source<T, IActorRef> ActorRef<T>(int bufferSize, OverflowStrategy overflowStrategy)
         {
-            if (bufferSize < 0) throw new ArgumentException("Buffer size must be greater than or equal 0", nameof(bufferSize));
-            if (overflowStrategy == OverflowStrategy.Backpressure) throw new NotSupportedException("Backpressure overflow strategy is not supported");
+            if (bufferSize < 0) ThrowHelper.ThrowArgumentException_GreaterThanEqualZero(ExceptionArgument.bufferSize);
+            if (overflowStrategy == OverflowStrategy.Backpressure) ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Backpressure_strategy);
 
             return new Source<T, IActorRef>(new ActorRefSource<T>(bufferSize, overflowStrategy, DefaultAttributes.ActorRefSource, Shape<T>("ActorRefSource")));
         }
@@ -812,7 +811,7 @@ namespace Akka.Streams.Dsl
         /// <returns>TBD</returns>
         public static Source<T, ISourceQueueWithComplete<T>> Queue<T>(int bufferSize, OverflowStrategy overflowStrategy)
         {
-            if (bufferSize < 0) throw new ArgumentException("Buffer size must be greater than or equal 0", nameof(bufferSize));
+            if (bufferSize < 0) ThrowHelper.ThrowArgumentException_GreaterThanEqualZero(ExceptionArgument.bufferSize);
 
             return FromGraph(new QueueSource<T>(bufferSize, overflowStrategy).WithAttributes(DefaultAttributes.QueueSource));
         }

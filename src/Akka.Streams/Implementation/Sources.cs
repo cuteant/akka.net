@@ -274,11 +274,12 @@ namespace Akka.Streams.Implementation
                                         FailStage(bufferOverflowException);
                                         break;
                                     default:
-                                        throw new ArgumentOutOfRangeException();
+                                        ThrowHelper.ThrowArgumentOutOfRangeException();
+                                        break;
                                 }
                             }
                             break;
-                        case Completion completion:
+                        case Completion _:
                             if (_stage._maxBuffer != 0 && _buffer.NonEmpty || _pendingOffer != null)
                             {
                                 _terminating = true;
@@ -448,14 +449,15 @@ namespace Akka.Streams.Implementation
                             case Directive.Resume:
                                 break;
                             default:
-                                throw new ArgumentOutOfRangeException();
+                                ThrowHelper.ThrowArgumentOutOfRangeException();
+                                break;
                         }
                     }
                 }
             }
 
             public override void OnDownstreamFinish() => CloseStage();
-            
+
             public override void PreStart()
             {
                 _blockingStream = _stage._create();
@@ -698,7 +700,8 @@ namespace Akka.Streams.Implementation
                         RestartState();
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        ThrowHelper.ThrowArgumentOutOfRangeException();
+                        break;
                 }
             }
 
@@ -1042,7 +1045,8 @@ namespace Akka.Streams.Implementation
                             // do nothing
                         };
                     case OverflowStrategy.DropBuffer:
-                        return message => {
+                        return message =>
+                        {
                             _buffer.Clear();
                             _buffer.AddToFront(message);
                         };
@@ -1054,9 +1058,9 @@ namespace Akka.Streams.Implementation
                     case OverflowStrategy.Backpressure:
                         return message =>
                         {
-                            throw new NotSupportedException("OverflowStrategy.Backpressure is not supported");
+                            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_OS_Backpressure);
                         };
-                    default: throw new NotSupportedException($"Unknown option: {overflowStrategy}");
+                    default: return ThrowHelper.ThrowNotSupportedException<TEventArgs>(overflowStrategy);
                 }
             }
         }
@@ -1081,9 +1085,12 @@ namespace Akka.Streams.Implementation
         /// <param name="overflowStrategy">Overflow strategy used, when buffer (size specified by <paramref name="maxBuffer"/>) has been overflown.</param>
         public EventSourceStage(Action<TDelegate> addHandler, Action<TDelegate> removeHandler, Func<Action<TEventArgs>, TDelegate> conversion, int maxBuffer, OverflowStrategy overflowStrategy)
         {
-            _conversion = conversion ?? throw new ArgumentNullException(nameof(conversion));
-            _addHandler = addHandler ?? throw new ArgumentNullException(nameof(addHandler));
-            _removeHandler = removeHandler ?? throw new ArgumentNullException(nameof(removeHandler));
+            if (null == conversion) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.conversion); }
+            if (null == addHandler) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.addHandler); }
+            if (null == removeHandler) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.removeHandler); }
+            _conversion = conversion;
+            _addHandler = addHandler;
+            _removeHandler = removeHandler;
             _maxBuffer = maxBuffer;
             _overflowStrategy = overflowStrategy;
             Shape = new SourceShape<TEventArgs>(Out);

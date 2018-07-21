@@ -30,7 +30,7 @@ namespace Akka.Persistence.Serialization
         {
             if (obj is Snapshot snapShot) return MessagePackSerializer.Serialize(GetPersistentPayload(snapShot), s_defaultResolver);
 
-            throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{GetType()}]");
+            return ThrowHelper.ThrowArgumentException_SnapshotSerializer(obj);
         }
 
         private PersistentPayload GetPersistentPayload(Snapshot snapshot)
@@ -65,7 +65,7 @@ namespace Akka.Persistence.Serialization
         {
             if (type == typeof(Snapshot)) return GetSnapshot(bytes);
 
-            throw new ArgumentException($"Unimplemented deserialization of message with type [{type}] in [{GetType()}]");
+            return ThrowHelper.ThrowArgumentException_SnapshotSerializer(type);
         }
 
         private Snapshot GetSnapshot(byte[] bytes)

@@ -249,7 +249,7 @@ namespace Akka.Streams.Implementation.Fusing
                 log: NoLogger.Instance,
                 connections: connections,
                 logics: logics,
-                onAsyncInput: (_1, _2, _3) => throw new NotSupportedException("IteratorInterpreter does not support asynchronous events."),
+                onAsyncInput: (_1, _2, _3) => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_IteratorInterpreter),
                 fuzzingMode: false,
                 context: null);
             interpreter.AttachUpstreamBoundary(0, _upstream);

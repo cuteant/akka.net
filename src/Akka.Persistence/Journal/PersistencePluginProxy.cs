@@ -105,16 +105,24 @@ namespace Akka.Persistence.Journal
             _config = config;
             var pluginId = Self.Path.Name;
             if (string.Equals(pluginId, "akka.persistence.journal.proxy", StringComparison.Ordinal))
+            {
                 _pluginType = new Journal();
+            }
             else if (string.Equals(pluginId, "akka.persistence.snapshot-store.proxy", StringComparison.Ordinal))
+            {
                 _pluginType = new SnapshotStore();
+            }
             else
-                throw new ArgumentException($"Unknown plugin type: {pluginId}.");
+            {
+                ThrowHelper.ThrowArgumentException_pluginId(pluginId);
+            }
             _initTimeout = config.GetTimeSpan("init-timeout");
             var key = "target-" + _pluginType.Qualifier + "-plugin";
             _targetPluginId = config.GetString(key);
             if (string.IsNullOrEmpty(_targetPluginId))
-                throw new ArgumentException($"{pluginId}.{key} must be defined.");
+            {
+                ThrowHelper.ThrowArgumentException_pluginId(pluginId, key);
+            }
             _startTarget = config.GetBoolean("start-target-" + _pluginType.Qualifier);
 
             _selfAddress = ((ExtendedActorSystem)Context.System).Provider.DefaultAddress;
@@ -195,7 +203,7 @@ namespace Akka.Persistence.Journal
         {
             switch (message)
             {
-                case TargetLocation tl:
+                case TargetLocation _:
                     Context.SetReceiveTimeout(TimeSpan.FromSeconds(1)); // for retries
                     Context.Become(Identifying(((TargetLocation)message).Address));
                     break;

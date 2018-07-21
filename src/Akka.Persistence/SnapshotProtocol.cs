@@ -831,7 +831,8 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public SaveSnapshot(SnapshotMetadata metadata, object snapshot)
         {
-            Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata), "SaveSnapshot requires SnapshotMetadata to be provided");
+            if (null == metadata) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.metadata, ExceptionResource.ArgumentNull_SaveSnapshot); }
+            Metadata = metadata;
             Snapshot = snapshot;
         }
 
@@ -888,7 +889,8 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public DeleteSnapshot(SnapshotMetadata metadata)
         {
-            Metadata = metadata ?? throw new ArgumentNullException(nameof(metadata), "DeleteSnapshot requires SnapshotMetadata to be provided");
+            if (null == metadata) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.metadata, ExceptionResource.ArgumentNull_DeleteSnapshot); }
+            Metadata = metadata;
         }
 
         /// <summary>

@@ -138,7 +138,7 @@ namespace Akka.Persistence.Fsm
                     }
                 }
 
-                PersistAll(eventsToPersist, @event =>
+                void HandleEvent(object @event)
                 {
                     switch (@event)
                     {
@@ -151,10 +151,9 @@ namespace Akka.Persistence.Fsm
                             doSnapshot = doSnapshot || snapshotAfterExtension.IsSnapshotAfterSeqNo(LastSequenceNr);
                             ApplyStateOnLastHandler();
                             break;
-                        default:
-                            break;
                     }
-                });
+                }
+                PersistAll(eventsToPersist, HandleEvent);
             }
         }
     }

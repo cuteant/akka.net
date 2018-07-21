@@ -49,7 +49,7 @@ namespace Akka.Streams
             /// </exception>
             public Name(string value)
             {
-                if (string.IsNullOrEmpty(value)) throw new ArgumentNullException(nameof(value), "Name attribute cannot be empty");
+                if (string.IsNullOrEmpty(value)) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.value, ExceptionResource.ArgumentNull_NameAttrIsNull);
                 Value = value;
             }
 

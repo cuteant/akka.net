@@ -127,7 +127,7 @@ namespace Akka.Streams.Stage
                 new Lazy<IModule>(
                     () =>
                         new GraphStageModule(Shape, InitialAttributes,
-                            (IGraphStageWithMaterializedValue<Shape, object>) this));
+                            (IGraphStageWithMaterializedValue<Shape, object>)this));
         }
 
         /// <summary>
@@ -371,7 +371,8 @@ namespace Akka.Streams.Stage
             /// </exception>
             public Scheduled(object timerKey, int timerId, bool isRepeating)
             {
-                TimerKey = timerKey ?? throw new ArgumentNullException(nameof(timerKey), "Timer key cannot be null");
+                if (null == timerKey) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.timerKey, ExceptionResource.ArgumentNull_TimerKeyIsNull); }
+                TimerKey = timerKey;
                 TimerId = timerId;
                 IsRepeating = isRepeating;
             }
@@ -449,7 +450,7 @@ namespace Akka.Streams.Stage
                 var element = _logic.Grab(_inlet);
                 _n--;
 
-                if(_n > 0)
+                if (_n > 0)
                     _logic.Pull(_inlet);
                 else
                     _logic.SetHandler(_inlet, Previous);
@@ -498,7 +499,7 @@ namespace Akka.Streams.Stage
                     // If (while executing andThen() callback) handler was changed to new emitting,
                     // we should add it to the end of emission queue
                     var currentHandler = Logic.GetHandler(Out);
-                    if(currentHandler is Emitting e)
+                    if (currentHandler is Emitting e)
                         AddFollowUp(e);
 
                     var next = Dequeue();
@@ -813,8 +814,7 @@ namespace Akka.Streams.Stage
         {
             get
             {
-                if (_interpreter == null)
-                    throw new IllegalStateException("Not yet initialized: only SetHandler is allowed in GraphStageLogic constructor");
+                if (_interpreter == null) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Not_yet_init);
                 return _interpreter;
             }
             set => _interpreter = value;
@@ -868,8 +868,7 @@ namespace Akka.Streams.Stage
         {
             get
             {
-                if (_stageActorRef == null)
-                    throw StageActorRefNotInitializedException.Instance;
+                if (_stageActorRef == null) ThrowHelper.ThrowStageActorRefNotInitializedException();
                 return _stageActorRef;
             }
         }
@@ -921,8 +920,7 @@ namespace Akka.Streams.Stage
         /// </exception>
         protected internal void SetHandler<T>(Inlet<T> inlet, Action onPush, Action onUpstreamFinish = null, Action<Exception> onUpstreamFailure = null)
         {
-            if (onPush == null)
-                throw new ArgumentNullException(nameof(onPush), "GraphStageLogic onPush handler must be provided");
+            if (onPush == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.onPush, ExceptionResource.ArgumentNull_GraphStageLogic_OnPush);
 
             SetHandler(inlet, new LambdaInHandler(onPush, onUpstreamFinish, onUpstreamFailure));
         }
@@ -963,8 +961,7 @@ namespace Akka.Streams.Stage
         /// </exception>
         protected internal void SetHandler<T>(Outlet<T> outlet, Action onPull, Action onDownstreamFinish = null)
         {
-            if (onPull == null)
-                throw new ArgumentNullException(nameof(onPull), "GraphStageLogic onPull handler must be provided");
+            if (onPull == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.onPull, ExceptionResource.ArgumentNull_GraphStageLogic_OnPull);
             SetHandler(outlet, new LambdaOutHandler(onPull, onDownstreamFinish));
         }
 
@@ -1023,10 +1020,8 @@ namespace Akka.Streams.Stage
             else
             {
                 // Detailed error information should not add overhead to the hot path
-                if (IsClosed(inlet))
-                    throw new ArgumentException("Cannot pull a closed port");
-                if (HasBeenPulled(inlet))
-                    throw new ArgumentException("Cannot pull port twice");
+                if (IsClosed(inlet)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_GraphStage_PullC);
+                if (HasBeenPulled(inlet)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_GraphStage_Twice);
             }
 
             // There were no errors, the pull was simply ignored as the target stage already closed its port. We
@@ -1090,8 +1085,7 @@ namespace Akka.Streams.Stage
             else
             {
                 // slow path
-                if (!IsAvailable(inlet))
-                    throw new ArgumentException("Cannot get element from already empty input port");
+                if (!IsAvailable(inlet)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_GraphStage_Grab);
                 var failed = (GraphInterpreter.Failed)element;
                 element = failed.PreviousElement;
                 connection.Slot = new GraphInterpreter.Failed(failed.Reason, Empty.Instance);
@@ -1147,7 +1141,7 @@ namespace Akka.Streams.Stage
                 // fast path
                 return !ReferenceEquals(connection.Slot, Empty.Instance);
             }
-            
+
             // slow path on failure
             if ((connection.PortState & (InReady | InFailed)) == (InReady | InFailed))
             {
@@ -1212,8 +1206,8 @@ namespace Akka.Streams.Stage
 
                 // Detailed error information should not add overhead to the hot path
                 ReactiveStreamsCompliance.RequireNonNullElement(element);
-                if (IsClosed(outlet)) throw new ArgumentException($"Cannot push closed port {outlet}");
-                if (!IsAvailable(outlet)) throw new ArgumentException($"Cannot push port twice {outlet}");
+                if (IsClosed(outlet)) ThrowHelper.ThrowArgumentException_Push_Closed(outlet);
+                if (!IsAvailable(outlet)) ThrowHelper.ThrowArgumentException_Push_Twice(outlet);
 
                 // No error, just InClosed caused the actual pull to be ignored, but the status flag still needs to be flipped
                 connection.PortState = portState ^ PushStartFlip;
@@ -1229,7 +1223,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="enabled">TBD</param>
         protected void SetKeepGoing(bool enabled) => Interpreter.SetKeepGoing(this, enabled);
-        
+
         /// <summary>
         /// Signals that there will be no more elements emitted on the given port.
         /// </summary>
@@ -1300,7 +1294,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="outlet">TBD</param>
         /// <returns>TBD</returns>
-        protected internal bool IsAvailable<T>(Outlet<T> outlet) 
+        protected internal bool IsAvailable<T>(Outlet<T> outlet)
             => (GetConnection(outlet).PortState & (OutReady | OutClosed)) == OutReady;
 
         /// <summary>
@@ -1308,7 +1302,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="outlet">TBD</param>
         /// <returns>TBD</returns>
-        protected bool IsClosed<T>(Outlet<T> outlet) 
+        protected bool IsClosed<T>(Outlet<T> outlet)
             => (GetConnection(outlet).PortState & OutClosed) != 0;
 
         /// <summary>
@@ -1333,8 +1327,8 @@ namespace Akka.Streams.Stage
         /// </exception>
         protected void ReadMany<T>(Inlet<T> inlet, int n, Action<IEnumerable<T>> andThen, Action<IEnumerable<T>> onComplete)
         {
-            if (n < 0)
-                throw new ArgumentException("Cannot read negative number of elements");
+            if (n < 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_GraphStage_ReadMany);
+
             if (n == 0)
                 andThen(null);
             else
@@ -1412,8 +1406,7 @@ namespace Akka.Streams.Stage
 
         private void RequireNotReading<T>(Inlet<T> inlet)
         {
-            if (GetHandler(inlet) is Reading<T>)
-                throw new IllegalStateException($"Already reading on inlet {inlet}");
+            if (GetHandler(inlet) is Reading<T>) ThrowHelper.ThrowIllegalStateException(inlet);
         }
 
         /// <summary>
@@ -1586,7 +1579,7 @@ namespace Akka.Streams.Stage
         /// <param name="handler">TBD</param>
         /// <returns>TBD</returns>
         protected Action<T> GetAsyncCallback<T>(Action<T> handler)
-            => @event => Interpreter.OnAsyncInput(this, @event, x => handler((T) x));
+            => @event => Interpreter.OnAsyncInput(this, @event, x => handler((T)x));
 
         /// <summary>
         /// Obtain a callback object that can be used asynchronously to re-enter the
@@ -1748,8 +1741,7 @@ namespace Akka.Streams.Stage
             /// <returns>TBD</returns>
             public T Grab()
             {
-                if (!_elem.HasValue)
-                    throw new IllegalStateException($"cannot grab element from port {this} when data has not yet arrived");
+                if (!_elem.HasValue) ThrowHelper.ThrowIllegalStateException_Grab(this);
 
                 var ret = _elem.Value;
                 _elem = Option<T>.None;
@@ -1764,10 +1756,8 @@ namespace Akka.Streams.Stage
             /// </exception>
             public void Pull()
             {
-                if (_pulled)
-                    throw new IllegalStateException($"cannot pull port {this} twice");
-                if (_closed)
-                    throw new IllegalStateException($"cannot pull closed port {this}");
+                if (_pulled) ThrowHelper.ThrowIllegalStateException_PussT(this);
+                if (_closed) ThrowHelper.ThrowIllegalStateException_PussC(this);
 
                 _pulled = true;
                 _sink.PullSubstream();
@@ -2065,7 +2055,7 @@ namespace Akka.Streams.Stage
         /// Called when the input port is finished. After this callback no other callbacks will be called for this port.
         /// </summary>
         public virtual void OnUpstreamFinish() => CompleteStage();
-        
+
         /// <summary>
         /// Called when the input port has failed. After this callback no other callbacks will be called for this port.
         /// </summary>
@@ -2141,7 +2131,7 @@ namespace Akka.Streams.Stage
         /// Called when the input port has a new element available. The actual element can be retrieved via the <see cref="GraphStageLogic.Grab{T}(Inlet{T})"/> method.
         /// </summary>
         public abstract void OnPush();
-        
+
         /// <summary>
         /// Called when the input port is finished. After this callback no other callbacks will be called for this port.
         /// </summary>
@@ -2483,7 +2473,7 @@ namespace Akka.Streams.Stage
         /// <param name="actorRef">TBD</param>
         public void Watch(IActorRef actorRef)
         {
-            var iw = (IInternalActorRef) actorRef;
+            var iw = (IInternalActorRef)actorRef;
             _watching = _watching.Add(actorRef);
             iw.SendSystemMessage(new Watch(iw, this));
         }

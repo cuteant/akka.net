@@ -33,8 +33,7 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         public static Props Props(Stream os, TaskCompletionSource<IOResult> completionPromise, int bufferSize, bool autoFlush)
         {
-            if (bufferSize <= 0)
-                throw new ArgumentException("Buffer size must be > 0");
+            if (bufferSize <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.bufferSize);
 
             return
                 Actor.Props.Create(() => new OutputStreamSubscriber(os, completionPromise, bufferSize, autoFlush))

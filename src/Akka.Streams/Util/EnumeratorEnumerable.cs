@@ -69,8 +69,7 @@ namespace Akka.Streams.Util
                 if (_current == null || !_current.MoveNext())
                 {
                     _current = _enumeratorFactory();
-                    if(!_current.MoveNext())
-                        throw new ArgumentException("empty iterator");
+                    if (!_current.MoveNext()) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_empty_iterator);
                 }
 
                 return true;

@@ -30,8 +30,7 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public static Props Props(int bufferSize, OverflowStrategy overflowStrategy, ActorMaterializerSettings settings)
         {
-            if (overflowStrategy == OverflowStrategy.Backpressure)
-                throw new NotSupportedException("Backpressure overflow strategy not supported");
+            if (overflowStrategy == OverflowStrategy.Backpressure) ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Backpressure_strategy);
 
             var maxFixedBufferSize = settings.MaxFixedBufferSize;
             return Actor.Props.Create(() => new ActorRefSourceActor<T>(bufferSize, overflowStrategy, maxFixedBufferSize));

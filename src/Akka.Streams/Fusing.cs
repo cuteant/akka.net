@@ -66,8 +66,8 @@ namespace Akka.Streams
             /// <exception cref="ArgumentException">TBD</exception>
             public FusedGraph(FusedModule module, TShape shape)
             {
-                if (module == null) throw new ArgumentNullException(nameof(module));
-                if (shape == null) throw new ArgumentNullException(nameof(shape));
+                if (null == module) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.module); }
+                if (null == shape) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.shape); }
 
                 Module = module;
                 Shape = shape;

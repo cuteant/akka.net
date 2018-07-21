@@ -1,0 +1,489 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<root>
+  <!-- 
+    Microsoft ResX Schema 
+    
+    Version 2.0
+    
+    The primary goals of this format is to allow a simple XML format 
+    that is mostly human readable. The generation and parsing of the 
+    various data types are done through the TypeConverter classes 
+    associated with the data types.
+    
+    Example:
+    
+    ... ado.net/XML headers & schema ...
+    <resheader name="resmimetype">text/microsoft-resx</resheader>
+    <resheader name="version">2.0</resheader>
+    <resheader name="reader">System.Resources.ResXResourceReader, System.Windows.Forms, ...</resheader>
+    <resheader name="writer">System.Resources.ResXResourceWriter, System.Windows.Forms, ...</resheader>
+    <data name="Name1"><value>this is my long string</value><comment>this is a comment</comment></data>
+    <data name="Color1" type="System.Drawing.Color, System.Drawing">Blue</data>
+    <data name="Bitmap1" mimetype="application/x-microsoft.net.object.binary.base64">
+        <value>[base64 mime encoded serialized .NET Framework object]</value>
+    </data>
+    <data name="Icon1" type="System.Drawing.Icon, System.Drawing" mimetype="application/x-microsoft.net.object.bytearray.base64">
+        <value>[base64 mime encoded string representing a byte array form of the .NET Framework object]</value>
+        <comment>This is a comment</comment>
+    </data>
+                
+    There are any number of "resheader" rows that contain simple 
+    name/value pairs.
+    
+    Each data row contains a name, and value. The row also contains a 
+    type or mimetype. Type corresponds to a .NET class that support 
+    text/value conversion through the TypeConverter architecture. 
+    Classes that don't support this are serialized and stored with the 
+    mimetype set.
+    
+    The mimetype is used for serialized objects, and tells the 
+    ResXResourceReader how to depersist the object. This is currently not 
+    extensible. For a given mimetype the value must be set accordingly:
+    
+    Note - application/x-microsoft.net.object.binary.base64 is the format 
+    that the ResXResourceWriter will generate, however the reader can 
+    read any of the formats listed below.
+    
+    mimetype: application/x-microsoft.net.object.binary.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Binary.BinaryFormatter
+            : and then encoded with base64 encoding.
+    
+    mimetype: application/x-microsoft.net.object.soap.base64
+    value   : The object must be serialized with 
+            : System.Runtime.Serialization.Formatters.Soap.SoapFormatter
+            : and then encoded with base64 encoding.
+
+    mimetype: application/x-microsoft.net.object.bytearray.base64
+    value   : The object must be serialized into a byte array 
+            : using a System.ComponentModel.TypeConverter
+            : and then encoded with base64 encoding.
+    -->
+  <xsd:schema id="root" xmlns="" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:msdata="urn:schemas-microsoft-com:xml-msdata">
+    <xsd:import namespace="http://www.w3.org/XML/1998/namespace" />
+    <xsd:element name="root" msdata:IsDataSet="true">
+      <xsd:complexType>
+        <xsd:choice maxOccurs="unbounded">
+          <xsd:element name="metadata">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" />
+              </xsd:sequence>
+              <xsd:attribute name="name" use="required" type="xsd:string" />
+              <xsd:attribute name="type" type="xsd:string" />
+              <xsd:attribute name="mimetype" type="xsd:string" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="assembly">
+            <xsd:complexType>
+              <xsd:attribute name="alias" type="xsd:string" />
+              <xsd:attribute name="name" type="xsd:string" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="data">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+                <xsd:element name="comment" type="xsd:string" minOccurs="0" msdata:Ordinal="2" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" msdata:Ordinal="1" />
+              <xsd:attribute name="type" type="xsd:string" msdata:Ordinal="3" />
+              <xsd:attribute name="mimetype" type="xsd:string" msdata:Ordinal="4" />
+              <xsd:attribute ref="xml:space" />
+            </xsd:complexType>
+          </xsd:element>
+          <xsd:element name="resheader">
+            <xsd:complexType>
+              <xsd:sequence>
+                <xsd:element name="value" type="xsd:string" minOccurs="0" msdata:Ordinal="1" />
+              </xsd:sequence>
+              <xsd:attribute name="name" type="xsd:string" use="required" />
+            </xsd:complexType>
+          </xsd:element>
+        </xsd:choice>
+      </xsd:complexType>
+    </xsd:element>
+  </xsd:schema>
+  <resheader name="resmimetype">
+    <value>text/microsoft-resx</value>
+  </resheader>
+  <resheader name="version">
+    <value>2.0</value>
+  </resheader>
+  <resheader name="reader">
+    <value>System.Resources.ResXResourceReader, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <resheader name="writer">
+    <value>System.Resources.ResXResourceWriter, System.Windows.Forms, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089</value>
+  </resheader>
+  <data name="ArgumentNull_FlowShape_Inlet" xml:space="preserve">
+    <value>FlowShape expected non-null inlet</value>
+  </data>
+  <data name="ArgumentNull_FlowShape_Outlet" xml:space="preserve">
+    <value>FlowShape expected non-null outlet</value>
+  </data>
+  <data name="ArgumentNull_GraphStageLogic_OnPull" xml:space="preserve">
+    <value>GraphStageLogic onPull handler must be provided</value>
+  </data>
+  <data name="ArgumentNull_GraphStageLogic_OnPush" xml:space="preserve">
+    <value>GraphStageLogic onPush handler must be provided</value>
+  </data>
+  <data name="ArgumentNull_IActorRefFactoryIsNull" xml:space="preserve">
+    <value>IActorRefFactory must be defined</value>
+  </data>
+  <data name="ArgumentNull_KeyIsNull" xml:space="preserve">
+    <value>Key cannot be null</value>
+  </data>
+  <data name="ArgumentNull_NameAttrIsNull" xml:space="preserve">
+    <value>Name attribute cannot be empty</value>
+  </data>
+  <data name="ArgumentNull_OnErrorRequire" xml:space="preserve">
+    <value>OnError has no cause defined</value>
+  </data>
+  <data name="ArgumentNull_OnNextRequire" xml:space="preserve">
+    <value>OnNext requires provided element not to be null</value>
+  </data>
+  <data name="ArgumentNull_OnSubscribeRequire" xml:space="preserve">
+    <value>OnSubscribe requires subscription to be defined</value>
+  </data>
+  <data name="ArgumentNull_RequireActorImpl" xml:space="preserve">
+    <value>ActorSubscriberImpl requires actor impl to be defined</value>
+  </data>
+  <data name="ArgumentNull_RequiresIActorRef" xml:space="preserve">
+    <value>ActorPublisherImpl requires IActorRef to be defined</value>
+  </data>
+  <data name="ArgumentNull_RequiresIActorRef_PS" xml:space="preserve">
+    <value>ActorPublisherSubscription requires IActorRef to be defined</value>
+  </data>
+  <data name="ArgumentNull_SinkShape_Inlet" xml:space="preserve">
+    <value>SinkShape expected non-null inlet</value>
+  </data>
+  <data name="ArgumentNull_SubscriberIsNull" xml:space="preserve">
+    <value>Subscriber must not be null</value>
+  </data>
+  <data name="ArgumentNull_TimerKeyIsNull" xml:space="preserve">
+    <value>Timer key cannot be null</value>
+  </data>
+  <data name="Argument_BufferCount_PowerofTwo" xml:space="preserve">
+    <value>Buffer Count must be power of two</value>
+  </data>
+  <data name="Argument_InputPorts_NeedGreaterThanOne" xml:space="preserve">
+    <value>Interleave input ports count must be greater than 1</value>
+  </data>
+  <data name="Argument_MaximumBurst_GreaterThanZero" xml:space="preserve">
+    <value>Throttle maximumBurst must be &gt; 0 in Enforcing mode</value>
+  </data>
+  <data name="Argument_module_cannot_be_added_to_itself" xml:space="preserve">
+    <value>A module cannot be added to itself. You should pass a separate instance to compose().</value>
+  </data>
+  <data name="Argument_Offset_Count_Length" xml:space="preserve">
+    <value>offset + count must be smaller or equal to the array length</value>
+  </data>
+  <data name="Argument_Rates_NotSupported" xml:space="preserve">
+    <value>Rates larger than 1 unit / tick are not supported</value>
+  </data>
+  <data name="Argument_SegmentSize_NeedGreaterThanZero" xml:space="preserve">
+    <value>Interleave segment size must be greater than 0</value>
+  </data>
+  <data name="Argument_submodule_cannot_be_added_again" xml:space="preserve">
+    <value>An existing submodule cannot be added again. All contained modules must be unique.</value>
+  </data>
+  <data name="Argument_ThrottlePer_NonZero" xml:space="preserve">
+    <value>Throttle per timeout must not be zero</value>
+  </data>
+  <data name="Argument_Timeout_NeedNonZero" xml:space="preserve">
+    <value>Timeout must be non-zero</value>
+  </data>
+  <data name="IllegalState_Pump_CompletedPhaseNeverExec" xml:space="preserve">
+    <value>The action of completed phase must never be executed</value>
+  </data>
+  <data name="IllegalState_Pump_NonInitialized" xml:space="preserve">
+    <value>Pump has not been initialized with a phase</value>
+  </data>
+  <data name="Argument_Increase_step_non_positive" xml:space="preserve">
+    <value>Increase step must be positive</value>
+  </data>
+  <data name="Argument_Maxdelay_less_than_initial" xml:space="preserve">
+    <value>Max delay must be bigger than initial delay</value>
+  </data>
+  <data name="Argument_Framing_FieldLength" xml:space="preserve">
+    <value>Length field length must be 1,2,3 or 4</value>
+  </data>
+  <data name="Argument_Merge_must_have_input_ports" xml:space="preserve">
+    <value>A Merge must have one or more input ports</value>
+  </data>
+  <data name="Argument_MergePreferred_least_one" xml:space="preserve">
+    <value>A MergePreferred must have at least one secondary port</value>
+  </data>
+  <data name="Argument_Broadcast_must_have_outputports" xml:space="preserve">
+    <value>A Broadcast must have one or more output ports</value>
+  </data>
+  <data name="Argument_Priorities_be_positive_int" xml:space="preserve">
+    <value>Priorities should be positive integers</value>
+  </data>
+  <data name="Argument_Balance_must_have_outputports" xml:space="preserve">
+    <value>A Balance must have one or more output ports</value>
+  </data>
+  <data name="Argument_Concat_must_have_inputports" xml:space="preserve">
+    <value>A Concat must have more than 1 input port</value>
+  </data>
+  <data name="Argument_Nomore_inlets_free_jun" xml:space="preserve">
+    <value>No more inlets free on junction</value>
+  </data>
+  <data name="Argument_Nomore_inlets_jun" xml:space="preserve">
+    <value>No more inlets on junction</value>
+  </data>
+  <data name="Argument_Nomore_outlets_jun" xml:space="preserve">
+    <value>No more outlets on junction</value>
+  </data>
+  <data name="Argument_Hub_buffer_4095" xml:space="preserve">
+    <value>Buffer size larger then 4095 is not allowed</value>
+  </data>
+  <data name="Argument_Hub_buffer_positive" xml:space="preserve">
+    <value>Buffer size must be positive</value>
+  </data>
+  <data name="Argument_Hub_buffer_power_two" xml:space="preserve">
+    <value>Buffer size must be a power of two</value>
+  </data>
+  <data name="Argument_Sample_Max_step" xml:space="preserve">
+    <value>Max step for a random sampling must &gt; 0</value>
+  </data>
+  <data name="Argument_Actor_must_be_publisher" xml:space="preserve">
+    <value>Actor must be ActorPublisher</value>
+  </data>
+  <data name="Argument_Buffer_must_be_g_t_zero" xml:space="preserve">
+    <value>Buffer must be greater than zero</value>
+  </data>
+  <data name="Argument_Buffersize_zero" xml:space="preserve">
+    <value>Buffer size cannot be zero</value>
+  </data>
+  <data name="Argument_Subscription_IsNull" xml:space="preserve">
+    <value>Subscription cannot be null</value>
+  </data>
+  <data name="Argument_EMC_with_empty_stack" xml:space="preserve">
+    <value>ExitMaterializationContext with empty stack</value>
+  </data>
+  <data name="Argument_FanOut_IdToEn" xml:space="preserve">
+    <value>Tried to enqueue without waiting for any demand</value>
+  </data>
+  <data name="Argument_GraphAssembly_IO" xml:space="preserve">
+    <value>'inlets' and 'inletOwners' must have the same length.</value>
+  </data>
+  <data name="Argument_GraphAssembly_O" xml:space="preserve">
+    <value>'inletOwners' and 'outlets' must have the same length.</value>
+  </data>
+  <data name="Argument_GraphAssembly_OO" xml:space="preserve">
+    <value>'outlets' and 'outletOwners' must have the same length.</value>
+  </data>
+  <data name="Argument_PMS_without_context" xml:space="preserve">
+    <value>PushMaterializationSource without context</value>
+  </data>
+  <data name="Argument_ReplaceShape_CombinedModule" xml:space="preserve">
+    <value>CombinedModule requires shape with same ports to replace</value>
+  </data>
+  <data name="Argument_ReplaceShape_CopiedModule" xml:space="preserve">
+    <value>CopiedModule requires shape with same ports to replace</value>
+  </data>
+  <data name="Argument_ReplaceShape_FusedModule" xml:space="preserve">
+    <value>FusedModule requires shape with the same ports as existing one</value>
+  </data>
+  <data name="Argument_ReplaceShape_StructuralInfoModule" xml:space="preserve">
+    <value>StructuralInfoModule requires shape with same ports to replace</value>
+  </data>
+  <data name="Argument_retries_non_negative" xml:space="preserve">
+    <value>number of retries must be non-negative or equal to -1</value>
+  </data>
+  <data name="Argument_RMRRB_initialSize" xml:space="preserve">
+    <value>initialSize must be a power of 2 that is &gt; 0 and &lt;= maxSize</value>
+  </data>
+  <data name="Argument_RMRRB_maxSize" xml:space="preserve">
+    <value>maxSize must be a power of 2 that is &gt; 0 and &lt; Int.MaxValue/2</value>
+  </data>
+  <data name="Argument_empty_iterator" xml:space="preserve">
+    <value>empty iterator</value>
+  </data>
+  <data name="Argument_GraphStage_Grab" xml:space="preserve">
+    <value>Cannot get element from already empty input port</value>
+  </data>
+  <data name="Argument_GraphStage_PullC" xml:space="preserve">
+    <value>Cannot pull a closed port</value>
+  </data>
+  <data name="Argument_GraphStage_ReadMany" xml:space="preserve">
+    <value>Cannot read negative number of elements</value>
+  </data>
+  <data name="Argument_GraphStage_Twice" xml:space="preserve">
+    <value>Cannot pull port twice</value>
+  </data>
+  <data name="Argument_Inletname_IsNull" xml:space="preserve">
+    <value>Inlet name must be defined</value>
+  </data>
+  <data name="Argument_subscription_timeout" xml:space="preserve">
+    <value>akka.stream.materializer.subscribtion-timeout.mode was not defined or has invalid value. Valid values are: no, off, false, noop, warn, cancel</value>
+  </data>
+  <data name="IllegalState_OnComplete_AfterE" xml:space="preserve">
+    <value>OnComplete must not be called after OnError</value>
+  </data>
+  <data name="IllegalState_OnComplete_Once" xml:space="preserve">
+    <value>OnComplete must only be called once</value>
+  </data>
+  <data name="IllegalState_OnError_AfterC" xml:space="preserve">
+    <value>OnError must not be called after OnComplete</value>
+  </data>
+  <data name="IllegalState_OnError_Once" xml:space="preserve">
+    <value>OnError must only be called once</value>
+  </data>
+  <data name="IllegalState_OnNext_AfterC" xml:space="preserve">
+    <value>OnNext must not be called after OnComplete</value>
+  </data>
+  <data name="IllegalState_OnNext_AfterE" xml:space="preserve">
+    <value>OnNext must not be called after OnError</value>
+  </data>
+  <data name="IllegalState_OnNext_NotAllowed" xml:space="preserve">
+    <value>OnNext is not allowed when the stream has not requested elements, total demand was 0</value>
+  </data>
+  <data name="IllegalState_Actor_Cannot_Restart" xml:space="preserve">
+    <value>This actor cannot be restarted</value>
+  </data>
+  <data name="IllegalState_AlIn_emitting_state" xml:space="preserve">
+    <value>Already in emitting state</value>
+  </data>
+  <data name="IllegalState_Al_emitting_state" xml:space="preserve">
+    <value>Already emitting a state</value>
+  </data>
+  <data name="IllegalState_Descend_EmptyResult" xml:space="preserve">
+    <value>Descend returned empty result from CopiedModule</value>
+  </data>
+  <data name="IllegalState_Inputbuffer_Overrun" xml:space="preserve">
+    <value>Input buffer overrun</value>
+  </data>
+  <data name="IllegalState_OnPull_empty_enumerator" xml:space="preserve">
+    <value>OnPull with empty enumerator is not expected in emitting state</value>
+  </data>
+  <data name="IllegalState_OnPush_not_allowed" xml:space="preserve">
+    <value>OnPush is not allowed in emitting state</value>
+  </data>
+  <data name="IllegalState_queue_never_null" xml:space="preserve">
+    <value>Internal queue must never contain a null</value>
+  </data>
+  <data name="IllegalState_signal_err_spec" xml:space="preserve">
+    <value>It's illegal to try to signal OnError with a spec violation</value>
+  </data>
+  <data name="SignalThrew_from_cancel" xml:space="preserve">
+    <value>It is illegal to throw exceptions from cancel(), rule 3.15</value>
+  </data>
+  <data name="SignalThrew_from_request" xml:space="preserve">
+    <value>It is illegal to throw exceptions from request(), rule 3.16</value>
+  </data>
+  <data name="IllegalState_init_mus_first" xml:space="preserve">
+    <value>message 'Initialized' must come first</value>
+  </data>
+  <data name="IllegalState_Substream_Source" xml:space="preserve">
+    <value>Substream Source cannot be materialized more than once</value>
+  </data>
+  <data name="IllegalState_uninitialized_substream" xml:space="preserve">
+    <value>cannot push to uninitialized substream</value>
+  </data>
+  <data name="IllegalState_call_materialize" xml:space="preserve">
+    <value>Attempted to call Materialize() after the ActorMaterializer has been shut down.</value>
+  </data>
+  <data name="IllegalState_Call_NotReached" xml:space="preserve">
+    <value>Called Apply on NotReached</value>
+  </data>
+  <data name="IllegalState_first_msg_init" xml:space="preserve">
+    <value>First message must be Initialized notification</value>
+  </data>
+  <data name="IllegalState_incoming_conn" xml:space="preserve">
+    <value>Cannot materialize an incoming connection Flow twice.</value>
+  </data>
+  <data name="IllegalState_internal_err" xml:space="preserve">
+    <value>internal error</value>
+  </data>
+  <data name="IllegalState_Not_yet_init" xml:space="preserve">
+    <value>Not yet initialized: only SetHandler is allowed in GraphStageLogic constructor</value>
+  </data>
+  <data name="IllegalState_Output_buf_overflow" xml:space="preserve">
+    <value>Output buffer overflow</value>
+  </data>
+  <data name="IllegalState_PushToDownStream_A" xml:space="preserve">
+    <value>PushToDownStream(...) after CompleteDownstream() or AbortDownstream(...)</value>
+  </data>
+  <data name="IllegalState_sub_called_after_err" xml:space="preserve">
+    <value>OnSubscribe called after OnError or OnComplete</value>
+  </data>
+  <data name="IllegalState_Sub_throw_ex" xml:space="preserve">
+    <value>Subscriber threw exception, this is in violation of rule 2:13</value>
+  </data>
+  <data name="IllegalState_tried_dequeue" xml:space="preserve">
+    <value>Tried to dequeue without waiting for any input</value>
+  </data>
+  <data name="NotSupported_Backpressure_strategy" xml:space="preserve">
+    <value>Backpressure overflow strategy is not supported</value>
+  </data>
+  <data name="NotSupported_EmptyModule" xml:space="preserve">
+    <value>EmptyModule cannot carry attributes</value>
+  </data>
+  <data name="NotSupported_invalid_CMV" xml:space="preserve">
+    <value>It is invalid to combine materialized value with EmptyModule except with Keep.Left or Keep.Right</value>
+  </data>
+  <data name="NotSupported_IO_operation" xml:space="preserve">
+    <value>IO operation was successful.</value>
+  </data>
+  <data name="NotSupported_IteratorInterpreter" xml:space="preserve">
+    <value>IteratorInterpreter does not support asynchronous events.</value>
+  </data>
+  <data name="NotSupported_NoMaterializer_event" xml:space="preserve">
+    <value>NoMaterializer cannot schedule a single event</value>
+  </data>
+  <data name="NotSupported_NoMaterializer_excontext" xml:space="preserve">
+    <value>NoMaterializer doesn't provide an ExecutionContext</value>
+  </data>
+  <data name="NotSupported_NoMaterializer_materialize" xml:space="preserve">
+    <value>NoMaterializer cannot materialize</value>
+  </data>
+  <data name="NotSupported_NoMaterializer_named" xml:space="preserve">
+    <value>NoMaterializer cannot be named</value>
+  </data>
+  <data name="NotSupported_NoMaterializer_repeatedevent" xml:space="preserve">
+    <value>NoMaterializer cannot schedule a repeated event</value>
+  </data>
+  <data name="NotSupported_OS_Backpressure" xml:space="preserve">
+    <value>OverflowStrategy.Backpressure is not supported</value>
+  </data>
+  <data name="NotSupported_replace_EmptyM" xml:space="preserve">
+    <value>Cannot replace the shape of empty module</value>
+  </data>
+  <data name="NotSupported_replace_shapeOfFM" xml:space="preserve">
+    <value>Cannot replace the shape of a FlowModule</value>
+  </data>
+  <data name="NotSupported_replace_shapeOfSink" xml:space="preserve">
+    <value>cannot replace the shape of a Sink, you need to wrap it in a Graph for that</value>
+  </data>
+  <data name="NotSupported_replace_shapeOfSrc" xml:space="preserve">
+    <value>cannot replace the shape of a Source, you need to wrap it in a Graph for that</value>
+  </data>
+  <data name="NotSupported_Stream_Only_R" xml:space="preserve">
+    <value>This stream can only read</value>
+  </data>
+  <data name="NotSupported_Stream_Only_W" xml:space="preserve">
+    <value>This stream can only write</value>
+  </data>
+  <data name="InvalidOperation_Chunk_be_pulled" xml:space="preserve">
+    <value>Chunk must be pulled from shared buffer</value>
+  </data>
+  <data name="InvalidOperation_empty_module_cannot_be_mat" xml:space="preserve">
+    <value>An empty module cannot be materialized (EmptyModule was given)</value>
+  </data>
+  <data name="InvalidOperation_SinkFirst_empty_stream" xml:space="preserve">
+    <value>Sink.First materialized on an empty stream</value>
+  </data>
+  <data name="InvalidOperation_Something_wrong" xml:space="preserve">
+    <value>Something went terribly wrong!</value>
+  </data>
+  <data name="InvalidOperation_top_level_module" xml:space="preserve">
+    <value>The top level module cannot be materialized because it has unconnected ports</value>
+  </data>
+  <data name="NotSupported_AbsorbTermination" xml:space="preserve">
+    <value>It is not allowed to call AbsorbTermination() from OnDownstreamFinish.</value>
+  </data>
+</root>

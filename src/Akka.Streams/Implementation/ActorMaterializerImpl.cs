@@ -74,22 +74,22 @@ namespace Akka.Streams.Implementation
         [InternalApi]
         protected IActorRef ActorOf(Props props, string name, string dispatcher)
         {
-            if (Supervisor is LocalActorRef localActorRef)
-                return ((ActorCell)localActorRef.Underlying).AttachChild(props.WithDispatcher(dispatcher),
-                    isSystemService: false, name: name);
-
-
-            if (Supervisor is RepointableActorRef repointableActorRef)
+            switch (Supervisor)
             {
-                if (repointableActorRef.IsStarted)
-                    return ((ActorCell)repointableActorRef.Underlying).AttachChild(props.WithDispatcher(dispatcher), isSystemService: false, name: name);
+                case LocalActorRef localActorRef:
+                    return ((ActorCell)localActorRef.Underlying).AttachChild(props.WithDispatcher(dispatcher),
+                        isSystemService: false, name: name);
 
-                var timeout = repointableActorRef.Underlying.System.Settings.CreationTimeout;
-                var f = repointableActorRef.Ask<IActorRef>(new StreamSupervisor.Materialize(props.WithDispatcher(dispatcher), name), timeout);
-                return f.Result;
+                case RepointableActorRef repointableActorRef:
+                    if (repointableActorRef.IsStarted)
+                        return ((ActorCell)repointableActorRef.Underlying).AttachChild(props.WithDispatcher(dispatcher), isSystemService: false, name: name);
+
+                    var timeout = repointableActorRef.Underlying.System.Settings.CreationTimeout;
+                    var f = repointableActorRef.Ask<IActorRef>(new StreamSupervisor.Materialize(props.WithDispatcher(dispatcher), name), timeout);
+                    return f.Result;
             }
 
-            throw new IllegalStateException($"Stream supervisor must be a local actor, was [{Supervisor.GetType()}]");
+            return ThrowHelper.ThrowIllegalStateException_ActorOf(Supervisor);
         }
     }
 
@@ -373,8 +373,7 @@ namespace Akka.Streams.Implementation
                 ? Fusing.Fusing.Aggressive(runnable)
                 : runnable;
 
-            if (_haveShutDown.Value)
-                throw new IllegalStateException("Attempted to call Materialize() after the ActorMaterializer has been shut down.");
+            if (_haveShutDown.Value) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_materialize);
 
             //if (StreamLayout.IsDebug)
             //    StreamLayout.Validate(runnableGraph.Module);

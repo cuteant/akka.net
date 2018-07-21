@@ -617,8 +617,7 @@ namespace Akka.Actor
             {
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
-                if (obj.GetType() != GetType()) return false;
-                return Equals((State<TS, TD>)obj);
+                return obj is State<TS, TD> state && Equals(state);
             }
 
             /// <inheritdoc/>

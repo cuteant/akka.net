@@ -431,8 +431,7 @@ namespace Akka.Streams.Dsl
         /// </exception>
         public MergeHub(int perProducerBufferSize)
         {
-            if (perProducerBufferSize <= 0)
-                throw new ArgumentException("Buffer size must be positive", nameof(perProducerBufferSize));
+            if (perProducerBufferSize <= 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Hub_buffer_positive, ExceptionArgument.perProducerBufferSize);
 
             _perProducerBufferSize = perProducerBufferSize;
             DemandThreshold = perProducerBufferSize / 2 + perProducerBufferSize % 2;
@@ -1130,12 +1129,9 @@ namespace Akka.Streams.Dsl
         /// </exception>
         public BroadcastHub(int bufferSize)
         {
-            if (bufferSize <= 0)
-                throw new ArgumentException("Buffer must be positive", nameof(bufferSize));
-            if (bufferSize > 4095)
-                throw new ArgumentException("Buffer size larger then 4095 is not allowed", nameof(bufferSize));
-            if ((bufferSize & bufferSize - 1) != 0)
-                throw new ArgumentException("Buffer size must be a power of two", nameof(bufferSize));
+            if (bufferSize <= 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Hub_buffer_positive, ExceptionArgument.bufferSize);
+            if (bufferSize > 4095) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Hub_buffer_4095, ExceptionArgument.bufferSize);
+            if ((bufferSize & bufferSize - 1) != 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Hub_buffer_power_two, ExceptionArgument.bufferSize);
 
             _bufferSize = bufferSize;
             _mask = _bufferSize - 1;
@@ -1347,18 +1343,20 @@ namespace Akka.Streams.Dsl
 
             public int Size(long id)
             {
-                if (_queues.TryGetValue(id, out var queue))
-                    return queue.Size;
-
-                throw new ArgumentException($"Invalid stream identifier: {id}", nameof(id));
+                if (!_queues.TryGetValue(id, out var queue))
+                {
+                    ThrowHelper.ThrowArgumentException_InvalidStreamId(id);
+                }
+                return queue.Size;
             }
 
             public bool IsEmpty(long id)
             {
-                if (_queues.TryGetValue(id, out var queue))
-                    return queue.IsEmpty;
-
-                throw new ArgumentException($"Invalid stream identifier: {id}", nameof(id));
+                if (!_queues.TryGetValue(id, out var queue))
+                {
+                    ThrowHelper.ThrowArgumentException_InvalidStreamId(id);
+                }
+                return queue.IsEmpty;
             }
 
             public bool NonEmpty(long id) => !IsEmpty(id);
@@ -1373,7 +1371,9 @@ namespace Akka.Streams.Dsl
                         Offer(id, element);
                 }
                 else
-                    throw new ArgumentException($"Invalid stream identifier: {id}", nameof(id));
+                {
+                    ThrowHelper.ThrowArgumentException_InvalidStreamId(id);
+                }
             }
 
             public object Poll(long id)

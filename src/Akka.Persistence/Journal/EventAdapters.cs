@@ -180,9 +180,6 @@ namespace Akka.Persistence.Journal
     [Serializable]
     public sealed class CombinedReadEventAdapter : IEventAdapter, IObjectReferences
     {
-        private static readonly Exception OnlyReadSideException = new IllegalStateException(
-                "CombinedReadEventAdapter must not be used when writing (creating manifests) events!");
-
         /// <summary>
         /// TBD
         /// </summary>
@@ -205,7 +202,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public string Manifest(object evt)
         {
-            throw OnlyReadSideException;
+            return ThrowHelper.ThrowIllegalStateException_OnlyReadSide<string>();
         }
 
         /// <summary>
@@ -216,7 +213,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public object ToJournal(object evt)
         {
-            throw OnlyReadSideException;
+            return ThrowHelper.ThrowIllegalStateException_OnlyReadSide<object>();
         }
 
         /// <summary>
@@ -287,8 +284,18 @@ namespace Akka.Persistence.Journal
                 foreach (var boundAdapter in kv.Value)
                 {
                     if (!adapterNames.Contains(boundAdapter))
-                        throw new ArgumentException(string.Format("{0} was bound to undefined event-adapter: {1} (bindings: [{2}], known adapters: [{3}])",
-                            kv.Key, boundAdapter, string.Join(", ", kv.Value), string.Join(", ", adapters.Keys)));
+                    {
+                        ThrowArgumentException();
+                        void ThrowArgumentException()
+                        {
+                            throw GetArgumentException();
+                        }
+                        ArgumentException GetArgumentException()
+                        {
+                            return new ArgumentException(string.Format("{0} was bound to undefined event-adapter: {1} (bindings: [{2}], known adapters: [{3}])",
+                                kv.Key, boundAdapter, string.Join(", ", kv.Value), string.Join(", ", adapters.Keys)));
+                        }
+                    }
                 }
             }
 
@@ -386,20 +393,28 @@ namespace Akka.Persistence.Journal
         {
             var type = TypeUtils.ResolveType(qualifiedName);//, true);
             if (typeof(IEventAdapter).IsAssignableFrom(type))
+            {
                 return Instantiate<IEventAdapter>(qualifiedName, system);
+            }
             if (typeof (IWriteEventAdapter).IsAssignableFrom(type))
+            {
                 return new NoopReadEventAdapter(Instantiate<IWriteEventAdapter>(qualifiedName, system));
+            }
             if (typeof (IReadEventAdapter).IsAssignableFrom(type))
+            {
                 return new NoopWriteEventAdapter(Instantiate<IReadEventAdapter>(qualifiedName, system));
-            throw new ArgumentException("Configured " + qualifiedName + " does not implement any EventAdapter interface!");
+            }
+
+            return ThrowHelper.ThrowArgumentException_qualifiedName(qualifiedName);
         }
 
         private static T Instantiate<T>(string qualifiedName, ExtendedActorSystem system)
         {
             var type = TypeUtils.ResolveType(qualifiedName);
             if (!typeof(T).IsAssignableFrom(type))
-                throw new ArgumentException(string.Format("Couldn't create instance of [{0}] from provided qualified type name [{1}], because it's not assignable from it",
-                    typeof(T), qualifiedName));
+            {
+                ThrowHelper.ThrowArgumentException_qualifiedName<T>(qualifiedName);
+            }
 
             try
             {

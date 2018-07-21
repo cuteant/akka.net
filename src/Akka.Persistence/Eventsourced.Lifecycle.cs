@@ -42,8 +42,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public override void AroundPreStart()
         {
-            if (PersistenceId == null)
-                throw new ArgumentNullException($"PersistenceId is [null] for PersistentActor [{Self.Path}]");
+            if (PersistenceId == null) ThrowHelper.ThrowArgumentNullException_Eventsourced(Self);
 
             // Fail fast on missing plugins.
             var j = Journal;

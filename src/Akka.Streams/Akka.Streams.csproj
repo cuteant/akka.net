@@ -40,6 +40,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>GraphApply.tt</DependentUpon>
     </Compile>
+    <Compile Update="Internal\Strings.Designer.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
     <None Update="CodeGen\Dsl\UnzipWith.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>UnzipWith.cs</LastGenOutput>
@@ -76,5 +81,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>FanOutShape.tt</DependentUpon>
     </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <EmbeddedResource Update="Internal\Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
   </ItemGroup>
 </Project>

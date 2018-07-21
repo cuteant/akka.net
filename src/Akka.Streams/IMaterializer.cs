@@ -110,7 +110,8 @@ namespace Akka.Streams
         /// <returns>N/A</returns>
         public IMaterializer WithNamePrefix(string name)
         {
-            throw new NotSupportedException("NoMaterializer cannot be named");
+            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_NoMaterializer_named);
+            return null;
         }
 
         /// <summary>
@@ -124,7 +125,8 @@ namespace Akka.Streams
         /// <returns>N/A</returns>
         public TMat Materialize<TMat>(IGraph<ClosedShape, TMat> runnable)
         {
-            throw new NotSupportedException("NoMaterializer cannot materialize");
+            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_NoMaterializer_materialize);
+            return default;
         }
 
 
@@ -140,7 +142,8 @@ namespace Akka.Streams
         /// <returns>N/A</returns>
         public TMat Materialize<TMat>(IGraph<ClosedShape, TMat> runnable, Attributes initialAttributes)
         {
-            throw new NotSupportedException("NoMaterializer cannot materialize");
+            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_NoMaterializer_materialize);
+            return default;
         }
 
         /// <summary>
@@ -154,7 +157,8 @@ namespace Akka.Streams
         /// <returns>N/A</returns>
         public ICancelable ScheduleOnce(TimeSpan delay, Action action)
         {
-            throw new NotSupportedException("NoMaterializer cannot schedule a single event");
+            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_NoMaterializer_event);
+            return default;
         }
 
         /// <summary>
@@ -169,7 +173,8 @@ namespace Akka.Streams
         /// <returns>N/A</returns>
         public ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action)
         {
-            throw new NotSupportedException("NoMaterializer cannot schedule a repeated event");
+            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_NoMaterializer_repeatedevent);
+            return null;
         }
 
         /// <summary>
@@ -180,7 +185,7 @@ namespace Akka.Streams
         /// </exception>
         public MessageDispatcher ExecutionContext
         {
-            get { throw new NotSupportedException("NoMaterializer doesn't provide an ExecutionContext"); }
+            get { return ThrowHelper.ThrowNotSupportedException<MessageDispatcher>(ExceptionResource.NotSupported_NoMaterializer_excontext); }
         }
     }
 

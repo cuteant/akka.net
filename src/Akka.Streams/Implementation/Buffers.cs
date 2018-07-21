@@ -139,8 +139,7 @@ namespace Akka.Streams.Implementation
         [InternalApi]
         public static FixedSizeBuffer<T> Create<T>(int size)
         {
-            if (size < 1)
-                throw new ArgumentException("buffer size must be positive");
+            if (size < 1) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Hub_buffer_positive);
             if (((size - 1) & size) == 0)
                 return new PowerOfTwoFixedSizeBuffer<T>(size);
             return new ModuloFixedSizeBuffer<T>(size);

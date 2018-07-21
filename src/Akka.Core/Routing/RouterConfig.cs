@@ -369,8 +369,7 @@ namespace Akka.Routing
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((Pool)obj);
+            return obj is Pool pool && Equals(pool);
         }
 
         /// <inheritdoc/>

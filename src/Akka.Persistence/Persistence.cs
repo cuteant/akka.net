@@ -78,7 +78,7 @@ namespace Akka.Persistence
             _defaultJournalPluginId = new Lazy<string>(() =>
             {
                 var configPath = _config.GetString("journal.plugin");
-                if (string.IsNullOrEmpty(configPath)) throw new NullReferenceException("Default journal plugin is not configured");
+                if (string.IsNullOrEmpty(configPath)) ThrowHelper.ThrowNullReferenceException();
                 return configPath;
             }, LazyThreadSafetyMode.ExecutionAndPublication);
 
@@ -213,8 +213,7 @@ namespace Akka.Persistence
         {
             var extension = _pluginExtensionIds.Values
                 .FirstOrDefault(e => e.Value.Ref.Equals(journalPluginActor));
-            if (extension == null)
-                throw new ArgumentException($"Unknown plugin actor {journalPluginActor}");
+            if (extension == null) ThrowHelper.ThrowArgumentException_UnknownPluginActor(journalPluginActor);
 
             return extension.Value.Config;
         }
@@ -271,7 +270,9 @@ namespace Akka.Persistence
             var pluginActorName = configPath;
             var pluginTypeName = pluginConfig.GetString("class");
             if (string.IsNullOrEmpty(pluginTypeName))
-                throw new ArgumentException($"Plugin class name must be defined in config property [{configPath}.class]");
+            {
+                ThrowHelper.ThrowArgumentException_PluginTypeIsNull(configPath);
+            }
             var pluginType = TypeUtils.ResolveType(pluginTypeName);//, true);
             var pluginDispatcherId = pluginConfig.GetString("plugin-dispatcher");
             object[] pluginActorArgs = pluginType.GetConstructor(new[] { typeof(Config) }) != null ? new object[] { pluginConfig } : null;
@@ -290,7 +291,7 @@ namespace Akka.Persistence
         {
             if (string.IsNullOrEmpty(configPath) || !system.Settings.Config.HasPath(configPath))
             {
-                throw new ArgumentException($"Persistence config is missing plugin config path for: {configPath}");
+                ThrowHelper.ThrowArgumentException_MissingPlugin(configPath);
             }
 
             var config = system.Settings.Config.GetConfig(configPath).WithFallback(system.Settings.Config.GetConfig(fallbackPath));

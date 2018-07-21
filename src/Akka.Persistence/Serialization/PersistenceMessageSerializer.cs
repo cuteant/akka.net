@@ -51,7 +51,7 @@ namespace Akka.Persistence.Serialization
                     {
                         return MessagePackSerializer.Serialize(GetPersistentFSMSnapshot(obj), s_defaultResolver);
                     }
-                    throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{GetType()}]");
+                    return ThrowHelper.ThrowArgumentException_MessageSerializer(obj);
             }
         }
 
@@ -155,7 +155,7 @@ namespace Akka.Persistence.Serialization
                 return GetPersistentFSMSnapshot(type, bytes);
             }
 
-            throw new SerializationException($"Unimplemented deserialization of message with type [{type}] in [{GetType()}]");
+            return ThrowHelper.ThrowSerializationException(type);
         }
 
         private static IPersistentRepresentation GetPersistentRepresentation(PersistenceMessageSerializer serializer, PersistentMessage message)

@@ -1,10 +1,10 @@
-﻿//-----------------------------------------------------------------------
+﻿// --- auto generated: 2018/7/21 18:17:48 --- //
+//-----------------------------------------------------------------------
 // <copyright file="FanInShape.cs" company="Akka.NET Project">
-//     Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
-//     Copyright (C) 2013-2018 .NET Foundation <https://github.com/akkadotnet/akka.net>
+//     Copyright (C) 2015-2016 Lightbend Inc. <http://www.lightbend.com>
+//     Copyright (C) 2013-2016 Akka.NET project <https://github.com/akkadotnet/akka.net>
 // </copyright>
 //-----------------------------------------------------------------------
-
 using System;
 using System.Linq;
 using System.Collections.Immutable;
@@ -74,7 +74,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public Inlet<T1> In(int n)
         {
-            if (n <= 0) throw new ArgumentException("n must be > 0", nameof(n));
+            if (n <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.n);
             return In1s[n-1];
         }
         

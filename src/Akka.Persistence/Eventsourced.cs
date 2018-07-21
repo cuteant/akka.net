@@ -311,7 +311,7 @@ namespace Akka.Persistence
         {
             if (IsRecovering)
             {
-                throw new InvalidOperationException("Cannot persist during replay. Events can be persisted when receiving RecoveryCompleted or later.");
+                ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
             _pendingStashingPersistInvocations++;
@@ -332,7 +332,7 @@ namespace Akka.Persistence
         {
             if (IsRecovering)
             {
-                throw new InvalidOperationException("Cannot persist during replay. Events can be persisted when receiving RecoveryCompleted or later.");
+                ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
             if (events == null) return;
@@ -383,7 +383,7 @@ namespace Akka.Persistence
         {
             if (IsRecovering)
             {
-                throw new InvalidOperationException("Cannot persist during replay. Events can be persisted when receiving RecoveryCompleted or later.");
+                ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
             _pendingInvocations.AddToFront(new AsyncHandlerInvocation(@event, o => handler((TEvent)o))); // AddLast
@@ -403,7 +403,7 @@ namespace Akka.Persistence
         {
             if (IsRecovering)
             {
-                throw new InvalidOperationException("Cannot persist during replay. Events can be persisted when receiving RecoveryCompleted or later.");
+                ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
             void Inv(object o) => handler((TEvent)o);
@@ -443,7 +443,7 @@ namespace Akka.Persistence
         {
             if (IsRecovering)
             {
-                throw new InvalidOperationException("Cannot persist during replay. Events can be persisted when receiving RecoveryCompleted or later.");
+                ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
             if (_pendingInvocations.Count == 0)
@@ -534,8 +534,7 @@ namespace Akka.Persistence
         /// <param name="action">Async task to run</param>
         protected void RunTask(Func<Task> action)
         {
-            if (_asyncTaskRunning)
-                throw new NotSupportedException("RunTask calls cannot be nested");
+            if (_asyncTaskRunning) ThrowHelper.ThrowNotSupportedException_AsyncTaskRun();
             Task wrap()
             {
                 Task t = action();

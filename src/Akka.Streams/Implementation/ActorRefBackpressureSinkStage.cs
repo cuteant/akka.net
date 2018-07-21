@@ -179,8 +179,7 @@ namespace Akka.Streams.Implementation
         protected override GraphStageLogic CreateLogic(Attributes inheritedAttributes)
         {
             var maxBuffer = inheritedAttributes.GetAttribute(new Attributes.InputBuffer(16, 16)).Max;
-            if(maxBuffer <= 0)
-                throw new ArgumentException("Buffer size mst be greater than 0");
+            if (maxBuffer <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.maxBuffer);
 
             return new Logic(this, maxBuffer);
         }

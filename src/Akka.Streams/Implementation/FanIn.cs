@@ -278,10 +278,8 @@ namespace Akka.Streams.Implementation
             while (!(IsMarked(id) && IsPending(id)))
             {
                 id++;
-                if (id == _inputCount)
-                    id = 0;
-                if (id == _preferredId)
-                    throw new IllegalStateException("Tried to dequeue without waiting for any input");
+                if (id == _inputCount) id = 0;
+                if (id == _preferredId) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_tried_dequeue);
             }
 
             return id;
@@ -297,10 +295,8 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public object Dequeue(int id)
         {
-            if (IsDepleted(id))
-                throw new ArgumentException($"Can't dequeue from depleted {id}", nameof(id));
-            if (!IsPending(id))
-                throw new ArgumentException($"No pending input at {id}", nameof(id));
+            if (IsDepleted(id)) ThrowHelper.ThrowArgumentException_FanIn_Dequeue(id);
+            if (!IsPending(id)) ThrowHelper.ThrowArgumentException_FanIn_Pending(id);
 
             _lastDequeuedId = id;
             var input = _inputs[id];
@@ -619,6 +615,8 @@ namespace Akka.Streams.Implementation
 
         #endregion
 
+        private static readonly Action s_defaultAction= () => { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_NonInitialized); };
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -650,9 +648,9 @@ namespace Akka.Streams.Implementation
             InputCount = inputCount;
             PrimaryOutputs = new SimpleOutputs(Self, this);
             InputBunch = new AnonymousInputBunch(inputCount, settings.MaxInputBufferSize, this);
-            
+
             TransferState = NotInitialized.Instance;
-            CurrentAction = () => { throw new IllegalStateException("Pump has been not initialized with a phase"); };
+            CurrentAction = s_defaultAction;
         }
 
         #region Actor impl
@@ -697,7 +695,7 @@ namespace Akka.Streams.Implementation
         protected override void PostRestart(Exception reason)
         {
             base.PostRestart(reason);
-            throw new IllegalStateException("This actor cannot be restarted");
+            ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Actor_Cannot_Restart);
         }
 
         /// <summary>

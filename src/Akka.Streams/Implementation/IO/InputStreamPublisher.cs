@@ -34,8 +34,7 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         public static Props Props(Stream inputstream, TaskCompletionSource<IOResult> completionSource, int chunkSize)
         {
-            if (chunkSize <= 0)
-                throw new ArgumentException($"chunkSize must be > 0 was {chunkSize}", nameof(chunkSize));
+            if (chunkSize <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.chunkSize, chunkSize);
 
             return Actor.Props.Create(()=> new InputStreamPublisher(inputstream, completionSource, chunkSize)).WithDeploy(Deploy.Local);
         }

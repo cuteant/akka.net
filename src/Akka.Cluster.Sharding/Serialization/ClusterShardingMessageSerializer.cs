@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Akka.Actor;
 using Akka.Serialization;
+using CuteAnt;
 using CuteAnt.Text;
 using MessagePack;
 using ActorRefMessage = Akka.Remote.Serialization.Protocol.ActorRefData;
@@ -164,7 +165,7 @@ namespace Akka.Cluster.Sharding.Serialization
                 case Shard.EntityStopped o: return MessagePackSerializer.Serialize(EntityStoppedToProto(o), s_defaultResolver);
                 case ShardRegion.StartEntity o: return MessagePackSerializer.Serialize(StartEntityToProto(o), s_defaultResolver);
                 case ShardRegion.StartEntityAck o: return MessagePackSerializer.Serialize(StartEntityAckToProto(o), s_defaultResolver);
-                case Shard.GetShardStats o: return new byte[0];
+                case Shard.GetShardStats _: return EmptyArray<byte>.Instance;
                 case Shard.ShardStats o: return MessagePackSerializer.Serialize(ShardStatsToProto(o), s_defaultResolver);
             }
             throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{this.GetType()}]");

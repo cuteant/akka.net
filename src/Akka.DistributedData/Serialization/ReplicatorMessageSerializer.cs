@@ -185,7 +185,7 @@ namespace Akka.DistributedData.Serialization
                     return writeCache.GetOrAdd(write);
                 case Read read:
                     return readCache.GetOrAdd(read);
-                case WriteAck writeAck:
+                case WriteAck _:
                     return writeAckBytes;
                 default:
                     return Serialize(obj);

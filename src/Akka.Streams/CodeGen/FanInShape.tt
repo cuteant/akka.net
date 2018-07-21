@@ -81,7 +81,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public Inlet<T1> In(int n)
         {
-            if (n <= 0) throw new ArgumentException("n must be > 0", nameof(n));
+            if (n <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.n);
             return In1s[n-1];
         }
         

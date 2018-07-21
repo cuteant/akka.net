@@ -270,8 +270,7 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         protected override GraphStageLogic CreateLogic(Attributes inheritedAttributes)
         {
-            if (_hasBeenCreated.Value)
-                throw new IllegalStateException("Cannot materialize an incoming connection Flow twice.");
+            if (_hasBeenCreated.Value) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_incoming_conn);
             _hasBeenCreated.Value = true;
 
             return new TcpConnectionStage.TcpStreamLogic(Shape, new TcpConnectionStage.Inbound(_connection, _halfClose), _remoteAddress);

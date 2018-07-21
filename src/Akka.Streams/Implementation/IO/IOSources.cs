@@ -38,10 +38,8 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         public FileSource(FileInfo f, int chunkSize, long startPosition, Attributes attributes, SourceShape<ByteString> shape) : base(shape)
         {
-            if(chunkSize <= 0)
-                throw new ArgumentException($"chunkSize must be > 0 (was {chunkSize})", nameof(chunkSize));
-            if(startPosition < 0)
-                throw new ArgumentException($"startPosition must be >= 0 (was {startPosition})", nameof(startPosition));
+            if (chunkSize <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.chunkSize, chunkSize);
+            if (startPosition < 0) ThrowHelper.ThrowArgumentException_GreaterThanEqualZero(ExceptionArgument.startPosition, startPosition);
 
             _f = f;
             _chunkSize = chunkSize;

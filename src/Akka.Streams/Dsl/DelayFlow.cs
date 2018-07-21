@@ -67,11 +67,9 @@ namespace Akka.Streams.Dsl
         [ApiMayChange]
         public LinearIncreasingDelay(TimeSpan increaseStep, Func<T, bool> needsIncrease, TimeSpan initialDelay, TimeSpan maxDelay)
         {
-            if (increaseStep <= TimeSpan.Zero)
-                throw new ArgumentException("Increase step must be positive", nameof(increaseStep));
+            if (increaseStep <= TimeSpan.Zero) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Increase_step_non_positive, ExceptionArgument.increaseStep);
 
-            if (maxDelay <= initialDelay)
-                throw new ArgumentException("Max delay must be bigger than initial delay", nameof(maxDelay));
+            if (maxDelay <= initialDelay) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Maxdelay_less_than_initial, ExceptionArgument.maxDelay);
 
             _increaseStep = increaseStep;
             _needsIncrease = needsIncrease;

@@ -286,8 +286,7 @@ namespace Akka.Streams.Implementation.IO
         {
             // has to be in this order as module depends on shape
             var maxBuffer = inheritedAttributes.GetAttribute(new Attributes.InputBuffer(16, 16)).Max;
-            if (maxBuffer <= 0)
-                throw new ArgumentException("Buffer size must be greater than 0");
+            if (maxBuffer <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.maxBuffer);
 
             var dataQueue = new BlockingCollection<ByteString>(maxBuffer);
             var downstreamStatus = new AtomicReference<IDownstreamStatus>(Ok.Instance);
@@ -315,14 +314,14 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="origin">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
         /// <returns>TBD</returns>
-        public override long Seek(long offset, SeekOrigin origin) => throw new NotSupportedException("This stream can only write");
+        public override long Seek(long offset, SeekOrigin origin) => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_W);
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="value">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
-        public override void SetLength(long value) => throw new NotSupportedException("This stream can only write");
+        public override void SetLength(long value) => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_W);
 
         /// <summary>
         /// TBD
@@ -332,13 +331,13 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="count">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
         /// <returns>TBD</returns>
-        public override int Read(byte[] buffer, int offset, int count) => throw new NotSupportedException("This stream can only write");
+        public override int Read(byte[] buffer, int offset, int count) => ThrowHelper.ThrowNotSupportedException<int>(ExceptionResource.NotSupported_Stream_Only_W);
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <exception cref="NotSupportedException">TBD</exception>
-        public override long Length => throw new NotSupportedException("This stream can only write");
+        public override long Length => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_W);
 
         /// <summary>
         /// TBD
@@ -346,13 +345,11 @@ namespace Akka.Streams.Implementation.IO
         /// <exception cref="NotSupportedException">TBD</exception>
         public override long Position
         {
-            get => throw new NotSupportedException("This stream can only write");
-            set => throw new NotSupportedException("This stream can only write");
+            get => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_W);
+            set => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_W);
         }
 
         #endregion
-
-        private static readonly Exception PublisherClosedException = new IOException("Reactive stream is terminated, no writes are possible");
         
         private readonly BlockingCollection<ByteString> _dataQueue;
         private readonly AtomicReference<IDownstreamStatus> _downstreamStatus;
@@ -383,12 +380,18 @@ namespace Akka.Streams.Implementation.IO
             if (_isActive)
             {
                 if (_isPublisherAlive)
+                {
                     sendAction();
+                }
                 else
-                    throw PublisherClosedException;
+                {
+                    ThrowHelper.ThrowIOException_PublisherClosed();
+                }
             }
             else
-                throw new IOException("OutputStream is closed");
+            {
+                ThrowHelper.ThrowIOException_OSIsClosed();
+            }
         }
 
         private void SendData(ByteString data) => Send(() =>
@@ -398,7 +401,7 @@ namespace Akka.Streams.Implementation.IO
             if (_downstreamStatus.Value is Canceled)
             {
                 _isPublisherAlive = false;
-                throw PublisherClosedException;
+                ThrowHelper.ThrowIOException_PublisherClosed();
             }
         });
 
@@ -411,7 +414,7 @@ namespace Akka.Streams.Implementation.IO
             {
                 //Publisher considered to be terminated at earliest convenience to minimize messages sending back and forth
                 _isPublisherAlive = false;
-                throw PublisherClosedException;
+                ThrowHelper.ThrowIOException_PublisherClosed();
             }
         });
         

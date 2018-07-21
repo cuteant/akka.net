@@ -114,11 +114,14 @@ namespace Akka.Streams.Implementation
             _completedObject = false;
             var bufferSize = _buffer.Count;
             while (_pos != -1 && (_pos < bufferSize && _pos < _maximumObjectLength) && !_completedObject)
+            {
                 Proceed(_buffer[_pos]);
+            }
 
             if (_pos >= _maximumObjectLength)
-                throw new Framing.FramingException(
-                    $"JSON element exceeded maximumObjectLength ({_maximumObjectLength} bytes)!");
+            {
+                ThrowHelper.ThrowFramingException(_maximumObjectLength);
+            }
 
             return _completedObject;
         }
@@ -181,7 +184,7 @@ namespace Akka.Streams.Implementation
                     }
                     else
                     {
-                        throw new Framing.FramingException($"Invalid JSON encountered at position {_pos} of {_buffer}");
+                        ThrowHelper.ThrowFramingException(_pos, _buffer);
                     }
                     break;
             }

@@ -76,7 +76,7 @@ namespace Akka.Streams.Implementation
     {
         private readonly int _maxSizeBit;
         private object[] _array;
-        
+
         /// <summary>
         /// Two counters counting the number of elements ever written and read; wrap-around is
         /// handled by always looking at differences or masked values
@@ -84,7 +84,7 @@ namespace Akka.Streams.Implementation
         private int _writeIndex;
 
         private int _readIndex; // the "oldest" of all read cursor indices, i.e. the one that is most behind
-        
+
         /// <summary>
         /// Current array.length log2, we don't keep it as an extra field because <see cref="Int32Extensions.NumberOfTrailingZeros"/>
         /// is a JVM intrinsic compiling down to a `BSF` instruction on x86, which is very fast on modern CPUs
@@ -105,11 +105,15 @@ namespace Akka.Streams.Implementation
         {
             Cursors = cursors;
             if ((initialSize & (initialSize - 1)) != 0 || initialSize <= 0 || initialSize > maxSize)
-                throw new ArgumentException("initialSize must be a power of 2 that is > 0 and <= maxSize");
+            {
+                ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_RMRRB_initialSize);
+            }
 
-            
-            if ((maxSize & (maxSize - 1)) != 0 || maxSize <= 0 || maxSize > int.MaxValue / 2)
-                throw new ArgumentException("maxSize must be a power of 2 that is > 0 and < Int.MaxValue/2");
+            const int halfMaxValue = int.MaxValue / 2;
+            if ((maxSize & (maxSize - 1)) != 0 || maxSize <= 0 || maxSize > halfMaxValue)
+            {
+                ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_RMRRB_maxSize);
+            }
 
             _array = new object[initialSize];
             _maxSizeBit = maxSize.NumberOfTrailingZeros();
@@ -216,16 +220,12 @@ namespace Akka.Streams.Implementation
         public T Read(ICursor cursor)
         {
             var c = cursor.Cursor;
-            if (c - _writeIndex < 0)
-            {
-                cursor.Cursor += 1;
-                var ret = (T)_array[c & Mask];
-                if(c == _readIndex)
-                    UpdateReadIndex();
-                return ret;
-            }
+            if (c - _writeIndex >= 0) { ThrowHelper.ThrowNothingToReadException(); }
 
-            throw NothingToReadException.Instance;
+            cursor.Cursor += 1;
+            var ret = (T)_array[c & Mask];
+            if (c == _readIndex) { UpdateReadIndex(); }
+            return ret;
         }
 
         /// <summary>

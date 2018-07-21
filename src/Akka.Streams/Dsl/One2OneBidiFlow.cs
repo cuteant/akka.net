@@ -112,8 +112,7 @@ namespace Akka.Streams.Dsl
                 {
                     var element = Grab(_outInlet);
 
-                    if (_pending <= 0)
-                        throw new UnexpectedOutputException(element);
+                    if (_pending <= 0) ThrowHelper.ThrowUnexpectedOutputException(element);
 
                     _pending -= 1;
 
@@ -127,8 +126,7 @@ namespace Akka.Streams.Dsl
                     }
                 }, onUpstreamFinish: () =>
                 {
-                    if (_pending != 0)
-                        throw new OutputTruncationException();
+                    if (_pending != 0) ThrowHelper.ThrowOutputTruncationException();
 
                     Complete(_outOutlet);
                 });

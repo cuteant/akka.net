@@ -277,7 +277,8 @@ namespace Akka.Streams.Stage
         /// </exception>
         public void Become(StageState<TIn, TOut> state)
         {
-            _current = state ?? throw new ArgumentNullException(nameof(state));
+            if (null == state) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.state); }
+            _current = state;
         }
 
         /// <summary>
@@ -329,7 +330,7 @@ namespace Akka.Streams.Stage
         /// <returns>TBD</returns>
         public ISyncDirective Emit(IEnumerator<TOut> enumerator, IContext<TOut> context, StageState<TIn, TOut> nextState)
         {
-            if (_isEmitting) throw new IllegalStateException("Already in emitting state");
+            if (_isEmitting) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_AlIn_emitting_state);
             if (!enumerator.MoveNext())
             {
                 Become(nextState);
@@ -384,8 +385,7 @@ namespace Akka.Streams.Stage
         /// <returns>TBD</returns>
         public ISyncDirective EmitAndFinish(IEnumerator<TOut> enumerator, IContext<TOut> context)
         {
-            if(_isEmitting)
-                throw new IllegalStateException("Already emitting a state");
+            if (_isEmitting) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Al_emitting_state);
             if (!enumerator.MoveNext())
                 return context.Finish();
 
@@ -416,16 +416,16 @@ namespace Akka.Streams.Stage
                     {
                         _isEmitting = false;
 
-                        if (andThen is StatefulStage.Stay)
+                        switch (andThen)
                         {
-                        }
-                        else if (andThen is StatefulStage.Become<TIn, TOut> become)
-                        {
-                            Become(become.State);
-                        }
-                        else if (andThen is StatefulStage.Finish)
-                        {
-                            context.PushAndFinish(element);
+                            case StatefulStage.Stay _:
+                                break;
+                            case StatefulStage.Become<TIn, TOut> become:
+                                Become(become.State);
+                                break;
+                            case StatefulStage.Finish _:
+                                context.PushAndFinish(element);
+                                break;
                         }
 
                         return context.Push(element);
@@ -434,7 +434,7 @@ namespace Akka.Streams.Stage
                     return context.PushAndFinish(element);
                 }
 
-                throw new IllegalStateException("OnPull with empty enumerator is not expected in emitting state");
+                return ThrowHelper.ThrowIllegalStateException<ISyncDirective>(ExceptionResource.IllegalState_OnPull_empty_enumerator);
             });
         }
     }
@@ -485,7 +485,7 @@ namespace Akka.Streams.Stage
         /// <returns>TBD</returns>
         public override ISyncDirective OnPush(TIn element, IContext<TOut> context)
         {
-            throw new IllegalStateException("OnPush is not allowed in emitting state");
+            return ThrowHelper.ThrowIllegalStateException<ISyncDirective>(ExceptionResource.IllegalState_OnPush_not_allowed);
         }
 
         /// <summary>

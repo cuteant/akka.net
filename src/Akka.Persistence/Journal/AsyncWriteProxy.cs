@@ -67,7 +67,8 @@ namespace Akka.Persistence.Journal
         [SerializationConstructor]
         public SetStore(IActorRef store)
         {
-            Store = store ?? throw new ArgumentNullException(nameof(store), "SetStore requires non-null reference to store actor");
+            if (null == store) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.store, ExceptionResource.ArgumentNull_SetStore); }
+            Store = store;
         }
 
         /// <summary>
@@ -99,7 +100,8 @@ namespace Akka.Persistence.Journal
             /// </exception>
             public ReplayFailure(Exception cause)
             {
-                Cause = cause ?? throw new ArgumentNullException(nameof(cause), "AsyncWriteTarget.ReplayFailure cause exception cannot be null");
+                if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_ReplayFailure); }
+                Cause = cause;
             }
 
             /// <summary>

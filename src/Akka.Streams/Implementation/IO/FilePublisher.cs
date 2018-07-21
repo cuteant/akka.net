@@ -48,14 +48,10 @@ namespace Akka.Streams.Implementation.IO
         public static Props Props(FileInfo f, TaskCompletionSource<IOResult> completionPromise, int chunkSize,
             long startPosition, int initialBuffer, int maxBuffer)
         {
-            if (chunkSize <= 0)
-                throw new ArgumentException($"chunkSize must be > 0 (was {chunkSize})", nameof(chunkSize));
-            if (startPosition < 0)
-                throw new ArgumentException($"startPosition must be >= 0 (was {startPosition})", nameof(startPosition));
-            if (initialBuffer <= 0)
-                throw new ArgumentException($"initialBuffer must be > 0 (was {initialBuffer})", nameof(initialBuffer));
-            if (maxBuffer < initialBuffer)
-                throw new ArgumentException($"maxBuffer must be >= initialBuffer (was {maxBuffer})", nameof(maxBuffer));
+            if (chunkSize <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.chunkSize, chunkSize);
+            if (startPosition < 0) ThrowHelper.ThrowArgumentException_GreaterThanEqualZero(ExceptionArgument.startPosition, startPosition);
+            if (initialBuffer <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.initialBuffer, initialBuffer);
+            if (maxBuffer < initialBuffer) ThrowHelper.ThrowArgumentException_MaxBuffer(maxBuffer);
 
             return Actor.Props.Create(() => new FilePublisher(f, completionPromise, chunkSize, startPosition, maxBuffer))
                 .WithDeploy(Deploy.Local);

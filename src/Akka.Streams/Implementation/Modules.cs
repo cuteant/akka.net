@@ -99,10 +99,11 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public override IModule ReplaceShape(Shape shape)
         {
-            if (Equals(shape, Shape))
-                return this;
-
-            throw new NotSupportedException("cannot replace the shape of a Source, you need to wrap it in a Graph for that");
+            if (!Equals(shape, Shape))
+            {
+                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_replace_shapeOfSrc);
+            }
+            return this;
         }
 
         /// <summary>

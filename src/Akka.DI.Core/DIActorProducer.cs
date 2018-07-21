@@ -28,8 +28,10 @@ namespace Akka.DI.Core
         /// </exception>
         public DIActorProducer(IDependencyResolver dependencyResolver, Type actorType)
         {
-            _dependencyResolver = dependencyResolver ?? throw new ArgumentNullException(nameof(dependencyResolver), $"DIActorProducer requires {nameof(dependencyResolver)} to be provided");
-            ActorType = actorType ?? throw new ArgumentNullException(nameof(actorType), $"DIActorProducer requires {nameof(actorType)} to be provided");
+            if (null == dependencyResolver) { ThrowHelper.ThrowArgumentNullException_DIActorProducer_DR(); }
+            if (null == actorType) { ThrowHelper.ThrowArgumentNullException_DIActorProducer_Type(); }
+            _dependencyResolver = dependencyResolver;
+            ActorType = actorType;
             _actorFactory = dependencyResolver.CreateActorFactory(actorType);
         }
 

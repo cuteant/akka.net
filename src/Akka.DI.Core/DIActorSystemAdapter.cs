@@ -28,7 +28,8 @@ namespace Akka.DI.Core
         /// </exception>
         public DIActorSystemAdapter(ActorSystem system)
         {
-            _system = system ?? throw new ArgumentNullException(nameof(system), $"DIActorSystemAdapter requires {nameof(system)} to be provided");
+            if (null == system) ThrowHelper.ThrowArgumentNullException_DIActorSystemAdapter();
+            _system = system;
             _producer = system.GetExtension<DIExt>();
         }
 

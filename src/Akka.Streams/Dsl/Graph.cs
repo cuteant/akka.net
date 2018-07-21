@@ -137,7 +137,7 @@ namespace Akka.Streams.Dsl
         public Merge(int inputPorts, bool eagerComplete = false)
         {
             // one input might seem counter intuitive but saves us from special handling in other places
-            if (inputPorts < 1) throw new ArgumentException("Merge must have one or more input ports", nameof(inputPorts));
+            if (inputPorts < 1) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Merge_must_have_input_ports, ExceptionArgument.inputPorts);
             _inputPorts = inputPorts;
             _eagerComplete = eagerComplete;
 
@@ -378,7 +378,7 @@ namespace Akka.Streams.Dsl
         /// </exception>
         public MergePreferred(int secondaryPorts, bool eagerClose = false)
         {
-            if (secondaryPorts < 1) throw new ArgumentException("A MergePreferred must have at least one secondary port", nameof(secondaryPorts));
+            if (secondaryPorts < 1) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_MergePreferred_least_one, ExceptionArgument.secondaryPorts);
             _secondaryPorts = secondaryPorts;
             _eagerClose = eagerClose;
 
@@ -560,10 +560,8 @@ namespace Akka.Streams.Dsl
             Priorities = priorities.ToList();
             EagerComplete = eagerComplete;
             InputPorts = Priorities.Count;
-            if (InputPorts <= 0)
-                throw new ArgumentException("A Merge must have one or more input ports");
-            if (!Priorities.All(x => x > 0))
-                throw new ArgumentException("Priorities should be positive integers");
+            if (InputPorts <= 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Merge_must_have_input_ports);
+            if (!Priorities.All(x => x > 0)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Priorities_be_positive_int);
 
             var input = new List<Inlet<T>>();
             for (int i = 1; i <= InputPorts; i++)
@@ -722,8 +720,8 @@ namespace Akka.Streams.Dsl
         /// </exception>
         internal Interleave(int inputPorts, int segmentSize, bool eagerClose = false)
         {
-            if (inputPorts <= 1) throw new ArgumentException("Interleave input ports count must be greater than 1", nameof(inputPorts));
-            if (segmentSize <= 0) throw new ArgumentException("Interleave segment size must be greater than 0", nameof(segmentSize));
+            if (inputPorts <= 1) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_InputPorts_NeedGreaterThanOne, ExceptionArgument.inputPorts);
+            if (segmentSize <= 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_SegmentSize_NeedGreaterThanZero, ExceptionArgument.segmentSize);
 
             _inputPorts = inputPorts;
             _segmentSize = segmentSize;
@@ -994,7 +992,7 @@ namespace Akka.Streams.Dsl
         /// </exception>
         public Broadcast(int outputPorts, bool eagerCancel = false)
         {
-            if (outputPorts < 1) throw new ArgumentException("A Broadcast must have one or more output ports", nameof(outputPorts));
+            if (outputPorts < 1) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Broadcast_must_have_outputports, ExceptionArgument.outputPorts);
             _outputPorts = outputPorts;
             _eagerCancel = eagerCancel;
 
@@ -1326,7 +1324,7 @@ namespace Akka.Streams.Dsl
         /// </exception>
         public Balance(int outputPorts, bool waitForAllDownstreams = false)
         {
-            if (outputPorts < 1) throw new ArgumentException("A Balance must have one or more output ports", nameof(outputPorts));
+            if (outputPorts < 1) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Balance_must_have_outputports, ExceptionArgument.outputPorts);
             _outputPorts = outputPorts;
             _waitForAllDownstreams = waitForAllDownstreams;
 
@@ -1751,7 +1749,7 @@ namespace Akka.Streams.Dsl
         /// </exception>
         public Concat(int inputPorts = 2)
         {
-            if (inputPorts <= 1) throw new ArgumentException("A Concat must have more than 1 input port", nameof(inputPorts));
+            if (inputPorts <= 1) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Concat_must_have_inputports, ExceptionArgument.inputPorts);
             _inputPorts = inputPorts;
 
             var inlets = new Inlet<TIn>[inputPorts];

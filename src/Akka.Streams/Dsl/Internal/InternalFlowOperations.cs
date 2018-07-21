@@ -835,8 +835,8 @@ namespace Akka.Streams.Dsl.Internal
         public static IFlow<IEnumerable<T>, TMat> GroupedWithin<T, TMat>(this IFlow<T, TMat> flow, int n,
             TimeSpan timeout)
         {
-            if (n <= 0) throw new ArgumentException("n must be > 0", nameof(n));
-            if (timeout == TimeSpan.Zero) throw new ArgumentException("Timeout must be non-zero", nameof(timeout));
+            if (n <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.n);
+            if (timeout == TimeSpan.Zero) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Timeout_NeedNonZero, ExceptionArgument.timeout);
 
             return flow.Via(new Fusing.GroupedWithin<T>(n, timeout));
         }
@@ -1251,12 +1251,12 @@ namespace Akka.Streams.Dsl.Internal
         {
             var merge = new GroupByMergeBack<T, TMat, TKey>(flow, maxSubstreams, groupingFunc);
 
-            Func<Sink<T, TMat>, TClosed> finish = s =>
+            TClosed finish(Sink<T, TMat> s)
             {
                 return toFunc(
                     flow.Via(new Fusing.GroupBy<T, TKey>(maxSubstreams, groupingFunc)),
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
-            };
+            }
 
             return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
         }
@@ -1370,11 +1370,11 @@ namespace Akka.Streams.Dsl.Internal
         {
             var merge = new SplitWhenMergeBack<T, TMat>(flow, predicate, substreamCancelStrategy);
 
-            Func<Sink<T, TMat>, TClosed> finish = s =>
+            TClosed finish(Sink<T, TMat> s)
             {
                 return toFunc(flow.Via(Fusing.Split.When(predicate, substreamCancelStrategy)),
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
-            };
+            }
 
             return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
         }
@@ -1475,11 +1475,11 @@ namespace Akka.Streams.Dsl.Internal
         {
             var merge = new SplitAfterMergeBack<T, TMat>(flow, predicate, substreamCancelStrategy);
 
-            Func<Sink<T, TMat>, TClosed> finish = s =>
+            TClosed finish(Sink<T, TMat> s)
             {
                 return toFunc(flow.Via(Fusing.Split.After(predicate, substreamCancelStrategy)),
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
-            };
+            }
 
             return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
         }
@@ -1737,12 +1737,10 @@ namespace Akka.Streams.Dsl.Internal
         public static IFlow<T, TMat> Throttle<T, TMat>(this IFlow<T, TMat> flow, int elements, TimeSpan per,
             int maximumBurst, ThrottleMode mode)
         {
-            if (elements <= 0) throw new ArgumentException("Throttle elements must be > 0", nameof(elements));
-            if (per == TimeSpan.Zero) throw new ArgumentException("Throttle per timeout must not be zero", nameof(per));
-            if (mode == ThrottleMode.Enforcing && maximumBurst < 0)
-                throw new ArgumentException("Throttle maximumBurst must be > 0 in Enforcing mode", nameof(maximumBurst));
-            if (per.Ticks < elements)
-                throw new ArgumentException("Rates larger than 1 unit / tick are not supported", nameof(elements));
+            if (elements <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.elements);
+            if (per == TimeSpan.Zero) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_ThrottlePer_NonZero, ExceptionArgument.per);
+            if (mode == ThrottleMode.Enforcing && maximumBurst < 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_MaximumBurst_GreaterThanZero, ExceptionArgument.maximumBurst);
+            if (per.Ticks < elements) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Rates_NotSupported, ExceptionArgument.elements);
 
             return flow.Via(new Throttle<T>(elements, per, maximumBurst, _ => 1, mode));
         }
@@ -1794,12 +1792,10 @@ namespace Akka.Streams.Dsl.Internal
         public static IFlow<T, TMat> Throttle<T, TMat>(this IFlow<T, TMat> flow, int cost, TimeSpan per,
             int maximumBurst, Func<T, int> calculateCost, ThrottleMode mode)
         {
-            if(cost <= 0) throw new ArgumentException("cost must be > 0", nameof(cost));
-            if (per == TimeSpan.Zero) throw new ArgumentException("Throttle per timeout must not be zero", nameof(per));
-            if (mode == ThrottleMode.Enforcing && maximumBurst < 0)
-                throw new ArgumentException("Throttle maximumBurst must be > 0 in Enforcing mode", nameof(maximumBurst));
-            if (per.Ticks < cost)
-                throw new ArgumentException("Rates larger than 1 unit / tick are not supported", nameof(cost));
+            if(cost <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.cost);
+            if (per == TimeSpan.Zero) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_ThrottlePer_NonZero, ExceptionArgument.per);
+            if (mode == ThrottleMode.Enforcing && maximumBurst < 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_MaximumBurst_GreaterThanZero, ExceptionArgument.maximumBurst);
+            if (per.Ticks < cost) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Rates_NotSupported, ExceptionArgument.cost);
 
             return flow.Via(new Throttle<T>(cost, per, maximumBurst, calculateCost, mode));
         }

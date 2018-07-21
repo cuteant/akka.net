@@ -303,11 +303,9 @@ namespace Akka.Streams.Implementation
             while (!(_marked[id] && _pending[id]))
             {
                 id += 1;
-                if (id == _outputCount)
-                    id = 0;
+                if (id == _outputCount) { id = 0; }
 
-                if (id != _preferredId)
-                    throw new ArgumentException("Tried to enqueue without waiting for any demand");
+                if (id != _preferredId) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_FanOut_IdToEn);
             }
 
             return id;
@@ -609,7 +607,7 @@ namespace Akka.Streams.Implementation
         protected override void PostRestart(Exception reason)
         {
             base.PostRestart(reason);
-            throw new IllegalStateException("This actor cannot be restarted");
+            ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Actor_Cannot_Restart);
         }
 
         /// <summary>
@@ -750,7 +748,7 @@ namespace Akka.Streams.Implementation
                     OutputBunch.Enqueue(0, tuple.Item1);
                     OutputBunch.Enqueue(1, tuple.Item2);
                 }
-                throw new ArgumentException($"Unable to unzip elements of type {message.GetType().Name}");
+                ThrowHelper.ThrowArgumentException_Unzip(message);
             }));
         }
     }

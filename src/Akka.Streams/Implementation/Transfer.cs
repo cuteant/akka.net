@@ -168,14 +168,14 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    internal static class DefaultOutputTransferStates 
+    internal static class DefaultOutputTransferStates
     {
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="outputs">TBD</param>
         /// <returns>TBD</returns>
-        public static TransferState NeedsDemand(IOutputs outputs) => new LambdaTransferState(() 
+        public static TransferState NeedsDemand(IOutputs outputs) => new LambdaTransferState(()
             => outputs.IsDemandAvailable, () => outputs.IsClosed);
 
         /// <summary>
@@ -446,6 +446,8 @@ namespace Akka.Streams.Implementation
     /// </summary>
     internal abstract class PumpBase : IPump
     {
+        internal static readonly Action s_nonInitialized = () => ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_NonInitialized);
+
         /// <summary>
         /// Initializes a new instance of the <see cref="PumpBase" /> class.
         /// </summary>
@@ -455,7 +457,7 @@ namespace Akka.Streams.Implementation
         protected PumpBase()
         {
             TransferState = NotInitialized.Instance;
-            CurrentAction = () => { throw new IllegalStateException("Pump has not been initialized with a phase"); };
+            CurrentAction = s_nonInitialized;
         }
 
         /// <summary>
@@ -530,19 +532,17 @@ namespace Akka.Streams.Implementation
         public static void Init(this IPump self)
         {
             self.TransferState = NotInitialized.Instance;
-            self.CurrentAction = () => { throw new IllegalStateException("Pump has not been initialized with a phase"); };
+            self.CurrentAction = PumpBase.s_nonInitialized;
         }
 
+        private static readonly Action s_neverExec = () => ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_CompletedPhaseNeverExec);
         /// <summary>
         /// TBD
         /// </summary>
         /// <exception cref="IllegalStateException">
         /// This exception is thrown when the action of the completed phase tried to execute.
         /// </exception>
-        public static readonly TransferPhase CompletedPhase = new TransferPhase(Completed.Instance, () =>
-        {
-            throw new IllegalStateException("The action of completed phase must never be executed");
-        });
+        public static readonly TransferPhase CompletedPhase = new TransferPhase(Completed.Instance, s_neverExec);
 
         /// <summary>
         /// TBD
@@ -558,11 +558,9 @@ namespace Akka.Streams.Implementation
         /// </exception>
         public static void InitialPhase(this IPump self, int waitForUpstream, TransferPhase andThen)
         {
-            if (waitForUpstream < 1)
-                throw new ArgumentException($"WaitForUpstream must be >= 1 (was {waitForUpstream})");
-            
-            if(self.TransferState != NotInitialized.Instance)
-                throw new IllegalStateException($"Initial state expected NotInitialized, but got {self.TransferState}");
+            if (waitForUpstream < 1) ThrowHelper.ThrowArgumentException_GreaterThanEqualOne(waitForUpstream);
+
+            if (self.TransferState != NotInitialized.Instance) ThrowHelper.ThrowIllegalStateException_Pump_InitialPhase(self);
 
             self.TransferState = new WaitingForUpstreamSubscription(waitForUpstream, andThen);
         }
@@ -577,8 +575,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         public static void WaitForUpstream(this IPump self, int waitForUpstream)
         {
-            if(waitForUpstream < 1) 
-                throw new ArgumentException($"WaitForUpstream must be >= 1 (was {waitForUpstream})");
+            if (waitForUpstream < 1) ThrowHelper.ThrowArgumentException_GreaterThanEqualOne(waitForUpstream);
 
             self.TransferState = new WaitingForUpstreamSubscription(waitForUpstream, new TransferPhase(self.TransferState, self.CurrentAction));
         }
@@ -644,7 +641,7 @@ namespace Akka.Streams.Implementation
                 self.PumpFailed(e);
             }
 
-            if(self.IsPumpFinished)
+            if (self.IsPumpFinished)
                 self.PumpFinished();
         }
     }

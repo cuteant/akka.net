@@ -81,7 +81,7 @@ namespace Akka.Streams.Implementation
             /// <exception cref="IllegalStateException">TBD</exception>
             public void Apply<T>(ISubscriber<T> subscriber)
             {
-                throw new IllegalStateException("Called Apply on NotReached");
+                ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Call_NotReached);
             }
         }
 
@@ -313,12 +313,13 @@ namespace Akka.Streams.Implementation
             if (_endOfStream is SubscriberManagement.NotReached)
             {
                 _pendingFromUpstream--;
-                if (!_buffer.Value.Write(value))
-                    throw new IllegalStateException("Output buffer overflow");
-                if (Dispatch(_subscriptions))
-                    RequestFromUpstreamIfRequired();
+                if (!_buffer.Value.Write(value)) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Output_buf_overflow);
+                if (Dispatch(_subscriptions)) { RequestFromUpstreamIfRequired(); }
             }
-            else throw new IllegalStateException("PushToDownStream(...) after CompleteDownstream() or AbortDownstream(...)");
+            else
+            {
+                ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_PushToDownStream_A);
+            }
         }
 
         private bool Dispatch(ICollection<ISubscriptionWithCursor<T>> subscriptions)

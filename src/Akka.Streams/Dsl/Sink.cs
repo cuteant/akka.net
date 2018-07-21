@@ -218,7 +218,9 @@ namespace Akka.Streams.Dsl
                 .MapMaterializedValue(e =>
                 {
                     if (!e.IsFaulted && e.IsCompleted && e.Result == null)
-                        throw new InvalidOperationException("Sink.First materialized on an empty stream");
+                    {
+                        ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_SinkFirst_empty_stream);
+                    }
 
                     return e;
                 });

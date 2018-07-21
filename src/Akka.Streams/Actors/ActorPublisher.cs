@@ -77,7 +77,7 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
-    public interface IActorPublisherMessage: IDeadLetterSuppression { }
+    public interface IActorPublisherMessage : IDeadLetterSuppression { }
 
     /// <summary>
     /// This message is delivered to the <see cref="ActorPublisher{T}"/> actor when the stream
@@ -305,15 +305,16 @@ namespace Akka.Streams.Actors
                     }
                     else
                     {
-                        throw new IllegalStateException(
-                            "OnNext is not allowed when the stream has not requested elements, total demand was 0");
+                        ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnNext_NotAllowed);
                     }
                     break;
                 case LifecycleState.ErrorEmitted:
-                    throw new IllegalStateException("OnNext must not be called after OnError");
+                    ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnNext_AfterE);
+                    break;
                 case LifecycleState.Completed:
                 case LifecycleState.CompleteThenStop:
-                    throw new IllegalStateException("OnNext must not be called after OnComplete");
+                    ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnNext_AfterC);
+                    break;
                 case LifecycleState.Canceled: break;
             }
         }
@@ -352,9 +353,13 @@ namespace Akka.Streams.Actors
                         }
                     }
                     break;
-                case LifecycleState.ErrorEmitted: throw new IllegalStateException("OnComplete must not be called after OnError");
+                case LifecycleState.ErrorEmitted:
+                    ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnComplete_AfterE);
+                    break;
                 case LifecycleState.Completed:
-                case LifecycleState.CompleteThenStop: throw new IllegalStateException("OnComplete must only be called once");
+                case LifecycleState.CompleteThenStop:
+                    ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnComplete_Once);
+                    break;
                 case LifecycleState.Canceled: break;
             }
         }
@@ -431,9 +436,13 @@ namespace Akka.Streams.Actors
                         }
                     }
                     break;
-                case LifecycleState.ErrorEmitted: throw new IllegalStateException("OnError must only be called once");
+                case LifecycleState.ErrorEmitted:
+                    ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnError_Once);
+                    break;
                 case LifecycleState.Completed:
-                case LifecycleState.CompleteThenStop: throw new IllegalStateException("OnError must not be called after OnComplete");
+                case LifecycleState.CompleteThenStop:
+                    ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnError_AfterC);
+                    break;
                 case LifecycleState.Canceled: break;
             }
         }
@@ -538,7 +547,7 @@ namespace Akka.Streams.Actors
                         break;
                     case LifecycleState.Active:
                     case LifecycleState.Canceled:
-                        if(_subscriber == subscriber)
+                        if (_subscriber == subscriber)
                             ReactiveStreamsCompliance.RejectDuplicateSubscriber(subscriber);
                         else
                             ReactiveStreamsCompliance.RejectAdditionalSubscriber(subscriber, "ActorPublisher");
@@ -663,13 +672,14 @@ namespace Akka.Streams.Actors
         /// <summary>
         /// TBD
         /// </summary>
-        /// <param name="ref">TBD</param>
+        /// <param name="actorRef">TBD</param>
         /// <exception cref="ArgumentNullException">
-        /// This exception is thrown when the specified <paramref name="ref"/> is undefined.
+        /// This exception is thrown when the specified <paramref name="actorRef"/> is undefined.
         /// </exception>
-        public ActorPublisherImpl(IActorRef @ref)
+        public ActorPublisherImpl(IActorRef actorRef)
         {
-            _ref = @ref ?? throw new ArgumentNullException(nameof(@ref), "ActorPublisherImpl requires IActorRef to be defined");
+            if (null == actorRef) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.actorRef, ExceptionResource.ArgumentNull_RequiresIActorRef); }
+            _ref = actorRef;
         }
 
         /// <summary>
@@ -681,7 +691,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public void Subscribe(ISubscriber<T> subscriber)
         {
-            if (subscriber == null) throw new ArgumentNullException(nameof(subscriber), "Subscriber must not be null");
+            if (null == subscriber) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscriber, ExceptionResource.ArgumentNull_SubscriberIsNull); }
             _ref.Tell(new Subscribe<T>(subscriber));
         }
     }
@@ -698,14 +708,15 @@ namespace Akka.Streams.Actors
         /// <summary>
         /// TBD
         /// </summary>
-        /// <param name="ref">TBD</param>
+        /// <param name="actorRef">TBD</param>
         /// <exception cref="ArgumentNullException">
-        /// This exception is thrown when the specified <paramref name="ref"/> is undefined.
+        /// This exception is thrown when the specified <paramref name="actorRef"/> is undefined.
         /// </exception>
         [SerializationConstructor]
-        public ActorPublisherSubscription(IActorRef @ref)
+        public ActorPublisherSubscription(IActorRef actorRef)
         {
-            _ref = @ref ?? throw new ArgumentNullException(nameof(@ref), "ActorPublisherSubscription requires IActorRef to be defined");
+            if (null == actorRef) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.actorRef, ExceptionResource.ArgumentNull_RequiresIActorRef_PS); }
+            _ref = actorRef;
         }
 
         /// <summary>

@@ -202,7 +202,7 @@ namespace Akka.Streams.Implementation
         /// <exception cref="ArgumentNullException">TBD</exception>
         public void Subscribe(ISubscriber<TOut> subscriber)
         {
-            if (subscriber == null) throw new ArgumentNullException(nameof(subscriber));
+            if (subscriber == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscriber);
             while (true)
             {
                 var current = _pendingSubscribers.Value;

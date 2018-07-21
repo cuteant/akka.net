@@ -85,12 +85,10 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public static Props Props(IActorRef persistentActor, ReplayFilterMode mode, int windowSize, int maxOldWriters, bool debugEnabled)
         {
-            if (windowSize <= 0)
-                throw new ArgumentNullException(nameof(windowSize), "windowSize must be > 0");
-            if (maxOldWriters <= 0)
-                throw new ArgumentNullException(nameof(maxOldWriters), "maxOldWriters must be > 0");
-            if (mode == ReplayFilterMode.Disabled)
-                throw new ArgumentNullException(nameof(mode), "mode must not be Disabled");
+            if (windowSize <= 0) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.windowSize, ExceptionResource.ArgumentNull_windowSize);
+            if (maxOldWriters <= 0) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.maxOldWriters, ExceptionResource.ArgumentNull_maxOldWriters);
+            if (mode == ReplayFilterMode.Disabled) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.mode, ExceptionResource.Argument_Mode_NoDisabled);
+
             return Actor.Props.Create(() => new ReplayFilter(persistentActor, mode, windowSize, maxOldWriters, debugEnabled));
         }
 
@@ -160,12 +158,14 @@ namespace Akka.Persistence.Journal
                                         //discard
                                         break;
                                     case ReplayFilterMode.Fail:
-                                        throw new IllegalStateException(errMsg);
+                                        ThrowHelper.ThrowIllegalStateException(errMsg);
+                                        break; ;
                                     case ReplayFilterMode.Warn:
                                         _buffer.AddToFront(r); // AddLast
                                         break;
                                     case ReplayFilterMode.Disabled:
-                                        throw new ArgumentException("Mode must not be Disabled");
+                                        ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Mode_NoDisabled);
+                                        break;
                                 }
                             }
                             else
@@ -188,12 +188,14 @@ namespace Akka.Persistence.Journal
                                     //discard
                                     break;
                                 case ReplayFilterMode.Fail:
-                                    throw new IllegalStateException(errMsg);
+                                    ThrowHelper.ThrowIllegalStateException(errMsg);
+                                    break;
                                 case ReplayFilterMode.Warn:
                                     _buffer.AddToFront(r); // AddLast
                                     break;
                                 case ReplayFilterMode.Disabled:
-                                    throw new ArgumentException("Mode must not be Disabled");
+                                    ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Mode_NoDisabled);
+                                    break;
                             }
                         }
                         else
@@ -238,12 +240,14 @@ namespace Akka.Persistence.Journal
                                             //    //discard
                                             //    break;
                                             case ReplayFilterMode.Fail:
-                                                throw new IllegalStateException(errMsg);
+                                                ThrowHelper.ThrowIllegalStateException(errMsg);
+                                                break;
                                             case ReplayFilterMode.Warn:
                                                 // keep
                                                 break;
                                             case ReplayFilterMode.Disabled:
-                                                throw new ArgumentException("Mode must not be Disabled");
+                                                ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Mode_NoDisabled);
+                                                break;
                                         }
                                     }
                                 });
@@ -290,7 +294,8 @@ namespace Akka.Persistence.Journal
                     _log.Error(errMsg);
                     break;
                 case ReplayFilterMode.Disabled:
-                    throw new ArgumentException("mode must not be Disabled");
+                    ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Mode_NoDisabled);
+                    break;
             }
         }
 

@@ -55,7 +55,7 @@ namespace Akka.Streams
             /// <exception cref="ArgumentException">TBD</exception>
             public InitName(string name)
             {
-                if (string.IsNullOrEmpty(name)) throw new ArgumentNullException(nameof(name));
+                if (string.IsNullOrEmpty(name)) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.name);
 
                 _name = name;
                 _outlet = new Outlet<TOut>(name + ".out");
@@ -91,8 +91,10 @@ namespace Akka.Streams
             /// <param name="inlets">TBD</param>
             public InitPorts(Outlet<TOut> outlet, IEnumerable<Inlet> inlets)
             {
-                _outlet = outlet ?? throw new ArgumentNullException(nameof(outlet));
-                _inlets = inlets ?? throw new ArgumentNullException(nameof(inlets));
+                if (null == outlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlet); }
+                if (null == inlets) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlets); }
+                _outlet = outlet;
+                _inlets = inlets;
             }
 
             /// <summary>
@@ -188,8 +190,8 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public sealed override Shape CopyFromPorts(ImmutableArray<Inlet> inlets, ImmutableArray<Outlet> outlets)
         {
-            if (outlets.Length != 1) throw new ArgumentException($"Proposed outlets [{string.Join(", ", outlets)}] do not fit FanInShape");
-            if (inlets.Length != Inlets.Length) throw new ArgumentException($"Proposed inlets [{string.Join(", ", inlets)}] do not fit FanInShape");
+            if (outlets.Length != 1) ThrowHelper.ThrowArgumentException_ProposedOutlets1(outlets);
+            if (inlets.Length != Inlets.Length) ThrowHelper.ThrowArgumentException_ProposedInlets1(inlets);
 
             return Construct(new InitPorts((Outlet<TOut>)outlets[0], inlets));
         }

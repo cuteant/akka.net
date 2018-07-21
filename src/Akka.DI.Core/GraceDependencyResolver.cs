@@ -29,8 +29,10 @@ namespace Akka.DI.Grace
         /// </exception>
         public GraceDependencyResolver(IInjectionScope container, ActorSystem system)
         {
-            _container = container ?? throw new ArgumentNullException(nameof(container));
-            _system = system ?? throw new ArgumentNullException(nameof(system));
+            if (null == container) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.container); }
+            if (null == system) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.system); }
+            _container = container;
+            _system = system;
             _system.AddDependencyResolver(this);
             _references = new ConditionalWeakTable<ActorBase, IInjectionScope>();
         }

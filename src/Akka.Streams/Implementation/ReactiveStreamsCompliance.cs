@@ -6,8 +6,10 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Pattern;
+using CuteAnt.Collections;
 using Reactive.Streams;
 
 namespace Akka.Streams.Implementation
@@ -80,34 +82,52 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public static readonly Exception NumberOfElementsInRequestMustBePositiveException =
-            new ArgumentException(NumberOfElementsInRequestMustBePositiveMsg);
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public static readonly Exception CanNotSubscribeTheSameSubscriberMultipleTimesException =
-            new IllegalStateException(CanNotSubscribeTheSameSubscriberMultipleTimes);
+        public static readonly Exception NumberOfElementsInRequestMustBePositiveException = new ArgumentException(NumberOfElementsInRequestMustBePositiveMsg);
 
         /// <summary>
         /// TBD
         /// </summary>
-        public static readonly Exception ElementMustNotBeNullException =
-            new ArgumentNullException("element", ElementMustNotBeNullMsg);
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public static readonly Exception SubscriptionMustNotBeNullException =
-            new ArgumentNullException("subscription", SubscriptionMustNotBeNullMsg);
+        public static readonly Exception CanNotSubscribeTheSameSubscriberMultipleTimesException = new IllegalStateException(CanNotSubscribeTheSameSubscriberMultipleTimes);
 
         /// <summary>
         /// TBD
         /// </summary>
-        public static Exception SubscriberMustNotBeNullException { get; } = new ArgumentNullException("subscriber", SubscriberMustNotBeNullMsg);
+        public static readonly Exception ElementMustNotBeNullException = new ArgumentNullException("element", ElementMustNotBeNullMsg);
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowElementMustNotBeNullException()
+        {
+            throw ElementMustNotBeNullException;
+        }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public static Exception ExceptionMustNotBeNullException { get; } = new ArgumentNullException("exception", ExceptionMustNotBeNullMsg);
+        public static readonly Exception SubscriptionMustNotBeNullException = new ArgumentNullException("subscription", SubscriptionMustNotBeNullMsg);
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowSubscriptionMustNotBeNullException()
+        {
+            throw SubscriptionMustNotBeNullException;
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        public static readonly Exception SubscriberMustNotBeNullException = new ArgumentNullException("subscriber", SubscriberMustNotBeNullMsg);
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowSubscriberMustNotBeNullException()
+        {
+            throw SubscriberMustNotBeNullException;
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        public static readonly Exception ExceptionMustNotBeNullException = new ArgumentNullException("exception", ExceptionMustNotBeNullMsg);
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowExceptionMustNotBeNullException()
+        {
+            throw ExceptionMustNotBeNullException;
+        }
 
         /// <summary>
         /// TBD
@@ -124,7 +144,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException($"{subscriber}.OnSubscribe", e);
+                ThrowHelper.ThrowSignalThrewException_Sub(subscriber, e);
             }
         }
 
@@ -142,7 +162,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException($"{subscriber}.OnSubscribe", e);
+                ThrowHelper.ThrowSignalThrewException_Sub(subscriber, e);
             }
         }
 
@@ -162,7 +182,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException($"{subscriber}.OnNext", e);
+                ThrowHelper.ThrowSignalThrewException_N(subscriber, e);
             }
         }
 
@@ -181,7 +201,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException($"{subscriber}.OnNext", e);
+                ThrowHelper.ThrowSignalThrewException_N(subscriber, e);
             }
         }
 
@@ -195,8 +215,7 @@ namespace Akka.Streams.Implementation
         /// <exception cref="SignalThrewException">TBD</exception>
         public static void TryOnError<T>(ISubscriber<T> subscriber, Exception cause)
         {
-            if (cause is ISpecViolation)
-                throw new IllegalStateException("It's illegal to try to signal OnError with a spec violation", cause);
+            if (cause is ISpecViolation) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_signal_err_spec, cause);
 
             try
             {
@@ -204,7 +223,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException($"{subscriber}.OnError", e);
+                ThrowHelper.ThrowSignalThrewException_E(subscriber, e);
             }
         }
 
@@ -217,8 +236,7 @@ namespace Akka.Streams.Implementation
         /// <exception cref="SignalThrewException">TBD</exception>
         internal static void TryOnError(IUntypedSubscriber subscriber, Exception cause)
         {
-            if (cause is ISpecViolation)
-                throw new IllegalStateException("It's illegal to try to signal OnError with a spec violation", cause);
+            if (cause is ISpecViolation) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_signal_err_spec, cause);
 
             try
             {
@@ -226,7 +244,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException($"{subscriber}.OnError", e);
+                ThrowHelper.ThrowSignalThrewException_E(subscriber, e);
             }
         }
 
@@ -244,7 +262,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException($"{subscriber}.OnComplete", e);
+                ThrowHelper.ThrowSignalThrewException_C(subscriber, e);
             }
         }
 
@@ -261,7 +279,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException($"{subscriber}.OnComplete", e);
+                ThrowHelper.ThrowSignalThrewException_C(subscriber, e);
             }
         }
 
@@ -277,6 +295,8 @@ namespace Akka.Streams.Implementation
             TryOnError(subscriber, CanNotSubscribeTheSameSubscriberMultipleTimesException);
         }
 
+        private static readonly CachedReadConcurrentDictionary<string, IllegalStateException> s_illegalStateExCache =
+            new CachedReadConcurrentDictionary<string, IllegalStateException>();
         /// <summary>
         /// TBD
         /// </summary>
@@ -286,7 +306,8 @@ namespace Akka.Streams.Implementation
         public static void RejectAdditionalSubscriber<T>(ISubscriber<T> subscriber, string rejector)
         {
             TryOnSubscribe(subscriber, CancelledSubscription.Instance);
-            TryOnError(subscriber, new IllegalStateException(rejector + " " + SupportsOnlyASingleSubscriber));
+            var exc = s_illegalStateExCache.GetOrAdd(rejector, err => new IllegalStateException($"{err} {SupportsOnlyASingleSubscriber}"));
+            TryOnError(subscriber, exc);
         }
 
         /// <summary>
@@ -297,7 +318,8 @@ namespace Akka.Streams.Implementation
         internal static void RejectAdditionalSubscriber(IUntypedSubscriber subscriber, string rejector)
         {
             TryOnSubscribe(subscriber, CancelledSubscription.Instance);
-            TryOnError(subscriber, new IllegalStateException(rejector + " " + SupportsOnlyASingleSubscriber));
+            var exc = s_illegalStateExCache.GetOrAdd(rejector, err => new IllegalStateException($"{err} {SupportsOnlyASingleSubscriber}"));
+            TryOnError(subscriber, exc);
         }
 
         /// <summary>
@@ -317,8 +339,7 @@ namespace Akka.Streams.Implementation
         /// <param name="subscriber">TBD</param>
         public static void RequireNonNullSubscriber<T>(ISubscriber<T> subscriber)
         {
-            if (subscriber is null)
-                throw SubscriberMustNotBeNullException;
+            if (subscriber is null) ThrowSubscriberMustNotBeNullException();
         }
 
         /// <summary>
@@ -330,8 +351,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         public static void RequireNonNullSubscription(ISubscription subscription)
         {
-            if (subscription is null)
-                throw SubscriptionMustNotBeNullException;
+            if (subscription is null) ThrowSubscriptionMustNotBeNullException();
         }
 
         /// <summary>
@@ -343,8 +363,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         public static void RequireNonNullException(Exception exception)
         {
-            if (exception is null)
-                throw ExceptionMustNotBeNullException;
+            if (exception is null) ThrowExceptionMustNotBeNullException();
         }
 
         /// <summary>
@@ -356,8 +375,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         public static void RequireNonNullElement(object element)
         {
-            if (element is null)
-                throw ElementMustNotBeNullException;
+            if (element is null) ThrowElementMustNotBeNullException();
         }
 
         /// <summary>
@@ -375,7 +393,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException("It is illegal to throw exceptions from cancel(), rule 3.15", e);
+                ThrowHelper.ThrowSignalThrewException(ExceptionResource.SignalThrew_from_cancel, e);
             }
         }
 
@@ -395,7 +413,7 @@ namespace Akka.Streams.Implementation
             }
             catch (Exception e)
             {
-                throw new SignalThrewException("It is illegal to throw exceptions from request(), rule 3.16", e);
+                ThrowHelper.ThrowSignalThrewException(ExceptionResource.SignalThrew_from_request, e);
             }
         }
     }

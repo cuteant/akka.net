@@ -63,12 +63,12 @@ namespace Akka.DistributedData
             switch (_consistency)
             {
                 case WriteTo write: return Nodes.Count - (write.Count - 1);
-                case WriteAll write: return 0;
+                case WriteAll _: return 0;
                 case WriteMajority write:
                     var n = Nodes.Count + 1;
                     var w = CalculateMajorityWithMinCapacity(write.MinCapacity, n);
                     return n - w;
-                case WriteLocal write: throw new ArgumentException("WriteAggregator does not support WriteLocal");
+                case WriteLocal _: throw new ArgumentException("WriteAggregator does not support WriteLocal");
                 default: throw new ArgumentException("Invalid consistency level");
             }
         }

@@ -110,29 +110,29 @@ namespace Akka.Persistence
         {
         }
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="AtomicWrite"/> class.
-    /// </summary>
-    /// <param name="payload">TBD</param>
-    /// <exception cref="ArgumentException">
-    /// This exception is thrown when either the specified <paramref name="payload"/> is empty
-    /// or the specified <paramref name="payload"/> contains messages from different <see cref="IPersistentRepresentation.PersistenceId"/>.
-    /// </exception>
-    /// <exception cref="ArgumentNullException">
-    /// This exception is thrown when the specified <paramref name="payload"/> is undefined.
-    /// </exception>
-    [SerializationConstructor]
-    public AtomicWrite(IImmutableList<IPersistentRepresentation> payload)
+        /// <summary>
+        /// Initializes a new instance of the <see cref="AtomicWrite"/> class.
+        /// </summary>
+        /// <param name="payload">TBD</param>
+        /// <exception cref="ArgumentException">
+        /// This exception is thrown when either the specified <paramref name="payload"/> is empty
+        /// or the specified <paramref name="payload"/> contains messages from different <see cref="IPersistentRepresentation.PersistenceId"/>.
+        /// </exception>
+        /// <exception cref="ArgumentNullException">
+        /// This exception is thrown when the specified <paramref name="payload"/> is undefined.
+        /// </exception>
+        [SerializationConstructor]
+        public AtomicWrite(IImmutableList<IPersistentRepresentation> payload)
         {
-            if (payload == null)
-                throw new ArgumentNullException(nameof(payload), "Payload of AtomicWrite must not be null.");
+            if (payload == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.payload, ExceptionResource.ArgumentNull_AtomicWrite);
 
-            if (payload.Count == 0)
-                throw new ArgumentException("Payload of AtomicWrite must not be empty.", nameof(payload));
+            if (payload.Count == 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_AtomicWrite, ExceptionArgument.payload);
 
             var firstMessage = payload[0];
             if (payload.Count > 1 && !payload.Skip(1).All(m => m.PersistenceId.Equals(firstMessage.PersistenceId)))
-                throw new ArgumentException($"AtomicWrite must contain messages for the same persistenceId, yet difference persistenceIds found: {payload.Select(m => m.PersistenceId).Distinct()}.", nameof(payload));
+            {
+                ThrowHelper.ThrowArgumentException_AtomicWrite(payload);
+            }
 
             Payload = payload;
             Sender = ActorRefs.NoSender;
@@ -214,7 +214,7 @@ namespace Akka.Persistence
         }
 
         /// <inheritdoc/>
-        public override string ToString() 
+        public override string ToString()
             => $"AtomicWrite<pid: {PersistenceId}, lowSeqNr: {LowestSequenceNr}, highSeqNr: {HighestSequenceNr}, size: {Size}, sender: {Sender}>";
     }
 
@@ -420,7 +420,7 @@ namespace Akka.Persistence
         }
 
         /// <inheritdoc/>
-        public override string ToString() 
+        public override string ToString()
             => $"Persistent<pid: {PersistenceId}, seqNr: {SequenceNr}, deleted: {IsDeleted}, manifest: {Manifest}, sender: {Sender}, payload: {Payload}, writerGuid: {WriterGuid}>";
     }
 }

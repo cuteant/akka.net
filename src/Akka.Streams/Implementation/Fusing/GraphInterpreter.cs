@@ -354,9 +354,9 @@ namespace Akka.Streams.Implementation.Fusing
         {
             get
             {
-                if (CurrentInterpreter.Value[0] == null)
-                    throw new InvalidOperationException("Something went terribly wrong!");
-                return (GraphInterpreter) CurrentInterpreter.Value[0];
+                var interpreter = CurrentInterpreter.Value[0];
+                if (interpreter == null) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Something_wrong);
+                return (GraphInterpreter)interpreter;
             }
         }
 
@@ -909,9 +909,19 @@ namespace Akka.Streams.Implementation.Fusing
         /// <returns>TBD</returns>
         public void Enqueue(Connection connection)
         {
-            if (IsDebug && _queueTail - _queueHead > _mask) throw new Exception($"{Name} internal queue full ({QueueStatus()}) + {connection}");
+            if (IsDebug && _queueTail - _queueHead > _mask) ThrowException(connection);
             _eventQueue[_queueTail & _mask] = connection;
             _queueTail++;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ThrowException(Connection connection)
+        {
+            throw GetException();
+            Exception GetException()
+            {
+                return new Exception($"{Name} internal queue full ({QueueStatus()}) + {connection}");
+            }
         }
 
         /// <summary>

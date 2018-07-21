@@ -50,8 +50,7 @@ namespace Akka.Persistence.MongoDb
 
         public MongoDbPersistence(ExtendedActorSystem system)
         {
-            if (system == null)
-                throw new ArgumentNullException(nameof(system));
+            if (system == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.system);
 
             // Initialize fallback configuration defaults
             system.Settings.InjectTopLevelFallback(DefaultConfiguration());

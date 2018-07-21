@@ -27,7 +27,8 @@ namespace Akka.DI.Core
         /// </exception>
         public void Initialize(IDependencyResolver dependencyResolver)
         {
-            _dependencyResolver = dependencyResolver ?? throw new ArgumentNullException(nameof(dependencyResolver), $"DIExt requires {nameof(dependencyResolver)} to be provided");
+            if (null == dependencyResolver) { ThrowHelper.ThrowArgumentNullException_DIExt(); }
+            _dependencyResolver = dependencyResolver;
         }
 
         /// <summary>

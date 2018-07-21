@@ -68,7 +68,7 @@ namespace Akka.Streams.Implementation.Fusing
             var outletsCount = outlets.Count;
             var connectionsCount = inletsCount + outletsCount;
 
-            if (connectionsCount <= 0) throw new ArgumentException($"Sum of inlets ({inletsCount}) and outlets ({outletsCount}) must be > 0");
+            if (connectionsCount <= 0) ThrowHelper.ThrowArgumentException_ConnCount(inletsCount, outletsCount);
 
             return new GraphAssembly(
                 stages: stages.ToArray(),
@@ -131,12 +131,9 @@ namespace Akka.Streams.Implementation.Fusing
         /// <returns>TBD</returns>
         public GraphAssembly(IGraphStageWithMaterializedValue<Shape, object>[] stages, Attributes[] originalAttributes, Inlet[] inlets, int[] inletOwners, Outlet[] outlets, int[] outletOwners)
         {
-            if (inlets.Length != inletOwners.Length)
-                throw new ArgumentException("'inlets' and 'inletOwners' must have the same length.", nameof(inletOwners));
-            if (inletOwners.Length != outlets.Length)
-                throw new ArgumentException("'inletOwners' and 'outlets' must have the same length.", nameof(outlets));
-            if (outlets.Length != outletOwners.Length)
-                throw new ArgumentException("'outlets' and 'outletOwners' must have the same length.", nameof(outletOwners));
+            if (inlets.Length != inletOwners.Length) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_GraphAssembly_IO);
+            if (inletOwners.Length != outlets.Length) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_GraphAssembly_O);
+            if (outlets.Length != outletOwners.Length) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_GraphAssembly_OO);
 
             Stages = stages;
             OriginalAttributes = originalAttributes;
@@ -184,8 +181,7 @@ namespace Akka.Streams.Implementation.Fusing
                 while (inletEnumerator.MoveNext())
                 {
                     var inlet = inletEnumerator.Current;
-                    if (inlet.Id != -1 && inlet.Id != idx)
-                        throw new ArgumentException($"Inlet {inlet} was shared among multiple stages. That is illegal.");
+                    if (inlet.Id != -1 && inlet.Id != idx) ThrowHelper.ThrowArgumentException_GraphAssembly_In(inlet);
                     inlet.Id = idx;
                     idx++;
                 }
@@ -195,8 +191,7 @@ namespace Akka.Streams.Implementation.Fusing
                 while (outletEnumerator.MoveNext())
                 {
                     var outlet = outletEnumerator.Current;
-                    if (outlet.Id != -1 && outlet.Id != idx)
-                        throw new ArgumentException($"Outlet {outlet} was shared among multiple stages. That is illegal.");
+                    if (outlet.Id != -1 && outlet.Id != idx) ThrowHelper.ThrowArgumentException_GraphAssembly_Out(outlet);
                     outlet.Id = idx;
                     idx++;
                 }
@@ -234,7 +229,7 @@ namespace Akka.Streams.Implementation.Fusing
                     }
                     else
                     {
-                        throw new IllegalStateException($"No handler defined in stage {logic} for port {inlet}");
+                        ThrowHelper.ThrowIllegalStateException_GraphAssembly_In(logic, inlet);
                     }
 
                     logic.PortToConn[inlet.Id] = connection;
@@ -253,7 +248,7 @@ namespace Akka.Streams.Implementation.Fusing
                     }
                     else
                     {
-                        throw new IllegalStateException($"No handler defined in stage {logic} for port {outlet}");
+                        ThrowHelper.ThrowIllegalStateException_GraphAssembly_Out(logic, outlet);
                     }
 
                     logic.PortToConn[outlet.Id + inCount] = connection;

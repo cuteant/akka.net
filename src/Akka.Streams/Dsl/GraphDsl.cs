@@ -382,7 +382,7 @@ namespace Akka.Streams.Dsl
                 else return outlet;
             }
 
-            throw new ArgumentException("No more outlets on junction");
+            return ThrowHelper.ThrowArgumentException<Outlet<TOut>>(ExceptionResource.Argument_Nomore_outlets_jun);
         }
 
         /// <summary>
@@ -406,7 +406,7 @@ namespace Akka.Streams.Dsl
                 else return inlet;
             }
 
-            throw new ArgumentException("No more inlets on junction");
+            return ThrowHelper.ThrowArgumentException<Inlet<TIn>>(ExceptionResource.Argument_Nomore_inlets_jun);
         }
     }
 
@@ -524,7 +524,7 @@ namespace Akka.Streams.Dsl
                 return b;
             }
 
-            throw new ArgumentException("No more inlets free on junction", nameof(junction));
+            return ThrowHelper.ThrowArgumentException<GraphDsl.Builder<TMat>>(ExceptionResource.Argument_Nomore_inlets_free_jun, ExceptionArgument.junction);
         }
 
         private static Outlet<TOut2> Bind<TIn, TOut1, TOut2, TMat>(GraphDsl.ForwardOps<TOut1, TMat> ops, UniformFanOutShape<TIn, TOut2> junction) where TIn : TOut1
@@ -730,7 +730,7 @@ namespace Akka.Streams.Dsl
                 }
             }
 
-            throw new ArgumentException("No more inlets free on junction", nameof(junction));
+            return ThrowHelper.ThrowArgumentException<GraphDsl.Builder<TMat>>(ExceptionResource.Argument_Nomore_inlets_free_jun, ExceptionArgument.junction);
         }
 
         /// <summary>

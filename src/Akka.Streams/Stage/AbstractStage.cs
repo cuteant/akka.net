@@ -50,7 +50,7 @@ namespace Akka.Streams.Stage
             onUpstreamFailure: exception => _currentStage.OnUpstreamFailure(exception, Context),
             onUpstreamFinish: () => _currentStage.OnUpstreamFinish(Context));
 
-            SetHandler(_shape.Outlet, 
+            SetHandler(_shape.Outlet,
                 onPull: () => _currentStage.OnPull(Context),
                 onDownstreamFinish: () => _currentStage.OnDownstreamFinish(Context));
         }
@@ -125,7 +125,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="element">TBD</param>
         /// <returns>TBD</returns>
-        public IDownstreamDirective PushAndFinish(object element) => PushAndFinish((TOut) element);
+        public IDownstreamDirective PushAndFinish(object element) => PushAndFinish((TOut)element);
 
         /// <summary>
         /// TBD
@@ -166,12 +166,13 @@ namespace Akka.Streams.Stage
         {
             if (IsClosed(_shape.Outlet))
             {
-                var exception = new NotSupportedException("It is not allowed to call AbsorbTermination() from OnDownstreamFinish.");
+                const string error = "It is not allowed to call AbsorbTermination() from OnDownstreamFinish.";
                 // This MUST be logged here, since the downstream has cancelled, i.e. there is no one to send onError to, the
                 // stage is just about to finish so no one will catch it anyway just the interpreter
 
-                Interpreter.Log.Error(exception.Message);
-                throw exception;    // We still throw for correctness (although a finish() would also work here)
+                Interpreter.Log.Error(error);
+                // We still throw for correctness (although a finish() would also work here)
+                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_AbsorbTermination);
             }
 
             if (IsAvailable(_shape.Outlet))
@@ -184,7 +185,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="element">TBD</param>
         /// <returns>TBD</returns>
-        public FreeDirective PushAndPull(object element) => PushAndPull((TOut) element);
+        public FreeDirective PushAndPull(object element) => PushAndPull((TOut)element);
 
         /// <summary>
         /// TBD
@@ -203,7 +204,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="element">TBD</param>
         /// <returns>TBD</returns>
-        public IUpstreamDirective HoldUpstreamAndPush(object element) => HoldUpstreamAndPush((TOut) element);
+        public IUpstreamDirective HoldUpstreamAndPush(object element) => HoldUpstreamAndPush((TOut)element);
 
         /// <summary>
         /// TBD
@@ -281,7 +282,8 @@ namespace Akka.Streams.Stage
                     _currentStage.PreStart(Context);
                     break;
                 default:
-                    throw new NotSupportedException($"PushPullGraphLogic doesn't support supervision directive {decision}");
+                    ThrowHelper.ThrowNotSupportedException(decision);
+                    break;
             }
         }
 
@@ -347,7 +349,7 @@ namespace Akka.Streams.Stage
             return
                 new LogicAndMaterializedValue<TMat>(
                     new PushPullGraphLogic<TIn, TOut>(Shape, inheritedAttributes,
-                        (AbstractStage<TIn, TOut>) stageAndMat.Item1), stageAndMat.Item2);
+                        (AbstractStage<TIn, TOut>)stageAndMat.Item1), stageAndMat.Item2);
         }
 
         /// <summary>
@@ -387,7 +389,7 @@ namespace Akka.Streams.Stage
         /// TBD
         /// </summary>
         protected internal virtual bool IsDetached => false;
-        
+
         /// <summary>
         /// User overridable callback.
         /// <para>
@@ -561,7 +563,7 @@ namespace Akka.Streams.Stage
         /// <param name="element">TBD</param>
         /// <param name="context">TBD</param>
         /// <returns>TBD</returns>
-        public sealed override IDirective OnPush(TIn element, IContext context) => OnPush(element, (TContext) context);
+        public sealed override IDirective OnPush(TIn element, IContext context) => OnPush(element, (TContext)context);
 
         /// <summary>
         /// This method is called when there is demand from downstream, i.e. you are allowed to push one element
@@ -578,7 +580,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="context">TBD</param>
         /// <returns>TBD</returns>
-        public override IDirective OnPull(IContext context) => OnPull((TContext) context);
+        public override IDirective OnPull(IContext context) => OnPull((TContext)context);
 
         /// <summary>
         /// <para>
@@ -598,7 +600,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="context">TBD</param>
         /// <returns>TBD</returns>
-        public sealed override ITerminationDirective OnUpstreamFinish(IContext context) => OnUpstreamFinish((TContext) context);
+        public sealed override ITerminationDirective OnUpstreamFinish(IContext context) => OnUpstreamFinish((TContext)context);
 
         /// <summary>
         /// <para>
@@ -626,7 +628,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="context">TBD</param>
         /// <returns>TBD</returns>
-        public sealed override ITerminationDirective OnDownstreamFinish(IContext context) => OnDownstreamFinish((TContext) context);
+        public sealed override ITerminationDirective OnDownstreamFinish(IContext context) => OnDownstreamFinish((TContext)context);
 
         /// <summary>
         /// This method is called when downstream has cancelled. 
@@ -658,7 +660,7 @@ namespace Akka.Streams.Stage
         /// <param name="cause">TBD</param>
         /// <param name="context">TBD</param>
         /// <returns>TBD</returns>
-        public sealed override ITerminationDirective OnUpstreamFailure(Exception cause, IContext context) => OnUpstreamFailure(cause, (TContext) context);
+        public sealed override ITerminationDirective OnUpstreamFailure(Exception cause, IContext context) => OnUpstreamFailure(cause, (TContext)context);
 
         /// <summary>
         /// <para>

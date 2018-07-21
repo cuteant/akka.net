@@ -314,10 +314,10 @@ namespace Akka.Cluster.Tools.Client
                         // ok, use another instead
                     }
                     return true;
-                case HeartbeatTick heartbeatTick:
+                case HeartbeatTick _:
                     _failureDetector.HeartBeat();
                     return true;
-                case RefreshContactsTick refreshContactsTick:
+                case RefreshContactsTick _:
                     SendGetContacts();
                     return true;
                 case Send send:
@@ -329,7 +329,7 @@ namespace Akka.Cluster.Tools.Client
                 case Publish publish:
                     Buffer(new PublishSubscribe.Publish(publish.Topic, publish.Message));
                     return true;
-                case ReconnectTimeout reconnectTimeout:
+                case ReconnectTimeout _:
                     _log.Warning("Receptionist reconnect not successful within {0} stopping cluster client", _settings.ReconnectTimeout);
                     Context.Stop(Self);
                     return true;
@@ -353,7 +353,7 @@ namespace Akka.Cluster.Tools.Client
                     case Publish publish:
                         receptionist.Forward(new PublishSubscribe.Publish(publish.Topic, publish.Message));
                         return true;
-                    case HeartbeatTick heartbeatTick:
+                    case HeartbeatTick _:
                         if (!_failureDetector.IsAvailable)
                         {
                             if (_log.IsInfoEnabled) _log.Info("Lost contact with [{0}], reestablishing connection", receptionist);
@@ -367,10 +367,10 @@ namespace Akka.Cluster.Tools.Client
                             receptionist.Tell(ClusterReceptionist.Heartbeat.Instance);
                         }
                         return true;
-                    case ClusterReceptionist.HeartbeatRsp heartbeatRsp:
+                    case ClusterReceptionist.HeartbeatRsp _:
                         _failureDetector.HeartBeat();
                         return true;
-                    case RefreshContactsTick refreshContactsTick:
+                    case RefreshContactsTick _:
                         receptionist.Tell(ClusterReceptionist.GetContacts.Instance);
                         return true;
                     case ClusterReceptionist.Contacts contacts:
@@ -382,7 +382,7 @@ namespace Akka.Cluster.Tools.Client
                         }
                         PublishContactPoints();
                         return true;
-                    case ActorIdentity actorIdentity:
+                    case ActorIdentity _:
                         // ok, from previous establish, already handled
                         return true;
 
@@ -396,20 +396,20 @@ namespace Akka.Cluster.Tools.Client
         {
             switch (message)
             {
-                case SubscribeContactPoints scp:
+                case SubscribeContactPoints _:
                     var subscriber = Sender;
                     subscriber.Tell(new ContactPoints(_contactPaths));
                     _subscribers = _subscribers.Add(subscriber);
                     Context.Watch(subscriber);
                     return true;
-                case UnsubscribeContactPoints uscp:
+                case UnsubscribeContactPoints _:
                     var subscriber1 = Sender;
                     _subscribers = _subscribers.Where(c => !c.Equals(subscriber1)).ToImmutableList();
                     return true;
                 case Terminated terminated:
                     Self.Tell(UnsubscribeContactPoints.Instance, terminated.ActorRef);
                     return true;
-                case GetContactPoints gcp:
+                case GetContactPoints _:
                     Sender.Tell(new ContactPoints(_contactPaths));
                     return true;
                 default:

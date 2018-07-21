@@ -33,7 +33,7 @@ namespace Akka.Streams
     /// It is also used in the Java DSL for "untyped Outlets" as a work-around
     /// for otherwise unreasonable existential types.
     /// </summary>
-    public abstract class OutPort 
+    public abstract class OutPort
     {
         /// <summary>
         /// TBD
@@ -63,7 +63,11 @@ namespace Akka.Streams
         /// <exception cref="ArgumentException">
         /// This exception is thrown when the specified <paramref name="name"/> is undefined.
         /// </exception>
-        protected Inlet(string name) => Name = name ?? throw new ArgumentException("Inlet name must be defined");
+        protected Inlet(string name)
+        {
+            if (null == name) { ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Inletname_IsNull); }
+            Name = name;
+        }
 
         /// <summary>
         /// TBD
@@ -245,7 +249,7 @@ namespace Akka.Streams
         /// TBD
         /// </summary>
         public static readonly ClosedShape Instance = new ClosedShape();
-        
+
         private ClosedShape() { }
 
         /// <summary>
@@ -276,10 +280,8 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public override Shape CopyFromPorts(ImmutableArray<Inlet> inlets, ImmutableArray<Outlet> outlets)
         {
-            if (inlets.Length > 0)
-                throw new ArgumentException("Proposed inlets do not fit ClosedShape", nameof(inlets));
-            if (outlets.Length > 0)
-                throw new ArgumentException("Proposed outlets do not fit ClosedShape", nameof(outlets));
+            if (inlets.Length > 0) ThrowHelper.ThrowArgumentException_FitClosedShape(ExceptionArgument.inlets);
+            if (outlets.Length > 0) ThrowHelper.ThrowArgumentException_FitClosedShape(ExceptionArgument.outlets);
 
             return this;
         }
@@ -319,7 +321,7 @@ namespace Akka.Streams
         /// </summary>
         /// <returns>TBD</returns>
         public override Shape DeepCopy()
-            => new AmorphousShape(Inlets.Select(i => i.CarbonCopy()).ToImmutableArray(),Outlets.Select(o => o.CarbonCopy()).ToImmutableArray());
+            => new AmorphousShape(Inlets.Select(i => i.CarbonCopy()).ToImmutableArray(), Outlets.Select(o => o.CarbonCopy()).ToImmutableArray());
 
         /// <summary>
         /// TBD
@@ -344,7 +346,8 @@ namespace Akka.Streams
         /// <exception cref="ArgumentNullException">TBD</exception>
         public SourceShape(Outlet<TOut> outlet)
         {
-            Outlet = outlet ?? throw new ArgumentNullException(nameof(outlet));
+            if (null == outlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlet); }
+            Outlet = outlet;
             Outlets = ImmutableArray.Create<Outlet>(outlet);
         }
 
@@ -367,7 +370,7 @@ namespace Akka.Streams
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override Shape DeepCopy() => new SourceShape<TOut>((Outlet<TOut>) Outlet.CarbonCopy());
+        public override Shape DeepCopy() => new SourceShape<TOut>((Outlet<TOut>)Outlet.CarbonCopy());
 
         /// <summary>
         /// TBD
@@ -381,10 +384,8 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public override Shape CopyFromPorts(ImmutableArray<Inlet> inlets, ImmutableArray<Outlet> outlets)
         {
-            if (inlets.Length != 0)
-                throw new ArgumentException("Proposed inlets do not fit SourceShape", nameof(inlets));
-            if (outlets.Length != 1)
-                throw new ArgumentException("Proposed outlets do not fit SourceShape", nameof(outlets));
+            if (inlets.Length != 0) ThrowHelper.ThrowArgumentException_FitSourceShape(ExceptionArgument.inlets);
+            if (outlets.Length != 1) ThrowHelper.ThrowArgumentException_FitSourceShape(ExceptionArgument.outlets);
 
             return new SourceShape<TOut>(outlets[0] as Outlet<TOut>);
         }
@@ -440,8 +441,10 @@ namespace Akka.Streams
         /// </exception>
         public FlowShape(Inlet<TIn> inlet, Outlet<TOut> outlet)
         {
-            Inlet = inlet ?? throw new ArgumentNullException(nameof(inlet), "FlowShape expected non-null inlet");
-            Outlet = outlet ?? throw new ArgumentNullException(nameof(outlet), "FlowShape expected non-null outlet");
+            if (null == inlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlet, ExceptionResource.ArgumentNull_FlowShape_Inlet); }
+            if (null == outlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlet, ExceptionResource.ArgumentNull_FlowShape_Outlet); }
+            Inlet = inlet;
+            Outlet = outlet;
             Inlets = ImmutableArray.Create<Inlet>(inlet);
             Outlets = ImmutableArray.Create<Outlet>(outlet);
         }
@@ -475,7 +478,7 @@ namespace Akka.Streams
         /// </summary>
         /// <returns>TBD</returns>
         public override Shape DeepCopy()
-            => new FlowShape<TIn, TOut>((Inlet<TIn>) Inlet.CarbonCopy(), (Outlet<TOut>) Outlet.CarbonCopy());
+            => new FlowShape<TIn, TOut>((Inlet<TIn>)Inlet.CarbonCopy(), (Outlet<TOut>)Outlet.CarbonCopy());
 
         /// <summary>
         /// TBD
@@ -489,10 +492,8 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public override Shape CopyFromPorts(ImmutableArray<Inlet> inlets, ImmutableArray<Outlet> outlets)
         {
-            if (inlets.Length != 1)
-                throw new ArgumentException("Proposed inlets do not fit FlowShape", nameof(inlets));
-            if (outlets.Length != 1)
-                throw new ArgumentException("Proposed outlets do not fit FlowShape", nameof(outlets));
+            if (inlets.Length != 1) ThrowHelper.ThrowArgumentException_FitFlowShape(ExceptionArgument.inlets);
+            if (outlets.Length != 1) ThrowHelper.ThrowArgumentException_FitFlowShape(ExceptionArgument.outlets);
 
             return new FlowShape<TIn, TOut>(inlets[0] as Inlet<TIn>, outlets[0] as Outlet<TOut>);
         }
@@ -518,7 +519,8 @@ namespace Akka.Streams
         /// </exception>
         public SinkShape(Inlet<TIn> inlet)
         {
-            Inlet = inlet ?? throw new ArgumentNullException(nameof(inlet), "SinkShape expected non-null inlet");
+            if (null == inlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlet, ExceptionResource.ArgumentNull_SinkShape_Inlet); }
+            Inlet = inlet;
             Inlets = ImmutableArray.Create<Inlet>(inlet);
         }
 
@@ -536,7 +538,7 @@ namespace Akka.Streams
         /// TBD
         /// </summary>
         /// <returns>TBD</returns>
-        public override Shape DeepCopy() => new SinkShape<TIn>((Inlet<TIn>) Inlet.CarbonCopy());
+        public override Shape DeepCopy() => new SinkShape<TIn>((Inlet<TIn>)Inlet.CarbonCopy());
 
         /// <summary>
         /// TBD
@@ -550,10 +552,8 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public override Shape CopyFromPorts(ImmutableArray<Inlet> inlets, ImmutableArray<Outlet> outlets)
         {
-            if (outlets.Length != 0)
-                throw new ArgumentException("Proposed outlets do not fit SinkShape", nameof(outlets));
-            if (inlets.Length != 1)
-                throw new ArgumentException("Proposed inlets do not fit SinkShape", nameof(inlets));
+            if (outlets.Length != 0) ThrowHelper.ThrowArgumentException_FitSinkShape(ExceptionArgument.outlets);
+            if (inlets.Length != 1) ThrowHelper.ThrowArgumentException_FitSinkShape(ExceptionArgument.inlets);
 
             return new SinkShape<TIn>(inlets[0] as Inlet<TIn>);
         }
@@ -614,10 +614,14 @@ namespace Akka.Streams
         /// </exception>
         public BidiShape(Inlet<TIn1> in1, Outlet<TOut1> out1, Inlet<TIn2> in2, Outlet<TOut2> out2)
         {
-            Inlet1 = in1 ?? throw new ArgumentNullException(nameof(in1));
-            Inlet2 = in2 ?? throw new ArgumentNullException(nameof(in2));
-            Outlet1 = out1 ?? throw new ArgumentNullException(nameof(out1));
-            Outlet2 = out2 ?? throw new ArgumentNullException(nameof(out2));
+            if (null == in1) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.in1); }
+            if (null == in2) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.in2); }
+            if (null == out1) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.out1); }
+            if (null == out2) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.out2); }
+            Inlet1 = in1;
+            Inlet2 = in2;
+            Outlet1 = out1;
+            Outlet2 = out2;
 
             Inlets = ImmutableArray.Create<Inlet>(Inlet1, Inlet2);
             Outlets = ImmutableArray.Create<Outlet>(Outlet1, Outlet2);
@@ -650,10 +654,10 @@ namespace Akka.Streams
         public override Shape DeepCopy()
         {
             return new BidiShape<TIn1, TOut1, TIn2, TOut2>(
-                (Inlet<TIn1>) Inlet1.CarbonCopy(),
-                (Outlet<TOut1>) Outlet1.CarbonCopy(),
-                (Inlet<TIn2>) Inlet2.CarbonCopy(),
-                (Outlet<TOut2>) Outlet2.CarbonCopy());
+                (Inlet<TIn1>)Inlet1.CarbonCopy(),
+                (Outlet<TOut1>)Outlet1.CarbonCopy(),
+                (Inlet<TIn2>)Inlet2.CarbonCopy(),
+                (Outlet<TOut2>)Outlet2.CarbonCopy());
         }
 
         /// <summary>
@@ -668,8 +672,8 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public override Shape CopyFromPorts(ImmutableArray<Inlet> inlets, ImmutableArray<Outlet> outlets)
         {
-            if (inlets.Length != 2) throw new ArgumentException($"Proposed inlets [{string.Join(", ", inlets)}] don't fit BidiShape");
-            if (outlets.Length != 2) throw new ArgumentException($"Proposed outlets [{string.Join(", ", outlets)}] don't fit BidiShape");
+            if (inlets.Length != 2) ThrowHelper.ThrowArgumentException_ProposedInlets(inlets);
+            if (outlets.Length != 2) ThrowHelper.ThrowArgumentException_ProposedOutlets(outlets);
 
             return new BidiShape<TIn1, TOut1, TIn2, TOut2>((Inlet<TIn1>)inlets[0], (Outlet<TOut1>)outlets[0], (Inlet<TIn2>)inlets[1], (Outlet<TOut2>)outlets[1]);
         }

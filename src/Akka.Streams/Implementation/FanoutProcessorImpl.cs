@@ -88,8 +88,7 @@ namespace Akka.Streams.Implementation
             SubReceive = new SubReceive(message =>
             {
                 var publisher = message as ExposedPublisher;
-                if (publisher == null)
-                    throw new IllegalStateException($"The first message must be ExposedPublisher but was {message}");
+                if (publisher == null) ThrowHelper.ThrowIllegalStateException_FP(message);
 
                 ExposedPublisher = publisher.Publisher;
                 SubReceive.Become(DownstreamRunning);
@@ -112,24 +111,25 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected bool DownstreamRunning(object message)
         {
-            if (message is SubscribePending)
-                SubscribePending();
-            else if (message is RequestMore)
+            switch (message)
             {
-                var requestMore = (RequestMore) message;
-                MoreRequested((ActorSubscriptionWithCursor<T>) requestMore.Subscription, requestMore.Demand);
-                _pump.Pump();
-            }
-            else if (message is Cancel)
-            {
-                var cancel = (Cancel) message;
-                UnregisterSubscription((ActorSubscriptionWithCursor<T>) cancel.Subscription);
-                _pump.Pump();
-            }
-            else
-                return false;
+                case SubscribePending _:
+                    SubscribePending();
+                    return true;
 
-            return true;
+                case RequestMore requestMore:
+                    MoreRequested((ActorSubscriptionWithCursor<T>)requestMore.Subscription, requestMore.Demand);
+                    _pump.Pump();
+                    return true;
+
+                case Cancel cancel:
+                    UnregisterSubscription((ActorSubscriptionWithCursor<T>)cancel.Subscription);
+                    _pump.Pump();
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

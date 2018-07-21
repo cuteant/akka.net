@@ -328,7 +328,8 @@ namespace Akka.Streams.Actors
         /// </exception>
         public ActorSubscriberImpl(IActorRef impl)
         {
-            _impl = impl ?? throw new ArgumentNullException(nameof(impl), "ActorSubscriberImpl requires actor impl to be defined");
+            if (null == impl) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.impl, ExceptionResource.ArgumentNull_RequireActorImpl);
+            _impl = impl;
         }
 
         /// <summary>
@@ -340,7 +341,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public void OnSubscribe(ISubscription subscription)
         {
-            if (subscription == null) throw new ArgumentNullException(nameof(subscription), "OnSubscribe requires subscription to be defined");
+            if (null == subscription) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscription, ExceptionResource.ArgumentNull_OnSubscribeRequire);
             _impl.Tell(new OnSubscribe(subscription));
         }
 
@@ -359,7 +360,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public void OnNext(object element)
         {
-            if (element == null) throw new ArgumentNullException(nameof(element), "OnNext requires provided element not to be null");
+            if (null == element) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.element, ExceptionResource.ArgumentNull_OnNextRequire);
             _impl.Tell(new OnNext(element));
         }
 
@@ -372,7 +373,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public void OnError(Exception cause)
         {
-            if (cause == null) throw new ArgumentNullException(nameof(cause), "OnError has no cause defined");
+            if (null == cause) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_OnErrorRequire);
             _impl.Tell(new OnError(cause));
         }
 

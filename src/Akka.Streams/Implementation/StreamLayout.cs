@@ -292,9 +292,7 @@ namespace Akka.Streams.Implementation
             foreach (var subModule in module.SubModules)
                 Validate(subModule, level + 1, print, idMap);
 
-            if (problems.Count > 0 && !shouldPrint)
-                throw new IllegalStateException(
-                    $"module inconsistent, found {problems.Count} problems:\n - {string.Join("\n - ", problems)}");
+            if (problems.Count > 0 && !shouldPrint) ThrowHelper.ThrowIllegalStateException_SL_Valid(problems);
         }
 
         private static ImmutableHashSet<IModule> Atomics(IMaterializedValueNode node)
@@ -310,7 +308,7 @@ namespace Akka.Streams.Implementation
                 case Combine c:
                     return Atomics(c.Left).Union(Atomics(c.Right));
                 default:
-                    throw new ArgumentException("Couldn't extract atomics for node " + node.GetType());
+                    return ThrowHelper.ThrowArgumentException_StreamLayout_Atomics(node);
             }
         }
     }
@@ -654,18 +652,12 @@ namespace Akka.Streams.Implementation
 
             if (!OutPorts.Contains(from))
             {
-                var message = Downstreams.ContainsKey(from)
-                    ? $"The output port [{from}] is already connected"
-                    : $"The output port [{from}] is not part of underlying graph";
-                throw new ArgumentException(message);
+                ThrowHelper.ThrowArgumentException_StreamLayout_WireOut(Downstreams, from);
             }
 
             if (!InPorts.Contains(to))
             {
-                var message = Upstreams.ContainsKey(to)
-                    ? $"The input port [{to}] is already connected"
-                    : $"The input port [{to}] is not part of underlying graph";
-                throw new ArgumentException(message);
+                ThrowHelper.ThrowArgumentException_StreamLayout_WireIn(Upstreams, to);
             }
 
             return new CompositeModule(
@@ -724,12 +716,8 @@ namespace Akka.Streams.Implementation
             //if (StreamLayout.IsDebug)
             //    StreamLayout.Validate(this);
 
-            if (Equals(other, this))
-                throw new ArgumentException(
-                    "A module cannot be added to itself. You should pass a separate instance to compose().");
-            if (SubModules.Contains(other))
-                throw new ArgumentException(
-                    "An existing submodule cannot be added again. All contained modules must be unique.");
+            if (Equals(other, this)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_module_cannot_be_added_to_itself);
+            if (SubModules.Contains(other)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_submodule_cannot_be_added_again);
 
             var modulesLeft = IsSealed ? ImmutableArray.Create<IModule>(this) : SubModules;
             var modulesRight = other.IsSealed ? ImmutableArray.Create(other) : other.SubModules;
@@ -781,7 +769,7 @@ namespace Akka.Streams.Implementation
                 case FusedModule fused:
                     return IsIgnorable(fused.MaterializedValueComputation);
                 default:
-                    throw new NotSupportedException($"Module of type {module.GetType()} is not supported by this method");
+                    return ThrowHelper.ThrowNotSupportedException_SL_IsIgnorable(module);
             }
         }
 
@@ -796,12 +784,8 @@ namespace Akka.Streams.Implementation
             //if (StreamLayout.IsDebug)
             //    StreamLayout.Validate(this);
 
-            if (ReferenceEquals(this, that))
-                throw new ArgumentException(
-                    "A module cannot be added to itself. You should pass a separate instance to Compose().");
-            if (SubModules.Contains(that))
-                throw new ArgumentException(
-                    "An existing submodule cannot be added again. All contained modules must be unique.");
+            if (ReferenceEquals(this, that)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_module_cannot_be_added_to_itself);
+            if (SubModules.Contains(that)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_submodule_cannot_be_added_again);
 
             var module1 = IsSealed ? ImmutableArray.Create<IModule>(this) : SubModules;
             var module2 = that.IsSealed ? ImmutableArray.Create(that) : that.SubModules;
@@ -945,10 +929,11 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public override IModule ReplaceShape(Shape shape)
         {
-            if (shape is ClosedShape)
-                return this;
-
-            throw new NotSupportedException("Cannot replace the shape of empty module");
+            if (!(shape is ClosedShape))
+            {
+                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_replace_EmptyM);
+            }
+            return this;
         }
 
         /// <summary>
@@ -986,8 +971,7 @@ namespace Akka.Streams.Implementation
                     other.Downstreams, other.Upstreams, materialized, IsSealed ? Attributes.None : Attributes);
             }
 
-            throw new NotSupportedException(
-                "It is invalid to combine materialized value with EmptyModule except with Keep.Left or Keep.Right");
+            return ThrowHelper.ThrowNotSupportedException<IModule>(ExceptionResource.NotSupported_invalid_CMV);
         }
 
         /// <summary>
@@ -1020,7 +1004,7 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public override IModule WithAttributes(Attributes attributes)
         {
-            throw new NotSupportedException("EmptyModule cannot carry attributes");
+            return ThrowHelper.ThrowNotSupportedException<IModule>(ExceptionResource.NotSupported_EmptyModule);
         }
     }
 
@@ -1084,8 +1068,7 @@ namespace Akka.Streams.Implementation
         {
             if (!ReferenceEquals(shape, Shape))
             {
-                if (!Shape.HasSamePortsAs(shape))
-                    throw new ArgumentException("CopiedModule requires shape with same ports to replace", nameof(shape));
+                if (!Shape.HasSamePortsAs(shape)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_ReplaceShape_CopiedModule, ExceptionArgument.shape);
                 return CompositeModule.Create(this, shape);
             }
             return this;
@@ -1182,9 +1165,7 @@ namespace Akka.Streams.Implementation
         {
             if (!ReferenceEquals(shape, Shape))
             {
-                if (!Shape.HasSamePortsAs(shape))
-                    throw new ArgumentException("CombinedModule requires shape with same ports to replace",
-                        nameof(shape));
+                if (!Shape.HasSamePortsAs(shape)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_ReplaceShape_CombinedModule, ExceptionArgument.shape);
 
                 return new CompositeModule(SubModules, shape, Downstreams, Upstreams, MaterializedValueComputation,
                     Attributes);
@@ -1337,8 +1318,7 @@ namespace Akka.Streams.Implementation
         {
             if (!ReferenceEquals(Shape, shape))
             {
-                if (!Shape.HasSamePortsAs(shape))
-                    throw new ArgumentException("StructuralInfoModule requires shape with same ports to replace", nameof(shape));
+                if (!Shape.HasSamePortsAs(shape)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_ReplaceShape_StructuralInfoModule, ExceptionArgument.shape);
                 return new StructuralInfoModule(SubModules, shape, Downstreams, Upstreams, InOwners, OutOwners,
                     MaterializedValues, MaterializedValueComputation, Attributes);
             }
@@ -1445,9 +1425,7 @@ namespace Akka.Streams.Implementation
         {
             if (!ReferenceEquals(shape, Shape))
             {
-                if (!shape.HasSamePortsAndShapeAs(Shape))
-                    throw new ArgumentException("FusedModule requires shape with the same ports as existing one",
-                        nameof(shape));
+                if (!shape.HasSamePortsAndShapeAs(Shape)) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_ReplaceShape_FusedModule, ExceptionArgument.shape);
                 return new FusedModule(SubModules, shape, Downstreams, Upstreams, MaterializedValueComputation,
                     Attributes, Info);
             }
@@ -1557,8 +1535,6 @@ namespace Akka.Streams.Implementation
     [InternalApi]
     public sealed class VirtualProcessor<T> : AtomicReference<object>, IProcessor<T, T>
     {
-        private const string NoDemand = "spec violation: OnNext was signaled from upstream without demand";
-
         #region internal classes
 
         private sealed class Inert
@@ -1594,7 +1570,6 @@ namespace Akka.Streams.Implementation
         {
             if (subscriber == null)
             {
-                var ex = ReactiveStreamsCompliance.SubscriberMustNotBeNullException;
                 try
                 {
                     TrySubscribe(Inert.Subscriber);
@@ -1602,7 +1577,7 @@ namespace Akka.Streams.Implementation
                 finally
                 {
                     // must throw ArgumentNullEx, rule 2:13
-                    throw ex;
+                    ReactiveStreamsCompliance.ThrowSubscriberMustNotBeNullException();
                 }
             }
 
@@ -1647,15 +1622,14 @@ namespace Akka.Streams.Implementation
         {
             if (subscription == null)
             {
-                var ex = ReactiveStreamsCompliance.SubscriptionMustNotBeNullException;
                 try
                 {
-                    TryOnSubscribe(new ErrorPublisher<T>(ex, "failed-VirtualProcessor"), subscription);
+                    TryOnSubscribe(new ErrorPublisher<T>(ReactiveStreamsCompliance.SubscriptionMustNotBeNullException, "failed-VirtualProcessor"), subscription);
                 }
                 finally
                 {
                     // must throw ArgumentNullEx, rule 2:13
-                    throw ex;
+                    ReactiveStreamsCompliance.ThrowSubscriptionMustNotBeNullException();
                 }
             }
 
@@ -1736,12 +1710,12 @@ namespace Akka.Streams.Implementation
                 {
                     case null:
                         if (!CompareAndSet(null, new ErrorPublisher<T>(ex, "failed-VirtualProcessor"))) { continue; }
-                        if (cause == null) { throw ex; }
+                        if (cause == null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
                         return;
 
                     case ISubscription subscription:
                         if (!CompareAndSet(subscription, new ErrorPublisher<T>(ex, "failed-VirtualProcessor"))) { continue; }
-                        if (cause == null) { throw ex; }
+                        if (cause == null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
                         return;
                     case Both both:
                         Value = Inert.Instance;
@@ -1752,7 +1726,7 @@ namespace Akka.Streams.Implementation
                         finally
                         {
                             // must throw ArgumentNullEx, rule 2:13
-                            if (cause == null) { throw ex; }
+                            if (cause == null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
                         }
 
                         return;
@@ -1859,7 +1833,7 @@ namespace Akka.Streams.Implementation
                 }
 
                 // must throw ArgumentNullEx, rule 2:13
-                throw ex;
+                ReactiveStreamsCompliance.ThrowElementMustNotBeNullException(); // throw ex;
             }
 
             while (true)
@@ -1875,15 +1849,16 @@ namespace Akka.Streams.Implementation
                         catch (Exception e)
                         {
                             Value = Inert.Instance;
-                            throw new IllegalStateException("Subscriber threw exception, this is in violation of rule 2:13", e);
+                            ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Sub_throw_ex, e);
+                            return;
                         }
 
                     case ISubscriber<T> subscriber:
                         // spec violation
-                        var ex = new IllegalStateException(NoDemand);
                         var inert = GetAndSet(Inert.Instance);
-                        if (inert != Inert.Instance) { new ErrorPublisher<T>(ex, "failed-VirtualProcessor").Subscribe(subscriber); }
-                        throw ex;
+                        if (inert != Inert.Instance) { new ErrorPublisher<T>(ThrowHelper.GetIllegalStateException_NoDemand(), "failed-VirtualProcessor").Subscribe(subscriber); }
+                        ThrowHelper.ThrowIllegalStateException_NoDemand();
+                        break;
 
                     case IPublisher<T> _:
                         // nothing to be done
@@ -1898,7 +1873,7 @@ namespace Akka.Streams.Implementation
                         break;
                 }
 
-                var publisher = new ErrorPublisher<T>(new IllegalStateException(NoDemand), "failed-VirtualPublisher");
+                var publisher = new ErrorPublisher<T>(ThrowHelper.GetIllegalStateException_NoDemand(), "failed-VirtualPublisher");
                 if (!CompareAndSet(Value, publisher)) { continue; }
                 throw publisher.Cause;
             }
@@ -2097,7 +2072,7 @@ namespace Akka.Streams.Implementation
                         break;
                 }
 
-                throw new IllegalStateException("internal error");
+                ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_internal_err);
             }
         }
     }
@@ -2251,12 +2226,9 @@ namespace Akka.Streams.Implementation
             //if(IsDebug)
             //    Console.WriteLine($"beginning materialization of {TopLevel}");
 
-            if (TopLevel is EmptyModule)
-                throw new InvalidOperationException("An empty module cannot be materialized (EmptyModule was given)");
+            if (TopLevel is EmptyModule) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_empty_module_cannot_be_mat);
 
-            if (!TopLevel.IsRunnable)
-                throw new InvalidOperationException(
-                    "The top level module cannot be materialized because it has unconnected ports");
+            if (!TopLevel.IsRunnable) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_top_level_module);
 
             try
             {
@@ -2578,7 +2550,7 @@ namespace Akka.Streams.Implementation
         {
             if (shape != Shape)
             {
-                throw new NotSupportedException("Cannot replace the shape of a FlowModule");
+                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_replace_shapeOfFM);
             }
 
             return this;

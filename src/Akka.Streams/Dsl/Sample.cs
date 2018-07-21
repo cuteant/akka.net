@@ -53,8 +53,7 @@ namespace Akka.Streams.Dsl
             {
                 var nextStep = _sample._next();
 
-                if (nextStep <= 0)
-                    throw new ArgumentException($"Sampling step should be a positive value: {nextStep}");
+                if (nextStep <= 0) ThrowHelper.ThrowArgumentException_Sampling_Step(nextStep);
 
                 return nextStep;
             }
@@ -68,8 +67,7 @@ namespace Akka.Streams.Dsl
         /// <param name="maxStep">must > 0, default 1000, the randomly step will be between 1 (inclusive) and <paramref name="maxStep"/> (inclusive)</param>
         public static Sample<T> Random(int maxStep = 1000)
         {
-            if (maxStep <= 0)
-                throw new ArgumentException($"Max step for a random sampling must > 0", nameof(maxStep));
+            if (maxStep <= 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Sample_Max_step, ExceptionArgument.maxStep);
 
             return new Sample<T>(() => ThreadLocalRandom.Current.Next(maxStep) + 1);
         }

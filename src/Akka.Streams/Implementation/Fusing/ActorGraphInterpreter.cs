@@ -954,8 +954,8 @@ namespace Akka.Streams.Implementation.Fusing
             /// <exception cref="ArgumentException">TBD</exception>
             public BatchingActorInputBoundary(int size, int id)
             {
-                if (size <= 0) throw new ArgumentException("Buffer size cannot be zero", nameof(size));
-                if ((size & (size - 1)) != 0) throw new ArgumentException("Buffer size must be power of two", nameof(size));
+                if (size <= 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Buffersize_zero, ExceptionArgument.size);
+                if ((size & (size - 1)) != 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Hub_buffer_power_two, ExceptionArgument.size);
 
                 _size = size;
                 _id = id;
@@ -1022,7 +1022,7 @@ namespace Akka.Streams.Implementation.Fusing
             /// <exception cref="ArgumentException">TBD</exception>
             public void OnSubscribe(ISubscription subscription)
             {
-                if (subscription == null) throw new ArgumentException("Subscription cannot be null");
+                if (subscription == null) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Subscription_IsNull);
                 if (_upstreamCompleted) ReactiveStreamsCompliance.TryCancel(subscription);
                 else if (_downstreamCanceled)
                 {
@@ -1046,8 +1046,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 if (!_upstreamCompleted)
                 {
-                    if (_inputBufferElements == _size)
-                        throw new IllegalStateException("Input buffer overrun");
+                    if (_inputBufferElements == _size) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Inputbuffer_Overrun);
                     _inputBuffer[(_nextInputElementCursor + _inputBufferElements) & _indexMask] = element;
                     _inputBufferElements++;
                     if (IsAvailable(_outlet))
@@ -1073,8 +1072,7 @@ namespace Akka.Streams.Implementation.Fusing
             private object Dequeue()
             {
                 var element = _inputBuffer[_nextInputElementCursor];
-                if (element == null)
-                    throw new IllegalStateException("Internal queue must never contain a null");
+                if (element == null) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_queue_never_null);
                 _inputBuffer[_nextInputElementCursor] = null;
 
                 _batchRemaining--;

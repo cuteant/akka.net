@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Annotations;
@@ -424,7 +425,8 @@ namespace Akka.Streams.Implementation.Fusing
                         OnRestart(ex);
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        ThrowHelper.ThrowArgumentOutOfRangeException();
+                        break;
                 }
                 return Option<T>.None;
             }
@@ -885,7 +887,8 @@ namespace Akka.Streams.Implementation.Fusing
                                 Push(stage.Out, _stageAggregate);
                                 break;
                             default:
-                                throw new ArgumentOutOfRangeException();
+                                ThrowHelper.ThrowArgumentOutOfRangeException();
+                                break;
                         }
                     }
                 };
@@ -1637,8 +1640,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </exception>
         public Grouped(int count)
         {
-            if (count <= 0)
-                throw new ArgumentException("count must be greater than 0", nameof(count));
+            if (count <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.count);
 
             _count = count;
 
@@ -1856,10 +1858,8 @@ namespace Akka.Streams.Implementation.Fusing
         /// </exception>
         public Sliding(int count, int step)
         {
-            if (count <= 0)
-                throw new ArgumentException("count must be greater than 0", nameof(count));
-            if (step <= 0)
-                throw new ArgumentException("step must be greater than 0", nameof(step));
+            if (count <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.count);
+            if (step <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.step);
 
             _count = count;
             _step = step;
@@ -1985,7 +1985,8 @@ namespace Akka.Streams.Implementation.Fusing
                         };
                         break;
                     default:
-                        throw new ArgumentOutOfRangeException();
+                        ThrowHelper.ThrowArgumentOutOfRangeException();
+                        break;
                 }
 
                 SetHandler(_stage.Outlet, this);
@@ -2911,9 +2912,7 @@ namespace Akka.Streams.Implementation.Fusing
                     }
                     catch (Exception ex)
                     {
-                        throw new Exception(
-                            "Log stage can only provide LoggingAdapter when used with ActorMaterializer! Provide a LoggingAdapter explicitly or use the actor based flow materializer.",
-                            ex);
+                        ThrowHelper.ThrowException(ex);
                     }
                 }
             }
@@ -3148,8 +3147,7 @@ namespace Akka.Streams.Implementation.Fusing
             public Logic(Attributes inheritedAttributes, Delay<T> stage) : base(stage.Shape)
             {
                 var inputBuffer = inheritedAttributes.GetAttribute<Attributes.InputBuffer>(null);
-                if (inputBuffer == null)
-                    throw new IllegalStateException($"Couldn't find InputBuffer Attribute for {this}");
+                if (inputBuffer == null) ThrowIllegalStateException(this);
 
                 _stage = stage;
                 _size = inputBuffer.Max;
@@ -3157,6 +3155,16 @@ namespace Akka.Streams.Implementation.Fusing
 
                 SetHandler(_stage.Inlet, this);
                 SetHandler(_stage.Outlet, this);
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private static void ThrowIllegalStateException(Logic logic)
+            {
+                throw GetException();
+                IllegalStateException GetException()
+                {
+                    return new IllegalStateException($"Couldn't find InputBuffer Attribute for {logic}");
+                }
             }
 
             public void OnPush()
@@ -3264,9 +3272,9 @@ namespace Akka.Streams.Implementation.Fusing
                             GrabAndPull();
                         };
                     case DelayOverflowStrategy.Fail:
-                        return () => { FailStage(new BufferOverflowException($"Buffer overflow for Delay combinator (max capacity was: {_size})!")); };
+                        return () => { FailStage(ThrowHelper.GetBufferOverflowException(_size)); };
                     default:
-                        return () => { throw new IllegalStateException($"Delay buffer must never overflow in {strategy} mode"); };
+                        return () => { ThrowHelper.ThrowIllegalStateException_OnPushStrategy(strategy); };
                 }
             }
         }
@@ -3629,8 +3637,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </exception>
         public RecoverWith(Func<Exception, IGraph<SourceShape<TOut>, TMat>> partialFunction, int maximumRetries)
         {
-            if (maximumRetries < -1)
-                throw new ArgumentException("number of retries must be non-negative or equal to -1", nameof(maximumRetries));
+            if (maximumRetries < -1) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_retries_non_negative, ExceptionArgument.maximumRetries);
 
             _partialFunction = partialFunction;
             _maximumRetries = maximumRetries;
@@ -3708,7 +3715,8 @@ namespace Akka.Streams.Implementation.Fusing
                                 Pull(_stage._in);
                             break;
                         default:
-                            throw new ArgumentOutOfRangeException();
+                            ThrowHelper.ThrowArgumentOutOfRangeException();
+                            break;
                     }
                 }
             }

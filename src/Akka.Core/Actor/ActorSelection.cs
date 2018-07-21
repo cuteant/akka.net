@@ -271,8 +271,7 @@ namespace Akka.Actor
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((ActorSelection)obj);
+            return obj is ActorSelection actorSel && Equals(actorSel);
         }
 
         /// <inheritdoc/>

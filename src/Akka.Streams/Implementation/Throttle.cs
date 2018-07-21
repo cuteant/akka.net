@@ -53,8 +53,7 @@ namespace Akka.Streams.Implementation
                     Push(_stage.Outlet, element);
                 else
                 {
-                    if (_enforcing)
-                        throw new OverflowException("Maximum throttle throughput exceeded.");
+                    if (_enforcing) ThrowHelper.ThrowOverflowException();
 
                     _currentElement = element;
                     ScheduleOnce(TimerName, TimeSpan.FromTicks(delayTicks));

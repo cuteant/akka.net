@@ -39,9 +39,12 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public AtLeastOnceDeliverySnapshot(long currentDeliveryId, UnconfirmedDelivery[] unconfirmedDeliveries)
         {
+            if (null == unconfirmedDeliveries)
+            {
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.unconfirmedDeliveries, ExceptionResource.ArgumentNull_AtLeastOnceDeliverySnapshot);
+            }
             CurrentDeliveryId = currentDeliveryId;
-            UnconfirmedDeliveries = unconfirmedDeliveries ?? throw new ArgumentNullException(nameof(unconfirmedDeliveries),
-                    "AtLeastOnceDeliverySnapshot expects not null array of unconfirmed deliveries");
+            UnconfirmedDeliveries = unconfirmedDeliveries;
         }
 
         /// <summary>
@@ -101,8 +104,11 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public UnconfirmedWarning(UnconfirmedDelivery[] unconfirmedDeliveries)
         {
-            UnconfirmedDeliveries = unconfirmedDeliveries ?? throw new ArgumentNullException(nameof(unconfirmedDeliveries),
-                    "UnconfirmedWarning expects not null array of unconfirmed deliveries");
+            if (null == unconfirmedDeliveries)
+            {
+                ThrowHelper.ThrowArgumentNullException(ExceptionArgument.unconfirmedDeliveries, ExceptionResource.ArgumentNull_UnconfirmedWarning);
+            }
+            UnconfirmedDeliveries = unconfirmedDeliveries;
         }
 
         /// <summary>
@@ -386,7 +392,7 @@ namespace Akka.Persistence
 
         private void StartRedeliverTask()
         {
-            var interval = new TimeSpan(RedeliverInterval.Ticks/2);
+            var interval = new TimeSpan(RedeliverInterval.Ticks / 2);
             _redeliverScheduleCancelable = _context.System.Scheduler.ScheduleTellRepeatedlyCancelable(interval, interval, _context.Self,
                 RedeliveryTick.Instance, _context.Self);
         }
@@ -409,8 +415,7 @@ namespace Akka.Persistence
         {
             if (_unconfirmed.Count >= MaxUnconfirmedMessages)
             {
-                throw new MaxUnconfirmedMessagesExceededException(
-                    $"{_context.Self} has too many unconfirmed messages. Maximum allowed is {MaxUnconfirmedMessages}");
+                ThrowHelper.ThrowMaxUnconfirmedMessagesExceededException(_context, MaxUnconfirmedMessages);
             }
 
             long deliveryId = NextDeliverySequenceNr();

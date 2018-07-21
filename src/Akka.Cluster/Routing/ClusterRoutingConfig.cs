@@ -182,8 +182,7 @@ namespace Akka.Cluster.Routing
         {
             if (obj is null) return false;
             if (ReferenceEquals(this, obj)) return true;
-            if (obj.GetType() != GetType()) return false;
-            return Equals((ClusterRouterPoolSettings)obj);
+            return obj is ClusterRouterPoolSettings settings && Equals(settings);
         }
 
         public override int GetHashCode()

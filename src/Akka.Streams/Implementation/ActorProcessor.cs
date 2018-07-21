@@ -125,8 +125,8 @@ namespace Akka.Streams.Implementation
         /// </exception>
         protected BatchingInputBuffer(int count, IPump pump)
         {
-            if (count <= 0) throw new ArgumentException("Buffer Count must be > 0", nameof(count));
-            if ((count & (count - 1)) != 0) throw new ArgumentException("Buffer Count must be power of two", nameof(count));
+            if (count <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.count);
+            if ((count & (count - 1)) != 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_BufferCount_PowerofTwo, ExceptionArgument.count);
             // TODO: buffer and batch sizing heuristics
 
             Count = count;
@@ -185,7 +185,7 @@ namespace Akka.Streams.Implementation
         {
             if (IsOpen)
             {
-                if (_inputBufferElements == Count) throw new IllegalStateException("Input buffer overrun");
+                if (_inputBufferElements == Count) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Inputbuffer_Overrun);
                 _inputBuffer[(_nextInputElementCursor + _inputBufferElements) & _indexMask] = element;
                 _inputBufferElements++;
             }
@@ -259,7 +259,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         protected virtual void OnSubscribe(ISubscription subscription)
         {
-            if (subscription == null) throw new ArgumentNullException(nameof(subscription), "OnSubscribe require subscription not to be null");
+            if (subscription == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscription, ExceptionResource.ArgumentNull_OnSubscribeRequire);
 
             if (_isUpstreamCompleted)
                 subscription.Cancel();
@@ -331,8 +331,7 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected virtual bool Completed(object message)
         {
-            if (message is OnSubscribe)
-                throw new IllegalStateException("OnSubscribe called after OnError or OnComplete");
+            if (message is OnSubscribe) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_sub_called_after_err);
             return false;
         }
 
@@ -513,8 +512,7 @@ namespace Akka.Streams.Implementation
                 SubReceive.Become(DownstreamRunning);
                 return true;
             }
-            throw new IllegalStateException(
-                $"The first message must be [{typeof (ExposedPublisher)}] but was [{message}]");
+            return ThrowHelper.ThrowIllegalStateException_FM(message);
         }
 
         /// <summary>
@@ -740,7 +738,7 @@ namespace Akka.Streams.Implementation
         protected override void PostRestart(Exception reason)
         {
             base.PostRestart(reason);
-            throw new IllegalStateException("This actor cannot be restarted", reason);
+            ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Actor_Cannot_Restart, reason);
         }
     }
 }

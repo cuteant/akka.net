@@ -437,8 +437,7 @@ namespace Akka.Persistence
 
         private void EnsureMayConfigureRecoverHandlers()
         {
-            if (_matchRecoverBuilders.Count <= 0)
-                throw new InvalidOperationException("You may only call Recover-methods when constructing the actor and inside Become().");
+            if (_matchRecoverBuilders.Count <= 0) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Recover_methods);
         }
 
         /// <summary>
@@ -525,8 +524,7 @@ namespace Akka.Persistence
         
         private void EnsureMayConfigureCommandHandlers()
         {
-            if (_matchCommandBuilders.Count <= 0)
-                throw new InvalidOperationException("You may only call Command-methods when constructing the actor and inside Become().");
+            if (_matchCommandBuilders.Count <= 0) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Command_methods);
         }
 
         /// <summary>

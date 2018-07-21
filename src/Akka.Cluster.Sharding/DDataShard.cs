@@ -141,7 +141,7 @@ namespace Akka.Cluster.Sharding
                     State = new Shard.ShardState(State.Entries.Union(success.Get(key).Elements));
                     ReceiveOne(i);
                     break;
-                case GetFailure failure:
+                case GetFailure _:
                     Log.Error("The DDataShard was unable to get an initial state within 'waiting-for-state-timeout': {0}", Settings.TunningParameters.WaitingForStateTimeout);
                     Context.Stop(Self);
                     break;

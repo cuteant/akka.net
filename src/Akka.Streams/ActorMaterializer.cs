@@ -86,14 +86,21 @@ namespace Akka.Streams
 
         private static ActorSystem ActorSystemOf(IActorRefFactory context)
         {
-            if (context is ExtendedActorSystem system) { return system; }
-            if (context is IActorContext ct) { return ct.System; }
-            if (context == null)
+            switch (context)
             {
-                throw new ArgumentNullException(nameof(context), "IActorRefFactory must be defined");
-            }
+                case ExtendedActorSystem system:
+                    return system;
 
-            throw new ArgumentException($"ActorRefFactory context must be a ActorSystem or ActorContext, got [{context.GetType()}]");
+                case IActorContext ct:
+                    return ct.System;
+
+                case null:
+                    ThrowHelper.ThrowArgumentNullException(ExceptionArgument.context, ExceptionResource.ArgumentNull_IActorRefFactoryIsNull);
+                    return null;
+
+                default:
+                    return ThrowHelper.ThrowArgumentException(context);
+            }
         }
 
         #endregion
@@ -209,7 +216,7 @@ namespace Akka.Streams
             //FIXME this method is going to cause trouble for other Materializer implementations
             if (materializer is ActorMaterializer downcast) { return downcast; }
 
-            throw new ArgumentException($"Expected {typeof(ActorMaterializer)} but got {materializer.GetType()}");
+            return ThrowHelper.ThrowArgumentException_Downcast(materializer);
         }
     }
 
@@ -278,7 +285,7 @@ namespace Akka.Streams
     /// </summary>
     public sealed class AbruptStageTerminationException : Exception
     {
-        public AbruptStageTerminationException(GraphStageLogic logic) 
+        public AbruptStageTerminationException(GraphStageLogic logic)
             : base($"GraphStage {logic} terminated abruptly, caused by for example materializer or actor system termination.")
         {
 
@@ -511,9 +518,9 @@ namespace Akka.Streams
                 case "no": case "off": case "false": case "noop": mode = StreamSubscriptionTimeoutTerminationMode.NoopTermination; break;
                 case "warn": mode = StreamSubscriptionTimeoutTerminationMode.WarnTermination; break;
                 case "cancel": mode = StreamSubscriptionTimeoutTerminationMode.CancelTermination; break;
-                default: throw new ArgumentException("akka.stream.materializer.subscribtion-timeout.mode was not defined or has invalid value. Valid values are: no, off, false, noop, warn, cancel");
+                default: ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_subscription_timeout); mode = default; break;
             }
-            
+
             return new StreamSubscriptionTimeoutSettings(
                 mode: mode,
                 timeout: c.GetTimeSpan("timeout", TimeSpan.FromSeconds(5)));
@@ -548,7 +555,7 @@ namespace Akka.Streams
             if (ReferenceEquals(obj, this))
                 return true;
             if (obj is StreamSubscriptionTimeoutSettings)
-                return Equals((StreamSubscriptionTimeoutSettings) obj);
+                return Equals((StreamSubscriptionTimeoutSettings)obj);
 
             return false;
         }

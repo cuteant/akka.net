@@ -34,10 +34,8 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         public static Props Props(FileInfo f, TaskCompletionSource<IOResult> completionPromise, int bufferSize, long startPosition, FileMode fileMode)
         {
-            if (bufferSize <= 0)
-                throw new ArgumentException($"bufferSize must be > 0 (was {bufferSize})", nameof(bufferSize));
-            if (startPosition < 0)
-                throw new ArgumentException($"startPosition must be >= 0 (was {startPosition})", nameof(startPosition));
+            if (bufferSize <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.bufferSize, bufferSize);
+            if (startPosition < 0) ThrowHelper.ThrowArgumentException_GreaterThanEqualZero(ExceptionArgument.startPosition, startPosition);
 
             return Actor.Props.Create(() => new FileSubscriber(f, completionPromise, bufferSize, startPosition, fileMode)).WithDeploy(Deploy.Local);
         }

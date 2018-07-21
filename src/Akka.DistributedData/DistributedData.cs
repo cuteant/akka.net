@@ -123,9 +123,9 @@ namespace Akka.DistributedData
                     if (Equals(id, success.Request))
                         return success.Get(key);
                     else throw new NotSupportedException($"Received response id [{success.Request}] and request correlation id [{id}] are different.");
-                case NotFound notFound: return null;
-                case DataDeleted deleted: throw new DataDeletedException($"Cannot retrieve data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
-                case GetFailure failure: throw new TimeoutException($"Couldn't retrieve the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
+                case NotFound _: return null;
+                case DataDeleted _: throw new DataDeletedException($"Cannot retrieve data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
+                case GetFailure _: throw new TimeoutException($"Couldn't retrieve the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
                 case Status.Failure failure:
                     ExceptionDispatchInfo.Capture(failure.Cause).Throw();
                     return default;
@@ -161,10 +161,10 @@ namespace Akka.DistributedData
                     if (Equals(id, success.Request))
                         return;
                     else throw new NotSupportedException($"Received response id [{success.Request}] and request correlation id [{id}] are different.");
-                case DataDeleted deleted: throw new DataDeletedException($"Cannot store data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
+                case DataDeleted _: throw new DataDeletedException($"Cannot store data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
                 case ModifyFailure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
                 case StoreFailure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
-                case UpdateTimeout timeout: throw new TimeoutException($"Couldn't confirm update of the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
+                case UpdateTimeout _: throw new TimeoutException($"Couldn't confirm update of the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
                 case Status.Failure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
                 default: throw new NotSupportedException("Unknown response type: " + response);
             }
@@ -195,9 +195,9 @@ namespace Akka.DistributedData
                     if (Equals(id, success.Request))
                         return;
                     else throw new NotSupportedException($"Received response id [{success.Request}] and request correlation id [{id}] are different.");
-                case ReplicationDeleteFailure failure: throw new TimeoutException($"Couldn't confirm deletion of the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
+                case ReplicationDeleteFailure _: throw new TimeoutException($"Couldn't confirm deletion of the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
                 case StoreFailure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
-                case DataDeleted deleted: throw new DataDeletedException($"Cannot store data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
+                case DataDeleted _: throw new DataDeletedException($"Cannot store data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
                 case Status.Failure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
                 default: throw new NotSupportedException("Unknown response type: " + response);
             }

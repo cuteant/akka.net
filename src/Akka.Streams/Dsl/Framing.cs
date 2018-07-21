@@ -60,8 +60,7 @@ namespace Akka.Streams.Dsl
         public static Flow<ByteString, ByteString, NotUsed> LengthField(int fieldLength, int maximumFramelength,
             int fieldOffset = 0, ByteOrder byteOrder = ByteOrder.LittleEndian)
         {
-            if (fieldLength < 1 || fieldLength > 4)
-                throw new ArgumentException("Length field length must be 1,2,3 or 4", nameof(fieldLength));
+            if (fieldLength < 1 || fieldLength > 4) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Framing_FieldLength, ExceptionArgument.fieldLength);
 
             return Flow.Create<ByteString>()
                 .Via(new LengthFieldFramingStage(fieldLength, maximumFramelength, fieldOffset, byteOrder))
@@ -124,39 +123,41 @@ namespace Akka.Streams.Dsl
             }
         }
 
-        private static readonly Func<IEnumerator<byte>, int, int> BigEndianDecoder = (enumerator, length) =>
+        private static readonly Func<IEnumerator<byte>, int, int> BigEndianDecoder = BigEndianDecoderInternal;
+        private static int BigEndianDecoderInternal(IEnumerator<byte> enumerator, int length)
         {
             var count = length;
             var decoded = 0;
             while (count > 0)
             {
                 decoded <<= 8;
-                if (!enumerator.MoveNext()) throw new IndexOutOfRangeException("LittleEndianDecoder reached end of byte string");
+                if (!enumerator.MoveNext()) ThrowHelper.ThrowIndexOutOfRangeException_Framing();
                 decoded |= enumerator.Current & 0xFF;
                 count--;
             }
 
             return decoded;
-        };
+        }
 
-        private static readonly Func<IEnumerator<byte>, int, int> LittleEndianDecoder = (enumerator, length) =>
+        private static readonly Func<IEnumerator<byte>, int, int> LittleEndianDecoder = LittleEndianDecoderInternal;
+        private static int LittleEndianDecoderInternal(IEnumerator<byte> enumerator, int length)
         {
             var highestOcted = (length - 1) << 3;
-            var mask = (int) (1L << (length << 3)) - 1;
+            var mask = (int)(1L << (length << 3)) - 1;
             var count = length;
             var decoded = 0;
 
             while (count > 0)
             {
                 // decoded >>>= 8 on the jvm
-                decoded = (int) ((uint) decoded >> 8);
-                if (!enumerator.MoveNext()) throw new IndexOutOfRangeException("LittleEndianDecoder reached end of byte string");
+                decoded = (int)((uint)decoded >> 8);
+                if (!enumerator.MoveNext()) ThrowHelper.ThrowIndexOutOfRangeException_Framing();
                 decoded += (enumerator.Current & 0xFF) << highestOcted;
                 count--;
             }
 
             return decoded & mask;
-        };
+        }
 
         private sealed class SimpleFramingProtocolEncoderStage : SimpleLinearGraphStage<ByteString>
         {

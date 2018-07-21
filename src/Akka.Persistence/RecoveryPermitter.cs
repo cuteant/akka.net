@@ -94,8 +94,7 @@ namespace Akka.Persistence
             _usedPermits--;
             Context.Unwatch(actorRef);
 
-            if (_usedPermits < 0)
-                throw new IllegalStateException("Permits must not be negative");
+            if (_usedPermits < 0) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_PermitsNeedNonegative);
 
             if (pending.Count > 0)
             {

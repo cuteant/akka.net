@@ -1487,7 +1487,7 @@ namespace Akka.Remote
                     case EndpointManager.Send s:
                         return WriteSend(s);
 
-                    case FlushAndStop f:
+                    case FlushAndStop _:
                         DoFlushAndStop();
                         return false;
 

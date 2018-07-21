@@ -108,11 +108,11 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public override IModule ReplaceShape(Shape shape)
         {
-            if (Equals(_shape, shape))
-                return this;
-
-            throw new NotSupportedException(
-                "cannot replace the shape of a Sink, you need to wrap it in a Graph for that");
+            if (!Equals(_shape, shape))
+            {
+                ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_replace_shapeOfSink);
+            }
+            return this;
         }
 
         /// <summary>
@@ -908,8 +908,7 @@ namespace Akka.Streams.Implementation
             Attributes inheritedAttributes)
         {
             var maxBuffer = inheritedAttributes.GetAttribute(new Attributes.InputBuffer(16, 16)).Max;
-            if (maxBuffer <= 0)
-                throw new ArgumentException("Buffer must be greater than zero", nameof(inheritedAttributes));
+            if (maxBuffer <= 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Buffer_must_be_g_t_zero, ExceptionArgument.inheritedAttributes);
 
             var logic = new Logic(this, maxBuffer);
             return new LogicAndMaterializedValue<ISinkQueue<T>>(logic, new Materialized(t => logic.Invoke(t)));
