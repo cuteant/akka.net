@@ -704,7 +704,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </summary>
         public void BreakUpGroupsByDispatcher()
         {
-            var newGroups = new Deque<ISet<IModule>>(true);
+            var newGroups = new Deque<ISet<IModule>>();
             var it = Groups.GetEnumerator();
             while (it.MoveNext())
             {
@@ -716,12 +716,14 @@ namespace Akka.Streams.Implementation.Fusing
                     {
                         group.Clear();
                         foreach (var subgroup in subgroups)
-                            newGroups.AddToFront(new HashSet<IModule>(subgroup));
+                        {
+                            newGroups.AddToBack(new HashSet<IModule>(subgroup));
+                        }
                     }
                 }
             }
 
-            newGroups.Reverse(group => Groups.AddToBack(group));
+            newGroups.ForEach(group => Groups.AddToBack(group));
         }
 
         /// <summary>

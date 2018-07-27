@@ -39,7 +39,7 @@ namespace Akka.Persistence
     /// </summary>
     internal class RecoveryPermitter : UntypedActor
     {
-        private readonly Deque<IActorRef> pending = new Deque<IActorRef>(true);
+        private readonly Deque<IActorRef> pending = new Deque<IActorRef>();
         private readonly ILoggingAdapter Log = Context.GetLogger();
         private int _usedPermits;
         private int _maxPendingStats;
@@ -66,7 +66,7 @@ namespace Akka.Persistence
                         {
                             Log.Debug("Exceeded max-concurrent-recoveries [{0}]. First pending {1}", MaxPermits, Sender);
                         }
-                        pending.AddToFront(Sender); // AddLast
+                        pending.AddToBack(Sender);
                         _maxPendingStats = Math.Max(_maxPendingStats, pending.Count);
                     }
                     else
@@ -98,7 +98,7 @@ namespace Akka.Persistence
 
             if (pending.Count > 0)
             {
-                var popRef = pending.RemoveFromBack(); // Pop
+                var popRef = pending.RemoveFromFront(); // Pop
                 RecoveryPermitGranted(popRef);
             }
 

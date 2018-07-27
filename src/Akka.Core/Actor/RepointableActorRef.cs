@@ -334,7 +334,7 @@ namespace Akka.Actor
         private readonly object _lock = new object();
 
         /* Both queues must be accessed via lock */
-        private readonly Deque<Envelope> _messageQueue = new Deque<Envelope>(true);
+        private readonly Deque<Envelope> _messageQueue = new Deque<Envelope>();
         private LatestFirstSystemMessageList _sysMsgQueue = SystemMessageList.LNil;
 
         private readonly TimeSpan _timeout;
@@ -383,7 +383,7 @@ namespace Akka.Actor
                 {
                     DrainSysMsgQueue(cell);
 
-                    while (_messageQueue.TryRemoveFromBack(out var e))
+                    while (_messageQueue.TryRemoveFromFront(out var e))
                     {
                         cell.SendMessage(e.Sender, e.Message);
 
@@ -527,7 +527,7 @@ namespace Akka.Actor
                     }
                     else
                     {
-                        _messageQueue.AddToFront(new Envelope(message, sender));
+                        _messageQueue.AddToBack(new Envelope(message, sender));
                         Mailbox.DebugPrint("{0} temp queueing {1} from {2}", Self, message, sender);
                     }
                 }

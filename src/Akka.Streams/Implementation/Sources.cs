@@ -972,7 +972,7 @@ namespace Akka.Streams.Implementation
             public Logic(EventSourceStage<TDelegate, TEventArgs> stage) : base(stage.Shape)
             {
                 _stage = stage;
-                _buffer = new Deque<TEventArgs>(true);
+                _buffer = new Deque<TEventArgs>();
                 var bufferCapacity = stage._maxBuffer;
                 var onEvent = GetAsyncCallback<TEventArgs>(e =>
                 {
@@ -983,7 +983,7 @@ namespace Akka.Streams.Implementation
                     else
                     {
                         if (_buffer.Count >= bufferCapacity) _onOverflow(e);
-                        else _buffer.AddToFront(e);
+                        else _buffer.AddToBack(e);
                     }
                 });
 
@@ -991,7 +991,7 @@ namespace Akka.Streams.Implementation
                 _onOverflow = SetupOverflowStrategy(stage._overflowStrategy);
                 SetHandler(stage.Out, this);
             }
-            //private void Enqueue(TEventArgs e) => _buffer.AddToFront(e);
+            //private void Enqueue(TEventArgs e) => _buffer.AddLast(e);
 
             //private TEventArgs Dequeue()
             //{
@@ -1002,9 +1002,8 @@ namespace Akka.Streams.Implementation
 
             public override void OnPull()
             {
-                if (_buffer.Count > 0)
+                if(_buffer.TryRemoveFromFront(out var element))
                 {
-                    var element = _buffer.RemoveFromBack();
                     Push(_stage.Out, element);
                 }
             }
@@ -1030,14 +1029,14 @@ namespace Akka.Streams.Implementation
                     case OverflowStrategy.DropHead:
                         return message =>
                         {
-                            _buffer.RemoveFromBack();
-                            _buffer.AddToFront(message);
+                            _buffer.RemoveFromFront();
+                            _buffer.AddToBack(message);
                         };
                     case OverflowStrategy.DropTail:
                         return message =>
                         {
-                            _buffer.RemoveFromFront();
-                            _buffer.AddToFront(message);
+                            _buffer.RemoveFromBack();
+                            _buffer.AddToBack(message);
                         };
                     case OverflowStrategy.DropNew:
                         return message =>
@@ -1048,7 +1047,7 @@ namespace Akka.Streams.Implementation
                         return message =>
                         {
                             _buffer.Clear();
-                            _buffer.AddToFront(message);
+                            _buffer.AddToBack(message);
                         };
                     case OverflowStrategy.Fail:
                         return message =>

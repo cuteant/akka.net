@@ -43,8 +43,8 @@ namespace Akka.Persistence.Journal
     /// </summary>
     public class ReplayFilter : ActorBase
     {
-        private readonly Deque<ReplayedMessage> _buffer = new Deque<ReplayedMessage>(true);
-        private readonly Deque<string> _oldWriters = new Deque<string>(true, StringComparer.Ordinal);
+        private readonly Deque<ReplayedMessage> _buffer = new Deque<ReplayedMessage>();
+        private readonly Deque<string> _oldWriters = new Deque<string>(StringComparer.Ordinal);
         private string _writerUuid = string.Empty;
         private long _sequenceNr = -1;
         private readonly ILoggingAdapter _log = Context.GetLogger();
@@ -139,7 +139,7 @@ namespace Akka.Persistence.Journal
                     {
                         if (_buffer.Count == WindowSize)
                         {
-                            var msg = _buffer.RemoveFromBack(); // RemoveFirst
+                            var msg = _buffer.RemoveFromFront();
                             PersistentActor.Tell(msg, ActorRefs.NoSender);
                         }
 
@@ -161,7 +161,7 @@ namespace Akka.Persistence.Journal
                                         ThrowHelper.ThrowIllegalStateException(errMsg);
                                         break; ;
                                     case ReplayFilterMode.Warn:
-                                        _buffer.AddToFront(r); // AddLast
+                                        _buffer.AddToBack(r);
                                         break;
                                     case ReplayFilterMode.Disabled:
                                         ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Mode_NoDisabled);
@@ -171,7 +171,7 @@ namespace Akka.Persistence.Journal
                             else
                             {
                                 // note that it is alright with == _sequenceNr, since such may be emitted by EventSeq
-                                _buffer.AddToFront(r); // AddLast
+                                _buffer.AddToBack(r);
                                 _sequenceNr = r.Persistent.SequenceNr;
                             }
                         }
@@ -191,7 +191,7 @@ namespace Akka.Persistence.Journal
                                     ThrowHelper.ThrowIllegalStateException(errMsg);
                                     break;
                                 case ReplayFilterMode.Warn:
-                                    _buffer.AddToFront(r); // AddLast
+                                    _buffer.AddToBack(r);
                                     break;
                                 case ReplayFilterMode.Disabled:
                                     ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Mode_NoDisabled);
@@ -201,10 +201,8 @@ namespace Akka.Persistence.Journal
                         else
                         {
                             // from new writer
-                            if (!string.IsNullOrEmpty(_writerUuid))
-                                _oldWriters.AddToFront(_writerUuid); // AddLast
-                            if (_oldWriters.Count > MaxOldWriters)
-                                _oldWriters.RemoveFromBack(); // RemoveFirst
+                            if (!string.IsNullOrEmpty(_writerUuid)) { _oldWriters.AddToBack(_writerUuid); }
+                            if (_oldWriters.Count > MaxOldWriters) { _oldWriters.RemoveFromFront(); }
                             _writerUuid = r.Persistent.WriterGuid;
                             _sequenceNr = r.Persistent.SequenceNr;
 
@@ -220,7 +218,7 @@ namespace Akka.Persistence.Journal
                             }
                             if (Mode == ReplayFilterMode.RepairByDiscardOld)
                             {
-                                _buffer.Reverse(msg =>
+                                _buffer.ForEach(msg =>
                                 {
                                     if (msg.Persistent.SequenceNr >= _sequenceNr) { LogError(msg); }
                                 });
@@ -228,7 +226,7 @@ namespace Akka.Persistence.Journal
                             }
                             else
                             {
-                                _buffer.Reverse(msg =>
+                                _buffer.ForEach(msg =>
                                 {
                                     if (msg.Persistent.SequenceNr >= _sequenceNr)
                                     {
@@ -252,7 +250,7 @@ namespace Akka.Persistence.Journal
                                     }
                                 });
                             }
-                            _buffer.AddToFront(r); // AddLast
+                            _buffer.AddToBack(r);
                         }
                     }
                     catch (IllegalStateException ex)
@@ -278,7 +276,7 @@ namespace Akka.Persistence.Journal
 
         private void SendBuffered()
         {
-            _buffer.Reverse(message => PersistentActor.Tell(message, ActorRefs.NoSender));
+            _buffer.ForEach(message => PersistentActor.Tell(message, ActorRefs.NoSender));
             _buffer.Clear();
         }
 

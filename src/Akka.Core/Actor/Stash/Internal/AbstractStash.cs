@@ -44,7 +44,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
     }}";
                 throw new NotSupportedException(message);
             }
-            _theStash = new Deque<Envelope>(true);
+            _theStash = new Deque<Envelope>();
             _actorCell = actorCell;
 
             // TODO: capacity needs to come from dispatcher or mailbox config
@@ -76,9 +76,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
 
             if (_capacity <= 0 || _theStash.Count < _capacity)
             {
-                // 这儿反着来
-                //_theStash.AddLast(new Envelope(currMsg, sender));
-                _theStash.AddToFront(new Envelope(currMsg, sender));
+                _theStash.AddToBack(new Envelope(currMsg, sender));
             }
             else
             {
@@ -102,7 +100,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
             //        _theStash.RemoveFirst();
             //    }
             //}
-            if (_theStash.TryRemoveFromBack(out var item))
+            if (_theStash.TryRemoveFromFront(out var item))
             {
                 EnqueueFirst(item);
             }
@@ -134,12 +132,11 @@ An (unbounded) deque-based mailbox can be configured as follows:
                     //{
                     //    EnqueueFirst(item);
                     //}
-                    // AddToFront & RemoveFromBack，不需要 Reverse
-                    _theStash.ForEach(Enqueue);
+                    _theStash.Reverse(Enqueue);
                 }
                 finally
                 {
-                    _theStash = new Deque<Envelope>(true);
+                    _theStash = new Deque<Envelope>();
                 }
             //}
         }
@@ -155,7 +152,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
                 return Enumerable.Empty<Envelope>();
 
             var stashed = _theStash;
-            _theStash = new Deque<Envelope>(true);
+            _theStash = new Deque<Envelope>();
             return stashed;
         }
 
@@ -169,8 +166,7 @@ An (unbounded) deque-based mailbox can be configured as follows:
             // we must enumerate envelopes in reversed order
             foreach (var envelope in envelopes.Distinct().Reverse())
             {
-                //_theStash.AddFirst(envelope);
-                _theStash.AddToBack(envelope);
+                _theStash.AddToFront(envelope);
             }
         }
 

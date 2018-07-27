@@ -1050,10 +1050,10 @@ namespace Akka.Remote
         // Use an internal buffer instead of Stash for efficiency stash/unstashAll is slow when many
         // messages are stashed
         // IMPORTANT: sender is not stored, so .Sender and forward must not be used in EndpointWriter
-        private readonly Deque<object> _buffer = new Deque<object>(true);
+        private readonly Deque<object> _buffer = new Deque<object>();
 
         //buffer for IPriorityMessages - ensures that heartbeats get delivered before user-defined messages
-        private readonly Deque<EndpointManager.Send> _prioBuffer = new Deque<EndpointManager.Send>(true);
+        private readonly Deque<EndpointManager.Send> _prioBuffer = new Deque<EndpointManager.Send>();
 
         private long _largeBufferLogTimestamp = MonotonicClock.GetNanos();
 
@@ -1113,12 +1113,12 @@ namespace Akka.Remote
         {
             _ackIdleTimerCancelable.CancelIfNotNull();
 
-            while (_prioBuffer.TryRemoveFromBack(out var msg))
+            while (_prioBuffer.TryRemoveFromFront(out var msg))
             {
                 _system.DeadLetters.Tell(msg);
             }
 
-            while (_buffer.TryRemoveFromBack(out var msg))
+            while (_buffer.TryRemoveFromFront(out var msg))
             {
                 _system.DeadLetters.Tell(msg);
             }
@@ -1164,7 +1164,7 @@ namespace Akka.Remote
             Receive<BackoffTimer>(backoff => SendBufferedMessages());
             Receive<FlushAndStop>(stop =>
             {
-                _buffer.AddToFront(stop); //Flushing is postponed after the pending writes
+                _buffer.AddToBack(stop); //Flushing is postponed after the pending writes
                 Context.System.Scheduler.ScheduleTellOnce(Settings.FlushWait, Self, FlushAndStopTimeout.Instance, Self);
             });
             Receive<FlushAndStopTimeout>(timeout =>
@@ -1387,11 +1387,11 @@ namespace Akka.Remote
             {
                 case IPriorityMessage _:
                 case ActorSelectionMessage selMsg when selMsg.Message is IPriorityMessage:
-                    _prioBuffer.AddToFront(send);
+                    _prioBuffer.AddToBack(send);
                     break;
 
                 default:
-                    _buffer.AddToFront(message);
+                    _buffer.AddToBack(message);
                     break;
             }
         }
@@ -1504,7 +1504,7 @@ namespace Akka.Remote
             {
                 if (count > 0 && _buffer.NonEmpty)
                 {
-                    if (_buffer.TryRemoveFromBackIf(SendDelegate, out var _))
+                    if (_buffer.TryRemoveFromFrontIf(SendDelegate, out var _))
                     {
                         _writeCount += 1;
                         return WriteLoop(count - 1);
@@ -1518,7 +1518,7 @@ namespace Akka.Remote
             bool WritePrioLoop()
             {
                 if (_prioBuffer.IsEmpty) { return true; }
-                if (_prioBuffer.TryRemoveFromBackIf(WriteSend, out var _))
+                if (_prioBuffer.TryRemoveFromFrontIf(WriteSend, out var _))
                 {
                     return WritePrioLoop();
                 }

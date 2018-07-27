@@ -27,7 +27,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         public readonly Action<object> Unhandled;
 
-        private readonly Deque<object> _stash = new Deque<object>(true);
+        private readonly Deque<object> _stash = new Deque<object>();
 
         /// <summary>
         /// TBD
@@ -63,12 +63,12 @@ namespace Akka.Streams.Implementation
                     {
                         if (!ActiveReceive(msg)) Unhandled(msg);
                     }
-                    _stash.Reverse(ProcessMsg);
+                    _stash.ForEach(ProcessMsg);
                 }
             }
             else
             {
-                _stash.AddToFront(message);
+                _stash.AddToBack(message);
             }
 
             return true;

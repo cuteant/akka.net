@@ -288,7 +288,7 @@ namespace Akka.Persistence
             {
                 void onWriteMessageComplete(bool err)
                 {
-                    _pendingInvocations.RemoveFromBack(); // Pop
+                    _pendingInvocations.RemoveFromFront(); // Pop
                     UnstashInternally(err);
                 }
                 var handled = CommonProcessingStateBehavior(message, onWriteMessageComplete);
@@ -344,7 +344,7 @@ namespace Akka.Persistence
             {
                 void onWriteMessageComplete(bool err)
                 {
-                    var invocation = _pendingInvocations.RemoveFromBack(); // Pop
+                    var invocation = _pendingInvocations.RemoveFromFront(); // Pop
 
                     // enables an early return to `processingCommands`, because if this counter hits `0`,
                     // we know the remaining pendingInvocations are all `persistAsync` created, which
@@ -368,7 +368,7 @@ namespace Akka.Persistence
         {
             try
             {
-                _pendingInvocations.Last.Handler(payload); // First.Value
+                _pendingInvocations.First.Handler(payload);
             }
             finally
             {
