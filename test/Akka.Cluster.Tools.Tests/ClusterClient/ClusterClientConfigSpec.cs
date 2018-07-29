@@ -13,6 +13,7 @@ using Akka.Configuration;
 using Akka.TestKit;
 using Xunit;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using System.Collections.Immutable;
 
 namespace Akka.Cluster.Tools.Tests.ClusterClient

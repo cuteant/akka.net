@@ -14,6 +14,7 @@ using Akka.TestKit;
 using Xunit;
 using Assert = Xunit.Assert;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 
 namespace Akka.Cluster.Tests
 {

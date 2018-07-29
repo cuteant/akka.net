@@ -5,12 +5,13 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using Akka.Actor;
-using Akka.Persistence.Fsm;
-using FluentAssertions;
 using System;
 using System.Collections.Generic;
+using Akka.Actor;
 using Akka.Configuration;
+using Akka.Persistence.Fsm;
+using FluentAssertions;
+using FluentAssertions.Extensions;
 using MessagePack;
 using Xunit;
 using static Akka.Actor.FSMBase;

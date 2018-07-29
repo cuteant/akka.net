@@ -11,6 +11,7 @@ using Akka.Pattern;
 using Akka.TestKit;
 using Xunit;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using System.Threading;
 
 namespace Akka.Tests.Pattern

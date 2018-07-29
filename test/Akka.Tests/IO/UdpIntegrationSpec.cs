@@ -17,6 +17,7 @@ using Xunit;
 using Xunit.Abstractions;
 using FluentAssertions;
 using FsCheck;
+using FluentAssertions.Extensions;
 
 namespace Akka.Tests.IO
 {

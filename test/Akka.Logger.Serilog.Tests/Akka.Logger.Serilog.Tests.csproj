@@ -7,6 +7,10 @@
   </PropertyGroup>
  
   <ItemGroup>
+    <PackageReference Include="Serilog.Sinks.ColoredConsole" Version="$(SerilogSinksColoredConsolePackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Logger.Serilog\Akka.Logger.Serilog.csproj" />
     <ProjectReference Include="..\..\src\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
   </ItemGroup>
