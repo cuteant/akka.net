@@ -900,6 +900,11 @@ namespace Akka.Cluster.Tools.Singleton
                     case HandOverToMe _ when e.StateData is OldestData oldest:
                         return GoToHandingOver(oldest.Singleton, oldest.SingletonTerminated, Sender);
 
+                    case TakeOverFromMe _:
+                        // already oldest, so confirm and continue like that
+                        Sender.Tell(HandOverToMe.Instance);
+                        return Stay();
+
                     case Terminated terminated when e.StateData is OldestData o && terminated.ActorRef.Equals(o.Singleton):
                         return Stay().Using(new OldestData(o.Singleton, true));
 

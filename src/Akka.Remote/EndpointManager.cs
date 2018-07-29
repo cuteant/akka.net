@@ -1053,21 +1053,21 @@ namespace Akka.Remote
                 if (_listens == null)
                 {
                     /*
-                 * Constructs chains of adapters on top of each driven given in configuration. The result structure looks like the following:
-                 *
-                 *      AkkaProtocolTransport <-- Adapter <-- ... <-- Adapter <-- Driver
-                 *
-                 * The transports variable contains only the heads of each chains (the AkkaProtocolTransport instances)
-                 */
+                     * Constructs chains of adapters on top of each driven given in configuration. The result structure looks like the following:
+                     *
+                     *      AkkaProtocolTransport <-- Adapter <-- ... <-- Adapter <-- Driver
+                     *
+                     * The transports variable contains only the heads of each chains (the AkkaProtocolTransport instances)
+                     */
                     var transports = new List<AkkaProtocolTransport>();
                     var actorSystem = Context.System;
                     foreach (var transportSettings in _settings.Transports)
                     {
                         var args = new object[] { actorSystem, transportSettings.Config };
 
-                        //Loads the driver -- the bottom element of the chain
-                        //The chain at this point:
-                        //  Driver
+                        // Loads the driver -- the bottom element of the chain
+                        // The chain at this point:
+                        //   Driver
                         Transport.Transport driver;
                         try
                         {
