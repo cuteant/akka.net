@@ -425,6 +425,21 @@ namespace Akka
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowNotSupportedException(ActorCell actorCell)
+        {
+            throw GetException();
+            NotSupportedException GetException()
+            {
+                string message = $@"DequeBasedMailbox required, got: {actorCell.Mailbox.GetType().Name}
+An (unbounded) deque-based mailbox can be configured as follows:
+    my-custom-mailbox {{
+        mailbox-type = ""Akka.Dispatch.UnboundedDequeBasedMailbox""
+    }}";
+                return new NotSupportedException(message);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNotSupportedException_ActorCell_SysMsgInvokeAll(SystemMessage m)
         {
             throw GetException();
