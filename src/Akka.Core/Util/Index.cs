@@ -151,7 +151,7 @@ namespace Akka.Util
                 if (set.TryRemove(value)) // If we can remove the value
                 {
                     if (set.IsEmpty) // and the set becomes empty
-                        _container.TryRemove(key, out set);
+                        _container.TryRemove(key, out _);
                     return true; // Remove succeeded
                 }
                 return false; // Remove failed
@@ -177,7 +177,7 @@ namespace Akka.Util
                         if (set.IsEmpty) // And the set becomes empty
                         {
                             // We try to remove the key if it's mapped to an empty set
-                            _container.TryRemove(e.Key, out set);
+                            _container.TryRemove(e.Key, out _);
                         }
                     }
                 }
@@ -217,7 +217,7 @@ namespace Akka.Util
             {
                 var e = i.Next();
                 var set = e.Value;
-                if(set != null) { set.Clear(); _container.TryRemove(e.Key, out set); }
+                if(set != null) { set.Clear(); _container.TryRemove(e.Key, out _); }
             }
         }
     }

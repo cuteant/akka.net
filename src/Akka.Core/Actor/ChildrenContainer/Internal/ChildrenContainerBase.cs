@@ -182,7 +182,7 @@ namespace Akka.Actor.Internal
         /// <returns>TBD</returns>
         public bool Contains(IActorRef actor)
         {
-            return TryGetByRef(actor, out var _);
+            return TryGetByRef(actor, out _);
         }
 
         /// <summary>

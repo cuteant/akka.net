@@ -172,7 +172,7 @@ namespace Akka.Util
         /// <returns>TBD</returns>
         public bool TryRemove(T item)
         {
-            return _storage.TryRemove(item, out var _);
+            return _storage.TryRemove(item, out _);
         }
     }
 }

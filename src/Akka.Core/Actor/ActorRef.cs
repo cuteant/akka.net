@@ -737,7 +737,7 @@ namespace Akka.Actor
         /// <param name="name">TBD</param>
         public void RemoveChild(string name)
         {
-            if (!_children.TryRemove(name, out var tmp))
+            if (!_children.TryRemove(name, out _))
             {
                 Log.Warning("{0} trying to remove non-child {1}", Path, name);
             }
@@ -750,7 +750,7 @@ namespace Akka.Actor
         /// <param name="child">TBD</param>
         public void RemoveChild(string name, IActorRef child)
         {
-            if (!_children.TryRemove(name, out var tmp))
+            if (!_children.TryRemove(name, out _))
             {
                 Log.Warning("{0} trying to remove non-child {1}", Path, name);
             }

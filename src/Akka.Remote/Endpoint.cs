@@ -503,7 +503,7 @@ namespace Akka.Remote
             {
                 Context.System.DeadLetters.Tell(msg.Copy(opt: null));
             }
-            _receiveBuffers.TryRemove(new EndpointManager.Link(_localAddress, _remoteAddress), out var value);
+            _receiveBuffers.TryRemove(new EndpointManager.Link(_localAddress, _remoteAddress), out _);
             _autoResendTimer.Cancel();
             _maxSilenceTimer?.Cancel();
         }
@@ -1504,7 +1504,7 @@ namespace Akka.Remote
             {
                 if (count > 0 && _buffer.NonEmpty)
                 {
-                    if (_buffer.TryRemoveFromFrontIf(SendDelegate, out var _))
+                    if (_buffer.TryRemoveFromFrontIf(SendDelegate, out _))
                     {
                         _writeCount += 1;
                         return WriteLoop(count - 1);
@@ -1518,7 +1518,7 @@ namespace Akka.Remote
             bool WritePrioLoop()
             {
                 if (_prioBuffer.IsEmpty) { return true; }
-                if (_prioBuffer.TryRemoveFromFrontIf(WriteSend, out var _))
+                if (_prioBuffer.TryRemoveFromFrontIf(WriteSend, out _))
                 {
                     return WritePrioLoop();
                 }

@@ -1265,7 +1265,7 @@ namespace Akka.Streams.Implementation.Fusing
                     sub.ExternalCallback(SubSink.Cancel.Instance);
                     return;
                 case PublisherSource<T> pub:
-                    pub.Create(default, out var _).Subscribe(CancelingSubscriber<T>.Instance);
+                    pub.Create(default, out _).Subscribe(CancelingSubscriber<T>.Instance);
                     return;
 
                 default:
