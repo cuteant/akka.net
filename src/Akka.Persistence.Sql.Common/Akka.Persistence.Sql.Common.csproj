@@ -3,7 +3,7 @@
   <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.Persistence.Sql.Common</RootNamespace>
     <AssemblyName>Akka.Persistence.Sql.Common</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

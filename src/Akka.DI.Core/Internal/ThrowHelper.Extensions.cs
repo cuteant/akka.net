@@ -94,5 +94,15 @@ namespace Akka.DI.Core
                 return new ArgumentNullException("context", $"DIActorContextAdapter requires context to be provided");
             }
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowInvalidOperationException_TheDependencyResolverHasNotBeenConfiguredYet()
+        {
+            throw GetException();
+            InvalidOperationException GetException()
+            {
+                return new InvalidOperationException("The Dependency Resolver has not been configured yet");
+            }
+        }
     }
 }

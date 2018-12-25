@@ -1,0 +1,214 @@
+
+E:\CoreProjects\akka.net\test\Akka.Persistence.Tests>dotnet test -- RunConfiguration.TargetPlatform=x64
+已开始生成，请等待...
+PersistentViewSpec.Actors.cs(40,45): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(92,52): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(144,51): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(168,49): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(193,49): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(226,60): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(249,53): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryFailureSpec.cs(137,36): warning CS0114: '“AtLeastOnceDeliveryFailureSpec.ChaosSender.Log”隐藏继承的成员“Eventsourced.Log”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryCrashSpec.cs(81,29): warning CS0114: '“AtLeastOnceDeliveryCrashSpec.CrashingActor.Log”隐藏继承的成 员“Eventsourced.Log”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(126,30): warning CS0659: '“AtLeastOnceDeliveryReceiveActorSpec.InvalidReq”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(271,30): warning CS0659: '“AtLeastOnceDeliveryReceiveActorSpec.ReqAck”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(30,29): warning CS0659: '“MemoryEventAdapterSpec.Tagged”重写 Object.Equals(object o) 但不重 写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(53,29): warning CS0659: '“MemoryEventAdapterSpec.NotTagged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(77,29): warning CS0659: '“MemoryEventAdapterSpec.TaggedDataChanged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(100,29): warning CS0659: '“MemoryEventAdapterSpec.UserDataChanged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliverySpec.cs(207,22): warning CS0659: '“AtLeastOnceDeliverySpec.ReqAck”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliverySpec.cs(218,22): warning CS0659: '“AtLeastOnceDeliverySpec.InvalidReq”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(83,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(95,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(137,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(141,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(145,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+EndToEndEventAdapterSpec.cs(243,51): warning CS0642: 空语句可能有错误 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(211,51): warning CS0642: 空语句可能有错误 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(632,27): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(601,21): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当 前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(598,48): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(577,21): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当 前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(575,48): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(536,46): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentActorSpecAsyncAwait.Actors.cs(736,25): warning CS0414: 字段“PersistentActorSpecAsyncAwait.AsyncPersistHandlerCorrelationCheck._counter”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentActorSpec.Actors.cs(638,25): warning CS0414: 字段“PersistentActorSpec.AsyncPersistHandlerCorrelationCheck._counter”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(612,21): warning xUnit1013: Public method 'PersistentReceive_must_redeliver_many_lost_messages' on test class 'AtLeastOnceDeliveryReceiveActorSpec' should be marked as a Fact. [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryCrashSpec.cs(81,29): warning CS0114: '“AtLeastOnceDeliveryCrashSpec.CrashingActor.Log”隐藏继承的成 员“Eventsourced.Log”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryFailureSpec.cs(137,36): warning CS0114: '“AtLeastOnceDeliveryFailureSpec.ChaosSender.Log”隐藏继承的成员“Eventsourced.Log”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(126,30): warning CS0659: '“AtLeastOnceDeliveryReceiveActorSpec.InvalidReq”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(271,30): warning CS0659: '“AtLeastOnceDeliveryReceiveActorSpec.ReqAck”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliverySpec.cs(207,22): warning CS0659: '“AtLeastOnceDeliverySpec.ReqAck”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliverySpec.cs(218,22): warning CS0659: '“AtLeastOnceDeliverySpec.InvalidReq”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(40,45): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(92,52): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(144,51): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(168,49): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(193,49): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(226,60): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(249,53): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(30,29): warning CS0659: '“MemoryEventAdapterSpec.Tagged”重写 Object.Equals(object o) 但不重 写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(53,29): warning CS0659: '“MemoryEventAdapterSpec.NotTagged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(77,29): warning CS0659: '“MemoryEventAdapterSpec.TaggedDataChanged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(100,29): warning CS0659: '“MemoryEventAdapterSpec.UserDataChanged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+EndToEndEventAdapterSpec.cs(243,51): warning CS0642: 空语句可能有错误 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(211,51): warning CS0642: 空语句可能有错误 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(83,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(95,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(137,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(141,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(145,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(632,27): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(601,21): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当 前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(598,48): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(577,21): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当 前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(575,48): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(536,46): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentActorSpecAsyncAwait.Actors.cs(736,25): warning CS0414: 字段“PersistentActorSpecAsyncAwait.AsyncPersistHandlerCorrelationCheck._counter”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentActorSpec.Actors.cs(638,25): warning CS0414: 字段“PersistentActorSpec.AsyncPersistHandlerCorrelationCheck._counter”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(612,21): warning xUnit1013: Public method 'PersistentReceive_must_redeliver_many_lost_messages' on test class 'AtLeastOnceDeliveryReceiveActorSpec' should be marked as a Fact. [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryCrashSpec.cs(81,29): warning CS0114: '“AtLeastOnceDeliveryCrashSpec.CrashingActor.Log”隐藏继承的成 员“Eventsourced.Log”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(40,45): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryFailureSpec.cs(137,36): warning CS0114: '“AtLeastOnceDeliveryFailureSpec.ChaosSender.Log”隐藏继承的成员“Eventsourced.Log”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(92,52): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(144,51): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(168,49): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(193,49): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(226,60): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.Actors.cs(249,53): warning CS0618: '“PersistentView”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(126,30): warning CS0659: '“AtLeastOnceDeliveryReceiveActorSpec.InvalidReq”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(271,30): warning CS0659: '“AtLeastOnceDeliveryReceiveActorSpec.ReqAck”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliverySpec.cs(207,22): warning CS0659: '“AtLeastOnceDeliverySpec.ReqAck”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliverySpec.cs(218,22): warning CS0659: '“AtLeastOnceDeliverySpec.InvalidReq”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(30,29): warning CS0659: '“MemoryEventAdapterSpec.Tagged”重写 Object.Equals(object o) 但不重 写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(53,29): warning CS0659: '“MemoryEventAdapterSpec.NotTagged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(77,29): warning CS0659: '“MemoryEventAdapterSpec.TaggedDataChanged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(100,29): warning CS0659: '“MemoryEventAdapterSpec.UserDataChanged”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+EndToEndEventAdapterSpec.cs(243,51): warning CS0642: 空语句可能有错误 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+MemoryEventAdapterSpec.cs(211,51): warning CS0642: 空语句可能有错误 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(83,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(95,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(137,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(141,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentViewSpec.cs(145,28): warning CS0618: '“Update”已过时:“PersistentView was deprecated and will be removed in the next major version [1.3.0]” [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(632,27): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(601,21): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当 前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(598,48): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(577,21): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当 前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(575,48): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+ReceivePersistentActorAsyncAwaitSpec.cs(536,46): warning CS1998: 此异步方法缺少 "await" 运算符，将以同步方式运行。请考虑使用 "await" 运算符等待非阻止的 API 调用，或者使用 "await Task.Run(...)" 在后台线程上执行占用大量 CPU 的工作。 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentActorSpec.Actors.cs(638,25): warning CS0414: 字段“PersistentActorSpec.AsyncPersistHandlerCorrelationCheck._counter”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+PersistentActorSpecAsyncAwait.Actors.cs(736,25): warning CS0414: 字段“PersistentActorSpecAsyncAwait.AsyncPersistHandlerCorrelationCheck._counter”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+AtLeastOnceDeliveryReceiveActorSpec.cs(612,21): warning xUnit1013: Public method 'PersistentReceive_must_redeliver_many_lost_messages' on test class 'AtLeastOnceDeliveryReceiveActorSpec' should be marked as a Fact. [E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\Akka.Persistence.Tests.csproj]
+完成的生成。
+
+E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\bin\Debug\netcoreapp2.2\Akka.Persistence.Tests.dll 的测试运行(.NETCoreApp,Version=v2.2)
+Microsoft (R) 测试执行命令行工具版本 15.9.0
+版权所有 (C) Microsoft Corporation。保留所有权利。
+
+正在启动测试执行，请稍候...
+[xUnit.net 00:00:09.85]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_Context_Become_during_recovery [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_Context_Become_during_recovery 个
+[xUnit.net 00:00:10.69]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed 个
+[xUnit.net 00:00:13.29]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_snapshotting [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_snapshotting 个
+[xUnit.net 00:00:15.10]     Akka.Persistence.Tests.PersistentViewSpec.PersistentView_should_run_size_limited_updates_on_user_request [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentViewSpec.PersistentView_should_run_size_limited_updates_on_user_request 个
+[xUnit.net 00:00:22.02]     Akka.Persistence.Tests.ReceivePersistentActorAsyncAwaitSpec.Actors_should_be_able_to_block_ask_self_message_loop [SKIP]
+[xUnit.net 00:00:22.81]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_Context_Become_during_recovery [SKIP]
+已跳过 Akka.Persistence.Tests.ReceivePersistentActorAsyncAwaitSpec.Actors_should_be_able_to_block_ask_self_message_loop 个
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_Context_Become_during_recovery 个
+[xUnit.net 00:00:26.40]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed 个
+[xUnit.net 00:00:27.02]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_snapshotting [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_snapshotting 个
+
+总测试: 249。已通过: 241。失败: 0。已跳过: 8。
+测试运行成功。
+测试执行时间: 32.6354 秒
+E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\bin\Debug\net471\win-x64\Akka.Persistence.Tests.dll 的测试运行(.NETFramework,Version=v4.7.1)
+Microsoft (R) 测试执行命令行工具版本 15.9.0
+版权所有 (C) Microsoft Corporation。保留所有权利。
+
+正在启动测试执行，请稍候...
+[xUnit.net 00:00:01.64]     Akka.Persistence.Tests.SnapshotDirectoryFailureSpec.LocalSnapshotStore_configured_with_a_failing_directory_name_should_throw_an_exception_at_startup [FAIL]
+Akka.Persistence.Tests.SnapshotDirectoryFailureSpec.LocalSnapshotStore_configured_with_a_failing_directory_name_should_throw_an_exception_at_startup 个失败
+错误消息:
+ System.NullReferenceException : 未将对象引用设置到对象的实例。
+堆栈跟踪:
+   在 CuteAnt.Reflection.TypeUtils.TryResolveType(String qualifiedTypeName, Type& type)
+   在 Akka.Util.TypeUtil.ResolveType(String qualifiedTypeName, Boolean throwOnError) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Util\TypeExtensions.cs:行号 54
+   在 Akka.Dispatch.Mailboxes..ctor(ActorSystem system) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Dispatch\Mailboxes.cs:行号 62
+   在 Akka.Actor.Internal.ActorSystemImpl.ConfigureMailboxes() 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\Internal\ActorSystemImpl.cs:行号 413
+   在 Akka.Actor.Internal.ActorSystemImpl..ctor(String name, Config config) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\Internal\ActorSystemImpl.cs:行号 85
+   在 Akka.Actor.ActorSystem.CreateAndStartSystem(String name, Config withFallback) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorSystem.cs:行号 117
+   在 Akka.Actor.ActorSystem.Create(String name, Config config) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorSystem.cs:行号 100
+   在 Akka.TestKit.TestKitBase.InitializeTest(ActorSystem system, Config config, String actorSystemName, String testActorName) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase.cs:行号 116
+   在 Akka.TestKit.TestKitBase..ctor(ITestKitAssertions assertions, ActorSystem system, Config config, String actorSystemName, String testActorName) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase.cs:行号 99
+   在 Akka.TestKit.TestKitBase..ctor(ITestKitAssertions assertions, Config config, String actorSystemName, String testActorName) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase.cs:行号 89
+   在 Akka.TestKit.Xunit2.TestKit..ctor(Config config, String actorSystemName, ITestOutputHelper output) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit.Xunit2\TestKit.cs:行号 55
+   在 Akka.TestKit.AkkaSpec..ctor(Config config, ITestOutputHelper output) 位置 E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\AkkaSpec.cs:行号 55
+   在 Akka.Persistence.Tests.PersistenceSpec..ctor(Config config, ITestOutputHelper output) 位置 E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\PersistenceSpec.cs:行号 52
+   在 Akka.Persistence.Tests.SnapshotDirectoryFailureSpec..ctor() 位置 E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\SnapshotDirectoryFailureSpec.cs:行号 53
+[xUnit.net 00:00:07.55]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_Context_Become_during_recovery [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_Context_Become_during_recovery 个
+[xUnit.net 00:00:08.32]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed 个
+[xUnit.net 00:00:10.50]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_snapshotting [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_snapshotting 个
+[xUnit.net 00:00:11.79]     Akka.Persistence.Tests.PersistentViewSpec.PersistentView_should_run_size_limited_updates_on_user_request [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentViewSpec.PersistentView_should_run_size_limited_updates_on_user_request 个
+[xUnit.net 00:00:23.23]     Akka.Persistence.Tests.ReceivePersistentActorAsyncAwaitSpec.Actors_should_be_able_to_block_ask_self_message_loop [SKIP]
+已跳过 Akka.Persistence.Tests.ReceivePersistentActorAsyncAwaitSpec.Actors_should_be_able_to_block_ask_self_message_loop 个
+[xUnit.net 00:00:25.54]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_Context_Become_during_recovery [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_Context_Become_during_recovery 个
+[xUnit.net 00:00:29.13]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed [SKIP]
+[xUnit.net 00:00:29.79]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_snapshotting [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed 个
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_snapshotting 个
+
+总测试: 249。已通过: 240。失败: 1。已跳过: 8。
+测试运行失败。
+测试执行时间: 33.5600 秒
+E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\bin\Debug\net452\win-x64\Akka.Persistence.Tests.dll 的测试运行(.NETFramework,Version=v4.5.2)
+Microsoft (R) 测试执行命令行工具版本 15.9.0
+版权所有 (C) Microsoft Corporation。保留所有权利。
+
+正在启动测试执行，请稍候...
+[xUnit.net 00:00:01.97]     Akka.Persistence.Tests.SnapshotDirectoryFailureSpec.LocalSnapshotStore_configured_with_a_failing_directory_name_should_throw_an_exception_at_startup [FAIL]
+Akka.Persistence.Tests.SnapshotDirectoryFailureSpec.LocalSnapshotStore_configured_with_a_failing_directory_name_should_throw_an_exception_at_startup 个失败
+错误消息:
+ System.IO.DirectoryNotFoundException : 未能找到路径“E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\bin\Debug\net452\win-x64\target\inUseSnapshotPath”的一部分。
+堆栈跟踪:
+   在 System.IO.__Error.WinIOError(Int32 errorCode, String maybeFullPath)
+   在 System.IO.FileStream.Init(String path, FileMode mode, FileAccess access, Int32 rights, Boolean useRights, FileShare share, Int32 bufferSize, FileOptions options, SECURITY_ATTRIBUTES secAttrs, String msgPath, Boolean bFromProxy, Boolean useLongPath, Boolean checkHost)
+   在 System.IO.FileStream..ctor(String path, FileMode mode, FileAccess access, FileShare share, Int32 bufferSize)
+   在 System.IO.FileInfo.Create()
+   在 Akka.Persistence.Tests.SnapshotDirectoryFailureSpec.AtStartup() 位置 E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\SnapshotDirectoryFailureSpec.cs:行号 61
+   在 Akka.TestKit.AkkaSpec.BeforeAll() 位置 E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\AkkaSpec.cs:行号 75
+   在 Akka.TestKit.AkkaSpec..ctor(Config config, ITestOutputHelper output) 位置 E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\AkkaSpec.cs:行号 57
+   在 Akka.Persistence.Tests.PersistenceSpec..ctor(Config config, ITestOutputHelper output) 位置 E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\PersistenceSpec.cs:行号 52
+   在 Akka.Persistence.Tests.SnapshotDirectoryFailureSpec..ctor() 位置 E:\CoreProjects\akka.net\test\Akka.Persistence.Tests\SnapshotDirectoryFailureSpec.cs:行号 53
+[xUnit.net 00:00:12.92]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_Context_Become_during_recovery [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_Context_Become_during_recovery 个
+[xUnit.net 00:00:13.72]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed 个
+[xUnit.net 00:00:16.53]     Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_snapshotting [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpec.PersistentActor_should_support_snapshotting 个
+[xUnit.net 00:00:18.55]     Akka.Persistence.Tests.ReceivePersistentActorAsyncAwaitSpec.Actors_should_be_able_to_block_ask_self_message_loop [SKIP]
+[xUnit.net 00:00:18.55]     Akka.Persistence.Tests.PersistentViewSpec.PersistentView_should_run_size_limited_updates_on_user_request [SKIP]
+已跳过 Akka.Persistence.Tests.ReceivePersistentActorAsyncAwaitSpec.Actors_should_be_able_to_block_ask_self_message_loop 个
+已跳过 Akka.Persistence.Tests.PersistentViewSpec.PersistentView_should_run_size_limited_updates_on_user_request 个
+[xUnit.net 00:00:26.14]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_Context_Become_during_recovery [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_Context_Become_during_recovery 个
+[xUnit.net 00:00:29.63]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed [SKIP]
+[xUnit.net 00:00:30.20]     Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_snapshotting [SKIP]
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_receive_RecoveryFinished_if_it_is_handled_after_all_events_have_been_replayed 个
+已跳过 Akka.Persistence.Tests.PersistentActorSpecAsyncAwait.PersistentActor_should_support_snapshotting 个
+
+总测试: 249。已通过: 240。失败: 1。已跳过: 8。
+测试运行失败。
+测试执行时间: 33.6073 秒
+
+E:\CoreProjects\akka.net\test\Akka.Persistence.Tests>

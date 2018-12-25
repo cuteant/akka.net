@@ -6,7 +6,10 @@
     <AssemblyName>Akka.Cluster.Sharding.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
- 
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
   <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Cluster.Sharding\Akka.Cluster.Sharding.csproj" />
     <ProjectReference Include="..\..\src\Akka.Persistence\Akka.Persistence.csproj" />

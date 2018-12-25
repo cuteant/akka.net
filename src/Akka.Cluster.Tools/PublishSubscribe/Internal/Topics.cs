@@ -108,6 +108,10 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
                     }
                     break;
 
+                case Count _:
+                    Sender.Tell(Subscribers.Count);
+                    break;
+
                 default:
                     foreach (var subscriber in Subscribers)
                     {
@@ -136,7 +140,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
             return Business(message) || DefaultReceive(message);
         }
 
-        private void Remove(IActorRef actorRef)
+        protected void Remove(IActorRef actorRef)
         {
             Subscribers.Remove(actorRef);
 
@@ -230,6 +234,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
                 case Terminated terminated:
                     var key1 = Utils.MakeKey(terminated.ActorRef);
                     _buffer.RecreateAndForwardMessagesIfNeeded(key1, () => NewGroupActor(terminated.ActorRef.Path.Name));
+                    Remove(terminated.ActorRef);
                     return true;
 
                 default:

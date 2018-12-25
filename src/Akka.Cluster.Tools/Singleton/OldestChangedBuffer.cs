@@ -8,8 +8,10 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Cluster.Tools.Singleton
 {
@@ -30,7 +32,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// TBD
         /// </summary>
         [Serializable]
-        public sealed class GetNext
+        public sealed class GetNext : ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -43,16 +45,19 @@ namespace Akka.Cluster.Tools.Singleton
         /// TBD
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class InitialOldestState
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public UniqueAddress Oldest { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public bool SafeToBeOldest { get; }
 
             /// <summary>
@@ -60,6 +65,7 @@ namespace Akka.Cluster.Tools.Singleton
             /// </summary>
             /// <param name="oldest">TBD</param>
             /// <param name="safeToBeOldest">TBD</param>
+            [SerializationConstructor]
             public InitialOldestState(UniqueAddress oldest, bool safeToBeOldest)
             {
                 Oldest = oldest;
@@ -71,17 +77,20 @@ namespace Akka.Cluster.Tools.Singleton
         /// TBD
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class OldestChanged
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public UniqueAddress Oldest { get; }
 
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="oldest">TBD</param>
+            [SerializationConstructor]
             public OldestChanged(UniqueAddress oldest)
             {
                 Oldest = oldest;
@@ -115,8 +124,15 @@ namespace Akka.Cluster.Tools.Singleton
             var self = Self;
             _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "singleton-exiting-1", () =>
             {
-                var timeout = _coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterExiting);
-                return self.Ask(SelfExiting.Instance, timeout).ContinueWith(tr => Done.Instance);
+                if (_cluster.IsTerminated || _cluster.SelfMember.Status == MemberStatus.Down)
+                {
+                    return Task.FromResult(Done.Instance);
+                }
+                else
+                {
+                    var timeout = _coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterExiting);
+                    return self.Ask(SelfExiting.Instance, timeout).ContinueWith(tr => Done.Instance);
+                }
             });
         }
 
@@ -172,8 +188,12 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void SendFirstChange()
         {
-            _changes = _changes.Dequeue(out var change);
-            Context.Parent.Tell(change);
+            // don't send cluster change events if this node is shutting its self down, just wait for SelfExiting
+            if (!_cluster.IsTerminated)
+            {
+                _changes = _changes.Dequeue(out var change);
+                Context.Parent.Tell(change);
+            }
         }
 
         /// <inheritdoc cref="ActorBase.PreStart"/>

@@ -16,6 +16,7 @@ using Akka.Event;
 using Akka.Pattern;
 using Akka.Remote.Transport;
 using Akka.Util;
+using DotNetty.Common.Concurrency;
 using DotNetty.Transport.Channels;
 
 namespace Akka.Remote.TestKit
@@ -309,10 +310,10 @@ namespace Akka.Remote.TestKit
             _log.Warning("handled network error from {0}: {1} {2}", channel.RemoteAddress, exception.Message, exception.StackTrace);
         }
 
-        public override Task CloseAsync(IChannelHandlerContext context)
+        public override void Close(IChannelHandlerContext context, IPromise promise)
         {
             _log.Info("Server: disconnecting {0} from {1}", context.Channel.LocalAddress, context.Channel.RemoteAddress);
-            return base.CloseAsync(context);
+            context.CloseAsync(promise);
         }
     }
 

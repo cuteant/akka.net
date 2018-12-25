@@ -50,6 +50,14 @@ namespace Akka.Tests.Actor
             return result;
         }
 
+        private class CustomReason : CoordinatedShutdown.Reason
+        {
+            internal CustomReason() { }
+        }
+
+        private static CoordinatedShutdown.Reason customReason = new CustomReason();
+
+
         [Fact]
         public void CoordinatedShutdown_must_sort_phases_in_topological_order()
         {
@@ -200,7 +208,7 @@ namespace Akka.Tests.Actor
                 return TaskEx.Completed;
             });
 
-            co.Run().Wait(RemainingOrDefault);
+            co.Run(CoordinatedShutdown.UnknownReason.Instance).Wait(RemainingOrDefault);
             ReceiveN(4).Should().Equal(new object[] { "A", "B", "B", "C" });
         }
 
@@ -233,8 +241,9 @@ namespace Akka.Tests.Actor
                 return TaskEx.Completed;
             });
 
-            co.Run("b").Wait(RemainingOrDefault);
+            co.Run(customReason, "b").Wait(RemainingOrDefault);
             ReceiveN(2).Should().Equal(new object[] { "B", "C" });
+            co.ShutdownReason.Should().BeEquivalentTo(customReason);
         }
 
         [Fact]
@@ -252,11 +261,14 @@ namespace Akka.Tests.Actor
                 return TaskEx.Completed;
             });
 
-            co.Run().Wait(RemainingOrDefault);
+            co.ShutdownReason.Should().BeNull();
+            co.Run(customReason).Wait(RemainingOrDefault);
+            co.ShutdownReason.Should().BeEquivalentTo(customReason);
             ExpectMsg("A");
-            co.Run().Wait(RemainingOrDefault);
+            co.Run(CoordinatedShutdown.UnknownReason.Instance).Wait(RemainingOrDefault);
             TestActor.Tell("done");
             ExpectMsg("done"); // no additional A
+            co.ShutdownReason.Should().BeEquivalentTo(customReason);
         }
 
         [Fact]
@@ -295,7 +307,7 @@ namespace Akka.Tests.Actor
                 return TaskEx.Completed;
             });
 
-            co.Run().Wait(RemainingOrDefault);
+            co.Run(CoordinatedShutdown.UnknownReason.Instance).Wait(RemainingOrDefault);
             ExpectMsg("A");
             ExpectMsg("A");
             ExpectMsg("B");
@@ -324,7 +336,7 @@ namespace Akka.Tests.Actor
                 return TaskEx.Completed;
             });
 
-            var result = co.Run();
+            var result = co.Run(CoordinatedShutdown.UnknownReason.Instance);
             ExpectMsg("B");
             Intercept<AggregateException>(() =>
             {
@@ -362,7 +374,7 @@ namespace Akka.Tests.Actor
                 return TaskEx.Completed;
             });
 
-            co.Run().Wait(RemainingOrDefault);
+            co.Run(CoordinatedShutdown.UnknownReason.Instance).Wait(RemainingOrDefault);
             ExpectMsg("A");
             ExpectMsg("B");
         }
@@ -394,10 +406,11 @@ namespace Akka.Tests.Actor
         [Fact]
         public void CoordinatedShutdown_must_terminate_ActorSystem()
         {
-            var shutdownSystem = CoordinatedShutdown.Get(Sys).Run();
+            var shutdownSystem = CoordinatedShutdown.Get(Sys).Run(customReason);
             shutdownSystem.Wait(TimeSpan.FromSeconds(10)).Should().BeTrue();
 
             Sys.WhenTerminated.IsCompleted.Should().BeTrue();
+            CoordinatedShutdown.Get(Sys).ShutdownReason.Should().BeEquivalentTo(customReason);
         }
     }
 }

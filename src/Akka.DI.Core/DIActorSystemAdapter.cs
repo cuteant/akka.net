@@ -26,11 +26,15 @@ namespace Akka.DI.Core
         /// <exception cref="ArgumentNullException">
         /// This exception is thrown when the specified <paramref name="system"/> is undefined.
         /// </exception>
+        /// <exception cref="InvalidOperationException">
+        /// This exception is thrown when the Dependency Resolver has not been configured in the <see cref="ActorSystem" />.
+        /// </exception>
         public DIActorSystemAdapter(ActorSystem system)
         {
             if (null == system) ThrowHelper.ThrowArgumentNullException_DIActorSystemAdapter();
             _system = system;
             _producer = system.GetExtension<DIExt>();
+            if (_producer == null) ThrowHelper.ThrowInvalidOperationException_TheDependencyResolverHasNotBeenConfiguredYet();
         }
 
         /// <summary>

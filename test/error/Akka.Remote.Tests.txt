@@ -1,0 +1,487 @@
+
+E:\CoreProjects\akka.net\test\Akka.Remote.Tests>dotnet test -- RunConfiguration.TargetPlatform=x64
+已开始生成，请等待...
+Actor\ActorRef.cs(568,30): warning CS0809: 过时成员“MinimalActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(121,25): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(121,55): warning CS0672: 成员“ActorSystemImpl.ActorPipelineResolver”将重写过时的成员“ExtendedActorSystem.ActorPipelineResolver”。请向“ActorSystemImpl.ActorPipelineResolver”中添加 Obsolete 特性。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(47,17): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Pattern\BackoffSupervisor.cs(59,29): warning CS0108: '“BackoffSupervisor.Reset”隐藏继承的成员“BackoffSupervisorBase.Reset”。如果是有意隐藏，请使用关键字 new。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorRef.cs(568,30): warning CS0809: 过时成员“MinimalActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Routing\RouterConfig.cs(22,27): warning CS0659: '“RouterConfig”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\EmptyLocalActorRef.cs(51,30): warning CS0809: 过时成员“EmptyLocalActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(121,25): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Stash\IActorStash.cs(32,37): warning CS0618: '“ActorProducerPluginBase”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Stash\StashFactory.cs(53,37): warning CS0618: '“IWithBoundedStash”已过时:“Bounded stashing is not yet implemented. Unbounded stashing will be used instead [0.7.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(121,55): warning CS0672: 成员“ActorSystemImpl.ActorPipelineResolver”将重写过时的成员“ExtendedActorSystem.ActorPipelineResolver”。请向“ActorSystemImpl.ActorPipelineResolver”中添加 Obsolete 特性。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\RepointableActorRef.cs(319,26): warning CS0618: '“ICell.GetChildren()”已过时:“Used ChildrenRefs instead [1.1.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(47,17): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Pattern\BackoffSupervisor.cs(59,29): warning CS0108: '“BackoffSupervisor.Reset”隐藏继承的成员“BackoffSupervisorBase.Reset”。如果是有意隐藏，请使用关键字 new。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Props.cs(112,13): warning CS0162: 检测到无法访问的代码 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\Mailboxes.cs(300,34): warning CS0168: 声明了变量“e”，但从未使用过 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Routing\RouterConfig.cs(22,27): warning CS0659: '“RouterConfig”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.cs(351,28): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\EmptyLocalActorRef.cs(51,30): warning CS0809: 过时成员“EmptyLocalActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.FaultHandling.cs(71,36): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.FaultHandling.cs(290,36): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Stash\IActorStash.cs(32,37): warning CS0618: '“ActorProducerPluginBase”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Routing\RoutedActorCell.cs(167,43): warning CS0618: '“Group.Paths”已过时:“Deprecated since Akka.NET v1.1. Use Paths(ActorSystem) instead.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Stash\StashFactory.cs(53,37): warning CS0618: '“IWithBoundedStash”已过时:“Bounded stashing is not yet implemented. Unbounded stashing will be used instead [0.7.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Util\Internal\AtomicState.cs(186,13): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\Mailboxes.cs(300,34): warning CS0168: 声明了变量“e”，但从未使用过 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(74,13): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(200,20): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\RepointableActorRef.cs(319,26): warning CS0618: '“ICell.GetChildren()”已过时:“Used ChildrenRefs instead [1.1.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(215,20): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Props.cs(112,13): warning CS0162: 检测到无法访问的代码 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(450,50): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\Mailboxes.cs(154,22): warning CS0414: 字段“Mailboxes._mailboxNonZeroPushTimeoutWarningIssued”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Util\Internal\AtomicState.cs(186,13): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.cs(351,28): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorRef.cs(396,38): warning CS1574: XML 注释中有未能解析的 cref 特性“Watch(IActorRef)” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.FaultHandling.cs(71,36): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\FSM.cs(418,96): warning CS1574: XML 注释中有未能解析的 cref 特性“GetLog” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.FaultHandling.cs(290,36): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Futures.cs(493,31): warning CS1574: XML 注释中有未能解析的 cref 特性“TellInternal” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\IAutoReceivedMessage.cs(230,32): warning CS1574: XML 注释中有未能解析的 cref 特性“DeathWatch” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\ThreadPoolBuilder.cs(63,45): warning CS1574: XML 注释中有未能解析的 cref 特性“SingleThreadDispatcher” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Routing\RoutedActorCell.cs(167,43): warning CS0618: '“Group.Paths”已过时:“Deprecated since Akka.NET v1.1. Use Paths(ActorSystem) instead.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(74,13): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(200,20): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(215,20): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(450,50): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\Mailboxes.cs(154,22): warning CS0414: 字段“Mailboxes._mailboxNonZeroPushTimeoutWarningIssued”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorRef.cs(396,38): warning CS1574: XML 注释中有未能解析的 cref 特性“Watch(IActorRef)” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\FSM.cs(418,96): warning CS1574: XML 注释中有未能解析的 cref 特性“GetLog” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Futures.cs(493,31): warning CS1574: XML 注释中有未能解析的 cref 特性“TellInternal” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\IAutoReceivedMessage.cs(230,32): warning CS1574: XML 注释中有未能解析的 cref 特性“DeathWatch” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\ThreadPoolBuilder.cs(63,45): warning CS1574: XML 注释中有未能解析的 cref 特性“SingleThreadDispatcher” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorRef.cs(568,30): warning CS0809: 过时成员“MinimalActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(121,25): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(121,55): warning CS0672: 成员“ActorSystemImpl.ActorPipelineResolver”将重写过时的成员“ExtendedActorSystem.ActorPipelineResolver”。请向“ActorSystemImpl.ActorPipelineResolver”中添加 Obsolete 特性。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(47,17): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Pattern\BackoffSupervisor.cs(59,29): warning CS0108: '“BackoffSupervisor.Reset”隐藏继承的成员“BackoffSupervisorBase.Reset”。如果是有意隐藏，请使用关键字 new。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Routing\RouterConfig.cs(22,27): warning CS0659: '“RouterConfig”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\EmptyLocalActorRef.cs(51,30): warning CS0809: 过时成员“EmptyLocalActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Stash\IActorStash.cs(32,37): warning CS0618: '“ActorProducerPluginBase”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Stash\StashFactory.cs(53,37): warning CS0618: '“IWithBoundedStash”已过时:“Bounded stashing is not yet implemented. Unbounded stashing will be used instead [0.7.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\RepointableActorRef.cs(319,26): warning CS0618: '“ICell.GetChildren()”已过时:“Used ChildrenRefs instead [1.1.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Props.cs(112,13): warning CS0162: 检测到无法访问的代码 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Util\Internal\AtomicState.cs(186,13): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\Mailboxes.cs(300,34): warning CS0168: 声明了变量“e”，但从未使用过 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.cs(351,28): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.FaultHandling.cs(71,36): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.FaultHandling.cs(290,36): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Routing\RoutedActorCell.cs(167,43): warning CS0618: '“Group.Paths”已过时:“Deprecated since Akka.NET v1.1. Use Paths(ActorSystem) instead.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(74,13): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(200,20): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(215,20): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(450,50): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\Mailboxes.cs(154,22): warning CS0414: 字段“Mailboxes._mailboxNonZeroPushTimeoutWarningIssued”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorRef.cs(396,38): warning CS1574: XML 注释中有未能解析的 cref 特性“Watch(IActorRef)” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\FSM.cs(418,96): warning CS1574: XML 注释中有未能解析的 cref 特性“GetLog” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Futures.cs(493,31): warning CS1574: XML 注释中有未能解析的 cref 特性“TellInternal” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\IAutoReceivedMessage.cs(230,32): warning CS1574: XML 注释中有未能解析的 cref 特性“DeathWatch” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\ThreadPoolBuilder.cs(63,45): warning CS1574: XML 注释中有未能解析的 cref 特性“SingleThreadDispatcher” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+IO\Tcp.cs(361,89): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#ack” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(361,101): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(476,71): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#wantsAck” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(476,83): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(477,88): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#ack” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(477,100): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(1029,38): warning CS0168: 声明了变量“_”，但从未使用过 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\TcpConnection.cs(807,41): warning CS0169: 从不使用字段“TcpConnection.PendingBufferWrite._remainingData” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\TcpListener.cs(30,21): warning CS0169: 从不使用字段“TcpListener.acceptLimit” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(589,90): warning CS1574: XML 注释中有未能解析的 cref 特性“WriteFile” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(361,89): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#ack” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(361,101): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(476,71): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#wantsAck” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(476,83): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(477,88): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#ack” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(477,100): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(1029,38): warning CS0168: 声明了变量“_”，但从未使用过 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\TcpListener.cs(30,21): warning CS0169: 从不使用字段“TcpListener.acceptLimit” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\TcpConnection.cs(807,41): warning CS0169: 从不使用字段“TcpConnection.PendingBufferWrite._remainingData” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(589,90): warning CS1574: XML 注释中有未能解析的 cref 特性“WriteFile” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(361,89): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#ack” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(361,101): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(476,71): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#wantsAck” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(476,83): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(477,88): warning CS1584: XML 注释中有语法错误的 cref 特性“WriteCommand#ack” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(477,100): warning CS1658: 意外的字符“#”。另请参见错误 CS1056。 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(1029,38): warning CS0168: 声明了变量“_”，但从未使用过 [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\TcpListener.cs(30,21): warning CS0169: 从不使用字段“TcpListener.acceptLimit” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\TcpConnection.cs(807,41): warning CS0169: 从不使用字段“TcpConnection.PendingBufferWrite._remainingData” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+IO\Tcp.cs(589,90): warning CS1574: XML 注释中有未能解析的 cref 特性“WriteFile” [E:\CoreProjects\akka.net\src\Akka\Akka.csproj]
+CallingThreadDispatcher.cs(46,30): warning CS0108: '“CallingThreadDispatcher.Id”隐藏继承的成员“MessageDispatcher.Id”。如果是有意隐藏，请使用关键字 new。 [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestActorRef.cs(20,18): warning CS0660: '“TestActorRef<TActor>”定义运算符 == 或运算符 !=，但不重写 Object.Equals(object o) [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestActorRef.cs(20,18): warning CS0661: '“TestActorRef<TActor>”定义运算符 == 或运算符 !=，但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestProbe.cs(92,35): warning CS0809: 过时成员“TestProbe.CreateTestProbe(string)”重写未过时成员“TestKitBase.CreateTestProbe(string)” [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestProbe.cs(125,60): warning CS0618: '“IInternalActorRef.IsTerminated”已过时:“Use Context.Watch and Receive<Terminated> [1.1.0]” [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+RemoteActorRef.cs(75,30): warning CS0809: 过时成员“RemoteActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+Transport\AkkaPduCodec.cs(194,26): warning CS1572: XML 注释中有“raw”的 param 标记，但是没有该名称的参数 [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+Transport\AkkaPduCodec.cs(196,64): warning CS1573: 参数“pdu”在“AkkaPduCodec.DecodePdu(AkkaProtocolMessage)”的 XML 注释中没有匹配的 param 标记(但其他参数有) [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+RemoteActorRef.cs(75,30): warning CS0809: 过时成员“RemoteActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+Transport\AkkaPduCodec.cs(194,26): warning CS1572: XML 注释中有“raw”的 param 标记，但是没有该名称的参数 [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+Transport\AkkaPduCodec.cs(196,64): warning CS1573: 参数“pdu”在“AkkaPduCodec.DecodePdu(AkkaProtocolMessage)”的 XML 注释中没有匹配的 param 标记(但其他参数有) [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+AkkaSpecExtensions.cs(90,13): warning xUnit2005: Do not use Assert.Same() on value type 'T'. [E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj]
+AkkaSpecExtensions.cs(102,13): warning xUnit2005: Do not use Assert.NotSame() on value type 'T'. [E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj]
+Actor\ActorRef.cs(568,30): warning CS0809: 过时成员“MinimalActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\EmptyLocalActorRef.cs(51,30): warning CS0809: 过时成员“EmptyLocalActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(121,25): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(121,55): warning CS0672: 成员“ActorSystemImpl.ActorPipelineResolver”将重写过时的成员“ExtendedActorSystem.ActorPipelineResolver”。请向“ActorSystemImpl.ActorPipelineResolver”中添加 Obsolete 特性。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(47,17): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Stash\IActorStash.cs(32,37): warning CS0618: '“ActorProducerPluginBase”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Pattern\BackoffSupervisor.cs(59,29): warning CS0108: '“BackoffSupervisor.Reset”隐藏继承的成员“BackoffSupervisorBase.Reset”。如果是有意隐藏，请使用关键字 new。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Routing\RouterConfig.cs(22,27): warning CS0659: '“RouterConfig”重写 Object.Equals(object o) 但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.cs(351,28): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\Mailboxes.cs(300,34): warning CS0168: 声明了变量“e”，但从未使用过 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Stash\StashFactory.cs(53,37): warning CS0618: '“IWithBoundedStash”已过时:“Bounded stashing is not yet implemented. Unbounded stashing will be used instead [0.7.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Util\Internal\AtomicState.cs(186,13): warning CS4014: 由于此调用不会等待，因此在此调用完成之前将会继续执行当前方法。请考虑将 "await" 运算符应用于调用结果。 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(74,13): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Routing\RoutedActorCell.cs(167,43): warning CS0618: '“Group.Paths”已过时:“Deprecated since Akka.NET v1.1. Use Paths(ActorSystem) instead.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(200,20): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Cancellation\Cancelable.cs(215,20): warning CS0618: '“Cancelable.Cancelable(IActionScheduler, CancellationTokenSource)”已过时:“Only to be used from DeprecatedSchedulerExtensions. [1.0.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Internal\ActorSystemImpl.cs(450,50): warning CS0618: '“ActorProducerPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Props.cs(112,13): warning CS0162: 检测到无法访问的代码 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\RepointableActorRef.cs(319,26): warning CS0618: '“ICell.GetChildren()”已过时:“Used ChildrenRefs instead [1.1.0]” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.FaultHandling.cs(71,36): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorCell.FaultHandling.cs(290,36): warning CS0618: '“ExtendedActorSystem.ActorPipelineResolver”已过时:“Actor producer pipeline API will be removed in v1.5.” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\Mailboxes.cs(154,22): warning CS0414: 字段“Mailboxes._mailboxNonZeroPushTimeoutWarningIssued”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\ActorRef.cs(396,38): warning CS1574: XML 注释中有未能解析的 cref 特性“Watch(IActorRef)” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\FSM.cs(418,96): warning CS1574: XML 注释中有未能解析的 cref 特性“GetLog” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\Futures.cs(493,31): warning CS1574: XML 注释中有未能解析的 cref 特性“TellInternal” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Actor\IAutoReceivedMessage.cs(230,32): warning CS1574: XML 注释中有未能解析的 cref 特性“DeathWatch” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+Dispatch\ThreadPoolBuilder.cs(63,45): warning CS1574: XML 注释中有未能解析的 cref 特性“SingleThreadDispatcher” [E:\CoreProjects\akka.net\src\Akka.Core\Akka.Core.csproj]
+RemoteActorRef.cs(75,30): warning CS0809: 过时成员“RemoteActorRef.IsTerminated”重写未过时成员“InternalActorRefBase.IsTerminated” [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+Transport\AkkaPduCodec.cs(194,26): warning CS1572: XML 注释中有“raw”的 param 标记，但是没有该名称的参数 [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+Transport\AkkaPduCodec.cs(196,64): warning CS1573: 参数“pdu”在“AkkaPduCodec.DecodePdu(AkkaProtocolMessage)”的 XML 注释中没有匹配的 param 标记(但其他参数有) [E:\CoreProjects\akka.net\src\Akka.Remote\Akka.Remote.csproj]
+CallingThreadDispatcher.cs(46,30): warning CS0108: '“CallingThreadDispatcher.Id”隐藏继承的成员“MessageDispatcher.Id”。如果是有意隐藏，请使用关键字 new。 [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestActorRef.cs(20,18): warning CS0660: '“TestActorRef<TActor>”定义运算符 == 或运算符 !=，但不重写 Object.Equals(object o) [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestActorRef.cs(20,18): warning CS0661: '“TestActorRef<TActor>”定义运算符 == 或运算符 !=，但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestProbe.cs(92,35): warning CS0809: 过时成员“TestProbe.CreateTestProbe(string)”重写未过时成员“TestKitBase.CreateTestProbe(string)” [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestProbe.cs(125,60): warning CS0618: '“IInternalActorRef.IsTerminated”已过时:“Use Context.Watch and Receive<Terminated> [1.1.0]” [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+CallingThreadDispatcher.cs(46,30): warning CS0108: '“CallingThreadDispatcher.Id”隐藏继承的成员“MessageDispatcher.Id”。如果是有意隐藏，请使用关键字 new。 [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestActorRef.cs(20,18): warning CS0660: '“TestActorRef<TActor>”定义运算符 == 或运算符 !=，但不重写 Object.Equals(object o) [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestActorRef.cs(20,18): warning CS0661: '“TestActorRef<TActor>”定义运算符 == 或运算符 !=，但不重写 Object.GetHashCode() [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestProbe.cs(92,35): warning CS0809: 过时成员“TestProbe.CreateTestProbe(string)”重写未过时成员“TestKitBase.CreateTestProbe(string)” [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+TestProbe.cs(125,60): warning CS0618: '“IInternalActorRef.IsTerminated”已过时:“Use Context.Watch and Receive<Terminated> [1.1.0]” [E:\CoreProjects\akka.net\src\Akka.TestKit\Akka.TestKit.csproj]
+RemotingSpec.cs(563,22): warning CS0114: '“RemotingSpec.AtStartup()”隐藏继承的成员“AkkaSpec.AtStartup()”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Remote.Tests\Akka.Remote.Tests.csproj]
+AkkaSpecExtensions.cs(90,13): warning xUnit2005: Do not use Assert.Same() on value type 'T'. [E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj]
+AkkaSpecExtensions.cs(102,13): warning xUnit2005: Do not use Assert.NotSame() on value type 'T'. [E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj]
+RemotingSpec.cs(563,22): warning CS0114: '“RemotingSpec.AtStartup()”隐藏继承的成员“AkkaSpec.AtStartup()”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Remote.Tests\Akka.Remote.Tests.csproj]
+AkkaSpec.cs(47,28): warning CS0414: 字段“AkkaSpec._systemNumber”已被赋值，但从未使用过它的值 [E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj]
+AkkaSpecExtensions.cs(90,13): warning xUnit2005: Do not use Assert.Same() on value type 'T'. [E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj]
+AkkaSpecExtensions.cs(102,13): warning xUnit2005: Do not use Assert.NotSame() on value type 'T'. [E:\CoreProjects\akka.net\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj]
+RemotingSpec.cs(563,22): warning CS0114: '“RemotingSpec.AtStartup()”隐藏继承的成员“AkkaSpec.AtStartup()”。若要使当前成员重写该实现，请添加关键字 override。否则，添加关键字 new。 [E:\CoreProjects\akka.net\test\Akka.Remote.Tests\Akka.Remote.Tests.csproj]
+完成的生成。
+
+E:\CoreProjects\akka.net\test\Akka.Remote.Tests\bin\Debug\netcoreapp2.2\Akka.Remote.Tests.dll 的测试运行(.NETCoreApp,Version=v2.2)
+Microsoft (R) 测试执行命令行工具版本 15.9.0
+版权所有 (C) Microsoft Corporation。保留所有权利。
+
+正在启动测试执行，请稍候...
+[xUnit.net 00:01:14.98]     Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_child_router_of_system_actor [SKIP]
+[xUnit.net 00:01:15.47]     Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_router [SKIP]
+已跳过 Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_child_router_of_system_actor 个
+已跳过 Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_router 个
+[xUnit.net 00:01:58.98]     Akka.Remote.Tests.RemotingSpec.Drop_received_messages_over_payload_size [SKIP]
+已跳过 Akka.Remote.Tests.RemotingSpec.Drop_received_messages_over_payload_size 个
+[xUnit.net 00:02:14.73]     Akka.Remote.Tests.RemotingSpec.Drop_sent_messages_over_payload_size [SKIP]
+已跳过 Akka.Remote.Tests.RemotingSpec.Drop_sent_messages_over_payload_size 个
+[xUnit.net 00:02:40.10]     Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown [FAIL]
+Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown 个失败
+错误消息:
+ Failed: Timeout 00:00:09.9890898 while waiting for a message of type Akka.Actor.Terminated Terminated [akka.tcp://System2@127.0.0.1:4942/remote/akka.tcp/AkkaSpec@127.0.0.1:4941/user/remote#2039339334].
+Expected: True
+Actual:   False
+堆栈跟踪:
+   at Akka.TestKit.Xunit2.XunitAssertions.Fail(String format, Object[] args) in E:\CoreProjects\akka.net\src\Akka.TestKit.Xunit2\XunitAssertions.cs:line 26
+   at Akka.TestKit.TestKitBase.InternalExpectMsgEnvelope[T](Nullable`1 timeout, Action`2 assert, String hint, Boolean shouldLog) in E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:line 238
+   at Akka.TestKit.TestKitBase.InternalExpectMsgEnvelope[T](Nullable`1 timeout, Action`1 msgAssert, Action`1 senderAssert, String hint) in E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:line 224
+   at Akka.TestKit.TestKitBase.InternalExpectMsg[T](Nullable`1 timeout, Action`1 msgAssert, String hint) in E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:line 199
+   at Akka.TestKit.TestKitBase.ExpectTerminated(IActorRef target, Nullable`1 timeout, String hint) in E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:line 180
+   at Akka.Remote.Tests.RemotingTerminatorSpecs.<>c__DisplayClass5_0.<RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown>b__1() in E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:line 130
+   at Akka.TestKit.TestKitBase.<>c__DisplayClass141_0.<Within>b__0() in E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:line 48
+   at Akka.TestKit.TestKitBase.Within[T](TimeSpan min, TimeSpan max, Func`1 function, String hint, Nullable`1 epsilonValue) in E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:line 101
+   at Akka.TestKit.TestKitBase.Within(TimeSpan min, TimeSpan max, Action action, String hint, Nullable`1 epsilonValue) in E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:line 48
+   at Akka.TestKit.TestKitBase.Within(TimeSpan max, Action action, Nullable`1 epsilonValue) in E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:line 31
+   at Akka.Remote.Tests.RemotingTerminatorSpecs.<RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown>b__5_0() in E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:line 125
+   at Akka.TestKit.Internal.InternalEventFilterApplier.<>c__DisplayClass20_0.<InternalExpect>b__0() in E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:line 260
+   at Akka.TestKit.Internal.InternalEventFilterApplier.Intercept[T](Func`1 func, ActorSystem system, Nullable`1 timeout, Nullable`1 expectedOccurrences, MatchedEventHandler matchedEventHandler) in E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:line 193
+   at Akka.TestKit.Internal.InternalEventFilterApplier.InternalExpect(Action action, ActorSystem actorSystem, Int32 expectedCount, Nullable`1 timeout) in E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:line 260
+   at Akka.TestKit.Internal.InternalEventFilterApplier.Expect(Int32 expectedCount, Action action) in E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:line 65
+   at Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown() in E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:line 110
+标准输出消息:
+ [DEBUG][2018/12/26 12:57:22][Thread 0007][LocalActorRefProvider(akka://AkkaSpec)] [akka://AkkaSpec/] Instantiating Remote Actor [akka.tcp://System2@127.0.0.1:4942/remote/akka.tcp/AkkaSpec@127.0.0.1:4941/user/remote]
+ [WARNING][2018/12/26 12:57:22][Thread 0111][[akka://AkkaSpec/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A4942-1#1582466964]] Association with remote system akka.tcp://System2@127.0.0.1:4942 has failed; address is now gated for 5000 ms. Reason is: [Akka.Remote.EndpointDisassociatedException: Disassociated
+    at Akka.Remote.EndpointWriter.PublishAndThrow(Exception reason, LogLevel level, Boolean needToThrow) in E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:line 1287
+    at Akka.Remote.EndpointWriter.Unhandled(Object message) in E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:line 1217
+    at Akka.Actor.ReceiveActor.ExecutePartialMessageHandler(Object message, PartialAction`1 partialAction) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:line 80
+    at Akka.Actor.ReceiveActor.<>c__DisplayClass11_0.<Become>b__0(Object m) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:line 90
+    at Akka.Actor.ActorCell.<>c__DisplayClass106_0.<Akka.Actor.IUntypedActorContext.Become>b__0(Object m) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.cs:line 307
+    at Akka.Actor.ActorBase.AroundReceive(Receive receive, Object message) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorBase.cs:line 155
+    at Akka.Actor.ActorCell.ReceiveMessage(Object message) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:line 199
+    at Akka.Actor.ActorCell.ReceivedTerminated(Terminated t) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DeathWatch.cs:line 94
+    at Akka.Actor.ActorCell.AutoReceiveMessage(Envelope envelope) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:line 145
+    at Akka.Actor.ActorCell.Invoke(Envelope envelope) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:line 73]
+ [ERROR][2018/12/26 12:57:22][Thread 0111][akka://AkkaSpec/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A4942-1/endpointWriter] Disassociated
+ Cause: Akka.Remote.EndpointDisassociatedException: Disassociated
+    at Akka.Remote.EndpointWriter.PublishAndThrow(Exception reason, LogLevel level, Boolean needToThrow) in E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:line 1287
+    at Akka.Remote.EndpointWriter.Unhandled(Object message) in E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:line 1217
+    at Akka.Actor.ReceiveActor.ExecutePartialMessageHandler(Object message, PartialAction`1 partialAction) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:line 80
+    at Akka.Actor.ReceiveActor.<>c__DisplayClass11_0.<Become>b__0(Object m) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:line 90
+    at Akka.Actor.ActorCell.<>c__DisplayClass106_0.<Akka.Actor.IUntypedActorContext.Become>b__0(Object m) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.cs:line 307
+    at Akka.Actor.ActorBase.AroundReceive(Receive receive, Object message) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorBase.cs:line 155
+    at Akka.Actor.ActorCell.ReceiveMessage(Object message) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:line 199
+    at Akka.Actor.ActorCell.ReceivedTerminated(Terminated t) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DeathWatch.cs:line 94
+    at Akka.Actor.ActorCell.AutoReceiveMessage(Envelope envelope) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:line 145
+    at Akka.Actor.ActorCell.Invoke(Envelope envelope) in E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:line 73
+ [INFO][2018/12/26 12:57:22][Thread 0060][akka://AkkaSpec/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A4942-1/endpointWriter] Message BackoffTimer from akka://AkkaSpec/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A4942-1/endpointWriter to akka://AkkaSpec/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A4942-1/endpointWriter was not delivered. 1 dead letters encountered.
+ [INFO][2018/12/26 12:57:23][Thread 0498][akka://AkkaSpec/deadLetters] Message Heartbeat from akka://AkkaSpec/system/remote-watcher to akka://AkkaSpec/deadLetters was not delivered. 2 dead letters encountered.
+ [INFO][2018/12/26 12:57:24][Thread 0011][akka://AkkaSpec/deadLetters] Message Heartbeat from akka://AkkaSpec/system/remote-watcher to akka://AkkaSpec/deadLetters was not delivered. 3 dead letters encountered.
+ [INFO][2018/12/26 12:57:25][Thread 0498][akka://AkkaSpec/deadLetters] Message Heartbeat from akka://AkkaSpec/system/remote-watcher to akka://AkkaSpec/deadLetters was not delivered. 4 dead letters encountered.
+ [INFO][2018/12/26 12:57:26][Thread 0059][akka://AkkaSpec/deadLetters] Message Heartbeat from akka://AkkaSpec/system/remote-watcher to akka://AkkaSpec/deadLetters was not delivered. 5 dead letters encountered.
+ [INFO][2018/12/26 12:57:27][Thread 0059][akka://AkkaSpec/deadLetters] Message Heartbeat from akka://AkkaSpec/system/remote-watcher to akka://AkkaSpec/deadLetters was not delivered. 6 dead letters encountered.
+ [WARNING][2018/12/26 12:57:29][Thread 0112][[akka://AkkaSpec/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A4942-1/endpointWriter#1775098946]] AssociationError [akka.tcp://AkkaSpec@127.0.0.1:4941] -> akka.tcp://System2@127.0.0.1:4942: Error [Association failed with akka.tcp://System2@127.0.0.1:4942] []
+ [WARNING][2018/12/26 12:57:29][Thread 0112][remoting] Tried to associate with unreachable remote address [akka.tcp://System2@127.0.0.1:4942]. Address is now gated for 5000 ms, all messages to this address will be delivered to dead letters. Reason: [Association failed with akka.tcp://System2@127.0.0.1:4942] Caused by: [System.AggregateException: One or more errors occurred. (ECONNREFUSED (ECONNREFUSED) : connection refused) ---> Akka.Remote.Transport.InvalidAssociationException: ECONNREFUSED (ECONNREFUSED) : connection refused
+    at Akka.Remote.Transport.DotNetty.TcpTransport.AssociateInternal(Address remoteAddress) in E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\TcpTransport.cs:line 545
+    at Akka.Remote.Transport.DotNetty.DotNettyTransport.Associate(Address remoteAddress) in E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\DotNettyTransport.cs:line 260
+    --- End of inner exception stack trace ---
+    at System.Threading.Tasks.Task`1.GetResultCore(Boolean waitCompletionNotification)
+    at Akka.Remote.Transport.ProtocolStateActor.<>c.<InitializeFSM>b__11_5(Task`1 result) in E:\CoreProjects\akka.net\src\Akka.Remote\Transport\AkkaProtocolTransport.cs:line 1072
+    at System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+    at System.Threading.ExecutionContext.RunInternal(ExecutionContext executionContext, ContextCallback callback, Object state)
+ --- End of stack trace from previous location where exception was thrown ---
+    at System.Threading.Tasks.Task.ExecuteWithThreadLocal(Task& currentTaskSlot)
+ ---> (Inner Exception #0) Akka.Remote.Transport.InvalidAssociationException: ECONNREFUSED (ECONNREFUSED) : connection refused
+    at Akka.Remote.Transport.DotNetty.TcpTransport.AssociateInternal(Address remoteAddress) in E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\TcpTransport.cs:line 545
+    at Akka.Remote.Transport.DotNetty.DotNettyTransport.Associate(Address remoteAddress) in E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\DotNettyTransport.cs:line 260<---
+ ]
+ [INFO][2018/12/26 12:57:29][Thread 0247][akka://AkkaSpec/deadLetters] Message Heartbeat from akka://AkkaSpec/system/remote-watcher to akka://AkkaSpec/deadLetters was not delivered. 7 dead letters encountered.
+ [INFO][2018/12/26 12:57:29][Thread 0247][akka://AkkaSpec/deadLetters] Message Heartbeat from akka://AkkaSpec/system/remote-watcher to akka://AkkaSpec/deadLetters was not delivered. 8 dead letters encountered.
+ [INFO][2018/12/26 12:57:30][Thread 0011][akka://AkkaSpec/deadLetters] Message Heartbeat from akka://AkkaSpec/system/remote-watcher to akka://AkkaSpec/deadLetters was not delivered. 9 dead letters encountered.
+ [DEBUG][2018/12/26 12:57:32][Thread 0007][ActorSystem(AkkaSpec)] System shutdown initiated
+ [DEBUG][2018/12/26 12:57:32][Thread 0247][EventStream] Shutting down: StandardOutLogger started
+ [DEBUG][2018/12/26 12:57:32][Thread 0247][EventStream] All default loggers stopped
+
+
+[xUnit.net 00:02:53.29]     Akka.Remote.Tests.Transport.AkkaProtocolStressTest.AkkaProtocolTransport_must_guarantee_at_most_once_delivery_and_message_ordering_despite_packet_loss [SKIP]
+已跳过 Akka.Remote.Tests.Transport.AkkaProtocolStressTest.AkkaProtocolTransport_must_guarantee_at_most_once_delivery_and_message_ordering_despite_packet_loss 个
+[xUnit.net 00:03:19.02]     Akka.Remote.Tests.Serialization.MiscMessageSerializerSpec.Can_serialize_LocalScope [SKIP]
+已跳过 Akka.Remote.Tests.Serialization.MiscMessageSerializerSpec.Can_serialize_LocalScope 个
+
+总测试: 245。已通过: 238。失败: 1。已跳过: 6。
+测试运行失败。
+测试执行时间: 3.4128 分钟
+E:\CoreProjects\akka.net\test\Akka.Remote.Tests\bin\Debug\net471\win-x64\Akka.Remote.Tests.dll 的测试运行(.NETFramework,Version=v4.7.1)
+Microsoft (R) 测试执行命令行工具版本 15.9.0
+版权所有 (C) Microsoft Corporation。保留所有权利。
+
+正在启动测试执行，请稍候...
+[xUnit.net 00:01:15.55]     Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_child_router_of_system_actor [SKIP]
+[xUnit.net 00:01:16.12]     Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_router [SKIP]
+已跳过 Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_child_router_of_system_actor 个
+已跳过 Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_router 个
+[xUnit.net 00:02:04.95]     Akka.Remote.Tests.RemotingSpec.Drop_received_messages_over_payload_size [SKIP]
+已跳过 Akka.Remote.Tests.RemotingSpec.Drop_received_messages_over_payload_size 个
+[xUnit.net 00:02:21.40]     Akka.Remote.Tests.RemotingSpec.Drop_sent_messages_over_payload_size [SKIP]
+已跳过 Akka.Remote.Tests.RemotingSpec.Drop_sent_messages_over_payload_size 个
+[xUnit.net 00:02:46.79]     Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown [FAIL]
+Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown 个失败
+错误消息:
+ Failed: Timeout 00:00:09.9970004 while waiting for a message of type Akka.Actor.Terminated Terminated [akka.tcp://System2@127.0.0.1:5177/remote/akka.tcp/RemotingTerminatorSpecs-110@127.0.0.1:5176/user/remote#2108030524].
+Expected: True
+Actual:   False
+堆栈跟踪:
+   在 Xunit.Assert.True(Nullable`1 condition, String userMessage) 位置 C:\Dev\xunit\xunit\src\xunit.assert\Asserts\BooleanAsserts.cs:行号 95
+   在 Akka.TestKit.Xunit2.XunitAssertions.Fail(String format, Object[] args) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit.Xunit2\XunitAssertions.cs:行号 26
+   在 Akka.TestKit.TestKitBase.InternalExpectMsgEnvelope[T](Nullable`1 timeout, Action`2 assert, String hint, Boolean shouldLog) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:行号 238
+   在 Akka.TestKit.TestKitBase.InternalExpectMsgEnvelope[T](Nullable`1 timeout, Action`1 msgAssert, Action`1 senderAssert, String hint) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:行号 224
+   在 Akka.TestKit.TestKitBase.InternalExpectMsg[T](Nullable`1 timeout, Action`1 msgAssert, String hint) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:行号 199
+   在 Akka.TestKit.TestKitBase.ExpectTerminated(IActorRef target, Nullable`1 timeout, String hint) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:行号 180
+   在 Akka.Remote.Tests.RemotingTerminatorSpecs.<>c__DisplayClass5_0.<RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown>b__1() 位置 E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:行号 130
+   在 Akka.TestKit.TestKitBase.<>c__DisplayClass141_0.<Within>b__0() 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:行号 48
+   在 Akka.TestKit.TestKitBase.Within[T](TimeSpan min, TimeSpan max, Func`1 function, String hint, Nullable`1 epsilonValue) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:行号 101
+   在 Akka.TestKit.TestKitBase.Within(TimeSpan min, TimeSpan max, Action action, String hint, Nullable`1 epsilonValue)  位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:行号 48
+   在 Akka.TestKit.TestKitBase.Within(TimeSpan max, Action action, Nullable`1 epsilonValue) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:行号 31
+   在 Akka.Remote.Tests.RemotingTerminatorSpecs.<RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown>b__5_0() 位置 E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:行号 125
+   在 Akka.TestKit.Internal.InternalEventFilterApplier.<>c__DisplayClass20_0.<InternalExpect>b__0() 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:行号 260
+   在 Akka.TestKit.Internal.InternalEventFilterApplier.Intercept[T](Func`1 func, ActorSystem system, Nullable`1 timeout, Nullable`1 expectedOccurrences, MatchedEventHandler matchedEventHandler) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:行号 193
+   在 Akka.TestKit.Internal.InternalEventFilterApplier.InternalExpect(Action action, ActorSystem actorSystem, Int32 expectedCount, Nullable`1 timeout) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:行号 260
+   在 Akka.TestKit.Internal.InternalEventFilterApplier.Expect(Int32 expectedCount, Action action) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:行号 65
+   在 Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown() 位置 E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:行号 110
+标准输出消息:
+ [DEBUG][2018/12/26 13:00:54][Thread 0298][LocalActorRefProvider(akka://RemotingTerminatorSpecs-110)] [akka://RemotingTerminatorSpecs-110/] Instantiating Remote Actor [akka.tcp://System2@127.0.0.1:5177/remote/akka.tcp/RemotingTerminatorSpecs-110@127.0.0.1:5176/user/remote]
+ [WARNING][2018/12/26 13:00:54][Thread 0470][[akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5177-1#478594012]] Association with remote system akka.tcp://System2@127.0.0.1:5177 has failed; address is now gated for 5000 ms. Reason is: [Akka.Remote.EndpointDisassociatedException: Disassociated
+    在 Akka.Remote.EndpointWriter.PublishAndThrow(Exception reason, LogLevel level, Boolean needToThrow) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:行号 1287
+    在 Akka.Remote.EndpointWriter.Unhandled(Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:行号 1217
+    在 Akka.Actor.ReceiveActor.ExecutePartialMessageHandler(Object message, PartialAction`1 partialAction) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:行号 80
+    在 Akka.Actor.ReceiveActor.<>c__DisplayClass11_0.<Become>b__0(Object m) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:行号 90
+    在 Akka.Actor.ActorCell.<>c__DisplayClass106_0.<Akka.Actor.IUntypedActorContext.Become>b__0(Object m) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.cs:行号 307
+    在 Akka.Actor.ActorBase.AroundReceive(Receive receive, Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorBase.cs:行号 155
+    在 Akka.Actor.ActorCell.ReceiveMessage(Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 199
+    在 Akka.Actor.ActorCell.ReceivedTerminated(Terminated t) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DeathWatch.cs:行号 94
+    在 Akka.Actor.ActorCell.AutoReceiveMessage(Envelope envelope) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 145
+    在 Akka.Actor.ActorCell.Invoke(Envelope envelope) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 73]
+ [ERROR][2018/12/26 13:00:54][Thread 0470][akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5177-1/endpointWriter] Disassociated
+ Cause: Akka.Remote.EndpointDisassociatedException: Disassociated
+    在 Akka.Remote.EndpointWriter.PublishAndThrow(Exception reason, LogLevel level, Boolean needToThrow) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:行号 1287
+    在 Akka.Remote.EndpointWriter.Unhandled(Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:行号 1217
+    在 Akka.Actor.ReceiveActor.ExecutePartialMessageHandler(Object message, PartialAction`1 partialAction) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:行号 80
+    在 Akka.Actor.ReceiveActor.<>c__DisplayClass11_0.<Become>b__0(Object m) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:行号 90
+    在 Akka.Actor.ActorCell.<>c__DisplayClass106_0.<Akka.Actor.IUntypedActorContext.Become>b__0(Object m) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.cs:行号 307
+    在 Akka.Actor.ActorBase.AroundReceive(Receive receive, Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorBase.cs:行号 155
+    在 Akka.Actor.ActorCell.ReceiveMessage(Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 199
+    在 Akka.Actor.ActorCell.ReceivedTerminated(Terminated t) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DeathWatch.cs:行号 94
+    在 Akka.Actor.ActorCell.AutoReceiveMessage(Envelope envelope) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 145
+    在 Akka.Actor.ActorCell.Invoke(Envelope envelope) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 73
+ [INFO][2018/12/26 13:00:54][Thread 0019][akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5177-1/endpointWriter] Message BackoffTimer from akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5177-1/endpointWriter to akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5177-1/endpointWriter was not delivered. 1 dead letters encountered.
+ [INFO][2018/12/26 13:00:55][Thread 0341][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 2 dead letters encountered.
+ [INFO][2018/12/26 13:00:56][Thread 0074][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 3 dead letters encountered.
+ [INFO][2018/12/26 13:00:57][Thread 0341][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 4 dead letters encountered.
+ [INFO][2018/12/26 13:00:58][Thread 0067][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 5 dead letters encountered.
+ [INFO][2018/12/26 13:00:59][Thread 0341][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 6 dead letters encountered.
+ [WARNING][2018/12/26 13:01:01][Thread 0468][[akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5177-1/endpointWriter#1534396928]] AssociationError [akka.tcp://RemotingTerminatorSpecs-110@127.0.0.1:5176] -> akka.tcp://System2@127.0.0.1:5177: Error [Association failed with akka.tcp://System2@127.0.0.1:5177] []
+ [WARNING][2018/12/26 13:01:01][Thread 0468][remoting] Tried to associate with unreachable remote address [akka.tcp://System2@127.0.0.1:5177]. Address is now gated for 5000 ms, all messages to this address will be delivered to dead letters. Reason: [Association failed with akka.tcp://System2@127.0.0.1:5177] Caused by: [System.AggregateException: 发生一个或多个错误。 ---> Akka.Remote.Transport.InvalidAssociationException: ECONNREFUSED (ECONNREFUSED) : connection refused
+    在 Akka.Remote.Transport.DotNetty.TcpTransport.<AssociateInternal>d__1.MoveNext() 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\TcpTransport.cs:行号 545
+ --- 引发异常的上一位置中堆栈跟踪的末尾 ---
+    在 System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+    在 System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+    在 System.Runtime.CompilerServices.ConfiguredTaskAwaitable`1.ConfiguredTaskAwaiter.GetResult()
+    在 Akka.Remote.Transport.DotNetty.DotNettyTransport.<Associate>d__25.MoveNext() 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\DotNettyTransport.cs:行号 260
+    --- 内部异常堆栈跟踪的结尾 ---
+    在 System.Threading.Tasks.Task`1.GetResultCore(Boolean waitCompletionNotification)
+    在 Akka.Remote.Transport.ProtocolStateActor.<>c.<InitializeFSM>b__11_5(Task`1 result) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\AkkaProtocolTransport.cs:行号 1072
+    在 System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+    在 System.Threading.Tasks.Task.Execute()
+ ---> (内部异常 #0) Akka.Remote.Transport.InvalidAssociationException: ECONNREFUSED (ECONNREFUSED) : connection refused
+    在 Akka.Remote.Transport.DotNetty.TcpTransport.<AssociateInternal>d__1.MoveNext() 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\TcpTransport.cs:行号 545
+ --- 引发异常的上一位置中堆栈跟踪的末尾 ---
+    在 System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+    在 System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+    在 System.Runtime.CompilerServices.ConfiguredTaskAwaitable`1.ConfiguredTaskAwaiter.GetResult()
+    在 Akka.Remote.Transport.DotNetty.DotNettyTransport.<Associate>d__25.MoveNext() 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\DotNettyTransport.cs:行号 260<---
+ ]
+ [INFO][2018/12/26 13:01:01][Thread 0341][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 7 dead letters encountered.
+ [INFO][2018/12/26 13:01:01][Thread 0341][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 8 dead letters encountered.
+ [INFO][2018/12/26 13:01:02][Thread 0341][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 9 dead letters encountered.
+ [DEBUG][2018/12/26 13:01:04][Thread 0298][ActorSystem(RemotingTerminatorSpecs-110)] System shutdown initiated
+ [DEBUG][2018/12/26 13:01:04][Thread 0074][EventStream] Shutting down: StandardOutLogger started
+ [DEBUG][2018/12/26 13:01:04][Thread 0074][EventStream] All default loggers stopped
+
+
+[xUnit.net 00:03:00.07]     Akka.Remote.Tests.Transport.AkkaProtocolStressTest.AkkaProtocolTransport_must_guarantee_at_most_once_delivery_and_message_ordering_despite_packet_loss [SKIP]
+已跳过 Akka.Remote.Tests.Transport.AkkaProtocolStressTest.AkkaProtocolTransport_must_guarantee_at_most_once_delivery_and_message_ordering_despite_packet_loss 个
+[xUnit.net 00:03:45.18]     Akka.Remote.Tests.Serialization.MiscMessageSerializerSpec.Can_serialize_LocalScope [SKIP]
+已跳过 Akka.Remote.Tests.Serialization.MiscMessageSerializerSpec.Can_serialize_LocalScope 个
+
+总测试: 253。已通过: 246。失败: 1。已跳过: 6。
+测试运行失败。
+测试执行时间: 4.1615 分钟
+E:\CoreProjects\akka.net\test\Akka.Remote.Tests\bin\Debug\net452\win-x64\Akka.Remote.Tests.dll 的测试运行(.NETFramework,Version=v4.5.2)
+Microsoft (R) 测试执行命令行工具版本 15.9.0
+版权所有 (C) Microsoft Corporation。保留所有权利。
+
+正在启动测试执行，请稍候...
+[xUnit.net 00:01:15.83]     Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_child_router_of_system_actor [SKIP]
+[xUnit.net 00:01:16.37]     Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_router [SKIP]
+已跳过 Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_child_router_of_system_actor 个
+已跳过 Akka.Remote.Tests.RemoteRouterSpec.RemoteRouter_must_load_settings_from_config_for_local_router 个
+[xUnit.net 00:02:05.40]     Akka.Remote.Tests.RemotingSpec.Drop_received_messages_over_payload_size [SKIP]
+已跳过 Akka.Remote.Tests.RemotingSpec.Drop_received_messages_over_payload_size 个
+[xUnit.net 00:02:21.89]     Akka.Remote.Tests.RemotingSpec.Drop_sent_messages_over_payload_size [SKIP]
+已跳过 Akka.Remote.Tests.RemotingSpec.Drop_sent_messages_over_payload_size 个
+[xUnit.net 00:02:47.32]     Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown [FAIL]
+Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown 个失败
+错误消息:
+ Failed: Timeout 00:00:09.9939870 while waiting for a message of type Akka.Actor.Terminated Terminated [akka.tcp://System2@127.0.0.1:5597/remote/akka.tcp/RemotingTerminatorSpecs-110@127.0.0.1:5596/user/remote#50019064].
+Expected: True
+Actual:   False
+堆栈跟踪:
+   在 Xunit.Assert.True(Nullable`1 condition, String userMessage) 位置 C:\Dev\xunit\xunit\src\xunit.assert\Asserts\BooleanAsserts.cs:行号 95
+   在 Akka.TestKit.Xunit2.XunitAssertions.Fail(String format, Object[] args) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit.Xunit2\XunitAssertions.cs:行号 26
+   在 Akka.TestKit.TestKitBase.InternalExpectMsgEnvelope[T](Nullable`1 timeout, Action`2 assert, String hint, Boolean shouldLog) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:行号 238
+   在 Akka.TestKit.TestKitBase.InternalExpectMsgEnvelope[T](Nullable`1 timeout, Action`1 msgAssert, Action`1 senderAssert, String hint) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:行号 224
+   在 Akka.TestKit.TestKitBase.InternalExpectMsg[T](Nullable`1 timeout, Action`1 msgAssert, String hint) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:行号 199
+   在 Akka.TestKit.TestKitBase.ExpectTerminated(IActorRef target, Nullable`1 timeout, String hint) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Expect.cs:行号 180
+   在 Akka.Remote.Tests.RemotingTerminatorSpecs.<>c__DisplayClass5_0.<RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown>b__1() 位置 E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:行号 130
+   在 Akka.TestKit.TestKitBase.<>c__DisplayClass141_0.<Within>b__0() 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:行号 48
+   在 Akka.TestKit.TestKitBase.Within[T](TimeSpan min, TimeSpan max, Func`1 function, String hint, Nullable`1 epsilonValue) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:行号 101
+   在 Akka.TestKit.TestKitBase.Within(TimeSpan min, TimeSpan max, Action action, String hint, Nullable`1 epsilonValue)  位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:行号 48
+   在 Akka.TestKit.TestKitBase.Within(TimeSpan max, Action action, Nullable`1 epsilonValue) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\TestKitBase_Within.cs:行号 31
+   在 Akka.Remote.Tests.RemotingTerminatorSpecs.<RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown>b__5_0() 位置 E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:行号 125
+   在 Akka.TestKit.Internal.InternalEventFilterApplier.<>c__DisplayClass20_0.<InternalExpect>b__0() 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:行号 260
+   在 Akka.TestKit.Internal.InternalEventFilterApplier.Intercept[T](Func`1 func, ActorSystem system, Nullable`1 timeout, Nullable`1 expectedOccurrences, MatchedEventHandler matchedEventHandler) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:行号 193
+   在 Akka.TestKit.Internal.InternalEventFilterApplier.InternalExpect(Action action, ActorSystem actorSystem, Int32 expectedCount, Nullable`1 timeout) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:行号 260
+   在 Akka.TestKit.Internal.InternalEventFilterApplier.Expect(Int32 expectedCount, Action action) 位置 E:\CoreProjects\akka.net\src\Akka.TestKit\EventFilter\Internal\EventFilterApplier.cs:行号 65
+   在 Akka.Remote.Tests.RemotingTerminatorSpecs.RemotingTerminator_should_shutdown_properly_without_exception_logging_while_graceful_shutdown() 位置 E:\CoreProjects\akka.net\test\Akka.Remote.Tests\RemotingTerminatorSpecs.cs:行号 110
+标准输出消息:
+ [DEBUG][2018/12/26 13:05:04][Thread 0085][LocalActorRefProvider(akka://RemotingTerminatorSpecs-110)] [akka://RemotingTerminatorSpecs-110/] Instantiating Remote Actor [akka.tcp://System2@127.0.0.1:5597/remote/akka.tcp/RemotingTerminatorSpecs-110@127.0.0.1:5596/user/remote]
+ [WARNING][2018/12/26 13:05:04][Thread 0367][[akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5597-1#1342883839]] Association with remote system akka.tcp://System2@127.0.0.1:5597 has failed; address is now gated for 5000 ms. Reason is: [Akka.Remote.EndpointDisassociatedException: Disassociated
+    在 Akka.Remote.EndpointWriter.PublishAndThrow(Exception reason, LogLevel level, Boolean needToThrow) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:行号 1287
+    在 Akka.Remote.EndpointWriter.Unhandled(Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:行号 1217
+    在 Akka.Actor.ReceiveActor.ExecutePartialMessageHandler(Object message, PartialAction`1 partialAction) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:行号 80
+    在 Akka.Actor.ReceiveActor.<>c__DisplayClass11_0.<Become>b__0(Object m) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:行号 90
+    在 Akka.Actor.ActorCell.<>c__DisplayClass106_0.<Akka.Actor.IUntypedActorContext.Become>b__0(Object m) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.cs:行号 307
+    在 Akka.Actor.ActorBase.AroundReceive(Receive receive, Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorBase.cs:行号 155
+    在 Akka.Actor.ActorCell.ReceiveMessage(Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 199
+    在 Akka.Actor.ActorCell.ReceivedTerminated(Terminated t) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DeathWatch.cs:行号 94
+    在 Akka.Actor.ActorCell.AutoReceiveMessage(Envelope envelope) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 145
+    在 Akka.Actor.ActorCell.Invoke(Envelope envelope) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 73]
+ [ERROR][2018/12/26 13:05:04][Thread 0367][akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5597-1/endpointWriter] Disassociated
+ Cause: Akka.Remote.EndpointDisassociatedException: Disassociated
+    在 Akka.Remote.EndpointWriter.PublishAndThrow(Exception reason, LogLevel level, Boolean needToThrow) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:行号 1287
+    在 Akka.Remote.EndpointWriter.Unhandled(Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Endpoint.cs:行号 1217
+    在 Akka.Actor.ReceiveActor.ExecutePartialMessageHandler(Object message, PartialAction`1 partialAction) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:行号 80
+    在 Akka.Actor.ReceiveActor.<>c__DisplayClass11_0.<Become>b__0(Object m) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ReceiveActor.cs:行号 90
+    在 Akka.Actor.ActorCell.<>c__DisplayClass106_0.<Akka.Actor.IUntypedActorContext.Become>b__0(Object m) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.cs:行号 307
+    在 Akka.Actor.ActorBase.AroundReceive(Receive receive, Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorBase.cs:行号 155
+    在 Akka.Actor.ActorCell.ReceiveMessage(Object message) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 199
+    在 Akka.Actor.ActorCell.ReceivedTerminated(Terminated t) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DeathWatch.cs:行号 94
+    在 Akka.Actor.ActorCell.AutoReceiveMessage(Envelope envelope) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 145
+    在 Akka.Actor.ActorCell.Invoke(Envelope envelope) 位置 E:\CoreProjects\akka.net\src\Akka.Core\Actor\ActorCell.DefaultMessages.cs:行号 73
+ [INFO][2018/12/26 13:05:04][Thread 0139][akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5597-1/endpointWriter] Message BackoffTimer from akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5597-1/endpointWriter to akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5597-1/endpointWriter was not delivered. 1 dead letters encountered.
+ [INFO][2018/12/26 13:05:05][Thread 0015][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 2 dead letters encountered.
+ [INFO][2018/12/26 13:05:06][Thread 0019][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 3 dead letters encountered.
+ [INFO][2018/12/26 13:05:07][Thread 0139][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 4 dead letters encountered.
+ [INFO][2018/12/26 13:05:08][Thread 0139][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 5 dead letters encountered.
+ [INFO][2018/12/26 13:05:09][Thread 0418][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 6 dead letters encountered.
+ [WARNING][2018/12/26 13:05:11][Thread 0468][[akka://RemotingTerminatorSpecs-110/system/endpointManager/reliableEndpointWriter-akka.tcp%3A%2F%2FSystem2%40127.0.0.1%3A5597-1/endpointWriter#2108646836]] AssociationError [akka.tcp://RemotingTerminatorSpecs-110@127.0.0.1:5596] -> akka.tcp://System2@127.0.0.1:5597: Error [Association failed with akka.tcp://System2@127.0.0.1:5597] []
+ [WARNING][2018/12/26 13:05:11][Thread 0468][remoting] Tried to associate with unreachable remote address [akka.tcp://System2@127.0.0.1:5597]. Address is now gated for 5000 ms, all messages to this address will be delivered to dead letters. Reason: [Association failed with akka.tcp://System2@127.0.0.1:5597] Caused by: [System.AggregateException: 发生一个或多个错误。 ---> Akka.Remote.Transport.InvalidAssociationException: ECONNREFUSED (ECONNREFUSED) : connection refused
+    在 Akka.Remote.Transport.DotNetty.TcpTransport.<AssociateInternal>d__1.MoveNext() 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\TcpTransport.cs:行号 545
+ --- 引发异常的上一位置中堆栈跟踪的末尾 ---
+    在 System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+    在 System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+    在 System.Runtime.CompilerServices.ConfiguredTaskAwaitable`1.ConfiguredTaskAwaiter.GetResult()
+    在 Akka.Remote.Transport.DotNetty.DotNettyTransport.<Associate>d__25.MoveNext() 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\DotNettyTransport.cs:行号 260
+    --- 内部异常堆栈跟踪的结尾 ---
+    在 System.Threading.Tasks.Task`1.GetResultCore(Boolean waitCompletionNotification)
+    在 Akka.Remote.Transport.ProtocolStateActor.<>c.<InitializeFSM>b__11_5(Task`1 result) 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\AkkaProtocolTransport.cs:行号 1072
+    在 System.Threading.Tasks.ContinuationResultTaskFromResultTask`2.InnerInvoke()
+    在 System.Threading.Tasks.Task.Execute()
+ ---> (内部异常 #0) Akka.Remote.Transport.InvalidAssociationException: ECONNREFUSED (ECONNREFUSED) : connection refused
+    在 Akka.Remote.Transport.DotNetty.TcpTransport.<AssociateInternal>d__1.MoveNext() 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\TcpTransport.cs:行号 545
+ --- 引发异常的上一位置中堆栈跟踪的末尾 ---
+    在 System.Runtime.ExceptionServices.ExceptionDispatchInfo.Throw()
+    在 System.Runtime.CompilerServices.TaskAwaiter.HandleNonSuccessAndDebuggerNotification(Task task)
+    在 System.Runtime.CompilerServices.ConfiguredTaskAwaitable`1.ConfiguredTaskAwaiter.GetResult()
+    在 Akka.Remote.Transport.DotNetty.DotNettyTransport.<Associate>d__25.MoveNext() 位置 E:\CoreProjects\akka.net\src\Akka.Remote\Transport\DotNetty\DotNettyTransport.cs:行号 260<---
+ ]
+ [INFO][2018/12/26 13:05:11][Thread 0138][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 7 dead letters encountered.
+ [INFO][2018/12/26 13:05:11][Thread 0138][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 8 dead letters encountered.
+ [INFO][2018/12/26 13:05:12][Thread 0138][akka://RemotingTerminatorSpecs-110/deadLetters] Message Heartbeat from akka://RemotingTerminatorSpecs-110/system/remote-watcher to akka://RemotingTerminatorSpecs-110/deadLetters was not delivered. 9 dead letters encountered.
+ [DEBUG][2018/12/26 13:05:14][Thread 0085][ActorSystem(RemotingTerminatorSpecs-110)] System shutdown initiated
+ [DEBUG][2018/12/26 13:05:14][Thread 0418][EventStream] Shutting down: StandardOutLogger started
+ [DEBUG][2018/12/26 13:05:14][Thread 0418][EventStream] All default loggers stopped
+
+
+[xUnit.net 00:03:00.99]     Akka.Remote.Tests.Transport.AkkaProtocolStressTest.AkkaProtocolTransport_must_guarantee_at_most_once_delivery_and_message_ordering_despite_packet_loss [SKIP]
+已跳过 Akka.Remote.Tests.Transport.AkkaProtocolStressTest.AkkaProtocolTransport_must_guarantee_at_most_once_delivery_and_message_ordering_despite_packet_loss 个
+[xUnit.net 00:03:40.86]     Akka.Remote.Tests.Serialization.MiscMessageSerializerSpec.Can_serialize_LocalScope [SKIP]
+已跳过 Akka.Remote.Tests.Serialization.MiscMessageSerializerSpec.Can_serialize_LocalScope 个
+
+总测试: 253。已通过: 246。失败: 1。已跳过: 6。
+测试运行失败。
+测试执行时间: 4.0175 分钟
+
+E:\CoreProjects\akka.net\test\Akka.Remote.Tests>

@@ -26,11 +26,22 @@
     <AssemblyOriginatorKeyFile>$(SourceRoot)/build/StrongKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
+  <PropertyGroup>
+    <DeveloperBuildTestTfms>netcoreapp2.2</DeveloperBuildTestTfms>
+    <StandardTestTfms>$(DeveloperBuildTestTfms)</StandardTestTfms>
+    <StandardTestTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardTestTfms);net471;net452</StandardTestTfms>
+    <DeveloperBuildTfms>netstandard2.0</DeveloperBuildTfms>
+    <StandardDevTfms>$(DeveloperBuildTfms)</StandardDevTfms>
+    <StandardDevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardDevTfms);net471;net451</StandardDevTfms>
+    <CoreDevTfms>$(StandardDevTfms);netcoreapp2.2</CoreDevTfms>
+  </PropertyGroup>
+
   <!-- Common compile parameters -->
   <PropertyGroup>
     <LangVersion>latest</LangVersion>
     <PlatformTarget>AnyCPU</PlatformTarget>
     <Prefer32Bit>false</Prefer32Bit>
+    <TieredCompilation>true</TieredCompilation>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
     <DefineConstants>$(DefineConstants);NET_3_5_GREATER;</DefineConstants>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
@@ -42,19 +53,19 @@
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.2' ">
-    <DefineConstants>$(DefineConstants);NETCOREAPP;NETCOREAPP_2_0_GREATER;NETCOREAPP_2_1_GREATER;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
+    <DefineConstants>$(DefineConstants);CORECLR;NETCOREAPP;NETCOREAPP_2_0_GREATER;NETCOREAPP_2_1_GREATER;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
-    <DefineConstants>$(DefineConstants);NETCOREAPP;NETCOREAPP_2_0_GREATER;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
+    <DefineConstants>$(DefineConstants);CORECLR;NETCOREAPP;NETCOREAPP_2_0_GREATER;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.0' ">
-    <DefineConstants>$(DefineConstants);NETCOREAPP;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
+    <DefineConstants>$(DefineConstants);CORECLR;NETCOREAPP;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard1.1'">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;NET_4_0_GREATER</DefineConstants>
+    <DefineConstants>$(DefineConstants);CORECLR;NETSTANDARD;NET_4_0_GREATER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'netstandard2.0'">
-    <DefineConstants>$(DefineConstants);NETSTANDARD;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
+    <DefineConstants>$(DefineConstants);CORECLR;NETSTANDARD;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition="'$(TargetFramework)' == 'net40'">
     <DefineConstants>$(DefineConstants);DESKTOPCLR</DefineConstants>

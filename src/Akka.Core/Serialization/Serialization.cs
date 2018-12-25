@@ -365,7 +365,7 @@ namespace Akka.Serialization
             {
                 var provider = originalSystem.Provider;
                 var res =
-                    path.ToSerializationFormatWithAddress(provider.GetExternalAddressFor(address).GetOrElse(provider.DefaultAddress));
+                    path.ToSerializationFormatWithAddress(provider.GetExternalAddressFor(address) ?? provider.DefaultAddress);
                 return res;
             }
         }

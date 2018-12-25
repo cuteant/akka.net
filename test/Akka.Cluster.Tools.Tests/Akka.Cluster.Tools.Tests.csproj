@@ -6,6 +6,9 @@
     <AssemblyName>Akka.Cluster.Tools.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Cluster.Tools\Akka.Cluster.Tools.csproj" />

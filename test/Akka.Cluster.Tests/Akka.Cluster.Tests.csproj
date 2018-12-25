@@ -8,6 +8,7 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
     <DefineConstants>$(DefineConstants);FSCHECK;</DefineConstants>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup>

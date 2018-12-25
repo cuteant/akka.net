@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using Akka.Util;
 using CuteAnt.Pool;
 using DotNetty.Buffers;
+using DotNetty.Common.Concurrency;
 using DotNetty.Transport.Channels;
 using ILoggingAdapter = Akka.Event.ILoggingAdapter;
 
@@ -76,22 +77,22 @@ namespace Akka.Remote.Transport.DotNetty
             return ctx.ConnectAsync(remoteAddress, localAddress);
         }
 
-        public override Task DisconnectAsync(IChannelHandlerContext ctx)
+        public override void Disconnect(IChannelHandlerContext ctx, IPromise promise)
         {
             if (_log.IsInfoEnabled) _log.Info("Channel {0} disconnect", ctx.Channel);
-            return ctx.DisconnectAsync();
+            ctx.DisconnectAsync(promise);
         }
 
-        public override Task CloseAsync(IChannelHandlerContext ctx)
+        public override void Close(IChannelHandlerContext ctx, IPromise promise)
         {
             if (_log.IsInfoEnabled) _log.Info("Channel {0} close", ctx.Channel);
-            return ctx.CloseAsync();
+            ctx.CloseAsync(promise);
         }
 
-        public override Task DeregisterAsync(IChannelHandlerContext ctx)
+        public override void Deregister(IChannelHandlerContext ctx, IPromise promise)
         {
             if (_log.IsDebugEnabled) _log.Debug("Channel {0} deregister", ctx.Channel);
-            return ctx.DeregisterAsync();
+            ctx.DeregisterAsync(promise);
         }
 
         public override void ChannelRead(IChannelHandlerContext ctx, object message)
@@ -103,13 +104,13 @@ namespace Akka.Remote.Transport.DotNetty
             ctx.FireChannelRead(message);
         }
 
-        public override Task WriteAsync(IChannelHandlerContext ctx, object message)
+        public override void Write(IChannelHandlerContext ctx, object message, IPromise promise)
         {
             if (_log.IsDebugEnabled)
             {
                 _log.Debug("Channel {0} writing a message ({1}) of type [{2}]", ctx.Channel, message, message == null ? "NULL" : message.GetType().TypeQualifiedName());
             }
-            return ctx.WriteAsync(message);
+            ctx.WriteAsync(message, promise);
         }
 
         public override void Flush(IChannelHandlerContext ctx)

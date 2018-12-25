@@ -740,6 +740,16 @@ An (unbounded) deque-based mailbox can be configured as follows:
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowFormatException_ExpectedPositiveValue(double value)
+        {
+            throw GetException();
+            FormatException GetException()
+            {
+                return new FormatException($"Expected a positive value instead of {value}");
+            }
+        }
+
         #endregion
     }
 }

@@ -3,7 +3,7 @@
   <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net471;net451</TargetFrameworks>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.Persistence.Wings</RootNamespace>
     <AssemblyName>Akka.Persistence.Wings</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

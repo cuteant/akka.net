@@ -12,6 +12,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Routing;
+using MessagePack;
 
 namespace Akka.Cluster.Tools.PublishSubscribe.Internal
 {
@@ -39,6 +40,22 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// </summary>
         public static readonly Count Instance = new Count();
         private Count() { }
+    }
+
+    /// <summary>
+    /// TBD
+    /// </summary>
+    [MessagePackObject]
+    internal sealed class CountSubscribers
+    {
+        [Key(0)]
+        public string Topic { get; }
+
+        [SerializationConstructor]
+        public CountSubscribers(string topic)
+        {
+            Topic = topic;
+        }
     }
 
     /// <summary>

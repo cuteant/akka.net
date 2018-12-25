@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.IO;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using Akka.Actor;
 using Akka.Pattern;
 using Akka.Streams.Dsl;
@@ -1182,6 +1183,16 @@ namespace Akka.Streams
         internal static void ThrowNothingToReadException()
         {
             throw NothingToReadException.Instance;
+        }
+
+        #endregion
+
+        #region -- OperationCanceledException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static OperationCanceledException GetOperationCanceledException(CancellationToken token)
+        {
+            return new OperationCanceledException($"Stage cancelled due to cancellation token request.", token);
         }
 
         #endregion

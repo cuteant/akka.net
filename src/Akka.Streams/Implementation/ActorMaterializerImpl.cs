@@ -18,6 +18,7 @@ using Akka.Pattern;
 using Akka.Streams.Implementation.Fusing;
 using Akka.Util;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Streams.Implementation
 {
@@ -543,7 +544,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class GetChildren
+        public sealed class GetChildren : ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -554,7 +555,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class StopChildren
+        public sealed class StopChildren : ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -565,7 +566,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class StoppedChildren
+        public sealed class StoppedChildren : ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -576,7 +577,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class PrintDebugDump
+        public sealed class PrintDebugDump : ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -587,16 +588,19 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         public sealed class Children
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly IImmutableSet<IActorRef> Refs;
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="refs">TBD</param>
+            [SerializationConstructor]
             public Children(IImmutableSet<IActorRef> refs)
             {
                 Refs = refs;

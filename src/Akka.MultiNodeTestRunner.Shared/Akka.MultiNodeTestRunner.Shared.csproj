@@ -3,7 +3,7 @@
   <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>netstandard2.0;net471;net452</TargetFrameworks>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.MultiNodeTestRunner.Shared</RootNamespace>
     <AssemblyName>Akka.MultiNodeTestRunner.Shared</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

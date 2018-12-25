@@ -102,7 +102,7 @@ namespace Akka.Remote.Tests
             Assert.Equal(4096, s.Backlog);
             Assert.True(s.TcpNoDelay);
             Assert.True(s.TcpKeepAlive);
-            Assert.True(s.TcpReuseAddr);
+            Assert.Equal("on", c.GetString("tcp-reuse-addr")); // "off-for-windows"
             Assert.True(string.IsNullOrEmpty(c.GetString("hostname")));
             Assert.Null(s.PublicPort);
             Assert.Equal(2, s.ServerSocketWorkerPoolSize);

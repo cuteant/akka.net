@@ -191,7 +191,7 @@ namespace Akka.Persistence
             var isWildcardSelection = destination.PathString.Contains("*");
             if (isWildcardSelection) { ThrowHelper.ThrowNotSupportedException_Deliver(); }
 
-            Deliver(ActorPath.Parse(destination.PathString), deliveryMessageMapper);
+            Deliver(ActorPath.Parse($"{destination.Anchor.Path}/{destination.PathString}"), deliveryMessageMapper);
         }
 
         /// <summary>

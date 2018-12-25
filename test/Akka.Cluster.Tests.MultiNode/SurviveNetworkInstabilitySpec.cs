@@ -158,11 +158,11 @@ namespace Akka.Cluster.Tests.MultiNode
             A_Network_partition_tolerant_cluster_must_heal_after_one_isolated_node();
             A_Network_partition_tolerant_cluster_must_heal_two_isolated_islands();
             A_Network_partition_tolerant_cluster_must_heal_after_unreachable_when_ring_is_changed();
-            A_Network_partition_tolerant_cluster_must_down_and_remove_quarantined_node();
+            A_Network_partition_tolerant_cluster_must_mark_quarantined_node_with_reachability_status_Terminated();
             A_Network_partition_tolerant_cluster_must_continue_and_move_Joining_to_Up_after_downing_of_one_half();
         }
 
-        public void A_Network_partition_tolerant_cluster_must_reach_initial_convergence()
+        internal void A_Network_partition_tolerant_cluster_must_reach_initial_convergence()
         {
             AwaitClusterUp(_config.First, _config.Second, _config.Third, _config.Fourth, _config.Fifth);
 
@@ -170,7 +170,7 @@ namespace Akka.Cluster.Tests.MultiNode
             AssertCanTalk(_config.First, _config.Second, _config.Third, _config.Fourth, _config.Fifth);
         }
 
-        public void A_Network_partition_tolerant_cluster_must_heal_after_a_broken_pair()
+        internal void A_Network_partition_tolerant_cluster_must_heal_after_a_broken_pair()
         {
             Within(45.Seconds(), () =>
             {
@@ -212,7 +212,7 @@ namespace Akka.Cluster.Tests.MultiNode
             });
         }
 
-        public void A_Network_partition_tolerant_cluster_must_heal_after_one_isolated_node()
+        internal void A_Network_partition_tolerant_cluster_must_heal_after_one_isolated_node()
         {
             Within(45.Seconds(), () =>
             {
@@ -250,7 +250,7 @@ namespace Akka.Cluster.Tests.MultiNode
             });
         }
 
-        public void A_Network_partition_tolerant_cluster_must_heal_two_isolated_islands()
+        internal void A_Network_partition_tolerant_cluster_must_heal_two_isolated_islands()
         {
             Within(45.Seconds(), () =>
             {
@@ -298,7 +298,7 @@ namespace Akka.Cluster.Tests.MultiNode
             });
         }
 
-        public void A_Network_partition_tolerant_cluster_must_heal_after_unreachable_when_ring_is_changed()
+        internal void A_Network_partition_tolerant_cluster_must_heal_after_unreachable_when_ring_is_changed()
         {
             Within(60.Seconds(), () =>
             {
@@ -375,7 +375,7 @@ namespace Akka.Cluster.Tests.MultiNode
             });
         }
 
-        public void A_Network_partition_tolerant_cluster_must_down_and_remove_quarantined_node()
+        internal void A_Network_partition_tolerant_cluster_must_mark_quarantined_node_with_reachability_status_Terminated()
         {
             Within(60.Seconds(), () =>
             {
@@ -402,7 +402,6 @@ namespace Akka.Cluster.Tests.MultiNode
                     Sys.ActorSelection(Node(_config.Third) / "user" / "watcher").Tell(new SurviveNetworkInstabilitySpecConfig.Targets(refs));
                     ExpectMsg<SurviveNetworkInstabilitySpecConfig.TargetsRegistered>();
                 }, _config.Second);
-
                 EnterBarrier("targets-registered");
 
                 RunOn(() =>
@@ -429,16 +428,37 @@ namespace Akka.Cluster.Tests.MultiNode
 
                 RunOn(() =>
                 {
+                    Thread.Sleep(2000.Milliseconds());
+
+                    var secondUniqueAddress = Cluster.State.Members.SingleOrDefault(m => m.Address == GetAddress(_config.Second));
+                    secondUniqueAddress.Should().NotBeNull(because: "2nd node should stay visible");
+                    secondUniqueAddress?.Status.Should().Be(MemberStatus.Up, because: "2nd node should be Up");
+                    
+                    // second should be marked with reachability status Terminated
+                    AwaitAssert(() => ClusterView.Reachability.Status(secondUniqueAddress?.UniqueAddress).Should().Be(Reachability.ReachabilityStatus.Terminated));
+                }, others.ToArray());
+                EnterBarrier("reachability-terminated");
+
+                RunOn(() =>
+                {
+                    Cluster.Down(GetAddress(_config.Second));
+                }, _config.Fourth);
+
+                RunOn(() =>
+                {
                     // second should be removed because of quarantine
                     AwaitAssert(() => ClusterView.Members.Select(c => c.Address).Should().NotContain(GetAddress(_config.Second)));
+                    // and also removed from reachability table
+                    AwaitAssert(() => ClusterView.Reachability.AllUnreachableOrTerminated.Should().BeEmpty());
                 }, others.ToArray());
+                EnterBarrier("removed-after-down");
 
                 EnterBarrier("after-6");
                 AssertCanTalk(others.ToArray());
             });
         }
 
-        public void A_Network_partition_tolerant_cluster_must_continue_and_move_Joining_to_Up_after_downing_of_one_half()
+        internal void A_Network_partition_tolerant_cluster_must_continue_and_move_Joining_to_Up_after_downing_of_one_half()
         {
             Within(60.Seconds(), () =>
             {

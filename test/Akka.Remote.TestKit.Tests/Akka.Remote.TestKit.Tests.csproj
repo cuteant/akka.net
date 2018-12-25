@@ -7,6 +7,9 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
     <DefineConstants>$(DefineConstants);SERIALIZATION;</DefineConstants>
   </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Remote.TestKit\Akka.Remote.TestKit.csproj" />

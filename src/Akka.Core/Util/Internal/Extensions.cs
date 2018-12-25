@@ -24,7 +24,7 @@ namespace Akka.Util.Internal
         /// <returns>TBD</returns>
         public static T AsInstanceOf<T>(this object self)
         {
-            return (T) self;
+            return (T)self;
         }
 
         /// <summary>
@@ -116,7 +116,7 @@ namespace Akka.Util.Internal
             if (hash.ContainsKey(key))
                 hash[key] = value;
             else
-                hash.Add(key,value);
+                hash.Add(key, value);
         }
 
         /// <summary>
@@ -133,20 +133,6 @@ namespace Akka.Util.Internal
             if (hash.TryGetValue(key, out var value))
                 return value;
             return elseValue;
-        }
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <typeparam name="T">TBD</typeparam>
-        /// <param name="obj">TBD</param>
-        /// <param name="elseValue">TBD</param>
-        /// <returns>TBD</returns>
-        public static T GetOrElse<T>(this T obj, T elseValue)
-        {
-            if (obj.Equals(default(T)))
-                return elseValue;
-            return obj;
         }
 
         /// <summary>
@@ -170,7 +156,7 @@ namespace Akka.Util.Internal
         /// <param name="this">TBD</param>
         /// <param name="other">TBD</param>
         /// <returns>TBD</returns>
-        public static TimeSpan Max(this TimeSpan @this, TimeSpan other) 
+        public static TimeSpan Max(this TimeSpan @this, TimeSpan other)
         {
             return @this > other ? @this : other;
         }
@@ -195,7 +181,7 @@ namespace Akka.Util.Internal
         /// <returns>TBD</returns>
         public static IEnumerable<T> Concat<T>(this IEnumerable<T> enumerable, T item)
         {
-            var itemInArray = new[] {item};
+            var itemInArray = new[] { item };
             if (enumerable == null)
                 return itemInArray;
             return enumerable.Concat(itemInArray);

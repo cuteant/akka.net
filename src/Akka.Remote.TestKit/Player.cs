@@ -21,6 +21,7 @@ using Akka.Pattern;
 using Akka.Remote.Transport;
 using Akka.Util;
 using Akka.Util.Internal;
+using DotNetty.Common.Concurrency;
 using DotNetty.Transport.Channels;
 
 namespace Akka.Remote.TestKit
@@ -678,10 +679,10 @@ namespace Akka.Remote.TestKit
             channel.CloseAsync();
         }
 
-        public override Task CloseAsync(IChannelHandlerContext context)
+        public override void Close(IChannelHandlerContext context, IPromise promise)
         {
             _log.Info("Client: disconnecting {0} from {1}", context.Channel.LocalAddress, context.Channel.RemoteAddress);
-            return base.CloseAsync(context);
+            context.CloseAsync(promise);
         }
     }
 }
