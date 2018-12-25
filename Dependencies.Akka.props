@@ -2,9 +2,9 @@
   <!-- Shared Package Versions -->
   <PropertyGroup>
     <!-- Test related packages -->
-    <FsCheckPackageVersion>2.11.0</FsCheckPackageVersion>
-    <FsCheckXunitPackageVersion>2.11.0</FsCheckXunitPackageVersion>
-    <Mongo2GoPackageVersion>2.2.1</Mongo2GoPackageVersion>
-    <TeamCityServiceMessagesPackageVersion>3.0.10</TeamCityServiceMessagesPackageVersion>
+    <FsCheckPackageVersion>2.13.0</FsCheckPackageVersion>
+    <FsCheckXunitPackageVersion>2.13.0</FsCheckXunitPackageVersion>
+    <Mongo2GoPackageVersion>2.2.8</Mongo2GoPackageVersion>
+    <TeamCityServiceMessagesPackageVersion>3.0.11</TeamCityServiceMessagesPackageVersion>
   </PropertyGroup>
 </Project>

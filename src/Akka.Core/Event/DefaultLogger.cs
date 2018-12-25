@@ -23,17 +23,19 @@ namespace Akka.Event
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            if (message is InitializeLogger)
+            switch (message)
             {
-                Sender.Tell(new LoggerInitialized());
-                return true;
-            }
-            var logEvent = message as LogEvent;
-            if (logEvent == null)
-                return false;
+                case InitializeLogger _:
+                    Sender.Tell(new LoggerInitialized());
+                    return true;
 
-            Print(logEvent);
-            return true;
+                case LogEvent logEvent:
+                    Print(logEvent);
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

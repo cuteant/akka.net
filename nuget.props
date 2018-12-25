@@ -16,7 +16,7 @@
     <Copyright>Copyright © 2013-2017 Akka.NET Team</Copyright>
     <PackageIconUrl>http://getakka.net/images/akkalogo.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/akkadotnet/akka.net</PackageProjectUrl>
-    <PackageLicenseUrl>https://github.com/akkadotnet/akka.net/blob/master/LICENSE</PackageLicenseUrl>
+    <PackageLicense>https://github.com/akkadotnet/akka.net/blob/master/LICENSE</PackageLicense>
     <PackageIconUrl></PackageIconUrl>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/akkadotnet/akka.net.git</RepositoryUrl>
