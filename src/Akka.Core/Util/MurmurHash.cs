@@ -269,7 +269,7 @@ namespace Akka.Util
         {
             if (arr.Length != 8)
             {
-                throw new ArgumentException("Not enough bits to make a byte!", nameof(arr));
+                AkkaThrowHelper.ThrowArgumentException_NotEnoughBitsToMakeAByte();
             }
             var bytes = new byte[(arr.Length - 1) / 8 + 1];
             arr.CopyTo(bytes, 0);

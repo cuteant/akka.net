@@ -1,5 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using System.Threading;
 using Akka.Actor;
 using Akka.Serialization.Formatters;
 using Akka.Serialization.Resolvers;
@@ -11,23 +10,12 @@ namespace Akka.Serialization
 {
     public static class MsgPackSerializerHelper
     {
-        private const int Locked = 1;
-        private const int Unlocked = 0;
-
-        private static int _registered = Unlocked;
-
         internal static IFormatterResolver DefaultResolver;
-
 
         static MsgPackSerializerHelper()
         {
             MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance);
             MessagePackSerializer.Typeless.RegisterTypelessFormatter(AkkaTypelessFormatter.Instance);
-        }
-
-        internal static void Register()
-        {
-            if (Interlocked.CompareExchange(ref _registered, Locked, Unlocked) == Locked) { return; }
 
             MessagePackStandardResolver.Register(
                 AkkaResolver.Instance,
@@ -40,9 +28,9 @@ namespace Akka.Serialization
             );
         }
 
-        internal const string ActorSystem = "ACTORSYSTEM";
+        internal const int ActorSystemIdentifier = 1;
         [MethodImpl(InlineMethod.Value)]
         public static ExtendedActorSystem GetActorSystem(this IFormatterResolver formatterResolver)
-            => formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystem);
+            => formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
     }
 }

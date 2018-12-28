@@ -55,7 +55,7 @@ namespace Akka.DistributedData.Durable
     /// If the `LoadAll` fails it can throw `LoadFailedException` and the `Replicator` supervisor
     /// will stop itself and the durable store.
     /// </summary>
-    public sealed class LoadAll : IEquatable<LoadAll>
+    public sealed class LoadAll : IEquatable<LoadAll>, ISingletonMessage
     {
         public static readonly LoadAll Instance = new LoadAll();
         private LoadAll() { }
@@ -73,7 +73,7 @@ namespace Akka.DistributedData.Durable
         }
     }
 
-    public sealed class LoadAllCompleted : IEquatable<LoadAllCompleted>
+    public sealed class LoadAllCompleted : IEquatable<LoadAllCompleted>, ISingletonMessage
     {
         public static readonly LoadAllCompleted Instance = new LoadAllCompleted();
         private LoadAllCompleted() { }

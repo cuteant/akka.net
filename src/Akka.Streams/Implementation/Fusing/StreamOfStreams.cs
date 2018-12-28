@@ -1016,7 +1016,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// Not yet materialized and no command has been scheduled
         /// </summary>
-        internal class Uninitialized : IState
+        internal sealed class Uninitialized : IState, ISingletonMessage
         {
             public static readonly Uninitialized Instance = new Uninitialized();
 
@@ -1041,7 +1041,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// A RequestOne command was scheduled before materialization
         /// </summary>
-        internal class RequestOneScheduledBeforeMaterialization : CommandScheduledBeforeMaterialization
+        internal sealed class RequestOneScheduledBeforeMaterialization : CommandScheduledBeforeMaterialization, ISingletonMessage
         {
             public static readonly RequestOneScheduledBeforeMaterialization Instance = new RequestOneScheduledBeforeMaterialization(RequestOne.Instance);
 
@@ -1053,7 +1053,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// A Cancel command was scheduled before materialization
         /// </summary>
-        internal sealed class CancelScheduledBeforeMaterialization : CommandScheduledBeforeMaterialization
+        internal sealed class CancelScheduledBeforeMaterialization : CommandScheduledBeforeMaterialization, ISingletonMessage
         {
             public static readonly CancelScheduledBeforeMaterialization Instance = new CancelScheduledBeforeMaterialization(Cancel.Instance);
 
@@ -1072,7 +1072,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
         }
 
-        internal class RequestOne : ICommand
+        internal sealed class RequestOne : ICommand, ISingletonMessage
         {
             public static readonly RequestOne Instance = new RequestOne();
 
@@ -1081,7 +1081,7 @@ namespace Akka.Streams.Implementation.Fusing
             }
         }
 
-        internal class Cancel : ICommand
+        internal sealed class Cancel : ICommand, ISingletonMessage
         {
             public static readonly Cancel Instance = new Cancel();
 

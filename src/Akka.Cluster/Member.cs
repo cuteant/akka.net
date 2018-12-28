@@ -125,7 +125,7 @@ namespace Akka.Cluster
         {
             if (obj is Member member) return CompareTo(member);
 
-            throw new ArgumentException($"Cannot compare {nameof(Member)} to an instance of type '{obj?.GetType().FullName ?? "null"}'");
+            return ThrowHelper.ThrowArgumentException_MemberCompare(obj);
         }
 
         /// <inheritdoc cref="object.ToString"/>
@@ -175,7 +175,7 @@ namespace Akka.Cluster
 
             //TODO: Akka exception?
             if (!AllowedTransitions[oldStatus].Contains(status))
-                throw new InvalidOperationException($"Invalid member status transition {Status} -> {status}");
+                ThrowHelper.ThrowInvalidOperationException_MemberCopy(Status, status);
 
             return new Member(UniqueAddress, UpNumber, status, Roles);
         }
@@ -203,8 +203,8 @@ namespace Akka.Cluster
             /// <inheritdoc cref="IComparer{Address}.Compare"/>
             public int Compare(Address x, Address y)
             {
-                if (x is null) throw new ArgumentNullException(nameof(x));
-                if (y is null) throw new ArgumentNullException(nameof(y));
+                if (x is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.x);
+                if (y is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.y);
 
                 if (ReferenceEquals(x, y)) return 0;
                 var result = string.CompareOrdinal(x.Host ?? "", y.Host ?? "");
@@ -274,8 +274,8 @@ namespace Akka.Cluster
             /// <inheritdoc cref="IComparer{Member}.Compare"/>
             public int Compare(Member x, Member y)
             {
-                if (x is null) throw new ArgumentNullException(nameof(x));
-                if (y is null) throw new ArgumentNullException(nameof(y));
+                if (x is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.x);
+                if (y is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.y);
 
                 return x.UniqueAddress.CompareTo(y.UniqueAddress, AddressOrdering);
             }
@@ -506,12 +506,12 @@ namespace Akka.Cluster
         {
             if (obj is UniqueAddress address) return CompareTo(address);
 
-            throw new ArgumentException($"Cannot compare {nameof(UniqueAddress)} with instance of type '{obj?.GetType().FullName ?? "null"}'.");
+            return ThrowHelper.ThrowArgumentException_UniqueAddressCompare(obj);
         }
 
         internal int CompareTo(UniqueAddress uniqueAddress, IComparer<Address> addresComparer)
         {
-            if (uniqueAddress == null) throw new ArgumentNullException(nameof(uniqueAddress));
+            if (uniqueAddress == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.uniqueAddress);
 
             var result = addresComparer.Compare(Address, uniqueAddress.Address);
             return result == 0 ? Uid.CompareTo(uniqueAddress.Uid) : result;

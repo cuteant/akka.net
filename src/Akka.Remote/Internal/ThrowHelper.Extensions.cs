@@ -217,7 +217,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_SystemMsg(Type type)
+        internal static object ThrowArgumentException_Serializer_SystemMsg(Type type)
         {
             throw GetException();
             ArgumentException GetException()

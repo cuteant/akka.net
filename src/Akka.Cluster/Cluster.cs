@@ -175,10 +175,11 @@ namespace Akka.Cluster
         /// </exception>
         public void Subscribe(IActorRef subscriber, ClusterEvent.SubscriptionInitialStateMode initialStateMode, params Type[] to)
         {
-            if (to.Length == 0)
-                throw new ArgumentException("At least one `IClusterDomainEvent` class is required", nameof(to));
+            if (to == null || to.Length == 0) { ThrowHelper.ThrowArgumentException_AtLeastOneIClusterDomainEventClassIsRequired(); }
             if (!to.All(t => typeof(ClusterEvent.IClusterDomainEvent).IsAssignableFrom(t)))
-                throw new ArgumentException($"Subscribe to `IClusterDomainEvent` or subclasses, was [{string.Join(", ", to.Select(c => c.Name))}]", nameof(to));
+            {
+                ThrowHelper.ThrowArgumentException_SubscribeToIClusterDomainEventOrSubclasses(to);
+            }
 
             ClusterCore.Tell(new InternalClusterAction.Subscribe(subscriber, initialStateMode, ImmutableHashSet.Create(to)));
         }

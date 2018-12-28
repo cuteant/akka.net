@@ -1411,7 +1411,7 @@ namespace Akka.Streams.Dsl
     /// </para>
     /// Cancels when downstream cancels
     /// </summary>
-    public sealed partial class ZipWith
+    public sealed partial class ZipWith : ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="ZipWith"/>.
@@ -1460,7 +1460,7 @@ namespace Akka.Streams.Dsl
     /// </para>
     /// Cancels when any downstream cancels
     /// </summary>
-    public partial class UnzipWith
+    public partial class UnzipWith : ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of <see cref="UnzipWith"/>.

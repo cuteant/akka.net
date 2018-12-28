@@ -105,7 +105,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// Marker object that indicates that a port holds no element since it was already grabbed. 
         /// The port is still pullable, but there is no more element to grab.
         /// </summary>
-        public sealed class Empty
+        public sealed class Empty : ISingletonMessage
         {
             /// <summary>
             /// TBD

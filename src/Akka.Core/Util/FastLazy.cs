@@ -36,7 +36,7 @@ namespace Akka.Util
         /// </exception>
         public FastLazy(Func<T> producer)
         {
-            if (producer == null) throw new ArgumentNullException(nameof(producer), "Producer cannot be null");
+            if (producer == null) { AkkaThrowHelper.ThrowArgumentNullException_ProducerCannotBeNull(); }
             _producer = producer;
         }
 

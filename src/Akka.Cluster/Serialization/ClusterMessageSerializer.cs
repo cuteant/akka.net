@@ -22,29 +22,9 @@ namespace Akka.Cluster.Serialization
 {
     public class ClusterMessageSerializer : Serializer
     {
-        private readonly Dictionary<Type, Func<byte[], object>> _fromBinaryMap;
-
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
-        public ClusterMessageSerializer(ExtendedActorSystem system) : base(system)
-        {
-            _fromBinaryMap = new Dictionary<Type, Func<byte[], object>>
-            {
-                [typeof(ClusterHeartbeatSender.Heartbeat)] = bytes => new ClusterHeartbeatSender.Heartbeat(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
-                [typeof(ClusterHeartbeatSender.HeartbeatRsp)] = bytes => new ClusterHeartbeatSender.HeartbeatRsp(UniqueAddressFrom(MessagePackSerializer.Deserialize<Protocol.UniqueAddress>(bytes, s_defaultResolver))),
-                [typeof(GossipEnvelope)] = GossipEnvelopeFrom,
-                [typeof(GossipStatus)] = GossipStatusFrom,
-                [typeof(InternalClusterAction.Join)] = JoinFrom,
-                [typeof(InternalClusterAction.Welcome)] = WelcomeFrom,
-                [typeof(ClusterUserAction.Leave)] = bytes => new ClusterUserAction.Leave(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
-                [typeof(ClusterUserAction.Down)] = bytes => new ClusterUserAction.Down(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
-                [typeof(InternalClusterAction.InitJoin)] = bytes => InternalClusterAction.InitJoin.Instance,
-                [typeof(InternalClusterAction.InitJoinAck)] = bytes => new InternalClusterAction.InitJoinAck(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
-                [typeof(InternalClusterAction.InitJoinNack)] = bytes => new InternalClusterAction.InitJoinNack(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver))),
-                [typeof(InternalClusterAction.ExitingConfirmed)] = bytes => new InternalClusterAction.ExitingConfirmed(UniqueAddressFrom(MessagePackSerializer.Deserialize<Protocol.UniqueAddress>(bytes, s_defaultResolver))),
-                [typeof(ClusterRouterPool)] = ClusterRouterPoolFrom
-            };
-        }
+        public ClusterMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         public override bool IncludeManifest => true;
 
@@ -79,18 +59,79 @@ namespace Akka.Cluster.Serialization
                 case ClusterRouterPool pool:
                     return ClusterRouterPoolToByteArray(pool);
                 default:
-                    throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterMessageSerializer)}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(obj);
             }
         }
 
+        static class _
+        {
+            internal const int Heartbeat = 0;
+            internal const int HeartbeatRsp = 1;
+            internal const int GossipEnvelope = 2;
+            internal const int GossipStatus = 3;
+            internal const int Join = 4;
+            internal const int Welcome = 5;
+            internal const int Leave = 6;
+            internal const int Down = 7;
+            internal const int InitJoin = 8;
+            internal const int InitJoinAck = 9;
+            internal const int InitJoinNack = 10;
+            internal const int ExitingConfirmed = 11;
+            internal const int ClusterRouterPool = 12;
+        }
+        private readonly Dictionary<Type, int> _fromBinaryMap = new Dictionary<Type, int>
+        {
+            [typeof(ClusterHeartbeatSender.Heartbeat)] = _.Heartbeat,
+            [typeof(ClusterHeartbeatSender.HeartbeatRsp)] = _.HeartbeatRsp,
+            [typeof(GossipEnvelope)] = _.GossipEnvelope,
+            [typeof(GossipStatus)] = _.GossipStatus,
+            [typeof(InternalClusterAction.Join)] = _.Join,
+            [typeof(InternalClusterAction.Welcome)] = _.Welcome,
+            [typeof(ClusterUserAction.Leave)] = _.Leave,
+            [typeof(ClusterUserAction.Down)] = _.Down,
+            [typeof(InternalClusterAction.InitJoin)] = _.InitJoin,
+            [typeof(InternalClusterAction.InitJoinAck)] = _.InitJoinAck,
+            [typeof(InternalClusterAction.InitJoinNack)] = _.InitJoinNack,
+            [typeof(InternalClusterAction.ExitingConfirmed)] = _.ExitingConfirmed,
+            [typeof(ClusterRouterPool)] = _.ClusterRouterPool
+        };
+
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (_fromBinaryMap.TryGetValue(type, out var factory))
+            if (_fromBinaryMap.TryGetValue(type, out var flag))
             {
-                return factory(bytes);
+                switch (flag)
+                {
+                    case _.Heartbeat:
+                        return new ClusterHeartbeatSender.Heartbeat(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
+                    case _.HeartbeatRsp:
+                        return new ClusterHeartbeatSender.HeartbeatRsp(UniqueAddressFrom(MessagePackSerializer.Deserialize<Protocol.UniqueAddress>(bytes, s_defaultResolver)));
+                    case _.GossipEnvelope:
+                        return GossipEnvelopeFrom(bytes);
+                    case _.GossipStatus:
+                        return GossipStatusFrom(bytes);
+                    case _.Join:
+                        return JoinFrom(bytes);
+                    case _.Welcome:
+                        return WelcomeFrom(bytes);
+                    case _.Leave:
+                        return new ClusterUserAction.Leave(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
+                    case _.Down:
+                        return new ClusterUserAction.Down(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
+                    case _.InitJoin:
+                        return InternalClusterAction.InitJoin.Instance;
+                    case _.InitJoinAck:
+                        return new InternalClusterAction.InitJoinAck(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
+                    case _.InitJoinNack:
+                        return new InternalClusterAction.InitJoinNack(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
+                    case _.ExitingConfirmed:
+                        return new InternalClusterAction.ExitingConfirmed(UniqueAddressFrom(MessagePackSerializer.Deserialize<Protocol.UniqueAddress>(bytes, s_defaultResolver)));
+                    case _.ClusterRouterPool:
+                        return ClusterRouterPoolFrom(bytes);
+                }
             }
 
-            throw new ArgumentException($"{nameof(ClusterMessageSerializer)} cannot deserialize object of type {type}");
+            return ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(type);
         }
 
         //

@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Serialization;
-using Akka.Util;
 using MessagePack;
 
 namespace Akka.Remote.Serialization
@@ -17,7 +16,7 @@ namespace Akka.Remote.Serialization
     /// <summary>
     /// This is a special <see cref="Serializer"/> that serializes and deserializes <see cref="ActorSelectionMessage"/> only.
     /// </summary>
-    public class MessageContainerSerializer : Serializer
+    public sealed class MessageContainerSerializer : Serializer
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
@@ -36,9 +35,6 @@ namespace Akka.Remote.Serialization
             var sel = obj as ActorSelectionMessage;
             if (null == sel) { ThrowHelper.ThrowArgumentException_Serializer_ActorSel(obj); }
 
-            //List<Protocol.Selection> pattern = null;
-            //if (sel.Elements != null)
-            //{
             var pattern = new List<Protocol.Selection>(sel.Elements.Length);
             foreach (var element in sel.Elements)
             {
@@ -57,7 +53,6 @@ namespace Akka.Remote.Serialization
                         break;
                 }
             }
-            //}
 
             return MessagePackSerializer.Serialize(new Protocol.SelectionEnvelope(
                 WrappedPayloadSupport.PayloadToProto(system, sel.Message), pattern), s_defaultResolver);
@@ -93,7 +88,7 @@ namespace Akka.Remote.Serialization
             return new ActorSelectionMessage(message, elements);
         }
 
-        private static Protocol.Selection BuildPattern(string matcher, Protocol.Selection.PatternType patternType)
+        internal static Protocol.Selection BuildPattern(string matcher, Protocol.Selection.PatternType patternType)
         {
             return new Protocol.Selection(patternType, matcher);
         }

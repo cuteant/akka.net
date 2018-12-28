@@ -59,7 +59,7 @@ namespace Akka.Cluster.Sharding
     /// it to know when it is completed.
     /// </summary>
     [Serializable]
-    public sealed class GracefulShutdown : IShardRegionCommand
+    public sealed class GracefulShutdown : IShardRegionCommand, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -99,7 +99,7 @@ namespace Akka.Cluster.Sharding
     /// Intended for testing purpose to see when cluster sharding is "ready".
     /// </summary>
     [Serializable]
-    public sealed class GetCurrentRegions : IShardRegionQuery
+    public sealed class GetCurrentRegions : IShardRegionQuery, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -189,7 +189,7 @@ namespace Akka.Cluster.Sharding
     /// For the statistics for the entire cluster, see <see cref="GetClusterShardingStats"/>.
     /// </summary>
     [Serializable]
-    public sealed class GetShardRegionStats : IShardRegionQuery
+    public sealed class GetShardRegionStats : IShardRegionQuery, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -208,7 +208,7 @@ namespace Akka.Cluster.Sharding
     /// and what entities are running on each of those shards.
     /// </summary>
     [Serializable]
-    public sealed class GetShardRegionState : IShardRegionQuery
+    public sealed class GetShardRegionState : IShardRegionQuery, ISingletonMessage
     {
         /// <summary>
         /// TBD

@@ -2,9 +2,7 @@
 using System.Collections.Generic;
 using System.Reflection;
 using Akka.Actor;
-using Akka.Configuration;
 using Akka.Serialization.Formatters;
-using Akka.Util;
 using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
@@ -36,7 +34,6 @@ namespace Akka.Serialization.Resolvers
             {typeof(IActorRef), new ActorRefFormatter<IActorRef>()},
             {typeof(IInternalActorRef), new ActorRefFormatter<IInternalActorRef>()},
             {typeof(RepointableActorRef), new ActorRefFormatter<RepointableActorRef>()},
-            //{typeof(Config), ActorConfigFormatter.Instnace},
         };
 
         internal static object GetFormatter(Type t)

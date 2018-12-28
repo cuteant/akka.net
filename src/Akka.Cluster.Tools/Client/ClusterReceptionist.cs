@@ -87,7 +87,7 @@ namespace Akka.Cluster.Tools.Client
     /// The sender will automatically become unsubscribed when it
     /// terminates.
     /// </summary>
-    public sealed class SubscribeClusterClients
+    public sealed class SubscribeClusterClients : ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -99,7 +99,7 @@ namespace Akka.Cluster.Tools.Client
     /// <summary>
     /// Explicitly unsubscribe from client interaction events.
     /// </summary>
-    public sealed class UnsubscribeClusterClients
+    public sealed class UnsubscribeClusterClients : ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -112,7 +112,7 @@ namespace Akka.Cluster.Tools.Client
     /// Get the cluster clients known to this receptionist. A <see cref="ClusterClients"/> message
     /// will be replied.
     /// </summary>
-    public sealed class GetClusterClients
+    public sealed class GetClusterClients : ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -171,7 +171,7 @@ namespace Akka.Cluster.Tools.Client
         /// TBD
         /// </summary>
         [Serializable]
-        internal sealed class GetContacts : IClusterClientMessage, IDeadLetterSuppression
+        internal sealed class GetContacts : IClusterClientMessage, IDeadLetterSuppression //, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -230,7 +230,7 @@ namespace Akka.Cluster.Tools.Client
         /// TBD
         /// </summary>
         [Serializable]
-        internal sealed class Heartbeat : IClusterClientMessage, IDeadLetterSuppression
+        internal sealed class Heartbeat : IClusterClientMessage, IDeadLetterSuppression //, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -243,7 +243,7 @@ namespace Akka.Cluster.Tools.Client
         /// TBD
         /// </summary>
         [Serializable]
-        internal sealed class HeartbeatRsp : IClusterClientMessage, IDeadLetterSuppression
+        internal sealed class HeartbeatRsp : IClusterClientMessage, IDeadLetterSuppression //, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -256,7 +256,7 @@ namespace Akka.Cluster.Tools.Client
         /// TBD
         /// </summary>
         [Serializable]
-        internal sealed class Ping : IDeadLetterSuppression
+        internal sealed class Ping : IDeadLetterSuppression, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -268,7 +268,7 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        internal sealed class CheckDeadlines
+        internal sealed class CheckDeadlines : ISingletonMessage
         {
             /// <summary>
             /// TBD

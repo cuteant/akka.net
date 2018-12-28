@@ -218,7 +218,7 @@ namespace Akka.Cluster
             protected MemberStatusChange(Member member, MemberStatus validStatus)
             {
                 if (member.Status != validStatus)
-                    throw new ArgumentException($"Expected {validStatus} state, got: {member}");
+                    ThrowHelper.ThrowArgumentException_ExpectedState(member, validStatus);
                 Member = member;
             }
 
@@ -367,7 +367,7 @@ namespace Akka.Cluster
                 : base(member, MemberStatus.Removed)
             {
                 if (member.Status != MemberStatus.Removed)
-                    throw new ArgumentException($"Expected Removed status, got {member}");
+                    ThrowHelper.ThrowArgumentException_ExpectedRemoveStatus(member);
                 PreviousStatus = previousStatus;
             }
 

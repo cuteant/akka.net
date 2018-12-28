@@ -33,6 +33,7 @@
     <DeveloperBuildTfms>netstandard2.0</DeveloperBuildTfms>
     <StandardDevTfms>$(DeveloperBuildTfms)</StandardDevTfms>
     <StandardDevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardDevTfms);net471;net451</StandardDevTfms>
+    <StandardDev40Tfms Condition=" '$(OS)' == 'Windows_NT' ">$(DeveloperBuildTfms);net451;net40</StandardDev40Tfms>
     <CoreDevTfms>$(StandardDevTfms);netcoreapp2.2</CoreDevTfms>
   </PropertyGroup>
 

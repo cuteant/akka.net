@@ -304,7 +304,7 @@ namespace Akka.Actor
     /// <summary>
     /// Used to deliver messages via <see cref="ActorSelection"/>.
     /// </summary>
-    public class ActorSelectionMessage : IAutoReceivedMessage, IPossiblyHarmful
+    public sealed class ActorSelectionMessage : IAutoReceivedMessage, IPossiblyHarmful
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ActorSelectionMessage" /> class.

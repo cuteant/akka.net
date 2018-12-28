@@ -6,8 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Runtime.InteropServices;
-using System.Threading;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Akka.Dispatch.SysMsg;
 using Akka.Util.Internal;
@@ -80,13 +79,19 @@ namespace Akka.Actor
                 else
                 {
                     internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
-                    if (t.Status == TaskStatus.Canceled)
-                        throw new TaskCanceledException();
-                    else
-                        throw t.Exception;
+                    return ThrowFailureAfterCompletion(t);
                 }
             }
             return promiseRef.Result.ContinueWith(continuationFunction, TaskContinuationOptions.ExecuteSynchronously);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        static bool ThrowFailureAfterCompletion(Task t)
+        {
+            if (t.Status == TaskStatus.Canceled)
+                throw new TaskCanceledException();
+            else
+                throw t.Exception;
         }
     }
 }

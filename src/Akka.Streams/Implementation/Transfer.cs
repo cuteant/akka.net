@@ -254,7 +254,7 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    internal sealed class Completed : TransferState
+    internal sealed class Completed : TransferState, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -279,7 +279,7 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    internal sealed class NotInitialized : TransferState
+    internal sealed class NotInitialized : TransferState, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -338,7 +338,7 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    internal sealed class Always : TransferState
+    internal sealed class Always : TransferState, ISingletonMessage
     {
         /// <summary>
         /// TBD

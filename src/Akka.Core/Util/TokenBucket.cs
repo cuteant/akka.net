@@ -33,10 +33,8 @@ namespace Akka.Util
         /// </exception>
         protected TokenBucket(long capacity, long ticksBetweenTokens)
         {
-            if(capacity<0)
-                throw new ArgumentException("Capacity must be non-negative", nameof(capacity));
-            if (ticksBetweenTokens <= 0)
-                throw new ArgumentException("Time between tokens must be larger than zero ticks.", nameof(ticksBetweenTokens));
+            if (capacity < 0) AkkaThrowHelper.ThrowArgumentException_TokenBucket_Capacity();
+            if (ticksBetweenTokens <= 0) AkkaThrowHelper.ThrowArgumentException_TokenBucket_Time();
             
             _capacity = capacity;
             _ticksBetweenTokens = ticksBetweenTokens;
@@ -74,8 +72,7 @@ namespace Akka.Util
         /// <returns>TBD</returns>
         public long Offer(long cost)
         {
-            if(cost < 0)
-                throw new ArgumentException("Cost must be non-negative", nameof(cost));
+            if (cost < 0) AkkaThrowHelper.ThrowArgumentException_TokenBucket_Offer();
 
             var now = CurrentTime;
             var timeElapsed = now - _lastUpdate;

@@ -356,15 +356,23 @@ namespace Akka.Remote.Transport.DotNetty
 
             if (InternalTransport == TransportMode.Tcp)
             {
-                pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, (int)MaximumPayloadBytes, 0, 4, 0, 4, true));
-                //if (Settings.BackwardsCompatibilityModeEnabled)
-                //{
-                //    pipeline.AddLast("FrameEncoder", new HeliosBackwardsCompatabilityLengthFramePrepender(4, false));
-                //}
-                //else
-                //{
-                pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
-                //}
+                if (Settings.ByteOrder == ByteOrder.BigEndian)
+                {
+                    pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder2((int)MaximumPayloadBytes, 0, 4, 0, 4, true));
+                    pipeline.AddLast("FrameEncoder", new LengthFieldPrepender2(4, 0, false));
+                }
+                else
+                {
+                    pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, (int)MaximumPayloadBytes, 0, 4, 0, 4, true));
+                    //if (Settings.BackwardsCompatibilityModeEnabled)
+                    //{
+                    //    pipeline.AddLast("FrameEncoder", new HeliosBackwardsCompatabilityLengthFramePrepender(4, false));
+                    //}
+                    //else
+                    //{
+                    pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
+                    //}
+                }
             }
         }
 
@@ -387,8 +395,16 @@ namespace Akka.Remote.Transport.DotNetty
 
             if (InternalTransport == TransportMode.Tcp)
             {
-                var handler = new TcpClientHandler(this, Logging.GetLogger(System, typeof(TcpClientHandler)), remoteAddress);
-                pipeline.AddLast("ClientHandler", handler);
+                if (TransferBatchSize > 1)
+                {
+                    var handler = new TcpBatchClientHandler(this, Logging.GetLogger(System, typeof(TcpBatchClientHandler)), remoteAddress);
+                    pipeline.AddLast("ClientHandler", handler);
+                }
+                else
+                {
+                    var handler = new TcpClientHandler(this, Logging.GetLogger(System, typeof(TcpClientHandler)), remoteAddress);
+                    pipeline.AddLast("ClientHandler", handler);
+                }
             }
         }
 
@@ -404,8 +420,16 @@ namespace Akka.Remote.Transport.DotNetty
 
             if (Settings.TransportMode == TransportMode.Tcp)
             {
-                var handler = new TcpServerHandler(this, Logging.GetLogger(System, typeof(TcpServerHandler)), AssociationListenerPromise.Task);
-                pipeline.AddLast("ServerHandler", handler);
+                if (TransferBatchSize > 1)
+                {
+                    var handler = new TcpBatchServerHandler(this, Logging.GetLogger(System, typeof(TcpBatchServerHandler)), AssociationListenerPromise.Task);
+                    pipeline.AddLast("ServerHandler", handler);
+                }
+                else
+                {
+                    var handler = new TcpServerHandler(this, Logging.GetLogger(System, typeof(TcpServerHandler)), AssociationListenerPromise.Task);
+                    pipeline.AddLast("ServerHandler", handler);
+                }
             }
         }
 

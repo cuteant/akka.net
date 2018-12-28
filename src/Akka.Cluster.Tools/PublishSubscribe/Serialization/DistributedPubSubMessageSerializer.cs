@@ -42,26 +42,13 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 
         #endregion
 
-        private readonly IDictionary<string, Func<byte[], object>> _fromBinaryMap;
-
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="DistributedPubSubMessageSerializer"/> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
-        public DistributedPubSubMessageSerializer(ExtendedActorSystem system) : base(system)
-        {
-            _fromBinaryMap = new Dictionary<string, Func<byte[], object>>(StringComparer.Ordinal)
-            {
-                { StatusManifest, StatusFrom },
-                { DeltaManifest, DeltaFrom },
-                { SendManifest, SendFrom },
-                { SendToAllManifest, SendToAllFrom },
-                { PublishManifest, PublishFrom },
-                { SendToOneSubscriberManifest, SendToOneSubscriberFrom }
-            };
-        }
+        public DistributedPubSubMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <summary>
         /// Serializes the given object into a byte array
@@ -90,7 +77,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 case SendToOneSubscriber sub:
                     return SendToOneSubscriberToProto(sub);
                 default:
-                    throw new ArgumentException($"Can't serialize object of type {obj.GetType()} with {nameof(DistributedPubSubMessageSerializer)}");
+                    return ThrowHelper.ThrowArgumentException_Serializer_DistributedPubSubMessage(obj);
             }
         }
 
@@ -105,12 +92,23 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, string manifest)
         {
-            if (_fromBinaryMap.TryGetValue(manifest, out var deserializer))
+            switch (manifest)
             {
-                return deserializer(bytes);
+                case StatusManifest:
+                    return StatusFrom(bytes);
+                case DeltaManifest:
+                    return DeltaFrom(bytes);
+                case SendManifest:
+                    return SendFrom(bytes);
+                case SendToAllManifest:
+                    return SendToAllFrom(bytes);
+                case PublishManifest:
+                    return PublishFrom(bytes);
+                case SendToOneSubscriberManifest:
+                    return SendToOneSubscriberFrom(bytes);
+                default:
+                    return ThrowHelper.ThrowArgumentException_Serializer_DistributedPubSubMessage(manifest);
             }
-
-            throw new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(DistributedPubSubMessageSerializer)}");
         }
 
         /// <summary>
@@ -141,7 +139,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 case SendToOneSubscriber _:
                     return SendToOneSubscriberManifest;
                 default:
-                    throw new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
+                    return ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage<string>(o);
             }
         }
         /// <inheritdoc />
@@ -162,7 +160,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 case SendToOneSubscriber _:
                     return SendToOneSubscriberManifestBytes;
                 default:
-                    throw new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
+                    return ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage<byte[]>(o);
             }
         }
 

@@ -32,7 +32,7 @@ namespace Akka.Cluster
             {
                 if (!sourceIterator.MoveNext())
                 {
-                    throw new InvalidOperationException("Sequence was empty");
+                    ThrowHelper.ThrowInvalidOperationException_SequenceWasEmpty();
                 }
                 var min = sourceIterator.Current;
                 while (sourceIterator.MoveNext())
@@ -82,7 +82,7 @@ namespace Akka.Cluster
             {
                 if (!sourceIterator.MoveNext())
                 {
-                    throw new InvalidOperationException("Sequence was empty");
+                    ThrowHelper.ThrowInvalidOperationException_SequenceWasEmpty();
                 }
                 var max = sourceIterator.Current;
                 var maxKey = selector(max);

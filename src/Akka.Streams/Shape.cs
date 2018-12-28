@@ -243,7 +243,7 @@ namespace Akka.Streams
     /// This <see cref="Shape"/> is used for graphs that have neither open inputs nor open
     /// outputs. Only such a <see cref="IGraph{TShape,TMaterializer}"/> can be materialized by a <see cref="IMaterializer"/>.
     /// </summary>
-    public class ClosedShape : Shape
+    public class ClosedShape : Shape, ISingletonMessage
     {
         /// <summary>
         /// TBD

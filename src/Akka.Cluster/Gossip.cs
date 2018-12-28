@@ -160,22 +160,19 @@ namespace Akka.Cluster
         {
             if (Members.Any(m => m.Status == MemberStatus.Removed))
             {
-                var members = string.Join(", ", Members.Where(m => m.Status == MemberStatus.Removed).Select(m => m.ToString()));
-                throw new ArgumentException($"Live members must not have status [Removed], got {members}", nameof(Members));
+                ThrowHelper.ThrowArgumentException_ExpectedRemoveStatus(Members);
             }
 
             var inReachabilityButNotMember = Overview.Reachability.AllObservers.Except(Members.Select(m => m.UniqueAddress));
             if (!inReachabilityButNotMember.IsEmpty)
             {
-                var inreachability = string.Join(", ", inReachabilityButNotMember.Select(a => a.ToString()));
-                throw new ArgumentException($"Nodes not part of cluster in reachability table, got {inreachability}", nameof(Overview));
+                ThrowHelper.ThrowArgumentException_NodesNotPartOfClusterInReachabilityTable(inReachabilityButNotMember);
             }
 
             var seenButNotMember = Overview.Seen.Except(Members.Select(m => m.UniqueAddress));
             if (!seenButNotMember.IsEmpty)
             {
-                var seen = string.Join(", ", seenButNotMember.Select(a => a.ToString()));
-                throw new ArgumentException($"Nodes not part of cluster have marked the Gossip as seen, got {seen}", nameof(Overview));
+                ThrowHelper.ThrowArgumentException_NodesNotPartOfClusterHaveMarkedTheGossipAsSeen(seenButNotMember);
             }
         }
 
@@ -425,7 +422,7 @@ namespace Akka.Cluster
             get
             {
                 //TODO: Akka exception?
-                if (Members.Count <= 0) throw new Exception("No youngest when no members");
+                if (Members.Count <= 0) ThrowHelper.ThrowException_NoYoungestWhenNoMembers();
                 return Members.MaxBy(m => m.UpNumber == int.MaxValue ? 0 : m.UpNumber);
             }
         }

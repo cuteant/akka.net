@@ -36,7 +36,6 @@ namespace Akka.Cluster.Tools.Client.Serialization
         #endregion
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
-        private readonly IDictionary<string, Func<byte[], IClusterClientMessage>> _fromBinaryMap;
 
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
@@ -44,16 +43,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
         /// Initializes a new instance of the <see cref="ClusterClientMessageSerializer"/> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
-        public ClusterClientMessageSerializer(ExtendedActorSystem system) : base(system)
-        {
-            _fromBinaryMap = new Dictionary<string, Func<byte[], IClusterClientMessage>>(StringComparer.Ordinal)
-            {
-                {ContactsManifest, ContactsFromBinary},
-                {GetContactsManifest, _ => ClusterReceptionist.GetContacts.Instance},
-                {HeartbeatManifest, _ => ClusterReceptionist.Heartbeat.Instance},
-                {HeartbeatRspManifest, _ => ClusterReceptionist.HeartbeatRsp.Instance}
-            };
-        }
+        public ClusterClientMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <summary>
         /// Serializes the given object into a byte array
@@ -76,7 +66,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case ClusterReceptionist.HeartbeatRsp _:
                     return EmptyBytes;
                 default:
-                    throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterClientMessage(obj);
             }
         }
 
@@ -91,12 +81,19 @@ namespace Akka.Cluster.Tools.Client.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, string manifest)
         {
-            if (_fromBinaryMap.TryGetValue(manifest, out var deserializer))
+            switch (manifest)
             {
-                return deserializer(bytes);
+                case ContactsManifest:
+                    return ContactsFromBinary(bytes);
+                case GetContactsManifest:
+                    return ClusterReceptionist.GetContacts.Instance;
+                case HeartbeatManifest:
+                    return ClusterReceptionist.Heartbeat.Instance;
+                case HeartbeatRspManifest:
+                    return ClusterReceptionist.HeartbeatRsp.Instance;
+                default:
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterClientMessage(manifest);
             }
-
-            throw new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(ClusterClientMessageSerializer)}");
         }
 
         /// <summary>
@@ -123,7 +120,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case ClusterReceptionist.HeartbeatRsp _:
                     return HeartbeatRspManifest;
                 default:
-                    throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+                    return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<string>(o);
             }
         }
 
@@ -141,7 +138,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case ClusterReceptionist.HeartbeatRsp _:
                     return HeartbeatRspManifestBytes;
                 default:
-                    throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+                    return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<byte[]>(o);
             }
         }
 

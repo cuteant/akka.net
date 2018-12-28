@@ -164,7 +164,7 @@ namespace Akka.Streams.Implementation.Fusing
     /// TBD
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    public sealed class Identity<T> : SimpleLinearGraphStage<T>
+    public sealed class Identity<T> : SimpleLinearGraphStage<T>, ISingletonMessage
     {
         #region internal classes
         private sealed class Logic : InAndOutGraphStageLogic
@@ -289,7 +289,7 @@ namespace Akka.Streams.Implementation.Fusing
     /// TBD
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    internal sealed class TerminationWatcher<T> : GraphStageWithMaterializedValue<FlowShape<T, T>, Task>
+    internal sealed class TerminationWatcher<T> : GraphStageWithMaterializedValue<FlowShape<T, T>, Task>, ISingletonMessage
     {
         /// <summary>
         /// TBD

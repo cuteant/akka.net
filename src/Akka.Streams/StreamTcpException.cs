@@ -47,7 +47,7 @@ namespace Akka.Streams
     /// <summary>
     /// TBD
     /// </summary>
-    public class BindFailedException : StreamTcpException
+    public class BindFailedException : StreamTcpException, ISingletonMessage
     {
         /// <summary>
         /// The single instance of this exception

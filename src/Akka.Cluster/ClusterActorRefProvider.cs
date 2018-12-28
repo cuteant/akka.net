@@ -174,9 +174,9 @@ namespace Akka.Cluster
                 if (deploy.Config.GetBoolean("cluster.enabled"))
                 {
                     if (deploy.Scope != Deploy.NoScopeGiven)
-                        throw new ConfigurationException($"Cluster deployment can't be combined with scope [{deploy.Scope}]");
+                        ThrowHelper.ThrowConfigurationException_ClusterDeploymentCanotBeCombinedWithScope(deploy);
                     if (deploy.RouterConfig is RemoteRouterConfig)
-                        throw new ConfigurationException($"Cluster deployment can't be combined with [{deploy.Config}]");
+                        ThrowHelper.ThrowConfigurationException_ClusterDeploymentCanotBeCombinedWith(deploy);
 
                     if (deploy.RouterConfig is Pool pool)
                     {
@@ -194,7 +194,7 @@ namespace Akka.Cluster
                     }
                     else
                     {
-                        throw new ArgumentException($"Cluster-aware router can only wrap Pool or Group, got [{deploy.RouterConfig.GetType()}]");
+                        return ThrowHelper.ThrowArgumentException_ClusterAwareRouterCanOnlyWrapPoolOrGroup(deploy);
                     }
                 }
                 else

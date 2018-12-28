@@ -41,7 +41,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        internal sealed class TryToIdentifySingleton
+        internal sealed class TryToIdentifySingleton : ISingletonMessage
         {
             /// <summary>
             /// TBD

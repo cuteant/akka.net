@@ -522,7 +522,7 @@ namespace Akka.Cluster
             MonitoredByNumberOfNodes = monitoredByNumberOfNodes;
 
             if (!nodes.Contains(selfAddress))
-                throw new ArgumentException($"Nodes [${string.Join(", ", nodes)}] must contain selfAddress [{selfAddress}]");
+                ThrowHelper.ThrowArgumentException_NodesMustContainSelfAddress(selfAddress, nodes);
 
             _useAllAsReceivers = MonitoredByNumberOfNodes >= (NodeRing().Count - 1);
             MyReceivers = new Lazy<ImmutableHashSet<UniqueAddress>>(() => Receivers(SelfAddress));

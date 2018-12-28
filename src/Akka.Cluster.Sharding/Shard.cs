@@ -12,6 +12,7 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.Persistence;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Cluster.Sharding
 {
@@ -124,17 +125,20 @@ namespace Akka.Cluster.Sharding
         /// we restart it after a back off using this message.
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class RestartEntity : IShardCommand
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly EntityId EntityId;
 
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="entityId">TBD</param>
+            [SerializationConstructor]
             public RestartEntity(string entityId)
             {
                 EntityId = entityId;
@@ -146,17 +150,20 @@ namespace Akka.Cluster.Sharding
         /// batches of entity actors at a time.
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class RestartEntities : IShardCommand
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly IImmutableSet<EntityId> Entries;
 
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="entries">TBD</param>
+            [SerializationConstructor]
             public RestartEntities(IImmutableSet<EntityId> entries)
             {
                 Entries = entries;
@@ -166,11 +173,15 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
+        [Union(0, typeof(EntityStarted))]
+        [Union(1, typeof(EntityStopped))]
         public abstract class StateChange : IClusterShardingSerializable
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly EntityId EntityId;
 
             /// <summary>
@@ -211,12 +222,14 @@ namespace Akka.Cluster.Sharding
         /// <see cref="ShardState"/> change for starting an entity in this `Shard`
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class EntityStarted : StateChange
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="entityId">TBD</param>
+            [SerializationConstructor]
             public EntityStarted(string entityId) : base(entityId)
             {
             }
@@ -226,12 +239,14 @@ namespace Akka.Cluster.Sharding
         /// <see cref="ShardState"/> change for an entity which has terminated.
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class EntityStopped : StateChange
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="entityId">TBD</param>
+            [SerializationConstructor]
             public EntityStopped(string entityId) : base(entityId)
             {
             }
@@ -241,7 +256,7 @@ namespace Akka.Cluster.Sharding
         /// TBD
         /// </summary>
         [Serializable]
-        public sealed class GetCurrentShardState : IShardQuery
+        public sealed class GetCurrentShardState : IShardQuery, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -257,15 +272,18 @@ namespace Akka.Cluster.Sharding
         /// TBD
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class CurrentShardState
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly string ShardId;
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public readonly IImmutableSet<string> EntityIds;
 
             /// <summary>
@@ -273,6 +291,7 @@ namespace Akka.Cluster.Sharding
             /// </summary>
             /// <param name="shardId">TBD</param>
             /// <param name="entityIds">TBD</param>
+            [SerializationConstructor]
             public CurrentShardState(string shardId, IImmutableSet<string> entityIds)
             {
                 ShardId = shardId;
@@ -284,7 +303,7 @@ namespace Akka.Cluster.Sharding
         /// TBD
         /// </summary>
         [Serializable]
-        public sealed class GetShardStats : IShardQuery
+        public sealed class GetShardStats : IShardQuery, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -300,15 +319,18 @@ namespace Akka.Cluster.Sharding
         /// TBD
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class ShardStats
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly string ShardId;
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public readonly int EntityCount;
 
             /// <summary>
@@ -316,6 +338,7 @@ namespace Akka.Cluster.Sharding
             /// </summary>
             /// <param name="shardId">TBD</param>
             /// <param name="entityCount">TBD</param>
+            [SerializationConstructor]
             public ShardStats(string shardId, int entityCount)
             {
                 ShardId = shardId;
@@ -730,7 +753,7 @@ namespace Akka.Cluster.Sharding
     
     class RememberEntityStarter : ActorBase
     {
-        private class Tick : INoSerializationVerificationNeeded
+        private class Tick : INoSerializationVerificationNeeded, ISingletonMessage
         {
             public static readonly Tick Instance = new Tick();
             private Tick()

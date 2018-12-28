@@ -560,7 +560,7 @@ namespace Akka.Streams.Tests.Dsl
                     .Via(cancel.Token.AsFlow<int>())
                     .RunWith(Sink.Seq<int>(), Materializer);
                 task.Wait(TimeSpan.FromSeconds(3)).Should().BeTrue();
-                task.Result.Should().AllBeEquivalentTo(Enumerable.Range(1, 100));
+                task.Result.Should().BeEquivalentTo(Enumerable.Range(1, 100));
             }, Materializer);
         }
 
@@ -722,7 +722,7 @@ namespace Akka.Streams.Tests.Dsl
                     .Via(cancel.Token.AsFlow<int>(cancelGracefully: true))
                     .RunWith(Sink.Seq<int>(), Materializer);
                 task.Wait(TimeSpan.FromSeconds(3)).Should().BeTrue();
-                task.Result.Should().AllBeEquivalentTo(Enumerable.Range(1, 10));
+                task.Result.Should().BeEquivalentTo(Enumerable.Range(1, 10));
                 cancel.Cancel();
             }, Materializer);
         }

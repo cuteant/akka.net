@@ -292,15 +292,20 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected virtual bool WaitingForUpstream(object message)
         {
-            if (message is OnComplete)
-                OnComplete();
-            else if (message is OnSubscribe)
-                OnSubscribe(((OnSubscribe)message).Subscription);
-            else if (message is OnError)
-                OnError(((OnError)message).Cause);
-            else
-                return false;
-            return true;
+            switch (message)
+            {
+                case OnComplete _:
+                    OnComplete();
+                    return true;
+                case OnSubscribe s:
+                    OnSubscribe(s.Subscription);
+                    return true;
+                case OnError e:
+                    OnError(e.Cause);
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>
@@ -310,17 +315,23 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected virtual bool UpstreamRunning(object message)
         {
-            if (message is OnNext)
-                EnqueueInputElement(((OnNext)message).Element);
-            else if (message is OnComplete)
-                OnComplete();
-            else if (message is OnSubscribe)
-                ((OnSubscribe)message).Subscription.Cancel();
-            else if (message is OnError)
-                OnError(((OnError)message).Cause);
-            else
-                return false;
-            return true;
+            switch (message)
+            {
+                case OnNext n:
+                    EnqueueInputElement(n.Element);
+                    return true;
+                case OnComplete _:
+                    OnComplete();
+                    return true;
+                case OnSubscribe s:
+                    s.Subscription.Cancel();
+                    return true;
+                case OnError e:
+                    OnError(e.Cause);
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

@@ -16,8 +16,6 @@ namespace Akka.Serialization
         private readonly IFormatterResolver _resolver;
         private readonly int _initialBufferSize;
 
-        static MsgPackTypelessSerializer() => MsgPackSerializerHelper.Register();
-
         public MsgPackTypelessSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default) { }
 
         public MsgPackTypelessSerializer(ExtendedActorSystem system, Config config) : this(system, MsgPackSerializerSettings.Create(config)) { }
@@ -42,9 +40,10 @@ namespace Akka.Serialization
 
             _resolver = new TypelessDefaultResolver();
             _resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
-            _resolver.Context.Add(MsgPackSerializerHelper.ActorSystem, system);
+            _resolver.Context2.Add(HyperionConstants.HyperionSerializerIdentifier, serializer);
+            _resolver.Context2.Add(MsgPackSerializerHelper.ActorSystemIdentifier, system);
 
-            Interlocked.Exchange(ref MsgPackSerializerHelper.DefaultResolver, _resolver);
+            Interlocked.CompareExchange(ref MsgPackSerializerHelper.DefaultResolver, _resolver, null);
         }
 
         public override byte[] ToBinary(object obj)

@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using MessagePack;
 
 namespace Akka.Streams
 {
@@ -24,7 +25,7 @@ namespace Akka.Streams
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class Enqueued : IQueueOfferResult
+        public sealed class Enqueued : IQueueOfferResult, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -39,7 +40,7 @@ namespace Akka.Streams
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class Dropped : IQueueOfferResult
+        public sealed class Dropped : IQueueOfferResult, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -74,7 +75,7 @@ namespace Akka.Streams
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class QueueClosed : IQueueOfferResult
+        public sealed class QueueClosed : IQueueOfferResult, ISingletonMessage
         {
             /// <summary>
             /// TBD

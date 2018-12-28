@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Pattern;
+using MessagePack;
 
 namespace Akka.Cluster.Sharding
 {
@@ -33,7 +34,7 @@ namespace Akka.Cluster.Sharding
         /// TBD
         /// </summary>
         [Serializable]
-        internal sealed class Retry : IShardRegionCommand
+        internal sealed class Retry : IShardRegionCommand, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -47,16 +48,19 @@ namespace Akka.Cluster.Sharding
         /// restart it after a back off using this message.
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         internal sealed class RestartShard
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly ShardId ShardId;
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="shardId">TBD</param>
+            [SerializationConstructor]
             public RestartShard(ShardId shardId)
             {
                 ShardId = shardId;
@@ -69,11 +73,13 @@ namespace Akka.Cluster.Sharding
         /// the message *must* be handled by the shard id extractor.
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class StartEntity : IClusterShardingSerializable
         {
             /// <summary>
             /// An identifier of an entity to be started. Unique in scope of a given shard.
             /// </summary>
+            [Key(0)]
             public readonly EntityId EntityId;
 
             /// <summary>
@@ -81,6 +87,7 @@ namespace Akka.Cluster.Sharding
             /// to start an entity with provided <paramref name="entityId"/>.
             /// </summary>
             /// <param name="entityId">An identifier of an entity to be started on a given shard.</param>
+            [SerializationConstructor]
             public StartEntity(EntityId entityId)
             {
                 EntityId = entityId;
@@ -116,16 +123,19 @@ namespace Akka.Cluster.Sharding
         /// to start(it does not guarantee the entity successfully started)
         /// </summary>
         [Serializable]
+        [MessagePackObject]
         public sealed class StartEntityAck : IClusterShardingSerializable
         {
             /// <summary>
             /// An identifier of a newly started entity. Unique in scope of a given shard.
             /// </summary>
+            [Key(0)]
             public readonly EntityId EntityId;
 
             /// <summary>
             /// An identifier of a shard, on which an entity identified by <see cref="EntityId"/> is hosted.
             /// </summary>
+            [Key(1)]
             public readonly ShardId ShardId;
 
             /// <summary>
@@ -134,6 +144,7 @@ namespace Akka.Cluster.Sharding
             /// </summary>
             /// <param name="entityId">An identifier of a newly started entity.</param>
             /// <param name="shardId">An identifier of a shard hosting started entity.</param>
+            [SerializationConstructor]
             public StartEntityAck(EntityId entityId, ShardId shardId)
             {
                 EntityId = entityId;

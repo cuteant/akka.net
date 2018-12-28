@@ -5,27 +5,17 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System;
-using System.IO;
-using System.Text;
-using Akka.Actor;
-using Akka.Serialization;
-using Akka.Util;
-using MessagePack;
-
 namespace Akka.Persistence.Serialization
 {
     /// <summary>
     /// Wrapper for snapshot data.
     /// </summary>
-    [MessagePackObject]
     public sealed class Snapshot
     {
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="data">TBD</param>
-        [SerializationConstructor]
         public Snapshot(object data)
         {
             Data = data;
@@ -34,7 +24,6 @@ namespace Akka.Persistence.Serialization
         /// <summary>
         /// TBD
         /// </summary>
-        [Key(0)]
         public readonly object Data;
 
         /// <inheritdoc/>

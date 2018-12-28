@@ -18,7 +18,7 @@ namespace Akka.Streams.Implementation
     /// TBD
     /// </summary>
     [Serializable]
-    public class NothingToReadException : Exception
+    public class NothingToReadException : Exception, ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of this exception

@@ -33,7 +33,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal class ReadElementAcknowledgement : IAdapterToStageMessage
+        internal sealed class ReadElementAcknowledgement : IAdapterToStageMessage, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -49,7 +49,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Close : IAdapterToStageMessage
+        internal sealed class Close : IAdapterToStageMessage, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -92,7 +92,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Finished : IStreamToAdapterMessage
+        internal class Finished : IStreamToAdapterMessage, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -108,7 +108,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Initialized : IStreamToAdapterMessage
+        internal class Initialized : IStreamToAdapterMessage, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -164,10 +164,15 @@ namespace Akka.Streams.Implementation.IO
                 _stage = stage;
                 _callback = GetAsyncCallback((IAdapterToStageMessage message) =>
                 {
-                    if (message is ReadElementAcknowledgement)
-                        SendPullIfAllowed();
-                    else if (message is Close)
-                        CompleteStage();
+                    switch (message)
+                    {
+                        case ReadElementAcknowledgement _:
+                            SendPullIfAllowed();
+                            break;
+                        case Close _:
+                            CompleteStage();
+                            break;
+                    }
                 });
 
                 SetHandler(stage._in, this);

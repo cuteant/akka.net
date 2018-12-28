@@ -67,6 +67,10 @@ namespace Akka.Serialization
             _nullSerializer = new NullSerializer(system);
             AddSerializer("null", _nullSerializer);
 
+            var initializerType = system.Settings.Config.GetString("akka.actor.serialization-initializer", "Akka.Serialization.SerializationInitializer, Akka");
+            var serializationInitializer = ActivatorUtils.FastCreateInstance<ISerializationInitializer>(TypeUtil.ResolveType(initializerType));
+            serializationInitializer.InitActorSystem(system);
+
             var serializersConfig = system.Settings.Config.GetConfig("akka.actor.serializers").AsEnumerable().ToList();
             var serializerBindingConfig = system.Settings.Config.GetConfig("akka.actor.serialization-bindings").AsEnumerable().ToList();
             var serializerSettingsConfig = system.Settings.Config.GetConfig("akka.actor.serialization-settings");

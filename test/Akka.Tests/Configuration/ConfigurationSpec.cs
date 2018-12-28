@@ -165,6 +165,33 @@ a {
             Assert.Throws<NullReferenceException>(() => config.GetInt("a.b.c"));
         }
 
+        [Fact]
+        public void WithFallback()
+        {
+            var hocon1 = @"
+a {
+    aa = [""x""]
+    b = 1
+}
+";
+            var hocon2 = @"
+aa = [""y""]
+a.b {
+    c = 2
+}
+";
+
+            var root1 = ConfigurationFactory.ParseString(hocon1);
+            var root2 = ConfigurationFactory.ParseString(hocon2);
+
+            var config = root1.SafeWithFallback(root2);
+
+            var aa = config.GetStringList("a.aa");
+            Assert.Equal(1, aa.Count);
+            Assert.Equal(1, config.GetInt("a.b"));
+            Assert.Equal(2, config.Fallback.GetInt("a.b.c"));
+        }
+
         public class MyObjectConfig
         {
             public string StringProperty { get; set; }

@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Serialization;
 using System.Text;
 using Akka.Actor;
 using Akka.Persistence.Fsm;
@@ -135,19 +134,38 @@ namespace Akka.Persistence.Serialization
             );
         }
 
-        private static readonly Dictionary<Type, Func<PersistenceMessageSerializer, byte[], object>> s_fromBinaryMap = new Dictionary<Type, Func<PersistenceMessageSerializer, byte[], object>>()
+        static class _
         {
-            { typeof(Persistent), (s, b)=> GetPersistentRepresentation(s, MessagePackSerializer.Deserialize<PersistentMessage>(b, s_defaultResolver)) },
-            { typeof(IPersistentRepresentation), (s, b)=> GetPersistentRepresentation(s, MessagePackSerializer.Deserialize<PersistentMessage>(b, s_defaultResolver)) },
-            { typeof(AtomicWrite), (s, b)=> GetAtomicWrite(s, b) },
-            { typeof(AtLeastOnceDeliverySnapshot), (s, b)=> GetAtLeastOnceDeliverySnapshot(s, b) },
-            { typeof(PersistentFSM.StateChangeEvent), (s, b)=> GetStateChangeEvent(b) },
+            internal const int Persistent = 0;
+            internal const int IPersistentRepresentation = 1;
+            internal const int AtomicWrite = 2;
+            internal const int AtLeastOnceDeliverySnapshot = 3;
+            internal const int StateChangeEvent = 4;
+        }
+        private static readonly Dictionary<Type, int> s_fromBinaryMap = new Dictionary<Type, int>()
+        {
+            { typeof(Persistent), _.Persistent },
+            { typeof(IPersistentRepresentation), _.IPersistentRepresentation },
+            { typeof(AtomicWrite), _.AtomicWrite },
+            { typeof(AtLeastOnceDeliverySnapshot), _.AtLeastOnceDeliverySnapshot },
+            { typeof(PersistentFSM.StateChangeEvent), _.StateChangeEvent },
         };
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (s_fromBinaryMap.TryGetValue(type, out var factory))
+            if (s_fromBinaryMap.TryGetValue(type, out var flag))
             {
-                return factory(this, bytes);
+                switch (flag)
+                {
+                    case _.Persistent:
+                    case _.IPersistentRepresentation:
+                        return GetPersistentRepresentation(this, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
+                    case _.AtomicWrite:
+                        return GetAtomicWrite(this, bytes);
+                    case _.AtLeastOnceDeliverySnapshot:
+                        return GetAtLeastOnceDeliverySnapshot(this, bytes);
+                    case _.StateChangeEvent:
+                        return GetStateChangeEvent(bytes);
+                }
             }
             if (type.GetTypeInfo().IsGenericType
                 && type.GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>))

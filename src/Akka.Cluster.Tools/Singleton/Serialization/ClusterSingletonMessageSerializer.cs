@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt;
@@ -33,22 +32,12 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         #endregion
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
-        private readonly IDictionary<string, Func<byte[], IClusterSingletonMessage>> _fromBinaryMap;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterSingletonMessageSerializer"/> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
-        public ClusterSingletonMessageSerializer(ExtendedActorSystem system) : base(system)
-        {
-            _fromBinaryMap = new Dictionary<string, Func<byte[], IClusterSingletonMessage>>(StringComparer.Ordinal)
-            {
-                {HandOverToMeManifest, _ => HandOverToMe.Instance},
-                {HandOverInProgressManifest, _ => HandOverInProgress.Instance},
-                {HandOverDoneManifest, _ => HandOverDone.Instance},
-                {TakeOverFromMeManifest, _ => TakeOverFromMe.Instance}
-            };
-        }
+        public ClusterSingletonMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <summary>
         /// Serializes the given object into a byte array
@@ -69,7 +58,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMe _:
                     return EmptyBytes;
                 default:
-                    throw new ArgumentException($"Cannot serialize object of type [{obj.GetType()}] in [{GetType()}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<byte[]>(obj);
             }
         }
 
@@ -84,12 +73,19 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, string manifest)
         {
-            if (_fromBinaryMap.TryGetValue(manifest, out var mapper))
+            switch (manifest)
             {
-                return mapper(bytes);
+                case HandOverToMeManifest:
+                    return HandOverToMe.Instance;
+                case HandOverInProgressManifest:
+                    return HandOverInProgress.Instance;
+                case HandOverDoneManifest:
+                    return HandOverDone.Instance;
+                case TakeOverFromMeManifest:
+                    return TakeOverFromMe.Instance;
+                default:
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage(manifest);
             }
-
-            throw new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{GetType()}]");
         }
 
         /// <summary>
@@ -116,7 +112,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMe _:
                     return TakeOverFromMeManifest;
                 default:
-                    throw new ArgumentException($"Cannot serialize object of type [{o.GetType()}] in [{GetType()}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<string>(o);
             }
         }
         /// <inheritdoc />
@@ -133,7 +129,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMe _:
                     return TakeOverFromMeManifestBytes;
                 default:
-                    throw new ArgumentException($"Cannot serialize object of type [{o.GetType()}] in [{GetType()}]");
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<byte[]>(o);
             }
         }
     }

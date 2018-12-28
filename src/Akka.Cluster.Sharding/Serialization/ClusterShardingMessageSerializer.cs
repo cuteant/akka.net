@@ -86,48 +86,11 @@ namespace Akka.Cluster.Sharding.Serialization
 
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
-        private readonly Dictionary<string, Func<byte[], object>> _fromBinaryMap;
-
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterShardingMessageSerializer"/> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
-        public ClusterShardingMessageSerializer(ExtendedActorSystem system) : base(system)
-        {
-            _fromBinaryMap = new Dictionary<string, Func<byte[], object>>(StringComparer.Ordinal)
-            {
-                { EntityStateManifest, EntityStateFromBinary },
-                { EntityStartedManifest, EntityStartedFromBinary },
-                { EntityStoppedManifest, EntityStoppedFromBinary },
-
-                { CoordinatorStateManifest, CoordinatorStateFromBinary },
-                { ShardRegionRegisteredManifest, bytes => new PersistentShardCoordinator.ShardRegionRegistered(ActorRefMessageFromBinary(bytes)) },
-                { ShardRegionProxyRegisteredManifest, bytes => new PersistentShardCoordinator.ShardRegionProxyRegistered(ActorRefMessageFromBinary(bytes)) },
-                { ShardRegionTerminatedManifest, bytes => new PersistentShardCoordinator.ShardRegionTerminated(ActorRefMessageFromBinary(bytes)) },
-                { ShardRegionProxyTerminatedManifest, bytes => new PersistentShardCoordinator.ShardRegionProxyTerminated(ActorRefMessageFromBinary(bytes)) },
-                { ShardHomeAllocatedManifest, ShardHomeAllocatedFromBinary },
-                { ShardHomeDeallocatedManifest, bytes => new PersistentShardCoordinator.ShardHomeDeallocated(ShardIdMessageFromBinary(bytes)) },
-
-                { RegisterManifest, bytes => new PersistentShardCoordinator.Register(ActorRefMessageFromBinary(bytes)) },
-                { RegisterProxyManifest, bytes => new PersistentShardCoordinator.RegisterProxy(ActorRefMessageFromBinary(bytes)) },
-                { RegisterAckManifest, bytes => new PersistentShardCoordinator.RegisterAck(ActorRefMessageFromBinary(bytes)) },
-                { GetShardHomeManifest, bytes => new PersistentShardCoordinator.GetShardHome(ShardIdMessageFromBinary(bytes)) },
-                { ShardHomeManifest, ShardHomeFromBinary},
-                { HostShardManifest, bytes => new PersistentShardCoordinator.HostShard(ShardIdMessageFromBinary(bytes)) },
-                { ShardStartedManifest, bytes => new PersistentShardCoordinator.ShardStarted(ShardIdMessageFromBinary(bytes)) },
-                { BeginHandOffManifest, bytes => new PersistentShardCoordinator.BeginHandOff(ShardIdMessageFromBinary(bytes)) },
-                { BeginHandOffAckManifest, bytes => new PersistentShardCoordinator.BeginHandOffAck(ShardIdMessageFromBinary(bytes)) },
-                { HandOffManifest, bytes => new PersistentShardCoordinator.HandOff(ShardIdMessageFromBinary(bytes)) },
-                { ShardStoppedManifest, bytes => new PersistentShardCoordinator.ShardStopped(ShardIdMessageFromBinary(bytes)) },
-                { GracefulShutdownReqManifest, bytes => new PersistentShardCoordinator.GracefulShutdownRequest(ActorRefMessageFromBinary(bytes)) },
-
-                { GetShardStatsManifest, bytes => Shard.GetShardStats.Instance },
-                { ShardStatsManifest, ShardStatsFromBinary },
-
-                { StartEntityManifest, StartEntityFromBinary },
-                { StartEntityAckManifest, StartEntityAckFromBinary }
-            };
-        }
+        public ClusterShardingMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <summary>
         /// Serializes the given object into a byte array
@@ -168,7 +131,7 @@ namespace Akka.Cluster.Sharding.Serialization
                 case Shard.GetShardStats _: return EmptyArray<byte>.Instance;
                 case Shard.ShardStats o: return MessagePackSerializer.Serialize(ShardStatsToProto(o), s_defaultResolver);
             }
-            throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{this.GetType()}]");
+            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<byte[]>(obj);
         }
 
         /// <summary>
@@ -182,10 +145,68 @@ namespace Akka.Cluster.Sharding.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, string manifest)
         {
-            if (_fromBinaryMap.TryGetValue(manifest, out var factory))
-                return factory(bytes);
+            switch (manifest)
+            {
+                case EntityStateManifest:
+                    return EntityStateFromBinary(bytes);
+                case EntityStartedManifest:
+                    return EntityStartedFromBinary(bytes);
+                case EntityStoppedManifest:
+                    return EntityStoppedFromBinary(bytes);
 
-            throw new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{this.GetType()}]");
+                case CoordinatorStateManifest:
+                    return CoordinatorStateFromBinary(bytes);
+                case ShardRegionRegisteredManifest:
+                    return new PersistentShardCoordinator.ShardRegionRegistered(ActorRefMessageFromBinary(bytes));
+                case ShardRegionProxyRegisteredManifest:
+                    return new PersistentShardCoordinator.ShardRegionProxyRegistered(ActorRefMessageFromBinary(bytes));
+                case ShardRegionTerminatedManifest:
+                    return new PersistentShardCoordinator.ShardRegionTerminated(ActorRefMessageFromBinary(bytes));
+                case ShardRegionProxyTerminatedManifest:
+                    return new PersistentShardCoordinator.ShardRegionProxyTerminated(ActorRefMessageFromBinary(bytes));
+                case ShardHomeAllocatedManifest:
+                    return ShardHomeAllocatedFromBinary(bytes);
+                case ShardHomeDeallocatedManifest:
+                    return new PersistentShardCoordinator.ShardHomeDeallocated(ShardIdMessageFromBinary(bytes));
+
+                case RegisterManifest:
+                    return new PersistentShardCoordinator.Register(ActorRefMessageFromBinary(bytes));
+                case RegisterProxyManifest:
+                    return new PersistentShardCoordinator.RegisterProxy(ActorRefMessageFromBinary(bytes));
+                case RegisterAckManifest:
+                    return new PersistentShardCoordinator.RegisterAck(ActorRefMessageFromBinary(bytes));
+                case GetShardHomeManifest:
+                    return new PersistentShardCoordinator.GetShardHome(ShardIdMessageFromBinary(bytes));
+                case ShardHomeManifest:
+                    return ShardHomeFromBinary(bytes);
+                case HostShardManifest:
+                    return new PersistentShardCoordinator.HostShard(ShardIdMessageFromBinary(bytes));
+                case ShardStartedManifest:
+                    return new PersistentShardCoordinator.ShardStarted(ShardIdMessageFromBinary(bytes));
+                case BeginHandOffManifest:
+                    return new PersistentShardCoordinator.BeginHandOff(ShardIdMessageFromBinary(bytes));
+                case BeginHandOffAckManifest:
+                    return new PersistentShardCoordinator.BeginHandOffAck(ShardIdMessageFromBinary(bytes));
+                case HandOffManifest:
+                    return new PersistentShardCoordinator.HandOff(ShardIdMessageFromBinary(bytes));
+                case ShardStoppedManifest:
+                    return new PersistentShardCoordinator.ShardStopped(ShardIdMessageFromBinary(bytes));
+                case GracefulShutdownReqManifest:
+                    return new PersistentShardCoordinator.GracefulShutdownRequest(ActorRefMessageFromBinary(bytes));
+
+                case GetShardStatsManifest:
+                    return Shard.GetShardStats.Instance;
+                case ShardStatsManifest:
+                    return ShardStatsFromBinary(bytes);
+
+                case StartEntityManifest:
+                    return StartEntityFromBinary(bytes);
+                case StartEntityAckManifest:
+                    return StartEntityAckFromBinary(bytes);
+
+                default:
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(manifest);
+            }
         }
 
         /// <summary>
@@ -230,7 +251,7 @@ namespace Akka.Cluster.Sharding.Serialization
                 case Shard.GetShardStats _: return GetShardStatsManifest;
                 case Shard.ShardStats _: return ShardStatsManifest;
             }
-            throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{this.GetType()}]");
+            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<string>(o);
         }
 
         /// <inheritdoc />
@@ -265,7 +286,7 @@ namespace Akka.Cluster.Sharding.Serialization
                 case Shard.GetShardStats _: return GetShardStatsManifestBytes;
                 case Shard.ShardStats _: return ShardStatsManifestBytes;
             }
-            throw new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{this.GetType()}]");
+            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<byte[]>(o);
         }
 
         //

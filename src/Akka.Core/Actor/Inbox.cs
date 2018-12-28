@@ -594,14 +594,12 @@ namespace Akka.Actor
         {
             if (!task.Wait(timeout))
             {
-                throw new TimeoutException(
-                    $"Inbox {Receiver.Path} didn't receive a response message in specified timeout {timeout}");
+                AkkaThrowHelper.ThrowTimeoutException_InboxDidntReceiveResponseMsgInSpecifiedTimeout(Receiver, timeout);
             }
 
             if (task.Result is Status.Failure received && received.Cause is TimeoutException)
             {
-                throw new TimeoutException(
-                    $"Inbox {Receiver.Path} received a status failure response message: {received.Cause.Message}", received.Cause);
+                AkkaThrowHelper.ThrowTimeoutException_InboxReceivedAStatusFailureResponseMsg(Receiver, received);
             }
 
             return task.Result;

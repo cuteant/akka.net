@@ -52,7 +52,7 @@ namespace Akka.Streams.Implementation
     /// A subscriber who calls <see cref="ISubscription.Cancel"/> directly from <see cref="OnSubscribe"/> and ignores all other callbacks.
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    public sealed class CancelingSubscriber<T> : ISubscriber<T>
+    public sealed class CancelingSubscriber<T> : ISubscriber<T>, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -95,7 +95,7 @@ namespace Akka.Streams.Implementation
     /// This specialized implementation is to be used for "noop" timeout mode.
     /// </summary>
     [InternalApi]
-    public sealed class NoopSubscriptionTimeout : ICancelable
+    public sealed class NoopSubscriptionTimeout : ICancelable, ISingletonMessage
     {
         /// <summary>
         /// TBD

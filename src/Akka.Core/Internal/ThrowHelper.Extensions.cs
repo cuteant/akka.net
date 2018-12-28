@@ -51,6 +51,46 @@ namespace Akka
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_TokenBucket_Capacity()
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException("Capacity must be non-negative", "capacity");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_TokenBucket_Time()
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException("Time between tokens must be larger than zero ticks.", "ticksBetweenTokens");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_TokenBucket_Offer()
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException("Cost must be non-negative", "cost");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_NotEnoughBitsToMakeAByte()
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException("Not enough bits to make a byte!", "arr");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_LogLevel(string logLevel)
         {
             throw GetException();
@@ -238,6 +278,20 @@ namespace Akka
             ArgumentException GetException()
             {
                 return new ArgumentException($"messagesPerResize must be > 0, was {messagesPerResize}", nameof(messagesPerResize));
+            }
+        }
+
+        #endregion
+
+        #region -- ArgumentNullException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentNullException_ProducerCannotBeNull()
+        {
+            throw GetException();
+            ArgumentNullException GetException()
+            {
+                return new ArgumentNullException("producer", "Producer cannot be null");
             }
         }
 
@@ -465,9 +519,33 @@ An (unbounded) deque-based mailbox can be configured as follows:
 
         #endregion
 
-        #region -- Akka Execptions --
+        #region -- TimeoutException --
 
-        //RejectedExecutionException
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowTimeoutException_InboxDidntReceiveResponseMsgInSpecifiedTimeout(IActorRef receiver, TimeSpan timeout)
+        {
+            throw GetException();
+            TimeoutException GetException()
+            {
+                return new TimeoutException(
+                    $"Inbox {receiver.Path} didn't receive a response message in specified timeout {timeout}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowTimeoutException_InboxReceivedAStatusFailureResponseMsg(IActorRef receiver, Status.Failure received)
+        {
+            throw GetException();
+            TimeoutException GetException()
+            {
+                return new TimeoutException(
+                    $"Inbox {receiver.Path} received a status failure response message: {received.Cause.Message}", received.Cause);
+            }
+        }
+
+        #endregion
+
+        #region -- Akka Execptions --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowRejectedExecutionException()
@@ -747,6 +825,17 @@ An (unbounded) deque-based mailbox can be configured as follows:
             FormatException GetException()
             {
                 return new FormatException($"Expected a positive value instead of {value}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_UnknownPhase(string phase, HashSet<string> knownPhases)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Unknown phase [{phase}], known phases [{string.Join(",", knownPhases)}]. " +
+                    "All phases (along with their optional dependencies) must be defined in configuration.");
             }
         }
 

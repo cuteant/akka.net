@@ -30,7 +30,7 @@ namespace Akka.Streams.Actors
     /// Requests one more element when remainingRequested is 0, i.e.
     /// * max one element in flight.
     /// </summary>
-    public sealed class OneByOneRequestStrategy : IRequestStrategy
+    public sealed class OneByOneRequestStrategy : IRequestStrategy, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -49,7 +49,7 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// When request is only controlled with manual calls to <see cref="ActorSubscriber.Request"/>.
     /// </summary>
-    public sealed class ZeroRequestStrategy : IRequestStrategy
+    public sealed class ZeroRequestStrategy : IRequestStrategy, ISingletonMessage
     {
         /// <summary>
         /// TBD

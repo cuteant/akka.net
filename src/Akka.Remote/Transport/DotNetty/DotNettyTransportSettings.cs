@@ -62,7 +62,7 @@ namespace Akka.Remote.Transport.DotNetty
             var publicPort = config.GetInt("public-port", 0);
 
             var order = ByteOrder.LittleEndian;
-            var byteOrderString = config.GetString("byte-order", "little-endian").ToLowerInvariant();
+            var byteOrderString = config.GetString("byte-order", "big-endian").ToLowerInvariant();
             switch (byteOrderString)
             {
                 case "little-endian": order = ByteOrder.LittleEndian; break;

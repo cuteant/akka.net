@@ -265,8 +265,9 @@ namespace Akka.Actor
         public void AddTask(string phase, string taskName, Func<Task<Done>> task)
         {
             if (!_knownPhases.Contains(phase))
-                throw new ConfigurationException($"Unknown phase [{phase}], known phases [{string.Join(",", _knownPhases)}]. " +
-                    "All phases (along with their optional dependencies) must be defined in configuration.");
+            {
+                AkkaThrowHelper.ThrowConfigurationException_UnknownPhase(phase, _knownPhases);
+            }
 
             if (!_tasks.TryGetValue(phase, out var current))
             {

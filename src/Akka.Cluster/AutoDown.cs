@@ -106,7 +106,7 @@ namespace Akka.Cluster
         /// </summary>
         protected override void PreStart()
         {
-            _cluster.Subscribe(Self,new []{ typeof(ClusterEvent.IClusterDomainEvent)});
+            _cluster.Subscribe(Self, new[] { typeof(ClusterEvent.IClusterDomainEvent) });
             base.PreStart();
         }
 
@@ -128,7 +128,7 @@ namespace Akka.Cluster
         /// </exception>
         public override void Down(Address node)
         {
-            if(!_leader) throw new InvalidOperationException("Must be leader to down node");
+            if (!_leader) ThrowHelper.ThrowInvalidOperationException_MustBeLeaderToDownNode();
             _cluster.LogInfo("Leader is auto-downing unreachable node [{0}]", node);
             _cluster.Down(node);
         }
@@ -211,7 +211,7 @@ namespace Akka.Cluster
                     _leader = leaderChanged.Leader != null && leaderChanged.Leader.Equals(SelfAddress);
                     if (_leader)
                     {
-                        foreach(var node in _pendingUnreachable) Down(node.Address);
+                        foreach (var node in _pendingUnreachable) Down(node.Address);
                         _pendingUnreachable = ImmutableHashSet.Create<UniqueAddress>();
                     }
                     return;
@@ -227,7 +227,7 @@ namespace Akka.Cluster
 
         private void UnreachableMember(Member m)
         {
-            if(!_skipMemberStatus.Contains(m.Status) && !_scheduledUnreachable.ContainsKey(m.UniqueAddress))
+            if (!_skipMemberStatus.Contains(m.Status) && !_scheduledUnreachable.ContainsKey(m.UniqueAddress))
                 ScheduleUnreachable(m.UniqueAddress);
         }
 
@@ -260,7 +260,7 @@ namespace Akka.Cluster
 
         private void Remove(UniqueAddress node)
         {
-            if(_scheduledUnreachable.TryGetValue(node, out var source))
+            if (_scheduledUnreachable.TryGetValue(node, out var source))
                 source.Cancel();
             _scheduledUnreachable = _scheduledUnreachable.Remove(node);
             _pendingUnreachable = _pendingUnreachable.Remove(node);
@@ -300,10 +300,12 @@ namespace Akka.Cluster
         {
             get
             {
-                if (_clusterSettings.AutoDownUnreachableAfter.HasValue)
-                    return AutoDown.Props(_clusterSettings.AutoDownUnreachableAfter.Value);
-                else 
-                    throw new ConfigurationException("AutoDowning downing provider selected but 'akka.cluster.auto-down-unreachable-after' not set");
+                var autoDownUnreachableAfter = _clusterSettings.AutoDownUnreachableAfter;
+                if (!autoDownUnreachableAfter.HasValue)
+                {
+                    ThrowHelper.ThrowConfigurationException_AutoDowningDowningProviderSelected();
+                }
+                return AutoDown.Props(autoDownUnreachableAfter.Value);
             }
         }
     }

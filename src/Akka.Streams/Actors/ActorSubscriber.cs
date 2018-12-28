@@ -159,47 +159,50 @@ namespace Akka.Streams.Actors
         /// <returns>TBD</returns>
         protected internal override bool AroundReceive(Receive receive, object message)
         {
-            if (message is OnNext)
+            switch (message)
             {
-                _requested--;
-                if (!_canceled)
-                {
-                    base.AroundReceive(receive, message);
-                    Request(RequestStrategy.RequestDemand(RemainingRequested));
-                }
-            }
-            else if (message is OnSubscribe onSubscribe)
-            {
-                if (_subscription == null)
-                {
-                    _subscription = onSubscribe.Subscription;
-                    if (_canceled)
+                case OnNext _:
+                    _requested--;
+                    if (!_canceled)
                     {
-                        Context.Stop(Self);
+                        base.AroundReceive(receive, message);
+                        Request(RequestStrategy.RequestDemand(RemainingRequested));
+                    }
+                    break;
+
+                case OnSubscribe onSubscribe:
+                    if (_subscription == null)
+                    {
+                        _subscription = onSubscribe.Subscription;
+                        if (_canceled)
+                        {
+                            Context.Stop(Self);
+                            onSubscribe.Subscription.Cancel();
+                        }
+                        else if (_requested != 0)
+                        {
+                            onSubscribe.Subscription.Request(RemainingRequested);
+                        }
+                    }
+                    else
+                    {
                         onSubscribe.Subscription.Cancel();
                     }
-                    else if (_requested != 0)
+                    break;
+
+                case OnComplete _:
+                case OnError _:
+                    if (!_canceled)
                     {
-                        onSubscribe.Subscription.Request(RemainingRequested);
+                        _canceled = true;
+                        base.AroundReceive(receive, message);
                     }
-                }
-                else
-                {
-                    onSubscribe.Subscription.Cancel();
-                }
-            }
-            else if (message is OnComplete || message is OnError)
-            {
-                if (!_canceled)
-                {
-                    _canceled = true;
+                    break;
+
+                default:
                     base.AroundReceive(receive, message);
-                }
-            }
-            else
-            {
-                base.AroundReceive(receive, message);
-                Request(RequestStrategy.RequestDemand(RemainingRequested));
+                    Request(RequestStrategy.RequestDemand(RemainingRequested));
+                    break;
             }
             return true;
         }
@@ -386,7 +389,7 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
-    public sealed class ActorSubscriberState : ExtensionIdProvider<ActorSubscriberState>, IExtension
+    public sealed class ActorSubscriberState : ExtensionIdProvider<ActorSubscriberState>, IExtension, ISingletonMessage
     {
         /// <summary>
         /// TBD

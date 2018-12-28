@@ -762,7 +762,7 @@ namespace Akka.Streams.Implementation.Fusing
             public GraphInterpreterShell Shell { get; }
         }
 
-        private class ShellRegistered
+        internal sealed class ShellRegistered : ISingletonMessage
         {
             public static readonly ShellRegistered Instance = new ShellRegistered();
             private ShellRegistered()
@@ -1422,10 +1422,15 @@ namespace Akka.Streams.Implementation.Fusing
             while (_shortCircuitBuffer.Count != 0 && _currentLimit > 0 && _activeInterpreters.Count != 0)
             {
                 var element = _shortCircuitBuffer.Dequeue();
-                if (element is IBoundaryEvent boundary)
-                    ProcessEvent(boundary);
-                else if (element is ShellRegistered)
-                    FinishShellRegistration();
+                switch (element)
+                {
+                    case IBoundaryEvent boundary:
+                        ProcessEvent(boundary);
+                        break;
+                    case ShellRegistered _:
+                        FinishShellRegistration();
+                        break;
+                }
             }
 
             if (_shortCircuitBuffer.Count != 0 && _currentLimit == 0)

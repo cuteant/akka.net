@@ -556,7 +556,7 @@ namespace Akka.Cluster.Tools.Client
     /// The sender will automatically become unsubscribed when it
     /// terminates.
     /// </summary>
-    public sealed class SubscribeContactPoints : ISubscribeContactPoints
+    public sealed class SubscribeContactPoints : ISubscribeContactPoints, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -575,7 +575,7 @@ namespace Akka.Cluster.Tools.Client
     /// <summary>
     /// Explicitly unsubscribe from contact point change events.
     /// </summary>
-    public sealed class UnsubscribeContactPoints : IUnsubscribeContactPoints
+    public sealed class UnsubscribeContactPoints : IUnsubscribeContactPoints, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -595,7 +595,7 @@ namespace Akka.Cluster.Tools.Client
     /// Get the contact points known to this client. A <see cref="ContactPoints"/> message
     /// will be replied.
     /// </summary>
-    public sealed class GetContactPoints : IGetContactPoints
+    public sealed class GetContactPoints : IGetContactPoints, ISingletonMessage
     {
         /// <summary>
         /// TBD

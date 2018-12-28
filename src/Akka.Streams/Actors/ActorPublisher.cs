@@ -496,83 +496,86 @@ namespace Akka.Streams.Actors
         /// <returns>TBD</returns>
         protected internal override bool AroundReceive(Receive receive, object message)
         {
-            if (message is Request req)
+            switch (message)
             {
-                if (req.IsProcessed)
-                {
-                    // it's an unstashed Request, demand is already handled
-                    base.AroundReceive(receive, req);
-                }
-                else
-                {
-                    if (req.Count < 1)
+                case Request req:
+                    if (req.IsProcessed)
                     {
-                        if (_lifecycleState == LifecycleState.Active)
-                            OnError(new ArgumentException("Number of requested elements must be positive. Rule 3.9"));
+                        // it's an unstashed Request, demand is already handled
+                        base.AroundReceive(receive, req);
                     }
                     else
                     {
-                        _demand += req.Count;
-                        if (_demand < 0)
-                            _demand = long.MaxValue; // long overflow: effectively unbounded
-                        req.MarkProcessed();
+                        if (req.Count < 1)
+                        {
+                            if (_lifecycleState == LifecycleState.Active)
+                                OnError(new ArgumentException("Number of requested elements must be positive. Rule 3.9"));
+                        }
+                        else
+                        {
+                            _demand += req.Count;
+                            if (_demand < 0)
+                                _demand = long.MaxValue; // long overflow: effectively unbounded
+                            req.MarkProcessed();
+                            base.AroundReceive(receive, message);
+                        }
+                    }
+                    return true;
+
+                case Subscribe<T> sub:
+                    var subscriber = sub.Subscriber;
+                    switch (_lifecycleState)
+                    {
+                        case LifecycleState.PreSubscriber:
+                            _scheduledSubscriptionTimeout.Cancel();
+                            _subscriber = subscriber;
+                            _lifecycleState = LifecycleState.Active;
+                            ReactiveStreamsCompliance.TryOnSubscribe(subscriber, new ActorPublisherSubscription(Self));
+                            break;
+                        case LifecycleState.ErrorEmitted:
+                            if (_onError.Stop) Context.Stop(Self);
+                            ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
+                            ReactiveStreamsCompliance.TryOnError(subscriber, _onError.Cause);
+                            break;
+                        case LifecycleState.Completed:
+                            ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
+                            ReactiveStreamsCompliance.TryOnComplete(subscriber);
+                            break;
+                        case LifecycleState.CompleteThenStop:
+                            Context.Stop(Self);
+                            ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
+                            ReactiveStreamsCompliance.TryOnComplete(subscriber);
+                            break;
+                        case LifecycleState.Active:
+                        case LifecycleState.Canceled:
+                            if (_subscriber == subscriber)
+                                ReactiveStreamsCompliance.RejectDuplicateSubscriber(subscriber);
+                            else
+                                ReactiveStreamsCompliance.RejectAdditionalSubscriber(subscriber, "ActorPublisher");
+                            break;
+                    }
+                    return true;
+
+                case Cancel _:
+                    if (_lifecycleState != LifecycleState.Canceled)
+                    {
+                        // possible to receive again in case of stash
+                        CancelSelf();
                         base.AroundReceive(receive, message);
                     }
-                }
+                    return true;
+
+                case SubscriptionTimeoutExceeded _:
+                    if (!_scheduledSubscriptionTimeout.IsCancellationRequested)
+                    {
+                        CancelSelf();
+                        base.AroundReceive(receive, message);
+                    }
+                    return true;
+
+                default:
+                    return base.AroundReceive(receive, message);
             }
-            else if (message is Subscribe<T> sub)
-            {
-                var subscriber = sub.Subscriber;
-                switch (_lifecycleState)
-                {
-                    case LifecycleState.PreSubscriber:
-                        _scheduledSubscriptionTimeout.Cancel();
-                        _subscriber = subscriber;
-                        _lifecycleState = LifecycleState.Active;
-                        ReactiveStreamsCompliance.TryOnSubscribe(subscriber, new ActorPublisherSubscription(Self));
-                        break;
-                    case LifecycleState.ErrorEmitted:
-                        if (_onError.Stop) Context.Stop(Self);
-                        ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
-                        ReactiveStreamsCompliance.TryOnError(subscriber, _onError.Cause);
-                        break;
-                    case LifecycleState.Completed:
-                        ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
-                        ReactiveStreamsCompliance.TryOnComplete(subscriber);
-                        break;
-                    case LifecycleState.CompleteThenStop:
-                        Context.Stop(Self);
-                        ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
-                        ReactiveStreamsCompliance.TryOnComplete(subscriber);
-                        break;
-                    case LifecycleState.Active:
-                    case LifecycleState.Canceled:
-                        if (_subscriber == subscriber)
-                            ReactiveStreamsCompliance.RejectDuplicateSubscriber(subscriber);
-                        else
-                            ReactiveStreamsCompliance.RejectAdditionalSubscriber(subscriber, "ActorPublisher");
-                        break;
-                }
-            }
-            else if (message is Cancel)
-            {
-                if (_lifecycleState != LifecycleState.Canceled)
-                {
-                    // possible to receive again in case of stash
-                    CancelSelf();
-                    base.AroundReceive(receive, message);
-                }
-            }
-            else if (message is SubscriptionTimeoutExceeded)
-            {
-                if (!_scheduledSubscriptionTimeout.IsCancellationRequested)
-                {
-                    CancelSelf();
-                    base.AroundReceive(receive, message);
-                }
-            }
-            else return base.AroundReceive(receive, message);
-            return true;
         }
 
         private void CancelSelf()
@@ -765,7 +768,7 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
-    internal class ActorPublisherState : ExtensionIdProvider<ActorPublisherState>, IExtension
+    internal sealed class ActorPublisherState : ExtensionIdProvider<ActorPublisherState>, IExtension, ISingletonMessage
     {
         /// <summary>
         /// TBD

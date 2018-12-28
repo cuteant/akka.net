@@ -24,7 +24,7 @@ namespace Akka.Remote
     internal interface IDaemonMsg { }
 
     /// <summary>INTERNAL API</summary>
-    internal class DaemonMsgCreate : IDaemonMsg
+    internal sealed class DaemonMsgCreate : IDaemonMsg
     {
         /// <summary>Initializes a new instance of the <see cref="DaemonMsgCreate"/> class.</summary>
         /// <param name="props">The props.</param>

@@ -16,7 +16,7 @@ namespace Akka.Streams.Implementation
     /// TBD
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    public sealed class EmptyPublisher<T> : IPublisher<T>
+    public sealed class EmptyPublisher<T> : IPublisher<T>, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -193,7 +193,7 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    internal sealed class CancelledSubscription : ISubscription
+    internal sealed class CancelledSubscription : ISubscription, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -250,7 +250,7 @@ namespace Akka.Streams.Implementation
     /// TBD
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    internal sealed class RejectAdditionalSubscribers<T> : IPublisher<T>
+    internal sealed class RejectAdditionalSubscribers<T> : IPublisher<T>, ISingletonMessage
     {
         /// <summary>
         /// TBD

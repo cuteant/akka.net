@@ -211,22 +211,22 @@ namespace Akka.Streams.Dsl
 
             private bool OnEvent(IEvent e)
             {
-                if (e is Element element)
+                switch (e)
                 {
-                    _demands[element.Id].OnElement();
-                    Push(_stage.Out, element.Value);
-                    return false;
-                }
+                    case Element element:
+                        _demands[element.Id].OnElement();
+                        Push(_stage.Out, element.Value);
+                        return false;
 
-                if (e is Register register)
-                {
-                    _demands.Add(register.Id, new InputState(register.DemandCallback, _stage.DemandThreshold));
-                    return true;
-                }
+                    case Register register:
+                        _demands.Add(register.Id, new InputState(register.DemandCallback, _stage.DemandThreshold));
+                        return true;
 
-                // only Deregister left, no need for a cast.
-                _demands.Remove(e.Id);
-                return true;
+                    default:
+                        // only Deregister left, no need for a cast.
+                        _demands.Remove(e.Id);
+                        return true;
+                }
             }
 
             public override void OnPull() => TryProcessNext(true);
@@ -529,9 +529,9 @@ namespace Akka.Streams.Dsl
     {
         #region internal classes
 
-        private interface IHubEvent { }
+        internal interface IHubEvent { }
 
-        private sealed class RegistrationPending : IHubEvent
+        internal sealed class RegistrationPending : IHubEvent, ISingletonMessage
         {
             public static readonly RegistrationPending Instance = new RegistrationPending();
 
@@ -541,7 +541,7 @@ namespace Akka.Streams.Dsl
             }
         }
 
-        private sealed class UnRegister : IHubEvent
+        internal sealed class UnRegister : IHubEvent
         {
             public UnRegister(long id, int previousOffset, int finalOffset)
             {
@@ -557,7 +557,7 @@ namespace Akka.Streams.Dsl
             public int FinalOffset { get; }
         }
 
-        private sealed class Advanced : IHubEvent
+        internal sealed class Advanced : IHubEvent
         {
             public Advanced(long id, int previousOffset)
             {
@@ -570,7 +570,7 @@ namespace Akka.Streams.Dsl
             public int PreviousOffset { get; }
         }
 
-        private sealed class NeedWakeup : IHubEvent
+        internal sealed class NeedWakeup : IHubEvent
         {
             public NeedWakeup(long id, int previousOffset, int currentOffset)
             {
@@ -586,7 +586,7 @@ namespace Akka.Streams.Dsl
             public int CurrentOffset { get; }
         }
 
-        private sealed class Consumer
+        internal sealed class Consumer
         {
             public Consumer(long id, Action<IConsumerEvent> callback)
             {
@@ -600,7 +600,7 @@ namespace Akka.Streams.Dsl
         }
 
 
-        private sealed class Completed
+        internal sealed class Completed : ISingletonMessage
         {
             public static readonly Completed Instance = new Completed();
 
@@ -611,9 +611,9 @@ namespace Akka.Streams.Dsl
         }
 
 
-        private interface IHubState { }
+        internal interface IHubState { }
 
-        private sealed class Open : IHubState
+        internal sealed class Open : IHubState
         {
             public Open(Task<Action<IHubEvent>> callbackTask, ImmutableList<Consumer> registrations)
             {
@@ -626,7 +626,7 @@ namespace Akka.Streams.Dsl
             public ImmutableList<Consumer> Registrations { get; }
         }
 
-        private sealed class Closed : IHubState
+        internal sealed class Closed : IHubState
         {
             public Closed(Exception failure = null)
             {
@@ -637,9 +637,9 @@ namespace Akka.Streams.Dsl
         }
 
 
-        private interface IConsumerEvent { }
+        internal interface IConsumerEvent { }
 
-        private sealed class Wakeup : IConsumerEvent
+        internal sealed class Wakeup : IConsumerEvent, ISingletonMessage
         {
             public static readonly Wakeup Instance = new Wakeup();
 
@@ -649,7 +649,7 @@ namespace Akka.Streams.Dsl
             }
         }
 
-        private sealed class HubCompleted : IConsumerEvent
+        internal sealed class HubCompleted : IConsumerEvent
         {
             public HubCompleted(Exception failure = null)
             {
@@ -659,7 +659,7 @@ namespace Akka.Streams.Dsl
             public Exception Failure { get; }
         }
 
-        private sealed class Initialize : IConsumerEvent
+        internal sealed class Initialize : IConsumerEvent
         {
             public Initialize(int offset)
             {
@@ -757,55 +757,57 @@ namespace Akka.Streams.Dsl
                     return;
                 }
 
-                if (hubEvent is UnRegister unregister)
+                switch (hubEvent)
                 {
-                    _activeConsumer--;
-                    FindAndRemoveConsumer(unregister.Id, unregister.PreviousOffset);
-                    if (_activeConsumer == 0)
-                    {
-                        if (IsClosed(_stage.In))
-                            CompleteStage();
-                        else if (_head != unregister.FinalOffset)
+                    case UnRegister unregister:
+                        _activeConsumer--;
+                        FindAndRemoveConsumer(unregister.Id, unregister.PreviousOffset);
+                        if (_activeConsumer == 0)
                         {
-                            // If our final consumer goes away, we roll forward the buffer so a subsequent consumer does not
-                            // see the already consumed elements. This feature is quite handy.
-
-                            while (_head != unregister.FinalOffset)
+                            if (IsClosed(_stage.In))
+                                CompleteStage();
+                            else if (_head != unregister.FinalOffset)
                             {
-                                _queue[_head & _stage._mask] = null;
-                                _head++;
+                                // If our final consumer goes away, we roll forward the buffer so a subsequent consumer does not
+                                // see the already consumed elements. This feature is quite handy.
+
+                                while (_head != unregister.FinalOffset)
+                                {
+                                    _queue[_head & _stage._mask] = null;
+                                    _head++;
+                                }
+
+                                _head = unregister.FinalOffset;
+                                if (!HasBeenPulled(_stage.In))
+                                    Pull(_stage.In);
                             }
-
-                            _head = unregister.FinalOffset;
-                            if (!HasBeenPulled(_stage.In))
-                                Pull(_stage.In);
                         }
-                    }
-                    else
-                        CheckUnblock(unregister.PreviousOffset);
-                    return;
+                        else
+                            CheckUnblock(unregister.PreviousOffset);
+                        return;
+
+                    case Advanced advance:
+                        var newOffset = advance.PreviousOffset + _stage._demandThreshold;
+                        // Move the consumer from its last known offset to its new one. Check if we are unblocked.
+                        var c = FindAndRemoveConsumer(advance.Id, advance.PreviousOffset);
+                        AddConsumer(c, newOffset);
+                        CheckUnblock(advance.PreviousOffset);
+                        return;
+
+                    case NeedWakeup wakeup:
+                        // only NeedWakeup left
+                        //var wakeup = (NeedWakeup)hubEvent;
+
+                        // Move the consumer from its last known offset to its new one. Check if we are unblocked.
+                        var consumer = FindAndRemoveConsumer(wakeup.Id, wakeup.PreviousOffset);
+                        AddConsumer(consumer, wakeup.CurrentOffset);
+
+                        // Also check if the consumer is now unblocked since we published an element since it went asleep.
+                        if (wakeup.CurrentOffset != _tail)
+                            consumer.Callback(Wakeup.Instance);
+                        CheckUnblock(wakeup.PreviousOffset);
+                        return;
                 }
-
-                if (hubEvent is Advanced advance)
-                {
-                    var newOffset = advance.PreviousOffset + _stage._demandThreshold;
-                    // Move the consumer from its last known offset to its new one. Check if we are unblocked.
-                    var c = FindAndRemoveConsumer(advance.Id, advance.PreviousOffset);
-                    AddConsumer(c, newOffset);
-                    CheckUnblock(advance.PreviousOffset);
-                    return;
-                }
-
-                // only NeedWakeup left
-                var wakeup = (NeedWakeup)hubEvent;
-                // Move the consumer from its last known offset to its new one. Check if we are unblocked.
-                var consumer = FindAndRemoveConsumer(wakeup.Id, wakeup.PreviousOffset);
-                AddConsumer(consumer, wakeup.CurrentOffset);
-
-                // Also check if the consumer is now unblocked since we published an element since it went asleep.
-                if (wakeup.CurrentOffset != _tail)
-                    consumer.Callback(Wakeup.Instance);
-                CheckUnblock(wakeup.PreviousOffset);
             }
 
             // Producer API
@@ -1072,26 +1074,25 @@ namespace Akka.Streams.Dsl
 
                 private void OnCommand(IConsumerEvent e)
                 {
-                    if (e is HubCompleted completed)
+                    switch (e)
                     {
-                        if (completed.Failure != null)
-                            FailStage(completed.Failure);
-                        else
-                            CompleteStage();
-                    }
-                    else if (e is Wakeup)
-                    {
-                        if (IsAvailable(_stage.Out))
-                            OnPull();
-                    }
-                    else
-                    {
-                        var intialize = (Initialize)e;
-                        _offsetInitialized = true;
-                        _previousPublishedOffset = intialize.Offset;
-                        _offset = intialize.Offset;
-                        if (IsAvailable(_stage.Out) && _hubCallback != null)
-                            OnPull();
+                        case HubCompleted completed:
+                            if (completed.Failure != null)
+                                FailStage(completed.Failure);
+                            else
+                                CompleteStage();
+                            break;
+
+                        case Wakeup _:
+                            if (IsAvailable(_stage.Out)) { OnPull(); }
+                            break;
+
+                        case Initialize intialize:
+                            _offsetInitialized = true;
+                            _previousPublishedOffset = intialize.Offset;
+                            _offset = intialize.Offset;
+                            if (IsAvailable(_stage.Out) && _hubCallback != null) { OnPull(); }
+                            break;
                     }
                 }
             }
@@ -1402,23 +1403,23 @@ namespace Akka.Streams.Dsl
 
         #region internal classes
 
-        private interface IConsumerEvent { }
+        internal interface IConsumerEvent { }
 
-        private sealed class Wakeup : IConsumerEvent
+        internal sealed class Wakeup : IConsumerEvent, ISingletonMessage
         {
             public static readonly Wakeup Instance = new Wakeup();
 
             private Wakeup() { }
         }
 
-        private sealed class Initialize : IConsumerEvent
+        internal sealed class Initialize : IConsumerEvent, ISingletonMessage
         {
             public static readonly Initialize Instance = new Initialize();
 
             private Initialize() { }
         }
 
-        private sealed class HubCompleted : IConsumerEvent
+        internal sealed class HubCompleted : IConsumerEvent
         {
             public Exception Failure { get; }
 
@@ -1429,16 +1430,16 @@ namespace Akka.Streams.Dsl
         }
 
 
-        private interface IHubEvent { }
+        internal interface IHubEvent { }
 
-        private sealed class RegistrationPending : IHubEvent
+        internal sealed class RegistrationPending : IHubEvent, ISingletonMessage
         {
             public static readonly RegistrationPending Instance = new RegistrationPending();
 
             private RegistrationPending() { }
         }
 
-        private sealed class UnRegister : IHubEvent
+        internal sealed class UnRegister : IHubEvent
         {
             public long Id { get; }
 
@@ -1448,7 +1449,7 @@ namespace Akka.Streams.Dsl
             }
         }
 
-        private sealed class NeedWakeup : IHubEvent
+        internal sealed class NeedWakeup : IHubEvent
         {
             public Consumer Consumer { get; }
 
@@ -1459,7 +1460,7 @@ namespace Akka.Streams.Dsl
 
         }
 
-        private sealed class Consumer : IHubEvent
+        internal sealed class Consumer : IHubEvent
         {
             public long Id { get; }
             public Action<IConsumerEvent> Callback { get; }
@@ -1471,14 +1472,14 @@ namespace Akka.Streams.Dsl
             }
         }
 
-        private sealed class TryPull : IHubEvent
+        internal sealed class TryPull : IHubEvent, ISingletonMessage
         {
             public static readonly TryPull Instance = new TryPull();
 
             private TryPull() { }
         }
 
-        private sealed class Completed
+        internal sealed class Completed : ISingletonMessage
         {
             public static readonly Completed Instance = new Completed();
 
@@ -1486,9 +1487,9 @@ namespace Akka.Streams.Dsl
         }
 
 
-        private interface IHubState { }
+        internal interface IHubState { }
 
-        private sealed class Open : IHubState
+        internal sealed class Open : IHubState
         {
             public Task<Action<IHubEvent>> CallbackTask { get; }
             public ImmutableList<Consumer> Registrations { get; }
@@ -1500,7 +1501,7 @@ namespace Akka.Streams.Dsl
             }
         }
 
-        private sealed class Closed : IHubState
+        internal sealed class Closed : IHubState
         {
             public Exception Failure { get; }
 
@@ -1633,55 +1634,59 @@ namespace Akka.Streams.Dsl
             {
                 _callbackCount++;
 
-                if (e is NeedWakeup n)
+                switch (e)
                 {
-                    // Also check if the consumer is now unblocked since we published an element since it went asleep.
-                    if (_queue.NonEmpty(n.Consumer.Id))
-                        n.Consumer.Callback(PartitionHub<T>.Wakeup.Instance);
-                    else
-                    {
-                        _needWakeup[n.Consumer.Id] = n.Consumer;
-                        TryPull();
-                    }
-                }
-                else if (e is TryPull)
-                    TryPull();
-                else if (e is RegistrationPending)
-                {
-                    var o = (Open)State.GetAndSet(_noRegistrationsState);
-                    foreach (var consumer in o.Registrations)
-                    {
-                        var newConsumers = _consumerInfo.Consumers.Add(consumer).Sort((c1, c2) => c1.Id.CompareTo(c2.Id));
-                        _consumerInfo = new ConsumerInfo(this, newConsumers);
-                        _queue.Init(consumer.Id);
-                        if (newConsumers.Count >= _hub._startAfterNrOfConsumers)
-                            _initialized = true;
-
-                        consumer.Callback(Initialize.Instance);
-
-                        if (_initialized && _pending.Count != 0)
+                    case NeedWakeup n:
+                        // Also check if the consumer is now unblocked since we published an element since it went asleep.
+                        if (_queue.NonEmpty(n.Consumer.Id))
+                            n.Consumer.Callback(PartitionHub<T>.Wakeup.Instance);
+                        else
                         {
-                            foreach (var p in _pending)
-                                Publish(p);
-
-                            _pending.Clear();
+                            _needWakeup[n.Consumer.Id] = n.Consumer;
+                            TryPull();
                         }
+                        break;
 
+                    case TryPull _:
                         TryPull();
-                    }
-                }
-                else if (e is UnRegister u)
-                {
-                    var newConsumers = _consumerInfo.Consumers.RemoveAll(c => c.Id == u.Id);
-                    _consumerInfo = new ConsumerInfo(this, newConsumers);
-                    _queue.Remove(u.Id);
-                    if (newConsumers.IsEmpty)
-                    {
-                        if (IsClosed(_hub.In))
-                            CompleteStage();
-                    }
-                    else
-                        TryPull();
+                        break;
+
+                    case RegistrationPending _:
+                        var o = (Open)State.GetAndSet(_noRegistrationsState);
+                        foreach (var consumer in o.Registrations)
+                        {
+                            var newConsumers0 = _consumerInfo.Consumers.Add(consumer).Sort((c1, c2) => c1.Id.CompareTo(c2.Id));
+                            _consumerInfo = new ConsumerInfo(this, newConsumers0);
+                            _queue.Init(consumer.Id);
+                            if (newConsumers0.Count >= _hub._startAfterNrOfConsumers)
+                                _initialized = true;
+
+                            consumer.Callback(Initialize.Instance);
+
+                            if (_initialized && _pending.Count != 0)
+                            {
+                                foreach (var p in _pending)
+                                    Publish(p);
+
+                                _pending.Clear();
+                            }
+
+                            TryPull();
+                        }
+                        break;
+
+                    case UnRegister u:
+                        var newConsumers = _consumerInfo.Consumers.RemoveAll(c => c.Id == u.Id);
+                        _consumerInfo = new ConsumerInfo(this, newConsumers);
+                        _queue.Remove(u.Id);
+                        if (newConsumers.IsEmpty)
+                        {
+                            if (IsClosed(_hub.In))
+                                CompleteStage();
+                        }
+                        else
+                            TryPull();
+                        break;
                 }
             }
 
@@ -1797,12 +1802,18 @@ namespace Akka.Streams.Dsl
                     if (_hubCallback == null) return;
 
                     var element = _source._logic.Poll(_id, _hubCallback);
-                    if (element == null)
-                        _hubCallback(new NeedWakeup(_consumer));
-                    else if (element is Completed)
-                        CompleteStage();
-                    else
-                        Push(_source._out, (T)element);
+                    switch (element)
+                    {
+                        case null:
+                            _hubCallback(new NeedWakeup(_consumer));
+                            break;
+                        case Completed _:
+                            CompleteStage();
+                            break;
+                        default:
+                            Push(_source._out, (T)element);
+                            break;
+                    }
                 }
 
                 public override void PostStop() => _hubCallback?.Invoke(new UnRegister(_id));

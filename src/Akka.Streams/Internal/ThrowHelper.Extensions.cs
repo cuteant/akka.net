@@ -653,6 +653,15 @@ namespace Akka.Streams
             }
         }
 
+        internal static void ThrowArgumentException_KeepAliveConcat_Ctor()
+        {
+            throw GetArgumentException();
+            ArgumentException GetArgumentException()
+            {
+                return new ArgumentException("The buffer keep alive failover size must be greater than 0.", "keepAliveFailoverSize");
+            }
+        }
+
         #endregion
 
         #region -- SignalThrewException --

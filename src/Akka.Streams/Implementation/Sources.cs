@@ -66,7 +66,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        internal sealed class Completion : IInput
+        internal sealed class Completion : IInput, ISingletonMessage
         {
             /// <summary>
             /// TBD

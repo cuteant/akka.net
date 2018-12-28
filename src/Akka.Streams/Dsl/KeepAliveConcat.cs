@@ -114,8 +114,7 @@ namespace Akka.Streams.Dsl
 
         public KeepAliveConcat(int keepAliveFailoverSize, TimeSpan interval, Func<T, IEnumerable<T>> extrapolate)
         {
-            if (keepAliveFailoverSize <= 0)
-                throw new ArgumentException("The buffer keep alive failover size must be greater than 0.", nameof(keepAliveFailoverSize));
+            if (keepAliveFailoverSize <= 0) ThrowHelper.ThrowArgumentException_KeepAliveConcat_Ctor();
 
             _keepAliveFailoverSize = keepAliveFailoverSize;
             _interval = interval;

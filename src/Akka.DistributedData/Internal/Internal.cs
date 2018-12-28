@@ -140,7 +140,7 @@ namespace Akka.DistributedData.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class WriteAck : IReplicatorMessage, IEquatable<WriteAck>
+    internal sealed class WriteAck : IReplicatorMessage, IEquatable<WriteAck>//, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -163,7 +163,7 @@ namespace Akka.DistributedData.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class WriteNack : IReplicatorMessage, IEquatable<WriteNack>
+    internal sealed class WriteNack : IReplicatorMessage, IEquatable<WriteNack> //, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -325,7 +325,7 @@ namespace Akka.DistributedData.Internal
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class ReadRepairAck
+    internal sealed class ReadRepairAck : ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -802,7 +802,7 @@ namespace Akka.DistributedData.Internal
 
     public sealed class DeltaPropagation : IReplicatorMessage, IEquatable<DeltaPropagation>
     {
-        private sealed class NoDelta : IDeltaReplicatedData<IReplicatedData, IReplicatedDelta>, IRequireCausualDeliveryOfDeltas
+        private sealed class NoDelta : IDeltaReplicatedData<IReplicatedData, IReplicatedDelta>, IRequireCausualDeliveryOfDeltas, ISingletonMessage
         {
             public static readonly NoDelta Instance = new NoDelta();
             private NoDelta() { }
@@ -873,7 +873,7 @@ namespace Akka.DistributedData.Internal
         }
     }
 
-    public sealed class DeltaNack : IReplicatorMessage, IDeadLetterSuppression, IEquatable<DeltaNack>
+    public sealed class DeltaNack : IReplicatorMessage, IDeadLetterSuppression, IEquatable<DeltaNack>//, ISingletonMessage
     {
         public static readonly DeltaNack Instance = new DeltaNack();
         private DeltaNack() { }

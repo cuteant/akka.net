@@ -1223,7 +1223,7 @@ namespace Akka.Cluster.Sharding
         /// TBD
         /// </summary>
         [Serializable]
-        public sealed class StateInitialized
+        public sealed class StateInitialized : ISingletonMessage
         {
             /// <summary>
             /// TBD

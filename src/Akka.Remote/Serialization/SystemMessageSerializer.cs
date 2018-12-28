@@ -9,7 +9,6 @@ using System;
 using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Dispatch.SysMsg;
-using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt;
 using MessagePack;
@@ -68,28 +67,63 @@ namespace Akka.Remote.Serialization
             }
         }
 
-        private static readonly Dictionary<Type, Func<SystemMessageSerializer, byte[], object>> s_fromBinaryMap = new Dictionary<Type, Func<SystemMessageSerializer, byte[], object>>()
+        static class _
         {
-            { typeof(Create), (s, b)=> CreateFromProto(s, b) },
-            { typeof(Recreate), (s, b)=> RecreateFromProto(s, b) },
-            { typeof(Suspend), (s, b)=> new Suspend() },
-            { typeof(Resume), (s, b)=> ResumeFromProto(s, b) },
-            { typeof(Terminate), (s, b)=> new Terminate() },
-            { typeof(Supervise), (s, b)=> SuperviseFromProto(s, b) },
-            { typeof(Watch), (s, b)=> WatchFromProto(s, b) },
-            { typeof(Unwatch), (s, b)=> UnwatchFromProto(s, b) },
-            { typeof(Failed), (s, b)=> FailedFromProto(s, b) },
-            { typeof(DeathWatchNotification), (s, b)=> DeathWatchNotificationFromProto(s, b) },
+            internal const int Create = 0;
+            internal const int Recreate = 1;
+            internal const int Suspend = 2;
+            internal const int Resume = 3;
+            internal const int Terminate = 4;
+            internal const int Supervise = 5;
+            internal const int Watch = 6;
+            internal const int Unwatch = 7;
+            internal const int Failed = 8;
+            internal const int DeathWatchNotification = 9;
+        }
+        private static readonly Dictionary<Type, int> s_fromBinaryMap = new Dictionary<Type, int>()
+        {
+            { typeof(Create), _.Create },
+            { typeof(Recreate), _.Recreate },
+            { typeof(Suspend), _.Suspend },
+            { typeof(Resume), _.Resume },
+            { typeof(Terminate), _.Terminate },
+            { typeof(Supervise), _.Supervise },
+            { typeof(Watch), _.Watch },
+            { typeof(Unwatch), _.Unwatch },
+            { typeof(Failed), _.Failed },
+            { typeof(DeathWatchNotification), _.DeathWatchNotification },
         };
 
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (!s_fromBinaryMap.TryGetValue(type, out var factory))
+            if (s_fromBinaryMap.TryGetValue(type, out var flag))
             {
-                ThrowHelper.ThrowArgumentException_Serializer_SystemMsg(type);
+                switch (flag)
+                {
+                    case _.Create:
+                        return CreateFromProto(this, bytes);
+                    case _.Recreate:
+                        return RecreateFromProto(this, bytes);
+                    case _.Suspend:
+                        return new Suspend();
+                    case _.Resume:
+                        return ResumeFromProto(this, bytes);
+                    case _.Terminate:
+                        return new Terminate();
+                    case _.Supervise:
+                        return SuperviseFromProto(this, bytes);
+                    case _.Watch:
+                        return WatchFromProto(this, bytes);
+                    case _.Unwatch:
+                        return UnwatchFromProto(this, bytes);
+                    case _.Failed:
+                        return FailedFromProto(this, bytes);
+                    case _.DeathWatchNotification:
+                        return DeathWatchNotificationFromProto(this, bytes);
+                }
             }
-            return factory(this, bytes);
+            return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg(type);
         }
 
         //

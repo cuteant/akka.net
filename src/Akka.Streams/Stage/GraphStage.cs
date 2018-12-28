@@ -1684,24 +1684,23 @@ namespace Akka.Streams.Stage
                 _sink = new SubSink<T>(name, logic.GetAsyncCallback<IActorSubscriberMessage>(
                     msg =>
                     {
-                        if (_closed)
-                            return;
+                        if (_closed) { return; }
 
-                        if (msg is OnNext next)
+                        switch (msg)
                         {
-                            _elem = (T)next.Element;
-                            _pulled = false;
-                            _handler.OnPush();
-                        }
-                        else if (msg is OnComplete)
-                        {
-                            _closed = true;
-                            _handler.OnUpstreamFinish();
-                        }
-                        else if (msg is OnError error)
-                        {
-                            _closed = true;
-                            _handler.OnUpstreamFailure(error.Cause);
+                            case OnNext next:
+                                _elem = (T)next.Element;
+                                _pulled = false;
+                                _handler.OnPush();
+                                break;
+                            case OnComplete _:
+                                _closed = true;
+                                _handler.OnUpstreamFinish();
+                                break;
+                            case OnError error:
+                                _closed = true;
+                                _handler.OnUpstreamFailure(error.Cause);
+                                break;
                         }
                     }));
             }
@@ -1816,22 +1815,24 @@ namespace Akka.Streams.Stage
 
                 _source = new SubSource<T>(name, logic.GetAsyncCallback<SubSink.ICommand>(command =>
                 {
-                    if (command is SubSink.RequestOne)
+                    switch (command)
                     {
-                        if (!_closed)
-                        {
-                            _available = true;
-                            _handler.OnPull();
-                        }
-                    }
-                    else if (command is SubSink.Cancel)
-                    {
-                        if (!_closed)
-                        {
-                            _available = false;
-                            _closed = true;
-                            _handler.OnDownstreamFinish();
-                        }
+                        case SubSink.RequestOne _:
+                            if (!_closed)
+                            {
+                                _available = true;
+                                _handler.OnPull();
+                            }
+                            break;
+
+                        case SubSink.Cancel _:
+                            if (!_closed)
+                            {
+                                _available = false;
+                                _closed = true;
+                                _handler.OnDownstreamFinish();
+                            }
+                            break;
                     }
                 }));
             }
@@ -2159,7 +2160,7 @@ namespace Akka.Streams.Stage
     /// TBD
     /// </summary>
     [Serializable]
-    public class StageActorRefNotInitializedException : Exception
+    public class StageActorRefNotInitializedException : Exception, ISingletonMessage
     {
         /// <summary>
         /// The singleton instance of this exception
@@ -2180,7 +2181,7 @@ namespace Akka.Streams.Stage
     /// <summary>
     /// Input handler that terminates the stage upon receiving completion. The stage fails upon receiving a failure.
     /// </summary>
-    public sealed class EagerTerminateInput : InHandler
+    public sealed class EagerTerminateInput : InHandler, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -2198,7 +2199,7 @@ namespace Akka.Streams.Stage
     /// <summary>
     /// Input handler that does not terminate the stage upon receiving completion. The stage fails upon receiving a failure.
     /// </summary>
-    public sealed class IgnoreTerminateInput : InHandler
+    public sealed class IgnoreTerminateInput : InHandler, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -2275,7 +2276,7 @@ namespace Akka.Streams.Stage
     /// <summary>
     /// Output handler that terminates the stage upon cancellation.
     /// </summary>
-    public sealed class EagerTerminateOutput : OutHandler
+    public sealed class EagerTerminateOutput : OutHandler, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -2292,7 +2293,7 @@ namespace Akka.Streams.Stage
     /// <summary>
     /// Output handler that does not terminate the stage upon cancellation.
     /// </summary>
-    public sealed class IgnoreTerminateOutput : OutHandler
+    public sealed class IgnoreTerminateOutput : OutHandler, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -2438,12 +2439,18 @@ namespace Akka.Streams.Stage
         /// <param name="message">TBD</param>
         public override void SendSystemMessage(ISystemMessage message)
         {
-            if (message is DeathWatchNotification death)
-                Tell(new Terminated(death.Actor, true, false), ActorRefs.NoSender);
-            else if (message is Watch w)
-                AddWatcher(w.Watchee, w.Watcher);
-            else if (message is Unwatch u)
-                RemoveWatcher(u.Watchee, u.Watcher);
+            switch (message)
+            {
+                case DeathWatchNotification death:
+                    Tell(new Terminated(death.Actor, true, false), ActorRefs.NoSender);
+                    break;
+                case Watch w:
+                    AddWatcher(w.Watchee, w.Watcher);
+                    break;
+                case Unwatch u:
+                    RemoveWatcher(u.Watchee, u.Watcher);
+                    break;
+            }
         }
 
         /// <summary>
@@ -2622,32 +2629,64 @@ namespace Akka.Streams.Stage
         /// TBD
         /// </summary>
         /// <param name="callback">TBD</param>
-        protected void StopCallback(Action<T> callback) => Locked(() => _callbackState.Value = new Stopped(callback));
+        protected void StopCallback(Action<T> callback) // => Locked(() => _callbackState.Value = new Stopped(callback));
+        {
+            Monitor.Enter(this);
+            try
+            {
+                _callbackState.Value = new Stopped(callback);
+            }
+            finally
+            {
+                Monitor.Exit(this);
+            }
+        }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="callback">TBD</param>
-        protected void InitCallback(Action<T> callback) => Locked(() =>
+        protected void InitCallback(Action<T> callback) //=> Locked(() =>
         {
-            var state = _callbackState.GetAndSet(new Initialized(callback));
-            (state as NotInitialized)?.Args.ForEach(callback);
-        });
+            Monitor.Enter(this);
+            try
+            {
+                var state = _callbackState.GetAndSet(new Initialized(callback));
+                (state as NotInitialized)?.Args.ForEach(callback);
+            }
+            finally
+            {
+                Monitor.Exit(this);
+            }
+        }//);
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="arg">TBD</param>
-        protected void InvokeCallbacks(T arg) => Locked(() =>
+        protected void InvokeCallbacks(T arg) // => Locked(() =>
         {
-            var state = _callbackState.Value;
-            if (state is Initialized initialized)
-                initialized.Callback(arg);
-            else if (state is NotInitialized notInitialized)
-                notInitialized.Args.Add(arg);
-            else if (state is Stopped stopped)
-                stopped.Callback(arg);
-        });
+            Monitor.Enter(this);
+            try
+            {
+                switch (_callbackState.Value)
+                {
+                    case Initialized initialized:
+                        initialized.Callback(arg);
+                        break;
+                    case NotInitialized notInitialized:
+                        notInitialized.Args.Add(arg);
+                        break;
+                    case Stopped stopped:
+                        stopped.Callback(arg);
+                        break;
+                }
+            }
+            finally
+            {
+                Monitor.Exit(this);
+            }
+        }//);
 
         private void Locked(Action body)
         {

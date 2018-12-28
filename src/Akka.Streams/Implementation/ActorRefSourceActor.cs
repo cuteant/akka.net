@@ -75,7 +75,7 @@ namespace Akka.Streams.Implementation
         /// <param name="message">TBD</param>
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
-            => DefaultReceive(message) || RequestElement(message) || (message is T && ReceiveElement((T)message));
+            => DefaultReceive(message) || RequestElement(message) || (message is T tmsg && ReceiveElement(tmsg));
 
         /// <summary>
         /// TBD
@@ -84,20 +84,23 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         protected bool DefaultReceive(object message)
         {
-            if (message is Actors.Cancel)
-                Context.Stop(Self);
-            else if (message is Status.Success)
+            switch (message)
             {
-                if (BufferSize == 0 || Buffer.IsEmpty)
-                    Context.Stop(Self);  // will complete the stream successfully
-                else
-                    Context.Become(DrainBufferThenComplete);
+                case Actors.Cancel _:
+                    Context.Stop(Self);
+                    return true;
+                case Status.Success _:
+                    if (BufferSize == 0 || Buffer.IsEmpty)
+                        Context.Stop(Self);  // will complete the stream successfully
+                    else
+                        Context.Become(DrainBufferThenComplete);
+                    return true;
+                case Status.Failure failure:
+                    OnErrorThenStop(failure.Cause);
+                    return true;
+                default:
+                    return false;
             }
-            else if (message is Status.Failure && IsActive)
-                OnErrorThenStop(((Status.Failure)message).Cause);
-            else
-                return false;
-            return true;
         }
 
         /// <summary>

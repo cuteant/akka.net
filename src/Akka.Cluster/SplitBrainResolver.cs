@@ -43,7 +43,7 @@ namespace Akka.Cluster
                 case "keep-majority": return new KeepMajority(config.GetConfig("keep-majority"));
                 case "keep-oldest": return new KeepOldest(config.GetConfig("keep-oldest"));
                 case "keep-referee": return new KeepReferee(config.GetConfig("keep-referee"));
-                default: throw new ArgumentException($"`akka.cluster.split-brain-resolver.active-strategy` setting not recognized: [{activeStrategy}]. Available options are: static-quorum, keep-majority, keep-oldest, keep-referee.");
+                default: return ThrowHelper.ThrowArgumentException_ResolveSplitBrainStrategy(activeStrategy);
             }
         }
     }
@@ -180,7 +180,7 @@ namespace Akka.Cluster
             if (remaining.Contains(oldest))
             {
                 return DownIfAlone && context.Remaining.Count == 1 // oldest is current node, and it's alone
-                    ? context.Remaining 
+                    ? context.Remaining
                     : context.Unreachable;
             }
             if (DownIfAlone && context.Unreachable.Count == 1) // oldest is unreachable, but it's alone
@@ -238,7 +238,7 @@ namespace Akka.Cluster
 
         #endregion
 
-        public static Actor.Props Props(TimeSpan stableAfter, ISplitBrainStrategy strategy) => 
+        public static Actor.Props Props(TimeSpan stableAfter, ISplitBrainStrategy strategy) =>
             Actor.Props.Create(() => new SplitBrainDecider(stableAfter, strategy)).WithDeploy(Deploy.Local);
 
         private readonly Cluster _cluster;
@@ -253,7 +253,8 @@ namespace Akka.Cluster
         public SplitBrainDecider(TimeSpan stableAfter, ISplitBrainStrategy strategy)
         {
             _stabilityTimeout = stableAfter;
-            _strategy = strategy ?? throw new ArgumentNullException(nameof(strategy));
+            if (null == strategy) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.strategy); }
+            _strategy = strategy;
             _cluster = Cluster.Get(Context.System);
         }
 

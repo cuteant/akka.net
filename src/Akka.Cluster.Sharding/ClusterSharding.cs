@@ -1200,7 +1200,7 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// Periodic message to trigger rebalance.
     /// </summary>
-    internal sealed class RebalanceTick
+    internal sealed class RebalanceTick : ISingletonMessage
     {
         /// <summary>
         /// TBD

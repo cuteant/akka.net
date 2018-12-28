@@ -65,7 +65,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class NotReached : IEndOfStream
+        public sealed class NotReached : IEndOfStream, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -88,7 +88,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class Completed : IEndOfStream
+        public sealed class Completed : IEndOfStream, ISingletonMessage
         {
             /// <summary>
             /// TBD

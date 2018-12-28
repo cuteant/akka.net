@@ -1447,7 +1447,7 @@ namespace Akka.Cluster
             else
             {
                 //TODO: Akka exception?
-                if (!_latestGossip.Members.IsEmpty) throw new InvalidOperationException("Join can only be done from an empty state");
+                if (!_latestGossip.Members.IsEmpty) ThrowHelper.ThrowInvalidOperationException_JoinCanOnlyBeDoneFromAnEmptyState();
 
                 // to support manual join when joining to seed nodes is stuck (no seed nodes available)
                 StopSeedNodeProcess();
@@ -1589,7 +1589,7 @@ namespace Akka.Cluster
         /// <exception cref="InvalidOperationException">Welcome can only be done from an empty state</exception>
         public void Welcome(Address joinWith, UniqueAddress from, Gossip gossip)
         {
-            if (!_latestGossip.Members.IsEmpty) throw new InvalidOperationException("Welcome can only be done from an empty state");
+            if (!_latestGossip.Members.IsEmpty) ThrowHelper.ThrowInvalidOperationException_WelcomeCanOnlyBeDoneFromAnEmptyState();
             if (!joinWith.Equals(from.Address))
             {
                 _cluster.LogInfo("Ignoring welcome from [{0}] when trying to join with [{1}]", from.Address, joinWith);
@@ -2490,7 +2490,7 @@ namespace Akka.Cluster
         {
             if (Cluster.IsAssertInvariantsEnabled && _latestGossip.Version.Versions.Count > _latestGossip.Members.Count)
             {
-                throw new InvalidOperationException($"Too many vector clock entries in gossip state {_latestGossip}");
+                ThrowHelper.ThrowInvalidOperationException_TooManyVectorClockEntriesInGossipState(_latestGossip);
             }
         }
 
@@ -2566,7 +2566,7 @@ namespace Akka.Cluster
             _selfAddress = Cluster.Get(Context.System).SelfAddress;
             _seeds = seeds;
             if (seeds.IsEmpty || seeds.Head() == _selfAddress)
-                throw new ArgumentException("Join seed node should not be done");
+                ThrowHelper.ThrowArgumentException_JoinSeedNodeShouldNotBeDone();
             Context.SetReceiveTimeout(Cluster.Get(Context.System).Settings.SeedNodeTimeout);
         }
 
@@ -2676,7 +2676,7 @@ namespace Akka.Cluster
             _selfAddress = _cluster.SelfAddress;
 
             if (seeds.Count <= 1 || seeds.Head() != _selfAddress)
-                throw new ArgumentException("Join seed node should not be done");
+                ThrowHelper.ThrowArgumentException_JoinSeedNodeShouldNotBeDone();
 
             _remainingSeeds = seeds.Remove(_selfAddress);
             _timeout = Deadline.Now + _cluster.Settings.SeedNodeTimeout;
@@ -2892,7 +2892,7 @@ namespace Akka.Cluster
                     case MemberStatus.Removed:
                         return typeof(ClusterEvent.MemberRemoved);
                     default:
-                        throw new ArgumentException($"Expected Up or Removed in OnMemberStatusChangedListener, got [{_status}]");
+                        return ThrowHelper.ThrowArgumentException_ExpectedUpOrRemovedInOnMemberStatusChangedListener(_status);
                 }
             }
         }

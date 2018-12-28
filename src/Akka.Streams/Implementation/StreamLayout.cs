@@ -144,7 +144,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public sealed class Ignore : IMaterializedValueNode
+        public sealed class Ignore : IMaterializedValueNode, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -890,7 +890,7 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    public sealed class EmptyModule : Module
+    public sealed class EmptyModule : Module, ISingletonMessage
     {
         /// <summary>
         /// TBD
@@ -1537,7 +1537,7 @@ namespace Akka.Streams.Implementation
     {
         #region internal classes
 
-        private sealed class Inert
+        internal sealed class Inert : ISingletonMessage
         {
             public static readonly ISubscriber<T> Subscriber = new CancellingSubscriber<T>();
 
@@ -1548,7 +1548,7 @@ namespace Akka.Streams.Implementation
             }
         }
 
-        private sealed class Both
+        internal sealed class Both
         {
             public Both(ISubscriber<T> subscriber)
             {
@@ -1884,7 +1884,7 @@ namespace Akka.Streams.Implementation
             long Demand { get; }
         }
 
-        private sealed class PassThrough : ISubscriptionState
+        internal sealed class PassThrough : ISubscriptionState, ISingletonMessage
         {
             public static readonly PassThrough Instance = new PassThrough();
 
@@ -1995,7 +1995,7 @@ namespace Akka.Streams.Implementation
     {
         #region internal classes
 
-        private sealed class Inert
+        internal sealed class Inert : ISingletonMessage
         {
             public static readonly ISubscriber<T> Subscriber = new CancellingSubscriber<T>();
 

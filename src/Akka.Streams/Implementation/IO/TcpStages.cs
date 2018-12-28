@@ -288,7 +288,7 @@ namespace Akka.Streams.Implementation.IO
     /// </summary>
     internal static class TcpConnectionStage
     {
-        private class WriteAck : Tcp.Event
+        internal class WriteAck : Tcp.Event, ISingletonMessage
         {
             public static readonly WriteAck Instance = new WriteAck();
 

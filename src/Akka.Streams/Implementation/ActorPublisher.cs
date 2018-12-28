@@ -24,7 +24,7 @@ namespace Akka.Streams.Implementation
     /// TBD
     /// </summary>
     [Serializable]
-    internal sealed class SubscribePending
+    internal sealed class SubscribePending : ISingletonMessage
     {
         /// <summary>
         /// TBD

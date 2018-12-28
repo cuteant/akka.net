@@ -36,7 +36,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Flush : IAdapterToStageMessage
+        internal class Flush : IAdapterToStageMessage, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -52,7 +52,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Close : IAdapterToStageMessage
+        internal class Close : IAdapterToStageMessage, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -72,7 +72,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Ok : IDownstreamStatus
+        internal class Ok : IDownstreamStatus, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -88,7 +88,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal class Canceled : IDownstreamStatus
+        internal class Canceled : IDownstreamStatus, ISingletonMessage
         {
             /// <summary>
             /// TBD
@@ -214,15 +214,16 @@ namespace Akka.Streams.Implementation.IO
 
             private void OnAsyncMessage(Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>> @event)
             {
-                if (@event.Item1 is Flush)
+                switch (@event.Item1)
                 {
-                    _flush = @event.Item2;
-                    SendResponseIfNeeded();
-                }
-                else if (@event.Item1 is Close)
-                {
-                    _close = @event.Item2;
-                    SendResponseIfNeeded();
+                    case Flush _:
+                        _flush = @event.Item2;
+                        SendResponseIfNeeded();
+                        break;
+                    case Close _:
+                        _close = @event.Item2;
+                        SendResponseIfNeeded();
+                        break;
                 }
             }
 
