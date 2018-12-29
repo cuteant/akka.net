@@ -150,12 +150,16 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         public DistributedPubSubMediator(DistributedPubSubSettings settings)
         {
             if (settings.RoutingLogic is ConsistentHashingRoutingLogic)
-                throw new ArgumentException("Consistent hashing routing logic cannot be used by the pub-sub mediator");
+            {
+                ThrowHelper.ThrowArgumentException_ConsistentHashingRoutingLogicCannotBeUsedByThePubSubMediator();
+            }
 
             _settings = settings;
 
             if (!string.IsNullOrEmpty(_settings.Role) && !_cluster.SelfRoles.Contains(_settings.Role))
-                throw new ArgumentException($"The cluster member [{_cluster.SelfAddress}] doesn't have the role [{_settings.Role}]");
+            {
+                ThrowHelper.ThrowArgumentException_ThisCusterMemberDoesNotHaveTheRole(_cluster, _settings);
+            }
 
             //Start periodic gossip to random nodes in cluster
             _gossipCancelable = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(_settings.GossipInterval, _settings.GossipInterval, Self, GossipTick.Instance, Self);
@@ -166,8 +170,8 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             Receive<Send>(send =>
             {
                 var routees = new List<Routee>();
-                if (_registry.TryGetValue(_cluster.SelfAddress, out var bucket) && 
-                    bucket.Content.TryGetValue(send.Path, out var valueHolder) && 
+                if (_registry.TryGetValue(_cluster.SelfAddress, out var bucket) &&
+                    bucket.Content.TryGetValue(send.Path, out var valueHolder) &&
                     send.LocalAffinity)
                 {
                     var routee = valueHolder.Routee;
@@ -208,7 +212,9 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             Receive<Put>(put =>
             {
                 if (put.Ref.Path.Address.HasGlobalScope)
-                    Log.Warning("Registered actor must be local: [{0}]", put.Ref);
+                {
+                    if (Log.IsWarningEnabled) Log.RegisteredActorMustBeLocal(put);
+                }
                 else
                 {
                     PutToRegistry(Internal.Utils.MakeKey(put.Ref), put.Ref);
@@ -604,7 +610,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         protected override void PreStart()
         {
             base.PreStart();
-            if (_cluster.IsTerminated) throw new IllegalStateException("Cluster node must not be terminated");
+            if (_cluster.IsTerminated) ThrowHelper.ThrowIllegalStateException_ClusterNodeMustNotBeTerminated();
             _cluster.Subscribe(Self, typeof(ClusterEvent.IMemberEvent));
         }
 

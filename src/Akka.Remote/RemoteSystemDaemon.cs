@@ -87,13 +87,14 @@ namespace Akka.Remote
 
         private void TerminationHookDoneWhenNoChildren()
         {
-            _terminating.WhileOn(() =>
+            void LocalTermination()
             {
                 if (!HasChildren)
                 {
                     _terminator.Tell(TerminationHookDone.Instance, this);
                 }
-            });
+            }
+            _terminating.WhileOn(LocalTermination);
         }
 
         /// <summary>Tells the internal.</summary>
@@ -105,7 +106,7 @@ namespace Akka.Remote
             {
                 //note: RemoteDaemon does not handle ActorSelection messages - those are handled directly by the RemoteActorRefProvider.
                 case IDaemonMsg _:
-                    Log.Debug("Received command [{0}] to RemoteSystemDaemon on [{1}]", message, Path.Address);
+                    if (Log.IsDebugEnabled) Log.ReceivedCommandToRemoteSystemDaemonOn(message, Path);
                     if (message is DaemonMsgCreate daemon) HandleDaemonMsgCreate(daemon);
                     break;
 
@@ -266,12 +267,12 @@ namespace Akka.Remote
                 });
                 if (isTerminating)
                 {
-                    Log.Error("Skipping [{0}] to RemoteSystemDaemon on [{1}] while terminating", message, p.Address);
+                    Log.SkippingToRemoteSystemDaemonOnWhileTerminating(message, p);
                 }
             }
             else
             {
-                Log.Debug("remote path does not match path from message [{0}]", message);
+                if (Log.IsDebugEnabled) Log.RemotePathDoesNotMatchPathFromMessage(message);
             }
         }
 

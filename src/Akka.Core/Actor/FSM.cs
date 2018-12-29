@@ -896,8 +896,7 @@ namespace Akka.Actor
         /// <param name="repeat">send once if false, scheduleAtFixedRate if true</param>
         public void SetTimer(string name, object msg, TimeSpan timeout, bool repeat = false)
         {
-            if (DebugEvent)
-                _log.Debug($"setting {(repeat ? "repeating" : "")} timer {name}/{timeout}: {msg}");
+            if (DebugEvent) { _log.SettingRepeatingTimer(name, msg, timeout, repeat); }
 
             if (_timers.TryGetValue(name, out var timer))
                 timer.Cancel();
@@ -913,8 +912,7 @@ namespace Akka.Actor
         /// <param name="name">The name of the timer to cancel.</param>
         public void CancelTimer(string name)
         {
-            if (DebugEvent)
-                _log.Debug($"Cancelling timer {name}");
+            if (DebugEvent) { _log.CancellingTimer(name); }
 
             if (_timers.TryGetValue(name, out var timer))
             {
@@ -1089,16 +1087,11 @@ namespace Akka.Actor
         /// <summary>
         /// Unhandled event handler
         /// </summary>
-        private StateFunction HandleEventDefault
+        private StateFunction HandleEventDefault => DefaultHandleEventInternal;
+        State<TState, TData> DefaultHandleEventInternal(Event<TData> @event)
         {
-            get
-            {
-                return delegate (Event<TData> @event)
-                {
-                    _log.Warning("unhandled event {0} in state {1}", @event.FsmEvent, StateName);
-                    return Stay();
-                };
-            }
+            if (_log.IsWarningEnabled) _log.UnhandledEventInState(@event, StateName);
+            return Stay();
         }
 
         private StateFunction _handleEvent;
@@ -1138,14 +1131,14 @@ namespace Akka.Actor
         /// <returns>A <see cref="StateFunction"/> which combines both the results of <paramref name="original"/> and <paramref name="fallback"/></returns>
         private static StateFunction OrElse(StateFunction original, StateFunction fallback)
         {
-            StateFunction chained = delegate (Event<TData> @event)
+            State<TState, TData> LocalChained(Event<TData> @event)
             {
                 var originalResult = original.Invoke(@event);
                 if (originalResult == null) return fallback.Invoke(@event);
                 return originalResult;
-            };
+            }
 
-            return chained;
+            return LocalChained;
         }
 
         #endregion
@@ -1229,7 +1222,7 @@ namespace Akka.Actor
             if (DebugEvent)
             {
                 var srcStr = GetSourceString(source);
-                _log.Debug("processing {0} from {1} in state {2}", fsmEvent, srcStr, StateName);
+                _log.ProcessingFsmEventFromInState(fsmEvent, srcStr, StateName);
             }
 
             var stateFunc = _stateFunctions[_currentState.StateName];
@@ -1251,7 +1244,7 @@ namespace Akka.Actor
 
             if (DebugEvent && !Equals(oldState, nextState))
             {
-                _log.Debug("transition {0} -> {1}", oldState, nextState);
+                _log.TransitionState(oldState, nextState);
             }
         }
 

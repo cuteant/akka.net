@@ -210,9 +210,9 @@ namespace Akka.DistributedData
 
         public T Get<T>(IKey<T> key) where T : IReplicatedData
         {
-            if (Data is T) return (T)Data;
+            if (Data is T td) return td;
 
-            throw new InvalidCastException($"Response returned for key '{Key}' is of type [{Data?.GetType()}] and cannot be casted using key '{key}' to type [{typeof(T)}]");
+            return ThrowHelper.ThrowInvalidCastException_KeyTypeCannotBeCasted(Key, Data, key);
         }
 
         /// <inheritdoc/>
@@ -442,7 +442,7 @@ namespace Akka.DistributedData
 
         public T Get<T>(IKey<T> key) where T : IReplicatedData
         {
-            if (!Equals(Key, key)) throw new ArgumentException("Wrong key used, must be contained key");
+            if (!Equals(Key, key)) ThrowHelper.ThrowArgumentException_WrongKeyUsedMustBeContainedKey();
             return (T)Data;
         }
 

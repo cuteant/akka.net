@@ -68,8 +68,8 @@ namespace Akka.DistributedData
                     var n = Nodes.Count + 1;
                     var w = CalculateMajorityWithMinCapacity(write.MinCapacity, n);
                     return n - w;
-                case WriteLocal _: throw new ArgumentException("WriteAggregator does not support WriteLocal");
-                default: throw new ArgumentException("Invalid consistency level");
+                case WriteLocal _: return ThrowHelper.ThrowArgumentException_WriteAggregatorDoesNotSupportWriteLocal();
+                default: return ThrowHelper.ThrowArgumentException_InvalidConsistencyLevel();
             }
         }
 
@@ -149,7 +149,7 @@ namespace Akka.DistributedData
             var isDelete = _envelope.Data is DeletedData;
             var done = DoneWhenRemainingSize;
             var isSuccess = Remaining.Count <= DoneWhenRemainingSize && !notEnoughNodes;
-            if (Log.IsDebugEnabled) Log.Debug("remaining: {0}, done when: {1}", Remaining.Count, done);
+            if (Log.IsDebugEnabled) Log.RemainingDoneWhen(Remaining.Count, done);
             var isTimeoutOrNotEnoughNodes = isTimeout || notEnoughNodes || _gotNackFrom.IsEmpty;
 
             object reply;
@@ -194,7 +194,7 @@ namespace Akka.DistributedData
 
         public WriteTo(int count, TimeSpan timeout)
         {
-            if (count < 2) throw new ArgumentException("WriteTo requires count > 2, Use WriteLocal for count=1");
+            if (count < 2) ThrowHelper.ThrowArgumentException_WriteToRequiresCount();
 
             Count = count;
             Timeout = timeout;

@@ -390,14 +390,27 @@ namespace Akka.Streams.Implementation
         /// <param name="subscriber">TBD</param>
         protected void RegisterSubscriber(ISubscriber<T> subscriber)
         {
-            if (_endOfStream is SubscriberManagement.NotReached)
-                if (_subscriptions.Any(s => s.Subscriber.Equals(subscriber)))
-                    ReactiveStreamsCompliance.RejectAdditionalSubscriber(subscriber, "SubscriberManagement");
-                else
+            switch (_endOfStream)
+            {
+                case SubscriberManagement.NotReached _:
+                    if (_subscriptions.Any(s => s.Subscriber.Equals(subscriber)))
+                    {
+                        ReactiveStreamsCompliance.RejectAdditionalSubscriber(subscriber, "SubscriberManagement");
+                    }
+                    else
+                    {
+                        AddSubscription(subscriber);
+                    }
+                    break;
+
+                case SubscriberManagement.Completed _ when !_buffer.Value.IsEmpty:
                     AddSubscription(subscriber);
-            else if (_endOfStream is SubscriberManagement.Completed && !_buffer.Value.IsEmpty)
-                AddSubscription(subscriber);
-            else _endOfStream.Apply(subscriber);
+                    break;
+
+                default:
+                    _endOfStream.Apply(subscriber);
+                    break;
+            }
         }
 
         private void AddSubscription(ISubscriber<T> subscriber)

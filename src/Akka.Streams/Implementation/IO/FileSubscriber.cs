@@ -116,7 +116,7 @@ namespace Akka.Streams.Implementation.IO
                     return true;
 
                 case OnError error:
-                    _log.Error(error.Cause, $"Tearing down FileSink({_f.FullName}) due to upstream error");
+                    _log.TearingDownFileSinkDueToUpstreamError(error, _f);
                     _completionPromise.TrySetResult(IOResult.Failed(_bytesWritten, error.Cause));
                     Context.Stop(Self);
                     return true;

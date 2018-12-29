@@ -667,8 +667,7 @@ namespace Akka.Streams.Implementation
         /// <param name="cause">TBD</param>
         protected void Fail(Exception cause)
         {
-            if (Settings.IsDebugLogging)
-                Log.Debug("Fail due to {0}", cause.Message);
+            if (Settings.IsDebugLogging) { Log.FailDueTo(cause); }
 
             NextPhase(Pumps.CompletedPhase);
             PrimaryOutputs.Error(cause);

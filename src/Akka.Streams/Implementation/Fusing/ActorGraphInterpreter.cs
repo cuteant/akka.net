@@ -8,8 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
-using System.Text;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Event;
@@ -1343,8 +1342,7 @@ namespace Akka.Streams.Implementation.Fusing
 
         private void EnqueueToShortCircuit(object input)
         {
-            if (_shortCircuitBuffer == null)
-                _shortCircuitBuffer = new Queue<object>();
+            if (_shortCircuitBuffer == null) { _shortCircuitBuffer = new Queue<object>(); }
 
             _shortCircuitBuffer.Enqueue(input);
         }
@@ -1355,15 +1353,13 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 _currentLimit = shell.Init(Self, _subFusingMaterializerImpl, EnqueueToShortCircuit, _currentLimit);
                 //if (IsDebug) Console.WriteLine($"registering new shell in {_initial}\n  {shell.ToString().Replace("\n", "\n  ")}");
-                if (shell.IsTerminated)
-                    return false;
+                if (shell.IsTerminated) { return false; }
                 _activeInterpreters.Add(shell);
                 return true;
             }
             catch (Exception e)
             {
-                if (Log.IsErrorEnabled)
-                    Log.Error(e, "Initialization of GraphInterpreterShell failed for {0}", shell);
+                if (Log.IsErrorEnabled) { Log.InitializationOfGraphInterpreterShellFailed(e, shell); }
                 return false;
             }
         }
@@ -1472,38 +1468,39 @@ namespace Akka.Streams.Implementation.Fusing
                 case IBoundaryEvent _:
                     _currentLimit = _eventLimit;
                     ProcessEvent((IBoundaryEvent)message);
-                    if (_shortCircuitBuffer != null)
-                        ShortCircuitBatch();
+                    if (_shortCircuitBuffer != null) { ShortCircuitBatch(); }
                     return true;
                 case ShellRegistered _:
                     _currentLimit = _eventLimit;
-                    if (_shortCircuitBuffer != null)
-                        ShortCircuitBatch();
+                    if (_shortCircuitBuffer != null) { ShortCircuitBatch(); }
                     return true;
                 case StreamSupervisor.PrintDebugDump _:
-                    if (_log.IsDebugEnabled)
-                    {
-                        var builder = StringBuilderManager.Allocate().Append($"activeShells (actor: {Self}):\n");
-
-                        foreach (var shell in _activeInterpreters)
-                        {
-                            builder.Append("  " + shell.ToString().Replace("\n", "\n  "));
-                            builder.Append(shell.Interpreter);
-                        }
-
-                        builder.AppendLine("NewShells:\n");
-
-                        _newShells.ForEach((shell, sb) =>
-                        {
-                            sb.Append("  " + shell.ToString().Replace("\n", "\n  "));
-                            sb.Append(shell.Interpreter);
-                        }, builder);
-
-                        _log.Debug(StringBuilderManager.ReturnAndFree(builder));
-                    }
+                    if (_log.IsDebugEnabled) { PrintDebugDump(); }
                     return true;
                 default: return false;
             }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void PrintDebugDump()
+        {
+            var builder = StringBuilderManager.Allocate().Append($"activeShells (actor: {Self}):\n");
+
+            foreach (var shell in _activeInterpreters)
+            {
+                builder.Append("  " + shell.ToString().Replace("\n", "\n  "));
+                builder.Append(shell.Interpreter);
+            }
+
+            builder.AppendLine("NewShells:\n");
+
+            _newShells.ForEach((shell, sb) =>
+            {
+                sb.Append("  " + shell.ToString().Replace("\n", "\n  "));
+                sb.Append(shell.Interpreter);
+            }, builder);
+
+            _log.Debug(StringBuilderManager.ReturnAndFree(builder));
         }
 
         /// <summary>

@@ -21,8 +21,12 @@ namespace Akka.DistributedData
         /// </summary>
         /// <param name="system">TBD</param>
         /// <returns>TBD</returns>
-        public static ReplicatorSettings Create(ActorSystem system) =>
-            Create(system.Settings.Config.GetConfig("akka.cluster.distributed-data") ?? throw new ConfigurationException("HOCON config section `akka.cluster.distributed-data` was not found"));
+        public static ReplicatorSettings Create(ActorSystem system)
+        {
+            var config = system.Settings.Config.GetConfig("akka.cluster.distributed-data");
+            if (null == config) { ThrowHelper.ThrowConfigurationException_DistributedDataConfigNotProvided(); }
+            return Create(config);
+        }
 
         /// <summary>
         /// Create settings from a configuration with the same layout as
@@ -33,7 +37,7 @@ namespace Akka.DistributedData
         /// <returns>TBD</returns>
         public static ReplicatorSettings Create(Config config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config), "DistributedData HOCON config not provided.");
+            if (config == null) ThrowHelper.ThrowArgumentNullException_DistributedDataConfigNotProvided();
 
             var dispatcher = config.GetString("use-dispatcher");
             if (string.IsNullOrEmpty(dispatcher)) dispatcher = Dispatchers.DefaultDispatcherId;
@@ -45,10 +49,10 @@ namespace Akka.DistributedData
             var isDurableStoreConfigured = !string.IsNullOrEmpty(durableStoreTypeName);
             if (durableKeys.Count != 0)
             {
-                Type durableStoreType;
+                Type durableStoreType = null;
                 if (!isDurableStoreConfigured || (durableStoreType = TypeUtil.ResolveType(durableStoreTypeName)) == null)
                 {
-                    throw new ArgumentException($"`akka.cluster.distributed-data.durable.store-actor-class` must be set when `akka.cluster.distributed-data.durable.keys` have been configured.");
+                    ThrowHelper.ThrowArgumentException_StoreActorClassMustBeSetWhenDataDurableKeysHaveBeenConfigured();
                 }
                 durableStoreProps = Props.Create(durableStoreType, durableConfig).WithDispatcher(durableConfig.GetString("use-dispatcher"));
             }
@@ -144,10 +148,10 @@ namespace Akka.DistributedData
                                   int maxDeltaElements,
                                   string dispatcher,
                                   TimeSpan pruningInterval,
-                                  TimeSpan maxPruningDissemination, 
-                                  IImmutableSet<string> durableKeys, 
-                                  Props durableStoreProps, 
-                                  TimeSpan pruningMarkerTimeToLive, 
+                                  TimeSpan maxPruningDissemination,
+                                  IImmutableSet<string> durableKeys,
+                                  Props durableStoreProps,
+                                  TimeSpan pruningMarkerTimeToLive,
                                   TimeSpan durablePruningMarkerTimeToLive,
                                   int maxDeltaSize)
         {
@@ -198,7 +202,7 @@ namespace Akka.DistributedData
         public ReplicatorSettings WithNotifySubscribersInterval(TimeSpan notifySubscribersInterval) => Copy(notifySubscribersInterval: notifySubscribersInterval);
         public ReplicatorSettings WithMaxDeltaElements(int maxDeltaElements) => Copy(maxDeltaElements: maxDeltaElements);
         public ReplicatorSettings WithDispatcher(string dispatcher) => Copy(dispatcher: string.IsNullOrEmpty(dispatcher) ? Dispatchers.DefaultDispatcherId : dispatcher);
-        public ReplicatorSettings WithPruning(TimeSpan pruningInterval, TimeSpan maxPruningDissemination) => 
+        public ReplicatorSettings WithPruning(TimeSpan pruningInterval, TimeSpan maxPruningDissemination) =>
             Copy(pruningInterval: pruningInterval, maxPruningDissemination: maxPruningDissemination);
         public ReplicatorSettings WithDurableKeys(IImmutableSet<string> durableKeys) => Copy(durableKeys: durableKeys);
         public ReplicatorSettings WithDurableStoreProps(Props durableStoreProps) => Copy(durableStoreProps: durableStoreProps);

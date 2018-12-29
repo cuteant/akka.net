@@ -282,7 +282,7 @@ namespace Akka.Actor
             var supervisor = new RootGuardianSupervisor(_rootPath, this, _terminationPromise, _log);
             var rootGuardianStrategy = new OneForOneStrategy(ex =>
             {
-                _log.Error(ex, "Guardian failed. Shutting down system");
+                _log.GuardianFailedShuttingDownSystem(ex);
                 return Directive.Stop;
             });
             var props = Props.Create<GuardianActor>(rootGuardianStrategy);
@@ -380,7 +380,7 @@ namespace Akka.Actor
         {
             if (ActorPath.TryParse(path, out var actorPath) && actorPath.Address == _rootPath.Address)
                 return ResolveActorRef(_rootGuardian, actorPath.Elements);
-            if (_log.IsDebugEnabled) _log.Debug("Resolve of unknown path [{0}] failed. Invalid format.", path);
+            if (_log.IsDebugEnabled) _log.ResolveOfUnknownPathFailed(path);
             return _deadLetters;
         }
 
@@ -393,7 +393,7 @@ namespace Akka.Actor
         {
             if (path.Root == _rootPath)
                 return ResolveActorRef(_rootGuardian, path.Elements);
-            if (_log.IsDebugEnabled) _log.Debug("Resolve of foreign ActorPath [{0}] failed", path);
+            if (_log.IsDebugEnabled) _log.ResolveOfForeignActorPathFailed(path);
             return _deadLetters;
 
             //Used to be this, but the code above is what Akka has
@@ -426,13 +426,13 @@ namespace Akka.Actor
         {
             if (pathElements.Count == 0)
             {
-                if (_log.IsDebugEnabled) _log.Debug("Resolve of empty path sequence fails (per definition)");
+                if (_log.IsDebugEnabled) _log.ResolveOfEmptyPathSequenceFailsPerDefinition();
                 return _deadLetters;
             }
             var child = actorRef.GetChild(pathElements);
             if (child.IsNobody())
             {
-                if (_log.IsDebugEnabled) _log.Debug("Resolve of path sequence [/{0}] failed", ActorPath.FormatPathElements(pathElements));
+                if (_log.IsDebugEnabled) _log.ResolveOfPathSequenceFailed(pathElements);
                 return new EmptyLocalActorRef(_system.Provider, actorRef.Path / pathElements, _eventStream);
             }
             return (IInternalActorRef)child;
@@ -478,9 +478,10 @@ namespace Akka.Actor
                 if (Settings.DebugRouterMisconfiguration)
                 {
                     var d = Deployer.Lookup(path);
-                    if (d != null && !(d.RouterConfig is NoRouter))
-                        Log.Warning("Configuration says that [{0}] should be a router, but code disagrees. Remove the config or add a RouterConfig to its Props.",
-                                    path);
+                    if (d != null && !(d.RouterConfig is NoRouter) && Log.IsWarningEnabled)
+                    {
+                        Log.ConfigurationSaysThatShouldBeARouterButCodeDisagrees(path);
+                    }
                 }
 
                 var props2 = props;
@@ -497,7 +498,7 @@ namespace Akka.Actor
 
                 if (!system.Dispatchers.HasDispatcher(props2.Dispatcher))
                 {
-                    throw new ConfigurationException($"Dispatcher [{props2.Dispatcher}] not configured for path {path}");
+                    AkkaThrowHelper.ThrowConfigurationException_DispatcherNotConfiguredForPath(props2, path);
                 }
 
                 try

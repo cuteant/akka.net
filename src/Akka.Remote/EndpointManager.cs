@@ -420,7 +420,7 @@ namespace Akka.Remote
             {
                 if (_log.IsInfoEnabled)
                 {
-                    _log.Info($"Quarantined address [{remoteAddress}] is still unreachable or has not been restarted. Keeping it quarantined.");
+                    _log.QuarantinedAddressIsStillUnreachable(remoteAddress);
                 }
                 // Restoring Quarantine marker overwritten by a Pass(endpoint, refuseUid) pair while
                 // probing remote system.
@@ -449,11 +449,7 @@ namespace Akka.Remote
                     case InvalidAssociation ia:
                         KeepQuarantinedOr(ia.RemoteAddress, () =>
                         {
-                            var causedBy = ia.InnerException == null
-                                ? ""
-                                : $"Caused by: [{ia.InnerException}]";
-                            _log.Warning("Tried to associate with unreachable remote address [{0}]. Address is now gated for {1} ms, all messages to this address will be delivered to dead letters. Reason: [{2}] {3}",
-                                ia.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds, ia.Message, causedBy);
+                            if (_log.IsWarningEnabled) _log.TriedToAssociateWithUnreachableRemoteAddress(ia, _settings);
                             _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
                         });
 
@@ -465,8 +461,7 @@ namespace Akka.Remote
                     case ShutDownAssociation shutdown:
                         KeepQuarantinedOr(shutdown.RemoteAddress, () =>
                         {
-                            if (_log.IsDebugEnabled) _log.Debug("Remote system with address [{0}] has shut down. Address is now gated for {1}ms, all messages to this address will be delivered to dead letters.",
-                                  shutdown.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds);
+                            if (_log.IsDebugEnabled) _log.RemoteSystemWithAddressHasShutDown(shutdown, _settings);
                             _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
                         });
                         return Directive.Stop;
@@ -474,8 +469,7 @@ namespace Akka.Remote
                     case HopelessAssociation hopeless:
                         if (hopeless.Uid.HasValue)
                         {
-                            _log.Error(hopeless.InnerException, "Association to [{0}] with UID [{1}] is irrecoverably failed. Quarantining address.",
-                                hopeless.RemoteAddress, hopeless.Uid);
+                            _log.AssociationToWithUidIsIrrecoverablyFailed(hopeless);
                             if (_settings.QuarantineDuration.HasValue)
                             {
                                 _endpoints.MarkAsQuarantined(hopeless.RemoteAddress, hopeless.Uid.Value,
@@ -486,8 +480,7 @@ namespace Akka.Remote
                         }
                         else
                         {
-                            _log.Warning("Association to [{0}] with unknown UID is irrecoverably failed. Address cannot be quarantined without knowing the UID, gating instead for {1} ms.",
-                                hopeless.RemoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds);
+                            if (_log.IsWarningEnabled) _log.AssociationToWithUnknownUIDIsIrrecoverablyFailed(hopeless, _settings);
                             _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
                         }
                         return Directive.Stop;
@@ -501,7 +494,7 @@ namespace Akka.Remote
                                 break;
 
                             default:
-                                _log.Error(ex, ex.Message);
+                                _log.LogErrorX(ex);
                                 break;
                         }
                         _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
@@ -521,7 +514,7 @@ namespace Akka.Remote
         {
             if (PruneTimerCancelleable != null)
             {
-                if (_log.IsDebugEnabled) _log.Debug("Starting prune timer for endpoint manager...");
+                if (_log.IsDebugEnabled) _log.StartingPruneTimerForEndpointManager();
             }
 
             base.PreStart();
@@ -551,7 +544,7 @@ namespace Akka.Remote
                 // mailboxes, and for example Netty is not part of the actor hierarchy, so its
                 // handles will not be cleaned up if no actor is taking responsibility of them
                 // (because they are sitting in a mailbox).
-                _log.Error("Remoting system has been terminated abruptly. Attempting to shut down transports");
+                _log.RemotingSystemHasBeenTerminatedAbruptly();
                 foreach (var t in _transportMapping.Values)
                 {
                     t.Shutdown();
@@ -725,8 +718,7 @@ namespace Akka.Remote
                     {
                         var endpoint = pass.Endpoint;
                         context.Stop(endpoint);
-                        _log.Warning("Association to [{0}] with unknown UID is reported as quarantined, but " +
-                        "address cannot be quarantined without knowing the UID, gating instead for {1} ms.", remoteAddr, _settings.RetryGateClosedFor.TotalMilliseconds);
+                        if (_log.IsWarningEnabled) _log.AssociationToWithUnknownUIDIsReportedAsQuarantined(remoteAddr, _settings);
                         _endpoints.MarkAsFailed(endpoint, Deadline.Now + _settings.RetryGateClosedFor);
                     }
                     else

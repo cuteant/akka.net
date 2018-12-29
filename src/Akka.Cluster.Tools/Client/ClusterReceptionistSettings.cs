@@ -28,7 +28,9 @@ namespace Akka.Cluster.Tools.Client
 
             var config = system.Settings.Config.GetConfig("akka.cluster.client.receptionist");
             if (config == null)
-                throw new ArgumentException($"Actor system [{system.Name}] doesn't have `akka.cluster.client.receptionist` config set up");
+            {
+                ThrowHelper.ThrowArgumentException_ActorSystemDoesnotHave_AkkaClusterClientReceptionist_Config(system);
+            }
 
             return Create(config);
         }

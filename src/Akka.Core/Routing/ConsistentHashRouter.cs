@@ -208,7 +208,8 @@ namespace Akka.Routing
                 catch (Exception ex)
                 {
                     //serialization failed
-                    _log.Value.Warning("Couldn't route message with consistent hash key [{0}] due to [{1}]", hashData, ex.Message);
+                    var logger = _log.Value;
+                    if (logger.IsWarningEnabled) logger.CouldnotRouteMessageWithConsistentHashKey(hashData, ex);
                     return Routee.NoRoutee;
                 }
             }
@@ -224,8 +225,8 @@ namespace Akka.Routing
             }
             else
             {
-                _log.Value.Warning("Message [{0}] must be handled by hashMapping, or implement [{1}] or be wrapped in [{2}]",
-                    message.GetType().Name, typeof (IConsistentHashable).Name, typeof (ConsistentHashableEnvelope).Name);
+                var logger = _log.Value;
+                if (logger.IsWarningEnabled) logger.MessageMustBeHandledByHashMapping(message);
                 return Routee.NoRoutee;
             }
         }
@@ -332,7 +333,8 @@ namespace Akka.Routing
             null,
             Pool.DefaultSupervisorStrategy,
             Dispatchers.DefaultDispatcherId,
-            false) { }
+            false)
+        { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ConsistentHashingPool"/> class.

@@ -139,7 +139,7 @@ namespace Akka.Cluster
             }
             catch (Exception ex)
             {
-                _log.Error(ex, "Failed to startup Cluster. You can try to increase 'akka.actor.creation-timeout'.");
+                _log.FailedToStartupCluster(ex);
                 Shutdown();
                 System.DeadLetters.Tell(ex); //don't re-throw the error. Just log it.
                 return System.DeadLetters;
@@ -590,8 +590,7 @@ namespace Akka.Cluster
             /// <param name="message">The message being logged.</param>
             internal void LogInfo(string message)
             {
-                if (_settings.LogInfo)
-                    _log.Info("Cluster Node [{0}] - {1}", _selfAddress, message);
+                if (_settings.LogInfo) { _log.Info("Cluster Node [{0}] - {1}", _selfAddress, message); }
             }
 
             /// <summary>
@@ -601,8 +600,7 @@ namespace Akka.Cluster
             /// <param name="arg1">The argument that fills in the template placeholder.</param>
             internal void LogInfo(string template, object arg1)
             {
-                if (_settings.LogInfo)
-                    _log.Info($"Cluster Node [{_selfAddress}] - " + template, arg1);
+                if (_settings.LogInfo) { _log.Info($"Cluster Node [{_selfAddress}] - " + template, arg1); }
             }
 
             /// <summary>
@@ -613,8 +611,7 @@ namespace Akka.Cluster
             /// <param name="arg2">The second argument that fills in the corresponding template placeholder.</param>
             internal void LogInfo(string template, object arg1, object arg2)
             {
-                if (_settings.LogInfo)
-                    _log.Info($"Cluster Node [{_selfAddress}] - " + template, arg1, arg2);
+                if (_settings.LogInfo) { _log.Info($"Cluster Node [{_selfAddress}] - " + template, arg1, arg2); }
             }
         }
 

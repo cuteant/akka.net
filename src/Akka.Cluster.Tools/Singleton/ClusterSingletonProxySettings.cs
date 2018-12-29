@@ -26,8 +26,7 @@ namespace Akka.Cluster.Tools.Singleton
         {
             system.Settings.InjectTopLevelFallback(ClusterSingletonManager.DefaultConfig());
             var config = system.Settings.Config.GetConfig("akka.cluster.singleton-proxy");
-            if (config == null)
-                throw new ConfigurationException($"Cannot create {typeof(ClusterSingletonProxySettings)}: akka.cluster.singleton-proxy configuration node not found");
+            if (config == null) ThrowHelper.ThrowConfigurationException_CannotCreateClusterSingletonProxySettings();
 
             return Create(config);
         }
@@ -88,12 +87,9 @@ namespace Akka.Cluster.Tools.Singleton
         /// <exception cref="ArgumentNullException"></exception>
         public ClusterSingletonProxySettings(string singletonName, string role, TimeSpan singletonIdentificationInterval, int bufferSize)
         {
-            if (string.IsNullOrEmpty(singletonName))
-                throw new ArgumentNullException(nameof(singletonName));
-            if (singletonIdentificationInterval == TimeSpan.Zero)
-                throw new ArgumentException("singletonIdentificationInterval must be positive", nameof(singletonIdentificationInterval));
-            if (bufferSize <= 0)
-                throw new ArgumentException("bufferSize must be positive", nameof(bufferSize));
+            if (string.IsNullOrEmpty(singletonName)) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.singletonName);
+            if (singletonIdentificationInterval == TimeSpan.Zero) ThrowHelper.ThrowArgumentException_SingletonIdentificationIntervalMustBePositive();
+            if (bufferSize <= 0) ThrowHelper.ThrowArgumentException_BufferSizeMustBePositive();
 
             SingletonName = singletonName;
             Role = role;

@@ -142,7 +142,7 @@ namespace Akka.Cluster.Sharding
                     ReceiveOne(i);
                     break;
                 case GetFailure _:
-                    Log.Error("The DDataShard was unable to get an initial state within 'waiting-for-state-timeout': {0}", Settings.TunningParameters.WaitingForStateTimeout);
+                    Log.TheDDataShardWasUnableToGetAnInitialState(Settings);
                     Context.Stop(Self);
                     break;
                 case NotFound notFound:
@@ -158,7 +158,7 @@ namespace Akka.Cluster.Sharding
         {
             RestartRememberedEntities();
             this.Initialized();
-            if (Log.IsDebugEnabled) Log.Debug("DDataShard recovery completed shard [{0}] with [{1}] entities", ShardId, State.Entries.Count);
+            if (Log.IsDebugEnabled) Log.DDataShardRecoveryCompletedShardWithEntities(ShardId, State.Entries.Count);
             Stash.UnstashAll();
             Context.Become(this.HandleCommand);
         }
@@ -178,7 +178,7 @@ namespace Akka.Cluster.Sharding
                     {
                         case Shard.EntityStarted started: return existing.Add(Cluster, started.EntityId);
                         case Shard.EntityStopped stopped: return existing.Remove(Cluster, stopped.EntityId);
-                        default: throw new NotSupportedException($"DDataShard send update event not supported: {e}");
+                        default: ThrowHelper.ThrowNotSupportedException_DDataShardSendUpdateEventNotSupported(e); return null;
                     }
                 }));
         }
@@ -188,7 +188,7 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case UpdateSuccess success when Equals(((Tuple<Shard.StateChange, int>)success.Request).Item1, e):
-                    if (Log.IsDebugEnabled) Log.Debug("The DDataShard state was successfully updated with {0}", e);
+                    if (Log.IsDebugEnabled) Log.TheDDataShardStateWasSuccessfullyUpdatedWith(e);
                     Context.UnbecomeStacked();
                     afterUpdateCallback(e);
                     Stash.UnstashAll();
@@ -199,19 +199,17 @@ namespace Akka.Cluster.Sharding
                     if (retryCount == MaxUpdateAttempts)
                     {
                         // parent ShardRegion supervisor will notice that it terminated and will start it again, after backoff
-                        Log.Error("The DDataShard was unable to update state after {0} attempts, within 'updating-state-timeout'={1}, event={2}. " +
-                            "Shard will be restarted after backoff.", MaxUpdateAttempts, Settings.TunningParameters.UpdatingStateTimeout, e);
+                        Log.TheDDataShardWasUnableToUpdateState(MaxUpdateAttempts, Settings, e);
                         Context.Stop(Self);
                     }
                     else
                     {
-                        Log.Error("The DDataShard was unable to update state, attempt {0} of {1}, within 'updating-state-timeout'={2}, event={3}",
-                            retryCount, MaxUpdateAttempts, Settings.TunningParameters.UpdatingStateTimeout, e);
+                        Log.TheDDataShardWasUnableToUpdateState(retryCount, MaxUpdateAttempts, Settings, e);
                         SendUpdate(e, retryCount + 1);
                     }
                     break;
                 case ModifyFailure failure when Equals(((Tuple<Shard.StateChange, int>)failure.Request).Item1, e):
-                    Log.Error("The DDataShard was unable to update state with error {0} and event {1}. Shard will be restarted", failure.Cause, e);
+                    Log.TheDDataShardWasUnableToUpdateStateWithError(failure, e);
                     ExceptionDispatchInfo.Capture(failure.Cause).Throw();
                     break;
                 default: Stash.Stash(); break;

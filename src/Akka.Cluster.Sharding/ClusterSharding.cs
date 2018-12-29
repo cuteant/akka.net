@@ -337,12 +337,13 @@ namespace Akka.Cluster.Sharding
                         return ActorRefs.Nobody;
 
                     default:
-                        throw new ActorInitializationException($"Unsupported guardian response: {reply}");
+                        ThrowHelper.ThrowActorInitialization_UnsupportedGuardianResponse(reply); return null;
                 }
             }
             else
             {
-                _cluster.System.Log.Debug("Starting Shard Region Proxy [{0}] (no actors will be hosted on this node)...", typeName);
+                var sysLog = _cluster.System.Log;
+                if (sysLog.IsDebugEnabled) sysLog.StartingShardRegionProxy(typeName);
                 return StartProxy(typeName, settings.Role, extractEntityId, extractShardId);
             }
         }
@@ -405,12 +406,13 @@ namespace Akka.Cluster.Sharding
                         return ActorRefs.Nobody;
 
                     default:
-                        throw new ActorInitializationException($"Unsupported guardian response: {reply}");
+                        ThrowHelper.ThrowActorInitialization_UnsupportedGuardianResponse(reply); return null;
                 }
             }
             else
             {
-                _cluster.System.Log.Debug("Starting Shard Region Proxy [{0}] (no actors will be hosted on this node)...", typeName);
+                var sysLog = _cluster.System.Log;
+                if (sysLog.IsDebugEnabled) sysLog.StartingShardRegionProxy(typeName);
                 return await StartProxyAsync(typeName, settings.Role, extractEntityId, extractShardId);
             }
         }
@@ -664,12 +666,13 @@ namespace Akka.Cluster.Sharding
                         return ActorRefs.Nobody;
 
                     default:
-                        throw new ActorInitializationException($"Unsupported guardian response: {reply}");
+                        ThrowHelper.ThrowActorInitialization_UnsupportedGuardianResponse(reply); return null;
                 }
             }
             else
             {
-                _cluster.System.Log.Debug("Starting Shard Region Proxy [{0}] (no actors will be hosted on this node)...", typeName);
+                var sysLog = _cluster.System.Log;
+                if (sysLog.IsDebugEnabled) sysLog.StartingShardRegionProxy(typeName);
                 return StartProxy(typeName, settings.Role, extractEntityId, extractShardId);
             }
         }
@@ -732,12 +735,13 @@ namespace Akka.Cluster.Sharding
                         return ActorRefs.Nobody;
 
                     default:
-                        throw new ActorInitializationException($"Unsupported guardian response: {reply}");
+                        ThrowHelper.ThrowActorInitialization_UnsupportedGuardianResponse(reply); return null;
                 }
             }
             else
             {
-                _cluster.System.Log.Debug("Starting Shard Region Proxy [{0}] (no actors will be hosted on this node)...", typeName);
+                var sysLog = _cluster.System.Log;
+                if (sysLog.IsDebugEnabled) sysLog.StartingShardRegionProxy(typeName);
                 return StartProxy(typeName, settings.Role, extractEntityId, extractShardId);
             }
         }
@@ -969,7 +973,7 @@ namespace Akka.Cluster.Sharding
                     return ActorRefs.Nobody;
 
                 default:
-                    throw new ActorInitializationException($"Unsupported guardian response: {reply}");
+                    ThrowHelper.ThrowActorInitialization_UnsupportedGuardianResponse(reply); return null;
             }
         }
 
@@ -1010,7 +1014,7 @@ namespace Akka.Cluster.Sharding
                     return ActorRefs.Nobody;
 
                 default:
-                    throw new ActorInitializationException($"Unsupported guardian response: {reply}");
+                    ThrowHelper.ThrowActorInitialization_UnsupportedGuardianResponse(reply); return null;
             }
         }
 
@@ -1085,12 +1089,10 @@ namespace Akka.Cluster.Sharding
         /// <returns>TBD</returns>
         public IActorRef ShardRegion(string typeName)
         {
-            if (_regions.TryGetValue(typeName, out var region))
-                return region;
-            if (_proxies.TryGetValue(typeName, out region))
-                return region;
+            if (_regions.TryGetValue(typeName, out var region)) { return region; }
+            if (_proxies.TryGetValue(typeName, out region)) { return region; }
 
-            throw new ArgumentException($"Shard type [{typeName}] must be started first");
+            return ThrowHelper.ThrowArgumentException_ShardTypeMustBeStartedFirst(typeName);
         }
 
         /// <summary>
@@ -1104,9 +1106,9 @@ namespace Akka.Cluster.Sharding
         /// <returns></returns>
         public IActorRef ShardRegionProxy(string typeName)
         {
-            if (_proxies.TryGetValue(typeName, out var proxy))
-                return proxy;
-            throw new ArgumentException($"Shard type [{typeName}] must be started first");
+            if (_proxies.TryGetValue(typeName, out var proxy)) { return proxy; }
+
+            return ThrowHelper.ThrowArgumentException_ShardTypeMustBeStartedFirst(typeName);
         }
 
         private IShardAllocationStrategy DefaultShardAllocationStrategy(ClusterShardingSettings settings)

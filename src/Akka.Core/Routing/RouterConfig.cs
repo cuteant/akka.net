@@ -78,7 +78,14 @@ namespace Akka.Routing
         /// <returns><c>true</c> if this message is handled by the router; otherwise <c>false</c>.</returns>
         public virtual bool IsManagementMessage(object message)
         {
-            return message is IAutoReceivedMessage || message is RouterManagementMessage;
+            switch (message)
+            {
+                case IAutoReceivedMessage _:
+                case RouterManagementMessage _:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

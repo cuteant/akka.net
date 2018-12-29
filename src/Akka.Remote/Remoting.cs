@@ -138,7 +138,7 @@ namespace Akka.Remote
         {
             if (_endpointManager == null)
             {
-                if (_log.IsInfoEnabled) _log.Info("Starting remoting");
+                if (_log.IsInfoEnabled) _log.StartingRemoting();
                 _endpointManager = System.SystemActorOf(RARP.For(System).ConfigureDispatcher(
                     Props.Create(() => new EndpointManager(System.Settings.Config, _log)).WithDeploy(Deploy.Local)),
                     EndpointManagerName);
@@ -172,7 +172,7 @@ namespace Akka.Remote
 
                     if (_log.IsInfoEnabled)
                     {
-                        _log.Info("Remoting started; listening on addresses : [{0}]", string.Join(",", _addresses.Select(x => x.ToString())));
+                        _log.RemotingStartedListeningOnAddresses(_addresses);
                     }
 
                     _endpointManager.Tell(new EndpointManager.StartupFinished());
@@ -196,7 +196,7 @@ namespace Akka.Remote
             }
             else
             {
-                _log.Warning("Remoting was already started. Ignoring start attempt.");
+                if (_log.IsWarningEnabled) _log.RemotingWasAlreadyStartedIgnoringStartAttempt();
             }
         }
 
@@ -210,7 +210,7 @@ namespace Akka.Remote
         {
             if (_endpointManager == null)
             {
-                _log.Warning("Remoting is not running. Ignoring shutdown attempt");
+                if (_log.IsWarningEnabled) _log.RemotingIsNotRunningIgnoringShutdownAttempt();
                 return TaskConstants.BooleanTrue;
             }
             else
@@ -233,8 +233,7 @@ namespace Akka.Remote
                     {
                         if (!result.Result)
                         {
-                            _log.Warning("Shutdown finished, but flushing might not have been successful and some messages might have been dropped. " +
-                                "Increase akka.remote.flush-wait-on-shutdown to a larger value to avoid this.");
+                            if (_log.IsWarningEnabled) _log.ShutdownFinishedButFlushingMightNotHaveBeenSuccessful();
                         }
                         finalize();
                     }

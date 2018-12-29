@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
@@ -69,7 +70,7 @@ namespace Akka.Persistence.Journal
                 persistence.SnapshotStoreFor(null);
         }
 
-        private interface IPluginType
+        internal interface IPluginType
         {
             string Qualifier { get; }
         }
@@ -144,12 +145,12 @@ namespace Akka.Persistence.Journal
                 switch (_pluginType)
                 {
                     case Journal _:
-                        if (_log.IsInfoEnabled) { _log.Info("Starting target journal [{0}]", _targetPluginId); }
+                        if (_log.IsInfoEnabled) { _log.StartingTargetJournal(_targetPluginId); }
                         target = Persistence.Instance.Apply(Context.System).JournalFor(_targetPluginId);
                         break;
 
                     case SnapshotStore _:
-                        if (_log.IsInfoEnabled) { _log.Info("Starting target snapshot-store [{0}]", _targetPluginId); }
+                        if (_log.IsInfoEnabled) { _log.StartingTargetSnapshotStore(_targetPluginId); }
                         target = Persistence.Instance.Apply(Context.System).SnapshotStoreFor(_targetPluginId);
                         break;
 
@@ -166,14 +167,14 @@ namespace Akka.Persistence.Journal
                 {
                     try
                     {
-                        if (_log.IsInfoEnabled) { _log.Info("Setting target {0} address to {1}", _pluginType.Qualifier, targetAddress); }
+                        if (_log.IsInfoEnabled) { _log.SettingTargetAddressTo(_pluginType, targetAddress); }
                         SetTargetLocation(Context.System, Address.Parse(targetAddress));
                     }
                     catch (UriFormatException)
                     {
                         if (_log.IsWarningEnabled)
                         {
-                            _log.Warning("Invalid URL provided for target {0} address: {1}", _pluginType.Qualifier, targetAddress);
+                            _log.InvalidURLProvidedForTarget(_pluginType, targetAddress);
                         }
                     }
                 }
@@ -210,8 +211,7 @@ namespace Akka.Persistence.Journal
                 case InitTimeout _:
                     if (_log.IsInfoEnabled)
                     {
-                        _log.Info("Initialization timed-out (after {0}s), use `PersistencePluginProxy.SetTargetLocation` or set `target-{1}-address`",
-                            _initTimeout.TotalSeconds, _pluginType.Qualifier);
+                        _log.InitializationTimedOut(_initTimeout, _pluginType);
                     }
                     Context.Become(InitTimedOut());
                     Stash.UnstashAll(); // will trigger appropriate failures
@@ -235,7 +235,7 @@ namespace Akka.Persistence.Journal
         private void SendIdentify(Address address)
         {
             var sel = Context.ActorSelection($"{new RootActorPath(address)}/system/{_targetPluginId}");
-            if (_log.IsInfoEnabled) { _log.Info("Trying to identify target + {0} at {1}", _pluginType.Qualifier, sel); }
+            if (_log.IsInfoEnabled) { _log.TryingToIdentifyTargetAt(_pluginType, sel); }
             sel.Tell(new Identify(_targetPluginId));
         }
 
@@ -249,7 +249,7 @@ namespace Akka.Persistence.Journal
                         if (_targetPluginId.Equals(ai.MessageId))
                         {
                             var target = ai.Subject;
-                            if (_log.IsInfoEnabled) { _log.Info("Found target {0} at [{1}]", _pluginType.Qualifier, address); }
+                            if (_log.IsInfoEnabled) { _log.FoundTargetAt(_pluginType, address); }
                             Context.SetReceiveTimeout(null);
                             Context.Watch(target);
                             Stash.UnstashAll();
@@ -363,7 +363,7 @@ namespace Akka.Persistence.Journal
                         break;
                     default:
                         var exception = TimeoutException();
-                        if (_log.IsErrorEnabled) { _log.Error(exception, "Failed PersistencePluginProxyRequest: {0}", exception.Message); }
+                        if (_log.IsErrorEnabled) { _log.FailedPersistencePluginProxyRequest(exception); }
                         break;
                 }
                 return true;

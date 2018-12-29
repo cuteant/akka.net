@@ -93,8 +93,8 @@ namespace Akka.Cluster.Sharding
             public Start(string typeName, Func<string, Props> entityProps, ClusterShardingSettings settings,
                 ExtractEntityId extractEntityId, ExtractShardId extractShardId, IShardAllocationStrategy allocationStrategy, object handOffStopMessage)
             {
-                if (string.IsNullOrEmpty(typeName)) throw new ArgumentNullException(nameof(typeName), "ClusterSharding start requires type name to be provided");
-                if (entityProps == null) throw new ArgumentNullException(nameof(entityProps), $"ClusterSharding start requires Props for [{typeName}] to be provided");
+                if (string.IsNullOrEmpty(typeName)) ThrowHelper.ThrowArgumentNullException_StartRrequiresTypeNameToBeProvided();
+                if (entityProps == null) ThrowHelper.ThrowArgumentNullException_StartRequiresPropsForTypeNameToBeProvided(typeName);
 
                 TypeName = typeName;
                 EntityProps = entityProps;
@@ -141,7 +141,7 @@ namespace Akka.Cluster.Sharding
             /// </exception>
             public StartProxy(string typeName, ClusterShardingSettings settings, ExtractEntityId extractEntityId, ExtractShardId extractShardId)
             {
-                if (string.IsNullOrEmpty(typeName)) throw new ArgumentNullException(nameof(typeName), "ClusterSharding start proxy requires type name to be provided");
+                if (string.IsNullOrEmpty(typeName)) ThrowHelper.ThrowArgumentNullException_ClusterShardingStartProxyRequiresTypeNameToBeProvided();
 
                 TypeName = typeName;
                 Settings = settings;

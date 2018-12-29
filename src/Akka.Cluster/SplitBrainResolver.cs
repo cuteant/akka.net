@@ -318,7 +318,7 @@ namespace Akka.Cluster
         {
             if (Log.IsInfoEnabled && _unreachable.Count > 0)
             {
-                Log.Info("A network partition detected - unreachable nodes: [{0}], remaining: [{1}]", string.Join(", ", _unreachable.Select(m => m.Address)), string.Join(", ", _reachable.Select(m => m.Address)));
+                Log.ANetworkPartitionDetected(_unreachable, _reachable);
             }
 
             var context = new NetworkPartitionContext(_unreachable, _reachable);
@@ -328,7 +328,7 @@ namespace Akka.Cluster
             {
                 if (Log.IsInfoEnabled)
                 {
-                    Log.Info("A network partition has been detected. {0} decided to down following nodes: [{1}]", _strategy, string.Join(", ", nodesToDown));
+                    Log.ANetworkPartitionHasBeenDetected(_strategy, nodesToDown);
                 }
 
                 foreach (var member in nodesToDown)

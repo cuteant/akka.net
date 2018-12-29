@@ -823,9 +823,9 @@ namespace Akka.Streams.Implementation.Fusing
 
             if (IsCopiedModuleWithGraphStageAndMaterializedValue(copy))
                 PushMaterializationSource((CopiedModule)copy);
-            else if (copy is GraphModule)
+            else if (copy is GraphModule graphModule)
             {
-                var mvids = ((GraphModule)copy).MaterializedValueIds;
+                var mvids = graphModule.MaterializedValueIds;
                 foreach (IModule mvid in mvids)
                 {
                     if (IsCopiedModuleWithGraphStageAndMaterializedValue(mvid))

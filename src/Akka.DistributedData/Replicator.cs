@@ -349,9 +349,11 @@ namespace Akka.DistributedData
             _log = Context.GetLogger();
             _maxDeltaSize = settings.MaxDeltaSize;
 
-            if (_cluster.IsTerminated) throw new ArgumentException("Cluster node must not be terminated");
+            if (_cluster.IsTerminated) ThrowHelper.ThrowArgumentException_ClusterNodeMustNotBeTerminated();
             if (!string.IsNullOrEmpty(_settings.Role) && !_cluster.SelfRoles.Contains(_settings.Role))
-                throw new ArgumentException($"The cluster node {_selfAddress} does not have the role {_settings.Role}");
+            {
+                ThrowHelper.ThrowArgumentException_TheClusterNodeDoesNotHaveTheRole(_selfAddress, _settings);
+            }
 
             _gossipTask = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(_settings.GossipInterval, _settings.GossipInterval, Self, GossipTick.Instance, Self);
             _notifyTask = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(_settings.NotifySubscribersInterval, _settings.NotifySubscribersInterval, Self, FlushChanges.Instance, Self);
@@ -423,9 +425,7 @@ namespace Akka.DistributedData
             var fromDurableStore = Equals(Sender, _durableStore) && !Equals(Sender, Context.System.DeadLetters);
             if ((e is LoadFailedException || e is ActorInitializationException) && fromDurableStore)
             {
-                _log.Error(e,
-                    "Stopping distributed-data Replicator due to load or startup failure in durable store, caused by: {0}",
-                    e.Message);
+                _log.StoppingDistributedDataReplicatorDueToLoadOrStartupFailureInDurableStore(e);
                 Context.Stop(Self);
                 return Directive.Stop;
             }
@@ -454,8 +454,7 @@ namespace Akka.DistributedData
             });
             Receive<LoadAllCompleted>(_ =>
             {
-                if (_log.IsDebugEnabled) _log.Debug("Loading {0} entries from durable store took {1} ms", count,
-                    (DateTime.UtcNow - startTime).TotalMilliseconds);
+                if (_log.IsDebugEnabled) _log.LoadingEntriesFromDurableStoreTookMs(count, startTime);
                 Become(NormalReceive);
                 Self.Tell(FlushChanges.Instance);
             });
@@ -519,7 +518,7 @@ namespace Akka.DistributedData
         {
             var localValue = GetData(key.Id);
 
-            if (_log.IsDebugEnabled) _log.Debug("Received get for key {0}, local value {1}, consistency: {2}", key.Id, localValue, consistency);
+            if (_log.IsDebugEnabled) _log.ReceivedGetForKey(key, localValue, consistency);
 
             if (IsLocalGet(consistency))
             {
@@ -570,7 +569,7 @@ namespace Akka.DistributedData
                 }
                 else if (localValue.Data is DeletedData)
                 {
-                    if (_log.IsDebugEnabled) _log.Debug("Received update for deleted key {0}", key);
+                    if (_log.IsDebugEnabled) _log.ReceivedUpdateForDeletedKey(key);
                     Sender.Tell(new DataDeleted(key, request));
                     return;
                 }
@@ -591,7 +590,7 @@ namespace Akka.DistributedData
 
                 // case Success((envelope, delta)) ⇒
 
-                if (_log.IsDebugEnabled) _log.Debug("Received Update for key {0}", key);
+                if (_log.IsDebugEnabled) _log.ReceivedUpdateForKey(key);
 
                 // handle the delta
                 if (delta != null)
@@ -653,7 +652,7 @@ namespace Akka.DistributedData
             }
             catch (Exception ex)
             {
-                if (_log.IsDebugEnabled) _log.Debug("Received update for key {0}, failed {1}", key, ex.Message);
+                if (_log.IsDebugEnabled) _log.ReceivedUpdateForKey(key, ex);
                 Sender.Tell(new ModifyFailure(key, "Update failed: " + ex.Message, ex, request));
             }
         }
@@ -713,7 +712,7 @@ namespace Akka.DistributedData
                 }
                 catch (ArgumentException e)
                 {
-                    _log.Warning("Couldn't merge [{0}] due to: {1}", key, e.Message);
+                    if (_log.IsWarningEnabled) _log.CouldnotMergeDueTo(key, e);
                     return null;
                 }
             }
@@ -928,15 +927,13 @@ namespace Akka.DistributedData
             try
             {
                 var isDebug = _log.IsDebugEnabled;
-                if (isDebug)
-                    _log.Debug("Received DeltaPropagation from [{0}], containing [{1}]", from.Address,
-                        string.Join(", ", deltas.Select(d => $"{d.Key}:{d.Value.FromSeqNr}->{d.Value.ToSeqNr}")));
+                if (isDebug) { _log.ReceivedDeltaPropagationFromContaining(from, deltas); }
 
                 if (IsNodeRemoved(from, deltas.Keys))
                 {
                     // Late message from a removed node.
                     // Drop it to avoid merging deltas that have been pruned on one side.
-                    if (isDebug) _log.Debug("Skipping DeltaPropagation from [{0}] because that node has been removed", from.Address);
+                    if (isDebug) _log.SkippingDeltaPropagationBecauseThatNodeHasBeenRemoved(from);
                 }
                 else
                 {
@@ -950,19 +947,17 @@ namespace Akka.DistributedData
                             var currentSeqNr = GetDeltaSequenceNr(key, from);
                             if (currentSeqNr >= delta.ToSeqNr)
                             {
-                                if (isDebug) _log.Debug("Skipping DeltaPropagation from [{0}] for [{1}] because toSeqNr [{2}] already handled [{3}]", from.Address, key, delta.FromSeqNr, currentSeqNr);
-                                if (reply)
-                                    Sender.Tell(WriteAck.Instance);
+                                if (isDebug) _log.SkippingDeltaPropagationBecauseToSeqNrAlreadyHandled(from, key, delta, currentSeqNr);
+                                if (reply) { Sender.Tell(WriteAck.Instance); }
                             }
                             else if (delta.FromSeqNr > currentSeqNr + 1)
                             {
-                                if (isDebug) _log.Debug("Skipping DeltaPropagation from [{0}] for [{1}] because missing deltas between [{2}-{3}]", from.Address, key, currentSeqNr + 1, delta.FromSeqNr - 1);
-                                if (reply)
-                                    Sender.Tell(DeltaNack.Instance);
+                                if (isDebug) _log.SkippingDeltaPropagationBecauseMissingDeltas(from, key, currentSeqNr, delta);
+                                if (reply) { Sender.Tell(DeltaNack.Instance); }
                             }
                             else
                             {
-                                if (isDebug) _log.Debug("Applying DeltaPropagation from [{0}] for [{1}] with sequence numbers [{2}-{3}], current was [{4}]", from.Address, key, delta.FromSeqNr, delta.ToSeqNr, currentSeqNr);
+                                if (isDebug) _log.ApplyingDeltaPropagationFromWithSequenceNumbers(from, key, delta, currentSeqNr);
                                 var newEnvelope = envelope.WithDeltaVersions(VersionVector.Create(from, delta.ToSeqNr));
                                 WriteAndStore(key, newEnvelope, reply);
                             }
@@ -979,7 +974,7 @@ namespace Akka.DistributedData
             {
                 // catching in case we need to support rolling upgrades that are
                 // mixing nodes with incompatible delta-CRDT types
-                _log.Warning("Couldn't process DeltaPropagation from [{0}] due to {1}", from, e);
+                if (_log.IsWarningEnabled) _log.CouldnotProcessDeltaPropagation(from, e);
             }
         }
 
@@ -1048,7 +1043,9 @@ namespace Akka.DistributedData
         private void ReceiveStatus(IImmutableDictionary<string, ByteString> otherDigests, int chunk, int totChunks)
         {
             if (_log.IsDebugEnabled)
-                _log.Debug("Received gossip status from [{0}], chunk {1}/{2} containing [{3}]", Sender.Path.Address, chunk + 1, totChunks, string.Join(", ", otherDigests.Keys));
+            {
+                _log.ReceivedGossipStatusFrom(Sender, chunk, totChunks, otherDigests);
+            }
 
             // if no data was send we do nothing
             if (otherDigests.Count == 0)
@@ -1074,8 +1071,7 @@ namespace Akka.DistributedData
 
             if (keys.Length != 0)
             {
-                if (_log.IsDebugEnabled)
-                    _log.Debug("Sending gossip to [{0}]: {1}", Sender.Path.Address, string.Join(", ", keys));
+                if (_log.IsDebugEnabled) { _log.SendingGossipTo(Sender, keys); }
 
                 var g = new Gossip(keys.Select(k => new KeyValuePair<string, DataEnvelope>(k, GetData(k))).ToImmutableDictionary(), !otherDifferentKeys.IsEmpty);
                 Sender.Tell(g);
@@ -1085,8 +1081,7 @@ namespace Akka.DistributedData
             if (!myMissingKeys.IsEmpty)
             {
                 var log = Context.System.Log;
-                if (log.IsDebugEnabled)
-                    log.Debug("Sending gossip status to {0}, requesting missing {1}", Sender.Path.Address, string.Join(", ", myMissingKeys));
+                if (log.IsDebugEnabled) { log.SendingGossipStatusTo(Sender, myMissingKeys); }
 
                 var status = new Internal.Status(myMissingKeys.Select(x => new KeyValuePair<string, ByteString>(x, NotFoundDigest)).ToImmutableDictionary(), chunk, totChunks);
                 Sender.Tell(status);
@@ -1095,8 +1090,7 @@ namespace Akka.DistributedData
 
         private void ReceiveGossip(IImmutableDictionary<string, DataEnvelope> updatedData, bool sendBack)
         {
-            if (_log.IsDebugEnabled)
-                _log.Debug("Received gossip from [{0}], containing [{1}]", Sender.Path.Address, string.Join(", ", updatedData.Keys));
+            if (_log.IsDebugEnabled) { _log.ReceivedGossipFrom(Sender, updatedData); }
 
             var replyData = ImmutableDictionary<string, DataEnvelope>.Empty.ToBuilder();
             foreach (var d in updatedData)
@@ -1155,7 +1149,7 @@ namespace Akka.DistributedData
         {
             if (Equals(terminated, _durableStore))
             {
-                _log.Error("Stopping distributed-data replicator because durable store terminated");
+                _log.StoppingDistributedDataReplicatorBecauseDurableStoreTerminated();
                 Context.Stop(Self);
             }
             else
@@ -1208,12 +1202,12 @@ namespace Akka.DistributedData
 
         private void ReceiveMemberRemoved(Member m)
         {
-            if (m.Address == _selfAddress) Context.Stop(Self);
+            if (m.Address == _selfAddress) { Context.Stop(Self); }
             else if (MatchingRole(m))
             {
                 _nodes = _nodes.Remove(m.Address);
                 _weaklyUpNodes = _weaklyUpNodes.Remove(m.Address);
-                if (_log.IsDebugEnabled) _log.Debug("Adding removed node [{0}] from MemberRemoved", m.UniqueAddress);
+                if (_log.IsDebugEnabled) _log.AddingRemovedNodeFromMemberRemoved(m);
                 _removedNodes = _removedNodes.SetItem(m.UniqueAddress, _allReachableClockTime);
                 _unreachable = _unreachable.Remove(m.Address);
                 _deltaPropagationSelector.CleanupRemovedNode(m.Address);
@@ -1275,7 +1269,7 @@ namespace Akka.DistributedData
             var removedNodesBuilder = _removedNodes.ToBuilder();
             foreach (var node in newRemovedNodes)
             {
-                if (debugEnabled) _log.Debug("Adding removed node [{0}] from data", node);
+                if (debugEnabled) _log.AddingRemovedNodeFromData(node);
                 removedNodesBuilder[node] = _allReachableClockTime;
             }
             _removedNodes = removedNodesBuilder.ToImmutable();
@@ -1308,14 +1302,14 @@ namespace Akka.DistributedData
                                     if (state is PruningInitialized initialized && initialized.Owner != _selfUniqueAddress)
                                     {
                                         var newEnvelope = envelope.InitRemovedNodePruning(removed, _selfUniqueAddress);
-                                        if (debugEnabled) _log.Debug("Initiating pruning of {0} with data {1}", removed, key);
+                                        if (debugEnabled) _log.InitiatingPruningOfWithData(removed, key);
                                         SetData(key, newEnvelope);
                                     }
                                 }
                                 else
                                 {
                                     var newEnvelope = envelope.InitRemovedNodePruning(removed, _selfUniqueAddress);
-                                    if (debugEnabled) _log.Debug("Initiating pruning of {0} with data {1}", removed, key);
+                                    if (debugEnabled) _log.InitiatingPruningOfWithData(removed, key);
                                     SetData(key, newEnvelope);
                                 }
                             }
@@ -1346,7 +1340,7 @@ namespace Akka.DistributedData
                             var removed = entry2.Key;
                             var isDurable = IsDurable(key);
                             var newEnvelope = envelope.Prune(removed, isDurable ? durablePrunningPerformed : prunningPerformed);
-                            if (debugEnabled) _log.Debug("Perform pruning of [{0}] from [{1}] to [{2}]", key, removed, _selfUniqueAddress);
+                            if (debugEnabled) _log.PerformPruningOfFromTo(key, removed, _selfUniqueAddress);
                             SetData(key, newEnvelope);
 
                             if (!ReferenceEquals(newEnvelope.Data, data) && isDurable)

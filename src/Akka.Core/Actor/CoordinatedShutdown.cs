@@ -330,7 +330,7 @@ namespace Akka.Actor
                     }
                     catch (Exception ex)
                     {
-                        Log.Error(ex, "Error occurred while executing CLR shutdown hook");
+                        Log.ErrorOccurredWhileExecutingCLRShutdownHook(ex);
                         return TaskEx.FromException<Done>(ex);
                     }
                 })).ContinueWith(continuationAction);
@@ -385,14 +385,12 @@ namespace Akka.Actor
                     Task<Done> phaseResult = null;
                     if (!_tasks.TryGetValue(phase, out var phaseTasks))
                     {
-                        if (debugEnabled)
-                            Log.Debug("Performing phase [{0}] with [0] tasks.", phase);
+                        if (debugEnabled) { Log.PerformingPhaseWithTasks(phase); }
                         phaseResult = TaskEx.Completed;
                     }
                     else
                     {
-                        if (debugEnabled)
-                            Log.Debug("Performing phase [{0}] with [{1}] tasks: [{2}]", phase, phaseTasks.Count, string.Join(",", phaseTasks.Select(x => x.Item1)));
+                        if (debugEnabled) { Log.PerformingPhaseWithTasks(phase, phaseTasks); }
 
                         // note that tasks within same phase are performed in parallel
                         var recoverEnabled = Phases[phase].Recover;
@@ -410,7 +408,7 @@ namespace Akka.Actor
                                         return r.ContinueWith(tr =>
                                         {
                                             if (tr.IsCanceled || tr.IsFaulted)
-                                                Log.Warning("Task [{0}] failed in phase [{1}]: {2}", taskName, phase, tr.Exception?.Flatten().Message);
+                                                Log.TaskFailedInPhase(taskName, phase, tr);
                                             return Done.Instance;
                                         });
                                     }
@@ -422,7 +420,7 @@ namespace Akka.Actor
                                     // in case task.Start() throws
                                     if (recoverEnabled)
                                     {
-                                        Log.Warning("Task [{0}] failed in phase [{1}]: {2}", taskName, phase, ex.Message);
+                                        Log.TaskFailedInPhase(taskName, phase, ex);
                                         return TaskEx.Completed;
                                     }
 
@@ -450,7 +448,7 @@ namespace Akka.Actor
 
                                 if (recoverEnabled)
                                 {
-                                    Log.Warning("Coordinated shutdown phase [{0}] timed out after {1}", phase, timeout);
+                                    if (Log.IsWarningEnabled) Log.CoordinatedShutdownPhaseTimedOutAfter(phase, timeout);
                                     return TaskEx.Completed;
                                 }
 
@@ -678,14 +676,15 @@ namespace Akka.Actor
                 {
                     if (!system.WhenTerminated.IsCompleted)
                     {
-                        if (coord.Log.IsInfoEnabled) coord.Log.Info("Starting coordinated shutdown from CLR termination hook.");
+                        var coordLog = coord.Log;
+                        if (coordLog.IsInfoEnabled) coordLog.StartingCoordinatedShutdownFromCLRTerminationHook();
                         try
                         {
                             coord.Run(ClrExitReason.Instance).Wait(coord.TotalTimeout);
                         }
                         catch (Exception ex)
                         {
-                            coord.Log.Warning("CoordinatedShutdown from CLR shutdown failed: {0}", ex.Message);
+                            if (coordLog.IsWarningEnabled) coordLog.CoordinatedShutdownFromCLRShutdownFailed(ex);
                         }
                     }
                     return Done.Instance;

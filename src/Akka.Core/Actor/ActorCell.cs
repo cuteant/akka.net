@@ -440,11 +440,7 @@ namespace Akka.Actor
                     }
                     catch (Exception e)
                     {
-                        if (_systemImpl.Log != null)
-                        {
-                            _systemImpl.Log.Error(e, "An error occurred while disposing {0} actor. Reason: {1}",
-                                actor.GetType(), e.Message);
-                        }
+                        _systemImpl.Log?.AnErrorOccurredWhileDisposingActor(actor, e);
                     }
                 }
 

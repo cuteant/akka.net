@@ -115,7 +115,7 @@ namespace Akka.Cluster.Sharding
                     }
                 case GetFailure failure when Equals(_coordinatorStateKey, failure.Key):
                     {
-                        Log.Error("The ShardCoordinator was unable to get an initial state within 'waiting-for-state-timeout': {0} (retrying)", _readConsistency.Timeout);
+                        Log.TheShardCoordinatorWasUnableToGetAnInitialState(_readConsistency);
                         GetCoordinatorState(); // repeat until GetSuccess
                         return true;
                     }
@@ -142,7 +142,7 @@ namespace Akka.Cluster.Sharding
                     }
                 case GetFailure failure when Equals(_allShardsKey, failure.Key):
                     {
-                        Log.Error("The ShardCoordinator was unable to get all shards state within 'waiting-for-state-timeout': {0} (retrying)", _readConsistency.Timeout);
+                        Log.TheShardCoordinatorWasUnableToGetAllShardsState(_readConsistency);
                         // repeat until GetSuccess
                         GetAllShards();
                         return true;
@@ -194,7 +194,7 @@ namespace Akka.Cluster.Sharding
                 switch (message)
                 {
                     case UpdateSuccess success when Equals(success.Key, _coordinatorStateKey) && Equals(success.Request, e):
-                        if (Log.IsDebugEnabled) Log.Debug("The coordinator state was successfully updated with {0}", e);
+                        if (Log.IsDebugEnabled) Log.TheCoordinatorStateWasSuccessfullyUpdatedWith(e);
                         var newRemainingKeys = remainingKeys.Remove(_coordinatorStateKey);
                         if (newRemainingKeys.IsEmpty)
                             UnbecomeAfterUpdate(e, afterUpdateCallback);
@@ -203,12 +203,12 @@ namespace Akka.Cluster.Sharding
                         return true;
 
                     case UpdateTimeout timeout when Equals(timeout.Key, _coordinatorStateKey) && Equals(timeout.Request, e):
-                        Log.Error("The ShardCoordinator was unable to update a distributed state within 'updating-state-timeout': {0} (retrying), event={1}", _writeConsistency.Timeout, e);
+                        Log.TheShardCoordinatorWasUnableToUpdateADistributedState(_writeConsistency, e);
                         SendCoordinatorStateUpdate(e);
                         return true;
 
                     case UpdateSuccess success when Equals(success.Key, _allShardsKey) && success.Request is string newShard:
-                        if (Log.IsDebugEnabled) Log.Debug("The coordinator shards state was successfully updated with {0}", newShard);
+                        if (Log.IsDebugEnabled) Log.TheCoordinatorShardsStateWasSuccessfullyUpdatedWith(newShard);
                         var newRemaining = remainingKeys.Remove(_allShardsKey);
                         if (newRemaining.IsEmpty)
                             UnbecomeAfterUpdate(e, afterUpdateCallback);
@@ -217,12 +217,12 @@ namespace Akka.Cluster.Sharding
                         return true;
 
                     case UpdateTimeout timeout when Equals(timeout.Key, _allShardsKey) && timeout.Request is string newShard:
-                        Log.Error("The ShardCoordinator was unable to update shards distributed state within 'updating-state-timeout': {0} (retrying), event={1}", _writeConsistency.Timeout, e);
+                        Log.TheShardCoordinatorWasUnableToUpdateShardsDistributedState(_writeConsistency, e);
                         SendShardsUpdate(newShard);
                         return true;
 
                     case ModifyFailure failure:
-                        Log.Error("The ShardCoordinator was unable to update a distributed state {0} with error {1} and event {2}.Coordinator will be restarted", failure.Key, failure.Cause, e);
+                        Log.TheShardCoordinatorWasUnableToUpdateADistributedState(failure, e);
                         ExceptionDispatchInfo.Capture(failure.Cause).Throw();
                         return true;
 
@@ -247,7 +247,7 @@ namespace Akka.Cluster.Sharding
         private void Activate()
         {
             Context.Become(this.Active);
-            if (Log.IsInfoEnabled) Log.Info("Sharding Coordinator was moved to the active state {0}", CurrentState);
+            if (Log.IsInfoEnabled) Log.ShardingCoordinatorWasMovedToTheActiveState(CurrentState);
         }
 
         private bool Active(object message)

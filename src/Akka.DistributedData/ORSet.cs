@@ -48,25 +48,25 @@ namespace Akka.DistributedData
         {
             if (dot.IsEmpty) return VersionVector.Empty;
 
-            if (dot is SingleVersionVector single)
+            switch (dot)
             {
-                // if dot is dominated by version vector, drop it
-                return vvector.VersionAt(single.Node) >= single.Version ? VersionVector.Empty : dot;
+                case SingleVersionVector single:
+                    // if dot is dominated by version vector, drop it
+                    return vvector.VersionAt(single.Node) >= single.Version ? VersionVector.Empty : dot;
+
+                case MultiVersionVector multi:
+                    var acc = ImmutableDictionary<UniqueAddress, long>.Empty.ToBuilder();
+                    foreach (var pair in multi.Versions)
+                    {
+                        var v2 = vvector.VersionAt(pair.Key);
+                        if (v2 < pair.Value) acc.Add(pair);
+                    }
+
+                    return VersionVector.Create(acc.ToImmutable());
+
+                default:
+                    return ThrowHelper.ThrowNotSupportedException_CannotSubtractDotsFromProvidedVersionVector();
             }
-
-            if (dot is MultiVersionVector multi)
-            {
-                var acc = ImmutableDictionary<UniqueAddress, long>.Empty.ToBuilder();
-                foreach (var pair in multi.Versions)
-                {
-                    var v2 = vvector.VersionAt(pair.Key);
-                    if (v2 < pair.Value) acc.Add(pair);
-                }
-
-                return VersionVector.Create(acc.ToImmutable());
-            }
-
-            throw new NotSupportedException("Cannot subtract dots from provided version vector");
         }
     }
 
@@ -193,7 +193,7 @@ namespace Akka.DistributedData
                     }
                     break;
             }
-            throw new NotSupportedException();
+            return ThrowHelper.ThrowNotSupportedException<T>();
         });
 
         public ORSet() : this(ImmutableDictionary<T, VersionVector>.Empty, VersionVector.Empty, null)
@@ -474,7 +474,7 @@ namespace Akka.DistributedData
                         return new DeltaGroup(vector.Add(this));
                         
                     default:
-                        throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
+                        return ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other);
                 }
             }
 
@@ -495,7 +495,9 @@ namespace Akka.DistributedData
             public RemoveDeltaOperation(ORSet<T> underlying)
             {
                 if (underlying.Count != 1)
-                    throw new ArgumentException($"RemoveDeltaOperation should contain one removed element, but was {underlying}");
+                {
+                    ThrowHelper.ThrowArgumentException_RemoveDeltaOperationShouldContainOneRemovedElement(underlying);
+                }
 
                 Underlying = underlying;
             }
@@ -513,7 +515,7 @@ namespace Akka.DistributedData
                         return new DeltaGroup(vector.Add(this));
                         
                     default:
-                        throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
+                        return ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other);
                 }
             }
         }
@@ -538,7 +540,7 @@ namespace Akka.DistributedData
                         return new DeltaGroup(vector.Add(this));
 
                     default:
-                        throw new ArgumentException($"Unknown delta operation of type {other.GetType()}", nameof(other));
+                        return ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other);
                 }
             }
         }
@@ -614,7 +616,7 @@ namespace Akka.DistributedData
 
         public ORSet<T> MergeDelta(IDeltaOperation delta)
         {
-            if (delta == null) throw new ArgumentNullException();
+            if (delta == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.delta);
             switch (delta)
             {
                 case AddDeltaOperation op: return DryMerge(op.Underlying, addDeltaOp: true);
@@ -629,11 +631,11 @@ namespace Akka.DistributedData
                             case AddDeltaOperation op: acc = acc.DryMerge(op.Underlying, addDeltaOp: true); break;
                             case RemoveDeltaOperation op: acc = acc.MergeRemoveDelta(op); break;
                             case FullStateDeltaOperation op: acc = acc.DryMerge(op.Underlying, addDeltaOp: false); break;
-                            default: throw new ArgumentException($"GroupDelta should not be nested");
+                            default: ThrowHelper.ThrowArgumentException_GroupDeltaShouldNotBeNested(); break;
                         }
                     }
                     return acc;
-                default: throw new ArgumentException($"Cannot merge delta of type {delta.GetType()}", nameof(delta));
+                default: return ThrowHelper.ThrowArgumentException_CannotMergeDeltaOfType<T>(delta);
             }
         }
 

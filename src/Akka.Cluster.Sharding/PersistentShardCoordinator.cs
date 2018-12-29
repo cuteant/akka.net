@@ -120,20 +120,20 @@ namespace Akka.Cluster.Sharding
                 {
                     case ShardRegionRegistered message:
                         if (Regions.ContainsKey(message.Region))
-                            throw new ArgumentException($"Region {message.Region} is already registered", nameof(e));
+                            ThrowHelper.ThrowArgumentException_RegionIsAlreadyRegistered(message);
 
                         return Copy(regions: Regions.SetItem(message.Region, ImmutableList<ShardId>.Empty));
 
                     case ShardRegionProxyRegistered message:
                         if (RegionProxies.Contains(message.RegionProxy))
-                            throw new ArgumentException($"Region proxy {message.RegionProxy} is already registered", nameof(e));
+                            ThrowHelper.ThrowArgumentException_RegionProxyIsAlreadyRegistered(message);
 
                         return Copy(regionProxies: RegionProxies.Add(message.RegionProxy));
 
                     case ShardRegionTerminated message:
                         {
                             if (!Regions.TryGetValue(message.Region, out var shardRegions))
-                                throw new ArgumentException($"Terminated region {message.Region} not registered", nameof(e));
+                                ThrowHelper.ThrowArgumentException_TerminatedRegionNotRegistered(message);
 
                             var newUnallocatedShards = RememberEntities ? UnallocatedShards.Union(shardRegions) : UnallocatedShards;
                             return Copy(
@@ -144,16 +144,16 @@ namespace Akka.Cluster.Sharding
 
                     case ShardRegionProxyTerminated message:
                         if (!RegionProxies.Contains(message.RegionProxy))
-                            throw new ArgumentException($"Terminated region proxy {message.RegionProxy} not registered", nameof(e));
+                            ThrowHelper.ThrowArgumentException_TerminatedRegionProxyNotRegistered(message);
 
                         return Copy(regionProxies: RegionProxies.Remove(message.RegionProxy));
 
                     case ShardHomeAllocated message:
                         {
                             if (!Regions.TryGetValue(message.Region, out var shardRegions))
-                                throw new ArgumentException($"Region {message.Region} not registered", nameof(e));
+                                ThrowHelper.ThrowArgumentException_RegionNotRegistered(message);
                             if (Shards.ContainsKey(message.Shard))
-                                throw new ArgumentException($"Shard {message.Shard} is already allocated", nameof(e));
+                                ThrowHelper.ThrowArgumentException_ShardIsAlreadyAllocated(message);
 
                             var newUnallocatedShards = RememberEntities ? UnallocatedShards.Remove(message.Shard) : UnallocatedShards;
                             return Copy(
@@ -164,9 +164,9 @@ namespace Akka.Cluster.Sharding
                     case ShardHomeDeallocated message:
                         {
                             if (!Shards.TryGetValue(message.Shard, out var region))
-                                throw new ArgumentException($"Shard {message.Shard} not allocated", nameof(e));
+                                ThrowHelper.ThrowArgumentException_ShardNotAllocated(message);
                             if (!Regions.TryGetValue(region, out var shardRegions))
-                                throw new ArgumentException($"Region {region} for shard {message.Shard} not registered", nameof(e));
+                                ThrowHelper.ThrowArgumentException_RegionForShardNotRegistered(region, message);
 
                             var newUnallocatedShards = RememberEntities ? UnallocatedShards.Add(message.Shard) : UnallocatedShards;
                             return Copy(
@@ -1233,7 +1233,7 @@ namespace Akka.Cluster.Sharding
         }
 
         #endregion
-        
+
         /// <summary>
         /// Factory method for the <see cref="Actor.Props"/> of the <see cref="PersistentShardCoordinator"/> actor.
         /// </summary>
@@ -1241,7 +1241,7 @@ namespace Akka.Cluster.Sharding
         /// <param name="settings">TBD</param>
         /// <param name="allocationStrategy">TBD</param>
         /// <returns>TBD</returns>
-        internal static Props Props(string typeName, ClusterShardingSettings settings, IShardAllocationStrategy allocationStrategy) => 
+        internal static Props Props(string typeName, ClusterShardingSettings settings, IShardAllocationStrategy allocationStrategy) =>
             Actor.Props.Create(() => new PersistentShardCoordinator(typeName, settings, allocationStrategy)).WithDeploy(Deploy.Local);
 
         public Cluster Cluster { get; } = Cluster.Get(Context.System);
@@ -1326,7 +1326,7 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case IDomainEvent evt:
-                    if (Log.IsDebugEnabled) Log.Debug("ReceiveRecover {0}", evt);
+                    if (Log.IsDebugEnabled) Log.ReceiveRecover(evt);
 
                     switch (evt)
                     {
@@ -1343,7 +1343,7 @@ namespace Akka.Cluster.Sharding
                             }
                             else
                             {
-                                if (Log.IsDebugEnabled) Log.Debug("ShardRegionTerminated but region {0} was not registered", regionTerminated.Region);
+                                if (Log.IsDebugEnabled) Log.ShardRegionTerminatedButRegionWasNotRegistered(regionTerminated);
                             }
 
                             return true;
@@ -1360,7 +1360,7 @@ namespace Akka.Cluster.Sharding
                     }
                     return false;
                 case SnapshotOffer offer when offer.Snapshot is State state:
-                    if (Log.IsDebugEnabled) Log.Debug("ReceiveRecover SnapshotOffer {0}", state);
+                    if (Log.IsDebugEnabled) Log.ReceiveRecoverSnapshotOffer(state);
                     CurrentState = state.WithRememberEntities(Settings.RememberEntities);
                     // Old versions of the state object may not have unallocatedShard set,
                     // thus it will be null.
@@ -1417,7 +1417,7 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case SaveSnapshotSuccess m:
-                    if (Log.IsDebugEnabled) Log.Debug("Persistent snapshot saved successfully");
+                    if (Log.IsDebugEnabled) Log.PersistentSnapshotSavedSuccessfully();
                     /*
                      * delete old events but keep the latest around because
                      *
@@ -1435,20 +1435,20 @@ namespace Akka.Cluster.Sharding
                     break;
 
                 case SaveSnapshotFailure m:
-                    Log.Warning("Persistent snapshot failure: {0}", m.Cause.Message);
+                    if (Log.IsWarningEnabled) Log.PersistentSnapshotFailure(m);
                     break;
                 case DeleteMessagesSuccess m:
-                    if (Log.IsDebugEnabled) Log.Debug("Persistent messages to {0} deleted successfully", m.ToSequenceNr);
+                    if (Log.IsDebugEnabled) Log.PersistentMessagesToDeletedSuccessfully(m);
                     DeleteSnapshots(new SnapshotSelectionCriteria(m.ToSequenceNr - 1));
                     break;
                 case DeleteMessagesFailure m:
-                    Log.Warning("Persistent messages to {0} deletion failure: {1}", m.ToSequenceNr, m.Cause.Message);
+                    if (Log.IsWarningEnabled) Log.PersistentMessagesToDeletionFailure(m);
                     break;
                 case DeleteSnapshotsSuccess m:
-                    if (Log.IsDebugEnabled) Log.Debug("Persistent snapshots matching {0} deleted successfully", m.Criteria);
+                    if (Log.IsDebugEnabled) Log.PersistentSnapshotsMatchingDeletedSuccessfully(m);
                     break;
                 case DeleteSnapshotsFailure m:
-                    Log.Warning("Persistent snapshots matching {0} deletion failure: {1}", m.Criteria, m.Cause.Message);
+                    if (Log.IsWarningEnabled) Log.PersistentSnapshotsMatchingDeletionFailure(m);
                     break;
                 default:
                     return false;
@@ -1476,7 +1476,7 @@ namespace Akka.Cluster.Sharding
         {
             if (LastSequenceNr % Settings.TunningParameters.SnapshotAfter == 0 && LastSequenceNr != 0)
             {
-                if (Log.IsDebugEnabled) Log.Debug("Saving snapshot, sequence number [{0}]", SnapshotSequenceNr);
+                if (Log.IsDebugEnabled) Log.SavingSnapshotSequenceNumber(SnapshotSequenceNr);
                 SaveSnapshot(CurrentState);
             }
         }

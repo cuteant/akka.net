@@ -53,7 +53,7 @@ namespace Akka.Actor
             if (IsWalking)
             {
                 if (message == null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
-                _log.Error("{0} received unexpected message [{1}]", _path, message);
+                _log.ActorReceivedUnexpectedMessage(_path, message);
             }
         }
 
@@ -68,7 +68,7 @@ namespace Akka.Actor
                 case Failed failed:
                     var cause = failed.Cause;
                     var child = failed.Child;
-                    _log.Error(cause, "guardian {0} failed, shutting down!", child);
+                    _log.GuardianFailedShuttingDown(cause, child);
                     CauseOfTermination = cause;
                     ((IInternalActorRef)child).Stop();
                     return;
@@ -85,7 +85,7 @@ namespace Akka.Actor
                     break;
             }
 
-            _log.Error("{0} received unexpected system message [{1}]", _path, systemMessage);
+            _log.ActorReceivedUnexpectedSystemMessage(_path, systemMessage);
         }
 
         /// <summary>

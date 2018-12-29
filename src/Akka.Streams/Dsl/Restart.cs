@@ -327,21 +327,19 @@ namespace Akka.Streams.Dsl
                 onPush: () => Push(Out, sinkIn.Grab()),
                 onUpstreamFinish: () =>
                 {
-                    if (_finishing)
-                        Complete(Out);
+                    if (_finishing) { Complete(Out); }
                     else
                     {
-                        if (Log.IsDebugEnabled) Log.Debug("Graph out finished");
+                        if (Log.IsDebugEnabled) { Log.GraphOutFinished(); }
                         OnCompleteOrFailure();
                     }
                 },
                 onUpstreamFailure: ex =>
                 {
-                    if (_finishing)
-                        Fail(Out, ex);
+                    if (_finishing) { Fail(Out, ex); }
                     else
                     {
-                        Log.Error(ex, "Restarting graph due to failure");
+                        Log.RestartingGraphDueToFailure(ex);
                         OnCompleteOrFailure();
                     }
                 }));
@@ -363,21 +361,18 @@ namespace Akka.Streams.Dsl
             sourceOut.SetHandler(new LambdaOutHandler(
                 onPull: () =>
                 {
-                    if (IsAvailable(In))
-                        sourceOut.Push(Grab(In));
+                    if (IsAvailable(In)) { sourceOut.Push(Grab(In)); }
                     else
                     {
-                        if (!HasBeenPulled(In))
-                            Pull(In);
+                        if (!HasBeenPulled(In)) { Pull(In); }
                     }
                 },
                 onDownstreamFinish: () =>
                 {
-                    if (_finishing)
-                        Cancel(In);
+                    if (_finishing) { Cancel(In); }
                     else
                     {
-                        if (Log.IsDebugEnabled) Log.Debug("Graph in finished");
+                        if (Log.IsDebugEnabled) { Log.GraphInFinished(); }
                         OnCompleteOrFailure();
                     }
                 }
@@ -386,8 +381,7 @@ namespace Akka.Streams.Dsl
             SetHandler(In,
                 onPush: () =>
                 {
-                    if (sourceOut.IsAvailable)
-                        sourceOut.Push(Grab(In));
+                    if (sourceOut.IsAvailable) { sourceOut.Push(Grab(In)); }
                 },
                 onUpstreamFinish: () =>
                 {
@@ -408,12 +402,12 @@ namespace Akka.Streams.Dsl
             // Check if the last start attempt was more than the minimum backoff
             if (_resetDeadline.IsOverdue)
             {
-                if (Log.IsDebugEnabled) Log.Debug($"Last restart attempt was more than {_minBackoff} ago, resetting restart count");
+                if (Log.IsDebugEnabled) Log.LastRestartAttemptWasMoreThan(_minBackoff);
                 _restartCount = 0;
             }
 
             var restartDelay = BackoffSupervisor.CalculateDelay(_restartCount, _minBackoff, _maxBackoff, _randomFactor);
-            if (Log.IsDebugEnabled) Log.Debug($"Restarting graph in {restartDelay}");
+            if (Log.IsDebugEnabled) Log.RestartingGraphIn(restartDelay);
             ScheduleOnce("RestartTimer", restartDelay);
             _restartCount += 1;
             // And while we wait, we go into backoff mode

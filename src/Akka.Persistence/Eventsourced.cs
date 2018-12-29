@@ -521,9 +521,7 @@ namespace Akka.Persistence
         /// <param name="sequenceNr">TBD</param>
         protected virtual void OnPersistRejected(Exception cause, object @event, long sequenceNr)
         {
-            if (Log.IsWarningEnabled)
-                Log.Warning("Rejected to persist event type [{0}] with sequence number [{1}] for persistenceId [{2}] due to [{3}].",
-                    @event.GetType(), sequenceNr, PersistenceId, cause.Message);
+            if (Log.IsWarningEnabled) { Log.RejectedToPersistEventTypeWithSequenceNumberForPersistenceId(cause, @event, sequenceNr, PersistenceId); }
         }
 
         /// <summary>

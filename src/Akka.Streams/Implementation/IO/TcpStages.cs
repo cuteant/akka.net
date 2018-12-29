@@ -439,9 +439,11 @@ namespace Akka.Streams.Implementation.IO
                     {
                         if (_connection != null)
                         {
-                            if (Interpreter.Log.IsDebugEnabled)
-                                Interpreter.Log.Debug(
-                                    $"Aborting tcp connection to {_remoteAddress} because of upstream failure: {ex.Message}\n{ex.StackTrace}");
+                            var interpreterLog = Interpreter.Log;
+                            if (interpreterLog.IsDebugEnabled)
+                            {
+                                interpreterLog.AbortingTcpConnectionToBecauseOfUpstreamFailure(_remoteAddress, ex);
+                            }
                             _connection.Tell(Tcp.Abort.Instance, StageActorRef);
                         }
                         else

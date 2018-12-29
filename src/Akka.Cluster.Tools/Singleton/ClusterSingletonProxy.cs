@@ -115,7 +115,7 @@ namespace Akka.Cluster.Tools.Singleton
                     {
                         // if the new singleton is defined, deliver all buffered messages
                         var subject = identity.Subject;
-                        if (Log.IsInfoEnabled) Log.Info("Singleton identified at [{0}]", subject.Path);
+                        if (Log.IsInfoEnabled) Log.SingletonIdentifiedAt(subject);
                         _singleton = subject;
                         Context.Watch(subject);
                         CancelTimer();
@@ -128,7 +128,7 @@ namespace Akka.Cluster.Tools.Singleton
                      if (oldest != null && _identityTimer != null)
                      {
                          var singletonAddress = new RootActorPath(oldest.Address) / _singletonPath;
-                         if (_log.IsDebugEnabled) Log.Debug("Trying to identify singleton at [{0}]", singletonAddress);
+                         if (_log.IsDebugEnabled) Log.TryingToIdentifySingletonAt(singletonAddress);
                          Context.ActorSelection(singletonAddress).Tell(new Identify(_identityId));
                      }
                  });
@@ -144,8 +144,7 @@ namespace Akka.Cluster.Tools.Singleton
                 {
                     if (_singleton != null)
                     {
-                        if (Log.IsDebugEnabled)
-                            Log.Debug("Forwarding message of type [{0}] to current singleton instance at [{1}]", msg.GetType(), _singleton.Path);
+                        if (Log.IsDebugEnabled) { Log.ForwardingMessageOfTypeToCurrentSingletonInstanceAt(msg, _singleton); }
                         _singleton.Forward(msg);
                     }
                     else
@@ -200,7 +199,7 @@ namespace Akka.Cluster.Tools.Singleton
         // Discard old singleton ActorRef and send a periodic message to self to identify the singleton.
         private void IdentifySingleton()
         {
-            if (Log.IsDebugEnabled) Log.Debug("Creating singleton identification timer...");
+            if (Log.IsDebugEnabled) Log.CreatingSingletonIdentificationTimer();
             _identityCounter++;
             _identityId = CreateIdentifyId(_identityCounter);
             _singleton = null;
@@ -248,24 +247,24 @@ namespace Akka.Cluster.Tools.Singleton
         {
             if (_settings.BufferSize == 0)
             {
-                if (Log.IsDebugEnabled) Log.Debug("Singleton not available and buffering is disabled, dropping message [{0}]", message.GetType());
+                if (Log.IsDebugEnabled) Log.SingletonNotAvailableAndBufferingIsDisabled(message);
             }
             else if (_buffer.Count == _settings.BufferSize)
             {
                 var first = _buffer.Dequeue();
-                if (Log.IsDebugEnabled) Log.Debug("Singleton not available, buffer is full, dropping first message [{0}]", first.Key.GetType());
+                if (Log.IsDebugEnabled) Log.SingletonNotAvailableBufferIsFull(first.Key);
                 _buffer.Enqueue(new KeyValuePair<object, IActorRef>(message, Sender));
             }
             else
             {
-                if (Log.IsDebugEnabled) Log.Debug("Singleton not available, buffering message type [{0}]", message.GetType());
+                if (Log.IsDebugEnabled) Log.SingletonNotAvailableBufferingMessageType(message);
                 _buffer.Enqueue(new KeyValuePair<object, IActorRef>(message, Sender));
             }
         }
 
         private void SendBuffered()
         {
-            if (Log.IsDebugEnabled) Log.Debug("Sending buffered messages to current singleton instance");
+            if (Log.IsDebugEnabled) Log.SendingBufferedMessagesToCurrentSingletonInstance();
             while (_buffer.Count != 0)
             {
                 var pair = _buffer.Dequeue();

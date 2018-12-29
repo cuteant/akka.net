@@ -318,7 +318,7 @@ namespace Akka.Cluster.Tools.Client
                 if (!string.IsNullOrEmpty(node.Host) && node.Port.HasValue)
                     return MurmurHash.StringHash(node.Host + ":" + node.Port.Value);
                 else
-                    throw new IllegalStateException("Unexpected address without host/port: " + node);
+                    return ThrowHelper.ThrowIllegalStateException_UnexpectedAddressWithoutHostPort(node);
             }
 
             /// <inheritdoc/>
@@ -361,7 +361,7 @@ namespace Akka.Cluster.Tools.Client
 
             if (!(_settings.Role == null || _cluster.SelfRoles.Contains(_settings.Role)))
             {
-                throw new ArgumentException($"This cluster member [{_cluster.SelfAddress}] does not have a role [{_settings.Role}]");
+                ThrowHelper.ThrowArgumentException_ThisCusterMemberDoesNotHaveARole(_cluster, _settings);
             }
 
             _nodes = ImmutableSortedSet<Address>.Empty.WithComparer(RingOrdering.Instance);
@@ -388,7 +388,7 @@ namespace Akka.Cluster.Tools.Client
             base.PreStart();
             if (_cluster.IsTerminated)
             {
-                throw new IllegalStateException("Cluster node must not be terminated");
+                ThrowHelper.ThrowIllegalStateException_ClusterNodeMustNotBeTerminated();
             }
             _cluster.Subscribe(Self, typeof(ClusterEvent.IMemberEvent));
         }
@@ -438,7 +438,7 @@ namespace Akka.Cluster.Tools.Client
                 case Heartbeat _:
                     if (_cluster.Settings.VerboseHeartbeatLogging)
                     {
-                        _log.Debug("Heartbeat from client [{0}]", Sender.Path);
+                        _log.HeartbeatFromClient(Sender);
                     }
                     Sender.Tell(HeartbeatRsp.Instance);
                     UpdateClientInteractions(Sender);
@@ -451,8 +451,7 @@ namespace Akka.Cluster.Tools.Client
                     if (_settings.NumberOfContacts >= _nodes.Count)
                     {
                         var contacts = new Contacts(_nodes.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());
-                        if (_log.IsDebugEnabled)
-                            _log.Debug("Client [{0}] gets contactPoints [{1}] (all nodes)", Sender.Path, string.Join(", ", contacts));
+                        if (_log.IsDebugEnabled) { _log.ClientGetsContactPointsAllNodes(Sender, contacts); }
 
                         Sender.Tell(contacts);
                     }
@@ -468,8 +467,7 @@ namespace Akka.Cluster.Tools.Client
                             : first.Union(_nodes.Take(_settings.NumberOfContacts - first.Length)).ToArray();
                         var contacts = new Contacts(slice.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());
 
-                        if (_log.IsDebugEnabled)
-                            _log.Debug("Client [{0}] gets ContactPoints [{1}]", Sender.Path, string.Join(", ", contacts.ContactPoints));
+                        if (_log.IsDebugEnabled) { _log.ClientGetsContactPoints(Sender, contacts); }
 
                         Sender.Tell(contacts);
                         UpdateClientInteractions(Sender);
@@ -548,7 +546,7 @@ namespace Akka.Cluster.Tools.Client
                 failureDetector = new DeadlineFailureDetector(_settings.AcceptableHeartbeatPause, _settings.HeartbeatInterval);
                 failureDetector.HeartBeat();
                 _clientInteractions = _clientInteractions.Add(client, failureDetector);
-                if (_log.IsDebugEnabled) _log.Debug($"Received new contact from [{client.Path}]");
+                if (_log.IsDebugEnabled) _log.ReceivedNewContactFrom(client);
                 var clusterClientUp = new ClusterClientUp(client);
                 _subscribers.ForEach(s => s.Tell(clusterClientUp));
                 _clientsPublished = _clientInteractions.Keys.ToImmutableHashSet();
@@ -562,7 +560,7 @@ namespace Akka.Cluster.Tools.Client
             {
                 if (!publishableClients.Contains(c))
                 {
-                    if (_log.IsDebugEnabled) _log.Debug($"Lost contact with [{c.Path}]");
+                    if (_log.IsDebugEnabled) _log.LostContactWith(c);
                     var clusterClientUnreachable = new ClusterClientUnreachable(c);
                     _subscribers.ForEach(s => s.Tell(clusterClientUnreachable));
                 }
@@ -605,7 +603,7 @@ namespace Akka.Cluster.Tools.Client
                     break;
 
                 case ReceiveTimeout _:
-                    if (_log.IsDebugEnabled) _log.Debug("ClientResponseTunnel for client [{0}] stopped due to inactivity", _client.Path);
+                    if (_log.IsDebugEnabled) _log.ClientResponseTunnelForClientStoppedDueToInactivity(_client);
                     Context.Stop(Self);
                     break;
 

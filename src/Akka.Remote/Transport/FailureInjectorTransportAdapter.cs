@@ -211,7 +211,7 @@ namespace Akka.Remote.Transport
         /// <returns>TBD</returns>
         protected override Task<IAssociationEventListener> InterceptListen(Address listenAddress, Task<IAssociationEventListener> listenerTask)
         {
-            _log.Warning("FailureInjectorTransport is active on this system. Gremlins might munch your packets.");
+            if (_log.IsWarningEnabled) _log.FailureInjectorTransportIsActiveOnThisSystem();
             listenerTask.ContinueWith(tr =>
             {
                 // Side effecting: As this class is not an actor, the only way to safely modify state
@@ -290,7 +290,7 @@ namespace Akka.Remote.Transport
                     {
                         if (_shouldDebugLog)
                         {
-                            _log.Debug("Dropping inbound [{0}] for [{1}] {2}", instance.GetType(), remoteAddress, debugMessage);
+                            _log.DroppingInbound(instance, remoteAddress, debugMessage);
                         }
 
                         return true;
@@ -320,7 +320,7 @@ namespace Akka.Remote.Transport
                     {
                         if (_shouldDebugLog)
                         {
-                            _log.Debug("Dropping outbound [{0}] for [{1}] {2}", instance.GetType(), remoteAddress, debugMessage);
+                            _log.DroppingOutbound(instance, remoteAddress, debugMessage);
                         }
                         return true;
                     }

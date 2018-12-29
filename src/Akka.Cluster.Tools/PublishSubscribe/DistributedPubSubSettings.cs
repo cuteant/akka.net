@@ -27,7 +27,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         {
             system.Settings.InjectTopLevelFallback(DistributedPubSub.DefaultConfig());
             var config = system.Settings.Config.GetConfig("akka.cluster.pub-sub");
-            if (config == null) throw new ArgumentException("Actor system settings has no configuration for akka.cluster.pub-sub defined");
+            if (config == null) ThrowHelper.ThrowArgumentException_ActorSystemSettingsHasNoConfigurationForPubSubDefined();
 
             return Create(config);
         }
@@ -54,10 +54,11 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                     routingLogic = new BroadcastRoutingLogic();
                     break;
                 case "consistent-hashing":
-                    throw new ArgumentException("Consistent hashing routing logic cannot be used by the pub-sub mediator");
+                    ThrowHelper.ThrowArgumentException_ConsistentHashingRoutingLogicCannotBeUsedByThePubSubMediator();
+                    break;
                 default:
-                    throw new ArgumentException("Unknown routing logic is tried to be applied to the pub-sub mediator: " +
-                                                routingLogicName);
+                    ThrowHelper.ThrowArgumentException_UnknownRoutingLogicIsTriedToBeAppliedToThePubSubMediator(routingLogicName);
+                    break;
             }
 
             return new DistributedPubSubSettings(
@@ -107,7 +108,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         {
             if (routingLogic is ConsistentHashingRoutingLogic)
             {
-                throw new ArgumentException("ConsistentHashingRoutingLogic cannot be used by the pub-sub mediator");
+                ThrowHelper.ThrowArgumentException_ConsistentHashingRoutingLogicCannotBeUsedByThePubsubMediator();
             }
 
             Role = !string.IsNullOrEmpty(role) ? role : null;

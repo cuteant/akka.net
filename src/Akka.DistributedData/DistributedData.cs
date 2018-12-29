@@ -61,7 +61,8 @@ namespace Akka.DistributedData
             _system = system;
             if (IsTerminated)
             {
-                system.Log.Warning("Replicator points to dead letters: Make sure the cluster node is not terminated and has the proper role!");
+                var systemLog = system.Log;
+                if (systemLog.IsWarningEnabled) { systemLog.ReplicatorPointsToDeadLetters(); }
                 Replicator = system.DeadLetters;
             }
             else
@@ -94,7 +95,7 @@ namespace Akka.DistributedData
                 case Status.Failure failure:
                     ExceptionDispatchInfo.Capture(failure.Cause).Throw();
                     return null;
-                default: throw new NotSupportedException("Unknown response type: " + response);
+                default: ThrowHelper.ThrowNotSupportedException_UnknownResponseType(response); return null;
             }
         }
 
@@ -112,7 +113,7 @@ namespace Akka.DistributedData
         /// <param name="consistency">A read consistency requested for this write.</param>
         /// <param name="cancellation">Cancellation token used to cancel request prematurelly if needed.</param>
         /// <returns>A task which may return a replicated data value or throw an exception.</returns>
-        public async Task<T> GetAsync<T>(IKey<T> key, IReadConsistency consistency = null, CancellationToken cancellation = default) 
+        public async Task<T> GetAsync<T>(IKey<T> key, IReadConsistency consistency = null, CancellationToken cancellation = default)
             where T : class, IReplicatedData<T>
         {
             var id = Guid.NewGuid();
@@ -120,16 +121,19 @@ namespace Akka.DistributedData
             switch (response)
             {
                 case GetSuccess success:
-                    if (Equals(id, success.Request))
-                        return success.Get(key);
-                    else throw new NotSupportedException($"Received response id [{success.Request}] and request correlation id [{id}] are different.");
+                    if (Equals(id, success.Request)) { return success.Get(key); }
+                    else
+                    {
+                        ThrowHelper.ThrowNotSupportedException_ReceivedResponseIdAndRequestCorrelationIdAreDifferent(success, id);
+                        return null;
+                    }
                 case NotFound _: return null;
-                case DataDeleted _: throw new DataDeletedException($"Cannot retrieve data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
-                case GetFailure _: throw new TimeoutException($"Couldn't retrieve the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
+                case DataDeleted _: ThrowHelper.ThrowDataDeletedException_CannotRetrieveDataUnderK1ey(key); return null;
+                case GetFailure _: ThrowHelper.ThrowTimeoutException_CouldnotRetrieveTheDataUnderKey(key, consistency); return null;
                 case Status.Failure failure:
                     ExceptionDispatchInfo.Capture(failure.Cause).Throw();
                     return default;
-                default: throw new NotSupportedException("Unknown response type: " + response);
+                default: ThrowHelper.ThrowNotSupportedException_UnknownResponseType(response); return null;
             }
         }
 
@@ -150,7 +154,7 @@ namespace Akka.DistributedData
         /// <param name="consistency">A write consistency requested for this write.</param>
         /// <param name="cancellation">Cancellation token used to cancel request prematurelly if needed.</param>
         /// <returns>A task which may complete successfully if update was confirmed within provided consistency or throw an exception.</returns>
-        public async Task UpdateAsync<T>(IKey<T> key, T replica, IWriteConsistency consistency = null, CancellationToken cancellation = default) 
+        public async Task UpdateAsync<T>(IKey<T> key, T replica, IWriteConsistency consistency = null, CancellationToken cancellation = default)
             where T : IReplicatedData<T>
         {
             var id = Guid.NewGuid();
@@ -158,15 +162,18 @@ namespace Akka.DistributedData
             switch (response)
             {
                 case UpdateSuccess success:
-                    if (Equals(id, success.Request))
+                    if (Equals(id, success.Request)) { return; }
+                    else
+                    {
+                        ThrowHelper.ThrowNotSupportedException_ReceivedResponseIdAndRequestCorrelationIdAreDifferent(success, id);
                         return;
-                    else throw new NotSupportedException($"Received response id [{success.Request}] and request correlation id [{id}] are different.");
-                case DataDeleted _: throw new DataDeletedException($"Cannot store data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
+                    }
+                case DataDeleted _: ThrowHelper.ThrowDataDeletedException_CannotStoreDataUnderKey(key); return;
                 case ModifyFailure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
                 case StoreFailure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
-                case UpdateTimeout _: throw new TimeoutException($"Couldn't confirm update of the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
+                case UpdateTimeout _: ThrowHelper.ThrowTimeoutException_CouldnotConfirmUpdateOfTheDataUnderKey(key, consistency); return;
                 case Status.Failure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
-                default: throw new NotSupportedException("Unknown response type: " + response);
+                default: ThrowHelper.ThrowNotSupportedException_UnknownResponseType(response); return;
             }
         }
 
@@ -192,14 +199,17 @@ namespace Akka.DistributedData
             switch (response)
             {
                 case DeleteSuccess success:
-                    if (Equals(id, success.Request))
+                    if (Equals(id, success.Request)) { return; }
+                    else
+                    {
+                        ThrowHelper.ThrowNotSupportedException_ReceivedResponseIdAndRequestCorrelationIdAreDifferent(success, id);
                         return;
-                    else throw new NotSupportedException($"Received response id [{success.Request}] and request correlation id [{id}] are different.");
-                case ReplicationDeleteFailure _: throw new TimeoutException($"Couldn't confirm deletion of the data under key [{key}] within consistency constraints {consistency} and under provided timeout.");
+                    }
+                case ReplicationDeleteFailure _: ThrowHelper.ThrowTimeoutException_CouldnotConfirmDeletionOfTheDataUnderKey(key, consistency); return;
                 case StoreFailure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
-                case DataDeleted _: throw new DataDeletedException($"Cannot store data under key [{key}]. It has been permanently deleted and the key cannot be reused.");
+                case DataDeleted _: ThrowHelper.ThrowDataDeletedException_CannotStoreDataUnderKey(key); return;
                 case Status.Failure failure: ExceptionDispatchInfo.Capture(failure.Cause).Throw(); return;
-                default: throw new NotSupportedException("Unknown response type: " + response);
+                default: ThrowHelper.ThrowNotSupportedException_UnknownResponseType(response); return;
             }
         }
 

@@ -82,7 +82,7 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case SaveSnapshotSuccess m:
-                    if (Log.IsDebugEnabled) Log.Debug("PersistentShard snapshot saved successfully");
+                    if (Log.IsDebugEnabled) Log.PersistentShardSnapshotSavedSuccessfully();
                     /*
                     * delete old events but keep the latest around because
                     *
@@ -99,23 +99,23 @@ namespace Akka.Cluster.Sharding
                     }
                     break;
                 case SaveSnapshotFailure m:
-                    Log.Warning("PersistentShard snapshot failure: [{0}]", m.Cause.Message);
+                    if (Log.IsWarningEnabled) Log.PersistentShardSnapshotFailure(m);
                     break;
                 case DeleteMessagesSuccess m:
                     var deleteTo = m.ToSequenceNr - 1;
                     var deleteFrom = Math.Max(0, deleteTo - Settings.TunningParameters.KeepNrOfBatches * Settings.TunningParameters.SnapshotAfter);
-                    if (Log.IsDebugEnabled) Log.Debug("PersistentShard messages to [{0}] deleted successfully. Deleting snapshots from [{1}] to [{2}]", m.ToSequenceNr, deleteFrom, deleteTo);
+                    if (Log.IsDebugEnabled) Log.PersistentShardMessagesToDeletedSuccessfully(m, deleteFrom, deleteTo);
                     DeleteSnapshots(new SnapshotSelectionCriteria(deleteTo, DateTime.MaxValue, deleteFrom));
                     break;
 
                 case DeleteMessagesFailure m:
-                    Log.Warning("PersistentShard messages to [{0}] deletion failure: [{1}]", m.ToSequenceNr, m.Cause.Message);
+                    if (Log.IsWarningEnabled) Log.PersistentShardMessagesToDeletionFailure(m);
                     break;
                 case DeleteSnapshotsSuccess m:
-                    if (Log.IsDebugEnabled) Log.Debug("PersistentShard snapshots matching [{0}] deleted successfully", m.Criteria);
+                    if (Log.IsDebugEnabled) Log.PersistentShardSnapshotsMatchingDeletedSuccessfully(m);
                     break;
                 case DeleteSnapshotsFailure m:
-                    Log.Warning("PersistentShard snapshots matching [{0}] deletion failure: [{1}]", m.Criteria, m.Cause.Message);
+                    if (Log.IsWarningEnabled) Log.PersistentShardSnapshotsMatchingDeletionFailure(m);
                     break;
                 default:
                     return this.HandleCommand(message);
@@ -139,7 +139,7 @@ namespace Akka.Cluster.Sharding
                 case RecoveryCompleted _:
                     RestartRememberedEntities();
                     this.Initialized();
-                    if (Log.IsDebugEnabled) Log.Debug("PersistentShard recovery completed shard [{0}] with [{1}] entities", ShardId, State.Entries.Count);
+                    if (Log.IsDebugEnabled) Log.PersistentShardRecoveryCompletedShard(ShardId, State.Entries.Count);
                     return true;
             }
             return false;
@@ -155,7 +155,7 @@ namespace Akka.Cluster.Sharding
         {
             if (LastSequenceNr % Settings.TunningParameters.SnapshotAfter == 0 && LastSequenceNr != 0)
             {
-                if (Log.IsDebugEnabled) Log.Debug("Saving snapshot, sequence number [{0}]", SnapshotSequenceNr);
+                if (Log.IsDebugEnabled) Log.SavingSnapshotSequenceNumber(SnapshotSequenceNr);
                 SaveSnapshot(State);
             }
         }
@@ -176,14 +176,14 @@ namespace Akka.Cluster.Sharding
                 {
                     //Note; because we're not persisting the EntityStopped, we don't need
                     // to persist the EntityStarted either.
-                    if (Log.IsDebugEnabled) Log.Debug("Starting entity [{0}] again, there are buffered messages for it", id);
+                    if (Log.IsDebugEnabled) Log.StartingEntityAgainThereAreBufferedMessagesForIt(id);
                     this.SendMessageBuffer(new Shard.EntityStarted(id));
                 }
                 else
                 {
                     if (!Passivating.Contains(tref))
                     {
-                        if (Log.IsDebugEnabled) Log.Debug("Entity [{0}] stopped without passivating, will restart after backoff", id);
+                        if (Log.IsDebugEnabled) Log.EntityStoppedWithoutPassivatingWillRestartAfterBackoff(id);
                         Context.System.Scheduler.ScheduleTellOnce(Settings.TunningParameters.EntityRestartBackoff, Self, new Shard.RestartEntity(id), ActorRefs.NoSender);
                     }
                     else
@@ -204,7 +204,7 @@ namespace Akka.Cluster.Sharding
                 {
                     if (MessageBuffers.ContainsKey(id))
                     {
-                        throw new InvalidOperationException($"Message buffers contains id [{id}].");
+                        ThrowHelper.ThrowInvalidOperationException_MessageBuffersContainsId(id);
                     }
                     this.GetEntity(id).Tell(payload, sender);
                 }

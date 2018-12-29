@@ -199,7 +199,7 @@ namespace Akka.Actor.Internal
 
                 if (_settings.LogConfigOnStart)
                 {
-                    _log.Info(Settings.ToString());
+                    _log.LogConfigOnStart(Settings);
                 }
             }
             catch (Exception)
@@ -490,7 +490,7 @@ namespace Akka.Actor.Internal
         /// </returns>
         public override Task Terminate()
         {
-            if (Log.IsDebugEnabled) Log.Debug("System shutdown initiated");
+            if (Log.IsDebugEnabled) Log.SystemShutdownInitiated();
             _provider.Guardian.Stop();
             return WhenTerminated;
         }

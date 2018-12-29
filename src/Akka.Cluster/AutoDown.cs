@@ -129,7 +129,7 @@ namespace Akka.Cluster
         public override void Down(Address node)
         {
             if (!_leader) ThrowHelper.ThrowInvalidOperationException_MustBeLeaderToDownNode();
-            _cluster.LogInfo("Leader is auto-downing unreachable node [{0}]", node);
+            if (_cluster.IsInfoEnabled) _cluster.LeaderIsAutoDowningUnreachableNode(node);
             _cluster.Down(node);
         }
     }

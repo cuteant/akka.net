@@ -450,11 +450,11 @@ namespace Akka.Remote
 
             if (_failureDetector.IsMonitoring(from))
             {
-                Log.Debug("Received heartbeat rsp from [{0}]", from);
+                Log.ReceivedHeartbeatRspFrom(from);
             }
             else
             {
-                Log.Debug("Received first heartbeat rsp from [{0}]", from);
+                Log.ReceivedFirstHeartbeatRspFrom(from);
             }
 
             if (WatcheeByNodes.ContainsKey(from) && !Unreachable.Contains(from))
@@ -483,7 +483,7 @@ namespace Akka.Remote
             {
                 if (!Unreachable.Contains(a) && !_failureDetector.IsAvailable(a))
                 {
-                    Log.Warning("Detected unreachable: [{0}]", a);
+                    if (Log.IsWarningEnabled) Log.DetectedUnreachable(a);
                     var nullableAddressUid =
                         _addressUids.TryGetValue(a, out int addressUid) ? new int?(addressUid) : null;
 
@@ -525,7 +525,7 @@ namespace Akka.Remote
         {
             // TODO: replace with Code Contracts assertion
             if (watcher.Equals(Self)) { ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Watcher); }
-            if (Log.IsDebugEnabled) { Log.Debug("Watching: [{0} -> {1}]", watcher.Path, watchee.Path); }
+            if (Log.IsDebugEnabled) { Log.Watching(watcher, watchee); }
 
             if (Watching.TryGetValue(watchee, out var watching))
             {
@@ -579,14 +579,14 @@ namespace Akka.Remote
         protected void RemoveWatch(IInternalActorRef watchee, IInternalActorRef watcher)
         {
             if (watcher.Equals(Self)) { ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Watcher); }
-            if (Log.IsDebugEnabled) { Log.Debug($"Unwatching: [{watcher.Path} -> {watchee.Path}]"); }
+            if (Log.IsDebugEnabled) { Log.Unwatching(watcher, watchee); }
             if (Watching.TryGetValue(watchee, out var watchers))
             {
                 watchers.Remove(watcher);
                 if (watchers.Count <= 0)
                 {
                     // clean up self watch when no more watchers of this watchee
-                    if (Log.IsDebugEnabled) { Log.Debug("Cleanup self watch of [{0}]", watchee.Path); }
+                    if (Log.IsDebugEnabled) { Log.CleanupSelfWatchOf(watchee); }
                     Context.Unwatch(watchee);
                     RemoveWatchee(watchee);
                 }
@@ -609,7 +609,7 @@ namespace Akka.Remote
                 if (watchees.Count <= 0)
                 {
                     // unwatched last watchee on that node
-                    if (Log.IsDebugEnabled) Log.Debug("Unwatched last watchee of node: [{0}]", watcheeAddress);
+                    if (Log.IsDebugEnabled) Log.UnwatchedLastWatcheeOfNode(watcheeAddress);
                     UnwatchNode(watcheeAddress);
                 }
             }
@@ -634,7 +634,7 @@ namespace Akka.Remote
 
         private void ProcessTerminated(IInternalActorRef watchee, bool existenceConfirmed, bool addressTerminated)
         {
-            if (Log.IsDebugEnabled) Log.Debug("Watchee terminated: [{0}]", watchee.Path);
+            if (Log.IsDebugEnabled) Log.WatcheeTerminated(watchee);
 
             // When watchee is stopped it sends DeathWatchNotification to this RemoteWatcher, which
             // will propagate it to all watchers of this watchee. addressTerminated case is already
@@ -667,11 +667,11 @@ namespace Akka.Remote
                 {
                     if (_failureDetector.IsMonitoring(a))
                     {
-                        if (Log.IsDebugEnabled) Log.Debug("Sending Heartbeat to [{0}]", a);
+                        if (Log.IsDebugEnabled) Log.SendingHeartbeatToAddr(a);
                     }
                     else
                     {
-                        if (Log.IsDebugEnabled) Log.Debug("Sending first Heartbeat to [{0}]", a);
+                        if (Log.IsDebugEnabled) Log.SendingFirstHeartbeatToAddr(a);
                         // schedule the expected first heartbeat for later, which will give the other
                         // side a chance to reply, and also trigger some resends if needed
                         _scheduler.ScheduleTellOnce(_heartbeatExpectedResponseAfter, Self, new ExpectedFirstHeartbeat(a), Self);
@@ -689,7 +689,7 @@ namespace Akka.Remote
         {
             if (WatcheeByNodes.ContainsKey(address) && !_failureDetector.IsMonitoring(address))
             {
-                if (Log.IsDebugEnabled) Log.Debug("Trigger extra expected heartbeat from [{0}]", address);
+                if (Log.IsDebugEnabled) Log.TriggerExtraExpectedHeartbeatFromAddr(address);
                 _failureDetector.Heartbeat(address);
             }
         }
@@ -708,7 +708,7 @@ namespace Akka.Remote
             var watcher = Self.AsInstanceOf<IInternalActorRef>();
             foreach (var watchee in WatcheeByNodes[address])
             {
-                if (Log.IsDebugEnabled) Log.Debug("Re-watch [{0} -> {1}]", watcher.Path, watchee.Path);
+                if (Log.IsDebugEnabled) Log.ReWatch(watcher, watchee);
                 watchee.SendSystemMessage(new Watch(watchee, watcher)); // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
             }
         }

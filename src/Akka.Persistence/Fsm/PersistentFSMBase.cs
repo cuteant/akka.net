@@ -182,7 +182,7 @@ namespace Akka.Persistence.Fsm
         {
             if (_debugEvent)
             {
-                _log.Debug($"setting {(repeat ? "repeating" : "")} timer {name}/{timeout}: {msg}");
+                _log.SettingRepeatingTimer(name, msg, timeout, repeat);
             }
             if (_timers.TryGetValue(name, out FSMBase.Timer oldTimer))
             {
@@ -200,10 +200,7 @@ namespace Akka.Persistence.Fsm
         /// <param name="name">The name of the timer to cancel.</param>
         public void CancelTimer(string name)
         {
-            if (_debugEvent)
-            {
-                _log.Debug($"Cancelling timer {name}");
-            }
+            if (_debugEvent) { _log.CancellingTimer(name); }
 
             if (_timers.ContainsKey(name))
             {
@@ -377,16 +374,12 @@ namespace Akka.Persistence.Fsm
         }
 
         // Unhandled event handler
-        private StateFunction HandleEventDefault
+        private StateFunction HandleEventDefault => DefaultHandleEventInternal;
+
+        State<TState, TData, TEvent> DefaultHandleEventInternal(FSMBase.Event<TData> @event, State<TState, TData, TEvent> state = null)
         {
-            get
-            {
-                return (@event, state) =>
-                {
-                    _log.Warning("unhandled event {0} in state {1}", @event.FsmEvent, StateName);
-                    return Stay();
-                };
-            }
+            if (_log.IsWarningEnabled) _log.UnhandledEventInState(@event, StateName);
+            return Stay();
         }
 
         private StateFunction _handleEvent;
@@ -503,7 +496,7 @@ namespace Akka.Persistence.Fsm
             if (_debugEvent)
             {
                 var srcStr = GetSourceString(source);
-                _log.Debug("processing {0} from {1} in state {2}", fsmEvent, srcStr, StateName);
+                _log.ProcessingFromInState(fsmEvent, srcStr, StateName);
             }
 
             var stateFunc = _stateFunctions[_currentState.StateName];
@@ -525,7 +518,7 @@ namespace Akka.Persistence.Fsm
 
             if (_debugEvent && !Equals(oldState, upcomingState))
             {
-                _log.Debug("transition {0} -> {1}", oldState, upcomingState);
+                _log.Transition(oldState, upcomingState);
             }
         }
 
@@ -630,11 +623,11 @@ namespace Akka.Persistence.Fsm
             {
                 if (failure.Cause is Exception exc)
                 {
-                    _log.Error(exc, "terminating due to Failure");
+                    _log.TerminatingDueToFailure(exc);
                 }
                 else
                 {
-                    _log.Error(failure.Cause.ToString());
+                    _log.TerminatingFailure(failure);
                 }
             }
         }

@@ -108,18 +108,15 @@ namespace Akka.Streams.Implementation.IO
 
         private void ReadAndSignal()
         {
-            if (!IsActive)
-                return;
+            if (!IsActive) { return; }
 
             ReadAndEmit();
-            if(TotalDemand > 0 && IsActive)
-                Self.Tell(Continue.Instance);
+            if (TotalDemand > 0 && IsActive) { Self.Tell(Continue.Instance); }
         }
 
         private void ReadAndEmit()
         {
-            if (TotalDemand <= 0)
-                return;
+            if (TotalDemand <= 0) { return; }
 
             try
             {
@@ -128,7 +125,7 @@ namespace Akka.Streams.Implementation.IO
                 if (readBytes == 0)
                 {
                     //had nothing to read into this chunk
-                    if (_log.IsDebugEnabled) _log.Debug("No more bytes available to read (got 0 from read)");
+                    if (_log.IsDebugEnabled) _log.NoMoreBytesAvailableToRead();
                     OnCompleteThenStop();
                 }
                 else

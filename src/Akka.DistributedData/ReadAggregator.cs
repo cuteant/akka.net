@@ -55,10 +55,10 @@ namespace Akka.DistributedData
                     return ncount - w;
 
                 case ReadLocal _:
-                    throw new ArgumentException("ReadAggregator does not support ReadLocal");
+                    return ThrowHelper.ThrowArgumentException_ReadAggregatorDoesNotSupportReadLocal();
 
                 default:
-                    throw new ArgumentException("Invalid consistency level");
+                    return ThrowHelper.ThrowArgumentException_InvalidConsistencyLevel();
             }
         }
 
@@ -68,7 +68,7 @@ namespace Akka.DistributedData
             foreach (var n in PrimaryNodes)
             {
                 var replica = Replica(n);
-                if (debugEnabled) Log.Debug("Sending {0} to primary replica {1}", _read, replica);
+                if (debugEnabled) Log.SendingToPrimaryReplica(_read, replica);
                 replica.Tell(_read);
             }
 
@@ -90,7 +90,7 @@ namespace Akka.DistributedData
 
                     Remaining = Remaining.Remove(Sender.Path.Address);
                     var done = DoneWhenRemainingSize;
-                    if (Log.IsDebugEnabled) Log.Debug("remaining: {0}, done when: {1}, current state: {2}", Remaining.Count, done, _result);
+                    if (Log.IsDebugEnabled) Log.RemainingDoneWhenCurrentState(Remaining.Count, done, _result);
                     if (Remaining.Count == done) Reply(true);
                     return true;
 

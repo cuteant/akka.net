@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using Akka.Actor;
 using Akka.Cluster.Sharding.Serialization;
+using Akka.Pattern;
 
 namespace Akka.Cluster.Sharding
 {
@@ -87,6 +89,108 @@ namespace Akka.Cluster.Sharding
 
     partial class ThrowHelper
     {
+        #region -- ArgumentException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static IActorRef ThrowArgumentException_ShardTypeMustBeStartedFirst(string typeName)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Shard type [{typeName}] must be started first");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_RegionIsAlreadyRegistered(PersistentShardCoordinator.ShardRegionRegistered message)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Region {message.Region} is already registered", "e");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_RegionProxyIsAlreadyRegistered(PersistentShardCoordinator.ShardRegionProxyRegistered message)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Region proxy {message.RegionProxy} is already registered", "e");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_TerminatedRegionNotRegistered(PersistentShardCoordinator.ShardRegionTerminated message)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Terminated region {message.Region} not registered", "e");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_TerminatedRegionProxyNotRegistered(PersistentShardCoordinator.ShardRegionProxyTerminated message)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Terminated region proxy {message.RegionProxy} not registered", "e");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_RegionNotRegistered(PersistentShardCoordinator.ShardHomeAllocated message)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Region {message.Region} not registered", "e");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_ShardIsAlreadyAllocated(PersistentShardCoordinator.ShardHomeAllocated message)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Shard {message.Shard} is already allocated", "e");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_ShardNotAllocated(PersistentShardCoordinator.ShardHomeDeallocated message)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Shard {message.Shard} not allocated", "e");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_RegionForShardNotRegistered(IActorRef region, PersistentShardCoordinator.ShardHomeDeallocated message)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Region {region} for shard {message.Shard} not registered", "e");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_UnknownEntityRecoveryStrategy(string entityRecoveryStrategy)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Unknown 'entity-recovery-strategy' [{entityRecoveryStrategy}], valid values are 'all' or 'constant'");
+            }
+        }
+
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static T ThrowArgumentException_Serializer_ClusterShardingMessage<T>(object obj)
         {
@@ -106,5 +210,127 @@ namespace Akka.Cluster.Sharding
                 return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterShardingMessageSerializer)}]");
             }
         }
+
+        #endregion
+
+        #region -- ArgumentNullException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentNullException_StartRrequiresTypeNameToBeProvided()
+        {
+            throw GetException();
+            ArgumentNullException GetException()
+            {
+                return new ArgumentNullException("typeName", "ClusterSharding start requires type name to be provided");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentNullException_StartRequiresPropsForTypeNameToBeProvided(string typeName)
+        {
+            throw GetException();
+            ArgumentNullException GetException()
+            {
+                return new ArgumentNullException("entityProps", $"ClusterSharding start requires Props for [{typeName}] to be provided");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentNullException_ClusterShardingStartProxyRequiresTypeNameToBeProvided()
+        {
+            throw GetException();
+            ArgumentNullException GetException()
+            {
+                return new ArgumentNullException("typeName", "ClusterSharding start proxy requires type name to be provided");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentNullException_RequiresTunningParametersToBeProvided()
+        {
+            throw GetException();
+            ArgumentNullException GetException()
+            {
+                return new ArgumentNullException("tunningParameters", $"ClusterShardingSettings requires tunningParameters to be provided");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentNullException_RequiresCoordinatorSingletonSettingsToBeProvided()
+        {
+            throw GetException();
+            ArgumentNullException GetException()
+            {
+                return new ArgumentNullException("coordinatorSingletonSettings", $"ClusterShardingSettings requires coordinatorSingletonSettings to be provided");
+            }
+        }
+
+        #endregion
+
+        #region -- InvalidOperationException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowInvalidOperationException_MessageBuffersContainsId(string id)
+        {
+            throw GetException();
+            InvalidOperationException GetException()
+            {
+                return new InvalidOperationException($"Message buffers contains id [{id}].");
+            }
+        }
+
+        #endregion
+
+        #region -- IllegalStateException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowIllegalStateException_UnexpectedChangeOfShard(PersistentShardCoordinator.ShardHome home)
+        {
+            throw GetException();
+            IllegalStateException GetException()
+            {
+                return new IllegalStateException($"Unexpected change of shard [{home.Shard}] from self to [{home.Ref}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowIllegalStateException_ShardMustNotBeAllocatedToAProxyOnlyShardRegion()
+        {
+            throw GetException();
+            IllegalStateException GetException()
+            {
+                return new IllegalStateException("Shard must not be allocated to a proxy only ShardRegion");
+            }
+        }
+
+        #endregion
+
+        #region -- NotSupportedException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowNotSupportedException_DDataShardSendUpdateEventNotSupported(Shard.StateChange e)
+        {
+            throw GetException();
+            NotSupportedException GetException()
+            {
+                return new NotSupportedException($"DDataShard send update event not supported: {e}");
+            }
+        }
+
+        #endregion
+
+        #region -- ActorInitializationException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowActorInitialization_UnsupportedGuardianResponse(object reply)
+        {
+            throw GetException();
+            ActorInitializationException GetException()
+            {
+                return new ActorInitializationException($"Unsupported guardian response: {reply}");
+            }
+        }
+
+        #endregion
     }
 }

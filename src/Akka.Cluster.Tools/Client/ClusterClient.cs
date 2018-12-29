@@ -174,8 +174,7 @@ namespace Akka.Cluster.Tools.Client
         /// <returns>TBD</returns>
         public static Props Props(ClusterClientSettings settings)
         {
-            if (settings == null)
-                throw new ArgumentNullException(nameof(settings));
+            if (settings == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.settings);
 
             return Actor.Props.Create(() => new ClusterClient(settings)).WithDeploy(Deploy.Local);
         }
@@ -203,7 +202,7 @@ namespace Akka.Cluster.Tools.Client
         {
             if (settings.InitialContacts.Count == 0)
             {
-                throw new ArgumentException("Initial contacts for cluster client cannot be empty");
+                ThrowHelper.ThrowArgumentException_InitialContactsForClusterClientCannotBeEmpty();
             }
 
             _settings = settings;
@@ -302,7 +301,7 @@ namespace Akka.Cluster.Tools.Client
 
                     if (receptionist != null)
                     {
-                        if (_log.IsInfoEnabled) _log.Info("Connected to [{0}]", receptionist.Path);
+                        if (_log.IsInfoEnabled) _log.ConnectedTo(receptionist);
                         ScheduleRefreshContactsTick(_settings.RefreshContactsInterval);
                         SendBuffered(receptionist);
                         Context.Become(Active(receptionist));
@@ -330,7 +329,7 @@ namespace Akka.Cluster.Tools.Client
                     Buffer(new PublishSubscribe.Publish(publish.Topic, publish.Message));
                     return true;
                 case ReconnectTimeout _:
-                    _log.Warning("Receptionist reconnect not successful within {0} stopping cluster client", _settings.ReconnectTimeout);
+                    if (_log.IsWarningEnabled) _log.ReceptionistReconnectNotSuccessful(_settings);
                     Context.Stop(Self);
                     return true;
                 default:
@@ -356,7 +355,7 @@ namespace Akka.Cluster.Tools.Client
                     case HeartbeatTick _:
                         if (!_failureDetector.IsAvailable)
                         {
-                            if (_log.IsInfoEnabled) _log.Info("Lost contact with [{0}], reestablishing connection", receptionist);
+                            if (_log.IsInfoEnabled) _log.LostContactWithReestablishingConnection(receptionist);
                             SendGetContacts();
                             ScheduleRefreshContactsTick(_settings.EstablishingGetContactsInterval);
                             Context.Become(Establishing);
@@ -427,8 +426,7 @@ namespace Akka.Cluster.Tools.Client
             else
                 sendTo = _contacts;
 
-            if (_log.IsDebugEnabled)
-                _log.Debug("Sending GetContacts to [{0}]", string.Join(", ", sendTo.AsEnumerable()));
+            if (_log.IsDebugEnabled) { _log.SendingGetContactsTo(sendTo); }
 
             sendTo.ForEach(c => c.Tell(ClusterReceptionist.GetContacts.Instance));
         }
@@ -437,25 +435,27 @@ namespace Akka.Cluster.Tools.Client
         {
             if (_settings.BufferSize == 0)
             {
-                _log.Warning("Receptionist not available and buffering is disabled, dropping message [{0}]", message.GetType().Name);
+                if (_log.IsWarningEnabled) _log.ReceptionistNotAvailableAndBufferingIsDisabled(message);
             }
             else if (_buffer.Count == _settings.BufferSize)
             {
                 var m = _buffer.Dequeue();
-                _log.Warning("Receptionist not available, buffer is full, dropping first message [{0}]", m.Item1.GetType().Name);
+                if (_log.IsWarningEnabled) _log.ReceptionistNotAvailableBufferIsFull(m.Item1);
                 _buffer.Enqueue(Tuple.Create(message, Sender));
             }
             else
             {
                 if (_log.IsDebugEnabled) // don't invoke reflection call on message type if we don't have to
-                    _log.Debug("Receptionist not available, buffering message type [{0}]", message.GetType().Name);
+                {
+                    _log.ReceptionistNotAvailableBufferingMessageType(message);
+                }
                 _buffer.Enqueue(Tuple.Create(message, Sender));
             }
         }
 
         private void SendBuffered(IActorRef receptionist)
         {
-            if (_log.IsDebugEnabled) _log.Debug("Sending buffered messages to receptionist");
+            if (_log.IsDebugEnabled) _log.SendingBufferedMessagesToReceptionist();
             while (_buffer.Count != 0)
             {
                 var t = _buffer.Dequeue();

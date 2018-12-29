@@ -83,8 +83,7 @@ namespace Akka.Streams.Implementation.IO
                         //blocking write
                         _outputStream.Write(bytes.ToArray(), 0, bytes.Count);
                         _bytesWritten += bytes.Count;
-                        if (_autoFlush)
-                            _outputStream.Flush();
+                        if (_autoFlush) { _outputStream.Flush(); }
                     }
                     catch (Exception ex)
                     {
@@ -94,8 +93,7 @@ namespace Akka.Streams.Implementation.IO
                     return true;
 
                 case OnError error:
-                    _log.Error(error.Cause,
-                        $"Tearing down OutputStreamSink due to upstream error, wrote bytes: {_bytesWritten}");
+                    _log.TearingDownOutputStreamSinkDueToUpstreamError(error, _bytesWritten);
                     _completionPromise.TrySetResult(IOResult.Failed(_bytesWritten, error.Cause));
                     Context.Stop(Self);
                     return true;

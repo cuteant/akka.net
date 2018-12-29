@@ -274,25 +274,28 @@ namespace Akka.DistributedData
 
         public override VersionVector Merge(VersionVector other)
         {
-            if (other is MultiVersionVector)
+            switch (other)
             {
-                var vector = (MultiVersionVector)other;
-                var v2 = vector.Versions.GetValueOrDefault(Node, 0L);
-                var mergedVersions = v2 >= Version ? vector.Versions : vector.Versions.SetItem(Node, Version);
-                return new MultiVersionVector(mergedVersions);
+                case MultiVersionVector multiVector:
+                    var v2 = multiVector.Versions.GetValueOrDefault(Node, 0L);
+                    var mergedVersions = v2 >= Version ? multiVector.Versions : multiVector.Versions.SetItem(Node, Version);
+                    return new MultiVersionVector(mergedVersions);
+
+                case SingleVersionVector singleVector:
+                    if (Node == singleVector.Node)
+                    {
+                        return Version >= singleVector.Version ? this : new SingleVersionVector(singleVector.Node, singleVector.Version);
+                    }
+                    else
+                    {
+                        return new MultiVersionVector(
+                            new KeyValuePair<UniqueAddress, long>(Node, Version),
+                            new KeyValuePair<UniqueAddress, long>(singleVector.Node, singleVector.Version));
+                    }
+
+                default:
+                    return ThrowHelper.ThrowNotSupportedException_SingleVersionVectorDoesnotSupportMerge();
             }
-            else if (other is SingleVersionVector)
-            {
-                var vector = (SingleVersionVector)other;
-                if (Node == vector.Node)
-                {
-                    return Version >= vector.Version ? this : new SingleVersionVector(vector.Node, vector.Version);
-                }
-                else return new MultiVersionVector(
-                    new KeyValuePair<UniqueAddress, long>(Node, Version),
-                    new KeyValuePair<UniqueAddress, long>(vector.Node, vector.Version));
-            }
-            else throw new NotSupportedException("SingleVersionVector doesn't support merge with provided version vector");
         }
 
         public override ImmutableHashSet<UniqueAddress> ModifiedByNodes => ImmutableHashSet.Create(Node);
@@ -342,27 +345,25 @@ namespace Akka.DistributedData
 
         public override VersionVector Merge(VersionVector other)
         {
-            if (other is MultiVersionVector)
+            switch (other)
             {
-                var vector = (MultiVersionVector)other;
-                var merged = vector.Versions.ToBuilder();
-                foreach (var pair in Versions)
-                {
-                    var mergedCurrentTime = merged.GetValueOrDefault(pair.Key, 0L);
-                    if (pair.Value >= mergedCurrentTime)
-                        merged.AddOrSet(pair.Key, pair.Value);
-                }
+                case MultiVersionVector multiVector:
+                    var merged = multiVector.Versions.ToBuilder();
+                    foreach (var pair in Versions)
+                    {
+                        var mergedCurrentTime = merged.GetValueOrDefault(pair.Key, 0L);
+                        if (pair.Value >= mergedCurrentTime) { merged.AddOrSet(pair.Key, pair.Value); }
+                    }
+                    return new MultiVersionVector(merged.ToImmutable());
 
-                return new MultiVersionVector(merged.ToImmutable());
+                case SingleVersionVector singleVector:
+                    var v1 = Versions.GetValueOrDefault(singleVector.Node, 0L);
+                    var merged0 = v1 >= singleVector.Version ? Versions : Versions.SetItem(singleVector.Node, singleVector.Version);
+                    return new MultiVersionVector(merged0);
+
+                default:
+                    return ThrowHelper.ThrowNotSupportedException_MultiVersionVectorDoesnotSupportMerge();
             }
-            else if (other is SingleVersionVector)
-            {
-                var vector = (SingleVersionVector)other;
-                var v1 = Versions.GetValueOrDefault(vector.Node, 0L);
-                var merged = v1 >= vector.Version ? Versions : Versions.SetItem(vector.Node, vector.Version);
-                return new MultiVersionVector(merged);
-            }
-            else throw new NotSupportedException("MultiVersionVector doesn't support merge with provided version vector");
         }
 
         public override ImmutableHashSet<UniqueAddress> ModifiedByNodes => Versions.Keys.ToImmutableHashSet();

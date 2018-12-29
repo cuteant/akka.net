@@ -222,8 +222,7 @@ namespace Akka.Streams.Implementation.Fusing
                         //do nothing
                         break;
                     case StreamSubscriptionTimeoutTerminationMode.WarnTermination:
-                        materializer.Logger.Warning(
-                            $"Substream subscription timeout triggered after {timeout} in prefixAndTail({_stage._count}).");
+                        materializer.Logger.SubstreamSubscriptionTimeoutTriggered(timeout, _stage._count);
                         break;
                     case StreamSubscriptionTimeoutTerminationMode.CancelTermination:
                         _tailSource.Timeout(timeout);

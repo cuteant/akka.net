@@ -179,14 +179,14 @@ namespace Akka.Cluster
                 {
                     if (verboseHeartbeatLogging)
                     {
-                        _log.Debug("Cluster Node [{0}] - Heartbeat to [{1}]", _cluster.SelfAddress, to.Address);
+                        _log.ClusterNodeHeartbeatTo(_cluster, to);
                     }
                 }
                 else
                 {
                     if (verboseHeartbeatLogging)
                     {
-                        _log.Debug("Cluster Node [{0}] - First Heartbeat to [{1}]", _cluster.SelfAddress, to.Address);
+                        _log.ClusterNodeFirstHeartbeatTo(_cluster, to);
                     }
 
                     // schedule the expected first heartbeat for later, which will give the
@@ -205,7 +205,7 @@ namespace Akka.Cluster
         {
             if (_cluster.Settings.VerboseHeartbeatLogging)
             {
-                _log.Debug("Cluster Node [{0}] - Heartbeat response from [{1}]", _cluster.SelfAddress, from.Address);
+                _log.ClusterNodeHeartbeatResponseFrom(_cluster, from);
             }
             _state = _state.HeartbeatRsp(from);
         }
@@ -216,7 +216,7 @@ namespace Akka.Cluster
             {
                 if (_cluster.Settings.VerboseHeartbeatLogging)
                 {
-                    _log.Debug("Cluster Node [{0}] - Trigger extra expected heartbeat from [{1}]", _cluster.SelfAddress, from.Address);
+                    _log.ClusterNodeTriggerExtraExpectedHeartbeatFrom(_cluster, from);
                 }
                 _failureDetector.Heartbeat(from.Address);
             }

@@ -150,7 +150,7 @@ namespace Akka.Persistence.Snapshot
             catch (Exception ex)
             {
                 var remaining = metadata.RemoveAt(metadata.Length - 1);
-                _log.Error(ex, $"Error loading snapshot [{last}], remaining attempts: [{remaining.Length}]");
+                _log.ErrorLoadingSnapshotRemainingAttempts(ex, last, remaining.Length);
                 if (remaining.IsEmpty)
                 {
                     throw;

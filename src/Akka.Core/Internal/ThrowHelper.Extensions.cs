@@ -839,6 +839,16 @@ An (unbounded) deque-based mailbox can be configured as follows:
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_DispatcherNotConfiguredForPath(Props props2, ActorPath path)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Dispatcher [{props2.Dispatcher}] not configured for path {path}");
+            }
+        }
+
         #endregion
     }
 }

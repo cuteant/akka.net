@@ -153,7 +153,7 @@ namespace Akka.DistributedData
                     : new ORMultiValueDictionary<TKey, TValue>(Underlying.Merge(other.Underlying), _withValueDeltas);
             }
 
-            throw new ArgumentException($"Trying to merge two ORMultiValueDictionaries of different map sub-types");
+            ThrowHelper.ThrowArgumentException_TryingToMergeTwoORMultiValueDictionaries(); return null;
         }
 
         /// <summary>

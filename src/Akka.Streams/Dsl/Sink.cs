@@ -191,8 +191,8 @@ namespace Akka.Streams.Dsl
         /// <param name="graph">TBD</param>
         /// <returns>TBD</returns>
         public static Sink<TIn, TMat> Wrap<TIn, TMat>(IGraph<SinkShape<TIn>, TMat> graph)
-            => graph is Sink<TIn, TMat>
-                ? (Sink<TIn, TMat>)graph
+            => graph is Sink<TIn, TMat> sink
+                ? sink
                 : new Sink<TIn, TMat>(graph.Module);
 
         /// <summary>
@@ -556,8 +556,8 @@ namespace Akka.Streams.Dsl
         /// <param name="graph">TBD</param>
         /// <returns>TBD</returns>
         public static Sink<TIn, TMat> FromGraph<TIn, TMat>(IGraph<SinkShape<TIn>, TMat> graph)
-            => graph is Sink<TIn, TMat>
-                ? (Sink<TIn, TMat>)graph
+            => graph is Sink<TIn, TMat> sink
+                ? sink
                 : new Sink<TIn, TMat>(graph.Module);
 
         /// <summary>

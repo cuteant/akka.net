@@ -87,10 +87,7 @@ namespace Akka.Persistence
                 var configPath = _config.GetString("snapshot-store.plugin");
                 if (string.IsNullOrEmpty(configPath))
                 {
-                    if (_log.IsWarningEnabled)
-                        _log.Warning("No default snapshot store configured! " +
-                            "To configure a default snapshot-store plugin set the `akka.persistence.snapshot-store.plugin` key. " +
-                            "For details see 'persistence.conf'");
+                    if (_log.IsWarningEnabled) { _log.NoDefaultSnapshotStoreConfigured(); }
                     return NoSnapshotStorePluginId;
                 }
                 return configPath;
@@ -107,15 +104,13 @@ namespace Akka.Persistence
 
             _config.GetStringList("journal.auto-start-journals").ForEach(id =>
             {
-                if (_log.IsInfoEnabled)
-                    _log.Info("Auto-starting journal plugin `{0}`", id);
+                if (_log.IsInfoEnabled) { _log.AutoStartingJournalPlugin(id); }
                 JournalFor(id);
             });
 
             _config.GetStringList("snapshot-store.auto-start-snapshot-stores").ForEach(id =>
             {
-                if (_log.IsInfoEnabled)
-                    _log.Info("Auto-starting snapshot store `{0}`", id);
+                if (_log.IsInfoEnabled) { _log.AutoStartingSnapshotStore(id); }
                 SnapshotStoreFor(id);
             });
 

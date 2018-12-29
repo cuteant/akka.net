@@ -616,8 +616,7 @@ namespace Akka.Streams.Implementation
         /// <param name="e">TBD</param>
         protected void Fail(Exception e)
         {
-            if (_settings.IsDebugLogging)
-                Log.Debug($"fail due to: {e.Message}");
+            if (_settings.IsDebugLogging) { Log.FailDueTo(e); }
 
             PrimaryInputs.Cancel();
             OutputBunch.Cancel(e);

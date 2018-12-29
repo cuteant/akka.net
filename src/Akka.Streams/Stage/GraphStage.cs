@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading;
 using Akka.Actor;
@@ -2405,6 +2406,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         public override bool IsTerminated => _watchedBy.Value == StageTerminatedTombstone;
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void LogIgnored(object message) => Log.Warning($"{message} message sent to StageActorRef({Path}) will be ignored, since it is not a real Actor. Use a custom message type to communicate with it instead.");
         /// <summary>
         /// TBD
@@ -2512,7 +2514,9 @@ namespace Akka.Streams.Stage
             {
                 var watchedBy = _watchedBy.Value;
                 if (watchedBy == StageTerminatedTombstone)
+                {
                     SendTerminated(watcher);
+                }
                 else
                 {
                     var isWatcheeSelf = Equals(watchee, this);
@@ -2521,14 +2525,21 @@ namespace Akka.Streams.Stage
                     if (isWatcheeSelf && !isWatcherSelf)
                     {
                         if (!watchedBy.Contains(watcher))
+                        {
                             if (!_watchedBy.CompareAndSet(watchedBy, watchedBy.Add(watcher)))
+                            {
                                 continue; // try again
+                            }
+                        }
                     }
                     else if (!isWatcheeSelf && isWatcherSelf)
-                        Log.Warning("externally triggered watch from {0} to {1} is illegal on StageActorRef",
-                            watcher, watchee);
+                    {
+                        Log.ExternallyRriggeredWatch(watcher, watchee);
+                    }
                     else
-                        Log.Error("BUG: illegal Watch({0}, {1}) for {2}", watchee, watcher, this);
+                    {
+                        Log.IllegalWatch(watchee, watcher, this);
+                    }
                 }
 
                 break;
@@ -2540,8 +2551,7 @@ namespace Akka.Streams.Stage
             while (true)
             {
                 var watchedBy = _watchedBy.Value;
-                if (watchedBy == null)
-                    SendTerminated(watcher);
+                if (watchedBy == null) { SendTerminated(watcher); }
                 else
                 {
                     var isWatcheeSelf = Equals(watchee, this);
@@ -2550,14 +2560,21 @@ namespace Akka.Streams.Stage
                     if (isWatcheeSelf && !isWatcherSelf)
                     {
                         if (!watchedBy.Contains(watcher))
+                        {
                             if (!_watchedBy.CompareAndSet(watchedBy, watchedBy.Remove(watcher)))
+                            {
                                 continue; // try again
+                            }
+                        }
                     }
                     else if (!isWatcheeSelf && isWatcherSelf)
-                        Log.Warning("externally triggered unwatch from {0} to {1} is illegal on StageActorRef",
-                            watcher, watchee);
+                    {
+                        Log.ExternallyRriggeredUnwatch(watcher, watchee);
+                    }
                     else
-                        Log.Error("BUG: illegal Watch({0}, {1}) for {2}", watchee, watcher, this);
+                    {
+                        Log.IllegalWatch(watchee, watcher, this);
+                    }
                 }
 
                 break;

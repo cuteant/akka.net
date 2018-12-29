@@ -442,9 +442,14 @@ namespace Akka.Cluster.Routing
         /// <returns><c>true</c> if this message is handled by the router; otherwise <c>false</c>.</returns>
         public override bool IsManagementMessage(object message)
         {
-            return message is ClusterEvent.IClusterDomainEvent
-                || message is ClusterEvent.CurrentClusterState
-                || base.IsManagementMessage(message);
+            switch (message)
+            {
+                case ClusterEvent.IClusterDomainEvent _:
+                case ClusterEvent.CurrentClusterState _:
+                    return true;
+                default:
+                    return base.IsManagementMessage(message);
+            }
         }
 
         /// <summary>
@@ -586,9 +591,14 @@ namespace Akka.Cluster.Routing
         /// <returns><c>true</c> if this message is handled by the router; otherwise <c>false</c>.</returns>
         public override bool IsManagementMessage(object message)
         {
-            return message is ClusterEvent.IClusterDomainEvent
-                || message is ClusterEvent.CurrentClusterState
-                || base.IsManagementMessage(message);
+            switch (message)
+            {
+                case ClusterEvent.IClusterDomainEvent _:
+                case ClusterEvent.CurrentClusterState _:
+                    return true;
+                default:
+                    return base.IsManagementMessage(message);
+            }
         }
 
         /// <summary>
@@ -744,13 +754,13 @@ namespace Akka.Cluster.Routing
         public Address FullAddress(Routee routee)
         {
             Address a = null;
-            if (routee is ActorRefRoutee)
+            if (routee is ActorRefRoutee actorRefRoutee)
             {
-                a = ((ActorRefRoutee)routee).Actor.Path.Address;
+                a = actorRefRoutee.Actor.Path.Address;
             }
-            else if (routee is ActorSelectionRoutee)
+            else if (routee is ActorSelectionRoutee actorSelectionRoutee)
             {
-                a = ((ActorSelectionRoutee)routee).Selection.Anchor.Path.Address;
+                a = actorSelectionRoutee.Selection.Anchor.Path.Address;
             }
 
             if (a == null || string.IsNullOrEmpty(a.Host) || !a.Port.HasValue)

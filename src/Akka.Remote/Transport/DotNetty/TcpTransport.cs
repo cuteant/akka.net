@@ -64,7 +64,7 @@ namespace Akka.Remote.Transport.DotNetty
                 var bytes = buf.GetIoBuffer();
 
                 var pdus = (List<object>)MessagePackSerializer.Deserialize<object>(bytes, DefaultResolver);
-                foreach(var raw in pdus)
+                foreach (var raw in pdus)
                 {
                     NotifyListener(new InboundPayload(raw));
                 }
@@ -112,8 +112,7 @@ namespace Akka.Remote.Transport.DotNetty
                         case SocketError.ConnectionReset:
                             if (Log.IsInfoEnabled)
                             {
-                                var channel = context.Channel;
-                                Log.Info($"{se.Message} Channel [{channel.LocalAddress}->{channel.RemoteAddress}](Id={channel.Id})");
+                                Log.DotNettyExceptionCaught(se, context);
                             }
                             NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
                             break;
@@ -141,8 +140,7 @@ namespace Akka.Remote.Transport.DotNetty
                         case ErrorCode.ECONNRESET:   // connection reset by peer
                             if (Log.IsInfoEnabled)
                             {
-                                var channel = context.Channel;
-                                Log.Info($"{exc.Description}. Channel [{channel.LocalAddress}->{channel.RemoteAddress}](Id={channel.Id})");
+                                Log.DotNettyExceptionCaught(exc, context);
                             }
                             NotifyListener(new Disassociated(DisassociateInfo.Shutdown));
                             break;
@@ -319,7 +317,7 @@ namespace Akka.Remote.Transport.DotNetty
 
     #region == class TcpServerHandler ==
 
-    internal sealed class TcpServerHandler: TcpServerHandler<TcpAssociationHandleFactory>
+    internal sealed class TcpServerHandler : TcpServerHandler<TcpAssociationHandleFactory>
     {
         public TcpServerHandler(DotNettyTransport transport, ILoggingAdapter log, Task<IAssociationEventListener> associationEventListener)
             : base(transport, log, associationEventListener) { }

@@ -83,15 +83,16 @@ namespace Akka.Remote
             {
                 if (_settings.UntrustedMode)
                 {
-                    _log.Debug("dropping daemon message in untrusted mode");
+                    _log.DroppingDaemonMessageInUntrustedMode();
                 }
                 else
                 {
+#if DEBUG
                     if (_settings.LogReceive)
                     {
-                        var msgLog = $"RemoteMessage: {payload} to {recipient}<+{originalReceiver} from {sender}";
-                        _log.Debug("received daemon message [{0}]", msgLog);
+                        _log.ReceivedDaemonMessage(payload, recipient, originalReceiver, sender);
                     }
+#endif
                     _remoteDaemon.Tell(payload);
                 }
             }
@@ -102,11 +103,12 @@ namespace Akka.Remote
                     //message is intended for a local recipient
                     case ILocalRef _ when (recipient.IsLocal):
                     case RepointableActorRef _ when (recipient.IsLocal):
+#if DEBUG
                         if (_settings.LogReceive)
                         {
-                            var msgLog = $"RemoteMessage: {payload} to {recipient}<+{originalReceiver} from {sender}";
-                            _log.Debug("received local message [{0}]", msgLog);
+                            _log.ReceivedLocalMessage(payload, recipient, originalReceiver, sender);
                         }
+#endif
                         switch (payload)
                         {
                             case ActorSelectionMessage sel:
@@ -117,10 +119,7 @@ namespace Akka.Remote
                                 {
                                     if (_log.IsDebugEnabled)
                                     {
-                                        _log.Debug(
-                                            "operating in UntrustedMode, dropping inbound actor selection to [{0}], allow it" +
-                                            "by adding the path to 'akka.remote.trusted-selection-paths' in configuration",
-                                            FormatActorPath(sel));
+                                        _log.OperatingInUntrustedMode1(sel);
                                     }
                                 }
                                 else
@@ -133,7 +132,7 @@ namespace Akka.Remote
                             case IPossiblyHarmful _ when _settings.UntrustedMode:
                                 if (_log.IsDebugEnabled)
                                 {
-                                    _log.Debug("operating in UntrustedMode, dropping inbound IPossiblyHarmful message of type {0}", payload.GetType());
+                                    _log.OperatingInUntrustedMode(payload);
                                 }
                                 break;
 
@@ -150,11 +149,12 @@ namespace Akka.Remote
                     // message is intended for a remote-deployed recipient
                     case IRemoteRef _ when (!recipient.IsLocal && !_settings.UntrustedMode):
                     case RepointableActorRef _ when (!recipient.IsLocal && !_settings.UntrustedMode):
+#if DEBUG
                         if (_settings.LogReceive)
                         {
-                            var msgLog = string.Format("RemoteMessage: {0} to {1}<+{2} from {3}", payload, recipient, originalReceiver, sender);
-                            _log.Debug("received remote-destined message {0}", msgLog);
+                            _log.ReceivedRemoteMessage(payload, recipient, originalReceiver, sender);
                         }
+#endif
                         if (_provider.Transport.Addresses.Contains(recipientAddress))
                         {
                             //if it was originally addressed to us but is in fact remote from our point of view (i.e. remote-deployed)
@@ -162,22 +162,18 @@ namespace Akka.Remote
                         }
                         else
                         {
-                            _log.Error(
-                                "Dropping message [{0}] for non-local recipient [{1}] arriving at [{2}] inbound addresses [{3}]",
-                                payloadClass, recipient, recipientAddress, string.Join(",", _provider.Transport.Addresses));
+                            _log.DroppingMsgForNonLocalRecipientArrivingAtInboundAddr(payloadClass, recipient, recipientAddress, _provider);
                         }
                         break;
 
                     default:
-                        _log.Error(
-                            "Dropping message [{0}] for non-local recipient [{1}] arriving at [{2}] inbound addresses [{3}]",
-                            payloadClass, recipient, recipientAddress, string.Join(",", _provider.Transport.Addresses));
+                        _log.DroppingMsgForNonLocalRecipientArrivingAtInboundAddr(payloadClass, recipient, recipientAddress, _provider);
                         break;
                 }
             }
         }
 
-        private static string FormatActorPath(ActorSelectionMessage sel)
+        internal static string FormatActorPath(ActorSelectionMessage sel)
         {
             return "/" + string.Join("/", sel.Elements.Select(x => x.ToString()));
         }
@@ -439,7 +435,7 @@ namespace Akka.Remote
             {
                 if (ex is IAssociationProblem) { return Directive.Escalate; }
 
-                _log.Warning("Association with remote system {0} has failed; address is now gated for {1} ms. Reason is: [{2}]", _remoteAddress, _settings.RetryGateClosedFor.TotalMilliseconds, ex);
+                if (_log.IsWarningEnabled) _log.AssociationWithRemoteSystemHasFailed(_remoteAddress, _settings, ex);
                 UidConfirmed = false; // Need confirmation of UID again
                 if (_bufferWasInUse)
                 {
@@ -964,7 +960,7 @@ namespace Akka.Remote
             }
             catch (Exception ex)
             {
-                _log.Error(ex, "Unable to publish error event to EventStream");
+                _log.UnableToPublishErrorEventToEventStream(ex);
             }
         }
 
@@ -1418,11 +1414,12 @@ namespace Akka.Remote
                     ThrowHelper.ThrowEndpointException_WriteSend();
                 }
 
+#if DEBUG
                 if (_provider.RemoteSettings.LogSend)
                 {
-                    _log.Debug("RemoteMessage: {0} to [{1}]<+[{2}] from [{3}]", send.Message,
-                        send.Recipient, send.Recipient.Path, send.SenderOption ?? _system.DeadLetters);
+                    _log.SendRemoteMessage(send, _system);
                 }
+#endif
 
                 var pdu = _codec.ConstructMessage(send.Recipient.LocalAddressToUse, send.Recipient,
                     this.SerializeMessage(send.Message), send.SenderOption, send.Seq, _lastAck);
@@ -1451,18 +1448,18 @@ namespace Akka.Remote
                 //{
                 var ok = _handle.Write(pdu);
 
-                    if (ok)
-                    {
-                        _ackDeadline = NewAckDeadline();
-                        _lastAck = null;
-                        return true;
-                    }
+                if (ok)
+                {
+                    _ackDeadline = NewAckDeadline();
+                    _lastAck = null;
+                    return true;
+                }
                 //}
                 return false;
             }
             catch (SerializationException ex)
             {
-                _log.Error(ex, "Transient association error (association remains live)");
+                _log.TransientAssociationErrorAassociationRemainsLive(ex);
                 return true;
             }
             catch (EndpointException ex)
@@ -1531,9 +1528,7 @@ namespace Akka.Remote
                 // FIXME remove this when testing/tuning is completed
                 if (_log.IsDebugEnabled)
                 {
-                    _log.Debug("Drained buffer with maxWriteCount: {0}, fullBackoffCount: {1}," +
-                               "smallBackoffCount: {2}, noBackoffCount: {3}," +
-                               "adaptiveBackoff: {4}", _maxWriteCount, _fullBackoffCount, _smallBackoffCount, _noBackoffCount, _adaptiveBackoffNanos / 1000);
+                    _log.DrainedBufferWithMaxWriteCount(_maxWriteCount, _fullBackoffCount, _smallBackoffCount, _noBackoffCount, _adaptiveBackoffNanos);
                 }
                 _fullBackoffCount = 1;
                 _smallBackoffCount = 0;
@@ -1555,7 +1550,7 @@ namespace Akka.Remote
                     var now = MonotonicClock.GetNanos();
                     if (now - _largeBufferLogTimestamp >= LogBufferSizeInterval)
                     {
-                        _log.Warning("[{0}] buffered messages in EndpointWriter for [{1}]. You should probably implement flow control to avoid flooding the remote connection.", size, RemoteAddress);
+                        if (_log.IsWarningEnabled) _log.BufferedMessagesInEndpointWriterFor(size, RemoteAddress);
                         _largeBufferLogTimestamp = now;
                     }
                 }
@@ -1831,28 +1826,28 @@ namespace Akka.Remote
                 //}
                 //else
                 //{
-                    var ackAndMessage = TryDecodeMessageAndAck(payload);
-                    var ackOption = ackAndMessage.AckOption;
-                    if (ackOption != null && _reliableDeliverySupervisor != null)
+                var ackAndMessage = TryDecodeMessageAndAck(payload);
+                var ackOption = ackAndMessage.AckOption;
+                if (ackOption != null && _reliableDeliverySupervisor != null)
+                {
+                    _reliableDeliverySupervisor.Tell(ackOption);
+                }
+                var messageOption = ackAndMessage.MessageOption;
+                if (messageOption != null)
+                {
+                    if (messageOption.ReliableDeliveryEnabled)
                     {
-                        _reliableDeliverySupervisor.Tell(ackOption);
+                        _ackedReceiveBuffer = _ackedReceiveBuffer.Receive(messageOption);
+                        DeliverAndAck();
                     }
-                    var messageOption = ackAndMessage.MessageOption;
-                    if (messageOption != null)
+                    else
                     {
-                        if (messageOption.ReliableDeliveryEnabled)
-                        {
-                            _ackedReceiveBuffer = _ackedReceiveBuffer.Receive(messageOption);
-                            DeliverAndAck();
-                        }
-                        else
-                        {
-                            _msgDispatch.Dispatch(messageOption.Recipient,
-                                messageOption.RecipientAddress,
-                                messageOption.SerializedMessage,
-                                messageOption.SenderOptional);
-                        }
+                        _msgDispatch.Dispatch(messageOption.Recipient,
+                            messageOption.RecipientAddress,
+                            messageOption.SerializedMessage,
+                            messageOption.SenderOptional);
                     }
+                }
                 //}
             });
             Receive<EndpointWriter.StopReading>(stop =>

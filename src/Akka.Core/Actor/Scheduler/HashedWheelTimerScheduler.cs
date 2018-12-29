@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Configuration;
@@ -380,7 +381,7 @@ namespace Akka.Actor
             var stopped = Stop();
             if (!stopped.Wait(_shutdownTimeout))
             {
-                Log.Warning("Failed to shutdown scheduler within {0}", _shutdownTimeout);
+                if (Log.IsWarningEnabled) Log.FailedToShutdownSchedulerWithin(_shutdownTimeout);
                 return;
             }
 
@@ -607,7 +608,7 @@ namespace Akka.Actor
                             {
                                 try
                                 {
-                                    _log.Error(ex, "Error while executing scheduled task {0}", current);
+                                    ErrorWhileExecutingScheduledTask(_log, ex, current);
                                     var nextErrored = current.Next;
                                     Remove(current);
                                     current = nextErrored;
@@ -641,6 +642,12 @@ namespace Akka.Actor
                     }
                     current = next;
                 }
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private static void ErrorWhileExecutingScheduledTask(ILoggingAdapter logger, Exception ex, SchedulerRegistration current)
+            {
+                logger.Error(ex, "Error while executing scheduled task {0}", current);
             }
 
             public void Remove(SchedulerRegistration reg)

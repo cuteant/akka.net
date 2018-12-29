@@ -37,8 +37,8 @@ namespace Akka.DistributedData.Serialization
             public SmallCache(int capacity, TimeSpan ttl, Func<TKey, TVal> getOrAddFactory)
             {
                 mask = capacity - 1;
-                if ((capacity & mask) != 0) throw new ArgumentException("Capacity must be power of 2 and less than or equal 32", nameof(capacity));
-                if (capacity > 32) throw new ArgumentException("Capacity must be less than or equal 32", nameof(capacity));
+                if ((capacity & mask) != 0) ThrowHelper.ThrowArgumentException_CapacityMustBe2_32();
+                if (capacity > 32) ThrowHelper.ThrowArgumentException_CapacityMustBeLessThanOrEqual32();
 
                 this.ttl = ttl;
                 this.getOrAddFactory = getOrAddFactory;

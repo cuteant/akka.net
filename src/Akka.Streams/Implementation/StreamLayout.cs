@@ -746,13 +746,19 @@ namespace Akka.Streams.Implementation
 
         private bool IsIgnorable(StreamLayout.IMaterializedValueNode computation)
         {
-            if (computation is StreamLayout.Atomic)
-                return IsIgnorable(((StreamLayout.Atomic)computation).Module);
+            switch (computation)
+            {
+                case StreamLayout.Atomic atomic:
+                    return IsIgnorable(atomic.Module);
+                case StreamLayout.Combine _:
+                case StreamLayout.Transform _:
+                    return false;
 
-            if (computation is StreamLayout.Combine || computation is StreamLayout.Transform)
-                return false;
-
-            return computation is StreamLayout.Ignore;
+                case StreamLayout.Ignore _:
+                    return true;
+                default:
+                    return false;
+            }
         }
 
         private bool IsIgnorable(IModule module)

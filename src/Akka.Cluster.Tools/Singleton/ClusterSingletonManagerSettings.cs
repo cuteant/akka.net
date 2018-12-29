@@ -28,9 +28,7 @@ namespace Akka.Cluster.Tools.Singleton
             system.Settings.InjectTopLevelFallback(ClusterSingletonManager.DefaultConfig());
 
             var config = system.Settings.Config.GetConfig("akka.cluster.singleton");
-            if (config == null)
-                throw new ConfigurationException(
-                    $"Cannot initialize {typeof(ClusterSingletonManagerSettings)}: akka.cluster.singleton configuration node was not provided");
+            if (config == null) ThrowHelper.ThrowConfigurationException_CannotInitializeClusterSingletonManagerSettings();
 
             return Create(config).WithRemovalMargin(Cluster.Get(system).DowningProvider.DownRemovalMargin);
         }
@@ -101,12 +99,9 @@ namespace Akka.Cluster.Tools.Singleton
         /// <exception cref="ArgumentException">TBD</exception>
         public ClusterSingletonManagerSettings(string singletonName, string role, TimeSpan removalMargin, TimeSpan handOverRetryInterval)
         {
-            if (string.IsNullOrWhiteSpace(singletonName))
-                throw new ArgumentNullException(nameof(singletonName));
-            if (removalMargin < TimeSpan.Zero)
-                throw new ArgumentException("ClusterSingletonManagerSettings.RemovalMargin must be positive", nameof(removalMargin));
-            if (handOverRetryInterval <= TimeSpan.Zero)
-                throw new ArgumentException("ClusterSingletonManagerSettings.HandOverRetryInterval must be positive", nameof(handOverRetryInterval));
+            if (string.IsNullOrWhiteSpace(singletonName)) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.singletonName);
+            if (removalMargin < TimeSpan.Zero) ThrowHelper.ThrowArgumentException_RemovalMarginMustBePositive();
+            if (handOverRetryInterval <= TimeSpan.Zero) ThrowHelper.ThrowArgumentException_HandOverRetryIntervalMustBePositive();
 
             SingletonName = singletonName;
             Role = role;

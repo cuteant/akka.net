@@ -66,7 +66,7 @@ namespace Akka.Actor
             {
                 if (!_printedWarning)
                 {
-                    _log.Warning("Dropping message: Inbox size has been exceeded, use akka.actor.inbox.inbox-size to increase maximum allowed inbox size. Current is {0}", _size);
+                    _log.DroppingMessageInboxSizeHasBeenExceeded(_size);
                     _printedWarning = true;
                 }
             }

@@ -50,8 +50,7 @@ namespace Akka.Remote.Transport.DotNetty
             var channel = context.Channel;
             if (!Transport.ConnectionGroup.TryAdd(channel))
             {
-                Log.Warning("Unable to ADD channel [{0}->{1}](Id={2}) to connection group. May not shut down cleanly.",
-                    channel.LocalAddress, channel.RemoteAddress, channel.Id);
+                if (Log.IsWarningEnabled) Log.UnableToAddChannelToConnectionGroup(channel);
             }
         }
 
@@ -62,8 +61,7 @@ namespace Akka.Remote.Transport.DotNetty
             var channel = context.Channel;
             if (!Transport.ConnectionGroup.TryRemove(channel))
             {
-                Log.Warning("Unable to REMOVE channel [{0}->{1}](Id={2}) from connection group. May not shut down cleanly.",
-                    channel.LocalAddress, channel.RemoteAddress, channel.Id);
+                if (Log.IsWarningEnabled) Log.UnableToRemoveChannelFromConnectionGroup(channel);
             }
         }
 
@@ -240,7 +238,7 @@ namespace Akka.Remote.Transport.DotNetty
             }
             catch (Exception ex)
             {
-                Log.Error(ex, "Failed to bind to {0}; shutting down DotNetty transport.", listenAddress);
+                Log.FailedToBindToEndPoint(ex, listenAddress);
                 try
                 {
                     await Shutdown().ConfigureAwait(false);

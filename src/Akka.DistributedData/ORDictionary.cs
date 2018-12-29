@@ -149,7 +149,7 @@ namespace Akka.DistributedData
         public ORDictionary<TKey, TValue> SetItem(UniqueAddress node, TKey key, TValue value)
         {
             if (value is IORSet && ValueMap.ContainsKey(key))
-                throw new ArgumentException("ORDictionary.SetItems may not be used to replace an existing ORSet", nameof(value));
+                ThrowHelper.ThrowArgumentException_ORDictionarySetItemsMayNotBeUsedToReplaceAnExistingORSet();
 
             var newKeys = KeySet.ResetDelta().Add(node, key);
             var delta = new PutDeltaOperation(newKeys.Delta, key, value);
@@ -267,7 +267,7 @@ namespace Akka.DistributedData
                     if (other.ValueMap.TryGetValue(key, out var value2))
                         mergedValues[key] = value2;
                     else
-                        throw new IllegalStateException($"Missing value for {key}");
+                        ThrowHelper.ThrowIllegalStateException_MissingValueFor(key);
                 }
             }
 
@@ -409,7 +409,8 @@ namespace Akka.DistributedData
 
             public PutDeltaOperation(ORSet<TKey>.IDeltaOperation underlying, TKey key, TValue value)
             {
-                Underlying = underlying ?? throw new ArgumentNullException(nameof(underlying));
+                if (null == underlying) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
+                Underlying = underlying;
                 Key = key;
                 Value = value;
             }
@@ -479,7 +480,7 @@ namespace Akka.DistributedData
 
             public UpdateDeltaOperation(ORSet<TKey>.IDeltaOperation underlying, ImmutableDictionary<TKey, IReplicatedData> values)
             {
-                if (underlying == null) throw new ArgumentNullException(nameof(underlying));
+                if (null == underlying) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
 
                 Underlying = underlying;
                 Values = values;
@@ -550,7 +551,8 @@ namespace Akka.DistributedData
         {
             public RemoveDeltaOperation(ORSet<TKey>.IDeltaOperation underlying)
             {
-                Underlying = underlying ?? throw new ArgumentNullException(nameof(underlying));
+                if (null == underlying) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
+                Underlying = underlying;
             }
 
             public override ORSet<TKey>.IDeltaOperation Underlying { get; }
@@ -576,7 +578,8 @@ namespace Akka.DistributedData
 
             public RemoveKeyDeltaOperation(ORSet<TKey>.IDeltaOperation underlying, TKey key)
             {
-                Underlying = underlying ?? throw new ArgumentNullException(nameof(underlying));
+                if (null == underlying) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
+                Underlying = underlying;
                 Key = key;
             }
 
@@ -686,7 +689,7 @@ namespace Akka.DistributedData
 
         public ORDictionary<TKey, TValue> MergeDelta(IDeltaOperation delta)
         {
-            if (delta == null) throw new ArgumentNullException();
+            if (delta == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.delta);
 
             var withDeltas = DryMergeDeltas(delta);
             return this.Merge(withDeltas);
@@ -741,7 +744,10 @@ namespace Akka.DistributedData
                         // please note that if RemoveDeltaOp is not preceded by update clearing the value
                         // anomalies may result
                     }
-                    else throw new ArgumentException("ORDictionary.RemoveDeltaOp must contain ORSet.RemoveDeltaOp inside");
+                    else
+                    {
+                        ThrowHelper.ThrowArgumentException_ORDictionaryRemoveDeltaOpMustContainORSetRemoveDeltaOpInside();
+                    }
                     return true;
                 case RemoveKeyDeltaOperation removeKeyOp:
                     // removeKeyOp tombstones values for later use
@@ -780,7 +786,9 @@ namespace Akka.DistributedData
                 foreach (var op in ops.Operations)
                 {
                     if (!ProcessDelta(op, mergedValues, tombstonedValues, ref mergedKeys))
-                        throw new IllegalStateException("Cannot nest DeltaGroup");
+                    {
+                        ThrowHelper.ThrowIllegalStateException_CannotNestDeltaGroup();
+                    }
                 }
                 return true;
             }

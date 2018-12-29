@@ -827,7 +827,7 @@ namespace Akka.Remote.Transport
                                         nextState = Stop(new Failure(d.Reason));
                                         break;
                                     default:
-                                        if (_log.IsDebugEnabled) _log.Debug("Expected message of type Associate; instead received {0}", pdu);
+                                        if (_log.IsDebugEnabled) _log.ExpectedMessageOfTypeAssociate(pdu);
                                         //Expect handshake to be finished, dropping connection
                                         SendDisassociate(wrappedHandle, DisassociateInfo.Unknown);
                                         nextState = Stop();

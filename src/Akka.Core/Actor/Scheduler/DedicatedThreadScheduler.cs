@@ -106,8 +106,9 @@ namespace Akka.Actor
                 }
 
                 // shutdown has been signaled
-               FireStopSignal();
-            }) {IsBackground = true};
+                FireStopSignal();
+            })
+            { IsBackground = true };
 
             thread.Start();
         }
@@ -189,7 +190,7 @@ namespace Akka.Actor
                 }
                 catch (Exception x)
                 {
-                    Log.Error(x, "DedicatedThreadScheduler failed to execute action");
+                    Log.DedicatedThreadSchedulerFailedToExecuteAction(x);
                 }
             }
             AddWork(initialDelay, executeAction, token);
@@ -218,7 +219,7 @@ namespace Akka.Actor
                 }
                 catch (Exception x)
                 {
-                    Log.Error(x, "DedicatedThreadScheduler failed to execute action");
+                    Log.DedicatedThreadSchedulerFailedToExecuteAction(x);
                 }
             }
 
@@ -242,18 +243,15 @@ namespace Akka.Actor
             {
                 _stopped.Value.TrySetResult(true);
             }
-            catch (Exception)
-            {
-                
-            }
+            catch (Exception) { }
         }
 
         /// <inheritdoc/>
         public void Dispose()
         {
             if (!Stop().Wait(_shutdownTimeout))
-            {    
-                Log.Warning("Failed to shutdown DedicatedThreadScheduler within {0}", _shutdownTimeout);   
+            {
+                if (Log.IsWarningEnabled) Log.FailedToShutdownDedicatedThreadSchedulerWithin(_shutdownTimeout);
             }
         }
 

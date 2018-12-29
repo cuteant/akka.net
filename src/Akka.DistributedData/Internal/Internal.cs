@@ -426,7 +426,9 @@ namespace Akka.DistributedData.Internal
             if (Data is IRemovedNodePruning dataWithRemovedNodePruning)
             {
                 if (!Pruning.TryGetValue(from, out var state))
-                    throw new ArgumentException($"Can't prune {@from} since it's not found in DataEnvelope");
+                {
+                    ThrowHelper.ThrowArgumentException_CantPruneSinceItsNotFoundInDataEnvelope(from);
+                }
 
                 if (state is PruningInitialized initialized)
                 {
@@ -495,7 +497,11 @@ namespace Akka.DistributedData.Internal
             IReplicatedData mergedData;
             if (cleanedData is IReplicatedDelta d)
             {
-                var delta = Data as IDeltaReplicatedData ?? throw new ArgumentException($"Expected {nameof(IDeltaReplicatedData)} but got '{Data}' instead.");
+                var delta = Data as IDeltaReplicatedData;
+                if (null == delta)
+                {
+                    ThrowHelper.ThrowArgumentException_ExpectedIDeltaReplicatedDataButGot(Data);
+                }
 
                 mergedData = delta.MergeDelta(d);
             }

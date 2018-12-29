@@ -123,7 +123,7 @@ namespace Akka.Cluster.Sharding
             int entityRecoveryConstantRateStrategyNumberOfEntities)
         {
             if (entityRecoveryStrategy != "all" && entityRecoveryStrategy != "constant")
-                throw new ArgumentException($"Unknown 'entity-recovery-strategy' [{entityRecoveryStrategy}], valid values are 'all' or 'constant'");
+                ThrowHelper.ThrowArgumentException_UnknownEntityRecoveryStrategy(entityRecoveryStrategy);
 
             CoordinatorFailureBackoff = coordinatorFailureBackoff;
             RetryInterval = retryInterval;
@@ -350,8 +350,7 @@ namespace Akka.Cluster.Sharding
         /// <returns>TBD</returns>
         public ClusterShardingSettings WithTuningParameters(TunningParameters tunningParameters)
         {
-            if (tunningParameters == null)
-                throw new ArgumentNullException(nameof(tunningParameters), $"ClusterShardingSettings requires {nameof(tunningParameters)} to be provided");
+            if (tunningParameters == null) ThrowHelper.ThrowArgumentNullException_RequiresTunningParametersToBeProvided();
 
             return Copy(tunningParameters: tunningParameters);
         }
@@ -366,8 +365,7 @@ namespace Akka.Cluster.Sharding
         /// <returns>TBD</returns>
         public ClusterShardingSettings WithCoordinatorSingletonSettings(ClusterSingletonManagerSettings coordinatorSingletonSettings)
         {
-            if (coordinatorSingletonSettings == null)
-                throw new ArgumentNullException(nameof(coordinatorSingletonSettings), $"ClusterShardingSettings requires {nameof(coordinatorSingletonSettings)} to be provided");
+            if (coordinatorSingletonSettings == null) ThrowHelper.ThrowArgumentNullException_RequiresCoordinatorSingletonSettingsToBeProvided();
 
             return Copy(coordinatorSingletonSettings: coordinatorSingletonSettings);
         }

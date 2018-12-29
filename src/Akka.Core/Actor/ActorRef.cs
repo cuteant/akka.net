@@ -726,7 +726,7 @@ namespace Akka.Actor
         {
             _children.AddOrUpdate(name, actor, (k, v) =>
             {
-                Log.Warning("{0} replacing child {1} ({2} -> {3})", name, actor, v, actor);
+                if (Log.IsWarningEnabled) Log.ReplacingChild(name, actor, v);
                 return v;
             });
         }
@@ -737,9 +737,9 @@ namespace Akka.Actor
         /// <param name="name">TBD</param>
         public void RemoveChild(string name)
         {
-            if (!_children.TryRemove(name, out _))
+            if (!_children.TryRemove(name, out _) && Log.IsWarningEnabled)
             {
-                Log.Warning("{0} trying to remove non-child {1}", Path, name);
+                Log.TryingToRemoveNonChild(Path, name);
             }
         }
 
@@ -750,9 +750,9 @@ namespace Akka.Actor
         /// <param name="child">TBD</param>
         public void RemoveChild(string name, IActorRef child)
         {
-            if (!_children.TryRemove(name, out _))
+            if (!_children.TryRemove(name, out _) && Log.IsWarningEnabled)
             {
-                Log.Warning("{0} trying to remove non-child {1}", Path, name);
+                Log.TryingToRemoveNonChild(Path, name);
             }
         }
 

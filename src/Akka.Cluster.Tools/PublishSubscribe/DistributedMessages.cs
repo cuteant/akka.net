@@ -139,7 +139,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// </exception>
         public Subscribe(string topic, IActorRef @ref, string @group = null)
         {
-            if (string.IsNullOrEmpty(topic)) throw new ArgumentException("topic must be defined");
+            if (string.IsNullOrEmpty(topic)) ThrowHelper.ThrowArgumentException_TopicMustBeDefined();
 
             Topic = topic;
             Group = @group;
@@ -213,7 +213,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// </exception>
         public Unsubscribe(string topic, IActorRef @ref, string @group = null)
         {
-            if (string.IsNullOrEmpty(topic)) throw new ArgumentException("topic must be defined");
+            if (string.IsNullOrEmpty(topic)) ThrowHelper.ThrowArgumentException_TopicMustBeDefined();
 
             Topic = topic;
             Group = @group;

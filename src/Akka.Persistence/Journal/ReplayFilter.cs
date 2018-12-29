@@ -133,7 +133,7 @@ namespace Akka.Persistence.Journal
             switch (message)
             {
                 case ReplayedMessage r:
-                    if (DebugEnabled && _log.IsDebugEnabled) { _log.Debug($"Replay: {r.Persistent}"); }
+                    if (DebugEnabled) { _log.Replay(r); }
 
                     try
                     {
@@ -263,7 +263,7 @@ namespace Akka.Persistence.Journal
                     return true;
                 case RecoverySuccess _:
                 case ReplayMessagesFailure _:
-                    if (DebugEnabled) { _log.Debug($"Replay completed: {message}"); }
+                    if (DebugEnabled) { _log.ReplayCompleted(message); }
 
                     SendBuffered();
                     PersistentActor.Tell(message, ActorRefs.NoSender);

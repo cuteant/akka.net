@@ -242,7 +242,9 @@ namespace Akka.Streams.Implementation
                 : _settings.Dispatcher));
 
             if (_settings.IsFuzzingMode && !_system.Settings.Config.HasPath("akka.stream.secret-test-fuzzing-warning-disable"))
-                Logger.Warning("Fuzzing mode is enabled on this system. If you see this warning on your production system then set 'akka.materializer.debug.fuzzing-mode' to off.");
+            {
+                Logger.FuzzingModeIsEnabledOnThisSystem();
+            }
         }
 
         /// <summary>

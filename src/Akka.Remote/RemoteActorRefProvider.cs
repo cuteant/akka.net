@@ -484,7 +484,7 @@ namespace Akka.Remote
 
                 return CreateRemoteRef(new RootActorPath(actorPath.Address) / actorPath.ElementsWithUid, localAddress);
             }
-            if (_log.IsDebugEnabled) _log.Debug("resolve of unknown path [{0}] failed", path);
+            if (_log.IsDebugEnabled) _log.ResolveOfUnknownPathFailed(path);
             return InternalDeadLetters;
         }
 
@@ -530,11 +530,11 @@ namespace Akka.Remote
         /// <returns>An <see cref="IActorRef"/> if a match was found. Otherwise nobody.</returns>
         public IActorRef InternalResolveActorRef(string path)
         {
-            if (path == String.Empty) { return ActorRefs.NoSender; }
+            if (path == string.Empty) { return ActorRefs.NoSender; }
 
             if (ActorPath.TryParse(path, out ActorPath actorPath)) { return ResolveActorRef(actorPath); }
 
-            if (_log.IsDebugEnabled) _log.Debug("resolve of unknown path [{0}] failed", path);
+            if (_log.IsDebugEnabled) _log.ResolveOfUnknownPathFailed(path);
             return DeadLetters;
         }
 
@@ -557,7 +557,7 @@ namespace Akka.Remote
             }
             catch (Exception ex)
             {
-                _log.Warning("Error while resolving address [{0}] due to [{1}]", actorPath.Address, ex.Message);
+                if (_log.IsWarningEnabled) _log.ErrorWhileResolvingAddress(actorPath, ex);
                 return new EmptyLocalActorRef(this, RootPath, _local.EventStream);
             }
         }
@@ -597,7 +597,7 @@ namespace Akka.Remote
         /// <param name="supervisor">TBD</param>
         public void UseActorOnNode(RemoteActorRef actor, Props props, Deploy deploy, IInternalActorRef supervisor)
         {
-            if (_log.IsDebugEnabled) _log.Debug("[{0}] Instantiating Remote Actor [{1}]", RootPath, actor.Path);
+            if (_log.IsDebugEnabled) _log.InstantiatingRemoteActor(RootPath, actor);
             IActorRef remoteNode = ResolveActorRef(new RootActorPath(actor.Path.Address) / "remote");
             remoteNode.Tell(new DaemonMsgCreate(props, deploy, actor.Path.ToSerializationFormat(), supervisor));
             _remoteDeploymentWatcher.Tell(new RemoteDeploymentWatcher.WatchRemote(actor, supervisor));
@@ -700,7 +700,7 @@ namespace Akka.Remote
                 {
                     if (@event.StateData != null && @event.FsmEvent is TerminationHook)
                     {
-                        if (_log.IsInfoEnabled) _log.Info("Shutting down remote daemon.");
+                        if (_log.IsInfoEnabled) _log.ShuttingDownRemoteDaemon();
                         @event.StateData.RemoteDaemon.Tell(TerminationHook.Instance);
                         return GoTo(TerminatorState.WaitDaemonShutdown);
                     }
@@ -713,7 +713,7 @@ namespace Akka.Remote
                 {
                     if (@event.StateData != null && @event.FsmEvent is TerminationHookDone)
                     {
-                        if (_log.IsInfoEnabled) _log.Info("Remote daemon shut down; proceeding with flushing remote transports.");
+                        if (_log.IsInfoEnabled) _log.RemoteDaemonShutDown();
                         @event.StateData.Transport.Shutdown()
                             .ContinueWith(t => TransportShutdown.Instance,
                                 TaskContinuationOptions.ExecuteSynchronously)
@@ -727,7 +727,7 @@ namespace Akka.Remote
 
                 State<TerminatorState, Internals> WaitTransportShutdownFunc(Event<Internals> @event)
                 {
-                    if (_log.IsInfoEnabled) _log.Info("Remoting shut down.");
+                    if (_log.IsInfoEnabled) _log.RemotingShutDown();
                     _systemGuardian.Tell(TerminationHookDone.Instance);
                     return Stop();
                 }

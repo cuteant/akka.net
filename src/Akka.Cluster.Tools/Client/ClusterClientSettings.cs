@@ -31,8 +31,7 @@ namespace Akka.Cluster.Tools.Client
             system.Settings.InjectTopLevelFallback(ClusterClientReceptionist.DefaultConfig());
 
             var config = system.Settings.Config.GetConfig("akka.cluster.client");
-            if (config == null)
-                throw new ArgumentException($"Actor system [{system.Name}] doesn't have `akka.cluster.client` config set up");
+            if (config == null) { ThrowHelper.ThrowArgumentException_ActorSystemDoesnotHave_AkkaClusterClient_Config(system); }
 
             return Create(config);
         }
@@ -123,7 +122,7 @@ namespace Akka.Cluster.Tools.Client
         {
             if (bufferSize < 0 || bufferSize > 10000)
             {
-                throw new ArgumentException("BufferSize must be >= 0 and <= 10000");
+                ThrowHelper.ThrowArgumentException_BufferSizeMustBe0_10000();
             }
 
             InitialContacts = initialContacts;
@@ -145,7 +144,7 @@ namespace Akka.Cluster.Tools.Client
         {
             if (initialContacts.Count == 0)
             {
-                throw new ArgumentException("InitialContacts must be defined");
+                ThrowHelper.ThrowArgumentException_InitialContactsMustBeDefined();
             }
 
             return Copy(initialContacts: initialContacts);

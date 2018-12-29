@@ -142,6 +142,16 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static int ThrowArgumentException_UnknownInClusterMessage<T>(T value, string unknown)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Unknown {unknown} [{value}] in cluster message");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static Type ThrowArgumentException_ExpectedUpOrRemovedInOnMemberStatusChangedListener(MemberStatus status)
         {
             throw GetException();

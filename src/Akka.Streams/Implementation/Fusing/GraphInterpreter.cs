@@ -588,8 +588,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
                 catch (Exception e)
                 {
-                    if (Log.IsErrorEnabled)
-                        Log.Error(e, $"Error during PreStart in [{Assembly.Stages[logic.StageId]}]");
+                    if (Log.IsErrorEnabled) { Log.ErrorDuringPreStartIn(e, Assembly, logic.StageId); }
                     logic.FailStage(e);
                 }
                 AfterStageHasRun(logic);
@@ -750,14 +749,12 @@ namespace Akka.Streams.Implementation.Fusing
             return eventsRemaining;
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void ReportStageError(Exception e)
         {
-            if (ActiveStage == null)
-                throw e;
+            if (ActiveStage == null) { throw e; }
 
-            var stage = Assembly.Stages[ActiveStage.StageId];
-            if (Log.IsErrorEnabled)
-                Log.Error(e, $"Error in stage [{stage}]: {e.Message}");
+            if (Log.IsErrorEnabled) { Log.ErroInStage(e, Assembly, ActiveStage.StageId); }
 
             ActiveStage.FailStage(e);
 
@@ -979,8 +976,7 @@ namespace Akka.Streams.Implementation.Fusing
             }
             catch (Exception err)
             {
-                if (Log.IsErrorEnabled)
-                    Log.Error(err, "Error during PostStop in [{0}]", Assembly.Stages[logic.StageId]);
+                if (Log.IsErrorEnabled) { Log.ErrorDuringPostStopIn(err, Assembly, logic.StageId); }
             }
         }
 

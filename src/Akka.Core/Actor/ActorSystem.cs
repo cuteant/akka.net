@@ -243,7 +243,7 @@ namespace Akka.Actor
                 {
                     if (disposing)
                     {
-                        if (Log.IsDebugEnabled) Log.Debug("Disposing system");
+                        if (Log.IsDebugEnabled) Log.DisposingSystem();
                         Terminate();
                     }
                     //Clean up unmanaged resources

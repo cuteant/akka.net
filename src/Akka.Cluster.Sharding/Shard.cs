@@ -504,7 +504,8 @@ namespace Akka.Cluster.Sharding
 
                 if (shard.MessageBuffers.TryGetValue(id, out var buffer) && buffer.Count != 0)
                 {
-                    if (shard.Log.IsDebugEnabled) shard.Log.Debug("Starting entity [{0}] again, there are buffered messages for it", id);
+                    var shardLog = shard.Log;
+                    if (shardLog.IsDebugEnabled) shardLog.StartingEntityAgainThereAreBufferedMessagesForIt(id);
                     shard.SendMessageBuffer(new Shard.EntityStarted(id));
                 }
                 else
@@ -529,7 +530,8 @@ namespace Akka.Cluster.Sharding
 
         private static void HandleStartEntity<TShard>(this TShard shard, ShardRegion.StartEntity start) where TShard : IShard
         {
-            if (shard.Log.IsDebugEnabled) shard.Log.Debug("Got a request from [{0}] to start entity [{1}] in shard [{2}]", shard.Sender, start.EntityId, shard.ShardId);
+            var shardLog = shard.Log;
+            if (shardLog.IsDebugEnabled) shardLog.GotRequestFromToStartEntityInShard(shard, start);
             shard.GetEntity(start.EntityId);
             shard.Context.Sender.Tell(new ShardRegion.StartEntityAck(start.EntityId, shard.ShardId));
         }
@@ -538,7 +540,8 @@ namespace Akka.Cluster.Sharding
         {
             if (ack.ShardId != shard.ShardId && shard.State.Entries.Contains(ack.EntityId))
             {
-                if (shard.Log.IsDebugEnabled) shard.Log.Debug("Entity [{0}] previously owned by shard [{1}] started in shard [{2}]", ack.EntityId, shard.ShardId, ack.ShardId);
+                var shardLog = shard.Log;
+                if (shardLog.IsDebugEnabled) shardLog.EntityPreviouslyOwnedByShardStartedInShard(ack, shard);
                 shard.ProcessChange(new Shard.EntityStopped(ack.EntityId), _ =>
                 {
                     shard.State = new Shard.ShardState(shard.State.Entries.Remove(ack.EntityId));
@@ -569,7 +572,8 @@ namespace Akka.Cluster.Sharding
                     shard.HandOff(shard.Sender);
                     break;
                 case PersistentShardCoordinator.HandOff handOff:
-                    shard.Log.Warning("Shard [{0}] can not hand off for another Shard [{1}]", shard.ShardId, handOff.Shard);
+                    var shardLog = shard.Log;
+                    if (shardLog.IsWarningEnabled) shardLog.ShardCanNotHandOffForAnotherShard(shard, handOff);
                     break;
                 default:
                     shard.Unhandled(message);
@@ -577,15 +581,16 @@ namespace Akka.Cluster.Sharding
             }
         }
 
-        private static void HandOff<TShard>(this TShard shard, IActorRef replyTo) where TShard: IShard
+        private static void HandOff<TShard>(this TShard shard, IActorRef replyTo) where TShard : IShard
         {
+            var shardLog = shard.Log;
             if (shard.HandOffStopper != null)
             {
-                shard.Log.Warning("HandOff shard [{0}] received during existing handOff", shard.ShardId);
+                shardLog.HandOffShardReceivedDuringExistingHandOff(shard);
             }
             else
             {
-                if (shard.Log.IsDebugEnabled) shard.Log.Debug("HandOff shard [{0}]", shard.ShardId);
+                if (shardLog.IsDebugEnabled) shardLog.HandOffShard(shard);
 
                 if (shard.State.Entries.Count != 0)
                 {
@@ -621,11 +626,12 @@ namespace Akka.Cluster.Sharding
 
         private static void Passivate<TShard>(this TShard shard, IActorRef entity, object stopMessage) where TShard : IShard
         {
+            var shardLog = shard.Log;
             if (shard.IdByRef.TryGetValue(entity, out var id))
             {
                 if (!shard.MessageBuffers.ContainsKey(id))
                 {
-                    if (shard.Log.IsDebugEnabled) shard.Log.Debug("Passivating started on entity {0}", id);
+                    if (shardLog.IsDebugEnabled) shardLog.PassivatingStartedOnEntity(id);
 
                     shard.Passivating = shard.Passivating.Add(entity);
                     shard.MessageBuffers = shard.MessageBuffers.Add(id, ImmutableList<Tuple<object, IActorRef>>.Empty);
@@ -634,23 +640,24 @@ namespace Akka.Cluster.Sharding
                 }
                 else
                 {
-                    if (shard.Log.IsDebugEnabled) shard.Log.Debug("Passivation already in progress for {0}. Not sending stopMessage back to entity.", entity);
+                    if (shardLog.IsDebugEnabled) shardLog.PassivationAlreadyInProgress(entity);
                 }
             }
             else
             {
-                if (shard.Log.IsDebugEnabled) shard.Log.Debug("Unknown entity {0}. Not sending stopMessage back to entity.", entity);
+                if (shardLog.IsDebugEnabled) shardLog.UnknownEntityNotSendingStopMessageBackToEntity(entity);
             }
         }
-        
-        public static void PassivateCompleted<TShard>(this TShard shard, Shard.EntityStopped evt) where TShard: IShard
+
+        public static void PassivateCompleted<TShard>(this TShard shard, Shard.EntityStopped evt) where TShard : IShard
         {
-            if (shard.Log.IsDebugEnabled) shard.Log.Debug("Entity stopped after passivation [{0}]", evt.EntityId);
+            var shardLog = shard.Log;
+            if (shardLog.IsDebugEnabled) shardLog.EntityStoppedAfterPassivation(evt);
             shard.State = new Shard.ShardState(shard.State.Entries.Remove(evt.EntityId));
             shard.MessageBuffers = shard.MessageBuffers.Remove(evt.EntityId);
         }
-        
-        public static void SendMessageBuffer<TShard>(this TShard shard, Shard.EntityStarted message) where TShard: IShard
+
+        public static void SendMessageBuffer<TShard>(this TShard shard, Shard.EntityStarted message) where TShard : IShard
         {
             var id = message.EntityId;
 
@@ -661,7 +668,8 @@ namespace Akka.Cluster.Sharding
 
                 if (buffer.Count != 0)
                 {
-                    if (shard.Log.IsDebugEnabled) shard.Log.Debug("Sending message buffer for entity [{0}] ([{1}] messages)", id, buffer.Count);
+                    var shardLog = shard.Log;
+                    if (shardLog.IsDebugEnabled) shardLog.SendingMessageBufferForEntity(id, buffer.Count);
 
                     shard.GetEntity(id);
 
@@ -679,9 +687,10 @@ namespace Akka.Cluster.Sharding
             var id = t.Item1;
             var payload = t.Item2;
 
+            var shardLog = shard.Log;
             if (string.IsNullOrEmpty(id))
             {
-                shard.Log.Warning("Id must not be empty, dropping message [{0}]", message.GetType());
+                if (shardLog.IsWarningEnabled) shardLog.IdMustNotBeEmptyDroppingMessage(message);
                 shard.Context.System.DeadLetters.Tell(message);
             }
             else
@@ -690,12 +699,12 @@ namespace Akka.Cluster.Sharding
                 {
                     if (shard.TotalBufferSize() >= shard.Settings.TunningParameters.BufferSize)
                     {
-                        shard.Log.Warning("Buffer is full, dropping message for entity [{0}]", id);
+                        if (shardLog.IsWarningEnabled) shardLog.BufferIsFullDroppingMessageForEntity(id);
                         shard.Context.System.DeadLetters.Tell(message);
                     }
                     else
                     {
-                        if (shard.Log.IsDebugEnabled) shard.Log.Debug("Message for entity [{0}] buffered", id);
+                        if (shardLog.IsDebugEnabled) shardLog.MessageForEntityBuffered(id);
                         shard.MessageBuffers = shard.MessageBuffers.SetItem(id, buffer.Add(Tuple.Create(message, sender)));
                     }
                 }
@@ -703,7 +712,7 @@ namespace Akka.Cluster.Sharding
                     shard.DeliverTo(id, message, payload, sender);
             }
         }
-        
+
         internal static void BaseDeliverTo<TShard>(this TShard shard, string id, object message, object payload, IActorRef sender) where TShard : IShard
         {
             var name = Uri.EscapeDataString(id);
@@ -714,14 +723,15 @@ namespace Akka.Cluster.Sharding
             else
                 child.Tell(payload, sender);
         }
-        
-        internal static IActorRef GetEntity<TShard>(this TShard shard, string id) where TShard: IShard
+
+        internal static IActorRef GetEntity<TShard>(this TShard shard, string id) where TShard : IShard
         {
             var name = Uri.EscapeDataString(id);
             var child = shard.Context.Child(name);
             if (Equals(child, ActorRefs.Nobody))
             {
-                if (shard.Log.IsDebugEnabled) shard.Log.Debug("Starting entity [{0}] in shard [{1}]", id, shard.ShardId);
+                var shardLog = shard.Log;
+                if (shardLog.IsDebugEnabled) shardLog.StartingEntityInShard(id, shard);
 
                 child = shard.Context.Watch(shard.Context.ActorOf(shard.EntityProps(id), name));
                 shard.IdByRef = shard.IdByRef.SetItem(child, id);
@@ -750,7 +760,7 @@ namespace Akka.Cluster.Sharding
             }
         }
     }
-    
+
     class RememberEntityStarter : ActorBase
     {
         private class Tick : INoSerializationVerificationNeeded, ISingletonMessage

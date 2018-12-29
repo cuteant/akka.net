@@ -115,25 +115,25 @@ namespace Akka.Persistence
                 case SaveSnapshotFailure saveSnapshotFailure:
                     if (Log.IsWarningEnabled)
                     {
-                        Log.Warning("Failed to SaveSnapshot given metadata [{0}] due to: [{1}: {2}]", saveSnapshotFailure.Metadata, saveSnapshotFailure.Cause, saveSnapshotFailure.Cause.Message);
+                        Log.FailedToSaveSnapshotGivenMetadata(saveSnapshotFailure);
                     }
                     break;
                 case DeleteSnapshotFailure deleteSnapshotFailure:
                     if (Log.IsWarningEnabled)
                     {
-                        Log.Warning("Failed to DeleteSnapshot given metadata [{0}] due to: [{1}: {2}]", deleteSnapshotFailure.Metadata, deleteSnapshotFailure.Cause, deleteSnapshotFailure.Cause.Message);
+                        Log.FailedToDeleteSnapshotGivenMetadata(deleteSnapshotFailure);
                     }
                     break;
                 case DeleteSnapshotsFailure deleteSnapshotsFailure:
                     if (Log.IsWarningEnabled)
                     {
-                        Log.Warning("Failed to DeleteSnapshots given criteria [{0}] due to: [{1}: {2}]", deleteSnapshotsFailure.Criteria, deleteSnapshotsFailure.Cause, deleteSnapshotsFailure.Cause.Message);
+                        Log.FailedToDeleteSnapshotsGivenCriteria(deleteSnapshotsFailure);
                     }
                     break;
                 case DeleteMessagesFailure deleteMessagesFailure:
                     if (Log.IsWarningEnabled)
                     {
-                        Log.Warning("Failed to DeleteMessages ToSequenceNr [{0}] for PersistenceId [{1}] due to: [{2}: {3}]", deleteMessagesFailure.ToSequenceNr, PersistenceId, deleteMessagesFailure.Cause, deleteMessagesFailure.Cause.Message);
+                        Log.FailedToDeleteMessagesToSequenceNrForPersistenceId(deleteMessagesFailure, PersistenceId);
                     }
                     break;
                 default:
