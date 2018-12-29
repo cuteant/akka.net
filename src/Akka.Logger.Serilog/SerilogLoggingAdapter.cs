@@ -60,8 +60,8 @@ namespace Akka.Logger.Serilog
         /// <summary>
         /// Obsolete. Use <see cref="M:Akka.Event.ILoggingAdapter.Warning(System.String,System.Object[])" /> instead!
         /// </summary>
-        /// <param name="format">N/A</param>
-        /// <param name="args">N/A</param>
+        /// <param name="format">The message that is being logged.</param>
+        /// <param name="args">An optional list of items used to format the message.</param>
         public override void Warn(string format, params object[] args)
         {
             base.Warning(format, BuildArgs(args));
