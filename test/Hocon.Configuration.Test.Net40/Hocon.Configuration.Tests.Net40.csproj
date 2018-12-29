@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFramework>net45</TargetFramework>
+    <DefineConstants>$(DefineConstants);TEST40</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hocon.Configuration\Hocon.Configuration.csproj" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net45' ">
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.1.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.1.0" />
+    <PackageReference Include="Moq" Version="$(MoqPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Hocon.Configuration.Test\**\*.cs" Exclude="..\Hocon.Configuration.Test\bin\**;..\Hocon.Configuration.Test\obj\**" />
+    <EmbeddedResource Include="..\Hocon.Configuration.Test\**\*.resx" Exclude="..\Hocon.Configuration.Test\bin\**;..\Hocon.Configuration.Test\obj\**;@(EmbeddedResource)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Include="..\Hocon.Configuration.Test\App.config" Link="App.config" />
+  </ItemGroup>
+
+</Project>

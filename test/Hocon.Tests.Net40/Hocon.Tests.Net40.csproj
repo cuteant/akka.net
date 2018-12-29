@@ -1,0 +1,26 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFramework>net45</TargetFramework>
+    <RootNamespace>Hocon.Tests</RootNamespace>
+    <AssemblyName>Hocon.Tests.Tests</AssemblyName>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);TEST40</DefineConstants>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="xunit" Version="2.1.0" />
+    <PackageReference Include="xunit.runner.visualstudio" Version="2.1.0" />
+    <PackageReference Include="Moq" Version="$(MoqPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Hocon\Hocon.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Hocon.Tests\**\*.cs" Exclude="..\Hocon.Tests\bin\**;..\Hocon.Tests\obj\**" />
+    <EmbeddedResource Include="..\Hocon.Tests\**\*.resx" Exclude="..\Hocon.Tests\bin\**;..\Hocon.Tests\obj\**;@(EmbeddedResource)" />
+  </ItemGroup>
+
+</Project>

@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardDev40Tfms)</TargetFrameworks>
+    <RootNamespace>Hocon</RootNamespace>
+    <AssemblyName>Hocon</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Hocon.Unofficial</PackageId>
+    <Title>Hocon (Unofficial)</Title>
+    <Description>HOCON is a complete and total rewrite of the HOCON parsing engine.</Description>
+    <PackageTags>Hocon</PackageTags>
+  </PropertyGroup>
+
+</Project>
