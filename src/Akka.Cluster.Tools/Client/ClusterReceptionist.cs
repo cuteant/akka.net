@@ -170,7 +170,6 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class GetContacts : IClusterClientMessage, IDeadLetterSuppression //, ISingletonMessage
         {
             /// <summary>
@@ -183,7 +182,6 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class Contacts : IClusterClientMessage
         {
             /// <summary>
@@ -229,7 +227,6 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class Heartbeat : IClusterClientMessage, IDeadLetterSuppression //, ISingletonMessage
         {
             /// <summary>
@@ -242,7 +239,6 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class HeartbeatRsp : IClusterClientMessage, IDeadLetterSuppression //, ISingletonMessage
         {
             /// <summary>
@@ -255,7 +251,6 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class Ping : IDeadLetterSuppression, ISingletonMessage
         {
             /// <summary>

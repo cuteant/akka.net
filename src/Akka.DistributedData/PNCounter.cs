@@ -26,7 +26,6 @@ namespace Akka.DistributedData
     /// 
     /// This class is immutable, i.e. "modifying" methods return a new instance.
     /// </summary>
-    [Serializable]
     public sealed partial class PNCounter :
         IDeltaReplicatedData<PNCounter, PNCounter>,
         IRemovedNodePruning<PNCounter>,

@@ -126,7 +126,6 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class RefreshContactsTick : ISingletonMessage
         {
             /// <summary>
@@ -139,7 +138,6 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class HeartbeatTick : ISingletonMessage
         {
             /// <summary>
@@ -152,7 +150,6 @@ namespace Akka.Cluster.Tools.Client
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class ReconnectTimeout : ISingletonMessage
         {
             /// <summary>

@@ -11,6 +11,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Persistence;
+using MessagePack;
 
 namespace Akka.Cluster.Sharding
 {
@@ -26,7 +27,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// Persistent state of the event sourced PersistentShardCoordinator.
         /// </summary>
-        [Serializable]
         public sealed class State : IClusterShardingSerializable
         {
             /// <summary>
@@ -267,7 +267,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// <see cref="Sharding.ShardRegion"/> registers to <see cref="PersistentShardCoordinator"/>, until it receives <see cref="RegisterAck"/>.
         /// </summary>
-        [Serializable]
         public sealed class Register : ICoordinatorCommand, IDeadLetterSuppression
         {
             /// <summary>
@@ -315,7 +314,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// <see cref="ShardRegion"/> in proxy only mode registers to <see cref="PersistentShardCoordinator"/>, until it receives <see cref="RegisterAck"/>.
         /// </summary>
-        [Serializable]
         public sealed class RegisterProxy : ICoordinatorCommand, IDeadLetterSuppression
         {
             /// <summary>
@@ -411,7 +409,6 @@ namespace Akka.Cluster.Sharding
         /// <see cref="ShardRegion"/> requests the location of a shard by sending this message
         /// to the <see cref="PersistentShardCoordinator"/>.
         /// </summary>
-        [Serializable]
         public sealed class GetShardHome : ICoordinatorCommand, IDeadLetterSuppression
         {
             /// <summary>
@@ -459,7 +456,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// <see cref="PersistentShardCoordinator"/> replies with this message for <see cref="GetShardHome"/> requests.
         /// </summary>
-        [Serializable]
         public sealed class ShardHome : ICoordinatorMessage
         {
             /// <summary>
@@ -516,7 +512,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// <see cref="PersistentShardCoordinator"/> informs a <see cref="ShardRegion"/> that it is hosting this shard
         /// </summary>
-        [Serializable]
         public sealed class HostShard : ICoordinatorMessage
         {
             /// <summary>
@@ -564,7 +559,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// <see cref="ShardRegion"/> replies with this message for <see cref="HostShard"/> requests which lead to it hosting the shard
         /// </summary>
-        [Serializable]
         public sealed class ShardStarted : ICoordinatorMessage
         {
             /// <summary>
@@ -617,7 +611,6 @@ namespace Akka.Cluster.Sharding
         /// When all have replied the <see cref="PersistentShardCoordinator" /> continues by sending
         /// <see cref="HandOff" /> to the <see cref="ShardRegion" /> responsible for the shard.
         /// </summary>
-        [Serializable]
         public sealed class BeginHandOff : ICoordinatorMessage
         {
             /// <summary>
@@ -665,7 +658,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// Acknowledgement of <see cref="BeginHandOff"/>
         /// </summary>
-        [Serializable]
         public sealed class BeginHandOffAck : ICoordinatorCommand
         {
             /// <summary>
@@ -716,7 +708,6 @@ namespace Akka.Cluster.Sharding
         /// shard. The <see cref="ShardRegion"/> is supposed to stop all entries in that shard and when
         /// all entries have terminated reply with <see cref="ShardStopped"/> to the <see cref="PersistentShardCoordinator"/>.
         /// </summary>
-        [Serializable]
         public sealed class HandOff : ICoordinatorMessage
         {
             /// <summary>
@@ -764,7 +755,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// Reply to <see cref="HandOff"/> when all entries in the shard have been terminated.
         /// </summary>
-        [Serializable]
         public sealed class ShardStopped : ICoordinatorCommand
         {
             /// <summary>
@@ -812,20 +802,23 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// Result of <see cref="PersistentShardCoordinator.AllocateShard"/> is piped to self with this message.
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public sealed class AllocateShardResult
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly ShardId Shard;
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public readonly IActorRef ShardRegion; // option
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(2)]
             public readonly IActorRef GetShardHomeSender;
 
             /// <summary>
@@ -834,6 +827,7 @@ namespace Akka.Cluster.Sharding
             /// <param name="shard">TBD</param>
             /// <param name="shardRegion">TBD</param>
             /// <param name="getShardHomeSender">TBD</param>
+            [SerializationConstructor]
             public AllocateShardResult(string shard, IActorRef shardRegion, IActorRef getShardHomeSender)
             {
                 Shard = shard;
@@ -848,12 +842,13 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// Result of `rebalance` is piped to self with this message.
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public sealed class RebalanceResult
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly IImmutableSet<ShardId> Shards;
 
             /// <summary>
@@ -872,7 +867,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// <see cref="Sharding.ShardRegion"/> requests full handoff to be able to shutdown gracefully.
         /// </summary>
-        [Serializable]
         public sealed class GracefulShutdownRequest : ICoordinatorCommand
         {
             /// <summary>
@@ -925,7 +919,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public class ShardRegionRegistered : IDomainEvent
         {
             /// <summary>
@@ -973,7 +966,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public class ShardRegionProxyRegistered : IDomainEvent
         {
             /// <summary>
@@ -1021,7 +1013,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public class ShardRegionTerminated : IDomainEvent
         {
             /// <summary>
@@ -1069,7 +1060,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public class ShardRegionProxyTerminated : IDomainEvent
         {
             /// <summary>
@@ -1117,7 +1107,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public class ShardHomeAllocated : IDomainEvent
         {
             /// <summary>
@@ -1174,7 +1163,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public class ShardHomeDeallocated : IDomainEvent
         {
             /// <summary>
@@ -1222,7 +1210,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public sealed class StateInitialized : ISingletonMessage
         {
             /// <summary>

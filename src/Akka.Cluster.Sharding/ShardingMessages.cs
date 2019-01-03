@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using Akka.Actor;
 using System.Collections.Immutable;
+using MessagePack;
 
 namespace Akka.Cluster.Sharding
 {
@@ -35,13 +36,14 @@ namespace Akka.Cluster.Sharding
     /// 
     /// <see cref="PoisonPill"/> is a perfectly fine <see cref="StopMessage"/>.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class Passivate : IShardRegionCommand
     {
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="stopMessage">TBD</param>
+        [SerializationConstructor]
         public Passivate(object stopMessage)
         {
             StopMessage = stopMessage;
@@ -50,6 +52,7 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public object StopMessage { get; private set; }
     }
 
@@ -58,7 +61,6 @@ namespace Akka.Cluster.Sharding
     /// the <see cref="ShardRegion"/> and then the <see cref="ShardRegion"/> actor will be stopped. You can <see cref="ICanWatch.Watch"/>
     /// it to know when it is completed.
     /// </summary>
-    [Serializable]
     public sealed class GracefulShutdown : IShardRegionCommand, ISingletonMessage
     {
         /// <summary>
@@ -75,18 +77,20 @@ namespace Akka.Cluster.Sharding
     /// We must be sure that a shard is initialized before to start send messages to it.
     /// Shard could be terminated during initialization.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class ShardInitialized
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly string ShardId;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="shardId">TBD</param>
+        [SerializationConstructor]
         public ShardInitialized(string shardId)
         {
             ShardId = shardId;
@@ -98,7 +102,6 @@ namespace Akka.Cluster.Sharding
     /// which contains the addresses of all registered regions.
     /// Intended for testing purpose to see when cluster sharding is "ready".
     /// </summary>
-    [Serializable]
     public sealed class GetCurrentRegions : IShardRegionQuery, ISingletonMessage
     {
         /// <summary>
@@ -114,17 +117,19 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// Reply to <see cref="GetCurrentRegions"/>.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class CurrentRegions
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly IImmutableSet<Address> Regions;
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="regions">TBD</param>
+        [SerializationConstructor]
         public CurrentRegions(IImmutableSet<Address> regions)
         {
             Regions = regions;
@@ -140,18 +145,20 @@ namespace Akka.Cluster.Sharding
     /// Intended for testing purpose to see when cluster sharding is "ready" or to monitor
     /// the state of the shard regions.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class GetClusterShardingStats : IShardRegionQuery
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly TimeSpan Timeout;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="timeout">TBD</param>
+        [SerializationConstructor]
         public GetClusterShardingStats(TimeSpan timeout)
         {
             Timeout = timeout;
@@ -161,18 +168,20 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// Reply to <see cref="GetClusterShardingStats"/>, contains statistics about all the sharding regions in the cluster.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class ClusterShardingStats
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly IImmutableDictionary<Address, ShardRegionStats> Regions;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="regions">TBD</param>
+        [SerializationConstructor]
         public ClusterShardingStats(IImmutableDictionary<Address, ShardRegionStats> regions)
         {
             Regions = regions;
@@ -188,7 +197,6 @@ namespace Akka.Cluster.Sharding
     /// 
     /// For the statistics for the entire cluster, see <see cref="GetClusterShardingStats"/>.
     /// </summary>
-    [Serializable]
     public sealed class GetShardRegionStats : IShardRegionQuery, ISingletonMessage
     {
         /// <summary>
@@ -207,7 +215,6 @@ namespace Akka.Cluster.Sharding
     /// The state contains information about what shards are running in this region
     /// and what entities are running on each of those shards.
     /// </summary>
-    [Serializable]
     public sealed class GetShardRegionState : IShardRegionQuery, ISingletonMessage
     {
         /// <summary>
@@ -223,18 +230,20 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// Reply to <see cref="GetShardRegionState"/> If gathering the shard information times out the set of shards will be empty.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class CurrentShardRegionState
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly IImmutableSet<ShardState> Shards;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="shards">TBD</param>
+        [SerializationConstructor]
         public CurrentShardRegionState(IImmutableSet<ShardState> shards)
         {
             Shards = shards;
@@ -244,18 +253,20 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class ShardRegionStats
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly IImmutableDictionary<string, int> Stats;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="stats">TBD</param>
+        [SerializationConstructor]
         public ShardRegionStats(IImmutableDictionary<string, int> stats)
         {
             Stats = stats;
@@ -265,16 +276,18 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class ShardState
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly string ShardId;
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public readonly IImmutableSet<string> EntityIds;
 
         /// <summary>
@@ -282,6 +295,7 @@ namespace Akka.Cluster.Sharding
         /// </summary>
         /// <param name="shardId">TBD</param>
         /// <param name="entityIds">TBD</param>
+        [SerializationConstructor]
         public ShardState(string shardId, IImmutableSet<string> entityIds)
         {
             ShardId = shardId;

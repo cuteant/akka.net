@@ -22,7 +22,6 @@ namespace Akka.DistributedData
     /// 
     /// This class is immutable, i.e. "modifying" methods return a new instance.
     /// </summary>
-    [Serializable]
     public abstract class VersionVector : IReplicatedData<VersionVector>, IReplicatedDataSerialization, IRemovedNodePruning<VersionVector>, IEquatable<VersionVector>
     {
         public enum Ordering
@@ -313,7 +312,6 @@ namespace Akka.DistributedData
         public override int GetHashCode() => Node.GetHashCode() ^ Version.GetHashCode();
     }
 
-    [Serializable]
     public sealed class MultiVersionVector : VersionVector
     {
         internal readonly ImmutableDictionary<UniqueAddress, long> Versions;

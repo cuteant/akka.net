@@ -31,7 +31,6 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public sealed class GetNext : ISingletonMessage
         {
             /// <summary>
@@ -44,7 +43,6 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class InitialOldestState
         {
@@ -76,7 +74,6 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class OldestChanged
         {

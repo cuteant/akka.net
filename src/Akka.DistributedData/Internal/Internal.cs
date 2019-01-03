@@ -20,7 +20,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class GossipTick : ISingletonMessage
     {
         /// <summary>
@@ -38,7 +37,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class DeltaPropagationTick : ISingletonMessage
     {
         /// <summary>
@@ -52,7 +50,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal class RemovedNodePruningTick : ISingletonMessage
     {
         /// <summary>
@@ -70,7 +67,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal class ClockTick : ISingletonMessage
     {
         /// <summary>
@@ -88,7 +84,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Write : IReplicatorMessage, IEquatable<Write>
     {
         /// <summary>
@@ -139,7 +134,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class WriteAck : IReplicatorMessage, IEquatable<WriteAck>//, ISingletonMessage
     {
         /// <summary>
@@ -162,7 +156,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class WriteNack : IReplicatorMessage, IEquatable<WriteNack> //, ISingletonMessage
     {
         /// <summary>
@@ -198,7 +191,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Read : IReplicatorMessage, IEquatable<Read>
     {
         /// <summary>
@@ -234,7 +226,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class ReadResult : IReplicatorMessage, IEquatable<ReadResult>, IDeadLetterSuppression
     {
         /// <summary>
@@ -273,8 +264,7 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
-    internal sealed class ReadRepair : IEquatable<ReadRepair>
+    internal sealed class ReadRepair : IEquatable<ReadRepair>, IReplicatorMessage
     {
         /// <summary>
         /// TBD
@@ -324,7 +314,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class ReadRepairAck : ISingletonMessage
     {
         /// <summary>
@@ -341,7 +330,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     public sealed class DataEnvelope : IEquatable<DataEnvelope>, IReplicatorMessage
     {
         /// <summary>
@@ -599,7 +587,6 @@ namespace Akka.DistributedData.Internal
     /// TBD
     /// </summary>
     /// <returns>TBD</returns>
-    [Serializable]
     internal sealed class DeletedData : IReplicatedData<DeletedData>, IEquatable<DeletedData>, ISingletonMessage
     {
         /// <summary>
@@ -637,7 +624,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Status : IReplicatorMessage, IEquatable<Status>
     {
         /// <summary>
@@ -708,7 +694,6 @@ namespace Akka.DistributedData.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Gossip : IReplicatorMessage, IEquatable<Gossip>
     {
         /// <summary>

@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
+using MessagePack;
 
 namespace Akka.Cluster.Sharding
 {
@@ -59,10 +60,12 @@ namespace Akka.Cluster.Sharding
     /// i.e. new members in the cluster. There is a configurable threshold of how large the difference
     /// must be to begin the rebalancing. The number of ongoing rebalancing processes can be limited.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public class LeastShardAllocationStrategy : IShardAllocationStrategy
     {
+        [Key(0)]
         private readonly int _rebalanceThreshold;
+        [Key(1)]
         private readonly int _maxSimultaneousRebalance;
 
         /// <summary>
@@ -70,6 +73,7 @@ namespace Akka.Cluster.Sharding
         /// </summary>
         /// <param name="rebalanceThreshold">TBD</param>
         /// <param name="maxSimultaneousRebalance">TBD</param>
+        [SerializationConstructor]
         public LeastShardAllocationStrategy(int rebalanceThreshold, int maxSimultaneousRebalance)
         {
             _rebalanceThreshold = rebalanceThreshold;

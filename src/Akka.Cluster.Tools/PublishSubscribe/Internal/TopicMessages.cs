@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Routing;
@@ -19,7 +20,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Prune : ISingletonMessage
     {
         /// <summary>
@@ -61,22 +61,25 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     internal class Bucket : IEquatable<Bucket>
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public Address Owner { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public long Version { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(2)]
         public IImmutableDictionary<string, ValueHolder> Content { get; }
 
         /// <summary>
@@ -93,6 +96,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <param name="owner">TBD</param>
         /// <param name="version">TBD</param>
         /// <param name="content">TBD</param>
+        [SerializationConstructor]
         public Bucket(Address owner, long version, IImmutableDictionary<string, ValueHolder> content)
         {
             Owner = owner;
@@ -133,20 +137,22 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     internal sealed class ValueHolder : IEquatable<ValueHolder>
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public long Version { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public IActorRef Ref { get; }
 
-        [NonSerialized]
+        [NonSerialized, IgnoreMember, IgnoreDataMember]
         private Routee _routee;
 
         /// <summary>
@@ -154,6 +160,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// </summary>
         /// <param name="version">TBD</param>
         /// <param name="ref">TBD</param>
+        [SerializationConstructor]
         public ValueHolder(long version, IActorRef @ref)
         {
             Version = version;
@@ -163,6 +170,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <summary>
         /// TBD
         /// </summary>
+        [IgnoreMember, IgnoreDataMember]
         public Routee Routee { get { return _routee ?? (_routee = Ref != null ? new ActorRefRoutee(Ref) : null); } }
 
         /// <inheritdoc/>
@@ -195,7 +203,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Status : IDistributedPubSubMessage, IDeadLetterSuppression
     {
         /// <summary>
@@ -254,7 +261,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Delta : IDistributedPubSubMessage, IEquatable<Delta>, IDeadLetterSuppression
     {
         /// <summary>
@@ -297,7 +303,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class DeltaCount : ISingletonMessage
     {
         /// <summary>
@@ -311,7 +316,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class GossipTick : ISingletonMessage
     {
         /// <summary>
@@ -325,18 +329,20 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     internal sealed class RegisterTopic
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public IActorRef TopicRef { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="topicRef">TBD</param>
+        [SerializationConstructor]
         public RegisterTopic(IActorRef topicRef)
         {
             TopicRef = topicRef;
@@ -346,17 +352,19 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     internal sealed class Subscribed
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public SubscribeAck Ack { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public IActorRef Subscriber { get; }
 
         /// <summary>
@@ -364,6 +372,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// </summary>
         /// <param name="ack">TBD</param>
         /// <param name="subscriber">TBD</param>
+        [SerializationConstructor]
         public Subscribed(SubscribeAck ack, IActorRef subscriber)
         {
             Ack = ack;
@@ -374,17 +383,19 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     internal sealed class Unsubscribed
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public UnsubscribeAck Ack { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public IActorRef Subscriber { get; }
 
         /// <summary>
@@ -392,6 +403,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// </summary>
         /// <param name="ack">TBD</param>
         /// <param name="subscriber">TBD</param>
+        [SerializationConstructor]
         public Unsubscribed(UnsubscribeAck ack, IActorRef subscriber)
         {
             Ack = ack;
@@ -402,7 +414,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class SendToOneSubscriber
     {
         /// <summary>

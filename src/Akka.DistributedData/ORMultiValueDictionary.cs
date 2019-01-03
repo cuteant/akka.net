@@ -29,7 +29,6 @@ namespace Akka.DistributedData
     /// 
     /// This class is immutable, i.e. "modifying" methods return a new instance.
     /// </summary>
-    [Serializable]
     public sealed partial class ORMultiValueDictionary<TKey, TValue> :
         IDeltaReplicatedData<ORMultiValueDictionary<TKey, TValue>, ORDictionary<TKey, ORSet<TValue>>.IDeltaOperation>,
         IRemovedNodePruning<ORMultiValueDictionary<TKey, TValue>>,

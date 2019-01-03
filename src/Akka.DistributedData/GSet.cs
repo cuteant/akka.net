@@ -60,7 +60,6 @@ namespace Akka.DistributedData
     /// This class is immutable, i.e. "modifying" methods return a new instance.
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    [Serializable]
     public sealed class GSet<T> :
         FastMerge<GSet<T>>,
         IReplicatedDataSerialization,

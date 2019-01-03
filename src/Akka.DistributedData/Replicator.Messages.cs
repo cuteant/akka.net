@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using System.Runtime.ExceptionServices;
 using System.Runtime.Serialization;
 using Akka.Actor;
+using MessagePack;
 
 namespace Akka.DistributedData
 {
@@ -70,7 +71,6 @@ namespace Akka.DistributedData
     /// way to pass contextual information (e.g. original sender) without having to use `ask`
     /// or maintain local correlation data structures.
     /// </summary>
-    [Serializable]
     public sealed class Get : ICommand, IEquatable<Get>, IReplicatorMessage
     {
         public IKey Key { get; }
@@ -163,7 +163,6 @@ namespace Akka.DistributedData
         T Get<T>(IKey<T> key) where T : IReplicatedData;
     }
 
-    [Serializable]
     public sealed class GetSuccess : IGetResponse, IEquatable<GetSuccess>, IReplicatorMessage
     {
         public IKey Key { get; }
@@ -219,7 +218,6 @@ namespace Akka.DistributedData
         public override string ToString() => $"GetSuccess({Key}:{Data}{(Request == null ? "" : ", req=" + Request)})";
     }
 
-    [Serializable]
     public sealed class NotFound : IGetResponse, IEquatable<NotFound>, IReplicatorMessage
     {
         public IKey Key { get; }
@@ -269,7 +267,6 @@ namespace Akka.DistributedData
     /// The <see cref="Get{T}"/> request could not be fulfill according to the given
     /// <see cref="IReadConsistency"/> level and <see cref="IReadConsistency.Timeout"/> timeout.
     /// </summary>
-    [Serializable]
     public sealed class GetFailure : IGetResponse, IEquatable<GetFailure>, IReplicatorMessage
     {
         public IKey Key { get; }
@@ -328,7 +325,6 @@ namespace Akka.DistributedData
     /// 
     /// If the key is deleted the subscriber is notified with a <see cref="DataDeleted"/> message.
     /// </summary>
-    [Serializable]
     public sealed class Subscribe : IReplicatorMessage, IEquatable<Subscribe>
     {
         public IKey Key { get; }
@@ -370,7 +366,6 @@ namespace Akka.DistributedData
     /// Unregister a subscriber.
     /// </summary>
     /// <seealso cref="Subscribe"/>
-    [Serializable]
     public sealed class Unsubscribe : IEquatable<Unsubscribe>, IReplicatorMessage
     {
         public IKey Key { get; }
@@ -417,7 +412,6 @@ namespace Akka.DistributedData
     /// The data value is retrieved with <see cref="Data"/> using the typed key.
     /// </summary>
     /// <seealso cref="Subscribe"/>
-    [Serializable]
     public sealed class Changed : IChanged, IEquatable<Changed>, IReplicatorMessage
     {
         public IKey Key { get; }
@@ -941,8 +935,7 @@ namespace Akka.DistributedData
     /// Get current number of replicas, including the local replica.
     /// Will reply to sender with <see cref="ReplicaCount"/>.
     /// </summary>
-    [Serializable]
-    public sealed class GetReplicaCount
+    public sealed class GetReplicaCount : ISingletonMessage
     {
         public static readonly GetReplicaCount Instance = new GetReplicaCount();
 
@@ -952,11 +945,13 @@ namespace Akka.DistributedData
     /// <summary>
     /// Current number of replicas. Reply to <see cref="GetReplicaCount"/>.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class ReplicaCount : IEquatable<ReplicaCount>
     {
+        [Key(0)]
         public int N { get; }
 
+        [SerializationConstructor]
         public ReplicaCount(int n)
         {
             N = n;
@@ -979,8 +974,7 @@ namespace Akka.DistributedData
     /// Notify subscribers of changes now, otherwise they will be notified periodically
     /// with the configured `notify-subscribers-interval`.
     /// </summary>
-    [Serializable]
-    public sealed class FlushChanges
+    public sealed class FlushChanges : ISingletonMessage
     {
         public static readonly FlushChanges Instance = new FlushChanges();
 

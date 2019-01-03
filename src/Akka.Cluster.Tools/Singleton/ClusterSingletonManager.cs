@@ -30,7 +30,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class HandOverToMe : IClusterSingletonMessage, IDeadLetterSuppression
     {
         /// <summary>
@@ -43,7 +42,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class HandOverInProgress : IClusterSingletonMessage
     {
         /// <summary>
@@ -56,7 +54,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class HandOverDone : IClusterSingletonMessage
     {
         /// <summary>
@@ -69,7 +66,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class TakeOverFromMe : IClusterSingletonMessage, IDeadLetterSuppression
     {
         /// <summary>
@@ -82,7 +78,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Cleanup : ISingletonMessage
     {
         /// <summary>
@@ -95,7 +90,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class StartOldestChangedBuffer : ISingletonMessage
     {
         /// <summary>
@@ -108,7 +102,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class HandOverRetry
     {
@@ -132,7 +125,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class TakeOverRetry
     {
@@ -161,7 +153,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class Uninitialized : IClusterSingletonData, ISingletonMessage
     {
         /// <summary>
@@ -174,7 +165,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class YoungerData : IClusterSingletonData
     {
@@ -198,7 +188,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class BecomingOldestData : IClusterSingletonData
     {
@@ -222,7 +211,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class OldestData : IClusterSingletonData
     {
@@ -254,7 +242,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class WasOldestData : IClusterSingletonData
     {
@@ -294,7 +281,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class HandingOverData : IClusterSingletonData
     {
@@ -327,7 +313,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class StoppingData : IClusterSingletonData
     {
@@ -351,7 +336,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     internal sealed class EndData : IClusterSingletonData, ISingletonMessage
     {
         /// <summary>
@@ -364,7 +348,6 @@ namespace Akka.Cluster.Tools.Singleton
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     [MessagePackObject]
     internal sealed class DelayedMemberRemoved
     {

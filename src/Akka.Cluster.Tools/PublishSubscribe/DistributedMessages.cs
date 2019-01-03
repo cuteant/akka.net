@@ -6,28 +6,31 @@
 //-----------------------------------------------------------------------
 
 using System;
-using Akka.Actor;
-using Akka.Event;
 using System.Collections.Immutable;
 using System.Linq;
+using Akka.Actor;
+using Akka.Event;
+using MessagePack;
 
 namespace Akka.Cluster.Tools.PublishSubscribe
 {
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class Put : IEquatable<Put>
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public IActorRef Ref { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="ref">TBD</param>
+        [SerializationConstructor]
         public Put(IActorRef @ref)
         {
             Ref = @ref;
@@ -63,18 +66,20 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class Remove : IEquatable<Remove>
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public string Path { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="path">TBD</param>
+        [SerializationConstructor]
         public Remove(string path)
         {
             Path = path;
@@ -110,23 +115,26 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class Subscribe : IEquatable<Subscribe>
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public string Topic { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public string Group { get; }
+        [Key(1)]
+        public IActorRef Ref { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public IActorRef Ref { get; }
+        [Key(2)]
+        public string Group { get; }
 
         /// <summary>
         /// TBD
@@ -137,6 +145,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <exception cref="ArgumentException">
         /// This exception is thrown when the specified <paramref name="topic"/> is undefined.
         /// </exception>
+        [SerializationConstructor]
         public Subscribe(string topic, IActorRef @ref, string @group = null)
         {
             if (string.IsNullOrEmpty(topic)) ThrowHelper.ThrowArgumentException_TopicMustBeDefined();
@@ -184,23 +193,26 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class Unsubscribe : IEquatable<Unsubscribe>
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public string Topic { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public string Group { get; }
+        [Key(1)]
+        public IActorRef Ref { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public IActorRef Ref { get; }
+        [Key(2)]
+        public string Group { get; }
 
         /// <summary>
         /// TBD
@@ -211,6 +223,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <exception cref="ArgumentException">
         /// This exception is thrown when the specified <paramref name="topic"/> is undefined.
         /// </exception>
+        [SerializationConstructor]
         public Unsubscribe(string topic, IActorRef @ref, string @group = null)
         {
             if (string.IsNullOrEmpty(topic)) ThrowHelper.ThrowArgumentException_TopicMustBeDefined();
@@ -258,12 +271,13 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class SubscribeAck : IEquatable<SubscribeAck>, IDeadLetterSuppression
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public Subscribe Subscribe { get; }
 
         /// <summary>
@@ -271,6 +285,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// </summary>
         /// <param name="subscribe">TBD</param>
         /// <returns>TBD</returns>
+        [SerializationConstructor]
         public SubscribeAck(Subscribe subscribe)
         {
             Subscribe = subscribe;
@@ -306,17 +321,19 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class UnsubscribeAck : IEquatable<UnsubscribeAck>
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public Unsubscribe Unsubscribe { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
+        [SerializationConstructor]
         public UnsubscribeAck(Unsubscribe unsubscribe)
         {
             Unsubscribe = unsubscribe;
@@ -352,7 +369,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     public sealed class Publish : IDistributedPubSubMessage, IEquatable<Publish>
     {
         /// <summary>
@@ -419,7 +435,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     public sealed class Send : IDistributedPubSubMessage, IEquatable<Send>
     {
         /// <summary>
@@ -486,7 +501,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     public sealed class SendToAll : IDistributedPubSubMessage, IEquatable<SendToAll>
     {
         /// <summary>
@@ -555,7 +569,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     public sealed class GetTopics : ISingletonMessage
     {
         /// <summary>
@@ -568,18 +581,20 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     public sealed class CurrentTopics : IEquatable<CurrentTopics>
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public IImmutableSet<string> Topics { get; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="topics">TBD</param>
+        [SerializationConstructor]
         public CurrentTopics(IImmutableSet<string> topics)
         {
             Topics = topics ?? ImmutableHashSet<string>.Empty;

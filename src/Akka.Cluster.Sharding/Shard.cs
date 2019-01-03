@@ -52,7 +52,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// Persistent state of the Shard.
         /// </summary>
-        [Serializable]
         public class ShardState : IClusterShardingSerializable
         {
             /// <summary>
@@ -124,7 +123,6 @@ namespace Akka.Cluster.Sharding
         /// When an remembering entries and the entity stops without issuing a <see cref="Passivate"/>,
         /// we restart it after a back off using this message.
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class RestartEntity : IShardCommand
         {
@@ -149,7 +147,6 @@ namespace Akka.Cluster.Sharding
         /// When initialising a shard with remember entities enabled the following message is used to restart
         /// batches of entity actors at a time.
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class RestartEntities : IShardCommand
         {
@@ -221,7 +218,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// <see cref="ShardState"/> change for starting an entity in this `Shard`
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class EntityStarted : StateChange
         {
@@ -238,7 +234,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// <see cref="ShardState"/> change for an entity which has terminated.
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class EntityStopped : StateChange
         {
@@ -255,7 +250,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public sealed class GetCurrentShardState : IShardQuery, ISingletonMessage
         {
             /// <summary>
@@ -271,7 +265,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class CurrentShardState
         {
@@ -302,7 +295,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         public sealed class GetShardStats : IShardQuery, ISingletonMessage
         {
             /// <summary>
@@ -318,7 +310,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class ShardStats
         {

@@ -33,7 +33,7 @@ akka {
 
             using (var system = ActorSystem.Create("MyClient", config))
             {
-                var chatClient = system.ActorOf(Props.Create<ChatClientActor>());
+                var chatClient = system.ActorOf(Props.Create<ChatClientActorX>());
                 chatClient.Tell(new ConnectRequest()
                 {
                     Username = "Roggan",
@@ -113,10 +113,20 @@ akka {
                 _server.Tell(sr);
             });
 
-            Receive<SayResponse>(srsp =>
-            {
-                Console.WriteLine("{0}: {1}", srsp.Username, srsp.Text);
-            });
+            Receive<SayResponse>(Handle);
+        }
+
+        protected virtual void Handle(SayResponse srsp)
+        {
+            Console.WriteLine("{0}: {1}", srsp.Username, srsp.Text);
+        }
+    }
+
+    class ChatClientActorX : ChatClientActor
+    {
+        protected override void Handle(SayResponse srsp)
+        {
+            Console.WriteLine("{0}: {1}", srsp.Username, srsp.Text + " - plus");
         }
     }
 }

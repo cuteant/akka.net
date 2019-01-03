@@ -59,7 +59,6 @@ namespace Akka.DistributedData
     /// This class is immutable, i.e. "modifying" methods return a new instance.
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    [Serializable]
     public sealed partial class LWWRegister<T> : IReplicatedData<LWWRegister<T>>, IReplicatedDataSerialization, IEquatable<LWWRegister<T>>
     {
         /// <summary>

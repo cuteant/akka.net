@@ -33,7 +33,6 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class Retry : IShardRegionCommand, ISingletonMessage
         {
             /// <summary>
@@ -47,7 +46,6 @@ namespace Akka.Cluster.Sharding
         /// When an remembering entities and the shard stops unexpected (e.g. persist failure), we
         /// restart it after a back off using this message.
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         internal sealed class RestartShard
         {
@@ -72,7 +70,6 @@ namespace Akka.Cluster.Sharding
         /// be running will trigger this message being sent through sharding. For this to work
         /// the message *must* be handled by the shard id extractor.
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class StartEntity : IClusterShardingSerializable
         {
@@ -122,7 +119,6 @@ namespace Akka.Cluster.Sharding
         /// Sent back when a <see cref="StartEntity"/> message was received and triggered the entity
         /// to start(it does not guarantee the entity successfully started)
         /// </summary>
-        [Serializable]
         [MessagePackObject]
         public sealed class StartEntityAck : IClusterShardingSerializable
         {

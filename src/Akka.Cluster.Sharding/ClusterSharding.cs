@@ -17,6 +17,7 @@ using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Pattern;
 using Akka.Util;
+using MessagePack;
 
 namespace Akka.Cluster.Sharding
 {
@@ -1331,16 +1332,18 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// Check if we've received a shard start request.
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     internal sealed class ResendShardHost
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly ShardId Shard;
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(1)]
         public readonly IActorRef Region;
 
         /// <summary>
@@ -1348,6 +1351,7 @@ namespace Akka.Cluster.Sharding
         /// </summary>
         /// <param name="shard">TBD</param>
         /// <param name="region">TBD</param>
+        [SerializationConstructor]
         public ResendShardHost(string shard, IActorRef region)
         {
             Shard = shard;
@@ -1358,18 +1362,20 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
+    [MessagePackObject]
     internal sealed class DelayedShardRegionTerminated
     {
         /// <summary>
         /// TBD
         /// </summary>
+        [Key(0)]
         public readonly IActorRef Region;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="region">TBD</param>
+        [SerializationConstructor]
         public DelayedShardRegionTerminated(IActorRef region)
         {
             Region = region;
