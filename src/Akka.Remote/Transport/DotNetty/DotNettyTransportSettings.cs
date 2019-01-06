@@ -72,7 +72,7 @@ namespace Akka.Remote.Transport.DotNetty
 
             return new DotNettyTransportSettings(
                 transportMode: transportMode == "tcp" ? TransportMode.Tcp : TransportMode.Udp,
-                enableLibuv: config.GetBoolean("enable-libuv", false),
+                enableLibuv: config.GetBoolean("enable-libuv", true),
                 enableSsl: config.GetBoolean("enable-ssl", false),
                 connectTimeout: config.GetTimeSpan("connection-timeout", TimeSpan.FromSeconds(15)),
                 hostname: host,

@@ -6,8 +6,8 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -16,9 +16,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
-using CuteAnt.Collections;
 using DotNetty.Buffers;
-using DotNetty.Common.Utilities;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Libuv.Native;
 using MessagePack;
