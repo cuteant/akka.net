@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
@@ -451,7 +452,7 @@ namespace Akka.Remote.Transport.DotNetty
         private readonly int _batchSize;
         private readonly object _gate = new object();
         private int _status = TransportStatus.Idle;
-        private readonly Deque<object> _deque = new Deque<object>(2 * 1024);
+        private readonly ConcurrentQueue<object> _deque = new ConcurrentQueue<object>();
 
         private int _channelStatus = ChannelStatus.Unknow;
         private bool IsWritable
@@ -491,10 +492,7 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (IsWritable)
             {
-                lock (_gate)
-                {
-                    _deque.AddToBack(payload);
-                }
+                _deque.Enqueue(payload);
                 if (TransportStatus.Idle == Interlocked.CompareExchange(ref _status, TransportStatus.Busy, TransportStatus.Idle))
                 {
                     Task.Run(ProcessMessagesAsync);
@@ -517,13 +515,10 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 batch.Clear();
 
-                lock (_gate)
+                while (_deque.TryDequeue(out var msg))
                 {
-                    if (!_deque.TryRemoveFromFront(batch, _batchSize))
-                    {
-                        Interlocked.Exchange(ref _status, TransportStatus.Idle);
-                        return true;
-                    }
+                    batch.Add(msg);
+                    if (batch.Count >= _batchSize) { break; }
                 }
 
                 var payload = MessagePackSerializer.Serialize<object>(batch, s_defaultResolver);
@@ -538,6 +533,12 @@ namespace Akka.Remote.Transport.DotNetty
                     Interlocked.Exchange(ref _channelStatus, ChannelStatus.Closed);
                     Interlocked.Exchange(ref _status, TransportStatus.Idle);
                     return false;
+                }
+
+                if (_deque.Count == 0)
+                {
+                    Interlocked.Exchange(ref _status, TransportStatus.Idle);
+                    return true;
                 }
             }
         }
