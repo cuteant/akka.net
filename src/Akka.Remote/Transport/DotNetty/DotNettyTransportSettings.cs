@@ -85,7 +85,7 @@ namespace Akka.Remote.Transport.DotNetty
                 transferBatchSize: config.GetInt("transfer-batch-size", 1),
                 ssl: config.HasPath("ssl") ? SslSettings.Create(config.GetConfig("ssl")) : SslSettings.Empty,
                 dnsUseIpv6: config.GetBoolean("dns-use-ipv6", false),
-                tcpReuseAddr: ResolveTcpReuseAddrOption(config.GetString("tcp-reuse-addr", "off-for-windows")),
+                tcpReuseAddr: ResolveTcpReuseAddrOption(config.GetString("tcp-reuse-addr", "on")), // "off-for-windows"
                 tcpReusePort: config.GetBoolean("tcp-reuse-port", true),
                 tcpKeepAlive: config.GetBoolean("tcp-keepalive", true),
                 tcpNoDelay: config.GetBoolean("tcp-nodelay", true),

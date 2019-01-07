@@ -42,7 +42,7 @@ namespace Akka.DistributedData.Serialization
         /// </summary>
         public override bool IncludeManifest => false;
 
-        private const int c_initialBufferSize = 1024 * 64;
+        private const int c_initialBufferSize = 1024 * 80;
         /// <summary>
         /// Serializes the given object into a byte array
         /// </summary>

@@ -192,7 +192,7 @@ namespace Akka.DistributedData.Serialization
             }
         }
 
-        private const int c_initialBufferSize = 1024 * 64;
+        private const int c_initialBufferSize = 1024 * 80;
         private byte[] Serialize(object obj)
         {
             using (var pooledStream = BufferManagerOutputStreamManager.Create())

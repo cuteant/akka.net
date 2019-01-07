@@ -382,7 +382,7 @@ namespace Akka.Remote.Transport.DotNetty
                 var host = certificate.GetNameInfo(X509NameType.DnsName, false);
 
                 var tlsHandler = Settings.Ssl.SuppressValidation
-                    ? new TlsHandler(stream => new SslStream(stream, false, (sender, cert, chain, errors) => true), new ClientTlsSettings(host))
+                    ? new TlsHandler(new ClientTlsSettings(host) { ServerCertificateValidation = (cert, chain, errors) => true })
                     : TlsHandler.Client(host, certificate);
 
                 channel.Pipeline.AddFirst("TlsHandler", tlsHandler);
@@ -486,7 +486,7 @@ namespace Akka.Remote.Transport.DotNetty
             return server;
         }
 
-        private async Task<IPEndPoint> ResolveNameAsync(DnsEndPoint address)
+        private static async Task<IPEndPoint> ResolveNameAsync(DnsEndPoint address)
         {
             var resolved = await Dns.GetHostEntryAsync(address.Host).ConfigureAwait(false);
             //NOTE: for some reason while Helios takes first element from resolved address list
@@ -494,7 +494,7 @@ namespace Akka.Remote.Transport.DotNetty
             return new IPEndPoint(resolved.AddressList[resolved.AddressList.Length - 1], address.Port);
         }
 
-        private async Task<IPEndPoint> ResolveNameAsync(DnsEndPoint address, AddressFamily addressFamily)
+        private static async Task<IPEndPoint> ResolveNameAsync(DnsEndPoint address, AddressFamily addressFamily)
         {
             var resolved = await Dns.GetHostEntryAsync(address.Host).ConfigureAwait(false);
             var found = resolved.AddressList.LastOrDefault(a => a.AddressFamily == addressFamily);

@@ -363,16 +363,26 @@ namespace Akka.Remote.Transport.DotNetty
             // disable automatic reads
             channel.Configuration.AutoRead = false;
 
-            _associationEventListener.ContinueWith(r =>
+            void LocalInit(IAssociationEventListener listener)
             {
-                var listener = r.Result;
                 var remoteAddress = DotNettyTransport.MapSocketToAddress(
                     socketAddress: socketAddress,
                     schemeIdentifier: Transport.SchemeIdentifier,
                     systemName: Transport.System.Name);
                 Init(channel, socketAddress, remoteAddress, msg, out var handle);
                 listener.Notify(new InboundAssociation(handle));
-            }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            }
+            if (_associationEventListener.IsCompleted)
+            {
+                LocalInit(_associationEventListener.Result);
+            }
+            else
+            {
+                _associationEventListener.ContinueWith(r =>
+                {
+                    LocalInit(r.Result);
+                }, TaskContinuationOptions.OnlyOnRanToCompletion);
+            }
         }
     }
 

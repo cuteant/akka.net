@@ -82,7 +82,7 @@ namespace Akka.Serialization
         public static ByteBufferWrapper ToUnpooledByteBuffer(this ByteString bytes) => new ByteBufferWrapper(GetBuffer(bytes));
 
 
-        private const int c_initialBufferSize = 1024 * 64;
+        private const int c_initialBufferSize = 1024 * 80;
         public static byte[] ToArray(this IMessage message, int initialBufferSize = c_initialBufferSize)
         {
             using (var pooledStream = BufferManagerOutputStreamManager.Create())

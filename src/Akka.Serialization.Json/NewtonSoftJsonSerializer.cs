@@ -35,7 +35,7 @@ namespace Akka.Serialization
         /// A default instance of <see cref="NewtonSoftJsonSerializerSettings"/> used when no custom configuration has been provided.
         /// </summary>
         public static readonly NewtonSoftJsonSerializerSettings Default = new NewtonSoftJsonSerializerSettings(
-            initialBufferSize: 1024 * 64,
+            initialBufferSize: 1024 * 80,
             encodeTypeNames: true,
             preserveObjectReferences: true,
             converters: Enumerable.Empty<Type>());
@@ -57,7 +57,7 @@ namespace Akka.Serialization
                 throw new ArgumentNullException(nameof(config), $"{nameof(NewtonSoftJsonSerializerSettings)} config was not provided");
 
             return new NewtonSoftJsonSerializerSettings(
-                initialBufferSize: config.GetInt("initial-buffer-size", 1024 * 64),
+                initialBufferSize: config.GetInt("initial-buffer-size", 1024 * 80),
                 encodeTypeNames: config.GetBoolean("encode-type-names", true),
                 preserveObjectReferences: config.GetBoolean("preserve-object-references", true),
                 converters: GetConverterTypes(config));

@@ -107,7 +107,7 @@ namespace Akka.Serialization
     {
         /// <summary>Default settings used by <see cref="HyperionSerializer"/> when no config has been specified.</summary>
         public static readonly HyperionSerializerSettings Default = new HyperionSerializerSettings(
-            initialBufferSize: 1024 * 64,
+            initialBufferSize: 1024 * 80,
             preserveObjectReferences: true,
             versionTolerance: true,
             knownTypesProvider: typeof(NoKnownTypes));
@@ -130,7 +130,7 @@ namespace Akka.Serialization
             var type = !string.IsNullOrEmpty(typeName) ? TypeUtils.ResolveType(typeName) : null; // Type.GetType(typeName, true)
 
             return new HyperionSerializerSettings(
-                initialBufferSize: config.GetInt("initial-buffer-size", 1024 * 64),
+                initialBufferSize: config.GetInt("initial-buffer-size", 1024 * 80),
                 preserveObjectReferences: config.GetBoolean("preserve-object-references", true),
                 versionTolerance: config.GetBoolean("version-tolerance", true),
                 knownTypesProvider: type);
