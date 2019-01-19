@@ -1,0 +1,41 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.EventStore.Tests</RootNamespace>
+    <AssemblyName>Akka.Persistence.EventStore.Tests</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net452' ">
+    <PackageReference Include="NetFx.Extensions.Configuration.Json" Version="$(NetFxExtensionsConfigurationPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' != 'net452' ">
+    <PackageReference Include="Microsoft.Extensions.Configuration.Json" Version="$(MicrosoftExtensionsConfigurationJsonPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Docker.DotNet" Version="$(DockerDotNetPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="appsettings.json">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Remove="Projections\taggedProjection.js" />
+    <EmbeddedResource Include="Projections\taggedProjection.js" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Persistence.EventStore.Query\Akka.Persistence.EventStore.Query.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.TCK\Akka.Persistence.TCK.csproj" />
+  </ItemGroup>
+
+</Project>

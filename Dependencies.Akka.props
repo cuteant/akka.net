@@ -2,6 +2,7 @@
   <!-- Shared Package Versions -->
   <PropertyGroup>
     <!-- Test related packages -->
+    <DockerDotNetPackageVersion>3.125.2</DockerDotNetPackageVersion>
     <FsCheckPackageVersion>2.13.0</FsCheckPackageVersion>
     <FsCheckXunitPackageVersion>2.13.0</FsCheckXunitPackageVersion>
     <Mongo2GoPackageVersion>2.2.8</Mongo2GoPackageVersion>

@@ -179,7 +179,6 @@ namespace Akka.Streams.Stage
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class Finish : IAndThen, ISingletonMessage
         {
             /// <summary>
@@ -215,7 +214,6 @@ namespace Akka.Streams.Stage
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
         internal sealed class Stay : IAndThen, ISingletonMessage
         {
             /// <summary>

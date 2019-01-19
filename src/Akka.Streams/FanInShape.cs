@@ -9,6 +9,8 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.Serialization;
+using MessagePack;
 
 namespace Akka.Streams
 {
@@ -42,10 +44,12 @@ namespace Akka.Streams
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public sealed class InitName : IInit
         {
+            [Key(0)]
             private readonly string _name;
+            [IgnoreMember, IgnoreDataMember]
             private readonly Outlet<TOut> _outlet;
 
             /// <summary>
@@ -53,6 +57,7 @@ namespace Akka.Streams
             /// </summary>
             /// <param name="name">TBD</param>
             /// <exception cref="ArgumentException">TBD</exception>
+            [SerializationConstructor]
             public InitName(string name)
             {
                 if (string.IsNullOrEmpty(name)) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.name);
@@ -64,14 +69,17 @@ namespace Akka.Streams
             /// <summary>
             /// TBD
             /// </summary>
+            [IgnoreMember, IgnoreDataMember]
             public Outlet<TOut> Outlet => _outlet;
             /// <summary>
             /// TBD
             /// </summary>
+            [IgnoreMember, IgnoreDataMember]
             public IEnumerable<Inlet> Inlets => Enumerable.Empty<Inlet>();
             /// <summary>
             /// TBD
             /// </summary>
+            [IgnoreMember, IgnoreDataMember]
             public string Name => _name;
         }
 

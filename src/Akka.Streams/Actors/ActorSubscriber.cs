@@ -92,7 +92,6 @@ namespace Akka.Streams.Actors
     /// <summary>
     /// TBD
     /// </summary>
-    [Serializable]
     public sealed class OnComplete : IActorSubscriberMessage, ISingletonMessage
     {
         /// <summary>

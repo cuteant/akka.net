@@ -193,6 +193,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Tests.Net40", "test\H
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Configuration.Tests.Net40", "test\Hocon.Configuration.Test.Net40\Hocon.Configuration.Tests.Net40.csproj", "{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.EventStore", "src\Akka.Persistence.EventStore\Akka.Persistence.EventStore.csproj", "{129C03DD-50F5-415E-ABF6-B1ECE2B6352F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.EventStore.Query", "src\Akka.Persistence.EventStore.Query\Akka.Persistence.EventStore.Query.csproj", "{8877A237-7E09-4561-8A68-7FE4E51F713B}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.EventStore.Tests", "test\Akka.Persistence.EventStore.Tests\Akka.Persistence.EventStore.Tests.csproj", "{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.projitems*{8dbb7dc8-2b90-4a8c-a60d-d41466174bde}*SharedItemsImports = 13
@@ -478,6 +484,18 @@ Global
 		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}.Release|Any CPU.Build.0 = Release|Any CPU
+		{129C03DD-50F5-415E-ABF6-B1ECE2B6352F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{129C03DD-50F5-415E-ABF6-B1ECE2B6352F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{129C03DD-50F5-415E-ABF6-B1ECE2B6352F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{129C03DD-50F5-415E-ABF6-B1ECE2B6352F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8877A237-7E09-4561-8A68-7FE4E51F713B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8877A237-7E09-4561-8A68-7FE4E51F713B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8877A237-7E09-4561-8A68-7FE4E51F713B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8877A237-7E09-4561-8A68-7FE4E51F713B}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -564,6 +582,9 @@ Global
 		{06BD857F-FF82-42AF-8BB9-066D408442AE} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
 		{BDA1982F-7ABF-4299-9EBC-EE40C43E7D99} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
 		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+		{129C03DD-50F5-415E-ABF6-B1ECE2B6352F} = {264C22A4-CAFC-41F6-B82C-4DDC5C196767}
+		{8877A237-7E09-4561-8A68-7FE4E51F713B} = {264C22A4-CAFC-41F6-B82C-4DDC5C196767}
+		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

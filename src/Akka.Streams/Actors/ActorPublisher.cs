@@ -115,7 +115,6 @@ namespace Akka.Streams.Actors
     /// This message is delivered to the <see cref="ActorPublisher{T}"/> actor when the stream
     /// subscriber cancels the subscription.
     /// </summary>
-    [Serializable]
     public sealed class Cancel : IActorPublisherMessage, INoSerializationVerificationNeeded, ISingletonMessage
     {
         /// <summary>
@@ -130,7 +129,6 @@ namespace Akka.Streams.Actors
     /// the exceeding of an subscription timeout. Once the actor receives this message, this
     /// publisher will already be in cancelled state, thus the actor should clean-up and stop itself.
     /// </summary>
-    [Serializable]
     public sealed class SubscriptionTimeoutExceeded : IActorPublisherMessage, INoSerializationVerificationNeeded, ISingletonMessage
     {
         /// <summary>

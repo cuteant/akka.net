@@ -23,6 +23,7 @@ using Akka.Streams.Implementation.Fusing;
 using Akka.Streams.Util;
 using Akka.Util;
 using Akka.Util.Internal;
+using MessagePack;
 using static Akka.Streams.Implementation.Fusing.GraphInterpreter;
 
 namespace Akka.Streams.Stage
@@ -345,20 +346,23 @@ namespace Akka.Streams.Stage
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public sealed class Scheduled : IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly object TimerKey;
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public readonly int TimerId;
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(2)]
             public readonly bool IsRepeating;
 
             /// <summary>
@@ -370,6 +374,7 @@ namespace Akka.Streams.Stage
             /// <exception cref="ArgumentNullException">
             /// This exception is thrown when the specified <paramref name="timerKey"/> is undefined.
             /// </exception>
+            [SerializationConstructor]
             public Scheduled(object timerKey, int timerId, bool isRepeating)
             {
                 if (null == timerKey) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.timerKey, ExceptionResource.ArgumentNull_TimerKeyIsNull); }

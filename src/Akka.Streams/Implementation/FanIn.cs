@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Pattern;
+using MessagePack;
 using Reactive.Streams;
 
 namespace Akka.Streams.Implementation
@@ -414,16 +415,18 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public struct OnError : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly int Id;
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public readonly Exception Cause;
 
             /// <summary>
@@ -431,6 +434,7 @@ namespace Akka.Streams.Implementation
             /// </summary>
             /// <param name="id">TBD</param>
             /// <param name="cause">TBD</param>
+            [SerializationConstructor]
             public OnError(int id, Exception cause)
             {
                 Id = id;
@@ -441,18 +445,20 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public struct OnComplete : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly int Id;
 
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="id">TBD</param>
+            [SerializationConstructor]
             public OnComplete(int id)
             {
                 Id = id;
@@ -462,16 +468,18 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        [Serializable]
+        [MessagePackObject]
         public struct OnNext : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public readonly int Id;
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(1)]
             public readonly object Element;
 
             /// <summary>
@@ -479,6 +487,7 @@ namespace Akka.Streams.Implementation
             /// </summary>
             /// <param name="id">TBD</param>
             /// <param name="element">TBD</param>
+            [SerializationConstructor]
             public OnNext(int id, object element)
             {
                 Id = id;
