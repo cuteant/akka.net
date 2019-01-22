@@ -4,7 +4,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Util;
 using CuteAnt.Reflection;
-using MessagePack.Resolvers;
+using MessagePack;
 using Microsoft.Extensions.Logging;
 
 namespace Akka.Serialization
@@ -30,18 +30,22 @@ namespace Akka.Serialization
                         s_logger.LogTrace("Loading FormatterResolver factory for MessagePack: {0}", resolverType.FullName);
                     }
                     var resolverFactory = ActivatorUtils.FastCreateInstance<IFormatterResolverFactory>(resolverType);
-#if DEBUG
-                    try
+                    var formatters = resolverFactory.GetFormatters();
+                    if (!MessagePackStandardResolver.TryRegister(formatters.ToArray()))
                     {
-#endif
-                        var formatters = resolverFactory.GetFormatters();
-                        MessagePackStandardResolver.Register(formatters.ToArray());
-                        var resolvers = resolverFactory.GetResolvers();
-                        MessagePackStandardResolver.Register(resolvers.ToArray());
-#if DEBUG
+                        if (s_logger.IsEnabled(LogLevel.Debug))
+                        {
+                            s_logger.LogDebug("Register must call on startup(before use GetFormatter<T>).: {0}", string.Join(",", formatters.Select(_ => _.GetType().FullName)));
+                        }
                     }
-                    catch { }
-#endif
+                    var resolvers = resolverFactory.GetResolvers();
+                    if (!MessagePackStandardResolver.TryRegister(resolvers.ToArray()))
+                    {
+                        if (s_logger.IsEnabled(LogLevel.Debug))
+                        {
+                            s_logger.LogDebug("Register must call on startup(before use GetFormatter<T>).: {0}", string.Join(",", formatters.Select(_ => _.GetType().FullName)));
+                        }
+                    }
                 }
             }
         }

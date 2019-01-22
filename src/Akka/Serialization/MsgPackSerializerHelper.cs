@@ -4,7 +4,7 @@ using Akka.Serialization.Formatters;
 using Akka.Serialization.Resolvers;
 using CuteAnt;
 using MessagePack;
-using MessagePack.Resolvers;
+using MessagePack.ImmutableCollection;
 
 namespace Akka.Serialization
 {
@@ -14,11 +14,12 @@ namespace Akka.Serialization
 
         static MsgPackSerializerHelper()
         {
-            MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance);
-            MessagePackSerializer.Typeless.RegisterTypelessFormatter(AkkaTypelessFormatter.Instance);
+            MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance, AkkaTypelessFormatter.Instance);
 
             MessagePackStandardResolver.Register(
                 AkkaResolver.Instance,
+
+                ImmutableCollectionResolver.Instance,
 
                 HyperionExceptionResolver2.Instance,
 

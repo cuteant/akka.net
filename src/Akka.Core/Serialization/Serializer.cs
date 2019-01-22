@@ -64,19 +64,23 @@ namespace Akka.Serialization
         /// </summary>
         public abstract bool IncludeManifest { get; }
 
+        /// <summary>Tries to create a copy of source.</summary>
+        /// <param name="source">The item to create a copy of</param>
+        /// <returns>The copy</returns>
+        public virtual object DeepCopy(object source)
+        {
+            if (null == source) { return null; }
+            var objType = source.GetType();
+            var bts = ToBinary(source);
+            return FromBinary(bts, objType);
+        }
+
         /// <summary>
         /// Serializes the given object into a byte array
         /// </summary>
         /// <param name="obj">The object to serialize </param>
         /// <returns>A byte array containing the serialized object</returns>
         public abstract byte[] ToBinary(object obj);
-
-        ///// <summary>
-        ///// Serializes the given object into a byte array
-        ///// </summary>
-        ///// <param name="obj">The object to serialize </param>
-        ///// <returns>A byte array containing the serialized object</returns>
-        //public abstract ArraySegment<byte> ToMemoryPool(object obj);
 
         /// <summary>
         /// Serializes the given object into a byte array and uses the given address to decorate serialized ActorRef's
@@ -97,31 +101,12 @@ namespace Akka.Serialization
         /// <returns>The object contained in the array</returns>
         public abstract object FromBinary(byte[] bytes, Type type);
 
-        ///// <summary>
-        ///// Deserializes a byte array into an object of type <paramref name="type"/>.
-        ///// </summary>
-        ///// <param name="bytes">The array containing the serialized object</param>
-        ///// <param name="offset"></param>
-        ///// <param name="count"></param>
-        ///// <param name="type">The type of object contained in the array</param>
-        ///// <returns>The object contained in the array</returns>
-        //public abstract object FromBinary(byte[] bytes, int offset, int count, Type type);
-
         /// <summary>
         /// Deserializes a byte array into an object.
         /// </summary>
         /// <param name="bytes">The array containing the serialized object</param>
         /// <returns>The object contained in the array</returns>
         public T FromBinary<T>(byte[] bytes) => (T)FromBinary(bytes, typeof(T));
-
-        ///// <summary>
-        ///// Deserializes a byte array into an object.
-        ///// </summary>
-        ///// <param name="bytes">The array containing the serialized object</param>
-        ///// <param name="offset"></param>
-        ///// <param name="count"></param>
-        ///// <returns>The object contained in the array</returns>
-        //public T FromBinary<T>(byte[] bytes, int offset, int count) => (T)FromBinary(bytes, offset, count, typeof(T));
     }
 
     /// <summary>
@@ -141,6 +126,16 @@ namespace Akka.Serialization
         /// Returns whether this serializer needs a manifest in the fromBinary method
         /// </summary>
         public sealed override bool IncludeManifest => true;
+
+        /// <inheritdoc />
+        public override object DeepCopy(object source)
+        {
+            if (null == source) { return null; }
+
+            var manifest = Manifest(source);
+            var bts = ToBinary(source);
+            return FromBinary(bts, manifest);
+        }
 
         /// <summary>
         /// Deserializes a byte array into an object of type <paramref name="type" />.

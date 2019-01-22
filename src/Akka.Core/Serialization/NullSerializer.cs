@@ -36,15 +36,15 @@ namespace Akka.Serialization
         /// </summary>
         public override bool IncludeManifest => false;
 
+        /// <inheritdoc />
+        public override object DeepCopy(object source) => null;
+
         /// <summary>
         /// Serializes the given object into a byte array
         /// </summary>
         /// <param name="obj">The object to serialize </param>
         /// <returns>A byte array containing the serialized object</returns>
-        public override byte[] ToBinary(object obj)
-        {
-            return EmptyBytes;
-        }
+        public override byte[] ToBinary(object obj) => EmptyBytes;
 
         /// <summary>
         /// Deserializes a byte array into an object of type <paramref name="type"/>
@@ -52,9 +52,6 @@ namespace Akka.Serialization
         /// <param name="bytes">The array containing the serialized object</param>
         /// <param name="type">The type of object contained in the array</param>
         /// <returns>The object contained in the array</returns>
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            return null;
-        }
+        public override object FromBinary(byte[] bytes, Type type) => null;
     }
 }

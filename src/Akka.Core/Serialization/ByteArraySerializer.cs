@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 
 namespace Akka.Serialization
@@ -26,6 +27,35 @@ namespace Akka.Serialization
         /// Returns whether this serializer needs a manifest in the fromBinary method
         /// </summary>
         public override bool IncludeManifest => false;
+
+        /// <inheritdoc />
+        public override object DeepCopy(object source)
+        {
+            var bts = source as byte[];
+            if (null == bts) { AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_IsNotByteArray); }
+            return CopyFrom(bts, 0, bts.Length);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private
+#if !NET451
+            unsafe
+#endif
+            static byte[] CopyFrom(byte[] buffer, int offset, int count)
+        {
+            var bytes = new byte[count];
+#if NET451
+            Buffer.BlockCopy(buffer, offset, bytes, 0, count);
+#else
+
+            fixed (byte* pSrc = &buffer[offset])
+            fixed (byte* pDst = &bytes[0])
+            {
+                Buffer.MemoryCopy(pSrc, pDst, bytes.Length, count);
+            }
+#endif
+            return bytes;
+        }
 
         /// <summary>
         /// Serializes the given object into a byte array

@@ -75,6 +75,9 @@ namespace Akka.Serialization
         /// <summary>Returns whether this serializer needs a manifest in the fromBinary method</summary>
         public override bool IncludeManifest => false;
 
+        /// <inheritdoc />
+        public sealed override object DeepCopy(object source) => _serializer.DeepCopyObject(source);
+
         /// <summary>Serializes the given object into a byte array</summary>
         /// <param name="obj">The object to serialize</param>
         /// <returns>A byte array containing the serialized object</returns>

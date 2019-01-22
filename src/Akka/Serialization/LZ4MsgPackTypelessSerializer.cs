@@ -43,6 +43,15 @@ namespace Akka.Serialization
             _resolver.Context2.Add(MsgPackSerializerHelper.ActorSystemIdentifier, system);
         }
 
+        /// <inheritdoc />
+        public sealed override object DeepCopy(object source)
+        {
+            if (source == null) { return null; }
+
+            var serializedObject = MessagePackSerializer.SerializeUnsafe(source, _resolver);
+            return MessagePackSerializer.Deserialize<object>(serializedObject, _resolver);
+        }
+
         public override byte[] ToBinary(object obj)
         {
             if (null == obj) { return EmptyArray<byte>.Instance; }

@@ -46,6 +46,15 @@ namespace Akka.Serialization
             Interlocked.CompareExchange(ref MsgPackSerializerHelper.DefaultResolver, _resolver, null);
         }
 
+        /// <inheritdoc />
+        public sealed override object DeepCopy(object source)
+        {
+            if (source == null) { return null; }
+
+            var serializedObject = MessagePackSerializer.SerializeUnsafe(source, _resolver);
+            return MessagePackSerializer.Deserialize<object>(serializedObject, _resolver);
+        }
+
         public override byte[] ToBinary(object obj)
         {
             if (null == obj) { return EmptyArray<byte>.Instance; }

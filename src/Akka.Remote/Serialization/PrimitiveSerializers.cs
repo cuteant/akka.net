@@ -34,6 +34,9 @@ namespace Akka.Remote.Serialization
         public override bool IncludeManifest { get; } = true;
 
         /// <inheritdoc />
+        public override object DeepCopy(object source) => source;
+
+        /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
             switch (obj)

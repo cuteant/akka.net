@@ -35,6 +35,14 @@ namespace Akka.Serialization
         public override bool IncludeManifest => true;
 
         /// <inheritdoc />
+        public override object DeepCopy(object source)
+        {
+            if (null == source) { return null; }
+            dynamic dynamicSource = source;
+            return dynamicSource.Clone();
+        }
+
+        /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
             if (obj is IMessage message)

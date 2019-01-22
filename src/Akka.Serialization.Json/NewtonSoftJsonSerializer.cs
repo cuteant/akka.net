@@ -15,6 +15,7 @@ using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
+using CuteAnt.Buffers;
 using CuteAnt.Collections;
 using CuteAnt.Extensions.Serialization;
 using CuteAnt.Reflection;
@@ -246,6 +247,9 @@ namespace Akka.Serialization
         /// Returns whether this serializer needs a manifest in the fromBinary method
         /// </summary>
         public override bool IncludeManifest => false;
+
+        /// <inheritdoc />
+        public override object DeepCopy(object source) => _jsonFormatter.DeepCopyObject(source);
 
         /// <summary>
         /// Serializes the given object into a byte array
