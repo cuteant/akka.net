@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="HoconParser.cs" company="Hocon Project">
-//     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
-//     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/Hocon>
+// <copyright file="Parser.cs" company="Hocon Project">
+//     Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
+//     Copyright (C) 2013-2018 .NET Foundation <https://github.com/akkadotnet/hocon>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -262,35 +262,17 @@ namespace Hocon
                 switch (_tokens.Current.Type)
                 {
                     case TokenType.Include:
-                        var parsedInclude = ParseInclude(null);
-                        if (_root.Type != HoconType.Object)
-                        {
-                            _root.Clear();
-                            _root.Add(parsedInclude.GetObject());
-                        }
-                        else
-                            _root.Add(parsedInclude.GetObject());
+                        _root.Add(ParseInclude(_root));
                         break;
 
                     // Hocon config file may contain one array and one array only
                     case TokenType.StartOfArray:
-                        _root.Clear();
-                        _root.Add(ParseArray(null));
-                        ConsumeWhitelines();
-                        if (_tokens.Current.Type != TokenType.EndOfFile)
-                            throw HoconParserException.Create(_tokens.Current, Path, "Hocon config can only contain one array or one object.");
-                        return;
+                        _root.Add(ParseArray(_root));
+                        break;
 
                     case TokenType.StartOfObject:
                     {
-                        var parsedObject = ParseObject(null);
-                        if (_root.Type != HoconType.Object)
-                        {
-                            _root.Clear();
-                            _root.Add(parsedObject);
-                        }
-                        else
-                            _root.Add(parsedObject.GetObject());
+                        _root.Add(ParseObject(_root).GetObject());
                         break;
                     }
 
@@ -301,20 +283,12 @@ namespace Hocon
                         if (_tokens.Current.Type != TokenType.LiteralValue)
                             break;
 
-                        var parsedObject = ParseObject(null);
-                        if (_root.Type != HoconType.Object)
-                        {
-                            _root.Clear();
-                            _root.Add(parsedObject);
-                        }
-                        else
-                            _root.Add(parsedObject.GetObject());
+                        _root.Add(ParseObject(_root).GetObject());
                         break;
                     }
 
                     case TokenType.Comment:
                     case TokenType.EndOfLine:
-                    case TokenType.EndOfFile:
                     case TokenType.EndOfObject:
                     case TokenType.EndOfArray:
                         _tokens.Next();

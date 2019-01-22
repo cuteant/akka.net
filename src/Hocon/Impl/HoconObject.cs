@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="HoconObject.cs" company="Hocon Project">
-//     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
-//     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/hocon>
+//     Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
+//     Copyright (C) 2013-2018 .NET Foundation <https://github.com/akkadotnet/hocon>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -284,7 +284,10 @@ namespace Hocon
                     return result;
 
                 child.EnsureFieldIsObject();
-                currentObject = child.GetObject();
+
+                // cannot use child.GetObject() because it would return a new merged object instance, which 
+                // breaks autoref with the parent object in the previous loop
+                currentObject = child.Value.GetObject();
             }
         }
 

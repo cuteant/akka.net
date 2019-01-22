@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="HoconTests.cs" company="Akka.NET Project">
-//     Copyright (C) 2009-2015 Typesafe Inc. <http://www.typesafe.com>
-//     Copyright (C) 2013-2015 Akka.NET project <https://github.com/akkadotnet/akka.net>
+// <copyright file="HoconTests.cs" company="Hocon Project">
+//     Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
+//     Copyright (C) 2013-2018 .NET Foundation <https://github.com/akkadotnet/hocon>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -482,6 +482,36 @@ y = hello
             Assert.Equal("hello", config.GetString("a.y"));
             Assert.Equal(123, config.GetInt("a.b.x"));
             Assert.Equal("hello", config.GetString("a.b.y"));
+        }
+
+        [Theory]
+        [InlineData(@"{
+    include ""foo""
+    a : include ""foo""
+}")]
+        [InlineData(@"
+    include ""foo""
+    a : include ""foo""
+")]
+        public void CanParseIncludeInRoot(string hocon)
+        {
+            var includeHocon = @"
+x = 123
+y = hello
+";
+#if TEST40
+            string IncludeCallback(HoconCallbackType t, string s) => includeHocon;
+#else
+            Task<string> IncludeCallback(HoconCallbackType t, string s)
+                => Task.FromResult(includeHocon);
+#endif
+
+            var config = Parser.Parse(hocon, IncludeCallback);
+
+            Assert.Equal(123, config.GetInt("x"));
+            Assert.Equal("hello", config.GetString("y"));
+            Assert.Equal(123, config.GetInt("a.x"));
+            Assert.Equal("hello", config.GetString("a.y"));
         }
 
         [Fact]

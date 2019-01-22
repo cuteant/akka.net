@@ -1,4 +1,11 @@
-﻿using System;
+﻿//-----------------------------------------------------------------------
+// <copyright file="Utils.cs" company="Hocon Project">
+//     Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
+//     Copyright (C) 2013-2018 .NET Foundation <https://github.com/akkadotnet/hocon>
+// </copyright>
+//-----------------------------------------------------------------------
+
+using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Text;
@@ -107,7 +114,7 @@ namespace Hocon
             => Hexadecimal.Contains(c);
 
         public static string ToHoconSafe(this string s)
-            => s.NeedTripleQuotes() ? $"\"\"\"{s}\"\"\"" : s.NeedQuotes() ? $"\"{s}\"" : s;
+            => s.NeedTripleQuotes() ? $"\"\"\"{s}\"\"\"" : s.NeedQuotes() ? s.AddQuotes() : s;
 
         public static HoconPath ToHoconPath(this string path)
             => HoconPath.Parse(path);
@@ -175,5 +182,12 @@ namespace Hocon
         public static bool NeedTripleQuotes(this string s)
             => s.NeedQuotes() && s.Contains(Utils.NewLine);
 
+        public static string AddQuotes(this string s)
+        {
+            if (s.Contains('"'))
+                return "\"" + s.Replace("\"", "\\\"") + "\"";
+
+            return "\"" + s + "\"";
+        }
     }
 }
