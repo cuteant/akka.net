@@ -9,17 +9,17 @@ using MessagePack.Resolvers;
 
 namespace Akka.Serialization
 {
-    public sealed class LZ4MsgPackTypelessSerializer : Serializer
+    public sealed class LZ4MsgPackSerializer : Serializer
     {
         private readonly MsgPackSerializerSettings _settings;
         private readonly IFormatterResolver _resolver;
         private readonly int _initialBufferSize;
 
-        public LZ4MsgPackTypelessSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default) { }
+        public LZ4MsgPackSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default) { }
 
-        public LZ4MsgPackTypelessSerializer(ExtendedActorSystem system, Config config) : this(system, MsgPackSerializerSettings.Create(config)) { }
+        public LZ4MsgPackSerializer(ExtendedActorSystem system, Config config) : this(system, MsgPackSerializerSettings.Create(config)) { }
 
-        public LZ4MsgPackTypelessSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
+        public LZ4MsgPackSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
         {
             _settings = settings;
             _initialBufferSize = settings.InitialBufferSize;
@@ -37,7 +37,7 @@ namespace Akka.Serialization
                     surrogates: new[] { akkaSurrogate }
                 ));
 
-            _resolver = new TypelessDefaultResolver();
+            _resolver = new DefaultResolver();
             _resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
             _resolver.Context2.Add(HyperionConstants.HyperionSerializerIdentifier, serializer);
             _resolver.Context2.Add(MsgPackSerializerHelper.ActorSystemIdentifier, system);
@@ -48,8 +48,9 @@ namespace Akka.Serialization
         {
             if (source == null) { return null; }
 
+            var type = source.GetType();
             var serializedObject = MessagePackSerializer.SerializeUnsafe(source, _resolver);
-            return MessagePackSerializer.Deserialize<object>(serializedObject, _resolver);
+            return MessagePackSerializer.NonGeneric.Deserialize(type, serializedObject, _resolver);
         }
 
         public override byte[] ToBinary(object obj)
@@ -58,10 +59,10 @@ namespace Akka.Serialization
             return LZ4MessagePackSerializer.Serialize(obj, _resolver);
         }
 
-        public override object FromBinary(byte[] bytes, Type type) => LZ4MessagePackSerializer.Deserialize<object>(bytes, _resolver);
+        public override object FromBinary(byte[] bytes, Type type) => LZ4MessagePackSerializer.NonGeneric.Deserialize(type, new ArraySegment<byte>(bytes, 0, bytes.Length), _resolver);
 
-        public override int Identifier => -3;
+        public override int Identifier => 102;
 
-        public override bool IncludeManifest => false;
+        public override bool IncludeManifest => true;
     }
 }

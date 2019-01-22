@@ -128,6 +128,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		LICENSE = LICENSE
 		NuGet.Config = NuGet.Config
 		nuget.props = nuget.props
+		src\serialization-identifiers.txt = src\serialization-identifiers.txt
 		version.props = version.props
 	EndProjectSection
 EndProject
@@ -198,6 +199,8 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.EventStore.Query", "src\Akka.Persistence.EventStore.Query\Akka.Persistence.EventStore.Query.csproj", "{8877A237-7E09-4561-8A68-7FE4E51F713B}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Persistence.EventStore.Tests", "test\Akka.Persistence.EventStore.Tests\Akka.Persistence.EventStore.Tests.csproj", "{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.MessagePackLZ4", "src\Akka.Serialization.MessagePackLZ4\Akka.Serialization.MessagePackLZ4.csproj", "{FCD5317A-5900-4796-834F-974EEFEA18CC}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -496,6 +499,10 @@ Global
 		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{FCD5317A-5900-4796-834F-974EEFEA18CC}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FCD5317A-5900-4796-834F-974EEFEA18CC}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FCD5317A-5900-4796-834F-974EEFEA18CC}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FCD5317A-5900-4796-834F-974EEFEA18CC}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -585,6 +592,7 @@ Global
 		{129C03DD-50F5-415E-ABF6-B1ECE2B6352F} = {264C22A4-CAFC-41F6-B82C-4DDC5C196767}
 		{8877A237-7E09-4561-8A68-7FE4E51F713B} = {264C22A4-CAFC-41F6-B82C-4DDC5C196767}
 		{F31F0C02-E9D4-43E9-A398-2080B0A2DCBB} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+		{FCD5317A-5900-4796-834F-974EEFEA18CC} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

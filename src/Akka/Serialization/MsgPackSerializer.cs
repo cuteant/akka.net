@@ -61,7 +61,7 @@ namespace Akka.Serialization
 
         public override object FromBinary(byte[] bytes, Type type) => MessagePackSerializer.NonGeneric.Deserialize(type, bytes, _resolver);
 
-        public override int Identifier => -1;
+        public override int Identifier => 101;
 
         public override bool IncludeManifest => true;
     }

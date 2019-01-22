@@ -8,6 +8,7 @@
   </PropertyGroup>
  
   <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Serialization.MessagePackLZ4\Akka.Serialization.MessagePackLZ4.csproj" />
     <ProjectReference Include="..\..\src\Akka.Serialization.TestKit\Akka.Serialization.TestKit.csproj" />
     <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
   </ItemGroup>

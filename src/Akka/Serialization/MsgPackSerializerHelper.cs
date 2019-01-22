@@ -29,7 +29,7 @@ namespace Akka.Serialization
             );
         }
 
-        internal const int ActorSystemIdentifier = 1;
+        public const int ActorSystemIdentifier = 1;
         [MethodImpl(InlineMethod.Value)]
         public static ExtendedActorSystem GetActorSystem(this IFormatterResolver formatterResolver)
             => formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);

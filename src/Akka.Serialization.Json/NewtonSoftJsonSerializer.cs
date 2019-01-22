@@ -241,7 +241,7 @@ namespace Akka.Serialization
         }
 
         /// <inheritdoc />
-        public override int Identifier => 160;
+        public override int Identifier => 105;
 
         /// <summary>
         /// Returns whether this serializer needs a manifest in the fromBinary method
