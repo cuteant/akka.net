@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
+using System.Reflection;
 
 namespace Akka.Tools.MatchHandler
 {
@@ -23,37 +22,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1) => handler(_, arg1));
+            Match<TCtx>(processor: (_, arg1) => handler(_, arg1));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1) => handler(_, arg1), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1) => handler(_, arg1));
         }
 
         public void MatchAny(Func<TIn, TArg1, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1) => handler(_, arg1));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1) => handler(_, arg1));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -84,37 +159,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2) => handler(_, arg1, arg2));
+            Match<TCtx>(processor: (_, arg1, arg2) => handler(_, arg1, arg2));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2) => handler(_, arg1, arg2), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2) => handler(_, arg1, arg2));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2) => handler(_, arg1, arg2));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2) => handler(_, arg1, arg2));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -149,37 +300,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2, arg3) => handler(_, arg1, arg2, arg3));
+            Match<TCtx>(processor: (_, arg1, arg2, arg3) => handler(_, arg1, arg2, arg3));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TArg3, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2, arg3) => handler(_, arg1, arg2, arg3), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TArg3, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2, arg3) => handler(_, arg1, arg2, arg3));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TArg3, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3) => handler(_, arg1, arg2, arg3));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TArg3, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3) => handler(_, arg1, arg2, arg3));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -218,37 +445,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2, arg3, arg4) => handler(_, arg1, arg2, arg3, arg4));
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4) => handler(_, arg1, arg2, arg3, arg4));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4) => handler(_, arg1, arg2, arg3, arg4), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TArg3, TArg4, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2, arg3, arg4) => handler(_, arg1, arg2, arg3, arg4));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4) => handler(_, arg1, arg2, arg3, arg4));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4) => handler(_, arg1, arg2, arg3, arg4));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -291,37 +594,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2, arg3, arg4, arg5) => handler(_, arg1, arg2, arg3, arg4, arg5));
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5) => handler(_, arg1, arg2, arg3, arg4, arg5));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5) => handler(_, arg1, arg2, arg3, arg4, arg5), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2, arg3, arg4, arg5) => handler(_, arg1, arg2, arg3, arg4, arg5));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5) => handler(_, arg1, arg2, arg3, arg4, arg5));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5) => handler(_, arg1, arg2, arg3, arg4, arg5));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -368,37 +747,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6));
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2, arg3, arg4, arg5, arg6) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -449,37 +904,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7));
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -534,37 +1065,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -623,37 +1230,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9));
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>
@@ -716,37 +1399,113 @@ namespace Akka.Tools.MatchHandler
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut> handler) where TCtx : class
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut> handler) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
         }
 
         /// <summary>Adds context-based matching case</summary>
         /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut>> processor) where TCtx : class
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut>> processor) where TCtx : TIn
         {
-            Match(binder: _ => _ as TCtx, processor: processor);
-        }
-
-        /// <summary>Adds context-based matching case</summary>
-        /// <typeparam name="TCtx">Context type</typeparam>
-        public void Match<TCtx>(Expression<Func<TIn, TCtx>> binder, Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut>> processor) where TCtx : class
-        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
             var bindResult = Expression.Variable(typeof(TCtx), "binded");
-            var caseExpr = Expression.Block(
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9, Parameter10))
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
                 new[] { bindResult },
-                Expression.Assign(bindResult, Expression.Invoke(binder, Parameter)),
+                Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
                 Expression.IfThen(
-                    Expression.NotEqual(Expression.Convert(bindResult, typeof(object)), Expression.Constant(null)),
+                    Expression.NotEqual(bindResult, Expression.Constant(null)),
                     Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9, Parameter10))
                 ));
+            }
             CaseExpressionsList.Add(caseExpr);
+            if (ctxType == ItemType) { _state = State.MatchAnyAdded; }
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut> handler, Predicate<TCtx> shouldHandle) where TCtx : TIn
+        {
+            Match<TCtx>(processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10), condition: _ => shouldHandle(_));
+        }
+
+        /// <summary>Adds context-based matching case</summary>
+        /// <typeparam name="TCtx">Context type</typeparam>
+        public void Match<TCtx>(Expression<Func<TCtx, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut>> processor, Expression<Predicate<TCtx>> condition) where TCtx : TIn
+        {
+            EnsureCanAdd();
+            var ctxType = typeof(TCtx);
+            var bindResult = Expression.Variable(ctxType, "binded");
+            BlockExpression caseExpr;
+            if (ctxType.GetTypeInfo().IsValueType)
+            {
+                caseExpr = Expression.Block(
+                    Expression.IfThen(
+                        Expression.TypeIs(Parameter, ctxType),
+                        Expression.Block(
+                            new[] { bindResult },
+                            Expression.Assign(bindResult, Expression.Convert(Parameter, ctxType)),
+                            Expression.IfThen(
+                                Expression.Invoke(condition, bindResult),
+                                Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9, Parameter10))
+                            )
+                        )
+                    )
+                );
+            }
+            else
+            {
+                caseExpr = Expression.Block(
+                    new[] { bindResult },
+                    Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType)),
+                    Expression.IfThen(
+                        Expression.AndAlso(
+                            Expression.NotEqual(bindResult, Expression.Constant(null)),
+                            Expression.Invoke(condition, bindResult)
+                            ),
+                        Expression.Return(RetPoint, Expression.Invoke(processor, bindResult, Parameter1, Parameter2, Parameter3, Parameter4, Parameter5, Parameter6, Parameter7, Parameter8, Parameter9, Parameter10))
+                    )
+                );
+            }
+            CaseExpressionsList.Add(caseExpr);
+        }
+
+        /// <summary>Adds predicated-based matching case</summary>
+        public void Match(Predicate<TIn> shouldHandle, Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut> handler)
+        {
+            Match(condition: _ => shouldHandle(_), processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
         }
 
         public void MatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut> handler)
         {
-            if (FinalExpr != null) { return; }
+            EnsureCanAdd();
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
+            _state = State.MatchAnyAdded;
+        }
+
+        public bool TryMatchAny(Func<TIn, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TArg8, TArg9, TArg10, TOut> handler)
+        {
+            if (FinalExpr != null) { return false; }
+            FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10) => handler(_, arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9, arg10));
+            _state = State.MatchAnyAdded;
+            return true;
         }
 
         /// <summary>Performs match on the given value</summary>

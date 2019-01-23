@@ -40,9 +40,29 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         /// <param name="action">TBD</param>
+        /// <param name="state"></param>
+        protected void RunTask(Action<object> action, object state)
+        {
+            ActorTaskScheduler.RunTask(action, state);
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="action">TBD</param>
         protected void RunTask(Func<Task> action)
         {
             ActorTaskScheduler.RunTask(action);
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="action">TBD</param>
+        /// <param name="state"></param>
+        protected void RunTask(Func<object, Task> action, object state)
+        {
+            ActorTaskScheduler.RunTask(action, state);
         }
 
         /// <summary>
@@ -76,6 +96,6 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        protected new static IUntypedActorContext Context => (IUntypedActorContext) ActorBase.Context;
+        protected new static IUntypedActorContext Context => (IUntypedActorContext)ActorBase.Context;
     }
 }

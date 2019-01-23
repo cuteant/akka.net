@@ -36,15 +36,14 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         protected sealed override bool Receive(object message)
         {
-            MethodInfo method = GetType().GetMethod("Handle", new[] {message.GetType()});
+            MethodInfo method = GetType().GetMethod("Handle", new[] { message.GetType() });
             if (method == null)
             {
                 return false;
             }
 
-            method.Invoke(this, new[] {message});
+            method.Invoke(this, new[] { message });
             return true;
         }
     }
 }
-

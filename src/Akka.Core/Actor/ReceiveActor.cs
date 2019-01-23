@@ -36,7 +36,7 @@ namespace Akka.Actor
         {
             //This might be called directly after the constructor, or when the same actor instance has been returned
             //during recreate. Make sure what happens here is idempotent
-            if(!_hasBeenInitialized)	//Do not perform this when "recreating" the same instance
+            if (!_hasBeenInitialized)	//Do not perform this when "recreating" the same instance
             {
                 _partialReceive = BuildNewReceiveHandler(_matchHandlerBuilders.Pop());
                 _hasBeenInitialized = true;
@@ -76,7 +76,7 @@ namespace Akka.Actor
         private void ExecutePartialMessageHandler(object message, PartialAction<object> partialAction)
         {
             var wasHandled = partialAction(message);
-            if(!wasHandled && _shouldUnhandle)
+            if (!wasHandled && _shouldUnhandle)
                 Unhandled(message);
         }
 
@@ -113,11 +113,15 @@ namespace Akka.Actor
 
         private Action<T> WrapAsyncHandler<T>(Func<T, Task> asyncHandler)
         {
-            return m =>
+            Task WrapHandler(object s)
             {
-                Task Wrap() => asyncHandler(m);
-                ActorTaskScheduler.RunTask(Wrap);
-            };
+                return asyncHandler((T)s);
+            }
+            void WrapRunTask(T m)
+            {
+                ActorTaskScheduler.RunTask(WrapHandler, state: m);
+            }
+            return WrapRunTask;
         }
 
         /// <summary>
@@ -131,7 +135,7 @@ namespace Akka.Actor
         /// <typeparam name="T">The type of the message</typeparam>
         /// <param name="handler">The message handler that is invoked for incoming messages of the specified type <typeparamref name="T"/></param>
         /// <param name="shouldHandle">When not <c>null</c> it is used to determine if the message matches.</param>
-        protected void ReceiveAsync<T>(Func<T,Task> handler, Predicate<T> shouldHandle = null)
+        protected void ReceiveAsync<T>(Func<T, Task> handler, Predicate<T> shouldHandle = null)
         {
             Receive(WrapAsyncHandler(handler), shouldHandle);
         }

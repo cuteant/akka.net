@@ -18,6 +18,12 @@ namespace Akka.Util.Internal
     /// </summary>
     internal static class TaskEx
     {
+        public static readonly Task CompletedTask =
+#if NET451
+            Task.FromResult(0);
+#else
+            Task.CompletedTask;
+#endif
         private const int RunContinuationsAsynchronously = 64;
         public static readonly bool IsRunContinuationsAsynchronouslyAvailable = Enum.IsDefined(typeof(TaskCreationOptions), RunContinuationsAsynchronously);
 
