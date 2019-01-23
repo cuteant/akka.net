@@ -22,6 +22,6 @@
 "Akka.Serialization.MsgPackSerializer, Akka" = 101
 "Akka.Serialization.LZ4MsgPackSerializer, Akka.Serialization.MessagePackLZ4" = 102
 "Akka.Serialization.LZ4MsgPackTypelessSerializer, Akka.Serialization.MessagePackLZ4" = 103
-"Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion" = 104
+"Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion" = -5 (104)
 "Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json" = 105
 "Akka.Serialization.Utf8JsonSerializer, Akka.Serialization.Json" = 106

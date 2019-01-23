@@ -70,7 +70,7 @@ namespace Akka.Serialization
         }
 
         /// <summary>Completely unique value to identify this implementation of Serializer, used to optimize network traffic.</summary>
-        public override int Identifier => 104;
+        public override int Identifier => -5; //104
 
         /// <summary>Returns whether this serializer needs a manifest in the fromBinary method</summary>
         public override bool IncludeManifest => false;

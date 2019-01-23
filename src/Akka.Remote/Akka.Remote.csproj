@@ -27,6 +27,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="Configuration\Remote.conf" />
+    <ProjectReference Include="..\Akka.Serialization.Protobuf\Akka.Serialization.Protobuf.csproj" />
     <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
 
