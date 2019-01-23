@@ -517,7 +517,6 @@ namespace Akka.Actor
 
             if (!(unwrapped is INoSerializationVerificationNeeded))
             {
-                //var deserializedMsg = SerializeAndDeserializePayload(unwrapped);
                 var serializer = _systemImpl.Serialization.FindSerializerFor(unwrapped);
                 var deserializedMsg = serializer.DeepCopy(unwrapped);
                 if (deadLetter != null)
@@ -527,21 +526,6 @@ namespace Akka.Actor
 
             return envelope;
         }
-
-        //private object SerializeAndDeserializePayload(object obj)
-        //{
-        //    var serializer = _systemImpl.Serialization.FindSerializerFor(obj);
-        //    var bytes = serializer.ToBinary(obj);
-
-        //    if (serializer is SerializerWithStringManifest manifestSerializer)
-        //    {
-        //        var manifest = manifestSerializer.Manifest(obj);
-        //        return _systemImpl.Serialization.Deserialize(bytes, serializer.Identifier, manifest);
-        //    }
-
-        //    // ## 苦竹 修改 前面已经判断了是否 SerializerWithStringManifest，所以这儿改为类型参数，反序列化时减少些判断 ##
-        //    return _systemImpl.Serialization.Deserialize(bytes, serializer.Identifier, obj.GetType()); // obj.GetType().TypeQualifiedName()
-        //}
     }
 }
 

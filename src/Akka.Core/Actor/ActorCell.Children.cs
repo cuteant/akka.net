@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Akka.Actor.Internal;
-using Akka.Serialization;
 using Akka.Util;
 
 namespace Akka.Actor
@@ -403,23 +402,8 @@ namespace Akka.Actor
                         if (argument != null && !(argument is INoSerializationVerificationNeeded))
                         {
                             var serializer = ser.FindSerializerFor(argument);
-                            var bytes = serializer.ToBinary(argument);
-                            if (serializer is SerializerWithStringManifest manifestSerializer)
-                            {
-                                var manifest = manifestSerializer.Manifest(argument);
-                                if (ser.Deserialize(bytes, manifestSerializer.Identifier, manifest) == null)
-                                {
-                                    AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name);
-                                }
-                            }
-                            else
-                            {
-                                // ## 苦竹 修改 前面已经判断了是否 SerializerWithStringManifest，所以这儿改为类型参数，反序列化时减少些判断 ##
-                                if (ser.Deserialize(bytes, serializer.Identifier, argument.GetType()) == null) // argument.GetType().TypeQualifiedName()
-                                {
-                                    AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name);
-                                }
-                            }
+                            var deserializedArgu = serializer.DeepCopy(argument);
+                            if (null == deserializedArgu) { AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name); }
                         }
                     }
                 }
@@ -433,32 +417,32 @@ namespace Akka.Actor
             }
             //else
             //{
-                // this name will either be unreserved or overwritten with a real child below
-                ReserveChild(name);
-                IInternalActorRef actor;
-                try
-                {
-                    var childPath = new ChildActorPath(Self.Path, name, NewUid());
-                    actor = _systemImpl.Provider.ActorOf(_systemImpl, props, _self, childPath,
-                        systemService: systemService, deploy: null, lookupDeploy: true, async: async);
-                }
-                catch
-                {
-                    //if actor creation failed, unreserve the name
-                    UnreserveChild(name);
-                    throw;
-                }
+            // this name will either be unreserved or overwritten with a real child below
+            ReserveChild(name);
+            IInternalActorRef actor;
+            try
+            {
+                var childPath = new ChildActorPath(Self.Path, name, NewUid());
+                actor = _systemImpl.Provider.ActorOf(_systemImpl, props, _self, childPath,
+                    systemService: systemService, deploy: null, lookupDeploy: true, async: async);
+            }
+            catch
+            {
+                //if actor creation failed, unreserve the name
+                UnreserveChild(name);
+                throw;
+            }
 
-                if (Mailbox != null && IsFailed)
-                {
-                    for (var i = 1; i <= Mailbox.SuspendCount(); i++)
-                        actor.Suspend();
-                }
+            if (Mailbox != null && IsFailed)
+            {
+                for (var i = 1; i <= Mailbox.SuspendCount(); i++)
+                    actor.Suspend();
+            }
 
-                //replace the reservation with the real actor
-                InitChild(actor);
-                actor.Start();
-                return actor;
+            //replace the reservation with the real actor
+            InitChild(actor);
+            actor.Start();
+            return actor;
             //}
         }
     }
