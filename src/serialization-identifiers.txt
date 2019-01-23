@@ -1,4 +1,3 @@
-"Akka.Serialization.MsgPackSerializer, Akka" = 101
 "Akka.Serialization.NullSerializer, Akka.Core" = 0
 "Akka.Serialization.MsgPackTypelessSerializer, Akka" = 1
 "Akka.Serialization.ProtobufSerializer, Akka.Serialization.Protobuf" = 2
@@ -20,7 +19,9 @@
 "Akka.Remote.Serialization.SystemMessageSerializer, Akka.Remote" = 22
 
 --------------------------------------------
+"Akka.Serialization.MsgPackSerializer, Akka" = 101
 "Akka.Serialization.LZ4MsgPackSerializer, Akka.Serialization.MessagePackLZ4" = 102
 "Akka.Serialization.LZ4MsgPackTypelessSerializer, Akka.Serialization.MessagePackLZ4" = 103
 "Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion" = 104
 "Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json" = 105
+"Akka.Serialization.Utf8JsonSerializer, Akka.Serialization.Json" = 106
