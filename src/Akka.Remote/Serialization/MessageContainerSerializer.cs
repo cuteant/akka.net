@@ -52,14 +52,15 @@ namespace Akka.Remote.Serialization
             var sel = obj as ActorSelectionMessage;
             if (null == sel) { ThrowHelper.ThrowArgumentException_Serializer_ActorSel(obj); }
 
-            var pattern = GetPattern(sel);
+            var protoMessage = new Protocol.SelectionEnvelope(
+                WrappedPayloadSupport.PayloadToProto(system, sel.Message),
+                GetPattern(sel));
 
-            return MessagePackSerializer.Serialize(new Protocol.SelectionEnvelope(
-                WrappedPayloadSupport.PayloadToProto(system, sel.Message), pattern), s_defaultResolver);
+            return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static List<Protocol.Selection> GetPattern(ActorSelectionMessage sel)
+        internal static List<Protocol.Selection> GetPattern(ActorSelectionMessage sel)
         {
             var pattern = new List<Protocol.Selection>(sel.Elements.Length);
             foreach (var element in sel.Elements)
@@ -81,7 +82,7 @@ namespace Akka.Remote.Serialization
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static SelectionPathElement[] ParsePattern(List<Protocol.Selection> pattern)
+        internal static SelectionPathElement[] ParsePattern(List<Protocol.Selection> pattern)
         {
             var elements = new SelectionPathElement[pattern.Count];
             for (var i = 0; i < pattern.Count; i++)
@@ -110,10 +111,9 @@ namespace Akka.Remote.Serialization
         public override object FromBinary(byte[] bytes, Type type)
         {
             var selectionEnvelope = MessagePackSerializer.Deserialize<Protocol.SelectionEnvelope>(bytes, s_defaultResolver);
+
             var message = WrappedPayloadSupport.PayloadFrom(system, selectionEnvelope.Payload);
-
             var elements = ParsePattern(selectionEnvelope.Pattern);
-
             return new ActorSelectionMessage(message, elements);
         }
 

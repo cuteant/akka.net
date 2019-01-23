@@ -15,7 +15,7 @@ namespace Akka.Actor
     /// Actors in this scope are deployed to a specified <see cref="Address"/>.
     /// </summary>
     [MessagePackObject]
-    public class RemoteScope : Scope, IEquatable<RemoteScope>
+    public sealed class RemoteScope : Scope, IEquatable<RemoteScope>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="RemoteScope"/> class.

@@ -23,7 +23,7 @@ namespace Akka.Remote.Serialization
     /// <summary>
     /// Serializes Akka's internal <see cref="DaemonMsgCreate"/> using protobuf.
     /// </summary>
-    public class DaemonMsgCreateSerializer : Serializer
+    public sealed class DaemonMsgCreateSerializer : Serializer
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 

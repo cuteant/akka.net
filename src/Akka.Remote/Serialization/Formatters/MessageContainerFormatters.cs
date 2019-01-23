@@ -21,29 +21,9 @@ namespace Akka.Remote.Serialization.Formatters
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SelectionEnvelope>();
             var selectionEnvelope = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+
             var message = WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), selectionEnvelope.Payload);
-
-            var elements = new SelectionPathElement[selectionEnvelope.Pattern.Count];
-            for (var i = 0; i < selectionEnvelope.Pattern.Count; i++)
-            {
-                var p = selectionEnvelope.Pattern[i];
-                switch (p.Type)
-                {
-                    case Protocol.Selection.PatternType.ChildName:
-                        elements[i] = new SelectChildName(p.Matcher);
-                        break;
-                    case Protocol.Selection.PatternType.ChildPattern:
-                        elements[i] = new SelectChildPattern(p.Matcher);
-                        break;
-                    case Protocol.Selection.PatternType.Parent:
-                        elements[i] = new SelectParent();
-                        break;
-                    case Protocol.Selection.PatternType.NoPatern:
-                    default:
-                        break;
-                }
-            }
-
+            var elements = MessageContainerSerializer.ParsePattern(selectionEnvelope.Pattern);
             return new ActorSelectionMessage(message, elements);
         }
 
@@ -51,29 +31,11 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SelectionEnvelope>();
-
-            var pattern = new List<Protocol.Selection>(value.Elements.Length);
-            foreach (var element in value.Elements)
-            {
-                switch (element)
-                {
-                    case SelectChildName childName:
-                        pattern.Add(MessageContainerSerializer.BuildPattern(childName.Name, Protocol.Selection.PatternType.ChildName));
-                        break;
-                    case SelectChildPattern childPattern:
-                        pattern.Add(MessageContainerSerializer.BuildPattern(childPattern.PatternStr, Protocol.Selection.PatternType.ChildPattern));
-                        break;
-                    case SelectParent parent:
-                        pattern.Add(MessageContainerSerializer.BuildPattern(null, Protocol.Selection.PatternType.Parent));
-                        break;
-                    default:
-                        break;
-                }
-            }
             var protoMessage = new Protocol.SelectionEnvelope(
-                WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.Message), pattern);
+                WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.Message),
+                MessageContainerSerializer.GetPattern(value));
 
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SelectionEnvelope>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }

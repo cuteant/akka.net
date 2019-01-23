@@ -80,19 +80,18 @@ namespace Akka.Remote.Serialization.Formatters
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.Identify>();
             var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
-            var system = formatterResolver.GetActorSystem();
 
-            return new Identify(WrappedPayloadSupport.PayloadFrom(system, protoMessage.MessageId));
+            return new Identify(WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), protoMessage.MessageId));
         }
 
         public override int Serialize(ref byte[] bytes, int offset, Identify value, IFormatterResolver formatterResolver)
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
+            var protoIdentify = new Protocol.Identify(WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.MessageId));
+
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.Identify>();
-            var system = formatterResolver.GetActorSystem();
-            return formatter.Serialize(ref bytes, offset,
-                    new Protocol.Identify(WrappedPayloadSupport.PayloadToProto(system, value.MessageId)), DefaultResolver);
+            return formatter.Serialize(ref bytes, offset, protoIdentify, DefaultResolver);
         }
     }
 
@@ -121,12 +120,12 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ActorIdentity>();
-            var system = formatterResolver.GetActorSystem();
             var protoIdentify = new Protocol.ActorIdentity(
-                WrappedPayloadSupport.PayloadToProto(system, value.MessageId),
+                WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.MessageId),
                 Akka.Serialization.Serialization.SerializedActorPath(value.Subject)
             );
+
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ActorIdentity>();
             return formatter.Serialize(ref bytes, offset, protoIdentify, DefaultResolver);
         }
     }
@@ -214,14 +213,13 @@ namespace Akka.Remote.Serialization.Formatters
     {
         public static readonly IMessagePackFormatter<RemoteScope> Instance = new RemoteScopeFormatter();
 
-        private RemoteScopeFormatter() { }
+        public RemoteScopeFormatter() { }
 
         public override RemoteScope Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
         {
             if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RemoteScope>();
-            var system = formatterResolver.GetActorSystem();
             var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
 
             return new RemoteScope(AddressFrom(protoMessage.Node));
@@ -231,9 +229,9 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RemoteScope>();
             var protoMessage = new Protocol.RemoteScope(AddressMessageBuilder(value.Address));
 
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RemoteScope>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -305,7 +303,6 @@ namespace Akka.Remote.Serialization.Formatters
             if (protoMessage == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.FromConfig>();
-
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -341,7 +338,6 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (defaultResizer == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.DefaultResizer>();
             var protoMessage = new Protocol.DefaultResizer(
                 (uint)defaultResizer.LowerBound,
                 (uint)defaultResizer.UpperBound,
@@ -351,6 +347,8 @@ namespace Akka.Remote.Serialization.Formatters
                 defaultResizer.BackoffRate,
                 (uint)defaultResizer.MessagesPerResize
             );
+
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.DefaultResizer>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -392,9 +390,9 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -435,9 +433,9 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -479,9 +477,9 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -524,11 +522,12 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ScatterGatherPool>();
             var protoMessage = new Protocol.ScatterGatherPool(
                 GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value),
                 Protocol.Duration.FromTimeSpan(value.Within)
             );
+
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ScatterGatherPool>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -572,13 +571,13 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.TailChoppingPool>();
             var protoMessage = new Protocol.TailChoppingPool(
                 GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value),
                 Protocol.Duration.FromTimeSpan(value.Within),
                 Protocol.Duration.FromTimeSpan(value.Interval)
             );
 
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.TailChoppingPool>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -619,9 +618,9 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }
@@ -652,12 +651,12 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RemoteRouterConfig>();
             var protoMessage = new Protocol.RemoteRouterConfig(
                 WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.Local),
                 value.Nodes.Select(AddressMessageBuilder).ToArray()
             );
 
+            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RemoteRouterConfig>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
         }
     }

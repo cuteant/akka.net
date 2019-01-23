@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Dispatch.SysMsg;
 using Akka.Util.Internal;
@@ -19,18 +20,13 @@ namespace Akka.Remote.Serialization
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
-        private ExceptionSupport _exceptionSupport;
-
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SystemMessageSerializer" /> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer. </param>
-        public SystemMessageSerializer(ExtendedActorSystem system) : base(system)
-        {
-            _exceptionSupport = new ExceptionSupport(system);
-        }
+        public SystemMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
         public override bool IncludeManifest { get; } = true;
@@ -41,13 +37,13 @@ namespace Akka.Remote.Serialization
             switch (obj)
             {
                 case Create create:
-                    return CreateToProto(create);
+                    return CreateToProto(system, create);
                 case Recreate recreate:
-                    return RecreateToProto(recreate);
+                    return RecreateToProto(system, recreate);
                 case Suspend suspend:
                     return EmptyBytes;
                 case Resume resume:
-                    return ResumeToProto(resume);
+                    return ResumeToProto(system, resume);
                 case Terminate terminate:
                     return EmptyBytes;
                 case Supervise supervise:
@@ -57,7 +53,7 @@ namespace Akka.Remote.Serialization
                 case Unwatch unwatch:
                     return UnwatchToProto(unwatch);
                 case Failed failed:
-                    return FailedToProto(failed);
+                    return FailedToProto(system, failed);
                 case DeathWatchNotification deathWatchNotification:
                     return DeathWatchNotificationToProto(deathWatchNotification);
                 case NoMessage noMessage:
@@ -102,25 +98,25 @@ namespace Akka.Remote.Serialization
                 switch (flag)
                 {
                     case _.Create:
-                        return CreateFromProto(this, bytes);
+                        return CreateFromProto(system, bytes);
                     case _.Recreate:
-                        return RecreateFromProto(this, bytes);
+                        return RecreateFromProto(system, bytes);
                     case _.Suspend:
                         return new Suspend();
                     case _.Resume:
-                        return ResumeFromProto(this, bytes);
+                        return ResumeFromProto(system, bytes);
                     case _.Terminate:
                         return new Terminate();
                     case _.Supervise:
-                        return SuperviseFromProto(this, bytes);
+                        return SuperviseFromProto(system, bytes);
                     case _.Watch:
-                        return WatchFromProto(this, bytes);
+                        return WatchFromProto(system, bytes);
                     case _.Unwatch:
-                        return UnwatchFromProto(this, bytes);
+                        return UnwatchFromProto(system, bytes);
                     case _.Failed:
-                        return FailedFromProto(this, bytes);
+                        return FailedFromProto(system, bytes);
                     case _.DeathWatchNotification:
-                        return DeathWatchNotificationFromProto(this, bytes);
+                        return DeathWatchNotificationFromProto(system, bytes);
                 }
             }
             return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg(type);
@@ -129,55 +125,55 @@ namespace Akka.Remote.Serialization
         //
         // Create
         //
-        private byte[] CreateToProto(Create create)
+        internal static byte[] CreateToProto(ExtendedActorSystem system, Create create)
         {
-            var message = new Protocol.CreateData(_exceptionSupport.ExceptionToProto(create.Failure));
+            var message = new Protocol.CreateData(ExceptionSupport.ExceptionToProto(system, create.Failure));
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static Create CreateFromProto(SystemMessageSerializer serializer, byte[] bytes)
+        internal static Create CreateFromProto(ExtendedActorSystem system, byte[] bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.CreateData>(bytes, s_defaultResolver);
-            var payload = (ActorInitializationException)serializer._exceptionSupport.ExceptionFromProto(proto.Cause);
+            var payload = (ActorInitializationException)ExceptionSupport.ExceptionFromProto(system, proto.Cause);
             return new Create(payload);
         }
 
         //
         // Recreate
         //
-        private byte[] RecreateToProto(Recreate recreate)
+        internal static byte[] RecreateToProto(ExtendedActorSystem system, Recreate recreate)
         {
-            var message = new Protocol.RecreateData(_exceptionSupport.ExceptionToProto(recreate.Cause));
+            var message = new Protocol.RecreateData(ExceptionSupport.ExceptionToProto(system, recreate.Cause));
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static Recreate RecreateFromProto(SystemMessageSerializer serializer, byte[] bytes)
+        internal static Recreate RecreateFromProto(ExtendedActorSystem system, byte[] bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.RecreateData>(bytes, s_defaultResolver);
-            var payload = serializer._exceptionSupport.ExceptionFromProto(proto.Cause);
+            var payload = ExceptionSupport.ExceptionFromProto(system, proto.Cause);
             return new Recreate(payload);
         }
 
         //
         // Recreate
         //
-        private byte[] ResumeToProto(Resume resume)
+        internal static byte[] ResumeToProto(ExtendedActorSystem system, Resume resume)
         {
-            var message = new Protocol.ResumeData(_exceptionSupport.ExceptionToProto(resume.CausedByFailure));
+            var message = new Protocol.ResumeData(ExceptionSupport.ExceptionToProto(system, resume.CausedByFailure));
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static Resume ResumeFromProto(SystemMessageSerializer serializer, byte[] bytes)
+        internal static Resume ResumeFromProto(ExtendedActorSystem system, byte[] bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.ResumeData>(bytes, s_defaultResolver);
-            var payload = serializer._exceptionSupport.ExceptionFromProto(proto.Cause);
+            var payload = ExceptionSupport.ExceptionFromProto(system, proto.Cause);
             return new Resume(payload);
         }
 
         //
         // Supervise
         //
-        private static byte[] SuperviseToProto(Supervise supervise)
+        internal static byte[] SuperviseToProto(Supervise supervise)
         {
             var message = new Protocol.SuperviseData(
                 new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(supervise.Child)),
@@ -186,16 +182,16 @@ namespace Akka.Remote.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static Supervise SuperviseFromProto(SystemMessageSerializer serializer, byte[] bytes)
+        internal static Supervise SuperviseFromProto(ExtendedActorSystem system, byte[] bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.SuperviseData>(bytes, s_defaultResolver);
-            return new Supervise(serializer.ResolveActorRef(proto.Child.Path), proto.Async);
+            return new Supervise(ResolveActorRef(system, proto.Child.Path), proto.Async);
         }
 
         //
         // Watch
         //
-        private static byte[] WatchToProto(Watch watch)
+        internal static byte[] WatchToProto(Watch watch)
         {
             var message = new Protocol.WatchData(
                 new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(watch.Watchee)),
@@ -204,18 +200,18 @@ namespace Akka.Remote.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static Watch WatchFromProto(SystemMessageSerializer serializer, byte[] bytes)
+        internal static Watch WatchFromProto(ExtendedActorSystem system, byte[] bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.WatchData>(bytes, s_defaultResolver);
             return new Watch(
-                serializer.ResolveActorRef(proto.Watchee.Path).AsInstanceOf<IInternalActorRef>(),
-                serializer.ResolveActorRef(proto.Watcher.Path).AsInstanceOf<IInternalActorRef>());
+                ResolveActorRef(system, proto.Watchee.Path).AsInstanceOf<IInternalActorRef>(),
+                ResolveActorRef(system, proto.Watcher.Path).AsInstanceOf<IInternalActorRef>());
         }
 
         //
         // Unwatch
         //
-        private static byte[] UnwatchToProto(Unwatch unwatch)
+        internal static byte[] UnwatchToProto(Unwatch unwatch)
         {
             var message = new Protocol.WatchData(
                 new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(unwatch.Watchee)),
@@ -224,41 +220,41 @@ namespace Akka.Remote.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static Unwatch UnwatchFromProto(SystemMessageSerializer serializer, byte[] bytes)
+        internal static Unwatch UnwatchFromProto(ExtendedActorSystem system, byte[] bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.WatchData>(bytes, s_defaultResolver);
             return new Unwatch(
-                serializer.ResolveActorRef(proto.Watchee.Path).AsInstanceOf<IInternalActorRef>(),
-                serializer.ResolveActorRef(proto.Watcher.Path).AsInstanceOf<IInternalActorRef>());
+                ResolveActorRef(system, proto.Watchee.Path).AsInstanceOf<IInternalActorRef>(),
+                ResolveActorRef(system, proto.Watcher.Path).AsInstanceOf<IInternalActorRef>());
         }
 
         //
         // Failed
         //
-        private byte[] FailedToProto(Failed failed)
+        internal static byte[] FailedToProto(ExtendedActorSystem system, Failed failed)
         {
             var message = new Protocol.FailedData(
                 new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(failed.Child)),
-                _exceptionSupport.ExceptionToProto(failed.Cause),
+                ExceptionSupport.ExceptionToProto(system, failed.Cause),
                 (ulong)failed.Uid
             );
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static Failed FailedFromProto(SystemMessageSerializer serializer, byte[] bytes)
+        internal static Failed FailedFromProto(ExtendedActorSystem system, byte[] bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.FailedData>(bytes, s_defaultResolver);
 
             return new Failed(
-                serializer.ResolveActorRef(proto.Child.Path),
-                serializer._exceptionSupport.ExceptionFromProto(proto.Cause),
+                ResolveActorRef(system, proto.Child.Path),
+                ExceptionSupport.ExceptionFromProto(system, proto.Cause),
                 (long)proto.Uid);
         }
 
         //
         // DeathWatchNotification
         //
-        private static byte[] DeathWatchNotificationToProto(DeathWatchNotification deathWatchNotification)
+        internal static byte[] DeathWatchNotificationToProto(DeathWatchNotification deathWatchNotification)
         {
             var message = new Protocol.DeathWatchNotificationData(
                 new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(deathWatchNotification.Actor)),
@@ -268,12 +264,12 @@ namespace Akka.Remote.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static DeathWatchNotification DeathWatchNotificationFromProto(SystemMessageSerializer serializer, byte[] bytes)
+        internal static DeathWatchNotification DeathWatchNotificationFromProto(ExtendedActorSystem system, byte[] bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.DeathWatchNotificationData>(bytes, s_defaultResolver);
 
             return new DeathWatchNotification(
-                serializer.system.Provider.ResolveActorRef(proto.Actor.Path),
+                system.Provider.ResolveActorRef(proto.Actor.Path),
                 proto.ExistenceConfirmed,
                 proto.AddressTerminated);
         }
@@ -281,7 +277,8 @@ namespace Akka.Remote.Serialization
         //
         // ActorRef
         //
-        private IActorRef ResolveActorRef(string path)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        internal static IActorRef ResolveActorRef(ExtendedActorSystem system, string path)
         {
             if (string.IsNullOrEmpty(path)) { return null; }
 

@@ -74,7 +74,7 @@ namespace Akka.Routing
     /// Implementation of <see cref="Akka.Routing.Resizer"/> that adjust the <see cref="Akka.Routing.Pool"/> based on specified thresholds.
     /// </summary>
     [MessagePackObject]
-    public class DefaultResizer : Resizer, IEquatable<DefaultResizer>
+    public sealed class DefaultResizer : Resizer, IEquatable<DefaultResizer>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultResizer"/> class.

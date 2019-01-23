@@ -8,11 +8,10 @@
 using System;
 using System.Collections.Generic;
 using System.Text;
-using CuteAnt;
-using CuteAnt.Text;
 using Akka.Actor;
 using Akka.Serialization;
-using Akka.Util;
+using CuteAnt;
+using CuteAnt.Text;
 using Google.Protobuf;
 
 namespace Akka.Remote.Serialization
