@@ -16,7 +16,6 @@ using Akka.Routing;
 using Akka.TestKit;
 using Akka.Util;
 using Akka.Util.Internal;
-using Google.Protobuf;
 using Xunit;
 using Xunit.Abstractions;
 using Nito.AsyncEx;
@@ -529,9 +528,9 @@ namespace Akka.Remote.Tests
             }
         }
 
-        private static ByteString ByteStringOfSize(int size)
+        private static byte[] ByteStringOfSize(int size)
         {
-            return ByteString.CopyFrom(new byte[size]);
+            return new byte[size];
         }
 
         private void VerifySend(object msg, Action afterSend)

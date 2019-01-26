@@ -17,13 +17,11 @@ using System.Linq;
 using System.Security.Cryptography;
 using Akka.DistributedData.Durable;
 using Akka.Event;
-using Google.Protobuf;
+using CuteAnt;
 using Status = Akka.DistributedData.Internal.Status;
 
 namespace Akka.DistributedData
 {
-    using Digest = ByteString;
-
     /// <summary>
     /// <para>
     /// A replicated in-memory data store supporting low latency and high availability
@@ -265,9 +263,9 @@ namespace Akka.DistributedData
         public static Props Props(ReplicatorSettings settings) =>
             Actor.Props.Create(() => new Replicator(settings)).WithDeploy(Deploy.Local).WithDispatcher(settings.Dispatcher);
 
-        private static readonly Digest DeletedDigest = ByteString.Empty;
-        private static readonly Digest LazyDigest = ByteString.CopyFrom(new byte[] { 0 });
-        private static readonly Digest NotFoundDigest = ByteString.CopyFrom(new byte[] { 255 });
+        private static readonly byte[] DeletedDigest = EmptyArray<byte>.Instance;
+        private static readonly byte[] LazyDigest = new byte[] { 0 };
+        private static readonly byte[] NotFoundDigest = new byte[] { 255 };
 
         private static readonly DataEnvelope DeletedEnvelope = new DataEnvelope(DeletedData.Instance);
 
@@ -312,7 +310,7 @@ namespace Akka.DistributedData
         /// <summary>
         /// The actual data.
         /// </summary>
-        private ImmutableDictionary<string, Tuple<DataEnvelope, Digest>> _dataEntries = ImmutableDictionary<string, Tuple<DataEnvelope, Digest>>.Empty;
+        private ImmutableDictionary<string, Tuple<DataEnvelope, byte[]>> _dataEntries = ImmutableDictionary<string, Tuple<DataEnvelope, byte[]>>.Empty;
 
         /// <summary>
         /// Keys that have changed, Changed event published to subscribers on FlushChanges
@@ -791,7 +789,7 @@ namespace Akka.DistributedData
                 ? envelope
                 : envelope.WithDeltaVersions(deltaVersions.Merge(VersionVector.Create(_selfUniqueAddress, currentVersion)));
 
-            Digest digest;
+            byte[] digest;
             if (_subscribers.ContainsKey(key) && !_changed.Contains(key))
             {
                 var oldDigest = GetDigest(key);
@@ -813,9 +811,9 @@ namespace Akka.DistributedData
             return newEnvelope;
         }
 
-        private Digest GetDigest(string key)
+        private byte[] GetDigest(string key)
         {
-            var contained = _dataEntries.TryGetValue(key, out Tuple<DataEnvelope, Digest> value);
+            var contained = _dataEntries.TryGetValue(key, out Tuple<DataEnvelope, byte[]> value);
             if (contained)
             {
                 if (Equals(value.Item2, LazyDigest))
@@ -829,13 +827,13 @@ namespace Akka.DistributedData
             else return NotFoundDigest;
         }
 
-        private Digest Digest(DataEnvelope envelope)
+        private byte[] Digest(DataEnvelope envelope)
         {
             if (Equals(envelope.Data, DeletedData.Instance)) return DeletedDigest;
 
             var bytes = _serializer.ToBinary(envelope.WithoutDeltaVersions());
             var serialized = SHA1.Create().ComputeHash(bytes);
-            return ProtobufUtil.FromBytes(serialized);
+            return serialized;
         }
 
         private DataEnvelope GetData(string key)
@@ -992,7 +990,7 @@ namespace Akka.DistributedData
             var to = Replica(address);
             if (_dataEntries.Count <= _settings.MaxDeltaElements)
             {
-                var status = new Internal.Status(_dataEntries.Select(x => new KeyValuePair<string, Digest>(x.Key, GetDigest(x.Key))).ToImmutableDictionary(), chunk: 0, totalChunks: 1);
+                var status = new Internal.Status(_dataEntries.Select(x => new KeyValuePair<string, byte[]>(x.Key, GetDigest(x.Key))).ToImmutableDictionary(), chunk: 0, totalChunks: 1);
                 to.Tell(status);
             }
             else
@@ -1011,7 +1009,7 @@ namespace Akka.DistributedData
                     }
                     var chunk = (int)(_statusCount % totChunks);
                     var entries = _dataEntries.Where(x => Math.Abs(MurmurHash.StringHash(x.Key)) % totChunks == chunk)
-                        .Select(x => new KeyValuePair<string, Digest>(x.Key, GetDigest(x.Key)))
+                        .Select(x => new KeyValuePair<string, byte[]>(x.Key, GetDigest(x.Key)))
                         .ToImmutableDictionary();
                     var status = new Internal.Status(entries, chunk, totChunks);
                     to.Tell(status);
@@ -1032,7 +1030,7 @@ namespace Akka.DistributedData
 
         private ActorSelection Replica(Address address) => Context.ActorSelection(Self.Path.ToStringWithAddress(address));
 
-        private bool IsOtherDifferent(string key, Digest otherDigest)
+        private bool IsOtherDifferent(string key, byte[] otherDigest)
         {
             var d = GetDigest(key);
             var isFound = !Equals(d, NotFoundDigest);
@@ -1040,7 +1038,7 @@ namespace Akka.DistributedData
             return isFound && !isEqualToOther;
         }
 
-        private void ReceiveStatus(IImmutableDictionary<string, ByteString> otherDigests, int chunk, int totChunks)
+        private void ReceiveStatus(IImmutableDictionary<string, byte[]> otherDigests, int chunk, int totChunks)
         {
             if (_log.IsDebugEnabled)
             {
@@ -1083,7 +1081,7 @@ namespace Akka.DistributedData
                 var log = Context.System.Log;
                 if (log.IsDebugEnabled) { log.SendingGossipStatusTo(Sender, myMissingKeys); }
 
-                var status = new Internal.Status(myMissingKeys.Select(x => new KeyValuePair<string, ByteString>(x, NotFoundDigest)).ToImmutableDictionary(), chunk, totChunks);
+                var status = new Internal.Status(myMissingKeys.Select(x => new KeyValuePair<string, byte[]>(x, NotFoundDigest)).ToImmutableDictionary(), chunk, totChunks);
                 Sender.Tell(status);
             }
         }

@@ -13,7 +13,6 @@ using System.Text;
 using Akka.Actor;
 using Akka.Cluster;
 using Akka.Event;
-using Google.Protobuf;
 
 namespace Akka.DistributedData.Internal
 {
@@ -629,7 +628,7 @@ namespace Akka.DistributedData.Internal
         /// <summary>
         /// TBD
         /// </summary>
-        public IImmutableDictionary<string, ByteString> Digests { get; }
+        public IImmutableDictionary<string, byte[]> Digests { get; }
         /// <summary>
         /// TBD
         /// </summary>
@@ -645,7 +644,7 @@ namespace Akka.DistributedData.Internal
         /// <param name="digests">TBD</param>
         /// <param name="chunk">TBD</param>
         /// <param name="totalChunks">TBD</param>
-        public Status(IImmutableDictionary<string, ByteString> digests, int chunk, int totalChunks)
+        public Status(IImmutableDictionary<string, byte[]> digests, int chunk, int totalChunks)
         {
             Digests = digests;
             Chunk = chunk;

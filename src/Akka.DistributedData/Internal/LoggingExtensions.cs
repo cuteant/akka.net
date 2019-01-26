@@ -9,7 +9,6 @@ using Akka.Actor;
 using Akka.Cluster;
 using Akka.DistributedData.Internal;
 using Akka.Event;
-using Google.Protobuf;
 
 namespace Akka.DistributedData
 {
@@ -76,7 +75,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ReceivedGossipStatusFrom(this ILoggingAdapter logger, IActorRef sender, int chunk, int totChunks, IImmutableDictionary<string, ByteString> otherDigests)
+        internal static void ReceivedGossipStatusFrom(this ILoggingAdapter logger, IActorRef sender, int chunk, int totChunks, IImmutableDictionary<string, byte[]> otherDigests)
         {
             logger.Debug("Received gossip status from [{0}], chunk {1}/{2} containing [{3}]", sender.Path.Address, chunk + 1, totChunks, string.Join(", ", otherDigests.Keys));
         }

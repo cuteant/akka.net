@@ -1,9 +1,8 @@
-﻿using Akka.Serialization;
-using Google.Protobuf;
+﻿using Google.Protobuf;
 using MessagePack;
 using MessagePack.Formatters;
 
-namespace Akka.Remote.Serialization.Formatters
+namespace Akka.Serialization.Formatters
 {
     public sealed class ByteStringFormatter : IMessagePackFormatter<ByteString>
     {

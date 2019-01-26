@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Serialization.Protobuf\Akka.Serialization.Protobuf.csproj" />
     <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
 
     <None Include="Resources\akka-validcert.pfx">

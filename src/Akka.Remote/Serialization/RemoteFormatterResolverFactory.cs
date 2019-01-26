@@ -15,8 +15,6 @@ namespace Akka.Remote.Serialization
             {
                 ActorSelectionMessageFormatter.Instance,
 
-                ByteStringFormatter.Instance,
-
                 DaemonMsgCreateFormatter.Instance,
             };
         }

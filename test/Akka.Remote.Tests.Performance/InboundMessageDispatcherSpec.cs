@@ -10,7 +10,6 @@ using Akka.Actor;
 using Akka.Configuration;
 using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
 using Akka.Util.Internal;
-using Google.Protobuf;
 using NBench;
 
 namespace Akka.Remote.Tests.Performance

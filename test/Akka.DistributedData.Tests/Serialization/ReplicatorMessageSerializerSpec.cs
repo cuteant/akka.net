@@ -8,10 +8,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.DistributedData.Internal;
-using Google.Protobuf;
 using Xunit;
 using Xunit.Abstractions;
 using Address = Akka.Actor.Address;
@@ -66,8 +66,8 @@ namespace Akka.DistributedData.Tests.Serialization
             CheckSerialization(new ReadResult(null));
             CheckSerialization(new Internal.Status(ImmutableDictionary.CreateRange(new[]
             {
-                new KeyValuePair<string, ByteString>("A", ByteString.CopyFromUtf8("a")),
-                new KeyValuePair<string, ByteString>("B", ByteString.CopyFromUtf8("b")),
+                new KeyValuePair<string, byte[]>("A", Encoding.UTF8.GetBytes("a")),
+                new KeyValuePair<string, byte[]>("B", Encoding.UTF8.GetBytes("b")),
             }), 3, 10));
             CheckSerialization(new Gossip(ImmutableDictionary.CreateRange(new[]
             {
