@@ -319,7 +319,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <param name="remaining">TBD</param>
         /// <param name="andThen">TBD</param>
-        public WaitingForUpstreamSubscription(int remaining, TransferPhase andThen)
+        public WaitingForUpstreamSubscription(int remaining, in TransferPhase andThen)
         {
             Remaining = remaining;
             AndThen = andThen;
@@ -362,7 +362,7 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    public struct TransferPhase
+    public readonly struct TransferPhase
     {
         /// <summary>
         /// TBD
@@ -408,7 +408,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <param name="waitForUpstream">TBD</param>
         /// <param name="andThen">TBD</param>
-        void InitialPhase(int waitForUpstream, TransferPhase andThen);
+        void InitialPhase(int waitForUpstream, in TransferPhase andThen);
         /// <summary>
         /// TBD
         /// </summary>
@@ -422,7 +422,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         /// <param name="phase">TBD</param>
-        void NextPhase(TransferPhase phase);
+        void NextPhase(in TransferPhase phase);
 
         // Exchange input buffer elements and output buffer "requests" until one of them becomes empty.
         // Generate upstream requestMore for every Nth consumed input element
@@ -480,7 +480,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <param name="waitForUpstream">TBD</param>
         /// <param name="andThen">TBD</param>
-        public void InitialPhase(int waitForUpstream, TransferPhase andThen)
+        public void InitialPhase(int waitForUpstream, in TransferPhase andThen)
             => Pumps.InitialPhase(this, waitForUpstream, andThen);
 
         /// <summary>
@@ -498,7 +498,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         /// <param name="phase">TBD</param>
-        public void NextPhase(TransferPhase phase) => Pumps.NextPhase(this, phase);
+        public void NextPhase(in TransferPhase phase) => Pumps.NextPhase(this, phase);
 
         /// <summary>
         /// TBD
@@ -556,7 +556,7 @@ namespace Akka.Streams.Implementation
         /// <exception cref="IllegalStateException">
         /// This exception is thrown when the initial state is not <see cref="NotInitialized.Instance"/>.
         /// </exception>
-        public static void InitialPhase(this IPump self, int waitForUpstream, TransferPhase andThen)
+        public static void InitialPhase(this IPump self, int waitForUpstream, in TransferPhase andThen)
         {
             if (waitForUpstream < 1) ThrowHelper.ThrowArgumentException_GreaterThanEqualOne(waitForUpstream);
 
@@ -605,7 +605,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <param name="self">TBD</param>
         /// <param name="phase">TBD</param>
-        public static void NextPhase(this IPump self, TransferPhase phase)
+        public static void NextPhase(this IPump self, in TransferPhase phase)
         {
             if (self.TransferState is WaitingForUpstreamSubscription w)
             {

@@ -2494,7 +2494,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 private readonly Action<Holder<T>> _callback;
 
-                public Holder(Result<T> element, Action<Holder<T>> callback)
+                public Holder(in Result<T> element, Action<Holder<T>> callback)
                 {
                     _callback = callback;
                     Element = element;
@@ -2502,14 +2502,14 @@ namespace Akka.Streams.Implementation.Fusing
 
                 public Result<T> Element { get; private set; }
 
-                public void SetElement(Result<T> result)
+                public void SetElement(in Result<T> result)
                 {
                     Element = result.IsSuccess && result.Value == null
                         ? Result.Failure<T>(ReactiveStreamsCompliance.ElementMustNotBeNullException)
                         : result;
                 }
 
-                public void Invoke(Result<T> result)
+                public void Invoke(in Result<T> result)
                 {
                     SetElement(result);
                     _callback(this);

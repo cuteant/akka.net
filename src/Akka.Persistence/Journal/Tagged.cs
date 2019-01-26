@@ -19,7 +19,7 @@ namespace Akka.Persistence.Journal
     /// journal implementation for more information.
     /// The journal will unwrap the event and store the <see cref="Payload"/>.
     /// </summary>
-    public struct Tagged
+    public readonly struct Tagged
     {
         /// <summary>
         /// TBD
@@ -46,11 +46,11 @@ namespace Akka.Persistence.Journal
         /// <summary>
         /// TBD
         /// </summary>
-        public object Payload { get; }
+        public readonly object Payload;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public IImmutableSet<string> Tags { get; }
+        public readonly IImmutableSet<string> Tags;
     }
 }

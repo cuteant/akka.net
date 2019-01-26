@@ -8,7 +8,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
-using System.Linq;
+using System.Runtime.Serialization;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor.Internal;
@@ -44,7 +44,7 @@ namespace Akka.Actor
     /// TBD
     /// </summary>
     [MessagePackObject]
-    internal struct Get : IQuery
+    internal readonly struct Get : IQuery
     {
         /// <summary>
         /// TBD
@@ -63,12 +63,16 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         [Key(0)]
-        public TimeSpan Deadline { get; private set; }
+        public readonly TimeSpan Deadline;
+        [IgnoreMember, IgnoreDataMember]
+        TimeSpan IQuery.Deadline => this.Deadline;
         /// <summary>
         /// TBD
         /// </summary>
         [Key(1)]
-        public IActorRef Client { get; private set; }
+        public readonly IActorRef Client;
+        [IgnoreMember, IgnoreDataMember]
+        IActorRef IQuery.Client => this.Client;
         /// <summary>
         /// TBD
         /// </summary>
@@ -84,7 +88,7 @@ namespace Akka.Actor
     /// TBD
     /// </summary>
     [MessagePackObject]
-    internal struct Select : IQuery
+    internal readonly struct Select : IQuery
     {
         /// <summary>
         /// TBD
@@ -105,17 +109,21 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         [Key(0)]
-        public TimeSpan Deadline { get; }
+        public readonly TimeSpan Deadline;
+        [IgnoreMember, IgnoreDataMember]
+        TimeSpan IQuery.Deadline => this.Deadline;
         /// <summary>
         /// TBD
         /// </summary>
         [Key(1)]
-        public Predicate<object> Predicate { get; set; }
+        public readonly Predicate<object> Predicate;
         /// <summary>
         /// TBD
         /// </summary>
         [Key(2)]
-        public IActorRef Client { get; }
+        public readonly IActorRef Client;
+        [IgnoreMember, IgnoreDataMember]
+        IActorRef IQuery.Client => this.Client;
         /// <summary>
         /// TBD
         /// </summary>
@@ -131,7 +139,7 @@ namespace Akka.Actor
     /// TBD
     /// </summary>
     [MessagePackObject]
-    internal struct StartWatch
+    internal readonly struct StartWatch
     {
         /// <summary>
         /// TBD
@@ -150,20 +158,20 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         [Key(0)]
-        public IActorRef Target { get; }
+        public readonly IActorRef Target;
 
         /// <summary>
         /// The custom termination message or null
         /// </summary>
         [Key(1)]
-        public object Message { get; }
+        public readonly object Message;
     }
 
     /// <summary>
     /// TBD
     /// </summary>
     [MessagePackObject]
-    internal struct StopWatch
+    internal readonly struct StopWatch
     {
         /// <summary>
         /// TBD
@@ -180,10 +188,10 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         [Key(0)]
-        public IActorRef Target { get; }
+        public readonly IActorRef Target;
     }
 
-    internal struct Kick { }
+    internal readonly struct Kick { }
 
     /// <summary>
     /// TBD

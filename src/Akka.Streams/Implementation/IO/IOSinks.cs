@@ -78,7 +78,7 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override object Create(MaterializationContext context, out Task<IOResult> materializer)
+        public override object Create(in MaterializationContext context, out Task<IOResult> materializer)
         {
             var mat = ActorMaterializerHelper.Downcast(context.Materializer);
             var settings = mat.EffectiveSettings(context.EffectiveAttributes);
@@ -144,7 +144,7 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override object Create(MaterializationContext context, out Task<IOResult> materializer)
+        public override object Create(in MaterializationContext context, out Task<IOResult> materializer)
         {
             var mat = ActorMaterializerHelper.Downcast(context.Materializer);
             var settings = mat.EffectiveSettings(context.EffectiveAttributes);

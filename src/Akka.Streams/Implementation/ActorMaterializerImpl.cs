@@ -55,7 +55,7 @@ namespace Akka.Streams.Implementation
         /// <param name="props">TBD</param>
         /// <returns>TBD</returns>
         [InternalApi]
-        public override IActorRef ActorOf(MaterializationContext context, Props props)
+        public override IActorRef ActorOf(in MaterializationContext context, Props props)
         {
             var dispatcher = props.Deploy.Dispatcher == Deploy.NoDispatcherGiven
                 ? EffectiveSettings(context.EffectiveAttributes).Dispatcher

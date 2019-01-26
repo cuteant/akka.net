@@ -82,12 +82,12 @@ namespace Akka.Dispatch.SysMsg
     /// The type of the list also encodes that the messages contained are in reverse order, i.e. the head of the list is the
     /// latest appended element.
     /// </summary>
-    internal struct LatestFirstSystemMessageList
+    internal readonly struct LatestFirstSystemMessageList
     {
         /// <summary>
         /// The front of the list.
         /// </summary>
-        public SystemMessage Head;
+        public readonly SystemMessage Head;
 
         /// <summary>
         /// Creates a new message list.
@@ -156,12 +156,12 @@ namespace Akka.Dispatch.SysMsg
     /// The type of the list also encodes that the messages contained are in reverse order, i.e. the head of the list is the
     /// latest appended element.
     /// </summary>
-    internal struct EarliestFirstSystemMessageList
+    internal readonly struct EarliestFirstSystemMessageList
     {
         /// <summary>
         /// The front of the list.
         /// </summary>
-        public SystemMessage Head;
+        public readonly SystemMessage Head;
 
         /// <summary>
         /// Creates a new message list.

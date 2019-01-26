@@ -100,7 +100,7 @@ namespace Akka.Persistence.Journal
     /// TBD
     /// </summary>
     [MessagePackObject]
-    public struct SingleEventSequence : IEventSequence, IEquatable<IEventSequence>
+    public readonly struct SingleEventSequence : IEventSequence, IEquatable<IEventSequence>
     {
         [Key(0)]
         private readonly object[] _events;

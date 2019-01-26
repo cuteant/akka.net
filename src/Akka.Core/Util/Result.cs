@@ -16,7 +16,7 @@ namespace Akka.Util
     /// TBD
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    public struct Result<T> : IEquatable<Result<T>>
+    public readonly struct Result<T> : IEquatable<Result<T>>
     {
         //[FieldOffset(0)]
         /// <summary>

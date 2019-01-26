@@ -611,7 +611,7 @@ namespace Akka.Dispatch
         /// </summary>
         /// <param name="cell">TBD</param>
         /// <param name="envelope">TBD</param>
-        public virtual void Dispatch(ActorCell cell, Envelope envelope)
+        public virtual void Dispatch(ActorCell cell, in Envelope envelope)
         {
             var mbox = cell.Mailbox;
             mbox.Enqueue(cell.Self, envelope);

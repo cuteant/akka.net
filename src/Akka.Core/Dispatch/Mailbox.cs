@@ -107,7 +107,7 @@ namespace Akka.Dispatch
         /// </summary>
         /// <param name="receiver">The actor sending this message to the mailbox</param>
         /// <param name="envelope">The envelope.</param>
-        internal void Enqueue(IActorRef receiver, Envelope envelope)
+        internal void Enqueue(IActorRef receiver, in Envelope envelope)
         {
             MessageQueue.Enqueue(receiver, envelope);
         }
@@ -152,7 +152,7 @@ namespace Akka.Dispatch
         /// <param name="old">TBD</param>
         /// <param name="newQueue">TBD</param>
         /// <returns>TBD</returns>
-        internal bool SystemQueuePut(LatestFirstSystemMessageList old, LatestFirstSystemMessageList newQueue)
+        internal bool SystemQueuePut(in LatestFirstSystemMessageList old, in LatestFirstSystemMessageList newQueue)
         {
             // Note: calling .head is not actually existing on the bytecode level as the parameters _old and _new
             // are SystemMessage instances hidden during compile time behind the SystemMessageList value class.
@@ -530,7 +530,7 @@ namespace Akka.Dispatch
         /// Drains <see cref="ISystemMessage"/> from this mailbox.
         /// </summary>
         /// <param name="newContents">The replacement queue for the system messages inside this mailbox.</param>
-        internal virtual EarliestFirstSystemMessageList SystemDrain(LatestFirstSystemMessageList newContents)
+        internal virtual EarliestFirstSystemMessageList SystemDrain(in LatestFirstSystemMessageList newContents)
         {
             var currentList = SystemQueue;
             if (currentList.Head is NoMessage) return new EarliestFirstSystemMessageList(null);

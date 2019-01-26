@@ -80,7 +80,7 @@ namespace Akka.Streams.Tests.Dsl
             protected override SinkModule<NotUsed, Task<Attributes>> NewInstance(SinkShape<NotUsed> shape)
                 => new AttributesSink(Attributes, shape);
 
-            public override object Create(MaterializationContext context, out Task<Attributes> materializer)
+            public override object Create(in MaterializationContext context, out Task<Attributes> materializer)
             {
                 materializer = Task.FromResult(context.EffectiveAttributes);
                 return new SinkholeSubscriber<NotUsed>(new TaskCompletionSource<NotUsed>());

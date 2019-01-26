@@ -227,7 +227,7 @@ namespace Akka.TestKit.Internal
             /// TBD
             /// </summary>
             /// <param name="envelope">TBD</param>
-            protected override void AutoReceiveMessage(Envelope envelope)
+            protected override void AutoReceiveMessage(in Envelope envelope)
             {
                 if (envelope.Message is InternalGetActor)
                     Sender.Tell(Actor, Self);

@@ -168,7 +168,7 @@ namespace Akka.Actor.Internal
         /// the envelope is a <see cref="Terminated"/> message, it will be ensured that it can be re-received
         /// by the actor.
         /// </summary>
-        private void EnqueueFirst(Envelope msg)
+        private void EnqueueFirst(in Envelope msg)
         {
             Mailbox.EnqueueFirst(msg);
             if (msg.Message is Terminated terminatedMessage)

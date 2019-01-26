@@ -671,7 +671,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <param name="waitForUpstream">TBD</param>
         /// <param name="andThen">TBD</param>
-        public void InitialPhase(int waitForUpstream, TransferPhase andThen)
+        public void InitialPhase(int waitForUpstream, in TransferPhase andThen)
             => Pumps.InitialPhase(this, waitForUpstream, andThen);
 
         /// <summary>
@@ -689,7 +689,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         /// <param name="phase">TBD</param>
-        public void NextPhase(TransferPhase phase) => Pumps.NextPhase(this, phase);
+        public void NextPhase(in TransferPhase phase) => Pumps.NextPhase(this, phase);
 
         /// <summary>
         /// TBD

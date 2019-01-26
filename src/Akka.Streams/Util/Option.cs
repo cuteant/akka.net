@@ -15,7 +15,7 @@ namespace Akka.Streams.Util
     /// Useful where distinguishing between null (or zero, or false) and uninitialized is significant.
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    public struct Option<T>
+    public readonly struct Option<T>
     {
         /// <summary>
         /// TBD
@@ -35,12 +35,12 @@ namespace Akka.Streams.Util
         /// <summary>
         /// TBD
         /// </summary>
-        public bool HasValue { get; }
+        public readonly bool HasValue;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public T Value { get; }
+        public readonly T Value;
 
         /// <summary>
         /// Performs an implicit conversion from <typeparamref name="T"/> to <see cref="Option{T}"/>.

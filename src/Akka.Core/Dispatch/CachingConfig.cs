@@ -40,7 +40,7 @@ namespace Akka.Dispatch
         /// <summary>
         /// TBD
         /// </summary>
-        public struct ValuePathEntry : IPathEntry
+        public readonly struct ValuePathEntry : IPathEntry
         {
             /// <summary>
             /// TBD
@@ -68,21 +68,24 @@ namespace Akka.Dispatch
             /// <summary>
             /// TBD
             /// </summary>
-            public bool Valid { get; private set; }
+            public readonly bool Valid;
+            bool IPathEntry.Valid => this.Valid;
             /// <summary>
             /// TBD
             /// </summary>
-            public bool Exists { get; private set; }
+            public readonly bool Exists;
+            bool IPathEntry.Exists => this.Exists;
             /// <summary>
             /// TBD
             /// </summary>
-            public Config Config { get; private set; }
+            public readonly Config Config;
+            Config IPathEntry.Config => this.Config;
         }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public struct StringPathEntry : IPathEntry
+        public readonly struct StringPathEntry : IPathEntry
         {
             /// <summary>
             /// TBD
@@ -102,20 +105,23 @@ namespace Akka.Dispatch
             /// <summary>
             /// TBD
             /// </summary>
-            public bool Valid { get; private set; }
+            public readonly bool Valid;
+            bool IPathEntry.Valid => this.Valid;
             /// <summary>
             /// TBD
             /// </summary>
-            public bool Exists { get; private set; }
+            public readonly bool Exists;
+            bool IPathEntry.Exists => this.Exists;
             /// <summary>
             /// TBD
             /// </summary>
-            public Config Config { get; private set; }
+            public readonly Config Config;
+            Config IPathEntry.Config => this.Config;
 
             /// <summary>
             /// TBD
             /// </summary>
-            public string Value { get; private set; }
+            public readonly string Value;
         }
 
         static readonly IPathEntry InvalidPathEntry = new ValuePathEntry(false, true);
@@ -285,9 +291,9 @@ namespace Akka.Dispatch
         public override string GetString(string path, string @default = null)
         {
             var pathEntry = GetPathEntry(path);
-            if (pathEntry is StringPathEntry)
+            if (pathEntry is StringPathEntry stringPath)
             {
-                return ((StringPathEntry) pathEntry).Value;
+                return stringPath.Value;
             }
             else
             {

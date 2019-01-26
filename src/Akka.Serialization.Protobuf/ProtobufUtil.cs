@@ -147,7 +147,7 @@ namespace Akka.Serialization
 
         public readonly int Length;
 
-        public ByteBufferWrapper(in ArraySegment<byte> payload)
+        public ByteBufferWrapper(ArraySegment<byte> payload)
         {
             Payload = payload;
             Length = payload.Count;

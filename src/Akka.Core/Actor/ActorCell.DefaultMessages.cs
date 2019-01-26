@@ -49,7 +49,7 @@ namespace Akka.Actor
         /// <exception cref="ActorKilledException">
         /// This exception is thrown if a <see cref="Akka.Actor.Kill"/> message is included in the given <paramref name="envelope"/>.
         /// </exception>>
-        public void Invoke(Envelope envelope)
+        public void Invoke(in Envelope envelope)
         {
 
             var message = envelope.Message;
@@ -97,7 +97,7 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="envelope">The envelope we received</param>
         /// <returns>An IActorRef that corresponds to a Sender</returns>
-        private IActorRef MatchSender(Envelope envelope)
+        private IActorRef MatchSender(in Envelope envelope)
         {
             var sender = envelope.Sender;
             return sender ?? System.DeadLetters;
@@ -127,7 +127,7 @@ namespace Akka.Actor
         /// <exception cref="ActorKilledException">
         /// This exception is thrown if a <see cref="Akka.Actor.Kill"/> message is included in the given <paramref name="envelope"/>.
         /// </exception>
-        protected virtual void AutoReceiveMessage(Envelope envelope)
+        protected virtual void AutoReceiveMessage(in Envelope envelope)
         {
             var message = envelope.Message;
 
@@ -174,7 +174,7 @@ namespace Akka.Actor
         /// This is only intended to be called from TestKit's TestActorRef
         /// </summary>
         /// <param name="envelope">TBD</param>
-        public void ReceiveMessageForTest(Envelope envelope)
+        public void ReceiveMessageForTest(in Envelope envelope)
         {
             var message = envelope.Message;
             CurrentMessage = message;
@@ -251,7 +251,7 @@ namespace Akka.Actor
             } while (messages.NonEmpty);
         }
 
-        private void SysMsgInvokeAll(EarliestFirstSystemMessageList messages, int currentState)
+        private void SysMsgInvokeAll(in EarliestFirstSystemMessageList messages, int currentState)
         {
 
             var nextState = currentState;

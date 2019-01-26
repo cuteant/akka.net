@@ -64,7 +64,7 @@ namespace Akka.Util
         /// Enqueues a message into the priority queue.
         /// </summary>
         /// <param name="item">The item to enqueue.</param>
-        public void Enqueue(Envelope item)
+        public void Enqueue(in Envelope item)
         {
 
             _data.Add(item);

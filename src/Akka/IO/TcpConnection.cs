@@ -702,7 +702,7 @@ namespace Akka.IO
             ReadError,
         }
 
-        private struct ReadResult
+        private readonly struct ReadResult
         {
             public static readonly ReadResult EndOfStream = new ReadResult(ReadResultType.EndOfStream, SocketError.Success);
             public static readonly ReadResult AllRead = new ReadResult(ReadResultType.AllRead, SocketError.Success);

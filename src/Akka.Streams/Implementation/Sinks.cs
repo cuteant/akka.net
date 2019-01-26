@@ -38,7 +38,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        object Create(MaterializationContext context, out object materializer);
+        object Create(in MaterializationContext context, out object materializer);
     }
 
     /// <summary>
@@ -93,9 +93,9 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public abstract object Create(MaterializationContext context, out TMat materializer);
+        public abstract object Create(in MaterializationContext context, out TMat materializer);
 
-        object ISinkModule.Create(MaterializationContext context, out object materializer)
+        object ISinkModule.Create(in MaterializationContext context, out object materializer)
         {
             var result = Create(context, out var m);
             materializer = m;
@@ -192,7 +192,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override object Create(MaterializationContext context, out IPublisher<TIn> materializer)
+        public override object Create(in MaterializationContext context, out IPublisher<TIn> materializer)
         {
             var processor = new VirtualProcessor<TIn>();
             materializer = processor;
@@ -243,7 +243,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override object Create(MaterializationContext context, out IPublisher<TIn> materializer)
+        public override object Create(in MaterializationContext context, out IPublisher<TIn> materializer)
         {
             var actorMaterializer = ActorMaterializerHelper.Downcast(context.Materializer);
             var settings = actorMaterializer.EffectiveSettings(Attributes);
@@ -306,7 +306,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override object Create(MaterializationContext context, out NotUsed materializer)
+        public override object Create(in MaterializationContext context, out NotUsed materializer)
         {
             materializer = NotUsed.Instance;
             return _subscriber;
@@ -352,7 +352,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override object Create(MaterializationContext context, out NotUsed materializer)
+        public override object Create(in MaterializationContext context, out NotUsed materializer)
         {
             materializer = NotUsed.Instance;
             return new CancellingSubscriber<T>();
@@ -420,7 +420,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override object Create(MaterializationContext context, out IActorRef materializer)
+        public override object Create(in MaterializationContext context, out IActorRef materializer)
         {
             var subscriberRef = ActorMaterializerHelper.Downcast(context.Materializer).ActorOf(context, _props);
             materializer = subscriberRef;
@@ -481,7 +481,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override object Create(MaterializationContext context, out NotUsed materializer)
+        public override object Create(in MaterializationContext context, out NotUsed materializer)
         {
             var actorMaterializer = ActorMaterializerHelper.Downcast(context.Materializer);
             var effectiveSettings = actorMaterializer.EffectiveSettings(context.EffectiveAttributes);
@@ -845,7 +845,7 @@ namespace Akka.Streams.Implementation
                 }
             }
 
-            private void EnqueueAndNotify(Result<Option<T>> requested)
+            private void EnqueueAndNotify(in Result<Option<T>> requested)
             {
                 _buffer.Enqueue(requested);
                 if (_currentRequest.HasValue)

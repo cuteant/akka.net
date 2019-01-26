@@ -313,7 +313,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal struct Outbound : ITcpRole
+        internal readonly struct Outbound : ITcpRole
         {
             /// <summary>
             /// TBD
@@ -354,7 +354,7 @@ namespace Akka.Streams.Implementation.IO
         /// <summary>
         /// TBD
         /// </summary>
-        internal struct Inbound : ITcpRole
+        internal readonly struct Inbound : ITcpRole
         {
             /// <summary>
             /// TBD

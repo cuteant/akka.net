@@ -12,7 +12,7 @@ namespace Akka.Actor
     /// <summary>
     /// Envelope class, represents a message and the sender of the message.
     /// </summary>
-    public struct Envelope
+    public readonly struct Envelope
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Envelope"/> struct.
@@ -45,13 +45,13 @@ namespace Akka.Actor
         /// Gets or sets the sender.
         /// </summary>
         /// <value>The sender.</value>
-        public IActorRef Sender { get; private set; }
+        public readonly IActorRef Sender;
 
         /// <summary>
         /// Gets or sets the message.
         /// </summary>
         /// <value>The message.</value>
-        public object Message { get; private set; }
+        public readonly object Message;
 
         /// <summary>
         /// Converts the <see cref="Envelope"/> to a string representation.

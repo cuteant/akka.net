@@ -39,7 +39,7 @@ namespace Akka.Streams.Implementation.IO
             return Actor.Props.Create(()=> new InputStreamPublisher(inputstream, completionSource, chunkSize)).WithDeploy(Deploy.Local);
         }
 
-        internal struct Continue : IDeadLetterSuppression, ISingletonMessage
+        internal readonly struct Continue : IDeadLetterSuppression, ISingletonMessage
         {
             public static readonly Continue Instance = new Continue();
         }

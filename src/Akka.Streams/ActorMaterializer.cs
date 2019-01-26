@@ -185,7 +185,7 @@ namespace Akka.Streams
         /// <param name="context">TBD</param>
         /// <param name="props">TBD</param>
         /// <returns>TBD</returns>
-        public abstract IActorRef ActorOf(MaterializationContext context, Props props);
+        public abstract IActorRef ActorOf(in MaterializationContext context, Props props);
 
         /// <summary>
         /// Creates a new logging adapter.

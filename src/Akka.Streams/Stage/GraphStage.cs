@@ -48,7 +48,7 @@ namespace Akka.Streams.Stage
     /// TBD
     /// </summary>
     /// <typeparam name="TMaterialized">TBD</typeparam>
-    public struct LogicAndMaterializedValue<TMaterialized> : ILogicAndMaterializedValue<TMaterialized>
+    public readonly struct LogicAndMaterializedValue<TMaterialized> : ILogicAndMaterializedValue<TMaterialized>
     {
         /// <summary>
         /// TBD
@@ -64,11 +64,13 @@ namespace Akka.Streams.Stage
         /// <summary>
         /// TBD
         /// </summary>
-        public GraphStageLogic Logic { get; }
+        public readonly GraphStageLogic Logic;
+        GraphStageLogic ILogicAndMaterializedValue<TMaterialized>.Logic => this.Logic;
         /// <summary>
         /// TBD
         /// </summary>
-        public TMaterialized MaterializedValue { get; }
+        public readonly TMaterialized MaterializedValue;
+        TMaterialized ILogicAndMaterializedValue<TMaterialized>.MaterializedValue => this.MaterializedValue;
     }
 
     /// <summary>

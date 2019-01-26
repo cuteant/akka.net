@@ -132,7 +132,7 @@ namespace Akka.Streams.TestKit
                 return new ProbeSource<T>(_testKit, _attributes, shape);
             }
 
-            public override IPublisher<T> Create(MaterializationContext context, out TestPublisher.Probe<T> materializer)
+            public override IPublisher<T> Create(in MaterializationContext context, out TestPublisher.Probe<T> materializer)
             {
                 materializer = _testKit.CreatePublisherProbe<T>();
                 return materializer;
@@ -162,7 +162,7 @@ namespace Akka.Streams.TestKit
                 return new ProbeSink<T>(_testKit, _attributes, shape);
             }
 
-            public override object Create(MaterializationContext context, out TestSubscriber.Probe<T> materializer)
+            public override object Create(in MaterializationContext context, out TestSubscriber.Probe<T> materializer)
             {
                 materializer = _testKit.CreateSubscriberProbe<T>();
                 return materializer;

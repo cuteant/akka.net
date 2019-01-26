@@ -628,7 +628,7 @@ namespace Akka.Streams.Tests.Dsl
                 return new ProbeSink(shape, _properties, Attributes);
             }
 
-            public override object Create(MaterializationContext context, out TestSubscriber.Probe<ByteString> materializer)
+            public override object Create(in MaterializationContext context, out TestSubscriber.Probe<ByteString> materializer)
             {
                 var promise = _properties.Probes[_properties.ProbesWriterTop];
                 var probe = TestSubscriber.CreateSubscriberProbe<ByteString>(_properties.Kit);

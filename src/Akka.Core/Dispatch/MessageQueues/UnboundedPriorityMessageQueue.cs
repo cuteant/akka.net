@@ -63,7 +63,7 @@ namespace Akka.Dispatch.MessageQueues
         /// <remarks>
         /// Called from within a synchronization mechanism.
         /// </remarks>
-        protected override void LockedEnqueue(Envelope envelope)
+        protected override void LockedEnqueue(in Envelope envelope)
         {
             _prioQueue.Enqueue(envelope);
         }
@@ -94,7 +94,7 @@ namespace Akka.Dispatch.MessageQueues
             return false;
         }
 
-        public void EnqueueFirst(Envelope envelope)
+        public void EnqueueFirst(in Envelope envelope)
         {
             _prependBuffer.Push(envelope);
         }

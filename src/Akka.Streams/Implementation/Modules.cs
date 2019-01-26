@@ -29,7 +29,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        IUntypedPublisher Create(MaterializationContext context, out object materializer);
+        IUntypedPublisher Create(in MaterializationContext context, out object materializer);
     }
 
     /// <summary>
@@ -81,9 +81,9 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public abstract IPublisher<TOut> Create(MaterializationContext context, out TMat materializer);
+        public abstract IPublisher<TOut> Create(in MaterializationContext context, out TMat materializer);
 
-        IUntypedPublisher ISourceModule.Create(MaterializationContext context, out object materializer)
+        IUntypedPublisher ISourceModule.Create(in MaterializationContext context, out object materializer)
         {
             var result = Create(context, out var m);
             materializer = m;
@@ -174,7 +174,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override IPublisher<TOut> Create(MaterializationContext context, out ISubscriber<TOut> materializer)
+        public override IPublisher<TOut> Create(in MaterializationContext context, out ISubscriber<TOut> materializer)
         {
             var processor = new VirtualProcessor<TOut>();
             materializer = processor;
@@ -240,7 +240,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override IPublisher<TOut> Create(MaterializationContext context, out NotUsed materializer)
+        public override IPublisher<TOut> Create(in MaterializationContext context, out NotUsed materializer)
         {
             materializer = NotUsed.Instance;
             return _publisher;
@@ -291,7 +291,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override IPublisher<TOut> Create(MaterializationContext context, out TaskCompletionSource<TOut> materializer)
+        public override IPublisher<TOut> Create(in MaterializationContext context, out TaskCompletionSource<TOut> materializer)
         {
             materializer = new TaskCompletionSource<TOut>();
             return new MaybePublisher<TOut>(materializer, Attributes.GetNameOrDefault("MaybeSource"));
@@ -347,7 +347,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override IPublisher<TOut> Create(MaterializationContext context, out IActorRef materializer)
+        public override IPublisher<TOut> Create(in MaterializationContext context, out IActorRef materializer)
         {
             var publisherRef = ActorMaterializerHelper.Downcast(context.Materializer).ActorOf(context, _props);
             materializer = publisherRef;
@@ -413,7 +413,7 @@ namespace Akka.Streams.Implementation
         /// <param name="context">TBD</param>
         /// <param name="materializer">TBD</param>
         /// <returns>TBD</returns>
-        public override IPublisher<TOut> Create(MaterializationContext context, out IActorRef materializer)
+        public override IPublisher<TOut> Create(in MaterializationContext context, out IActorRef materializer)
         {
             var mat = ActorMaterializerHelper.Downcast(context.Materializer);
             materializer = mat.ActorOf(context, ActorRefSourceActor<TOut>.Props(_bufferSize, _overflowStrategy, mat.Settings));

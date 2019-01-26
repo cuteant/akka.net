@@ -19,7 +19,7 @@ using CuteAnt.Reflection;
 
 namespace Akka.Persistence
 {
-    internal struct PluginHolder
+    internal readonly struct PluginHolder
     {
         public PluginHolder(IActorRef @ref, EventAdapters adapters, Config config)
         {
@@ -28,11 +28,11 @@ namespace Akka.Persistence
             Config = config;
         }
 
-        public IActorRef Ref { get; }
+        public readonly IActorRef Ref;
 
-        public EventAdapters Adapters { get; }
+        public readonly EventAdapters Adapters;
 
-        public Config Config { get; }
+        public readonly Config Config;
     }
 
     /// <summary>

@@ -55,7 +55,7 @@ namespace Akka.Dispatch.MessageQueues
         /// </summary>
         /// <param name="receiver">TBD</param>
         /// <param name="envelope">TBD</param>
-        public void Enqueue(IActorRef receiver, Envelope envelope)
+        public void Enqueue(IActorRef receiver, in Envelope envelope)
         {
             lock (_lock)
             {
@@ -94,7 +94,7 @@ namespace Akka.Dispatch.MessageQueues
         /// TBD
         /// </summary>
         /// <param name="envelope">TBD</param>
-        protected abstract void LockedEnqueue(Envelope envelope);
+        protected abstract void LockedEnqueue(in Envelope envelope);
 
         /// <summary>
         /// TBD

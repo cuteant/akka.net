@@ -411,7 +411,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         [MessagePackObject]
-        public struct SubstreamRequestMore : INoSerializationVerificationNeeded, IDeadLetterSuppression
+        public readonly struct SubstreamRequestMore : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
@@ -441,7 +441,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         [MessagePackObject]
-        public struct SubstreamCancel : INoSerializationVerificationNeeded, IDeadLetterSuppression
+        public readonly struct SubstreamCancel : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
@@ -464,7 +464,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         [MessagePackObject]
-        public struct SubstreamSubscribePending : INoSerializationVerificationNeeded, IDeadLetterSuppression
+        public readonly struct SubstreamSubscribePending : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
@@ -522,7 +522,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <typeparam name="T">TBD</typeparam>
         [Serializable]
-        public struct ExposedPublishers<T> : INoSerializationVerificationNeeded, IDeadLetterSuppression
+        public readonly struct ExposedPublishers<T> : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
@@ -666,7 +666,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <param name="waitForUpstream">TBD</param>
         /// <param name="andThen">TBD</param>
-        public void InitialPhase(int waitForUpstream, TransferPhase andThen)
+        public void InitialPhase(int waitForUpstream, in TransferPhase andThen)
             => Pumps.InitialPhase(this, waitForUpstream, andThen);
 
         /// <summary>
@@ -684,7 +684,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         /// <param name="phase">TBD</param>
-        public void NextPhase(TransferPhase phase) => Pumps.NextPhase(this, phase);
+        public void NextPhase(in TransferPhase phase) => Pumps.NextPhase(this, phase);
 
         /// <summary>
         /// TBD

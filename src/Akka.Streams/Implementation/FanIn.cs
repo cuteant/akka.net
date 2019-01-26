@@ -416,7 +416,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         [MessagePackObject]
-        public struct OnError : INoSerializationVerificationNeeded, IDeadLetterSuppression
+        public readonly struct OnError : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
@@ -446,7 +446,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         [MessagePackObject]
-        public struct OnComplete : INoSerializationVerificationNeeded, IDeadLetterSuppression
+        public readonly struct OnComplete : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
@@ -469,7 +469,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         [MessagePackObject]
-        public struct OnNext : INoSerializationVerificationNeeded, IDeadLetterSuppression
+        public readonly struct OnNext : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
@@ -499,7 +499,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         [Serializable]
-        public struct OnSubscribe : INoSerializationVerificationNeeded, IDeadLetterSuppression
+        public readonly struct OnSubscribe : INoSerializationVerificationNeeded, IDeadLetterSuppression
         {
             /// <summary>
             /// TBD
@@ -556,7 +556,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public struct SubInput : ISubscriber<T>
+        public readonly struct SubInput : ISubscriber<T>
         {
             private readonly IActorRef _impl;
             private readonly int _id;
@@ -738,7 +738,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <param name="waitForUpstream">TBD</param>
         /// <param name="andThen">TBD</param>
-        public void InitialPhase(int waitForUpstream, TransferPhase andThen)
+        public void InitialPhase(int waitForUpstream, in TransferPhase andThen)
             => Pumps.InitialPhase(this, waitForUpstream, andThen);
 
         /// <summary>
@@ -756,7 +756,7 @@ namespace Akka.Streams.Implementation
         /// TBD
         /// </summary>
         /// <param name="phase">TBD</param>
-        public void NextPhase(TransferPhase phase) => Pumps.NextPhase(this, phase);
+        public void NextPhase(in TransferPhase phase) => Pumps.NextPhase(this, phase);
 
         /// <summary>
         /// TBD

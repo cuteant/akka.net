@@ -2,10 +2,10 @@
 
 namespace Akka.Persistence.EventStore.Journal
 {
-    public struct Unsubscribe
+    public readonly struct Unsubscribe
     {
         public readonly string StreamId;
-        public IActorRef Subscriber;
+        public readonly IActorRef Subscriber;
 
         public Unsubscribe(string streamId, IActorRef subscriber)
         {
