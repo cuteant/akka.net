@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------
 
 using Akka.Actor;
-using TQueue = System.Collections.Concurrent.ConcurrentQueue<Akka.Actor.Envelope>;
+using TQueue = Akka.Util.ConcurrentQueueWrapper<Akka.Actor.Envelope>;
 
 namespace Akka.Dispatch.MessageQueues
 {
@@ -16,34 +16,21 @@ namespace Akka.Dispatch.MessageQueues
         private readonly TQueue _queue = new TQueue();
 
         /// <inheritdoc cref="IMessageQueue"/>
-        public bool HasMessages
-        {
-            get { return !_queue.IsEmpty; }
-        }
+        public bool HasMessages => _queue.NonEmpty;
 
         /// <inheritdoc cref="IMessageQueue"/>
-        public int Count
-        {
-            get { return _queue.Count; }
-        }
+        public int Count => _queue.Count;
 
         /// <inheritdoc cref="IMessageQueue"/>
-        public void Enqueue(IActorRef receiver, in Envelope envelope)
-        {
-            _queue.Enqueue(envelope);
-        }
+        public void Enqueue(IActorRef receiver, in Envelope envelope) => _queue.Enqueue(envelope);
 
         /// <inheritdoc cref="IMessageQueue"/>
-        public bool TryDequeue(out Envelope envelope)
-        {
-            return _queue.TryDequeue(out envelope);
-        }
+        public bool TryDequeue(out Envelope envelope) => _queue.TryDequeue(out envelope);
 
         /// <inheritdoc cref="IMessageQueue"/>
         public void CleanUp(IActorRef owner, IMessageQueue deadletters)
         {
-            Envelope msg;
-            while (TryDequeue(out msg))
+            while (TryDequeue(out Envelope msg))
             {
                 deadletters.Enqueue(owner, msg);
             }

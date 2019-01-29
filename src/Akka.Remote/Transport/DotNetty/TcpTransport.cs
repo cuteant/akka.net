@@ -543,7 +543,7 @@ namespace Akka.Remote.Transport.DotNetty
                     return false;
                 }
 
-                if (_deque.Count == 0)
+                if (_deque.IsEmpty)
                 {
                     Interlocked.Exchange(ref _status, TransportStatus.Idle);
                     return true;
