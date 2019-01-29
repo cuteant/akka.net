@@ -2585,9 +2585,11 @@ namespace Akka.Cluster
             switch (message)
             {
                 case InternalClusterAction.JoinSeenNode _:
+                    var ctx = Context;
+                    var ctxParentPath = ctx.Parent.Path;
                     // send InitJoin to all seed nodes (except myself)
                     foreach (var path in _seeds.Where(x => x != _selfAddress)
-                                .Select(y => Context.ActorSelection(Context.Parent.Path.ToStringWithAddress(y))))
+                                .Select(y => ctx.ActorSelection(ctxParentPath.ToStringWithAddress(y))))
                     {
                         path.Tell(InternalClusterAction.InitJoin.Instance);
                     }
@@ -2595,9 +2597,10 @@ namespace Akka.Cluster
                     break;
 
                 case InternalClusterAction.InitJoinAck initJoinAck:
+                    var context = Context;
                     // first InitJoinAck reply
-                    Context.Parent.Tell(new ClusterUserAction.JoinTo(initJoinAck.Address));
-                    Context.Become(Done);
+                    context.Parent.Tell(new ClusterUserAction.JoinTo(initJoinAck.Address));
+                    context.Become(Done);
                     break;
 
                 case InternalClusterAction.InitJoinNack _:
@@ -2700,32 +2703,37 @@ namespace Akka.Cluster
                 case InternalClusterAction.JoinSeenNode _:
                     if (_timeout.HasTimeLeft)
                     {
+                        var ctx = Context;
+                        var ctxParentPath= ctx.Parent.Path;
                         // send InitJoin to remaining seed nodes (except myself)
                         foreach (var seed in _remainingSeeds.Select(
-                                    x => Context.ActorSelection(Context.Parent.Path.ToStringWithAddress(x))))
+                                    x => ctx.ActorSelection(ctxParentPath.ToStringWithAddress(x))))
                             seed.Tell(InternalClusterAction.InitJoin.Instance);
                     }
                     else
                     {
+                        var ctx = Context;
                         // no InitJoinAck received, initialize new cluster by joining myself
-                        Context.Parent.Tell(new ClusterUserAction.JoinTo(_selfAddress));
-                        Context.Stop(Self);
+                        ctx.Parent.Tell(new ClusterUserAction.JoinTo(_selfAddress));
+                        ctx.Stop(Self);
                     }
                     break;
 
                 case InternalClusterAction.InitJoinAck initJoinAck:
+                    var context = Context;
                     // first InitJoinAck reply, join existing cluster
-                    Context.Parent.Tell(new ClusterUserAction.JoinTo(initJoinAck.Address));
-                    Context.Stop(Self);
+                    context.Parent.Tell(new ClusterUserAction.JoinTo(initJoinAck.Address));
+                    context.Stop(Self);
                     break;
 
                 case InternalClusterAction.InitJoinNack initJoinNack:
                     _remainingSeeds = _remainingSeeds.Remove(initJoinNack.Address);
                     if (_remainingSeeds.IsEmpty)
                     {
+                        var ctx = Context;
                         // initialize new cluster by joining myself when nacks from all other seed nodes
-                        Context.Parent.Tell(new ClusterUserAction.JoinTo(_selfAddress));
-                        Context.Stop(Self);
+                        ctx.Parent.Tell(new ClusterUserAction.JoinTo(_selfAddress));
+                        ctx.Stop(Self);
                     }
                     break;
 

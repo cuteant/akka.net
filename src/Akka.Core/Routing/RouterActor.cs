@@ -25,7 +25,7 @@ namespace Akka.Routing
             get
             {
                 var context = Context;
-                var routedActorCell = Context as RoutedActorCell;
+                var routedActorCell = context as RoutedActorCell;
                 if (null == routedActorCell) { AkkaThrowHelper.ThrowActorInitializationException_RouterActor(context); }
                 return routedActorCell;
             }
