@@ -494,19 +494,17 @@ namespace Akka.Remote.Transport
             {
                 case ListenUnderlying listen:
                     LocalAddress = listen.ListenAddress;
-                    var capturedSelf = Self;
                     listen.UpstreamListener.ContinueWith(
-                        listenerRegistered => capturedSelf.Tell(new ListenerRegistered(listenerRegistered.Result)),
+                        ContinueAction, Self,
                         TaskContinuationOptions.ExecuteSynchronously);
                     break;
 
                 case ListenerRegistered listener:
                     AssociationListener = listener.Listener;
-                    void SendEvent(object dEvent)
+                    foreach (var dEvent in DelayedEvents)
                     {
                         Self.Tell(dEvent, ActorRefs.NoSender);
                     }
-                    DelayedEvents.ForEach(SendEvent);
                     DelayedEvents.Clear();
                     Context.Become(Ready);
                     break;
@@ -515,27 +513,12 @@ namespace Akka.Remote.Transport
                     DelayedEvents.Enqueue(message);
                     break;
             }
-            //PatternMatch.Match(message)
-            //    .With<ListenUnderlying>(listen =>
-            //    {
-            //        LocalAddress = listen.ListenAddress;
-            //        var capturedSelf = Self;
-            //        listen.UpstreamListener.ContinueWith(
-            //            listenerRegistered => capturedSelf.Tell(new ListenerRegistered(listenerRegistered.Result)),
-            //            TaskContinuationOptions.ExecuteSynchronously);
-            //    })
-            //    .With<ListenerRegistered>(listener =>
-            //    {
-            //        AssociationListener = listener.Listener;
-            //        foreach (var dEvent in DelayedEvents)
-            //        {
-            //            Self.Tell(dEvent, ActorRefs.NoSender);
-            //        }
+        }
 
-            //        DelayedEvents = new QueueX<object>();
-            //        Context.Become(Ready);
-            //    })
-            //    .Default(m => DelayedEvents.Enqueue(m));
+        private static void ContinueAction(Task<IAssociationEventListener> listenerRegistered, object state)
+        {
+            var capturedSelf = (IActorRef)state;
+            capturedSelf.Tell(new ListenerRegistered(listenerRegistered.Result));
         }
 
         /// <summary>Method to be implemented for child classes - processes messages once the transport is
