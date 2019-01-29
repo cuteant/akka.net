@@ -1,4 +1,5 @@
 ﻿using MessagePack;
+using PersistentPayload = Akka.Serialization.Protocol.Payload;
 
 namespace Akka.Persistence.Serialization.Protocol
 {
@@ -25,33 +26,6 @@ namespace Akka.Persistence.Serialization.Protocol
 
         [Key(6)]
         public string WriterGuid { get; set; }
-    }
-
-    /// <summary>Defines a payload.</summary>
-    [MessagePackObject]
-    public sealed class PersistentPayload
-    {
-        [Key(0)]
-        public byte[] Payload { get; set; }
-
-        [Key(1)]
-        public int SerializerId { get; set; }
-
-        [Key(2)]
-        public byte[] PayloadManifest { get; set; }
-
-        [Key(3)]
-        public int TypeHashCode { get; set; }
-
-        [Key(4)]
-        public byte ManifestMode { get; set; }
-    }
-
-    public sealed class MessageManifestMode
-    {
-        public const byte None = 0;
-        public const byte IncludeManifest = 1;
-        public const byte WithStringManifest = 2;
     }
 
     [MessagePackObject]

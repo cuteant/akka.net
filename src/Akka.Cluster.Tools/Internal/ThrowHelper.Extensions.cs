@@ -335,7 +335,7 @@ namespace Akka.Cluster.Tools
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"Can't serialize object of type [{o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
+                return new ArgumentException($"Can't serialize object of type [{(o as Type) ?? o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
             }
         }
 

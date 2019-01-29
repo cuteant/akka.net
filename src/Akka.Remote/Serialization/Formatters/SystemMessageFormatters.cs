@@ -193,7 +193,7 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var protoMessage = new Protocol.SuperviseData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Child)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Child)),
                 value.Async
             );
 
@@ -226,8 +226,8 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var protoMessage = new Protocol.WatchData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watchee)),
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watcher))
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watchee)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watcher))
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.WatchData>();
@@ -259,8 +259,8 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var protoMessage = new Protocol.WatchData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watchee)),
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watcher))
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watchee)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watcher))
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.WatchData>();
@@ -293,7 +293,7 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var protoMessage = new Protocol.FailedData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Child)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Child)),
                 ExceptionSupport.ExceptionToProto(formatterResolver.GetActorSystem(), value.Cause),
                 (ulong)value.Uid
             );
@@ -328,7 +328,7 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var protoMessage = new Protocol.DeathWatchNotificationData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Actor)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Actor)),
                 value.ExistenceConfirmed,
                 value.AddressTerminated
             );

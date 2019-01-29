@@ -145,11 +145,11 @@ namespace Akka.Persistence.TCK.Serialization
             public string Data { get; }
         }
 
-        public class MySnapshotSerializer : Serializer
+        public class MySnapshotSerializer : SerializerWithTypeManifest
         {
             public MySnapshotSerializer(ExtendedActorSystem system) : base(system) { }
             public override int Identifier => 77124;
-            public override bool IncludeManifest => true;
+            //public override bool IncludeManifest => true;
 
             public override byte[] ToBinary(object obj)
             {
@@ -178,15 +178,25 @@ namespace Akka.Persistence.TCK.Serialization
                 throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MySnapshotSerializer2)}]");
             }
 
+            protected override string GetManifest(Type type)
+            {
+                if (type == typeof(MySnapshot2)) return ContactsManifest;
+                throw new ArgumentException($"Can't serialize object of type [{type}] in [{nameof(MySnapshotSerializer2)}]");
+            }
             public override string Manifest(object obj)
             {
                 if (obj is MySnapshot2) return ContactsManifest;
                 throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MySnapshotSerializer2)}]");
             }
             /// <inheritdoc />
-            public override byte[] ManifestBytes(object obj)
+            public override byte[] ToBinary(object obj, out byte[] manifest)
             {
-                if (obj is MySnapshot2) return ContactsManifestBytes;
+                if (obj is MySnapshot2 snapshot)
+                {
+                    manifest = ContactsManifestBytes;
+                    return Encoding.UTF8.GetBytes($".{snapshot.Data}");
+                }
+                manifest = null;
                 throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MySnapshotSerializer2)}]");
             }
 

@@ -2494,7 +2494,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 private readonly Action<Holder<T>> _callback;
 
-                public Holder(in Result<T> element, Action<Holder<T>> callback)
+                public Holder(Result<T> element, Action<Holder<T>> callback)
                 {
                     _callback = callback;
                     Element = element;

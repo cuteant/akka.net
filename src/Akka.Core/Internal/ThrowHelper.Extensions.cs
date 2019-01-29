@@ -5,10 +5,10 @@ using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Configuration;
 using Akka.Dispatch;
+using Akka.Dispatch.SysMsg;
 using Akka.Pattern;
 using Akka.Routing;
 using Akka.Tools.MatchHandler;
-using Akka.Dispatch.SysMsg;
 
 namespace Akka
 {
@@ -278,6 +278,18 @@ namespace Akka
             ArgumentException GetException()
             {
                 return new ArgumentException($"messagesPerResize must be > 0, was {messagesPerResize}", nameof(messagesPerResize));
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static T ThrowArgumentException_Serializer_D<T>(object obj)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                var type = obj as Type;
+                var typeQualifiedName = type != null ? type.FullName : obj?.GetType().FullName;
+                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
             }
         }
 

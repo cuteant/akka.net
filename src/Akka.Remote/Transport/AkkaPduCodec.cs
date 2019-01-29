@@ -12,7 +12,7 @@ using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Remote.Serialization;
 using Akka.Remote.Serialization.Protocol;
-using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
+using SerializedMessage = Akka.Serialization.Protocol.Payload;
 
 namespace Akka.Remote.Transport
 {
@@ -191,9 +191,9 @@ namespace Akka.Remote.Transport
         }
 
         /// <summary>Return an <see cref="IAkkaPdu"/> instance that represents a PDU contained in the raw <see cref="T:System.Byte{T}"/>.</summary>
-        /// <param name="raw">Encoded raw byte representation of an Akka PDU</param>
+        /// <param name="pdu">Encoded raw byte representation of an Akka PDU</param>
         /// <returns>Class representation of a PDU that can be used in a <see cref="PatternMatch"/>.</returns>
-        public abstract IAkkaPdu DecodePdu(AkkaProtocolMessage pdu);
+        public abstract IAkkaPdu DecodePdu(in AkkaProtocolMessage pdu);
 
         /// <summary>Takes an <see cref="IAkkaPdu"/> representation of an Akka PDU and returns its encoded
         /// form as a <see cref="T:System.Byte{T}"/>.</summary>
@@ -255,7 +255,7 @@ namespace Akka.Remote.Transport
         /// <param name="ackOption">TBD</param>
         /// <returns>TBD</returns>
         public abstract object ConstructMessage(Address localAddress, IActorRef recipient,
-            SerializedMessage serializedMessage, IActorRef senderOption = null, SeqNo seqOption = null, Ack ackOption = null);
+            in SerializedMessage serializedMessage, IActorRef senderOption = null, SeqNo seqOption = null, Ack ackOption = null);
 
         /// <summary>TBD</summary>
         /// <param name="ack">TBD</param>
@@ -278,7 +278,7 @@ namespace Akka.Remote.Transport
         /// or a control message.</li><li>The PDU is a control message with an invalid format.</li></ul>
         /// </exception>
         /// <returns>TBD</returns>
-        public override IAkkaPdu DecodePdu(AkkaProtocolMessage pdu)
+        public override IAkkaPdu DecodePdu(in AkkaProtocolMessage pdu)
         {
             //try
             //{
@@ -413,13 +413,13 @@ namespace Akka.Remote.Transport
         /// <param name="seqOption">TBD</param>
         /// <param name="ackOption">TBD</param>
         /// <returns>TBD</returns>
-        public override object ConstructMessage(Address localAddress, IActorRef recipient, SerializedMessage serializedMessage,
+        public override object ConstructMessage(Address localAddress, IActorRef recipient, in SerializedMessage serializedMessage,
             IActorRef senderOption = null, SeqNo seqOption = null, Ack ackOption = null)
         {
             var ackAndEnvelope = new AckAndEnvelopeContainer();
             var envelope = new RemoteEnvelope() { Recipient = SerializeActorRef(recipient.Path.Address, recipient) };
-            if (senderOption != null && senderOption.Path != null) { envelope.Sender = SerializeActorRef(localAddress, senderOption); }
-            if (seqOption != null) { envelope.Seq = (ulong)seqOption.RawValue; } else envelope.Seq = SeqUndefined;
+            if (senderOption != null && senderOption.Path != null) { envelope.Sender = ConvertActorRef(localAddress, senderOption); }
+            if (seqOption != null) { envelope.Seq = (ulong)seqOption.RawValue; } else { envelope.Seq = SeqUndefined; }
             if (ackOption != null) { ackAndEnvelope.Ack = AckBuilder(ackOption); }
             envelope.Message = serializedMessage;
             ackAndEnvelope.Envelope = envelope;
@@ -478,11 +478,20 @@ namespace Akka.Remote.Transport
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Address DecodeAddress(AddressData origin)
+        private static Address DecodeAddress(in AddressData origin)
             => new Address(origin.Protocol, origin.System, origin.Hostname, (int)origin.Port);
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static ActorRefData SerializeActorRef(Address defaultAddress, IActorRef actorRef)
+        private static ReadOnlyActorRefData SerializeActorRef(Address defaultAddress, IActorRef actorRef)
+        {
+            var path = actorRef.Path;
+            return new ReadOnlyActorRefData(
+                (!string.IsNullOrEmpty(path.Address.Host))
+                    ? path.ToSerializationFormat()
+                    : path.ToSerializationFormatWithAddress(defaultAddress));
+        }
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ActorRefData ConvertActorRef(Address defaultAddress, IActorRef actorRef)
         {
             var path = actorRef.Path;
             return new ActorRefData(

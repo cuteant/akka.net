@@ -9,7 +9,7 @@ using MessagePack.Resolvers;
 
 namespace Akka.Serialization
 {
-    public sealed class LZ4MsgPackSerializer : Serializer
+    public sealed class LZ4MsgPackSerializer : SerializerWithTypeManifest
     {
         private readonly MsgPackSerializerSettings _settings;
         private readonly IFormatterResolver _resolver;
@@ -62,7 +62,5 @@ namespace Akka.Serialization
         public override object FromBinary(byte[] bytes, Type type) => LZ4MessagePackSerializer.NonGeneric.Deserialize(type, new ArraySegment<byte>(bytes, 0, bytes.Length), _resolver);
 
         public override int Identifier => 102;
-
-        public override bool IncludeManifest => true;
     }
 }

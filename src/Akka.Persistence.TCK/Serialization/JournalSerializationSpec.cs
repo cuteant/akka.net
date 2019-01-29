@@ -13,6 +13,7 @@ using Akka.Configuration;
 using Akka.Persistence.Fsm;
 using Akka.Persistence.Journal;
 using Akka.Serialization;
+using Akka.Serialization.Protocol;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.Text;
@@ -158,12 +159,12 @@ namespace Akka.Persistence.TCK.Serialization
             public string Data { get; }
         }
 
-        public class MyPayloadSerializer : Serializer
+        public class MyPayloadSerializer : SerializerWithTypeManifest
         {
             public MyPayloadSerializer(ExtendedActorSystem system) : base(system) { }
 
             public override int Identifier => 77123;
-            public override bool IncludeManifest => true;
+            //public override bool IncludeManifest => true;
 
             public override byte[] ToBinary(object obj)
             {
@@ -215,14 +216,25 @@ namespace Akka.Persistence.TCK.Serialization
                 return null;
             }
 
+            protected override string GetManifest(Type type)
+            {
+                return _manifestV2;
+            }
             public override string Manifest(object o)
             {
                 return _manifestV2;
             }
             /// <inheritdoc />
-            public override byte[] ManifestBytes(object o)
+            public override byte[] ToBinary(object obj, out byte[] manifest)
             {
-                return _manifestV2Bytes;
+                if (obj is MyPayload2 payload)
+                {
+                    manifest = _manifestV2Bytes;
+                    return Encoding.UTF8.GetBytes($".{payload.Data}:{payload.N}");
+                }
+
+                manifest = null;
+                return null;
             }
 
             public override object FromBinary(byte[] bytes, string manifest)

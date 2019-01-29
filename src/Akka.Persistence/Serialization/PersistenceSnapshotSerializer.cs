@@ -6,11 +6,10 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Text;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
-using Akka.Persistence.Serialization.Protocol;
 using Akka.Serialization;
-using CuteAnt.Reflection;
+using Akka.Serialization.Protocol;
 using MessagePack;
 
 namespace Akka.Persistence.Serialization
@@ -19,74 +18,51 @@ namespace Akka.Persistence.Serialization
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
-        public PersistenceSnapshotSerializer(ExtendedActorSystem system) : base(system)
-        {
-            IncludeManifest = true;
-        }
+        public PersistenceSnapshotSerializer(ExtendedActorSystem system) : base(system) { }
 
-        public override bool IncludeManifest { get; }
+        public override object DeepCopy(object source)
+        {
+            if (null == source) { return null; }
+            var snapShot = source as Snapshot;
+            if (null == snapShot) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(source); }
+
+            var payload = GetPersistentPayload(snapShot);
+            return new Snapshot(system.Serialization.Deserialize(payload));
+        }
 
         public override byte[] ToBinary(object obj)
         {
-            if (obj is Snapshot snapShot) return MessagePackSerializer.Serialize(GetPersistentPayload(snapShot), s_defaultResolver);
+            if (obj is Snapshot snapShot)
+            {
+                return MessagePackSerializer.Serialize(GetPersistentPayload(snapShot), s_defaultResolver);
+            }
 
             return ThrowHelper.ThrowArgumentException_SnapshotSerializer(obj);
         }
 
-        private PersistentPayload GetPersistentPayload(Snapshot snapshot)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Payload GetPersistentPayload(Snapshot snapShot)
         {
-            var snapshotData = snapshot.Data;
-            if (null == snapshotData) { return null; }
+            var snapshotData = snapShot.Data;
+            if (null == snapshotData) { return Payload.Null; }
 
-            var snapshotDataType = snapshotData.GetType();
-            var serializer = system.Serialization.FindSerializerForType(snapshotDataType);
-            var payload = new PersistentPayload();
-
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                payload.ManifestMode = MessageManifestMode.WithStringManifest;
-                payload.PayloadManifest = manifestSerializer.ManifestBytes(snapshotData);
-            }
-            else if (serializer.IncludeManifest)
-            {
-                payload.ManifestMode = MessageManifestMode.IncludeManifest;
-                var typeKey = TypeSerializer.GetTypeKeyFromType(snapshotDataType);
-                payload.TypeHashCode = typeKey.HashCode;
-                payload.PayloadManifest = typeKey.TypeName;
-            }
-
-            payload.Payload = serializer.ToBinary(snapshotData);
-            payload.SerializerId = serializer.Identifier;
-
-            return payload;
+            var serializer = system.Serialization.FindSerializerForType(snapshotData.GetType());
+            return serializer.ToPayload(snapshotData);
         }
 
         public override object FromBinary(byte[] bytes, Type type)
         {
-            if (type == typeof(Snapshot)) return GetSnapshot(bytes);
-
-            return ThrowHelper.ThrowArgumentException_SnapshotSerializer(type);
+            var payload = MessagePackSerializer.Deserialize<Payload>(bytes, s_defaultResolver);
+            return new Snapshot(system.Serialization.Deserialize(payload));
+            //if (type == typeof(Snapshot)) return GetSnapshot(bytes);
+            //return ThrowHelper.ThrowArgumentException_SnapshotSerializer(type);
         }
 
-        private Snapshot GetSnapshot(byte[] bytes)
-        {
-            var payload = MessagePackSerializer.Deserialize<PersistentPayload>(bytes, s_defaultResolver);
-
-            object data;
-            switch (payload.ManifestMode)
-            {
-                case MessageManifestMode.IncludeManifest:
-                    data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId, new TypeKey(payload.TypeHashCode, payload.PayloadManifest));
-                    break;
-                case MessageManifestMode.WithStringManifest:
-                    data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId, Encoding.UTF8.GetString(payload.PayloadManifest));
-                    break;
-                case MessageManifestMode.None:
-                default:
-                    data = system.Serialization.Deserialize(payload.Payload, payload.SerializerId);
-                    break;
-            }
-            return new Snapshot(data);
-        }
+        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
+        //private Snapshot GetSnapshot(byte[] bytes)
+        //{
+        //    var payload = MessagePackSerializer.Deserialize<Payload>(bytes, s_defaultResolver);
+        //    return new Snapshot(system.Serialization.Deserialize(payload));
+        //}
     }
 }

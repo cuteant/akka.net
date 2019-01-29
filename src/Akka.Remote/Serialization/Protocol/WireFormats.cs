@@ -1,4 +1,5 @@
-﻿using MessagePack;
+﻿using Akka.Serialization.Protocol;
+using MessagePack;
 
 namespace Akka.Remote.Serialization.Protocol
 {
@@ -19,7 +20,7 @@ namespace Akka.Remote.Serialization.Protocol
     public sealed class RemoteEnvelope
     {
         [Key(0)]
-        public ActorRefData Recipient { get; set; }
+        public ReadOnlyActorRefData Recipient { get; set; }
 
         [Key(1)]
         public Payload Message { get; set; }
@@ -59,10 +60,10 @@ namespace Akka.Remote.Serialization.Protocol
         [Key(2)]
         public readonly string Path;
         [Key(3)]
-        public readonly ActorRefData Supervisor;
+        public readonly ReadOnlyActorRefData Supervisor;
 
         [SerializationConstructor]
-        public DaemonMsgCreateData(PropsData props, DeployData deploy, string path, ActorRefData supervisor)
+        public DaemonMsgCreateData(PropsData props, DeployData deploy, string path, ReadOnlyActorRefData supervisor)
         {
             Props = props;
             Deploy = deploy;
@@ -73,7 +74,7 @@ namespace Akka.Remote.Serialization.Protocol
 
     /// <summary>Serialization of Akka.Actor.Props</summary>
     [MessagePackObject]
-    public sealed class PropsData
+    public readonly struct PropsData
     {
         [Key(0)]
         public readonly DeployData Deploy;
@@ -95,7 +96,7 @@ namespace Akka.Remote.Serialization.Protocol
 
     /// <summary>Serialization of akka.actor.Deploy</summary>
     [MessagePackObject]
-    public sealed class DeployData
+    public readonly struct DeployData
     {
         [Key(0)]
         public readonly string Path;
@@ -275,7 +276,7 @@ namespace Akka.Remote.Serialization.Protocol
     }
 
     [MessagePackObject]
-    public sealed class GenericRoutingPool
+    public readonly struct GenericRoutingPool
     {
         [Key(0)]
         public readonly uint NrOfInstances;

@@ -5,65 +5,27 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using System.Text;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
-using Akka.Serialization;
-using CuteAnt.Reflection;
-using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
+using SerializedMessage = Akka.Serialization.Protocol.Payload;
 
 namespace Akka.Remote.Serialization
 {
     internal static class WrappedPayloadSupport
     {
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static SerializedMessage PayloadToProto(ActorSystem system, object payload)
         {
-            if (null == payload) { return null; }
+            if (null == payload) { return SerializedMessage.Null; }
 
-            var payloadType = payload.GetType();
-            var serializer = system.Serialization.FindSerializerForType(payloadType);
-
-            var payloadProto = new SerializedMessage
-            {
-                Message = serializer.ToBinary(payload),
-                SerializerId = serializer.Identifier
-            };
-
-            // get manifest
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                payloadProto.ManifestMode = Protocol.MessageManifestMode.WithStringManifest;
-                payloadProto.MessageManifest = manifestSerializer.ManifestBytes(payload);
-            }
-            else if (serializer.IncludeManifest)
-            {
-                payloadProto.ManifestMode = Protocol.MessageManifestMode.IncludeManifest;
-                var typeKey = TypeSerializer.GetTypeKeyFromType(payloadType);
-                payloadProto.TypeHashCode = typeKey.HashCode;
-                payloadProto.MessageManifest = typeKey.TypeName;
-            }
-
-            return payloadProto;
+            var serializer = system.Serialization.FindSerializerForType(payload.GetType());
+            return serializer.ToPayload(payload);
         }
 
-        public static object PayloadFrom(ActorSystem system, SerializedMessage payload)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static object PayloadFrom(ActorSystem system, in SerializedMessage payload)
         {
-            if (null == payload) { return null; }
-
-            switch (payload.ManifestMode)
-            {
-                case Protocol.MessageManifestMode.IncludeManifest:
-                    return system.Serialization.Deserialize(payload.Message, payload.SerializerId, new TypeKey(payload.TypeHashCode, payload.MessageManifest));
-
-                case Protocol.MessageManifestMode.WithStringManifest:
-                    return system.Serialization.Deserialize(payload.Message, payload.SerializerId, Encoding.UTF8.GetString(payload.MessageManifest));
-
-                case Protocol.MessageManifestMode.None:
-                default:
-                    //var msg = payload.Message;
-                    //if (null == msg || msg.Length == 0) { return null; }
-                    //return system.Serialization.Deserialize(msg, payload.SerializerId);
-                    return system.Serialization.Deserialize(payload.Message, payload.SerializerId);
-            }
+            return system.Serialization.Deserialize(payload);
         }
     }
 }

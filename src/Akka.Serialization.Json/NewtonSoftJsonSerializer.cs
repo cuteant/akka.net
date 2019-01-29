@@ -243,11 +243,6 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override int Identifier => 105;
 
-        /// <summary>
-        /// Returns whether this serializer needs a manifest in the fromBinary method
-        /// </summary>
-        public override bool IncludeManifest => false;
-
         /// <inheritdoc />
         public override object DeepCopy(object source) => _jsonFormatter.DeepCopyObject(source);
 

@@ -16,7 +16,7 @@ using MessagePack;
 
 namespace Akka.Remote.Serialization
 {
-    public sealed class SystemMessageSerializer : Akka.Serialization.Serializer
+    public sealed class SystemMessageSerializer : Akka.Serialization.SerializerWithTypeManifest
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
@@ -27,9 +27,6 @@ namespace Akka.Remote.Serialization
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer. </param>
         public SystemMessageSerializer(ExtendedActorSystem system) : base(system) { }
-
-        /// <inheritdoc />
-        public override bool IncludeManifest { get; } = true;
 
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
@@ -176,7 +173,7 @@ namespace Akka.Remote.Serialization
         internal static byte[] SuperviseToProto(Supervise supervise)
         {
             var message = new Protocol.SuperviseData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(supervise.Child)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(supervise.Child)),
                 supervise.Async
             );
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
@@ -194,8 +191,8 @@ namespace Akka.Remote.Serialization
         internal static byte[] WatchToProto(Watch watch)
         {
             var message = new Protocol.WatchData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(watch.Watchee)),
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(watch.Watcher))
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(watch.Watchee)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(watch.Watcher))
             );
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
@@ -214,8 +211,8 @@ namespace Akka.Remote.Serialization
         internal static byte[] UnwatchToProto(Unwatch unwatch)
         {
             var message = new Protocol.WatchData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(unwatch.Watchee)),
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(unwatch.Watcher))
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(unwatch.Watchee)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(unwatch.Watcher))
             );
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
@@ -234,7 +231,7 @@ namespace Akka.Remote.Serialization
         internal static byte[] FailedToProto(ExtendedActorSystem system, Failed failed)
         {
             var message = new Protocol.FailedData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(failed.Child)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(failed.Child)),
                 ExceptionSupport.ExceptionToProto(system, failed.Cause),
                 (ulong)failed.Uid
             );
@@ -257,7 +254,7 @@ namespace Akka.Remote.Serialization
         internal static byte[] DeathWatchNotificationToProto(DeathWatchNotification deathWatchNotification)
         {
             var message = new Protocol.DeathWatchNotificationData(
-                new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(deathWatchNotification.Actor)),
+                new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(deathWatchNotification.Actor)),
                 deathWatchNotification.ExistenceConfirmed,
                 deathWatchNotification.AddressTerminated
             );

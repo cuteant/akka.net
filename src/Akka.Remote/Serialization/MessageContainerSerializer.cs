@@ -28,9 +28,6 @@ namespace Akka.Remote.Serialization
         public MessageContainerSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override bool IncludeManifest => false;
-
-        /// <inheritdoc />
         public override object DeepCopy(object source)
         {
             if (null == source) return null;

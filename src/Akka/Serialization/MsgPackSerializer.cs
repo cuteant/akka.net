@@ -9,7 +9,7 @@ using MessagePack.Resolvers;
 
 namespace Akka.Serialization
 {
-    public sealed class MsgPackSerializer : Serializer
+    public sealed class MsgPackSerializer : SerializerWithTypeManifest
     {
         private readonly MsgPackSerializerSettings _settings;
         private readonly IFormatterResolver _resolver;
@@ -62,7 +62,5 @@ namespace Akka.Serialization
         public override object FromBinary(byte[] bytes, Type type) => MessagePackSerializer.NonGeneric.Deserialize(type, bytes, _resolver);
 
         public override int Identifier => 101;
-
-        public override bool IncludeManifest => true;
     }
 }

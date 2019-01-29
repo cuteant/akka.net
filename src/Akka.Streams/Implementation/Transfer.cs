@@ -319,7 +319,7 @@ namespace Akka.Streams.Implementation
         /// </summary>
         /// <param name="remaining">TBD</param>
         /// <param name="andThen">TBD</param>
-        public WaitingForUpstreamSubscription(int remaining, in TransferPhase andThen)
+        public WaitingForUpstreamSubscription(int remaining, TransferPhase andThen)
         {
             Remaining = remaining;
             AndThen = andThen;

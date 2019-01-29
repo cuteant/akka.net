@@ -10,11 +10,12 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
-using System.Text;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Persistence.Fsm;
 using Akka.Persistence.Serialization.Protocol;
 using Akka.Serialization;
+using Akka.Serialization.Protocol;
 using CuteAnt;
 using CuteAnt.Collections;
 using CuteAnt.Reflection;
@@ -22,15 +23,13 @@ using MessagePack;
 
 namespace Akka.Persistence.Serialization
 {
-    public sealed class PersistenceMessageSerializer : Serializer
+    public sealed class PersistenceMessageSerializer : SerializerWithTypeManifest
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
         public PersistenceMessageSerializer(ExtendedActorSystem system) : base(system)
         {
         }
-
-        public override bool IncludeManifest { get; } = true;
 
         public override byte[] ToBinary(object obj)
         {
@@ -70,31 +69,13 @@ namespace Akka.Persistence.Serialization
             return message;
         }
 
-        private PersistentPayload GetPersistentPayload(object obj)
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private Payload GetPersistentPayload(object obj)
         {
-            if (null == obj) { return null; }
+            if (null == obj) { return Payload.Null; }
 
-            var objType = obj.GetType();
-            var serializer = system.Serialization.FindSerializerForType(objType);
-            var payload = new PersistentPayload();
-
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                payload.ManifestMode = MessageManifestMode.WithStringManifest;
-                payload.PayloadManifest = manifestSerializer.ManifestBytes(obj);
-            }
-            else if (serializer.IncludeManifest)
-            {
-                payload.ManifestMode = MessageManifestMode.IncludeManifest;
-                var typeKey = TypeSerializer.GetTypeKeyFromType(objType);
-                payload.TypeHashCode = typeKey.HashCode;
-                payload.PayloadManifest = typeKey.TypeName;
-            }
-
-            payload.Payload = serializer.ToBinary(obj);
-            payload.SerializerId = serializer.Identifier;
-
-            return payload;
+            var serializer = system.Serialization.FindSerializerForType(obj.GetType());
+            return serializer.ToPayload(obj);
         }
 
         private Protocol.AtomicWrite GetAtomicWrite(AtomicWrite write)
@@ -158,11 +139,11 @@ namespace Akka.Persistence.Serialization
                 {
                     case _.Persistent:
                     case _.IPersistentRepresentation:
-                        return GetPersistentRepresentation(this, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
+                        return GetPersistentRepresentation(system, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
                     case _.AtomicWrite:
-                        return GetAtomicWrite(this, bytes);
+                        return GetAtomicWrite(system, bytes);
                     case _.AtLeastOnceDeliverySnapshot:
-                        return GetAtLeastOnceDeliverySnapshot(this, bytes);
+                        return GetAtLeastOnceDeliverySnapshot(system, bytes);
                     case _.StateChangeEvent:
                         return GetStateChangeEvent(bytes);
                 }
@@ -176,16 +157,16 @@ namespace Akka.Persistence.Serialization
             return ThrowHelper.ThrowSerializationException(type);
         }
 
-        private static IPersistentRepresentation GetPersistentRepresentation(PersistenceMessageSerializer serializer, PersistentMessage message)
+        private static IPersistentRepresentation GetPersistentRepresentation(ExtendedActorSystem system, PersistentMessage message)
         {
             var sender = ActorRefs.NoSender;
             if (message.Sender != null)
             {
-                sender = serializer.system.Provider.ResolveActorRef(message.Sender);
+                sender = system.Provider.ResolveActorRef(message.Sender);
             }
 
             return new Persistent(
-                serializer.GetPayload(message.Payload),
+                system.Serialization.Deserialize(message.Payload),
                 message.SequenceNr,
                 message.PersistenceId,
                 message.Manifest,
@@ -194,32 +175,18 @@ namespace Akka.Persistence.Serialization
                 message.WriterGuid);
         }
 
-        private object GetPayload(PersistentPayload payload)
-        {
-            switch (payload.ManifestMode)
-            {
-                case MessageManifestMode.IncludeManifest:
-                    return system.Serialization.Deserialize(payload.Payload, payload.SerializerId, new TypeKey(payload.TypeHashCode, payload.PayloadManifest));
-                case MessageManifestMode.WithStringManifest:
-                    return system.Serialization.Deserialize(payload.Payload, payload.SerializerId, Encoding.UTF8.GetString(payload.PayloadManifest));
-                case MessageManifestMode.None:
-                default:
-                    return system.Serialization.Deserialize(payload.Payload, payload.SerializerId);
-            }
-        }
-
-        private static AtomicWrite GetAtomicWrite(PersistenceMessageSerializer serializer, byte[] bytes)
+        private static AtomicWrite GetAtomicWrite(ExtendedActorSystem system, byte[] bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.AtomicWrite>(bytes, s_defaultResolver);
             var payloads = new List<IPersistentRepresentation>();
             foreach (var payload in message.Payload)
             {
-                payloads.Add(GetPersistentRepresentation(serializer, payload));
+                payloads.Add(GetPersistentRepresentation(system, payload));
             }
             return new AtomicWrite(payloads.ToImmutableList());
         }
 
-        private static AtLeastOnceDeliverySnapshot GetAtLeastOnceDeliverySnapshot(PersistenceMessageSerializer serializer, byte[] bytes)
+        private static AtLeastOnceDeliverySnapshot GetAtLeastOnceDeliverySnapshot(ExtendedActorSystem system, byte[] bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.AtLeastOnceDeliverySnapshot>(bytes, s_defaultResolver);
 
@@ -229,7 +196,7 @@ namespace Akka.Persistence.Serialization
                 foreach (var unconfirmed in message.UnconfirmedDeliveries)
                 {
                     ActorPath.TryParse(unconfirmed.Destination, out var actorPath);
-                    unconfirmedDeliveries.Add(new UnconfirmedDelivery(unconfirmed.DeliveryId, actorPath, serializer.GetPayload(unconfirmed.Payload)));
+                    unconfirmedDeliveries.Add(new UnconfirmedDelivery(unconfirmed.DeliveryId, actorPath, system.Serialization.Deserialize(unconfirmed.Payload)));
                 }
             }
             return new AtLeastOnceDeliverySnapshot(message.CurrentDeliveryId, unconfirmedDeliveries.ToArray());
@@ -266,7 +233,7 @@ namespace Akka.Persistence.Serialization
                 return instanceType.MakeDelegateForCtor(types);
             }
 
-            object[] arguments = { message.StateIdentifier, GetPayload(message.Data), timeout };
+            object[] arguments = { message.StateIdentifier, system.Serialization.Deserialize(message.Data), timeout };
 
             var ctorInvoker = s_ctorInvokerCache.GetOrAdd(type, MakeDelegateForCtor);
 

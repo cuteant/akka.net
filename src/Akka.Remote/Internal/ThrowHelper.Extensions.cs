@@ -227,12 +227,12 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_Primitive(Type type)
+        internal static object ThrowArgumentException_Serializer_Primitive(string manifest)
         {
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{type.TypeQualifiedName()}] in [${nameof(Akka.Remote.Serialization.PrimitiveSerializers)}]");
+                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(Akka.Remote.Serialization.PrimitiveSerializers)}]");
             }
         }
 
@@ -262,7 +262,9 @@ namespace Akka.Remote
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"Cannot deserialize object of type [{obj?.GetType().TypeQualifiedName()}]");
+                var type = obj as Type;
+                var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
             }
         }
 

@@ -20,7 +20,7 @@ using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.Collections;
 using MessagePack;
-using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
+using SerializedMessage = Akka.Serialization.Protocol.Payload;
 
 namespace Akka.Remote
 {
@@ -35,7 +35,7 @@ namespace Akka.Remote
         /// <param name="recipientAddress">TBD</param>
         /// <param name="message">TBD</param>
         /// <param name="senderOption">TBD</param>
-        void Dispatch(IInternalActorRef recipient, Address recipientAddress, SerializedMessage message, IActorRef senderOption = null);
+        void Dispatch(IInternalActorRef recipient, Address recipientAddress, in SerializedMessage message, IActorRef senderOption = null);
     }
 
     #endregion
@@ -71,7 +71,7 @@ namespace Akka.Remote
         /// <param name="recipientAddress">TBD</param>
         /// <param name="message">TBD</param>
         /// <param name="senderOption">TBD</param>
-        public void Dispatch(IInternalActorRef recipient, Address recipientAddress, SerializedMessage message, IActorRef senderOption = null)
+        public void Dispatch(IInternalActorRef recipient, Address recipientAddress, in SerializedMessage message, IActorRef senderOption = null)
         {
             var payload = MessageSerializer.Deserialize(_system, message);
             Type payloadClass = payload?.GetType();

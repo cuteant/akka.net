@@ -36,13 +36,13 @@ namespace Akka.Remote.Serialization.Protocol
     public readonly struct SuperviseData
     {
         [Key(0)]
-        public readonly ActorRefData Child;
+        public readonly ReadOnlyActorRefData Child;
 
         [Key(1)]
         public readonly bool Async;
 
         [SerializationConstructor]
-        public SuperviseData(ActorRefData child, bool async)
+        public SuperviseData(ReadOnlyActorRefData child, bool async)
         {
             Child = child;
             Async = async;
@@ -53,13 +53,13 @@ namespace Akka.Remote.Serialization.Protocol
     public readonly struct WatchData
     {
         [Key(0)]
-        public readonly ActorRefData Watchee;
+        public readonly ReadOnlyActorRefData Watchee;
 
         [Key(1)]
-        public readonly ActorRefData Watcher;
+        public readonly ReadOnlyActorRefData Watcher;
 
         [SerializationConstructor]
-        public WatchData(ActorRefData watchee, ActorRefData watcher)
+        public WatchData(ReadOnlyActorRefData watchee, ReadOnlyActorRefData watcher)
         {
             Watchee = watchee;
             Watcher = watcher;
@@ -70,7 +70,7 @@ namespace Akka.Remote.Serialization.Protocol
     public readonly struct FailedData
     {
         [Key(0)]
-        public readonly ActorRefData Child;
+        public readonly ReadOnlyActorRefData Child;
 
         [Key(1)]
         public readonly ExceptionData Cause;
@@ -79,7 +79,7 @@ namespace Akka.Remote.Serialization.Protocol
         public readonly ulong Uid;
 
         [SerializationConstructor]
-        public FailedData(ActorRefData child, ExceptionData cause, ulong uid)
+        public FailedData(ReadOnlyActorRefData child, ExceptionData cause, ulong uid)
         {
             Child = child;
             Cause = cause;
@@ -91,7 +91,7 @@ namespace Akka.Remote.Serialization.Protocol
     public readonly struct DeathWatchNotificationData
     {
         [Key(0)]
-        public readonly ActorRefData Actor;
+        public readonly ReadOnlyActorRefData Actor;
 
         [Key(1)]
         public readonly bool ExistenceConfirmed;
@@ -100,7 +100,7 @@ namespace Akka.Remote.Serialization.Protocol
         public readonly bool AddressTerminated;
 
         [SerializationConstructor]
-        public DeathWatchNotificationData(ActorRefData actor, bool existenceConfirmed, bool addressTerminated)
+        public DeathWatchNotificationData(ReadOnlyActorRefData actor, bool existenceConfirmed, bool addressTerminated)
         {
             Actor = actor;
             ExistenceConfirmed = existenceConfirmed;

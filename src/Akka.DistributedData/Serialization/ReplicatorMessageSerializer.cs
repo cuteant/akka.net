@@ -176,7 +176,6 @@ namespace Akka.DistributedData.Serialization
             });
         }
 
-        public override bool IncludeManifest => false;
         public override byte[] ToBinary(object obj)
         {
             switch (obj)

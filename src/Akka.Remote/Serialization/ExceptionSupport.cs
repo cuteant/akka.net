@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Reflection;
 using System.Runtime.Serialization;
 using Akka.Actor;
+using Akka.Serialization.Protocol;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.Reflection;
@@ -66,7 +67,7 @@ namespace Akka.Remote.Serialization
             var serializationInfo = new SerializationInfo(exceptionType, DefaultFormatterConverter);
             serializable.GetObjectData(serializationInfo, new StreamingContext());
 
-            var customFields = new Dictionary<string, Protocol.Payload>();
+            var customFields = new Dictionary<string, Payload>();
 
             foreach (var info in serializationInfo)
             {

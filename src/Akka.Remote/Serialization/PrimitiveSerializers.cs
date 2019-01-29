@@ -10,26 +10,53 @@ using System.Collections.Generic;
 using System.Text;
 using Akka.Actor;
 using Akka.Serialization;
-using CuteAnt;
 using CuteAnt.Text;
 
 namespace Akka.Remote.Serialization
 {
-    public sealed class PrimitiveSerializers : Serializer
+    public sealed class PrimitiveSerializers : SerializerWithStringManifest
     {
         private static readonly Encoding s_encodingUtf8 = StringHelper.UTF8NoBOM;
         private static readonly Encoding s_decodingUtf8 = Encoding.UTF8;
+
+        #region manifests
+
+        private const string StringManifest = "S";
+        private static readonly byte[] StringManifestBytes;
+        private const string Int32Manifest = "I";
+        private static readonly byte[] Int32ManifestBytes;
+        private const string Int64Manifest = "L";
+        private static readonly byte[] Int64ManifestBytes;
+        private static readonly Dictionary<Type, string> ManifestMap;
+
+        static PrimitiveSerializers()
+        {
+            StringManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StringManifest);
+            Int32ManifestBytes = StringHelper.UTF8NoBOM.GetBytes(Int32Manifest);
+            Int64ManifestBytes = StringHelper.UTF8NoBOM.GetBytes(Int64Manifest);
+            ManifestMap = new Dictionary<Type, string>
+            {
+                { typeof(string), StringManifest},
+                { typeof(int), Int32Manifest},
+                { typeof(long), Int64Manifest},
+            };
+        }
+
+        #endregion
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PrimitiveSerializers" /> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer. </param>
-        public PrimitiveSerializers(ExtendedActorSystem system) : base(system)
-        {
-        }
+        public PrimitiveSerializers(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override bool IncludeManifest { get; } = true;
+        protected override string GetManifest(Type type)
+        {
+            if (null == type) { return string.Empty; }
+            if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
+            return ThrowHelper.ThrowArgumentException_Serializer_D<string>(type);
+        }
 
         /// <inheritdoc />
         public override object DeepCopy(object source) => source;
@@ -52,22 +79,55 @@ namespace Akka.Remote.Serialization
             }
         }
 
-        private static readonly Dictionary<Type, Func<byte[], object>> s_fromBinaryMap = new Dictionary<Type, Func<byte[], object>>()
+        /// <inheritdoc />
+        public override object FromBinary(byte[] bytes, string manifest)
         {
-            { TypeConstants.StringType, bytes => s_decodingUtf8.GetString(bytes) },
-            { TypeConstants.IntType, bytes => BitConverter.ToInt32(bytes, 0) },
-            { TypeConstants.LongType, bytes => BitConverter.ToInt64(bytes, 0) },
-            //{ typeof(ByteString), bytes => ProtobufUtil.FromBytes(bytes) },
-        };
+            switch (manifest)
+            {
+                case StringManifest:
+                    return s_decodingUtf8.GetString(bytes);
+                case Int32Manifest:
+                    return BitConverter.ToInt32(bytes, 0);
+                case Int64Manifest:
+                    return BitConverter.ToInt64(bytes, 0);
+                default:
+                    return ThrowHelper.ThrowArgumentException_Serializer_Primitive(manifest);
+            }
+        }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, Type type)
+        public override string Manifest(object o)
         {
-            if (!s_fromBinaryMap.TryGetValue(type, out var factory))
+            switch (o)
             {
-                ThrowHelper.ThrowArgumentException_Serializer_Primitive(type);
+                case string _:
+                    return StringManifest;
+                case int _:
+                    return Int32Manifest;
+                case long _:
+                    return Int64Manifest;
+                default:
+                    return ThrowHelper.ThrowArgumentException_Serializer_D<string>(o);
             }
-            return factory(bytes);
+        }
+
+        /// <inheritdoc />
+        public override byte[] ToBinary(object o, out byte[] manifest)
+        {
+            switch (o)
+            {
+                case string str:
+                    manifest = StringManifestBytes;
+                    return s_encodingUtf8.GetBytes(str);
+                case int intValue:
+                    manifest = Int32ManifestBytes;
+                    return BitConverter.GetBytes(intValue);
+                case long longValue:
+                    manifest = Int64ManifestBytes;
+                    return BitConverter.GetBytes(longValue);
+                default:
+                    manifest = null; return ThrowHelper.ThrowArgumentException_Serializer_D<byte[]>(o);
+            }
         }
     }
 }

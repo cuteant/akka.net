@@ -37,11 +37,6 @@ namespace Akka.DistributedData.Serialization
                     }));
         }
 
-        /// <summary>
-        /// Returns whether this serializer needs a manifest in the fromBinary method
-        /// </summary>
-        public override bool IncludeManifest => false;
-
         private const int c_initialBufferSize = 1024 * 80;
         /// <summary>
         /// Serializes the given object into a byte array

@@ -14,7 +14,7 @@ using Akka.Serialization;
 using CuteAnt;
 using CuteAnt.Text;
 using MessagePack;
-using ActorRefMessage = Akka.Remote.Serialization.Protocol.ActorRefData;
+using ActorRefMessage = Akka.Remote.Serialization.Protocol.ReadOnlyActorRefData;
 
 namespace Akka.Cluster.Sharding.Serialization
 {
@@ -26,61 +26,127 @@ namespace Akka.Cluster.Sharding.Serialization
         #region manifests
 
         private const string CoordinatorStateManifest = "AA";
-        private static readonly byte[] CoordinatorStateManifestBytes = StringHelper.UTF8NoBOM.GetBytes(CoordinatorStateManifest);
+        private static readonly byte[] CoordinatorStateManifestBytes;
         private const string ShardRegionRegisteredManifest = "AB";
-        private static readonly byte[] ShardRegionRegisteredManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionRegisteredManifest);
+        private static readonly byte[] ShardRegionRegisteredManifestBytes;
         private const string ShardRegionProxyRegisteredManifest = "AC";
-        private static readonly byte[] ShardRegionProxyRegisteredManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionProxyRegisteredManifest);
+        private static readonly byte[] ShardRegionProxyRegisteredManifestBytes;
         private const string ShardRegionTerminatedManifest = "AD";
-        private static readonly byte[] ShardRegionTerminatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionTerminatedManifest);
+        private static readonly byte[] ShardRegionTerminatedManifestBytes;
         private const string ShardRegionProxyTerminatedManifest = "AE";
-        private static readonly byte[] ShardRegionProxyTerminatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionProxyTerminatedManifest);
+        private static readonly byte[] ShardRegionProxyTerminatedManifestBytes;
         private const string ShardHomeAllocatedManifest = "AF";
-        private static readonly byte[] ShardHomeAllocatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeAllocatedManifest);
+        private static readonly byte[] ShardHomeAllocatedManifestBytes;
         private const string ShardHomeDeallocatedManifest = "AG";
-        private static readonly byte[] ShardHomeDeallocatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeDeallocatedManifest);
+        private static readonly byte[] ShardHomeDeallocatedManifestBytes;
 
         private const string RegisterManifest = "BA";
-        private static readonly byte[] RegisterManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterManifest);
+        private static readonly byte[] RegisterManifestBytes;
         private const string RegisterProxyManifest = "BB";
-        private static readonly byte[] RegisterProxyManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterProxyManifest);
+        private static readonly byte[] RegisterProxyManifestBytes;
         private const string RegisterAckManifest = "BC";
-        private static readonly byte[] RegisterAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterAckManifest);
+        private static readonly byte[] RegisterAckManifestBytes;
         private const string GetShardHomeManifest = "BD";
-        private static readonly byte[] GetShardHomeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetShardHomeManifest);
+        private static readonly byte[] GetShardHomeManifestBytes;
         private const string ShardHomeManifest = "BE";
-        private static readonly byte[] ShardHomeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeManifest);
+        private static readonly byte[] ShardHomeManifestBytes;
         private const string HostShardManifest = "BF";
-        private static readonly byte[] HostShardManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HostShardManifest);
+        private static readonly byte[] HostShardManifestBytes;
         private const string ShardStartedManifest = "BG";
-        private static readonly byte[] ShardStartedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStartedManifest);
+        private static readonly byte[] ShardStartedManifestBytes;
         private const string BeginHandOffManifest = "BH";
-        private static readonly byte[] BeginHandOffManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BeginHandOffManifest);
+        private static readonly byte[] BeginHandOffManifestBytes;
         private const string BeginHandOffAckManifest = "BI";
-        private static readonly byte[] BeginHandOffAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BeginHandOffAckManifest);
+        private static readonly byte[] BeginHandOffAckManifestBytes;
         private const string HandOffManifest = "BJ";
-        private static readonly byte[] HandOffManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOffManifest);
+        private static readonly byte[] HandOffManifestBytes;
         private const string ShardStoppedManifest = "BK";
-        private static readonly byte[] ShardStoppedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStoppedManifest);
+        private static readonly byte[] ShardStoppedManifestBytes;
         private const string GracefulShutdownReqManifest = "BL";
-        private static readonly byte[] GracefulShutdownReqManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GracefulShutdownReqManifest);
+        private static readonly byte[] GracefulShutdownReqManifestBytes;
 
         private const string EntityStateManifest = "CA";
-        private static readonly byte[] EntityStateManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStateManifest);
+        private static readonly byte[] EntityStateManifestBytes;
         private const string EntityStartedManifest = "CB";
-        private static readonly byte[] EntityStartedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStartedManifest);
+        private static readonly byte[] EntityStartedManifestBytes;
         private const string EntityStoppedManifest = "CD";
-        private static readonly byte[] EntityStoppedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStoppedManifest);
+        private static readonly byte[] EntityStoppedManifestBytes;
 
         private const string StartEntityManifest = "EA";
-        private static readonly byte[] StartEntityManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StartEntityManifest);
+        private static readonly byte[] StartEntityManifestBytes;
         private const string StartEntityAckManifest = "EB";
-        private static readonly byte[] StartEntityAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StartEntityAckManifest);
+        private static readonly byte[] StartEntityAckManifestBytes;
 
         private const string GetShardStatsManifest = "DA";
-        private static readonly byte[] GetShardStatsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetShardStatsManifest);
+        private static readonly byte[] GetShardStatsManifestBytes;
         private const string ShardStatsManifest = "DB";
-        private static readonly byte[] ShardStatsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStatsManifest);
+        private static readonly byte[] ShardStatsManifestBytes;
+
+        private static readonly Dictionary<Type, string> ManifestMap;
+
+        static ClusterShardingMessageSerializer()
+        {
+            CoordinatorStateManifestBytes = StringHelper.UTF8NoBOM.GetBytes(CoordinatorStateManifest);
+            ShardRegionRegisteredManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionRegisteredManifest);
+            ShardRegionProxyRegisteredManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionProxyRegisteredManifest);
+            ShardRegionTerminatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionTerminatedManifest);
+            ShardRegionProxyTerminatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardRegionProxyTerminatedManifest);
+            ShardHomeAllocatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeAllocatedManifest);
+            ShardHomeDeallocatedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeDeallocatedManifest);
+
+            RegisterManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterManifest);
+            RegisterProxyManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterProxyManifest);
+            RegisterAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RegisterAckManifest);
+            GetShardHomeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetShardHomeManifest);
+            ShardHomeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardHomeManifest);
+            HostShardManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HostShardManifest);
+            ShardStartedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStartedManifest);
+            BeginHandOffManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BeginHandOffManifest);
+            BeginHandOffAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BeginHandOffAckManifest);
+            HandOffManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOffManifest);
+            ShardStoppedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStoppedManifest);
+            GracefulShutdownReqManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GracefulShutdownReqManifest);
+
+            EntityStateManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStateManifest);
+            EntityStartedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStartedManifest);
+            EntityStoppedManifestBytes = StringHelper.UTF8NoBOM.GetBytes(EntityStoppedManifest);
+
+            StartEntityManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StartEntityManifest);
+            StartEntityAckManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StartEntityAckManifest);
+
+            GetShardStatsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetShardStatsManifest);
+            ShardStatsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ShardStatsManifest);
+
+            ManifestMap = new Dictionary<Type, string>
+            {
+                { typeof(Shard.ShardState), EntityStateManifest},
+                { typeof(Shard.EntityStarted), EntityStartedManifest},
+                { typeof(Shard.EntityStopped), EntityStoppedManifest},
+                { typeof(PersistentShardCoordinator.State), CoordinatorStateManifest},
+                { typeof(PersistentShardCoordinator.ShardRegionRegistered), ShardRegionRegisteredManifest},
+                { typeof(PersistentShardCoordinator.ShardRegionProxyRegistered), ShardRegionProxyRegisteredManifest},
+                { typeof(PersistentShardCoordinator.ShardRegionTerminated), ShardRegionTerminatedManifest},
+                { typeof(PersistentShardCoordinator.ShardRegionProxyTerminated), ShardRegionProxyTerminatedManifest},
+                { typeof(PersistentShardCoordinator.ShardHomeAllocated), ShardHomeAllocatedManifest},
+                { typeof(PersistentShardCoordinator.ShardHomeDeallocated), ShardHomeDeallocatedManifest},
+                { typeof(PersistentShardCoordinator.Register), RegisterManifest},
+                { typeof(PersistentShardCoordinator.RegisterProxy), RegisterProxyManifest},
+                { typeof(PersistentShardCoordinator.RegisterAck), RegisterAckManifest},
+                { typeof(PersistentShardCoordinator.GetShardHome), GetShardHomeManifest},
+                { typeof(PersistentShardCoordinator.ShardHome), ShardHomeManifest},
+                { typeof(PersistentShardCoordinator.HostShard), HostShardManifest},
+                { typeof(PersistentShardCoordinator.ShardStarted), ShardStartedManifest},
+                { typeof(PersistentShardCoordinator.BeginHandOff), BeginHandOffManifest},
+                { typeof(PersistentShardCoordinator.BeginHandOffAck), BeginHandOffAckManifest},
+                { typeof(PersistentShardCoordinator.HandOff), HandOffManifest},
+                { typeof(PersistentShardCoordinator.ShardStopped), ShardStoppedManifest},
+                { typeof(PersistentShardCoordinator.GracefulShutdownRequest), GracefulShutdownReqManifest},
+                { typeof(ShardRegion.StartEntity), StartEntityManifest},
+                { typeof(ShardRegion.StartEntityAck), StartEntityAckManifest},
+                { typeof(Shard.GetShardStats), GetShardStatsManifest},
+                { typeof(Shard.ShardStats), ShardStatsManifest},
+            };
+        }
 
         #endregion
 
@@ -209,6 +275,19 @@ namespace Akka.Cluster.Sharding.Serialization
             }
         }
 
+        /// <inheritdoc />
+        protected override string GetManifest(Type type)
+        {
+            if (null == type) { return string.Empty; }
+            var manifestMap = ManifestMap;
+            if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
+            foreach (var item in manifestMap)
+            {
+                if (item.Key.IsAssignableFrom(type)) { return item.Value; }
+            }
+            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<string>(type);
+        }
+
         /// <summary>
         /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(System.Byte[],System.String)" /> method.
         /// <note>
@@ -255,38 +334,91 @@ namespace Akka.Cluster.Sharding.Serialization
         }
 
         /// <inheritdoc />
-        public override byte[] ManifestBytes(object o)
+        public override byte[] ToBinary(object obj, out byte[] manifest)
         {
-            switch (o)
+            switch (obj)
             {
-                case Shard.ShardState _: return EntityStateManifestBytes;
-                case Shard.EntityStarted _: return EntityStartedManifestBytes;
-                case Shard.EntityStopped _: return EntityStoppedManifestBytes;
-                case PersistentShardCoordinator.State _: return CoordinatorStateManifestBytes;
-                case PersistentShardCoordinator.ShardRegionRegistered _: return ShardRegionRegisteredManifestBytes;
-                case PersistentShardCoordinator.ShardRegionProxyRegistered _: return ShardRegionProxyRegisteredManifestBytes;
-                case PersistentShardCoordinator.ShardRegionTerminated _: return ShardRegionTerminatedManifestBytes;
-                case PersistentShardCoordinator.ShardRegionProxyTerminated _: return ShardRegionProxyTerminatedManifestBytes;
-                case PersistentShardCoordinator.ShardHomeAllocated _: return ShardHomeAllocatedManifestBytes;
-                case PersistentShardCoordinator.ShardHomeDeallocated _: return ShardHomeDeallocatedManifestBytes;
-                case PersistentShardCoordinator.Register _: return RegisterManifestBytes;
-                case PersistentShardCoordinator.RegisterProxy _: return RegisterProxyManifestBytes;
-                case PersistentShardCoordinator.RegisterAck _: return RegisterAckManifestBytes;
-                case PersistentShardCoordinator.GetShardHome _: return GetShardHomeManifestBytes;
-                case PersistentShardCoordinator.ShardHome _: return ShardHomeManifestBytes;
-                case PersistentShardCoordinator.HostShard _: return HostShardManifestBytes;
-                case PersistentShardCoordinator.ShardStarted _: return ShardStartedManifestBytes;
-                case PersistentShardCoordinator.BeginHandOff _: return BeginHandOffManifestBytes;
-                case PersistentShardCoordinator.BeginHandOffAck _: return BeginHandOffAckManifestBytes;
-                case PersistentShardCoordinator.HandOff _: return HandOffManifestBytes;
-                case PersistentShardCoordinator.ShardStopped _: return ShardStoppedManifestBytes;
-                case PersistentShardCoordinator.GracefulShutdownRequest _: return GracefulShutdownReqManifestBytes;
-                case ShardRegion.StartEntity _: return StartEntityManifestBytes;
-                case ShardRegion.StartEntityAck _: return StartEntityAckManifestBytes;
-                case Shard.GetShardStats _: return GetShardStatsManifestBytes;
-                case Shard.ShardStats _: return ShardStatsManifestBytes;
+                case PersistentShardCoordinator.State o:
+                    manifest = CoordinatorStateManifestBytes;
+                    return MessagePackSerializer.Serialize(CoordinatorStateToProto(o), s_defaultResolver);
+                case PersistentShardCoordinator.ShardRegionRegistered o:
+                    manifest = ShardRegionRegisteredManifestBytes;
+                    return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.Region), s_defaultResolver);
+                case PersistentShardCoordinator.ShardRegionProxyRegistered o:
+                    manifest = ShardRegionProxyRegisteredManifestBytes;
+                    return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.RegionProxy), s_defaultResolver);
+                case PersistentShardCoordinator.ShardRegionTerminated o:
+                    manifest = ShardRegionTerminatedManifestBytes;
+                    return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.Region), s_defaultResolver);
+                case PersistentShardCoordinator.ShardRegionProxyTerminated o:
+                    manifest = ShardRegionProxyTerminatedManifestBytes;
+                    return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.RegionProxy), s_defaultResolver);
+                case PersistentShardCoordinator.ShardHomeAllocated o:
+                    manifest = ShardHomeAllocatedManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardHomeAllocatedToProto(o), s_defaultResolver);
+                case PersistentShardCoordinator.ShardHomeDeallocated o:
+                    manifest = ShardHomeDeallocatedManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
+                case PersistentShardCoordinator.Register o:
+                    manifest = RegisterManifestBytes;
+                    return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.ShardRegion), s_defaultResolver);
+                case PersistentShardCoordinator.RegisterProxy o:
+                    manifest = RegisterProxyManifestBytes;
+                    return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.ShardRegionProxy), s_defaultResolver);
+                case PersistentShardCoordinator.RegisterAck o:
+                    manifest = RegisterAckManifestBytes;
+                    return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.Coordinator), s_defaultResolver);
+                case PersistentShardCoordinator.GetShardHome o:
+                    manifest = GetShardHomeManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
+                case PersistentShardCoordinator.ShardHome o:
+                    manifest = ShardHomeManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardHomeToProto(o), s_defaultResolver);
+                case PersistentShardCoordinator.HostShard o:
+                    manifest = HostShardManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
+                case PersistentShardCoordinator.ShardStarted o:
+                    manifest = ShardStartedManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
+                case PersistentShardCoordinator.BeginHandOff o:
+                    manifest = BeginHandOffManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
+                case PersistentShardCoordinator.BeginHandOffAck o:
+                    manifest = BeginHandOffAckManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
+                case PersistentShardCoordinator.HandOff o:
+                    manifest = HandOffManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
+                case PersistentShardCoordinator.ShardStopped o:
+                    manifest = ShardStoppedManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
+                case PersistentShardCoordinator.GracefulShutdownRequest o:
+                    manifest = GracefulShutdownReqManifestBytes;
+                    return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.ShardRegion), s_defaultResolver);
+                case Shard.ShardState o:
+                    manifest = EntityStateManifestBytes;
+                    return MessagePackSerializer.Serialize(EntityStateToProto(o), s_defaultResolver);
+                case Shard.EntityStarted o:
+                    manifest = EntityStartedManifestBytes;
+                    return MessagePackSerializer.Serialize(EntityStartedToProto(o), s_defaultResolver);
+                case Shard.EntityStopped o:
+                    manifest = EntityStoppedManifestBytes;
+                    return MessagePackSerializer.Serialize(EntityStoppedToProto(o), s_defaultResolver);
+                case ShardRegion.StartEntity o:
+                    manifest = StartEntityManifestBytes;
+                    return MessagePackSerializer.Serialize(StartEntityToProto(o), s_defaultResolver);
+                case ShardRegion.StartEntityAck o:
+                    manifest = StartEntityAckManifestBytes;
+                    return MessagePackSerializer.Serialize(StartEntityAckToProto(o), s_defaultResolver);
+                case Shard.GetShardStats _:
+                    manifest = GetShardStatsManifestBytes;
+                    return EmptyArray<byte>.Instance;
+                case Shard.ShardStats o:
+                    manifest = ShardStatsManifestBytes;
+                    return MessagePackSerializer.Serialize(ShardStatsToProto(o), s_defaultResolver);
             }
-            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<byte[]>(o);
+            manifest = null;
+            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<byte[]>(obj);
         }
 
         //

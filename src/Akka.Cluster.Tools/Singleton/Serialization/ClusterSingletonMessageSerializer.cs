@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt;
@@ -21,13 +22,31 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         #region manifest
 
         private const string HandOverToMeManifest = "A";
-        private static readonly byte[] HandOverToMeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverToMeManifest);
+        private static readonly byte[] HandOverToMeManifestBytes;
         private const string HandOverInProgressManifest = "B";
-        private static readonly byte[] HandOverInProgressManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverInProgressManifest);
+        private static readonly byte[] HandOverInProgressManifestBytes;
         private const string HandOverDoneManifest = "C";
-        private static readonly byte[] HandOverDoneManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverDoneManifest);
+        private static readonly byte[] HandOverDoneManifestBytes;
         private const string TakeOverFromMeManifest = "D";
-        private static readonly byte[] TakeOverFromMeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(TakeOverFromMeManifest);
+        private static readonly byte[] TakeOverFromMeManifestBytes;
+
+        private static readonly Dictionary<Type, string> ManifestMap;
+
+        static ClusterSingletonMessageSerializer()
+        {
+            HandOverToMeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverToMeManifest);
+            HandOverInProgressManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverInProgressManifest);
+            HandOverDoneManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverDoneManifest);
+            TakeOverFromMeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(TakeOverFromMeManifest);
+
+            ManifestMap = new Dictionary<Type, string>
+            {
+                { typeof(HandOverToMe), HandOverToMeManifest},
+                { typeof(HandOverInProgress), HandOverInProgressManifest},
+                { typeof(HandOverDone), HandOverDoneManifest},
+                { typeof(TakeOverFromMe), TakeOverFromMeManifest},
+            };
+        }
 
         #endregion
 
@@ -88,6 +107,14 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
             }
         }
 
+        /// <inheritdoc />
+        protected override string GetManifest(Type type)
+        {
+            if (null == type) { return string.Empty; }
+            if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
+            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<string>(type);
+        }
+
         /// <summary>
         /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(System.Byte[],System.String)" /> method.
         /// <note>
@@ -116,20 +143,24 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
             }
         }
         /// <inheritdoc />
-        public override byte[] ManifestBytes(object o)
+        public override byte[] ToBinary(object obj, out byte[] manifest)
         {
-            switch (o)
+            switch (obj)
             {
                 case HandOverToMe _:
-                    return HandOverToMeManifestBytes;
+                    manifest = HandOverToMeManifestBytes;
+                    return EmptyBytes;
                 case HandOverInProgress _:
-                    return HandOverInProgressManifestBytes;
+                    manifest = HandOverInProgressManifestBytes;
+                    return EmptyBytes;
                 case HandOverDone _:
-                    return HandOverDoneManifestBytes;
+                    manifest = HandOverDoneManifestBytes;
+                    return EmptyBytes;
                 case TakeOverFromMe _:
-                    return TakeOverFromMeManifestBytes;
+                    manifest = TakeOverFromMeManifestBytes;
+                    return EmptyBytes;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<byte[]>(o);
+                    manifest = null; return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<byte[]>(obj);
             }
         }
     }

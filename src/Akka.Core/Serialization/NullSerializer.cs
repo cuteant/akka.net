@@ -7,6 +7,7 @@
 
 using System;
 using Akka.Actor;
+using Akka.Serialization.Protocol;
 
 namespace Akka.Serialization
 {
@@ -31,11 +32,6 @@ namespace Akka.Serialization
         /// </summary>
         public override int Identifier => 0;
 
-        /// <summary>
-        /// Returns whether this serializer needs a manifest in the fromBinary method
-        /// </summary>
-        public override bool IncludeManifest => false;
-
         /// <inheritdoc />
         public override object DeepCopy(object source) => null;
 
@@ -53,5 +49,11 @@ namespace Akka.Serialization
         /// <param name="type">The type of object contained in the array</param>
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, Type type) => null;
+
+        /// <inheritdoc />
+        public override Payload ToPayload(object obj) => Payload.Null;
+
+        /// <inheritdoc />
+        public override Payload ToPayloadWithAddress(Address address, object obj) => Payload.Null;
     }
 }

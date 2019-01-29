@@ -25,13 +25,31 @@ namespace Akka.Cluster.Tools.Client.Serialization
         #region manifests
 
         private const string ContactsManifest = "A";
-        private static readonly byte[] ContactsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ContactsManifest);
+        private static readonly byte[] ContactsManifestBytes;
         private const string GetContactsManifest = "B";
-        private static readonly byte[] GetContactsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetContactsManifest);
+        private static readonly byte[] GetContactsManifestBytes;
         private const string HeartbeatManifest = "C";
-        private static readonly byte[] HeartbeatManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HeartbeatManifest);
+        private static readonly byte[] HeartbeatManifestBytes;
         private const string HeartbeatRspManifest = "D";
-        private static readonly byte[] HeartbeatRspManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HeartbeatRspManifest);
+        private static readonly byte[] HeartbeatRspManifestBytes;
+
+        private static readonly Dictionary<Type, string> ManifestMap;
+
+        static ClusterClientMessageSerializer()
+        {
+            ContactsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ContactsManifest);
+            GetContactsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(GetContactsManifest);
+            HeartbeatManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HeartbeatManifest);
+            HeartbeatRspManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HeartbeatRspManifest);
+
+            ManifestMap = new Dictionary<Type, string>
+            {
+                { typeof(ClusterReceptionist.Contacts), ContactsManifest},
+                { typeof(ClusterReceptionist.GetContacts), GetContactsManifest},
+                { typeof(ClusterReceptionist.Heartbeat), HeartbeatManifest},
+                { typeof(ClusterReceptionist.HeartbeatRsp), HeartbeatRspManifest},
+            };
+        }
 
         #endregion
 
@@ -96,6 +114,14 @@ namespace Akka.Cluster.Tools.Client.Serialization
             }
         }
 
+        /// <inheritdoc />
+        protected override string GetManifest(Type type)
+        {
+            if (null == type) { return string.Empty; }
+            if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
+            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<string>(type);
+        }
+
         /// <summary>
         /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(System.Byte[],System.String)" /> method.
         /// <note>
@@ -125,20 +151,24 @@ namespace Akka.Cluster.Tools.Client.Serialization
         }
 
         /// <inheritdoc />
-        public override byte[] ManifestBytes(object o)
+        public override byte[] ToBinary(object obj, out byte[] manifest)
         {
-            switch (o)
+            switch (obj)
             {
-                case ClusterReceptionist.Contacts _:
-                    return ContactsManifestBytes;
+                case ClusterReceptionist.Contacts contacts:
+                    manifest = ContactsManifestBytes;
+                    return ContactsToProto(contacts);
                 case ClusterReceptionist.GetContacts _:
-                    return GetContactsManifestBytes;
+                    manifest = GetContactsManifestBytes;
+                    return EmptyBytes;
                 case ClusterReceptionist.Heartbeat _:
-                    return HeartbeatManifestBytes;
+                    manifest = HeartbeatManifestBytes;
+                    return EmptyBytes;
                 case ClusterReceptionist.HeartbeatRsp _:
-                    return HeartbeatRspManifestBytes;
+                    manifest = HeartbeatRspManifestBytes;
+                    return EmptyBytes;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<byte[]>(o);
+                    manifest = null; return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<byte[]>(obj);
             }
         }
 

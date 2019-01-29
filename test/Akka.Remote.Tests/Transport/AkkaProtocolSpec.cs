@@ -16,7 +16,7 @@ using Akka.TestKit;
 using Akka.Util.Internal;
 using MessagePack;
 using Xunit;
-using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
+using SerializedMessage = Akka.Serialization.Protocol.Payload;
 
 namespace Akka.Remote.Tests.Transport
 {
@@ -36,7 +36,7 @@ namespace Akka.Remote.Tests.Transport
         private AkkaPduCodec codec;
 
         SerializedMessage testMsg =
-            new SerializedMessage { SerializerId = 0, Message = Encoding.UTF8.GetBytes("foo") };
+            new SerializedMessage(Encoding.UTF8.GetBytes("foo"), 0);
 
         private byte[] testEnvelope;
         private object testMsgPdu;

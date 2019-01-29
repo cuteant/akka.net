@@ -20,13 +20,11 @@ using AddressData = Akka.Remote.Serialization.Protocol.AddressData;
 
 namespace Akka.Cluster.Serialization
 {
-    public class ClusterMessageSerializer : Serializer
+    public class ClusterMessageSerializer : SerializerWithTypeManifest
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
         public ClusterMessageSerializer(ExtendedActorSystem system) : base(system) { }
-
-        public override bool IncludeManifest => true;
 
         public override byte[] ToBinary(object obj)
         {
@@ -397,7 +395,7 @@ namespace Akka.Cluster.Serialization
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static Address AddressFrom(AddressData addressProto)
+        private static Address AddressFrom(in AddressData addressProto)
         {
             return new Address(
                 addressProto.Protocol,
@@ -417,16 +415,5 @@ namespace Akka.Cluster.Serialization
         {
             return new UniqueAddress(AddressFrom(uniqueAddressProto.Address), (int)uniqueAddressProto.Uid);
         }
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private static string GetObjectManifest(Serializer serializer, object obj)
-        //{
-        //    if (serializer is SerializerWithStringManifest manifestSerializer)
-        //    {
-        //        return manifestSerializer.Manifest(obj);
-        //    }
-
-        //    return obj.GetType().TypeQualifiedName();
-        //}
     }
 }

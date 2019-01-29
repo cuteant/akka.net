@@ -13,7 +13,7 @@ using Akka.Util;
 
 namespace Akka.Persistence.Tests.Serialization
 {
-    public class MyPayloadSerializer : Serializer
+    public class MyPayloadSerializer : SerializerWithTypeManifest
     {
         public MyPayloadSerializer(ExtendedActorSystem system) : base(system)
         {
@@ -24,10 +24,10 @@ namespace Akka.Persistence.Tests.Serialization
             get { return 77123; }
         }
 
-        public override bool IncludeManifest
-        {
-            get { return true; }
-        }
+        //public override bool IncludeManifest
+        //{
+        //    get { return true; }
+        //}
 
         public override byte[] ToBinary(object obj)
         {

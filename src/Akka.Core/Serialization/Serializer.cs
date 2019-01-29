@@ -6,10 +6,13 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Text;
 using Akka.Actor;
 using Akka.Annotations;
+using Akka.Serialization.Protocol;
 using Akka.Util;
 using CuteAnt.Reflection;
 
@@ -62,7 +65,7 @@ namespace Akka.Serialization
         /// <summary>
         /// Returns whether this serializer needs a manifest in the fromBinary method
         /// </summary>
-        public abstract bool IncludeManifest { get; }
+        public virtual bool IncludeManifest => false;
 
         /// <summary>Tries to create a copy of source.</summary>
         /// <param name="source">The item to create a copy of</param>
@@ -90,7 +93,7 @@ namespace Akka.Serialization
         /// <returns>TBD</returns>
         public byte[] ToBinaryWithAddress(Address address, object obj)
         {
-            return Serialization.SerializeWithTransport(system, address, () => ToBinary(obj));
+            return Serialization.SerializeWithTransport(system, address, this, obj);
         }
 
         /// <summary>
@@ -107,6 +110,37 @@ namespace Akka.Serialization
         /// <param name="bytes">The array containing the serialized object</param>
         /// <returns>The object contained in the array</returns>
         public T FromBinary<T>(byte[] bytes) => (T)FromBinary(bytes, typeof(T));
+
+        /// <summary>
+        /// Serializes the given object into a <see cref="Payload"/>
+        /// </summary>
+        /// <param name="obj">The object to serialize </param>
+        /// <returns>A <see cref="Payload"/> containing the serialized object</returns>
+        public virtual Payload ToPayload(object obj)
+        {
+            return new Payload(ToBinary(obj), Identifier);
+        }
+
+        /// <summary>
+        /// Serializes the given object into a <see cref="Payload"/> and uses the given address to decorate serialized ActorRef's
+        /// </summary>
+        /// <param name="address">The address to use when serializing local ActorRef´s</param>
+        /// <param name="obj">The object to serialize</param>
+        /// <returns>A <see cref="Payload"/> containing the serialized object</returns>
+        public virtual Payload ToPayloadWithAddress(Address address, object obj)
+        {
+            return new Payload(Serialization.SerializeWithTransport(system, address, this, obj), Identifier);
+        }
+
+        /// <summary>
+        /// Deserializes a <see cref="Payload"/> into an object.
+        /// </summary>
+        /// <param name="payload">The <see cref="Payload"/> containing the serialized object</param>
+        /// <returns>The object contained in the <see cref="Payload"/></returns>
+        public virtual object FromPayload(in Payload payload)
+        {
+            return FromBinary(payload.Message, null);
+        }
     }
 
     /// <summary>
@@ -145,9 +179,14 @@ namespace Akka.Serialization
         /// <returns>The object contained in the array</returns>
         public sealed override object FromBinary(byte[] bytes, Type type)
         {
-            var manifest = type.TypeQualifiedName();
+            var manifest = GetManifest(type);
             return FromBinary(bytes, manifest);
         }
+
+        /// <summary>Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.</summary>
+        /// <param name="type">The type of object contained in the array</param>
+        /// <returns></returns>
+        protected abstract string GetManifest(Type type);
 
         /// <summary>
         /// Deserializes a byte array into an object using an optional <paramref name="manifest"/> (type hint).
@@ -176,8 +215,41 @@ namespace Akka.Serialization
         /// </note>
         /// </summary>
         /// <param name="o">The object for which the manifest is needed.</param>
+        /// <param name="manifest"></param>
         /// <returns>The manifest needed for the deserialization of the specified <paramref name="o"/>.</returns>
-        public abstract byte[] ManifestBytes(object o);
+        public abstract byte[] ToBinary(object o, out byte[] manifest);
+
+        /// <summary>
+        /// Serializes the given object into a byte array and uses the given address to decorate serialized ActorRef's
+        /// </summary>
+        /// <param name="address">The address to use when serializing local ActorRef´s</param>
+        /// <param name="obj">The object to serialize</param>
+        /// <param name="manifest"></param>
+        /// <returns>TBD</returns>
+        public byte[] ToBinaryWithAddress(Address address, object obj, out byte[] manifest)
+        {
+            return Serialization.SerializeWithTransport(system, address, this, obj, out manifest);
+        }
+
+        /// <inheritdoc />
+        public sealed override Payload ToPayload(object obj)
+        {
+            var payload = ToBinary(obj, out var manifest);
+            return new Payload(payload, Identifier, manifest);
+        }
+
+        /// <inheritdoc />
+        public sealed override Payload ToPayloadWithAddress(Address address, object obj)
+        {
+            var payload = Serialization.SerializeWithTransport(system, address, this, obj, out var manifest);
+            return new Payload(payload, Identifier, manifest);
+        }
+
+        /// <inheritdoc />
+        public sealed override object FromPayload(in Payload payload)
+        {
+            return FromBinary(payload.Message, Encoding.UTF8.GetString(payload.MessageManifest));
+        }
     }
 
     /// <summary>

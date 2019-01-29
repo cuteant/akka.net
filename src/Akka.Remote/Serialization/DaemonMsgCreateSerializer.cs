@@ -12,6 +12,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Routing;
 using Akka.Serialization;
+using Akka.Serialization.Protocol;
 using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt;
@@ -34,9 +35,6 @@ namespace Akka.Remote.Serialization
         public DaemonMsgCreateSerializer(ExtendedActorSystem system) : base(system)
         {
         }
-
-        /// <inheritdoc />
-        public override bool IncludeManifest => false;
 
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
@@ -76,7 +74,7 @@ namespace Akka.Remote.Serialization
 
         }
 
-        internal static Props PropsFromProto(ExtendedActorSystem system, Protocol.PropsData protoProps)
+        internal static Props PropsFromProto(ExtendedActorSystem system, in Protocol.PropsData protoProps)
         {
             var actorClass = TypeUtils.ResolveType(protoProps.Clazz);
             var propsArgs = protoProps.Args;
@@ -103,13 +101,13 @@ namespace Akka.Remote.Serialization
             return new Protocol.DeployData(
                 deploy.Path,
                 WrappedPayloadSupport.PayloadToProto(system, deploy.Config),
-                deploy.RouterConfig != NoRouter.Instance ? WrappedPayloadSupport.PayloadToProto(system, deploy.RouterConfig) : null,
-                deploy.Scope != Deploy.NoScopeGiven ? WrappedPayloadSupport.PayloadToProto(system, deploy.Scope) : null,
+                deploy.RouterConfig != NoRouter.Instance ? WrappedPayloadSupport.PayloadToProto(system, deploy.RouterConfig) : Payload.Null,
+                deploy.Scope != Deploy.NoScopeGiven ? WrappedPayloadSupport.PayloadToProto(system, deploy.Scope) : Payload.Null,
                 deploy.Dispatcher != Deploy.NoDispatcherGiven ? deploy.Dispatcher : null
                 );
         }
 
-        internal static Deploy DeployFromProto(ExtendedActorSystem system, Protocol.DeployData protoDeploy)
+        internal static Deploy DeployFromProto(ExtendedActorSystem system, in Protocol.DeployData protoDeploy)
         {
             var config = WrappedPayloadSupport.PayloadFrom(system, protoDeploy.Config)?.AsInstanceOf<Config>() ?? Config.Empty;
 
@@ -128,13 +126,13 @@ namespace Akka.Remote.Serialization
         // IActorRef
         //
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Protocol.ActorRefData SerializeActorRef(IActorRef actorRef)
+        internal static Protocol.ReadOnlyActorRefData SerializeActorRef(IActorRef actorRef)
         {
-            return new Protocol.ActorRefData(Akka.Serialization.Serialization.SerializedActorPath(actorRef));
+            return new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(actorRef));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static IActorRef DeserializeActorRef(ExtendedActorSystem system, Protocol.ActorRefData actorRefData)
+        internal static IActorRef DeserializeActorRef(ExtendedActorSystem system, in Protocol.ReadOnlyActorRefData actorRefData)
         {
             return system.Provider.ResolveActorRef(actorRefData.Path);
         }

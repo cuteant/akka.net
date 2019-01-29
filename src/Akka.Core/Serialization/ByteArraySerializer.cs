@@ -23,11 +23,6 @@ namespace Akka.Serialization
         /// <param name="system">The actor system to associate with this serializer. </param>
         public ByteArraySerializer(ExtendedActorSystem system) : base(system) { }
 
-        /// <summary>
-        /// Returns whether this serializer needs a manifest in the fromBinary method
-        /// </summary>
-        public override bool IncludeManifest => false;
-
         /// <inheritdoc />
         public override object DeepCopy(object source)
         {

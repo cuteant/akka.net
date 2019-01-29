@@ -17,7 +17,7 @@ using Google.Protobuf;
 namespace Akka.Serialization
 {
     /// <summary>This is a special <see cref="Serializer"/> that serializes and deserializes Google protobuf messages only.</summary>
-    public sealed class ProtobufSerializer : Serializer
+    public sealed class ProtobufSerializer : SerializerWithTypeManifest
     {
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, MessageParser> TypeLookup = new ConcurrentDictionary<RuntimeTypeHandle, MessageParser>();
 
@@ -30,9 +30,6 @@ namespace Akka.Serialization
         public ProtobufSerializer(ExtendedActorSystem system, Config config) : this(system, ProtobufSerializerSettings.Create(config)) { }
 
         public ProtobufSerializer(ExtendedActorSystem system, ProtobufSerializerSettings settings) : base(system) => _initialBufferSize = settings.InitialBufferSize;
-
-        /// <inheritdoc />
-        public override bool IncludeManifest => true;
 
         /// <inheritdoc />
         public override object DeepCopy(object source)

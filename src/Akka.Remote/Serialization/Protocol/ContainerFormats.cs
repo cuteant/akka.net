@@ -1,40 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
+using Akka.Serialization.Protocol;
 using MessagePack;
 
 namespace Akka.Remote.Serialization.Protocol
 {
     #region -- Common types --
 
-    /// <summary>Defines a payload.</summary>
+    /// <summary>Defines a remote ActorRef that "remembers" and uses its original Actor instance on the original node.</summary>
     [MessagePackObject]
-    public sealed class Payload
+    public readonly struct ReadOnlyActorRefData
     {
         [Key(0)]
-        public byte[] Message { get; set; }
+        public readonly string Path;
 
-        [Key(1)]
-        public int SerializerId { get; set; }
-
-        [Key(2)]
-        public byte[] MessageManifest { get; set; }
-
-        [Key(3)]
-        public int TypeHashCode { get; set; }
-
-        [Key(4)]
-        public byte ManifestMode { get; set; }
+        [SerializationConstructor]
+        public ReadOnlyActorRefData(string path) => Path = path;
     }
-
-    public sealed class MessageManifestMode
-    {
-        public const byte None = 0;
-        public const byte IncludeManifest = 1;
-        public const byte WithStringManifest = 2;
-    }
-
-    /// <summary>Defines a remote ActorRef that "remembers" and uses its original Actor instance on the original node.</summary>
     [MessagePackObject]
     public sealed class ActorRefData
     {
@@ -47,7 +30,7 @@ namespace Akka.Remote.Serialization.Protocol
 
     /// <summary>Defines a remote address.</summary>
     [MessagePackObject]
-    public sealed class AddressData
+    public readonly struct AddressData
     {
         [SerializationConstructor]
         public AddressData(string system, string hostname, uint port, string protocol)
@@ -181,7 +164,7 @@ namespace Akka.Remote.Serialization.Protocol
     #region -- Google types --
 
     [MessagePackObject]
-    public sealed class Duration
+    public readonly struct Duration
     {
         [Key(0)]
         public readonly long Seconds;

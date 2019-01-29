@@ -14,6 +14,7 @@ using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Util;
 using Akka.Util.Internal;
+using Akka.Serialization.Protocol;
 using CuteAnt;
 using CuteAnt.Collections;
 using CuteAnt.Reflection;
@@ -38,16 +39,54 @@ namespace Akka.Serialization
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="system">TBD</param>
         /// <param name="address">TBD</param>
-        /// <param name="action">TBD</param>
+        /// <param name="func">TBD</param>
+        /// <param name="obj">TBD</param>
         /// <returns>TBD</returns>
-        public static T SerializeWithTransport<T>(ActorSystem system, Address address, Func<T> action)
+        public static T SerializeWithTransport<T>(ActorSystem system, Address address, Func<object, T> func, object obj)
         {
             _currentTransportInformation = new Information()
             {
                 System = system,
                 Address = address
             };
-            var res = action();
+            var res = func(obj);
+            _currentTransportInformation = null;
+            return res;
+        }
+
+        /// <summary>TBD</summary>
+        /// <param name="system"></param>
+        /// <param name="address"></param>
+        /// <param name="serializer"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static byte[] SerializeWithTransport(ActorSystem system, Address address, Serializer serializer, object obj)
+        {
+            _currentTransportInformation = new Information()
+            {
+                System = system,
+                Address = address
+            };
+            var res = serializer.ToBinary(obj);
+            _currentTransportInformation = null;
+            return res;
+        }
+
+        /// <summary>TBD</summary>
+        /// <param name="system"></param>
+        /// <param name="address"></param>
+        /// <param name="serializer"></param>
+        /// <param name="obj"></param>
+        /// <param name="manifest"></param>
+        /// <returns></returns>
+        public static byte[] SerializeWithTransport(ActorSystem system, Address address, SerializerWithStringManifest serializer, object obj, out byte[] manifest)
+        {
+            _currentTransportInformation = new Information()
+            {
+                System = system,
+                Address = address
+            };
+            var res = serializer.ToBinary(obj, out manifest);
             _currentTransportInformation = null;
             return res;
         }
@@ -195,36 +234,19 @@ namespace Akka.Serialization
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
         /// optional type hint to the Serializer.</summary>
-        /// <param name="bytes">TBD</param>
-        /// <param name="serializerId">TBD</param>
-        /// <param name="typeKey">TBD</param>
+        /// <param name="payload">TBD</param>
         /// <exception cref="SerializationException">
         /// This exception is thrown if the system cannot find the serializer with the given
-        /// <paramref name="serializerId"/> or it couldn't find the given <paramref name="typeKey"/>
-        /// with the given <paramref name="serializerId"/>.</exception>
+        /// <paramref name="payload"/>.</exception>
         /// <returns>The resulting object</returns>
-        public object Deserialize(byte[] bytes, int serializerId, in TypeKey typeKey)
+        public object Deserialize(in Payload payload)
         {
-            if (_serializersById.TryGetValue(serializerId, out var serializer))
+            if (_serializersById.TryGetValue(payload.SerializerId, out var serializer))
             {
-                //if (null == typeName)
-                //{
-                //    return serializer.FromBinary(bytes, null);
-                //}
-
-                Type type = null;
-                try
-                {
-                    type = TypeSerializer.GetTypeFromTypeKey(typeKey);
-                }
-                catch (Exception ex)
-                {
-                    ThrowSerializationException_D(typeKey, serializerId, ex);
-                }
-                return serializer.FromBinary(bytes, type);
+                return serializer.FromPayload(payload);
             }
 
-            ThrowSerializationException(serializerId); return null;
+            ThrowSerializationException(payload.SerializerId); return null;
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -409,16 +431,6 @@ namespace Akka.Serialization
             SerializationException GetSerializationException()
             {
                 return new SerializationException($"Cannot find manifest class [{manifest}] for serializer with id [{serializerId}].", ex);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void ThrowSerializationException_D(TypeKey typeKey, int serializerId, Exception ex)
-        {
-            throw GetSerializationException();
-            SerializationException GetSerializationException()
-            {
-                return new SerializationException($"Cannot find manifest class [{Encoding.UTF8.GetString(typeKey.TypeName)}] for serializer with id [{serializerId}].", ex);
             }
         }
 

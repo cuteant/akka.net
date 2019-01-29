@@ -6,16 +6,19 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
+using Akka.Dispatch;
 using Akka.Remote.Routing;
 using Akka.Routing;
 using Akka.Serialization;
+using Akka.Util.Internal;
 using CuteAnt;
 using CuteAnt.Text;
 using MessagePack;
-using MessagePack.Resolvers;
 
 namespace Akka.Remote.Serialization
 {
@@ -24,59 +27,101 @@ namespace Akka.Remote.Serialization
         #region manifests
 
         private const string IdentifyManifest = "ID";
-        private static readonly byte[] IdentifyManifestBytes = StringHelper.UTF8NoBOM.GetBytes(IdentifyManifest);
+        private static readonly byte[] IdentifyManifestBytes;
         private const string ActorIdentityManifest = "AID";
-        private static readonly byte[] ActorIdentityManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ActorIdentityManifest);
+        private static readonly byte[] ActorIdentityManifestBytes;
         private const string ActorRefManifest = "AR";
-        private static readonly byte[] ActorRefManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ActorRefManifest);
+        private static readonly byte[] ActorRefManifestBytes;
         private const string PoisonPillManifest = "PP";
-        private static readonly byte[] PoisonPillManifestBytes = StringHelper.UTF8NoBOM.GetBytes(PoisonPillManifest);
+        private static readonly byte[] PoisonPillManifestBytes;
         private const string KillManifest = "K";
-        private static readonly byte[] KillManifestBytes = StringHelper.UTF8NoBOM.GetBytes(KillManifest);
+        private static readonly byte[] KillManifestBytes;
         private const string RemoteWatcherHearthbeatManifest = "RWHB";
-        private static readonly byte[] RemoteWatcherHearthbeatManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteWatcherHearthbeatManifest);
+        private static readonly byte[] RemoteWatcherHearthbeatManifestBytes;
         private const string RemoteWatcherHearthbeatRspManifest = "RWHR";
-        private static readonly byte[] RemoteWatcherHearthbeatRspManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteWatcherHearthbeatRspManifest);
+        private static readonly byte[] RemoteWatcherHearthbeatRspManifestBytes;
         private const string LocalScopeManifest = "LS";
-        private static readonly byte[] LocalScopeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(LocalScopeManifest);
+        private static readonly byte[] LocalScopeManifestBytes;
         private const string RemoteScopeManifest = "RS";
-        private static readonly byte[] RemoteScopeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteScopeManifest);
+        private static readonly byte[] RemoteScopeManifestBytes;
         private const string ConfigManifest = "CF";
-        private static readonly byte[] ConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ConfigManifest);
+        private static readonly byte[] ConfigManifestBytes;
         private const string FromConfigManifest = "FC";
-        private static readonly byte[] FromConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(FromConfigManifest);
+        private static readonly byte[] FromConfigManifestBytes;
         private const string DefaultResizerManifest = "DR";
-        private static readonly byte[] DefaultResizerManifestBytes = StringHelper.UTF8NoBOM.GetBytes(DefaultResizerManifest);
+        private static readonly byte[] DefaultResizerManifestBytes;
         private const string RoundRobinPoolManifest = "RORRP";
-        private static readonly byte[] RoundRobinPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RoundRobinPoolManifest);
+        private static readonly byte[] RoundRobinPoolManifestBytes;
         private const string BroadcastPoolManifest = "ROBP";
-        private static readonly byte[] BroadcastPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BroadcastPoolManifest);
+        private static readonly byte[] BroadcastPoolManifestBytes;
         private const string RandomPoolManifest = "RORP";
-        private static readonly byte[] RandomPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RandomPoolManifest);
+        private static readonly byte[] RandomPoolManifestBytes;
         private const string ScatterGatherPoolManifest = "ROSGP";
-        private static readonly byte[] ScatterGatherPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ScatterGatherPoolManifest);
+        private static readonly byte[] ScatterGatherPoolManifestBytes;
         private const string TailChoppingPoolManifest = "ROTCP";
-        private static readonly byte[] TailChoppingPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(TailChoppingPoolManifest);
+        private static readonly byte[] TailChoppingPoolManifestBytes;
         private const string ConsistentHashingPoolManifest = "ROCHP";
-        private static readonly byte[] ConsistentHashingPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ConsistentHashingPoolManifest);
+        private static readonly byte[] ConsistentHashingPoolManifestBytes;
         private const string RemoteRouterConfigManifest = "RORRC";
-        private static readonly byte[] RemoteRouterConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteRouterConfigManifest);
+        private static readonly byte[] RemoteRouterConfigManifestBytes;
+        private static readonly Dictionary<Type, string> ManifestMap;
+
+        static MiscMessageSerializer()
+        {
+            IdentifyManifestBytes = StringHelper.UTF8NoBOM.GetBytes(IdentifyManifest);
+            ActorIdentityManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ActorIdentityManifest);
+            ActorRefManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ActorRefManifest);
+            PoisonPillManifestBytes = StringHelper.UTF8NoBOM.GetBytes(PoisonPillManifest);
+            KillManifestBytes = StringHelper.UTF8NoBOM.GetBytes(KillManifest);
+            RemoteWatcherHearthbeatManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteWatcherHearthbeatManifest);
+            RemoteWatcherHearthbeatRspManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteWatcherHearthbeatRspManifest);
+            LocalScopeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(LocalScopeManifest);
+            RemoteScopeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteScopeManifest);
+            ConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ConfigManifest);
+            FromConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(FromConfigManifest);
+            DefaultResizerManifestBytes = StringHelper.UTF8NoBOM.GetBytes(DefaultResizerManifest);
+            RoundRobinPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RoundRobinPoolManifest);
+            BroadcastPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(BroadcastPoolManifest);
+            RandomPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RandomPoolManifest);
+            ScatterGatherPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ScatterGatherPoolManifest);
+            TailChoppingPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(TailChoppingPoolManifest);
+            ConsistentHashingPoolManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ConsistentHashingPoolManifest);
+            RemoteRouterConfigManifestBytes = StringHelper.UTF8NoBOM.GetBytes(RemoteRouterConfigManifest);
+            ManifestMap = new Dictionary<Type, string>
+            {
+                { typeof(Identify), IdentifyManifest},
+                { typeof(ActorIdentity), ActorIdentityManifest},
+                { typeof(IActorRef), ActorRefManifest},
+                { typeof(PoisonPill), PoisonPillManifest},
+                { typeof(Kill), KillManifest},
+                { typeof(RemoteWatcher.Heartbeat), RemoteWatcherHearthbeatManifest},
+                { typeof(RemoteWatcher.HeartbeatRsp), RemoteWatcherHearthbeatRspManifest},
+                { typeof(RemoteScope), RemoteScopeManifest},
+                { typeof(LocalScope), LocalScopeManifest},
+                { typeof(Config), ConfigManifest},
+                { typeof(FromConfig), FromConfigManifest},
+                { typeof(DefaultResizer), DefaultResizerManifest},
+                { typeof(RoundRobinPool), RoundRobinPoolManifest},
+                { typeof(BroadcastPool), BroadcastPoolManifest},
+                { typeof(RandomPool), RandomPoolManifest},
+                { typeof(ScatterGatherFirstCompletedPool), ScatterGatherPoolManifest},
+                { typeof(TailChoppingPool), TailChoppingPoolManifest},
+                { typeof(ConsistentHashingPool), ConsistentHashingPoolManifest},
+                { typeof(RemoteRouterConfig), RemoteRouterConfigManifest},
+            };
+        }
 
         #endregion
 
-        private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
+        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
-        private readonly IFormatterResolver _defaultResolver;
+        private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="MiscMessageSerializer" /> class.
         /// </summary>
         /// <param name="system">The actor system to associate with this serializer. </param>
-        public MiscMessageSerializer(ExtendedActorSystem system) : base(system)
-        {
-            _defaultResolver = new DefaultResolver();
-            _defaultResolver.Context2.Add(MsgPackSerializerHelper.ActorSystemIdentifier, system);
-        }
+        public MiscMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
@@ -84,35 +129,35 @@ namespace Akka.Remote.Serialization
             switch (obj)
             {
                 case Identify identify:
-                    return MessagePackSerializer.Serialize(identify, _defaultResolver);
+                    return IdentifyToProto(identify);
                 case ActorIdentity actorIdentity:
-                    return MessagePackSerializer.Serialize(actorIdentity, _defaultResolver);
+                    return ActorIdentityToProto(actorIdentity);
                 case IActorRef actorRef:
                     return ActorRefToProto(actorRef);
                 case RemoteWatcher.HeartbeatRsp heartbeatRsp:
-                    return MessagePackSerializer.Serialize(heartbeatRsp, _defaultResolver);
+                    return HeartbeatRspToProto(heartbeatRsp);
                 case RemoteScope remoteScope:
-                    return MessagePackSerializer.Serialize(remoteScope, _defaultResolver);
+                    return RemoteScopeToProto(remoteScope);
                 case Config config:
                     return ConfigToProto(config);
                 case FromConfig fromConfig:
-                    return MessagePackSerializer.Serialize(fromConfig, _defaultResolver);
+                    return FromConfigToProto(fromConfig);
                 case DefaultResizer defaultResizer:
-                    return MessagePackSerializer.Serialize(defaultResizer, _defaultResolver);
+                    return DefaultResizerToProto(defaultResizer);
                 case RoundRobinPool roundRobinPool:
-                    return MessagePackSerializer.Serialize(roundRobinPool, _defaultResolver);
+                    return RoundRobinPoolToProto(roundRobinPool);
                 case BroadcastPool broadcastPool:
-                    return MessagePackSerializer.Serialize(broadcastPool, _defaultResolver);
+                    return BroadcastPoolToProto(broadcastPool);
                 case RandomPool randomPool:
-                    return MessagePackSerializer.Serialize(randomPool, _defaultResolver);
+                    return RandomPoolToProto(randomPool);
                 case ScatterGatherFirstCompletedPool scatterPool:
-                    return MessagePackSerializer.Serialize(scatterPool, _defaultResolver);
+                    return ScatterGatherFirstCompletedPoolToProto(scatterPool);
                 case TailChoppingPool tailChoppingPool:
-                    return MessagePackSerializer.Serialize(tailChoppingPool, _defaultResolver);
+                    return TailChoppingPoolToProto(tailChoppingPool);
                 case ConsistentHashingPool hashingPool:
-                    return MessagePackSerializer.Serialize(hashingPool, _defaultResolver);
+                    return ConsistentHashingPoolToProto(hashingPool);
                 case RemoteRouterConfig remoteRouterConfig:
-                    return MessagePackSerializer.Serialize(remoteRouterConfig, _defaultResolver);
+                    return RemoteRouterConfigToProto(remoteRouterConfig);
 
                 case PoisonPill _:
                 case Kill _:
@@ -123,6 +168,19 @@ namespace Akka.Remote.Serialization
                 default:
                     return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
             }
+        }
+
+        /// <inheritdoc />
+        protected override string GetManifest(Type type)
+        {
+            if (null == type) { return string.Empty; }
+            var manifestMap = ManifestMap;
+            if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
+            foreach (var item in manifestMap)
+            {
+                if (item.Key.IsAssignableFrom(type)) { return item.Value; }
+            }
+            return ThrowHelper.ThrowArgumentException_Serializer_D<string>(type);
         }
 
         /// <inheritdoc />
@@ -175,51 +233,71 @@ namespace Akka.Remote.Serialization
         }
 
         /// <inheritdoc />
-        public override byte[] ManifestBytes(object obj)
+        public override byte[] ToBinary(object obj, out byte[] manifest)
         {
             switch (obj)
             {
-                case Identify _:
-                    return IdentifyManifestBytes;
-                case ActorIdentity _:
-                    return ActorIdentityManifestBytes;
-                case IActorRef _:
-                    return ActorRefManifestBytes;
+                case Identify identify:
+                    manifest = IdentifyManifestBytes;
+                    return IdentifyToProto(identify);
+                case ActorIdentity actorIdentity:
+                    manifest = ActorIdentityManifestBytes;
+                    return ActorIdentityToProto(actorIdentity);
+                case IActorRef actorRef:
+                    manifest = ActorRefManifestBytes;
+                    return ActorRefToProto(actorRef);
+                case RemoteWatcher.HeartbeatRsp heartbeatRsp:
+                    manifest = RemoteWatcherHearthbeatRspManifestBytes;
+                    return HeartbeatRspToProto(heartbeatRsp);
+                case RemoteScope remoteScope:
+                    manifest = RemoteScopeManifestBytes;
+                    return RemoteScopeToProto(remoteScope);
+                case Config config:
+                    manifest = ConfigManifestBytes;
+                    return ConfigToProto(config);
+                case FromConfig fromConfig:
+                    manifest = FromConfigManifestBytes;
+                    return FromConfigToProto(fromConfig);
+                case DefaultResizer defaultResizer:
+                    manifest = DefaultResizerManifestBytes;
+                    return DefaultResizerToProto(defaultResizer);
+                case RoundRobinPool roundRobinPool:
+                    manifest = RoundRobinPoolManifestBytes;
+                    return RoundRobinPoolToProto(roundRobinPool);
+                case BroadcastPool broadcastPool:
+                    manifest = BroadcastPoolManifestBytes;
+                    return BroadcastPoolToProto(broadcastPool);
+                case RandomPool randomPool:
+                    manifest = RandomPoolManifestBytes;
+                    return RandomPoolToProto(randomPool);
+                case ScatterGatherFirstCompletedPool scatterPool:
+                    manifest = ScatterGatherPoolManifestBytes;
+                    return ScatterGatherFirstCompletedPoolToProto(scatterPool);
+                case TailChoppingPool tailChoppingPool:
+                    manifest = TailChoppingPoolManifestBytes;
+                    return TailChoppingPoolToProto(tailChoppingPool);
+                case ConsistentHashingPool hashingPool:
+                    manifest = ConsistentHashingPoolManifestBytes;
+                    return ConsistentHashingPoolToProto(hashingPool);
+                case RemoteRouterConfig remoteRouterConfig:
+                    manifest = RemoteRouterConfigManifestBytes;
+                    return RemoteRouterConfigToProto(remoteRouterConfig);
+
                 case PoisonPill _:
-                    return PoisonPillManifestBytes;
+                    manifest = PoisonPillManifestBytes;
+                    return EmptyBytes;
                 case Kill _:
-                    return KillManifestBytes;
+                    manifest = KillManifestBytes;
+                    return EmptyBytes;
                 case RemoteWatcher.Heartbeat _:
-                    return RemoteWatcherHearthbeatManifestBytes;
-                case RemoteWatcher.HeartbeatRsp _:
-                    return RemoteWatcherHearthbeatRspManifestBytes;
-                case RemoteScope _:
-                    return RemoteScopeManifestBytes;
+                    manifest = RemoteWatcherHearthbeatManifestBytes;
+                    return EmptyBytes;
                 case LocalScope _:
-                    return LocalScopeManifestBytes;
-                case Config _:
-                    return ConfigManifestBytes;
-                case FromConfig _:
-                    return FromConfigManifestBytes;
-                case DefaultResizer _:
-                    return DefaultResizerManifestBytes;
-                case RoundRobinPool _:
-                    return RoundRobinPoolManifestBytes;
-                case BroadcastPool _:
-                    return BroadcastPoolManifestBytes;
-                case RandomPool _:
-                    return RandomPoolManifestBytes;
-                case ScatterGatherFirstCompletedPool _:
-                    return ScatterGatherPoolManifestBytes;
-                case TailChoppingPool _:
-                    return TailChoppingPoolManifestBytes;
-                case ConsistentHashingPool _:
-                    return ConsistentHashingPoolManifestBytes;
-                case RemoteRouterConfig _:
-                    return RemoteRouterConfigManifestBytes;
+                    manifest = LocalScopeManifestBytes;
+                    return EmptyBytes;
 
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_D<byte[]>(obj);
+                    manifest = null; return ThrowHelper.ThrowArgumentException_Serializer_D<byte[]>(obj);
             }
         }
 
@@ -229,9 +307,9 @@ namespace Akka.Remote.Serialization
             switch (manifest)
             {
                 case IdentifyManifest:
-                    return MessagePackSerializer.Deserialize<Identify>(bytes, _defaultResolver);
+                    return IdentifyFromProto(bytes);
                 case ActorIdentityManifest:
-                    return MessagePackSerializer.Deserialize<ActorIdentity>(bytes, _defaultResolver);
+                    return ActorIdentityFromProto(bytes);
                 case ActorRefManifest:
                     return ActorRefFromProto(bytes);
                 case PoisonPillManifest:
@@ -241,57 +319,117 @@ namespace Akka.Remote.Serialization
                 case RemoteWatcherHearthbeatManifest:
                     return RemoteWatcher.Heartbeat.Instance;
                 case RemoteWatcherHearthbeatRspManifest:
-                    return MessagePackSerializer.Deserialize<RemoteWatcher.HeartbeatRsp>(bytes, _defaultResolver);
+                    return HearthbeatRspFromProto(bytes);
                 case LocalScopeManifest:
                     return LocalScope.Instance;
                 case RemoteScopeManifest:
-                    return MessagePackSerializer.Deserialize<RemoteScope>(bytes, _defaultResolver);
+                    return RemoteScopeFromProto(bytes);
                 case ConfigManifest:
                     return ConfigFromProto(bytes);
                 case FromConfigManifest:
-                    return MessagePackSerializer.Deserialize<FromConfig>(bytes, _defaultResolver);
+                    return FromConfigFromProto(bytes);
                 case DefaultResizerManifest:
-                    return MessagePackSerializer.Deserialize<DefaultResizer>(bytes, _defaultResolver);
+                    return DefaultResizerFromProto(bytes);
                 case RoundRobinPoolManifest:
-                    return MessagePackSerializer.Deserialize<RoundRobinPool>(bytes, _defaultResolver);
+                    return RoundRobinPoolFromProto(bytes);
                 case BroadcastPoolManifest:
-                    return MessagePackSerializer.Deserialize<BroadcastPool>(bytes, _defaultResolver);
+                    return BroadcastPoolFromProto(bytes);
                 case RandomPoolManifest:
-                    return MessagePackSerializer.Deserialize<RandomPool>(bytes, _defaultResolver);
+                    return RandomPoolFromProto(bytes);
                 case ScatterGatherPoolManifest:
-                    return MessagePackSerializer.Deserialize<ScatterGatherFirstCompletedPool>(bytes, _defaultResolver);
+                    return ScatterGatherFirstCompletedPoolFromProto(bytes);
                 case TailChoppingPoolManifest:
-                    return MessagePackSerializer.Deserialize<TailChoppingPool>(bytes, _defaultResolver);
+                    return TailChoppingPoolFromProto(bytes);
                 case ConsistentHashingPoolManifest:
-                    return MessagePackSerializer.Deserialize<ConsistentHashingPool>(bytes, _defaultResolver);
+                    return ConsistentHashingPoolFromProto(bytes);
                 case RemoteRouterConfigManifest:
-                    return MessagePackSerializer.Deserialize<RemoteRouterConfig>(bytes, _defaultResolver);
+                    return RemoteRouterConfigFromProto(bytes);
 
                 default:
                     return ThrowHelper.ThrowSerializationException_Serializer_MiscFrom(manifest);
             }
         }
 
+        //
+        // Identify
+        //
+        private byte[] IdentifyToProto(Identify identify)
+        {
+            return MessagePackSerializer.Serialize(new Protocol.Identify(WrappedPayloadSupport.PayloadToProto(system, identify.MessageId)), s_defaultResolver);
+        }
+
+        private Identify IdentifyFromProto(byte[] bytes)
+        {
+            var protoMessage = MessagePackSerializer.Deserialize<Protocol.Identify>(bytes, s_defaultResolver);
+            return new Identify(WrappedPayloadSupport.PayloadFrom(system, protoMessage.MessageId));
+        }
+
+        //
+        // ActorIdentity
+        //
+        private byte[] ActorIdentityToProto(ActorIdentity actorIdentity)
+        {
+            var protoIdentify = new Protocol.ActorIdentity(
+                WrappedPayloadSupport.PayloadToProto(system, actorIdentity.MessageId),
+                Akka.Serialization.Serialization.SerializedActorPath(actorIdentity.Subject)
+            );
+            return MessagePackSerializer.Serialize(protoIdentify, s_defaultResolver);
+        }
+
+        private ActorIdentity ActorIdentityFromProto(byte[] bytes)
+        {
+            var protoMessage = MessagePackSerializer.Deserialize<Protocol.ActorIdentity>(bytes, s_defaultResolver);
+            return new ActorIdentity(WrappedPayloadSupport.PayloadFrom(system, protoMessage.CorrelationId), ResolveActorRef(protoMessage.Path));
+        }
+
         private const string c_nobody = "nobody";
         //
         // IActorRef
         //
-        private byte[] ActorRefToProto(IActorRef actorRef)
+        private static byte[] ActorRefToProto(IActorRef actorRef)
         {
-            var protoActor = new Protocol.ActorRefData(actorRef is Nobody ? c_nobody : Akka.Serialization.Serialization.SerializedActorPath(actorRef));
+            var protoActor = new Protocol.ReadOnlyActorRefData(actorRef is Nobody ? c_nobody : Akka.Serialization.Serialization.SerializedActorPath(actorRef));
 
-            return MessagePackSerializer.Serialize(protoActor, _defaultResolver);
+            return MessagePackSerializer.Serialize(protoActor, s_defaultResolver);
         }
 
         private IActorRef ActorRefFromProto(byte[] bytes)
         {
-            var protoMessage = MessagePackSerializer.Deserialize<Protocol.ActorRefData>(bytes, _defaultResolver);
+            var protoMessage = MessagePackSerializer.Deserialize<Protocol.ReadOnlyActorRefData>(bytes, s_defaultResolver);
             if (string.Equals(protoMessage.Path, c_nobody, StringComparison.Ordinal))
             {
                 return Nobody.Instance;
             }
 
-            return system.Provider.ResolveActorRef(protoMessage.Path);
+            return system.AsInstanceOf<ExtendedActorSystem>().Provider.ResolveActorRef(protoMessage.Path);
+        }
+
+        //
+        // RemoteWatcher.HeartbeatRsp
+        //
+        private static byte[] HeartbeatRspToProto(RemoteWatcher.HeartbeatRsp heartbeatRsp)
+        {
+            return MessagePackSerializer.Serialize(new Protocol.RemoteWatcherHeartbeatResponse((ulong)heartbeatRsp.AddressUid), s_defaultResolver);
+        }
+
+        private static RemoteWatcher.HeartbeatRsp HearthbeatRspFromProto(byte[] bytes)
+        {
+            var message = MessagePackSerializer.Deserialize<Protocol.RemoteWatcherHeartbeatResponse>(bytes, s_defaultResolver);
+            return new RemoteWatcher.HeartbeatRsp((int)message.Uid);
+        }
+
+        //
+        // RemoteScope
+        //
+        private static byte[] RemoteScopeToProto(RemoteScope remoteScope)
+        {
+            return MessagePackSerializer.Serialize(new Protocol.RemoteScope(AddressMessageBuilder(remoteScope.Address)), s_defaultResolver);
+        }
+
+        private static RemoteScope RemoteScopeFromProto(byte[] bytes)
+        {
+            var message = MessagePackSerializer.Deserialize<Protocol.RemoteScope>(bytes, s_defaultResolver);
+            return new RemoteScope(AddressFrom(message.Node));
         }
 
         //
@@ -309,6 +447,309 @@ namespace Akka.Remote.Serialization
             if (bytes.Length == 0) { return Config.Empty; }
 
             return ConfigurationFactory.ParseString(Encoding.UTF8.GetString(bytes));
+        }
+
+        //
+        // FromConfig
+        //
+        private byte[] FromConfigToProto(FromConfig fromConfig)
+        {
+            Protocol.FromConfig message;
+            if (fromConfig == FromConfig.Instance || null == fromConfig)
+            {
+                message = null;
+            }
+            else
+            {
+                message = new Protocol.FromConfig(WrappedPayloadSupport.PayloadToProto(system, fromConfig.Resizer), fromConfig.RouterDispatcher);
+            }
+
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
+        }
+
+        private FromConfig FromConfigFromProto(byte[] bytes)
+        {
+            var fromConfig = MessagePackSerializer.Deserialize<Protocol.FromConfig>(bytes, s_defaultResolver);
+
+            if (null == fromConfig) { return FromConfig.Instance; }
+
+            var rawResizer = fromConfig.Resizer;
+            Resizer resizer = rawResizer.NoeEmtpy
+                ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, rawResizer)
+                : null;
+
+            var routerDispatcher = !string.IsNullOrEmpty(fromConfig.RouterDispatcher)
+                ? fromConfig.RouterDispatcher
+                : Dispatchers.DefaultDispatcherId;
+
+            return new FromConfig(resizer, Pool.DefaultSupervisorStrategy, routerDispatcher);
+        }
+
+        //
+        // DefaultResizer
+        //
+        private static byte[] DefaultResizerToProto(DefaultResizer defaultResizer)
+        {
+            var message = new Protocol.DefaultResizer(
+                (uint)defaultResizer.LowerBound,
+                (uint)defaultResizer.UpperBound,
+                (uint)defaultResizer.PressureThreshold,
+                defaultResizer.RampupRate,
+                defaultResizer.BackoffThreshold,
+                defaultResizer.BackoffRate,
+                (uint)defaultResizer.MessagesPerResize
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
+        }
+
+        private static DefaultResizer DefaultResizerFromProto(byte[] bytes)
+        {
+            var resizer = MessagePackSerializer.Deserialize<Protocol.DefaultResizer>(bytes, s_defaultResolver);
+            return new DefaultResizer(
+                (int)resizer.LowerBound,
+                (int)resizer.UpperBound,
+                (int)resizer.PressureThreshold,
+                resizer.RampupRate,
+                resizer.BackoffThreshold,
+                resizer.BackoffRate,
+                (int)resizer.MessagesPerResize);
+        }
+
+        //
+        // Generic Routing Pool
+        //
+        private Protocol.GenericRoutingPool GenericRoutingPoolBuilder(Pool pool)
+        {
+            return new Protocol.GenericRoutingPool(
+                (uint)pool.NrOfInstances,
+                pool.RouterDispatcher,
+                pool.UsePoolDispatcher,
+                WrappedPayloadSupport.PayloadToProto(system, pool.Resizer)
+            );
+        }
+
+        //
+        // RoundRobinPool
+        //
+        private byte[] RoundRobinPoolToProto(RoundRobinPool roundRobinPool)
+        {
+            return MessagePackSerializer.Serialize(GenericRoutingPoolBuilder(roundRobinPool), s_defaultResolver);
+        }
+
+        private RoundRobinPool RoundRobinPoolFromProto(byte[] bytes)
+        {
+            var broadcastPool = MessagePackSerializer.Deserialize<Protocol.GenericRoutingPool>(bytes, s_defaultResolver);
+
+            var rawResizer = broadcastPool.Resizer;
+            Resizer resizer = rawResizer.NoeEmtpy
+                ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, rawResizer)
+                : null;
+
+            var routerDispatcher = !string.IsNullOrEmpty(broadcastPool.RouterDispatcher)
+                ? broadcastPool.RouterDispatcher
+                : Dispatchers.DefaultDispatcherId;
+
+            return new RoundRobinPool(
+                (int)broadcastPool.NrOfInstances,
+                resizer,
+                Pool.DefaultSupervisorStrategy,
+                routerDispatcher,
+                broadcastPool.UsePoolDispatcher);
+        }
+
+        //
+        // BroadcastPool
+        //
+        private byte[] BroadcastPoolToProto(BroadcastPool broadcastPool)
+        {
+            return MessagePackSerializer.Serialize(GenericRoutingPoolBuilder(broadcastPool), s_defaultResolver);
+        }
+
+        private BroadcastPool BroadcastPoolFromProto(byte[] bytes)
+        {
+            var broadcastPool = MessagePackSerializer.Deserialize<Protocol.GenericRoutingPool>(bytes, s_defaultResolver);
+
+            var rawResizer = broadcastPool.Resizer;
+            Resizer resizer = rawResizer.NoeEmtpy
+                ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, rawResizer)
+                : null;
+            var routerDispatcher = !string.IsNullOrEmpty(broadcastPool.RouterDispatcher)
+                ? broadcastPool.RouterDispatcher
+                : Dispatchers.DefaultDispatcherId;
+
+            return new BroadcastPool(
+                (int)broadcastPool.NrOfInstances,
+                resizer,
+                Pool.DefaultSupervisorStrategy,
+                routerDispatcher,
+                broadcastPool.UsePoolDispatcher);
+        }
+
+        //
+        // RandomPool
+        //
+        private byte[] RandomPoolToProto(RandomPool randomPool)
+        {
+            return MessagePackSerializer.Serialize(GenericRoutingPoolBuilder(randomPool), s_defaultResolver);
+        }
+
+        private RandomPool RandomPoolFromProto(byte[] bytes)
+        {
+            var randomPool = MessagePackSerializer.Deserialize<Protocol.GenericRoutingPool>(bytes, s_defaultResolver);
+
+            var rawResizer = randomPool.Resizer;
+            Resizer resizer = rawResizer.NoeEmtpy
+                ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, rawResizer)
+                : null;
+
+            var routerDispatcher = !string.IsNullOrEmpty(randomPool.RouterDispatcher)
+                ? randomPool.RouterDispatcher
+                : Dispatchers.DefaultDispatcherId;
+
+            return new RandomPool(
+                (int)randomPool.NrOfInstances,
+                resizer,
+                Pool.DefaultSupervisorStrategy,
+                routerDispatcher,
+                randomPool.UsePoolDispatcher);
+        }
+
+        //
+        // ScatterGatherFirstCompletedPool
+        //
+        private byte[] ScatterGatherFirstCompletedPoolToProto(ScatterGatherFirstCompletedPool scatterGatherFirstCompletedPool)
+        {
+            var message = new Protocol.ScatterGatherPool(
+                GenericRoutingPoolBuilder(scatterGatherFirstCompletedPool),
+                Protocol.Duration.FromTimeSpan(scatterGatherFirstCompletedPool.Within)
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
+        }
+
+        private ScatterGatherFirstCompletedPool ScatterGatherFirstCompletedPoolFromProto(byte[] bytes)
+        {
+            var scatterGatherFirstCompletedPool = MessagePackSerializer.Deserialize<Protocol.ScatterGatherPool>(bytes, s_defaultResolver);
+
+            var rawResizer = scatterGatherFirstCompletedPool.Generic.Resizer;
+            Resizer resizer = rawResizer.NoeEmtpy
+                ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, rawResizer)
+                : null;
+
+            var routerDispatcher = !string.IsNullOrEmpty(scatterGatherFirstCompletedPool.Generic.RouterDispatcher)
+                ? scatterGatherFirstCompletedPool.Generic.RouterDispatcher
+                : Dispatchers.DefaultDispatcherId;
+
+            return new ScatterGatherFirstCompletedPool(
+                (int)scatterGatherFirstCompletedPool.Generic.NrOfInstances,
+                resizer,
+                scatterGatherFirstCompletedPool.Within.ToTimeSpan(),
+                Pool.DefaultSupervisorStrategy,
+                routerDispatcher,
+                scatterGatherFirstCompletedPool.Generic.UsePoolDispatcher);
+        }
+
+        //
+        // TailChoppingPool
+        //
+        private byte[] TailChoppingPoolToProto(TailChoppingPool tailChoppingPool)
+        {
+            var message = new Protocol.TailChoppingPool(
+                GenericRoutingPoolBuilder(tailChoppingPool),
+                Protocol.Duration.FromTimeSpan(tailChoppingPool.Within),
+                Protocol.Duration.FromTimeSpan(tailChoppingPool.Interval)
+            );
+            return MessagePackSerializer.Serialize(message, s_defaultResolver);
+        }
+
+        private TailChoppingPool TailChoppingPoolFromProto(byte[] bytes)
+        {
+            var tailChoppingPool = MessagePackSerializer.Deserialize<Protocol.TailChoppingPool>(bytes, s_defaultResolver);
+
+            var rawResizer = tailChoppingPool.Generic.Resizer;
+            Resizer resizer = rawResizer.NoeEmtpy
+                ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, rawResizer)
+                : null;
+
+            var routerDispatcher = !string.IsNullOrEmpty(tailChoppingPool.Generic.RouterDispatcher)
+                ? tailChoppingPool.Generic.RouterDispatcher
+                : Dispatchers.DefaultDispatcherId;
+
+            return new TailChoppingPool(
+                (int)tailChoppingPool.Generic.NrOfInstances,
+                resizer,
+                Pool.DefaultSupervisorStrategy,
+                routerDispatcher,
+                tailChoppingPool.Within.ToTimeSpan(),
+                tailChoppingPool.Interval.ToTimeSpan(),
+                tailChoppingPool.Generic.UsePoolDispatcher);
+        }
+
+        //
+        // ConsistentHashingPool
+        //
+        private byte[] ConsistentHashingPoolToProto(ConsistentHashingPool hashingPool)
+        {
+            return MessagePackSerializer.Serialize(GenericRoutingPoolBuilder(hashingPool), s_defaultResolver);
+        }
+
+        private object ConsistentHashingPoolFromProto(byte[] bytes)
+        {
+            var consistentHashingPool = MessagePackSerializer.Deserialize<Protocol.GenericRoutingPool>(bytes, s_defaultResolver);
+
+            var rawResizer = consistentHashingPool.Resizer;
+            Resizer resizer = rawResizer.NoeEmtpy
+                ? (Resizer)WrappedPayloadSupport.PayloadFrom(system, rawResizer)
+                : null;
+            var routerDispatcher = !string.IsNullOrEmpty(consistentHashingPool.RouterDispatcher)
+                ? consistentHashingPool.RouterDispatcher
+                : Dispatchers.DefaultDispatcherId;
+
+            return new ConsistentHashingPool(
+                (int)consistentHashingPool.NrOfInstances,
+                resizer,
+                Pool.DefaultSupervisorStrategy,
+                routerDispatcher,
+                consistentHashingPool.UsePoolDispatcher);
+        }
+
+        //
+        // RemoteRouterConfig
+        //
+        private byte[] RemoteRouterConfigToProto(RemoteRouterConfig remoteRouterConfig)
+        {
+            var protoRemoteRouterConfig = new Protocol.RemoteRouterConfig(
+                WrappedPayloadSupport.PayloadToProto(system, remoteRouterConfig.Local),
+                remoteRouterConfig.Nodes.Select(AddressMessageBuilder).ToArray()
+            );
+            return MessagePackSerializer.Serialize(protoRemoteRouterConfig, s_defaultResolver);
+        }
+
+        private RemoteRouterConfig RemoteRouterConfigFromProto(byte[] bytes)
+        {
+            var protoMessage = MessagePackSerializer.Deserialize<Protocol.RemoteRouterConfig>(bytes, s_defaultResolver);
+            return new RemoteRouterConfig(WrappedPayloadSupport.PayloadFrom(system, protoMessage.Local).AsInstanceOf<Pool>(), protoMessage.Nodes.Select(_ => AddressFrom(_)));
+        }
+
+        //
+        // Address
+        //
+        private static Protocol.AddressData AddressMessageBuilder(Address address)
+        {
+            var message = new Protocol.AddressData(
+                address.System,
+                address.Host,
+                (uint)(address.Port ?? 0),
+                address.Protocol);
+            return message;
+        }
+
+        private static Address AddressFrom(in Protocol.AddressData addressProto)
+        {
+            return new Address(
+                addressProto.Protocol,
+                addressProto.System,
+                addressProto.Hostname,
+                addressProto.Port == 0 ? null : (int?)addressProto.Port);
         }
 
         private IActorRef ResolveActorRef(string path)

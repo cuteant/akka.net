@@ -197,7 +197,7 @@ namespace Akka.Cluster.Sharding
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterShardingMessageSerializer)}]");
+                return new ArgumentException($"Can't serialize object of type [{(obj as Type) ?? obj.GetType()}] in [{nameof(ClusterShardingMessageSerializer)}]");
             }
         }
 

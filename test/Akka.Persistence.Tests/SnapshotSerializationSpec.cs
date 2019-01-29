@@ -58,13 +58,13 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        public class MySerializer : Serializer
+        public class MySerializer : SerializerWithTypeManifest
         {
             public MySerializer(ExtendedActorSystem system) : base(system)
             {
             }
 
-            public override bool IncludeManifest { get { return true; } }
+            //public override bool IncludeManifest { get { return true; } }
             public override int Identifier { get { return 5177; } }
 
             public override byte[] ToBinary(object obj)

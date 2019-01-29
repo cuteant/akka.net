@@ -9,7 +9,7 @@ namespace Akka.Serialization
 {
     /// <summary>This is a special <see cref="Serializer"/> that serializes and deserializes javascript objects only.
     /// These objects need to be in the JavaScript Object Notation (JSON) format.</summary>
-    public class Utf8JsonSerializer : Serializer
+    public class Utf8JsonSerializer : SerializerWithTypeManifest
     {
         private readonly IJsonFormatterResolver _resolver;
         private readonly int _initialBufferSize;
@@ -52,9 +52,6 @@ namespace Akka.Serialization
 
         /// <inheritdoc />
         public override int Identifier => 106;
-
-        /// <inheritdoc />
-        public override bool IncludeManifest => true;
 
         /// <inheritdoc />
         public override object DeepCopy(object source)

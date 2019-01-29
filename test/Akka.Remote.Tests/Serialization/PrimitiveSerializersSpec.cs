@@ -60,7 +60,9 @@ namespace Akka.Remote.Tests.Serialization
             var serializer = Sys.Serialization.FindSerializerFor(message);
             serializer.Should().BeOfType<PrimitiveSerializers>();
             var serializedBytes = serializer.ToBinary(message);
-            return (T)serializer.FromBinary(serializedBytes, typeof(T));
+            var primitiveSerializer = (PrimitiveSerializers)serializer;
+            var m = primitiveSerializer.Manifest(message);
+            return (T)primitiveSerializer.FromBinary(serializedBytes, m);
         }
 
         private void AssertEqual<T>(T message)
