@@ -14,7 +14,7 @@ namespace Akka.Persistence.EventStore.Journal
         private IActorContext _context;
 
         private readonly Dictionary<IActorRef, ISet<EventStoreStreamCatchUpSubscription>> _subscriptions =
-                new Dictionary<IActorRef, ISet<EventStoreStreamCatchUpSubscription>>();
+                new Dictionary<IActorRef, ISet<EventStoreStreamCatchUpSubscription>>(ActorRefComparer.Instance);
 
         public EventStoreSubscriptions(IEventStoreConnection conn, IActorContext context)
         {

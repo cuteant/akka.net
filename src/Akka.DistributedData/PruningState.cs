@@ -18,7 +18,7 @@ namespace Akka.DistributedData
         public IImmutableSet<Address> Seen { get; }
 
         public PruningInitialized(UniqueAddress owner, params Address[] seen)
-            : this(owner, seen.ToImmutableHashSet()) { }
+            : this(owner, seen.ToImmutableHashSet(AddressComparer.Instance)) { }
 
         public PruningInitialized(UniqueAddress owner, IImmutableSet<Address> seen)
         {

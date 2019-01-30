@@ -297,7 +297,7 @@ namespace Akka.DistributedData
             }
         }
 
-        public override ImmutableHashSet<UniqueAddress> ModifiedByNodes => ImmutableHashSet.Create(Node);
+        public override ImmutableHashSet<UniqueAddress> ModifiedByNodes => ImmutableHashSet.Create(UniqueAddressComparer.Instance, Node);
 
         public override bool NeedPruningFrom(UniqueAddress removedNode) => Node == removedNode;
 
@@ -318,12 +318,12 @@ namespace Akka.DistributedData
 
         public MultiVersionVector(params KeyValuePair<UniqueAddress, long>[] nodeVersions)
         {
-            Versions = nodeVersions.ToImmutableDictionary();
+            Versions = nodeVersions.ToImmutableDictionary(UniqueAddressComparer.Instance);
         }
 
         public MultiVersionVector(IEnumerable<KeyValuePair<UniqueAddress, long>> versions)
         {
-            Versions = versions.ToImmutableDictionary();
+            Versions = versions.ToImmutableDictionary(UniqueAddressComparer.Instance);
         }
 
         public MultiVersionVector(ImmutableDictionary<UniqueAddress, long> nodeVersions)
@@ -347,6 +347,7 @@ namespace Akka.DistributedData
             {
                 case MultiVersionVector multiVector:
                     var merged = multiVector.Versions.ToBuilder();
+                    merged.KeyComparer = UniqueAddressComparer.Instance;
                     foreach (var pair in Versions)
                     {
                         var mergedCurrentTime = merged.GetValueOrDefault(pair.Key, 0L);
@@ -364,7 +365,7 @@ namespace Akka.DistributedData
             }
         }
 
-        public override ImmutableHashSet<UniqueAddress> ModifiedByNodes => Versions.Keys.ToImmutableHashSet();
+        public override ImmutableHashSet<UniqueAddress> ModifiedByNodes => Versions.Keys.ToImmutableHashSet(UniqueAddressComparer.Instance);
 
         public override bool NeedPruningFrom(UniqueAddress removedNode) => Versions.ContainsKey(removedNode);
 

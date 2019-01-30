@@ -48,7 +48,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <param name="emptyTimeToLive">TBD</param>
         protected TopicLike(TimeSpan emptyTimeToLive)
         {
-            Subscribers = new HashSet<IActorRef>();
+            Subscribers = new HashSet<IActorRef>(ActorRefComparer.Instance);
             EmptyTimeToLive = emptyTimeToLive;
             PruneInterval = new TimeSpan(emptyTimeToLive.Ticks / 2);
             PruneCancelable = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(PruneInterval, PruneInterval, Self, Prune.Instance, Self);

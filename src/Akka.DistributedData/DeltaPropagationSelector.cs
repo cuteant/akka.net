@@ -79,12 +79,14 @@ namespace Akka.DistributedData
                 _deltaNodeRoundRobinCounter += sliceSize;
 
                 var result = ImmutableDictionary<Address, DeltaPropagation>.Empty.ToBuilder();
+                result.KeyComparer = AddressComparer.Instance;
                 var cache = new Dictionary<Tuple<string, long, long>, IReplicatedData>();
                 foreach (var node in slice)
                 {
                     // collect the deltas that have not already been sent to the node and merge
                     // them into a delta group
                     var deltas = ImmutableDictionary<string, Tuple<IReplicatedData, long, long>>.Empty.ToBuilder();
+                    deltas.KeyComparer = StringComparer.Ordinal;
                     foreach (var entry in _deltaEntries)
                     {
                         var key = entry.Key;
@@ -163,7 +165,7 @@ namespace Akka.DistributedData
 
                         return new KeyValuePair<string, ImmutableSortedDictionary<long, IReplicatedData>>(entry.Key, deltasAfterMin);
                     })
-                    .ToImmutableDictionary();
+                    .ToImmutableDictionary(StringComparer.Ordinal);
             }
         }
 
@@ -171,7 +173,7 @@ namespace Akka.DistributedData
         {
             _deltaSentToNode = _deltaSentToNode
                 .Select(entry => new KeyValuePair<string, ImmutableDictionary<Address, long>>(entry.Key, entry.Value.Remove(address)))
-                .ToImmutableDictionary();
+                .ToImmutableDictionary(StringComparer.Ordinal);
         }
 
         private ImmutableSortedDictionary<long, IReplicatedData> DeltaEntriesAfter(

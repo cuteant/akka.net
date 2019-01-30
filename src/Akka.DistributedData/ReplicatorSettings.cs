@@ -65,7 +65,7 @@ namespace Akka.DistributedData
                 dispatcher: dispatcher,
                 pruningInterval: config.GetTimeSpan("pruning-interval"),
                 maxPruningDissemination: config.GetTimeSpan("max-pruning-dissemination"),
-                durableKeys: durableKeys.ToImmutableHashSet(),
+                durableKeys: durableKeys.ToImmutableHashSet(StringComparer.Ordinal),
                 durableStoreProps: durableStoreProps,
                 pruningMarkerTimeToLive: config.GetTimeSpan("pruning-marker-time-to-live"),
                 durablePruningMarkerTimeToLive: durableConfig.GetTimeSpan("pruning-marker-time-to-live"),

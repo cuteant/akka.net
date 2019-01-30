@@ -367,7 +367,9 @@ namespace Akka.DistributedData
 
             _hasDurableKeys = settings.DurableKeys.Count > 0;
             var durableKeysBuilder = ImmutableHashSet<string>.Empty.ToBuilder();
+            durableKeysBuilder.KeyComparer = StringComparer.Ordinal;
             var durableWildcardsBuilder = ImmutableHashSet<string>.Empty.ToBuilder();
+            durableWildcardsBuilder.KeyComparer = StringComparer.Ordinal;
             foreach (var key in settings.DurableKeys)
             {
                 if (key.EndsWith("*"))
@@ -735,7 +737,7 @@ namespace Akka.DistributedData
             var keys = _dataEntries
                 .Where(kvp => !(kvp.Value.Item1.Data is DeletedData))
                 .Select(x => x.Key)
-                .ToImmutableHashSet();
+                .ToImmutableHashSet(StringComparer.Ordinal);
             Sender.Tell(new GetKeysIdsResult(keys));
         }
 
@@ -892,7 +894,7 @@ namespace Akka.DistributedData
                     Notify(kvp.Key, kvp.Value);
                     if (!_subscribers.TryGetValue(kvp.Key, out var set))
                     {
-                        set = new HashSet<IActorRef>();
+                        set = new HashSet<IActorRef>(ActorRefComparer.Instance);
                         _subscribers.Add(kvp.Key, set);
                     }
 
@@ -990,7 +992,7 @@ namespace Akka.DistributedData
             var to = Replica(address);
             if (_dataEntries.Count <= _settings.MaxDeltaElements)
             {
-                var status = new Internal.Status(_dataEntries.Select(x => new KeyValuePair<string, byte[]>(x.Key, GetDigest(x.Key))).ToImmutableDictionary(), chunk: 0, totalChunks: 1);
+                var status = new Internal.Status(_dataEntries.Select(x => new KeyValuePair<string, byte[]>(x.Key, GetDigest(x.Key))).ToImmutableDictionary(StringComparer.Ordinal), chunk: 0, totalChunks: 1);
                 to.Tell(status);
             }
             else
@@ -1010,7 +1012,7 @@ namespace Akka.DistributedData
                     var chunk = (int)(_statusCount % totChunks);
                     var entries = _dataEntries.Where(x => Math.Abs(MurmurHash.StringHash(x.Key)) % totChunks == chunk)
                         .Select(x => new KeyValuePair<string, byte[]>(x.Key, GetDigest(x.Key)))
-                        .ToImmutableDictionary();
+                        .ToImmutableDictionary(StringComparer.Ordinal);
                     var status = new Internal.Status(entries, chunk, totChunks);
                     to.Tell(status);
                 }
@@ -1052,13 +1054,13 @@ namespace Akka.DistributedData
             var otherDifferentKeys = otherDigests
                 .Where(x => IsOtherDifferent(x.Key, x.Value))
                 .Select(x => x.Key)
-                .ToImmutableHashSet();
+                .ToImmutableHashSet(StringComparer.Ordinal);
 
-            var otherKeys = otherDigests.Keys.ToImmutableHashSet();
+            var otherKeys = otherDigests.Keys.ToImmutableHashSet(StringComparer.Ordinal);
             var myKeys = (totChunks == 1
                     ? _dataEntries.Keys
                     : _dataEntries.Keys.Where(x => Math.Abs(MurmurHash.StringHash(x)) % totChunks == chunk))
-                .ToImmutableHashSet();
+                .ToImmutableHashSet(StringComparer.Ordinal);
 
             var otherMissingKeys = myKeys.Except(otherKeys);
 
@@ -1071,7 +1073,7 @@ namespace Akka.DistributedData
             {
                 if (_log.IsDebugEnabled) { _log.SendingGossipTo(Sender, keys); }
 
-                var g = new Gossip(keys.Select(k => new KeyValuePair<string, DataEnvelope>(k, GetData(k))).ToImmutableDictionary(), !otherDifferentKeys.IsEmpty);
+                var g = new Gossip(keys.Select(k => new KeyValuePair<string, DataEnvelope>(k, GetData(k))).ToImmutableDictionary(StringComparer.Ordinal), !otherDifferentKeys.IsEmpty);
                 Sender.Tell(g);
             }
 
@@ -1081,7 +1083,7 @@ namespace Akka.DistributedData
                 var log = Context.System.Log;
                 if (log.IsDebugEnabled) { log.SendingGossipStatusTo(Sender, myMissingKeys); }
 
-                var status = new Internal.Status(myMissingKeys.Select(x => new KeyValuePair<string, byte[]>(x, NotFoundDigest)).ToImmutableDictionary(), chunk, totChunks);
+                var status = new Internal.Status(myMissingKeys.Select(x => new KeyValuePair<string, byte[]>(x, NotFoundDigest)).ToImmutableDictionary(StringComparer.Ordinal), chunk, totChunks);
                 Sender.Tell(status);
             }
         }
@@ -1091,6 +1093,7 @@ namespace Akka.DistributedData
             if (_log.IsDebugEnabled) { _log.ReceivedGossipFrom(Sender, updatedData); }
 
             var replyData = ImmutableDictionary<string, DataEnvelope>.Empty.ToBuilder();
+            replyData.KeyComparer = StringComparer.Ordinal;
             foreach (var d in updatedData)
             {
                 var key = d.Key;
@@ -1112,7 +1115,7 @@ namespace Akka.DistributedData
         {
             if (!_newSubscribers.TryGetValue(key.Id, out var set))
             {
-                _newSubscribers[key.Id] = set = new HashSet<IActorRef>();
+                _newSubscribers[key.Id] = set = new HashSet<IActorRef>(ActorRefComparer.Instance);
             }
             set.Add(subscriber);
 
@@ -1154,7 +1157,7 @@ namespace Akka.DistributedData
             {
                 var keys1 = _subscribers.Where(x => x.Value.Contains(terminated))
                     .Select(x => x.Key)
-                    .ToImmutableHashSet();
+                    .ToImmutableHashSet(StringComparer.Ordinal);
 
                 foreach (var k in keys1)
                 {
@@ -1164,7 +1167,7 @@ namespace Akka.DistributedData
 
                 var keys2 = _newSubscribers.Where(x => x.Value.Contains(terminated))
                     .Select(x => x.Key)
-                    .ToImmutableHashSet();
+                    .ToImmutableHashSet(StringComparer.Ordinal);
 
                 foreach (var k in keys2)
                 {
@@ -1254,7 +1257,7 @@ namespace Akka.DistributedData
         private void CollectRemovedNodes()
         {
             var knownNodes = _nodes.Union(_weaklyUpNodes).Union(_removedNodes.Keys.Select(x => x.Address));
-            var newRemovedNodes = new HashSet<UniqueAddress>();
+            var newRemovedNodes = new HashSet<UniqueAddress>(UniqueAddressComparer.Instance);
             foreach (var pair in _dataEntries)
             {
                 if (pair.Value.Item1.Data is IRemovedNodePruning removedNodePruning)
@@ -1265,6 +1268,7 @@ namespace Akka.DistributedData
 
             var debugEnabled = _log.IsDebugEnabled;
             var removedNodesBuilder = _removedNodes.ToBuilder();
+            removedNodesBuilder.KeyComparer = UniqueAddressComparer.Instance;
             foreach (var node in newRemovedNodes)
             {
                 if (debugEnabled) _log.AddingRemovedNodeFromData(node);
@@ -1279,7 +1283,7 @@ namespace Akka.DistributedData
             var removedSet = _removedNodes
                 .Where(x => (_allReachableClockTime - x.Value) > _maxPruningDisseminationNanos)
                 .Select(x => x.Key)
-                .ToImmutableHashSet();
+                .ToImmutableHashSet(UniqueAddressComparer.Instance);
 
             if (!removedSet.IsEmpty)
             {
@@ -1368,7 +1372,9 @@ namespace Akka.DistributedData
                     if (toRemove.Length > 0)
                     {
                         var removedNodesBuilder = _removedNodes.ToBuilder();
+                        removedNodesBuilder.KeyComparer = UniqueAddressComparer.Instance;
                         var newPruningBuilder = envelope.Pruning.ToBuilder();
+                        newPruningBuilder.KeyComparer = UniqueAddressComparer.Instance;
 
                         removedNodesBuilder.RemoveRange(toRemove);
                         newPruningBuilder.RemoveRange(toRemove);
@@ -1420,7 +1426,7 @@ namespace Akka.DistributedData
                             : new KeyValuePair<string, Delta>(key,
                                 new Delta(new DataEnvelope(t.Item1), t.Item2, t.Item3));
                     })
-                    .ToImmutableDictionary();
+                    .ToImmutableDictionary(StringComparer.Ordinal);
 
                 return new DeltaPropagation(_replicator._selfUniqueAddress, shouldReply: false, deltas: newDeltas);
             }

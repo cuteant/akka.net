@@ -204,7 +204,7 @@ namespace Akka.Cluster.Sharding
             /// <param name="stopMessage">TBD</param>
             public HandOffStopper(ShardId shard, IActorRef replyTo, IEnumerable<IActorRef> entities, object stopMessage)
             {
-                var remaining = new HashSet<IActorRef>(entities);
+                var remaining = new HashSet<IActorRef>(entities, ActorRefComparer.Instance);
 
                 Receive<Terminated>(t =>
                 {
@@ -734,7 +734,7 @@ namespace Akka.Cluster.Sharding
                     if (shardStates.IsFaulted)
                         throw shardStates.Exception; //TODO check if this is the right way
 
-                    return new CurrentShardRegionState(shardStates.Result.Select(x => new ShardState(x.Item1, x.Item2.EntityIds.ToImmutableHashSet())).ToImmutableHashSet());
+                    return new CurrentShardRegionState(shardStates.Result.Select(x => new ShardState(x.Item1, x.Item2.EntityIds.ToImmutableHashSet(StringComparer.Ordinal))).ToImmutableHashSet());
                 }, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
         }
 

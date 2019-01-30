@@ -668,7 +668,7 @@ namespace Akka.Streams.Implementation
                     return true;
 
                 case GetChildren _:
-                    Sender.Tell(new Children(Context.GetChildren().ToImmutableHashSet()));
+                    Sender.Tell(new Children(Context.GetChildren().ToImmutableHashSet(ActorRefComparer.Instance)));
                     return true;
 
                 case StopChildren _:

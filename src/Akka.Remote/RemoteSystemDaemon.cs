@@ -68,7 +68,7 @@ namespace Akka.Remote
     {
         private readonly ActorSystemImpl _system;
         private readonly Switch _terminating = new Switch(false);
-        private readonly ConcurrentDictionary<IActorRef, IImmutableSet<IActorRef>> _parent2Children = new ConcurrentDictionary<IActorRef, IImmutableSet<IActorRef>>();
+        private readonly ConcurrentDictionary<IActorRef, IImmutableSet<IActorRef>> _parent2Children = new ConcurrentDictionary<IActorRef, IImmutableSet<IActorRef>>(ActorRefComparer.Instance);
         private readonly IActorRef _terminator;
 
         /// <summary>Initializes a new instance of the <see cref="RemoteSystemDaemon"/> class.</summary>

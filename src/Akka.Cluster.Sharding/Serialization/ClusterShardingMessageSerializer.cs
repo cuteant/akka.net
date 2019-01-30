@@ -506,11 +506,11 @@ namespace Akka.Cluster.Sharding.Serialization
         private PersistentShardCoordinator.State CoordinatorStateFromBinary(byte[] bytes)
         {
             var state = MessagePackSerializer.Deserialize<Protocol.CoordinatorState>(bytes, s_defaultResolver);
-            var shards = ImmutableDictionary.CreateRange(state.Shards.Select(entry => new KeyValuePair<string, IActorRef>(entry.ShardId, ResolveActorRef(entry.RegionRef))));
-            var regionsZero = ImmutableDictionary.CreateRange(state.Regions.Select(region => new KeyValuePair<IActorRef, IImmutableList<string>>(ResolveActorRef(region), ImmutableList<string>.Empty)));
+            var shards = ImmutableDictionary.CreateRange(StringComparer.Ordinal, state.Shards.Select(entry => new KeyValuePair<string, IActorRef>(entry.ShardId, ResolveActorRef(entry.RegionRef))));
+            var regionsZero = ImmutableDictionary.CreateRange(ActorRefComparer.Instance, state.Regions.Select(region => new KeyValuePair<IActorRef, IImmutableList<string>>(ResolveActorRef(region), ImmutableList<string>.Empty)));
             var regions = shards.Aggregate(regionsZero, (acc, entry) => acc.SetItem(entry.Value, acc[entry.Value].Add(entry.Key)));
-            var proxies = state.RegionProxies.Select(ResolveActorRef).ToImmutableHashSet();
-            var unallocatedShards = state.UnallocatedShards.ToImmutableHashSet();
+            var proxies = state.RegionProxies.Select(ResolveActorRef).ToImmutableHashSet(ActorRefComparer.Instance);
+            var unallocatedShards = state.UnallocatedShards.ToImmutableHashSet(StringComparer.Ordinal);
 
             return new PersistentShardCoordinator.State(
                 shards: shards,
@@ -572,7 +572,7 @@ namespace Akka.Cluster.Sharding.Serialization
         private static Shard.ShardState EntityStateFromBinary(byte[] bytes)
         {
             var msg = MessagePackSerializer.Deserialize<Protocol.EntityState>(bytes, s_defaultResolver);
-            return new Shard.ShardState(msg.Entities.ToImmutableHashSet());
+            return new Shard.ShardState(msg.Entities.ToImmutableHashSet(StringComparer.Ordinal));
         }
 
         //

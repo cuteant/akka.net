@@ -34,5 +34,23 @@ namespace Akka.Actor
             }
         }
     }
+
+    /// <summary>ActorRefComparer</summary>
+    public sealed class ActorRefComparer : System.Collections.Generic.IEqualityComparer<IActorRef>
+    {
+        /// <summary>ActorRefComparer.Instance</summary>
+        public static readonly ActorRefComparer Instance = new ActorRefComparer();
+
+        /// <summary>Determines whether the specified <see cref="IActorRef"/>s are equal.</summary>
+        public bool Equals(IActorRef x, IActorRef y)
+        {
+            if (ReferenceEquals(x, y)) { return true; }
+            if (null == x/* || null == y*/) { return false; }
+            return x.Equals(y);
+        }
+
+        /// <summary>Returns a hash code for the specified <see cref="IActorRef"/>.</summary>
+        public int GetHashCode(IActorRef obj) => obj.GetHashCode();
+    }
 }
 

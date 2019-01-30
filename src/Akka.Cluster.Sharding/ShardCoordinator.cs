@@ -105,7 +105,7 @@ namespace Akka.Cluster.Sharding
                 case GetCurrentRegions _:
                     var regions = coordinator.CurrentState.Regions.Keys
                         .Select(region => string.IsNullOrEmpty(region.Path.Address.Host) ? coordinator.Cluster.SelfAddress : region.Path.Address)
-                        .ToImmutableHashSet();
+                        .ToImmutableHashSet(AddressComparer.Instance);
                     coordinator.Sender.Tell(new CurrentRegions(regions));
                     return true;
                 case ClusterEvent.CurrentClusterState _:
@@ -154,7 +154,7 @@ namespace Akka.Cluster.Sharding
             // Consider regions that don't belong to the current cluster to be terminated.
             // This is an optimization that makes it operational faster and reduces the
             // amount of lost messages during startup.
-            var nodes = coordinator.Cluster.ReadView.Members.Select(x => x.Address).ToImmutableHashSet();
+            var nodes = coordinator.Cluster.ReadView.Members.Select(x => x.Address).ToImmutableHashSet(AddressComparer.Instance);
 
             foreach (var entry in coordinator.CurrentState.Regions)
             {
@@ -218,7 +218,7 @@ namespace Akka.Cluster.Sharding
                     var coordinatorLog = coordinator.Log;
                     if (coordinatorLog.IsDebugEnabled) coordinatorLog.GracefulShutdownOfRegion(request, shards);
                     coordinator.GracefullShutdownInProgress = coordinator.GracefullShutdownInProgress.Add(request.ShardRegion);
-                    ContinueRebalance(coordinator, shards.ToImmutableHashSet());
+                    ContinueRebalance(coordinator, shards.ToImmutableHashSet(StringComparer.Ordinal));
                 }
             }
         }
@@ -278,7 +278,7 @@ namespace Akka.Cluster.Sharding
         {
             if (coordinator.CurrentState.Regions.Count != 0)
             {
-                var shardsTask = coordinator.AllocationStrategy.Rebalance(coordinator.CurrentState.Regions, coordinator.RebalanceInProgress.Keys.ToImmutableHashSet());
+                var shardsTask = coordinator.AllocationStrategy.Rebalance(coordinator.CurrentState.Regions, coordinator.RebalanceInProgress.Keys.ToImmutableHashSet(StringComparer.Ordinal));
                 if (shardsTask.IsCompleted && !shardsTask.IsFaulted)
                     ContinueRebalance(coordinator, shardsTask.Result);
                 else

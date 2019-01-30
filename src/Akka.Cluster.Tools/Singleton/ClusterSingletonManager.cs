@@ -642,7 +642,7 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void CleanupOverdueNotMemberAnyMore()
         {
-            _removed = _removed.Where(kv => kv.Value.IsOverdue).ToImmutableDictionary();
+            _removed = _removed.Where(kv => kv.Value.IsOverdue).ToImmutableDictionary(UniqueAddressComparer.Instance);
         }
 
         private ActorSelection Peer(Address at)

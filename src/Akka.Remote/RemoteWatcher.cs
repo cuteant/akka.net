@@ -344,9 +344,9 @@ namespace Akka.Remote
 
         /// <summary>Nodes that this node is watching, i.e. expecting heartbeats from these nodes. Map of
         /// address --&gt; Set(watchee) on this address.</summary>
-        protected readonly Dictionary<Address, HashSet<IInternalActorRef>> WatcheeByNodes = new Dictionary<Address, HashSet<IInternalActorRef>>();
+        protected readonly Dictionary<Address, HashSet<IInternalActorRef>> WatcheeByNodes = new Dictionary<Address, HashSet<IInternalActorRef>>(AddressComparer.Instance);
 
-        private readonly Dictionary<Address, int> _addressUids = new Dictionary<Address, int>();
+        private readonly Dictionary<Address, int> _addressUids = new Dictionary<Address, int>(AddressComparer.Instance);
 
         private readonly ICancelable _heartbeatCancelable;
         private readonly ICancelable _failureDetectorReaperCancelable;
@@ -359,7 +359,7 @@ namespace Akka.Remote
         protected ICollection<Address> WatchingNodes => WatcheeByNodes.Keys;
 
         /// <summary>TBD</summary>
-        protected HashSet<Address> Unreachable { get; } = new HashSet<Address>();
+        protected HashSet<Address> Unreachable { get; } = new HashSet<Address>(AddressComparer.Instance);
 
         #endregion
 
@@ -425,7 +425,7 @@ namespace Akka.Remote
                         return list;
                     }).ToArray());
                     Sender.Tell(new Stats(watchSet.Count(), WatchingNodes.Count, watchSet,
-                        ImmutableHashSet.Create(WatchingNodes.ToArray())));
+                        ImmutableHashSet.Create(AddressComparer.Instance, WatchingNodes.ToArray())));
                     break;
 
                 default:

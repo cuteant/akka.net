@@ -964,7 +964,7 @@ namespace Akka.Cluster
         private bool _exitingTasksInProgress = false;
         private readonly TaskCompletionSource<Done> _selfExiting = new TaskCompletionSource<Done>();
         private readonly CoordinatedShutdown _coordShutdown = CoordinatedShutdown.Get(Context.System);
-        private HashSet<UniqueAddress> _exitingConfirmed = new HashSet<UniqueAddress>();
+        private HashSet<UniqueAddress> _exitingConfirmed = new HashSet<UniqueAddress>(UniqueAddressComparer.Instance);
 
 
         /// <summary>
@@ -1149,7 +1149,7 @@ namespace Akka.Cluster
             // in case the actual removal was performed by another leader node
             if (_exitingConfirmed.Count > 0)
             {
-                _exitingConfirmed = new HashSet<UniqueAddress>(_exitingConfirmed.Where(n => _latestGossip.Members.Any(m => m.UniqueAddress.Equals(n))));
+                _exitingConfirmed = new HashSet<UniqueAddress>(_exitingConfirmed.Where(n => _latestGossip.Members.Any(m => m.UniqueAddress.Equals(n))), UniqueAddressComparer.Instance);
             }
         }
 
@@ -2201,11 +2201,11 @@ namespace Akka.Cluster
             var removedUnreachable =
                 localOverview.Reachability.AllUnreachableOrTerminated.Select(localGossip.GetMember)
                     .Where(m => Gossip.RemoveUnreachableWithMemberStatus.Contains(m.Status))
-                    .ToImmutableHashSet();
+                    .ToImmutableHashSet(MemberComparer.Instance);
 
             var removedExitingConfirmed =
                 _exitingConfirmed.Where(x => localGossip.GetMember(x).Status == MemberStatus.Exiting)
-                .ToImmutableHashSet();
+                .ToImmutableHashSet(UniqueAddressComparer.Instance);
 
             var upNumber = 0;
             var changedMembers = localMembers.Select(m =>
@@ -2250,7 +2250,7 @@ namespace Akka.Cluster
 
                 // removing REMOVED nodes from the `seen` table
                 var removed = removedUnreachable.Select(u => u.UniqueAddress)
-                    .ToImmutableHashSet()
+                    .ToImmutableHashSet(UniqueAddressComparer.Instance)
                     .Union(removedExitingConfirmed);
                 var newSeen = localSeen.Except(removed);
                 // removing REMOVED nodes from the `reachability` table
@@ -2281,7 +2281,7 @@ namespace Akka.Cluster
                 }
 
                 UpdateLatestGossip(newGossip);
-                _exitingConfirmed = new HashSet<UniqueAddress>(_exitingConfirmed.Except(removedExitingConfirmed));
+                _exitingConfirmed = new HashSet<UniqueAddress>(_exitingConfirmed.Except(removedExitingConfirmed), UniqueAddressComparer.Instance);
 
                 if (infoEnabled)
                 {
@@ -2329,7 +2329,7 @@ namespace Akka.Cluster
 
                 var newlyDetectedReachableMembers = localOverview.Reachability.AllUnreachableFrom(SelfUniqueAddress)
                         .Where(node => !node.Equals(SelfUniqueAddress) && _cluster.FailureDetector.IsAvailable(node.Address))
-                        .Select(localGossip.GetMember).ToImmutableHashSet();
+                        .Select(localGossip.GetMember).ToImmutableHashSet(MemberComparer.Instance);
 
                 if (!newlyDetectedUnreachableMembers.IsEmpty || !newlyDetectedReachableMembers.IsEmpty)
                 {

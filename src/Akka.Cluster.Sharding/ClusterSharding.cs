@@ -1076,7 +1076,7 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// get all currently defined sharding type names.
         /// </summary>
-        public ImmutableHashSet<EntityId> ShardTypeNames => _regions.Keys.ToImmutableHashSet();
+        public ImmutableHashSet<EntityId> ShardTypeNames => _regions.Keys.ToImmutableHashSet(StringComparer.Ordinal);
 
         /// <summary>
         /// Retrieve the actor reference of the <see cref="Sharding.ShardRegion"/> actor responsible for the named entity type.
@@ -1277,7 +1277,7 @@ namespace Akka.Cluster.Sharding
             _shard = shard;
             _from = @from;
 
-            _remaining = new HashSet<IActorRef>(regions);
+            _remaining = new HashSet<IActorRef>(regions, ActorRefComparer.Instance);
             foreach (var region in _remaining)
                 region.Tell(new PersistentShardCoordinator.BeginHandOff(shard));
 

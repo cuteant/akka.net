@@ -56,6 +56,7 @@ namespace Akka.DistributedData
 
                 case MultiVersionVector multi:
                     var acc = ImmutableDictionary<UniqueAddress, long>.Empty.ToBuilder();
+                    acc.KeyComparer = UniqueAddressComparer.Instance;
                     foreach (var pair in multi.Versions)
                     {
                         var v2 = vvector.VersionAt(pair.Key);
@@ -142,7 +143,7 @@ namespace Akka.DistributedData
                                 {
                                     var commonDots = rhsDots.Versions
                                         .Where(kv => lhsDots.Version == kv.Value && lhsDots.Node == kv.Key)
-                                        .ToImmutableDictionary();
+                                        .ToImmutableDictionary(UniqueAddressComparer.Instance);
                                     var commonDotKeys = commonDots.Keys.ToImmutableArray();
                                     var lhsUnique = commonDotKeys.Length != 0 ? VersionVector.Empty : lhsDots;
                                     var rhsUniqueDots = rhsDots.Versions.RemoveRange(commonDotKeys);
@@ -165,7 +166,7 @@ namespace Akka.DistributedData
                                 {
                                     var commonDots = lhsDots.Versions
                                         .Where(kv => kv.Value == rhsDots.Version && kv.Key == rhsDots.Node)
-                                        .ToImmutableDictionary();
+                                        .ToImmutableDictionary(UniqueAddressComparer.Instance);
                                     var commonDotKeys = commonDots.Keys.ToImmutableArray();
                                     var lhsUniqueDots = lhsDots.Versions.RemoveRange(commonDotKeys);
                                     var rhsUnique = commonDotKeys.IsEmpty ? rhsDots : VersionVector.Empty;
@@ -177,7 +178,7 @@ namespace Akka.DistributedData
                             case MultiVersionVector rhsDots:
                                 {
                                     var commonDots = rhsDots.Versions
-                                        .Where(kv => rhsDots.Versions.TryGetValue(kv.Key, out var v) && v == kv.Value).ToImmutableDictionary();
+                                        .Where(kv => rhsDots.Versions.TryGetValue(kv.Key, out var v) && v == kv.Value).ToImmutableDictionary(UniqueAddressComparer.Instance);
                                     var commonDotKeys = commonDots.Keys.ToImmutableArray();
                                     var lhsUniqueDots = lhsDots.Versions.RemoveRange(commonDotKeys);
                                     var rhsUniqueDots = lhsDots.Versions.RemoveRange(commonDotKeys);

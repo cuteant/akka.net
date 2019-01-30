@@ -800,7 +800,7 @@ namespace Akka.Streams.Actors
             }
         }
 
-        private readonly ConcurrentDictionary<IActorRef, State> _state = new ConcurrentDictionary<IActorRef, State>();
+        private readonly ConcurrentDictionary<IActorRef, State> _state = new ConcurrentDictionary<IActorRef, State>(ActorRefComparer.Instance);
 
         /// <summary>
         /// TBD

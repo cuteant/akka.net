@@ -16,12 +16,12 @@ namespace Akka.Remote
     /// <summary>Not threadsafe - only to be used in HeadActor</summary>
     internal sealed class EndpointRegistry
     {
-        private readonly Dictionary<Address, Tuple<IActorRef, int>> _addressToReadonly = new Dictionary<Address, Tuple<IActorRef, int>>();
+        private readonly Dictionary<Address, Tuple<IActorRef, int>> _addressToReadonly = new Dictionary<Address, Tuple<IActorRef, int>>(AddressComparer.Instance);
 
-        private Dictionary<Address, EndpointManager.EndpointPolicy> _addressToWritable = new Dictionary<Address, EndpointManager.EndpointPolicy>();
+        private Dictionary<Address, EndpointManager.EndpointPolicy> _addressToWritable = new Dictionary<Address, EndpointManager.EndpointPolicy>(AddressComparer.Instance);
 
-        private readonly Dictionary<IActorRef, Address> _readonlyToAddress = new Dictionary<IActorRef, Address>();
-        private readonly Dictionary<IActorRef, Address> _writableToAddress = new Dictionary<IActorRef, Address>();
+        private readonly Dictionary<IActorRef, Address> _readonlyToAddress = new Dictionary<IActorRef, Address>(ActorRefComparer.Instance);
+        private readonly Dictionary<IActorRef, Address> _writableToAddress = new Dictionary<IActorRef, Address>(ActorRefComparer.Instance);
 
         #region -- RegisterWritableEndpoint --
 
@@ -360,7 +360,7 @@ namespace Akka.Remote
                     return new KeyValuePair<Address, EndpointManager.EndpointPolicy>(key, new EndpointManager.WasGated(gated.RefuseUid));
                 }
                 return entry;
-            }).ToDictionary(key => key.Key, value => value.Value);
+            }).ToDictionary(key => key.Key, value => value.Value, AddressComparer.Instance);
         }
 
         #endregion

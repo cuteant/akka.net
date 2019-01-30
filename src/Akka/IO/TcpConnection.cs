@@ -506,7 +506,7 @@ namespace Akka.IO
                 CloseSocket();
             }
 
-            var notifications = new HashSet<IActorRef>();
+            var notifications = new HashSet<IActorRef>(ActorRefComparer.Instance);
             if (info.Handler != null) notifications.Add(info.Handler);
             if (closeCommander != null) notifications.Add(closeCommander);
             StopWith(new CloseInformation(notifications, closedEvent));
@@ -515,7 +515,7 @@ namespace Akka.IO
         private void HandleError(IActorRef handler, SocketException exception)
         {
             if (Log.IsDebugEnabled) Log.Debug("Closing connection due to IO error {0}", exception);
-            StopWith(new CloseInformation(new HashSet<IActorRef>(new[] { handler }), new ErrorClosed(exception.Message)));
+            StopWith(new CloseInformation(new HashSet<IActorRef>(new[] { handler }, ActorRefComparer.Instance), new ErrorClosed(exception.Message)));
         }
 
         private bool SafeShutdownOutput()

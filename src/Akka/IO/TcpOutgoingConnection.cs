@@ -59,7 +59,7 @@ namespace Akka.IO
         {
             ReleaseConnectionSocketArgs();
 
-            StopWith(new CloseInformation(new HashSet<IActorRef>(new[] { _commander }), _connect.FailureMessage));
+            StopWith(new CloseInformation(new HashSet<IActorRef>(new[] { _commander }, ActorRefComparer.Instance), _connect.FailureMessage));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

@@ -504,7 +504,7 @@ namespace Akka.Remote.Transport
                 new ConcurrentDictionary<Tuple<Address, Address>, Tuple<IHandleEventListener, IHandleEventListener>>();
 
         private readonly ConcurrentDictionary<Address, Tuple<TestTransport, Task<IAssociationEventListener>>>
-            _transportTable = new ConcurrentDictionary<Address, Tuple<TestTransport, Task<IAssociationEventListener>>>();
+            _transportTable = new ConcurrentDictionary<Address, Tuple<TestTransport, Task<IAssociationEventListener>>>(AddressComparer.Instance);
 
         /// <summary>
         /// Retrieves the specified <see cref="AssociationRegistry"/> associated with the <paramref name="key"/>.

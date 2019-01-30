@@ -203,7 +203,7 @@ namespace Akka.Remote
         {
             if (cfg.IsEmpty) return new Dictionary<string, string>(StringComparer.Ordinal);
             var unwrapped = cfg.Root.GetObject().Unwrapped;
-            return unwrapped.ToDictionary(k => k.Key, v => v.Value != null ? v.Value.ToString() : null);
+            return unwrapped.ToDictionary(k => k.Key, v => v.Value?.ToString(), StringComparer.Ordinal);
         }
     }
 }

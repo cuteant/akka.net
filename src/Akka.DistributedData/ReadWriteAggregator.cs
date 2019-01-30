@@ -64,8 +64,8 @@ namespace Akka.DistributedData
                 else
                 {
                     var n = Nodes.OrderBy(x => ThreadLocalRandom.Current.Next()).ToArray();
-                    var p = n.Take(primarySize).ToImmutableHashSet();
-                    var s = n.Skip(primarySize).Take(MaxSecondaryNodes).ToImmutableHashSet();
+                    var p = n.Take(primarySize).ToImmutableHashSet(AddressComparer.Instance);
+                    var s = n.Skip(primarySize).Take(MaxSecondaryNodes).ToImmutableHashSet(AddressComparer.Instance);
                     return Tuple.Create((IImmutableSet<Address>)p, (IImmutableSet<Address>)s);
                 }
             });

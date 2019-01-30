@@ -56,7 +56,7 @@ namespace Akka.Cluster
 
             AutoDownUnreachableAfter = cc.GetTimeSpanWithOffSwitch("auto-down-unreachable-after");
 
-            Roles = cc.GetStringList("roles").ToImmutableHashSet();
+            Roles = cc.GetStringList("roles").ToImmutableHashSet(StringComparer.Ordinal);
             MinNrOfMembers = cc.GetInt("min-nr-of-members");
 
             _useDispatcher = cc.GetString("use-dispatcher");
@@ -67,7 +67,7 @@ namespace Akka.Cluster
             SchedulerTicksPerWheel = cc.GetInt("scheduler.ticks-per-wheel");
 
             MinNrOfMembersOfRole = cc.GetConfig("role").Root.GetObject().Items
-                .ToImmutableDictionary(kv => kv.Key, kv => kv.Value.GetObject().GetKey("min-nr-of-members").GetInt());
+                .ToImmutableDictionary(kv => kv.Key, kv => kv.Value.GetObject().GetKey("min-nr-of-members").GetInt(), StringComparer.Ordinal);
 
             VerboseHeartbeatLogging = cc.GetBoolean("debug.verbose-heartbeat-logging");
             VerboseGossipReceivedLogging = cc.GetBoolean("debug.verbose-receive-gossip-logging");

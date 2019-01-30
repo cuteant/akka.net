@@ -454,7 +454,7 @@ namespace Akka.DistributedData.Internal
                             var performed = entry.Value as PruningPerformed;
                             return !performed?.IsObsolete(currentTime) ?? true;
                         })
-                        .ToImmutableDictionary();
+                        .ToImmutableDictionary(UniqueAddressComparer.Instance);
 
                 // cleanup and merge DeltaVersions
                 var removedNodes = filteredMergedPruning.Keys.ToArray();
@@ -519,7 +519,7 @@ namespace Akka.DistributedData.Internal
                 var newPruningState = kvp.Value.AddSeen(node);
                 changed = !ReferenceEquals(newPruningState, kvp.Value) || changed;
                 return new KeyValuePair<UniqueAddress, IPruningState>(kvp.Key, newPruningState);
-            }).ToImmutableDictionary();
+            }).ToImmutableDictionary(UniqueAddressComparer.Instance);
 
             return changed ? new DataEnvelope(Data, newRemovedNodePruning) : this;
         }

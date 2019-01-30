@@ -478,7 +478,7 @@ namespace Akka.Cluster.Sharding
             switch (query)
             {
                 case Shard.GetCurrentShardState _:
-                    shard.Context.Sender.Tell(new Shard.CurrentShardState(shard.ShardId, shard.RefById.Keys.ToImmutableHashSet()));
+                    shard.Context.Sender.Tell(new Shard.CurrentShardState(shard.ShardId, shard.RefById.Keys.ToImmutableHashSet(StringComparer.Ordinal)));
                     break;
                 case Shard.GetShardStats _:
                     shard.Context.Sender.Tell(new Shard.ShardStats(shard.ShardId, shard.State.Entries.Count));

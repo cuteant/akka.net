@@ -261,7 +261,7 @@ namespace Akka.Remote.Transport
         private readonly Transport WrappedTransport;
 
         private Dictionary<Address, Tuple<ThrottleMode, ThrottleTransportAdapter.Direction>> _throttlingModes
-            = new Dictionary<Address, Tuple<ThrottleMode, ThrottleTransportAdapter.Direction>>();
+            = new Dictionary<Address, Tuple<ThrottleMode, ThrottleTransportAdapter.Direction>>(AddressComparer.Instance);
 
         private List<Tuple<Address, ThrottlerHandle>> _handleTable = new List<Tuple<Address, ThrottlerHandle>>();
 

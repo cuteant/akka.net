@@ -301,7 +301,7 @@ namespace Akka.Persistence.Journal
 
             // A Map of handler from alias to implementation (i.e. class implementing Akka.Serialization.ISerializer)
             // For example this defines a handler named 'country': `"country" -> com.example.comain.CountryTagsAdapter`
-            var handlers = adapters.ToDictionary(kv => kv.Key, kv => InstantiateAdapter(kv.Value, system));
+            var handlers = adapters.ToDictionary(kv => kv.Key, kv => InstantiateAdapter(kv.Value, system), StringComparer.Ordinal);
 
             // bindings is a enumerable of key-val representing the mapping from Type to handler.
             // It is primarily ordered by the most specific classes first, and secondly in the configured order.
@@ -431,7 +431,7 @@ namespace Akka.Persistence.Journal
             if (config.HasPath(path))
             {
                 var hoconObject = config.GetConfig(path).Root.GetObject();
-                return hoconObject.Unwrapped.ToDictionary(kv => kv.Key, kv => kv.Value.ToString().Trim('"'));
+                return hoconObject.Unwrapped.ToDictionary(kv => kv.Key, kv => kv.Value.ToString().Trim('"'), StringComparer.Ordinal);
             }
             else return new Dictionary<string, string>(StringComparer.Ordinal) { };
         }
@@ -449,7 +449,7 @@ namespace Akka.Persistence.Journal
                         return str != null ? new[] { str } : hoconValue.GetStringList().ToArray();
                     }
                     else return new[] { kv.Value.ToString().Trim('"') };
-                });
+                }, StringComparer.Ordinal);
             }
             else return new Dictionary<string, string[]>(StringComparer.Ordinal) { };
         }

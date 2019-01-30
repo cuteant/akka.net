@@ -355,7 +355,7 @@ namespace Akka.Remote
         private bool _normalShutdown = false;
 
         /// <summary>Mapping between transports and the local addresses they listen to</summary>
-        private Dictionary<Address, AkkaProtocolTransport> _transportMapping = new Dictionary<Address, AkkaProtocolTransport>();
+        private Dictionary<Address, AkkaProtocolTransport> _transportMapping = new Dictionary<Address, AkkaProtocolTransport>(AddressComparer.Instance);
 
         private readonly ConcurrentDictionary<Link, ResendState> _receiveBuffers = new ConcurrentDictionary<Link, ResendState>();
 
@@ -392,8 +392,8 @@ namespace Akka.Remote
             }
         }
 
-        private Dictionary<IActorRef, AkkaProtocolHandle> _pendingReadHandoffs = new Dictionary<IActorRef, AkkaProtocolHandle>();
-        private Dictionary<IActorRef, List<InboundAssociation>> _stashedInbound = new Dictionary<IActorRef, List<InboundAssociation>>();
+        private Dictionary<IActorRef, AkkaProtocolHandle> _pendingReadHandoffs = new Dictionary<IActorRef, AkkaProtocolHandle>(ActorRefComparer.Instance);
+        private Dictionary<IActorRef, List<InboundAssociation>> _stashedInbound = new Dictionary<IActorRef, List<InboundAssociation>>(ActorRefComparer.Instance);
 
         #endregion
 
@@ -601,7 +601,7 @@ namespace Akka.Remote
                                          }
                                          return new KeyValuePair<Address, AkkaProtocolTransport>(x.address,
                                              x.transports.Head().Item1.ProtocolTransport);
-                                     }).ToDictionary(x => x.Key, v => v.Value);
+                                     }).ToDictionary(x => x.Key, v => v.Value, AddressComparer.Instance);
 
                 //Register a listener to each transport and collect mapping to addresses
                 var transportsAndAddresses = listens.Results.Select(x =>
@@ -759,7 +759,7 @@ namespace Akka.Remote
                          context.Stop(x.Key);
                      }
                      return !drop;
-                 }).ToDictionary(key => key.Key, value => value.Value);
+                 }).ToDictionary(key => key.Key, value => value.Value, ActorRefComparer.Instance);
 
                 // Stop all matching stashed connections
                 _stashedInbound = _stashedInbound.Select(x =>
@@ -772,7 +772,7 @@ namespace Akka.Remote
                          return !drop;
                      }).ToList();
                      return new KeyValuePair<IActorRef, List<InboundAssociation>>(x.Key, associations);
-                 }).ToDictionary(k => k.Key, v => v.Value);
+                 }).ToDictionary(k => k.Key, v => v.Value, ActorRefComparer.Instance);
             }
             Receive<Quarantine>(HandleQuarantine);
 

@@ -118,10 +118,10 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         private readonly TimeSpan _pruneInterval;
         private readonly PerGroupingBuffer _buffer;
 
-        private ISet<Address> _nodes = new HashSet<Address>();
+        private ISet<Address> _nodes = new HashSet<Address>(AddressComparer.Instance);
         private long deltaCount = 0L;
         private ILoggingAdapter _log;
-        private IDictionary<Address, Bucket> _registry = new Dictionary<Address, Bucket>();
+        private IDictionary<Address, Bucket> _registry = new Dictionary<Address, Bucket>(AddressComparer.Instance);
 
         /// <summary>
         /// TBD
@@ -137,7 +137,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             {
                 return _registry
                     .Select(entry => new KeyValuePair<Address, long>(entry.Key, entry.Value.Version))
-                    .ToDictionary(kv => kv.Key, kv => kv.Value);
+                    .ToDictionary(kv => kv.Key, kv => kv.Value, AddressComparer.Instance);
             }
         }
 
@@ -263,7 +263,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             });
             Receive<GetTopics>(getTopics =>
             {
-                Sender.Tell(new CurrentTopics(GetCurrentTopics().ToImmutableHashSet()));
+                Sender.Tell(new CurrentTopics(GetCurrentTopics().ToImmutableHashSet(StringComparer.Ordinal)));
             });
             Receive<Subscribed>(subscribed =>
             {
@@ -344,7 +344,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                     .Where(m => m.Status != MemberStatus.Joining && IsMatchingRole(m))
                     .Select(m => m.Address);
 
-                _nodes = new HashSet<Address>(nodes);
+                _nodes = new HashSet<Address>(nodes, AddressComparer.Instance);
             });
             Receive<ClusterEvent.MemberUp>(up =>
             {
@@ -415,7 +415,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         private IEnumerable<Bucket> CollectDelta(IDictionary<Address, long> versions)
         {
             // missing entries are represented by version 0
-            var filledOtherVersions = OwnVersions.ToDictionary(c => c.Key, c => 0L);
+            var filledOtherVersions = OwnVersions.ToDictionary(c => c.Key, c => 0L, AddressComparer.Instance);
             foreach (var version in versions)
             {
                 filledOtherVersions[version.Key] = version.Value;
@@ -563,7 +563,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
 
         private void HandlePrune()
         {
-            var modifications = new Dictionary<Address, Bucket>();
+            var modifications = new Dictionary<Address, Bucket>(AddressComparer.Instance);
             foreach (var entry in _registry)
             {
                 var owner = entry.Key;

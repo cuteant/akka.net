@@ -543,11 +543,11 @@ namespace Akka.Actor
             return phasesConf.Root.GetObject().Unwrapped.ToDictionary(x => x.Key, v =>
              {
                  var c = phasesConf.GetConfig(v.Key).WithFallback(defaultPhaseConfig);
-                 var dependsOn = c.GetStringList("depends-on").ToImmutableHashSet();
+                 var dependsOn = c.GetStringList("depends-on").ToImmutableHashSet(StringComparer.Ordinal);
                  var timeout = c.GetTimeSpan("timeout", allowInfinite: false);
                  var recover = c.GetBoolean("recover");
                  return new Phase(dependsOn, timeout, recover);
-             });
+             }, StringComparer.Ordinal);
         }
 
         /// <summary>

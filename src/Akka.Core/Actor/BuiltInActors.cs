@@ -84,7 +84,7 @@ namespace Akka.Actor
         public SystemGuardianActor(IActorRef userGuardian)
         {
             _userGuardian = userGuardian;
-            _terminationHooks = new HashSet<IActorRef>();
+            _terminationHooks = new HashSet<IActorRef>(ActorRefComparer.Instance);
         }
 
         /// <summary>

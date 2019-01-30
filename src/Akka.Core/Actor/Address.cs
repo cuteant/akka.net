@@ -354,6 +354,24 @@ namespace Akka.Actor
         }
     }
 
+    /// <summary>AddressComparer</summary>
+    public sealed class AddressComparer : IEqualityComparer<Address>
+    {
+        /// <summary>AddressComparer.Instance</summary>
+        public static readonly AddressComparer Instance = new AddressComparer();
+
+        /// <summary>Determines whether the specified <see cref="Address"/>s are equal.</summary>
+        public bool Equals(Address x, Address y)
+        {
+            if (ReferenceEquals(x, y)) { return true; }
+            if (null == x/* || null == y*/) { return false; }
+            return x.Equals(y);
+        }
+
+        /// <summary>Returns a hash code for the specified <see cref="Address"/>.</summary>
+        public int GetHashCode(Address obj) => obj.GetHashCode();
+    }
+
     /// <summary>
     /// Extractor class for so-called "relative actor paths" - as in "relative URI", not
     /// "relative to some other actors."

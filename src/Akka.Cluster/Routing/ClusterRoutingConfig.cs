@@ -94,7 +94,7 @@ namespace Akka.Cluster.Routing
         {
             return new ClusterRouterGroupSettings(
                 GetMaxTotalNrOfInstances(config),
-                ImmutableHashSet.Create(config.GetStringList("routees.paths").ToArray()),
+                ImmutableHashSet.Create(StringComparer.Ordinal, config.GetStringList("routees.paths").ToArray()),
                 config.GetBoolean("cluster.allow-local-routees"),
                 UseRoleOption(config.GetString("cluster.use-role")));
         }
@@ -873,7 +873,7 @@ namespace Akka.Cluster.Routing
             }
 
             UsedRouteePaths = Settings.AllowLocalRoutees
-                ? ImmutableDictionary<Address, ImmutableHashSet<string>>.Empty.Add(Cluster.SelfAddress, settings.RouteesPaths.ToImmutableHashSet())
+                ? ImmutableDictionary<Address, ImmutableHashSet<string>>.Empty.Add(Cluster.SelfAddress, settings.RouteesPaths.ToImmutableHashSet(StringComparer.Ordinal))
                 : ImmutableDictionary<Address, ImmutableHashSet<string>>.Empty;
         }
 
@@ -1036,7 +1036,7 @@ namespace Akka.Cluster.Routing
 
             //find the node with the least routees
             var numberOfRouteesPerNode = currentNodes.ToDictionary(x => x,
-                routee => currentRoutees.Count(y => routee == FullAddress(y)));
+                routee => currentRoutees.Count(y => routee == FullAddress(y)), AddressComparer.Instance);
 
             var target = numberOfRouteesPerNode.Aggregate(
                         (curMin, x) =>

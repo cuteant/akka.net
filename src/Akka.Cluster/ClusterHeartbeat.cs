@@ -66,7 +66,7 @@ namespace Akka.Cluster
             _state = new ClusterHeartbeatSenderState(
                 ring: new HeartbeatNodeRing(
                     _cluster.SelfUniqueAddress,
-                    ImmutableHashSet.Create(_cluster.SelfUniqueAddress),
+                    ImmutableHashSet.Create(UniqueAddressComparer.Instance, _cluster.SelfUniqueAddress),
                     ImmutableHashSet<UniqueAddress>.Empty,
                     _cluster.Settings.MonitoredByNrOfMembers),
                 oldReceiversNowUnreachable: ImmutableHashSet<UniqueAddress>.Empty,
@@ -135,8 +135,8 @@ namespace Akka.Cluster
 
         private void Init(ClusterEvent.CurrentClusterState snapshot)
         {
-            var nodes = snapshot.Members.Select(x => x.UniqueAddress).ToImmutableHashSet();
-            var unreachable = snapshot.Unreachable.Select(c => c.UniqueAddress).ToImmutableHashSet();
+            var nodes = snapshot.Members.Select(x => x.UniqueAddress).ToImmutableHashSet(UniqueAddressComparer.Instance);
+            var unreachable = snapshot.Unreachable.Select(c => c.UniqueAddress).ToImmutableHashSet(UniqueAddressComparer.Instance);
             _state = _state.Init(nodes, unreachable);
         }
 
@@ -567,7 +567,7 @@ namespace Akka.Cluster
         {
             if (_useAllAsReceivers)
             {
-                return NodeRing().Remove(sender).ToImmutableHashSet();
+                return NodeRing().Remove(sender).ToImmutableHashSet(UniqueAddressComparer.Instance);
             }
             else
             {
@@ -609,7 +609,7 @@ namespace Akka.Cluster
                     ? slice1 
                     : take(remaining, NodeRing().Until(sender).Where(c => !c.Equals(sender)).GetEnumerator(), slice1).Item2;
 
-                return slice.ToImmutableHashSet();
+                return slice.ToImmutableHashSet(UniqueAddressComparer.Instance);
             }
         }
 

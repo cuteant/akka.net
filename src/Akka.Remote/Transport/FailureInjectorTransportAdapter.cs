@@ -166,7 +166,7 @@ namespace Akka.Remote.Transport
 
         private readonly bool _shouldDebugLog;
         private volatile IAssociationEventListener _upstreamListener = null;
-        private readonly ConcurrentDictionary<Address, IGremlinMode> addressChaosTable = new ConcurrentDictionary<Address, IGremlinMode>();
+        private readonly ConcurrentDictionary<Address, IGremlinMode> addressChaosTable = new ConcurrentDictionary<Address, IGremlinMode>(AddressComparer.Instance);
         private volatile IGremlinMode _allMode = PassThru.Instance;
 
         ///// <summary>TBD</summary>

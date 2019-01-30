@@ -90,7 +90,7 @@ namespace Akka.DistributedData
             Value = State.Aggregate(Zero, (v, acc) => v + acc.Value);
         }
 
-        public ImmutableHashSet<UniqueAddress> ModifiedByNodes => State.Keys.ToImmutableHashSet();
+        public ImmutableHashSet<UniqueAddress> ModifiedByNodes => State.Keys.ToImmutableHashSet(UniqueAddressComparer.Instance);
         
         /// <summary>
         /// Increment the counter with the delta specified. The delta must be zero or positive.
@@ -113,7 +113,7 @@ namespace Akka.DistributedData
             var nextValue = State.GetValueOrDefault(node, 0UL) + n;
             var newDelta = Delta == null
                 ? new GCounter(
-                    ImmutableDictionary.CreateRange(new[] { new KeyValuePair<UniqueAddress, ulong>(node, nextValue) }))
+                    ImmutableDictionary.CreateRange(UniqueAddressComparer.Instance, new[] { new KeyValuePair<UniqueAddress, ulong>(node, nextValue) }))
                 : new GCounter(Delta.State.SetItem(node, nextValue));
 
             return AssignAncestor(new GCounter(State.SetItem(node, nextValue), newDelta));

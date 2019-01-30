@@ -384,9 +384,9 @@ namespace Akka.Actor
     /// </summary>
     internal class FullActorState : IActorState
     {
-        private readonly Dictionary<IActorRef, object> _watching = new Dictionary<IActorRef, object>();
-        private readonly HashSet<IActorRef> _watchedBy = new HashSet<IActorRef>();
-        private readonly HashSet<IActorRef> _terminatedQueue = new HashSet<IActorRef>();//terminatedqueue should never be used outside the message loop
+        private readonly Dictionary<IActorRef, object> _watching = new Dictionary<IActorRef, object>(ActorRefComparer.Instance);
+        private readonly HashSet<IActorRef> _watchedBy = new HashSet<IActorRef>(ActorRefComparer.Instance);
+        private readonly HashSet<IActorRef> _terminatedQueue = new HashSet<IActorRef>(ActorRefComparer.Instance);//terminatedqueue should never be used outside the message loop
         private Stack<Receive> _behaviorStack = new Stack<Receive>(2);
         /// <summary>
         /// TBD

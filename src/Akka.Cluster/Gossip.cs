@@ -52,7 +52,7 @@ namespace Akka.Cluster
         /// <summary>
         /// An empty set of members
         /// </summary>
-        public static readonly ImmutableSortedSet<Member> EmptyMembers = ImmutableSortedSet.Create<Member>();
+        public static readonly ImmutableSortedSet<Member> EmptyMembers = ImmutableSortedSet<Member>.Empty;
 
         /// <summary>
         /// An empty <see cref="Gossip"/> object.
@@ -132,12 +132,12 @@ namespace Akka.Cluster
             Version = version;
 
             _membersMap = new Lazy<ImmutableDictionary<UniqueAddress, Member>>(
-                () => members.ToImmutableDictionary(m => m.UniqueAddress, m => m));
+                () => members.ToImmutableDictionary(m => m.UniqueAddress, m => m, UniqueAddressComparer.Instance));
 
             ReachabilityExcludingDownedObservers = new Lazy<Reachability>(() =>
             {
                 var downed = Members.Where(m => m.Status == MemberStatus.Down).ToList();
-                return Overview.Reachability.RemoveObservers(downed.Select(m => m.UniqueAddress).ToImmutableHashSet());
+                return Overview.Reachability.RemoveObservers(downed.Select(m => m.UniqueAddress).ToImmutableHashSet(UniqueAddressComparer.Instance));
             });
 
             if (Cluster.IsAssertInvariantsEnabled) AssertInvariants();
@@ -218,7 +218,7 @@ namespace Akka.Cluster
         /// <returns>TBD</returns>
         public Gossip OnlySeen(UniqueAddress node)
         {
-            return Copy(overview: Overview.Copy(seen: ImmutableHashSet.Create(node)));
+            return Copy(overview: Overview.Copy(seen: ImmutableHashSet.Create(UniqueAddressComparer.Instance, node)));
         }
 
         /// <summary>
@@ -278,7 +278,7 @@ namespace Akka.Cluster
                 that.Overview.Reachability);
 
             // 4. Nobody can have seen this new gossip yet
-            var mergedSeen = ImmutableHashSet.Create<UniqueAddress>();
+            var mergedSeen = ImmutableHashSet<UniqueAddress>.Empty;
 
             return new Gossip(mergedMembers, new GossipOverview(mergedSeen, mergedReachability), mergedVClock);
         }
@@ -376,7 +376,7 @@ namespace Akka.Cluster
         [IgnoreMember]
         public ImmutableHashSet<string> AllRoles
         {
-            get { return Members.SelectMany(m => m.Roles).ToImmutableHashSet(); }
+            get { return Members.SelectMany(m => m.Roles).ToImmutableHashSet(StringComparer.Ordinal); }
         }
 
         /// <summary>
@@ -458,13 +458,13 @@ namespace Akka.Cluster
         /// <summary>
         /// TBD
         /// </summary>
-        public GossipOverview() : this(ImmutableHashSet.Create<UniqueAddress>(), Reachability.Empty) { }
+        public GossipOverview() : this(ImmutableHashSet<UniqueAddress>.Empty, Reachability.Empty) { }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="reachability">TBD</param>
-        public GossipOverview(Reachability reachability) : this(ImmutableHashSet.Create<UniqueAddress>(), reachability) { }
+        public GossipOverview(Reachability reachability) : this(ImmutableHashSet<UniqueAddress>.Empty, reachability) { }
 
         /// <summary>
         /// TBD

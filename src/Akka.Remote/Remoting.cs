@@ -157,7 +157,7 @@ namespace Akka.Remote
                     {
                         ThrowHelper.ThrowConfigurationException();
                     }
-                    _addresses = new HashSet<Address>(akkaProtocolTransports.Select(a => a.Address));
+                    _addresses = new HashSet<Address>(akkaProtocolTransports.Select(a => a.Address), AddressComparer.Instance);
 
                     var tmp = akkaProtocolTransports.GroupBy(t => t.ProtocolTransport.SchemeIdentifier);
                     _transportMapping = new Dictionary<string, HashSet<ProtocolTransportAddressPair>>(StringComparer.Ordinal);
@@ -168,7 +168,7 @@ namespace Akka.Remote
                     }
 
                     _defaultAddress = akkaProtocolTransports.Head().Address;
-                    _addresses = new HashSet<Address>(akkaProtocolTransports.Select(x => x.Address));
+                    _addresses = new HashSet<Address>(akkaProtocolTransports.Select(x => x.Address), AddressComparer.Instance);
 
                     if (_log.IsInfoEnabled)
                     {

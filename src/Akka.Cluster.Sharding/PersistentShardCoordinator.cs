@@ -104,7 +104,7 @@ namespace Akka.Cluster.Sharding
             {
                 get
                 {
-                    return Shards.Keys.Union(UnallocatedShards).ToImmutableHashSet();
+                    return Shards.Keys.Union(UnallocatedShards).ToImmutableHashSet(StringComparer.Ordinal);
                 }
             }
 

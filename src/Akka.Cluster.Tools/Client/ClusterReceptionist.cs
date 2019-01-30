@@ -504,7 +504,7 @@ namespace Akka.Cluster.Tools.Client
 
                 case SubscribeClusterClients _:
                     var subscriber = Sender;
-                    subscriber.Tell(new ClusterClients(_clientInteractions.Keys.ToImmutableHashSet()));
+                    subscriber.Tell(new ClusterClients(_clientInteractions.Keys.ToImmutableHashSet(ActorRefComparer.Instance)));
                     _subscribers = _subscribers.Add(subscriber);
                     Context.Watch(subscriber);
                     return true;
@@ -519,11 +519,11 @@ namespace Akka.Cluster.Tools.Client
                     return true;
 
                 case GetClusterClients _:
-                    Sender.Tell(new ClusterClients(_clientInteractions.Keys.ToImmutableHashSet()));
+                    Sender.Tell(new ClusterClients(_clientInteractions.Keys.ToImmutableHashSet(ActorRefComparer.Instance)));
                     return true;
 
                 case CheckDeadlines _:
-                    _clientInteractions = _clientInteractions.Where(c => c.Value.IsAvailable).ToImmutableDictionary();
+                    _clientInteractions = _clientInteractions.Where(c => c.Value.IsAvailable).ToImmutableDictionary(ActorRefComparer.Instance);
                     PublishClientsUnreachable();
                     return true;
 
@@ -544,13 +544,13 @@ namespace Akka.Cluster.Tools.Client
                 if (_log.IsDebugEnabled) _log.ReceivedNewContactFrom(client);
                 var clusterClientUp = new ClusterClientUp(client);
                 _subscribers.ForEach(s => s.Tell(clusterClientUp));
-                _clientsPublished = _clientInteractions.Keys.ToImmutableHashSet();
+                _clientsPublished = _clientInteractions.Keys.ToImmutableHashSet(ActorRefComparer.Instance);
             }
         }
 
         private void PublishClientsUnreachable()
         {
-            var publishableClients = _clientInteractions.Keys.ToImmutableHashSet();
+            var publishableClients = _clientInteractions.Keys.ToImmutableHashSet(ActorRefComparer.Instance);
             foreach (var c in _clientsPublished)
             {
                 if (!publishableClients.Contains(c))

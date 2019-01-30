@@ -47,7 +47,7 @@ namespace Akka.Cluster
         }
 
         private readonly Cluster _cluster;
-        private ImmutableHashSet<Address> _clusterNodes = ImmutableHashSet.Create<Address>();
+        private ImmutableHashSet<Address> _clusterNodes = ImmutableHashSet.Create<Address>(AddressComparer.Instance);
 
         /// <summary>
         /// TBD
@@ -93,7 +93,7 @@ namespace Akka.Cluster
             {
                 case ClusterEvent.CurrentClusterState state:
                     _clusterNodes =
-                        state.Members.Select(m => m.Address).Where(a => a != _cluster.SelfAddress).ToImmutableHashSet();
+                        state.Members.Select(m => m.Address).Where(a => a != _cluster.SelfAddress).ToImmutableHashSet(AddressComparer.Instance);
                     foreach (var node in _clusterNodes) TakeOverResponsibility(node);
                     Unreachable.ExceptWith(_clusterNodes);
                     return;

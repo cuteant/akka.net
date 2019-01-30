@@ -67,7 +67,7 @@ namespace Akka.Remote.Serialization
             var serializationInfo = new SerializationInfo(exceptionType, DefaultFormatterConverter);
             serializable.GetObjectData(serializationInfo, new StreamingContext());
 
-            var customFields = new Dictionary<string, Payload>();
+            var customFields = new Dictionary<string, Payload>(StringComparer.Ordinal);
 
             foreach (var info in serializationInfo)
             {

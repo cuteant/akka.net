@@ -212,7 +212,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <param name="isReplyToStatus">TBD</param>
         public Status(IDictionary<Address, long> versions, bool isReplyToStatus)
         {
-            Versions = versions ?? new Dictionary<Address, long>(0);
+            Versions = versions ?? new Dictionary<Address, long>(0, AddressComparer.Instance);
             IsReplyToStatus = isReplyToStatus;
         }
 

@@ -135,7 +135,7 @@ namespace Akka.Cluster
             [IgnoreMember]
             public ImmutableHashSet<string> AllRoles
             {
-                get { return RoleLeaderMap.Keys.ToImmutableHashSet(); }
+                get { return RoleLeaderMap.Keys.ToImmutableHashSet(StringComparer.Ordinal); }
             }
 
             /// <summary>
@@ -450,7 +450,7 @@ namespace Akka.Cluster
         /// Published when the state change is first seen on a node.
         /// </summary>
         [MessagePackObject]
-        public sealed class RoleLeaderChanged : IClusterDomainEvent
+        public sealed class RoleLeaderChanged : IClusterDomainEvent, IEquatable<RoleLeaderChanged>
         {
             /// <summary>
             /// TBD
@@ -499,11 +499,37 @@ namespace Akka.Cluster
                 return false;
             }
 
+            public bool Equals(RoleLeaderChanged other)
+            {
+                if (ReferenceEquals(this, other)) { return true; }
+                if (null == other) { return false; }
+                return Role.Equals(other.Role)
+                    && ((Leader == null && other.Leader == null) || (Leader != null && Leader.Equals(other.Leader)));
+            }
+
             /// <inheritdoc/>
             public override string ToString()
             {
                 return $"RoleLeaderChanged(Leader={Leader}, Role={Role})";
             }
+        }
+
+        /// <summary>RoleLeaderChangedComparer</summary>
+        public sealed class RoleLeaderChangedComparer : IEqualityComparer<RoleLeaderChanged>
+        {
+            /// <summary>RoleLeaderChangedComparer.Instance</summary>
+            public static readonly RoleLeaderChangedComparer Instance = new RoleLeaderChangedComparer();
+
+            /// <summary>Determines whether the specified <see cref="RoleLeaderChanged"/>s are equal.</summary>
+            public bool Equals(RoleLeaderChanged x, RoleLeaderChanged y)
+            {
+                if (ReferenceEquals(x, y)) { return true; }
+                if (null == x/* || null == y*/) { return false; }
+                return x.Equals(y);
+            }
+
+            /// <summary>Returns a hash code for the specified <see cref="RoleLeaderChanged"/>.</summary>
+            public int GetHashCode(RoleLeaderChanged obj) => obj.GetHashCode();
         }
 
         /// <summary>
@@ -900,7 +926,7 @@ namespace Akka.Cluster
         /// <returns>TBD</returns>
         internal static ImmutableHashSet<RoleLeaderChanged> DiffRolesLeader(Gossip oldGossip, Gossip newGossip, UniqueAddress selfUniqueAddress)
         {
-            return InternalDiffRolesLeader(oldGossip, newGossip, selfUniqueAddress).ToImmutableHashSet();
+            return InternalDiffRolesLeader(oldGossip, newGossip, selfUniqueAddress).ToImmutableHashSet(RoleLeaderChangedComparer.Instance);
         }
 
         private static IEnumerable<RoleLeaderChanged> InternalDiffRolesLeader(Gossip oldGossip, Gossip newGossip, UniqueAddress selfUniqueAddress)
@@ -918,7 +944,7 @@ namespace Akka.Cluster
         /// <summary>
         /// Used for checking convergence when we don't have any information from the cluster daemon.
         /// </summary>
-        private static readonly HashSet<UniqueAddress> EmptySet = new HashSet<UniqueAddress>();
+        private static readonly HashSet<UniqueAddress> EmptySet = new HashSet<UniqueAddress>(UniqueAddressComparer.Instance);
 
         /// <summary>
         /// TBD
@@ -938,7 +964,7 @@ namespace Akka.Cluster
             var newSeenBy = newGossip.SeenBy;
             if (!newConvergence.Equals(oldGossip.Convergence(selfUniqueAddress, EmptySet)) || !newSeenBy.SequenceEqual(oldGossip.SeenBy))
             {
-                return ImmutableList.Create(new SeenChanged(newConvergence, newSeenBy.Select(s => s.Address).ToImmutableHashSet()));
+                return ImmutableList.Create(new SeenChanged(newConvergence, newSeenBy.Select(s => s.Address).ToImmutableHashSet(AddressComparer.Instance)));
             }
 
             return ImmutableList<SeenChanged>.Empty;
@@ -1010,18 +1036,18 @@ namespace Akka.Cluster
             var unreachable = _latestGossip.Overview.Reachability.AllUnreachableOrTerminated
                 .Where(node => !node.Equals(_selfUniqueAddress))
                 .Select(node => _latestGossip.GetMember(node))
-                .ToImmutableHashSet();
+                .ToImmutableHashSet(MemberComparer.Instance);
 
             var state = new ClusterEvent.CurrentClusterState(
                 members: _latestGossip.Members,
                 unreachable: unreachable,
-                seenBy: _latestGossip.SeenBy.Select(s => s.Address).ToImmutableHashSet(),
+                seenBy: _latestGossip.SeenBy.Select(s => s.Address).ToImmutableHashSet(AddressComparer.Instance),
                 leader: _latestGossip.Leader(_selfUniqueAddress)?.Address,
                 roleLeaderMap: _latestGossip.AllRoles.ToImmutableDictionary(r => r, r =>
                 {
                     var leader = _latestGossip.RoleLeader(r, _selfUniqueAddress);
                     return leader?.Address;
-                }));
+                }, StringComparer.Ordinal));
             receiver.Tell(state);
         }
 

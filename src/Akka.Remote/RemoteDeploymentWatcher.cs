@@ -17,7 +17,7 @@ namespace Akka.Remote
     internal class RemoteDeploymentWatcher : ReceiveActor, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private readonly IDictionary<IActorRef, IInternalActorRef> _supervisors =
-            new Dictionary<IActorRef, IInternalActorRef>();
+            new Dictionary<IActorRef, IInternalActorRef>(ActorRefComparer.Instance);
 
         /// <summary>TBD</summary>
         public RemoteDeploymentWatcher()

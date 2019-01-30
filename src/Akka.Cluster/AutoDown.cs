@@ -143,8 +143,8 @@ namespace Akka.Cluster
             Gossip.ConvergenceSkipUnreachableWithMemberStatus;
 
         private ImmutableDictionary<UniqueAddress, ICancelable> _scheduledUnreachable =
-            ImmutableDictionary.Create<UniqueAddress, ICancelable>();
-        private ImmutableHashSet<UniqueAddress> _pendingUnreachable = ImmutableHashSet.Create<UniqueAddress>();
+            ImmutableDictionary.Create<UniqueAddress, ICancelable>(UniqueAddressComparer.Instance);
+        private ImmutableHashSet<UniqueAddress> _pendingUnreachable = ImmutableHashSet.Create<UniqueAddress>(UniqueAddressComparer.Instance);
 
         /// <summary>
         /// TBD
@@ -212,7 +212,7 @@ namespace Akka.Cluster
                     if (_leader)
                     {
                         foreach (var node in _pendingUnreachable) Down(node.Address);
-                        _pendingUnreachable = ImmutableHashSet.Create<UniqueAddress>();
+                        _pendingUnreachable = ImmutableHashSet.Create<UniqueAddress>(UniqueAddressComparer.Instance);
                     }
                     return;
                 case AutoDown.UnreachableTimeout unreachableTimeout:

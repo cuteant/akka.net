@@ -678,4 +678,22 @@ namespace Akka.Actor
             return InternalCompareTo(left.Parent, right.Parent);
         }
     }
+
+    /// <summary>ActorPathComparer</summary>
+    public sealed class ActorPathComparer : IEqualityComparer<ActorPath>
+    {
+        /// <summary>ActorPathComparer.Instance</summary>
+        public static readonly ActorPathComparer Instance = new ActorPathComparer();
+
+        /// <summary>Determines whether the specified <see cref="ActorPath"/>s are equal.</summary>
+        public bool Equals(ActorPath x, ActorPath y)
+        {
+            if (ReferenceEquals(x, y)) { return true; }
+            if (null == x/* || null == y*/) { return false; }
+            return x.Equals(y);
+        }
+
+        /// <summary>Returns a hash code for the specified <see cref="ActorPath"/>.</summary>
+        public int GetHashCode(ActorPath obj) => obj.GetHashCode();
+    }
 }

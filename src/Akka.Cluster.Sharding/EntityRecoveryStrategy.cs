@@ -55,7 +55,7 @@ namespace Akka.Cluster.Sharding
             var builder = ImmutableHashSet<Task<IImmutableSet<EntityId>>>.Empty.ToBuilder();
             foreach (var bucket in entities.Grouped(numberOfEntities))
             {
-                var scheduled = ScheduleEntities(stamp, bucket.ToImmutableHashSet());
+                var scheduled = ScheduleEntities(stamp, bucket.ToImmutableHashSet(StringComparer.Ordinal));
                 builder.Add(scheduled);
                 stamp += frequency;
             }

@@ -35,7 +35,7 @@ namespace Akka.Event
     /// </summary>
     internal sealed class AddressTerminatedTopic : IExtension
     {
-        private readonly AtomicReference<HashSet<IActorRef>> _subscribers = new AtomicReference<HashSet<IActorRef>>(new HashSet<IActorRef>());
+        private readonly AtomicReference<HashSet<IActorRef>> _subscribers = new AtomicReference<HashSet<IActorRef>>(new HashSet<IActorRef>(ActorRefComparer.Instance));
 
         /// <summary>
         /// Retrieves the extension from the specified actor system.
@@ -56,7 +56,7 @@ namespace Akka.Event
             while (true)
             {
                 var current = _subscribers;
-                if (!_subscribers.CompareAndSet(current, new HashSet<IActorRef>(current.Value) {subscriber}))
+                if (!_subscribers.CompareAndSet(current, new HashSet<IActorRef>(current.Value, ActorRefComparer.Instance) {subscriber}))
                     continue;
                 break;
             }
@@ -71,7 +71,7 @@ namespace Akka.Event
             while (true)
             {
                 var current = _subscribers;
-                var newSet = new HashSet<IActorRef>(_subscribers.Value);
+                var newSet = new HashSet<IActorRef>(_subscribers.Value, ActorRefComparer.Instance);
                 newSet.Remove(subscriber);
                 if (!_subscribers.CompareAndSet(current, newSet))
                     continue;

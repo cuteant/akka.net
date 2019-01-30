@@ -29,7 +29,7 @@ namespace Akka.Persistence.Journal
         public Tagged(object payload, IEnumerable<string> tags)
         {
             Payload = payload;
-            Tags = tags.ToImmutableHashSet();
+            Tags = tags.ToImmutableHashSet(System.StringComparer.Ordinal);
         }
 
         /// <summary>

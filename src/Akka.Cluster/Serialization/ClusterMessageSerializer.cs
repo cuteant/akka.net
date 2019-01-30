@@ -147,7 +147,7 @@ namespace Akka.Cluster.Serialization
         private static InternalClusterAction.Join JoinFrom(byte[] bytes)
         {
             var join = MessagePackSerializer.Deserialize<Protocol.Join>(bytes, s_defaultResolver);
-            return new InternalClusterAction.Join(UniqueAddressFrom(join.Node), join.Roles.ToImmutableHashSet());
+            return new InternalClusterAction.Join(UniqueAddressFrom(join.Node), join.Roles.ToImmutableHashSet(StringComparer.Ordinal));
         }
 
         private static byte[] WelcomeMessageBuilder(InternalClusterAction.Welcome welcome)
@@ -257,7 +257,7 @@ namespace Akka.Cluster.Serialization
             var allMembers = gossip.Members.ToArray();
             var allAddresses = gossip.Members.Select(x => x.UniqueAddress).ToArray();
             var addressMapping = allAddresses.ZipWithIndex();
-            var allRoles = allMembers.Aggregate(ImmutableHashSet.Create<string>(), (set, member) => set.Union(member.Roles)).ToArray();
+            var allRoles = allMembers.Aggregate(ImmutableHashSet.Create<string>(StringComparer.Ordinal), (set, member) => set.Union(member.Roles)).ToArray();
             var roleMapping = allRoles.ZipWithIndex();
             var allHashes = gossip.Version.Versions.Keys.Select(x => x.ToString()).ToArray();
             var hashMapping = allHashes.ZipWithIndex();
@@ -301,11 +301,16 @@ namespace Akka.Cluster.Serialization
                     addressMapping[member.AddressIndex],
                     member.UpNumber,
                     (MemberStatus)member.Status,
-                    member.RolesIndexes.Select(x => roleMapping[x]).ToImmutableHashSet());
+                    member.RolesIndexes.Length > 0 ?
+                        member.RolesIndexes.Select(x => roleMapping[x]).ToImmutableHashSet(StringComparer.Ordinal) :
+                        ImmutableHashSet<string>.Empty);
 
             var members = gossip.Members.Select(MemberFromProto).ToImmutableSortedSet(Member.Ordering);
             var reachability = ReachabilityFromProto(gossip.Overview.ObserverReachability, addressMapping);
-            var seen = gossip.Overview.Seen.Select(x => addressMapping[x]).ToImmutableHashSet();
+            var protoSeen = gossip.Overview.Seen;
+            var seen = protoSeen == null || protoSeen.Length == 0 ?
+                ImmutableHashSet<UniqueAddress>.Empty :
+                protoSeen.Select(x => addressMapping[x]).ToImmutableHashSet(UniqueAddressComparer.Instance);
             var overview = new GossipOverview(seen, reachability);
 
             return new Gossip(members, overview, VectorClockFrom(gossip.Version, hashMapping));
@@ -337,10 +342,14 @@ namespace Akka.Cluster.Serialization
             return builderList;
         }
 
-        private static Reachability ReachabilityFromProto(IEnumerable<Protocol.ObserverReachability> reachabilityProto, List<UniqueAddress> addressMapping)
+        private static Reachability ReachabilityFromProto(IList<Protocol.ObserverReachability> reachabilityProto, List<UniqueAddress> addressMapping)
         {
+            if (reachabilityProto == null || reachabilityProto.Count == 0)
+            {
+                return new Reachability(ImmutableList<Reachability.Record>.Empty, ImmutableDictionary<UniqueAddress, long>.Empty);
+            }
             var recordBuilder = ImmutableList.CreateBuilder<Reachability.Record>();
-            var versionsBuilder = ImmutableDictionary.CreateBuilder<UniqueAddress, long>();
+            var versionsBuilder = ImmutableDictionary.CreateBuilder<UniqueAddress, long>(UniqueAddressComparer.Instance);
             foreach (var o in reachabilityProto)
             {
                 var observer = addressMapping[o.AddressIndex];

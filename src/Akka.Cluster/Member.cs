@@ -19,11 +19,11 @@ namespace Akka.Cluster
     /// Represents the address, current status, and roles of a cluster member node.
     /// </summary>
     /// <remarks>
-    /// NOTE: <see cref="GetHashCode"/> and <see cref="Equals"/> are solely based on the underlying <see cref="Address"/>,
+    /// NOTE: <see cref="GetHashCode"/> and <see cref="Equals(object)"/> are solely based on the underlying <see cref="Address"/>,
     /// not its <see cref="MemberStatus"/> and roles.
     /// </remarks>
     [MessagePackObject]
-    public class Member : IComparable<Member>, IComparable
+    public class Member : IComparable<Member>, IComparable, IEquatable<Member>
     {
         /// <summary>
         /// TBD
@@ -43,7 +43,7 @@ namespace Akka.Cluster
         /// <returns>TBD</returns>
         internal static Member Removed(UniqueAddress node)
         {
-            return new Member(node, int.MaxValue, MemberStatus.Removed, ImmutableHashSet.Create<string>());
+            return new Member(node, int.MaxValue, MemberStatus.Removed, ImmutableHashSet<string>.Empty);
         }
 
         /// <summary>
@@ -116,6 +116,14 @@ namespace Akka.Cluster
         {
             if (obj is Member m) { return UniqueAddress.Equals(m.UniqueAddress); }
             return false;
+        }
+
+        public bool Equals(Member other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return UniqueAddress.Equals(other.UniqueAddress);
         }
 
         /// <inheritdoc cref="IComparable.CompareTo"/>
@@ -292,7 +300,7 @@ namespace Akka.Cluster
             // group all members by Address => Seq[Member]
             var groupedByAddress = (a.Concat(b)).GroupBy(x => x.UniqueAddress);
 
-            var acc = new HashSet<Member>();
+            var acc = new HashSet<Member>(Akka.Cluster.MemberComparer.Instance);
 
             foreach (var g in groupedByAddress)
             {
@@ -343,7 +351,7 @@ namespace Akka.Cluster
             // group all members by Address => Seq[Member]
             var groupedByAddress = (a.Concat(b)).GroupBy(x => x.UniqueAddress);
 
-            var acc = new HashSet<Member>();
+            var acc = new HashSet<Member>(Akka.Cluster.MemberComparer.Instance);
 
             foreach (var g in groupedByAddress)
             {
@@ -354,7 +362,7 @@ namespace Akka.Cluster
                     if (!Gossip.RemoveUnreachableWithMemberStatus.Contains(m.Status)) acc.Add(m);
                 }
             }
-            return acc.ToImmutableHashSet();
+            return acc.ToImmutableHashSet(Akka.Cluster.MemberComparer.Instance);
         }
 
         /// <summary>
@@ -403,7 +411,6 @@ namespace Akka.Cluster
             }.ToImmutableDictionary();
     }
 
-
     /// <summary>
     /// Defines the current status of a cluster member node
     ///
@@ -440,6 +447,24 @@ namespace Akka.Cluster
         /// because cluster convergence cannot be reached i.e. because of unreachable nodes.
         /// </summary>
         WeaklyUp = 6,
+    }
+
+    /// <summary>MemberComparer</summary>
+    public sealed class MemberComparer : IEqualityComparer<Member>
+    {
+        /// <summary>MemberComparer.Instance</summary>
+        public static readonly MemberComparer Instance = new MemberComparer();
+
+        /// <summary>Determines whether the specified <see cref="Member"/>s are equal.</summary>
+        public bool Equals(Member x, Member y)
+        {
+            if (ReferenceEquals(x, y)) { return true; }
+            if (null == x/* || null == y*/) { return false; }
+            return x.Equals(y);
+        }
+
+        /// <summary>Returns a hash code for the specified <see cref="Member"/>.</summary>
+        public int GetHashCode(Member obj) => obj.GetHashCode();
     }
 
     /// <summary>
@@ -545,6 +570,24 @@ namespace Akka.Cluster
         }
 
         #endregion
+    }
+
+    /// <summary>UniqueAddressComparer</summary>
+    public sealed class UniqueAddressComparer : IEqualityComparer<UniqueAddress>
+    {
+        /// <summary>UniqueAddressComparer.Instance</summary>
+        public static readonly UniqueAddressComparer Instance = new UniqueAddressComparer();
+
+        /// <summary>Determines whether the specified <see cref="UniqueAddress"/>s are equal.</summary>
+        public bool Equals(UniqueAddress x, UniqueAddress y)
+        {
+            if (ReferenceEquals(x, y)) { return true; }
+            if (null == x/* || null == y*/) { return false; }
+            return x.Equals(y);
+        }
+
+        /// <summary>Returns a hash code for the specified <see cref="UniqueAddress"/>.</summary>
+        public int GetHashCode(UniqueAddress obj) => obj.GetHashCode();
     }
 }
 

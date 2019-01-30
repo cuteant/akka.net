@@ -111,7 +111,7 @@ namespace Akka.Cluster.Sharding
                 var difference = mostShards.Length - leastShardsRegion.Value.Count;
                 if (difference >= _rebalanceThreshold)
                 {
-                    return Task.FromResult<IImmutableSet<ShardId>>(mostShards.Take(Math.Min(difference, _maxSimultaneousRebalance - rebalanceInProgress.Count)).ToImmutableHashSet());
+                    return Task.FromResult<IImmutableSet<ShardId>>(mostShards.Take(Math.Min(difference, _maxSimultaneousRebalance - rebalanceInProgress.Count)).ToImmutableHashSet(StringComparer.Ordinal));
                 }
             }
 

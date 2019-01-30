@@ -211,7 +211,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         private static Internal.Status StatusFrom(byte[] bytes)
         {
             var statusProto = MessagePackSerializer.Deserialize<Protocol.Status>(bytes, s_defaultResolver);
-            var versions = new Dictionary<Address, long>();
+            var versions = new Dictionary<Address, long>(AddressComparer.Instance);
 
             foreach (var protoVersion in statusProto.Versions)
             {
@@ -257,7 +257,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                     content.Add(protoBucketContent.Key, valueHolder);
                 }
 
-                var bucket = new Bucket(AddressFrom(protoBuckets.Owner), protoBuckets.Version, content.ToImmutableDictionary());
+                var bucket = new Bucket(AddressFrom(protoBuckets.Owner), protoBuckets.Version, content.ToImmutableDictionary(StringComparer.Ordinal));
                 buckets.Add(bucket);
             }
 

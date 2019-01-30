@@ -205,7 +205,7 @@ namespace Akka.Cluster.Tools.Client
             _settings = settings;
             _failureDetector = new DeadlineFailureDetector(_settings.AcceptableHeartbeatPause, _settings.HeartbeatInterval);
 
-            _contactPaths = settings.InitialContacts.ToImmutableHashSet();
+            _contactPaths = settings.InitialContacts.ToImmutableHashSet(ActorPathComparer.Instance);
             _initialContactsSelections = _contactPaths.Select(Context.ActorSelection).ToArray();
             _contacts = _initialContactsSelections;
 
@@ -286,7 +286,7 @@ namespace Akka.Cluster.Tools.Client
                 case ClusterReceptionist.Contacts contacts:
                     if (contacts.ContactPoints.Count > 0)
                     {
-                        _contactPaths = contacts.ContactPoints.Select(ActorPath.Parse).ToImmutableHashSet();
+                        _contactPaths = contacts.ContactPoints.Select(ActorPath.Parse).ToImmutableHashSet(ActorPathComparer.Instance);
                         _contacts = _contactPaths.Select(Context.ActorSelection).ToArray();
                         _contacts.ForEach(c => c.Tell(new Identify(null)));
                     }
@@ -373,7 +373,7 @@ namespace Akka.Cluster.Tools.Client
                         // refresh of contacts
                         if (contacts.ContactPoints.Count > 0)
                         {
-                            _contactPaths = contacts.ContactPoints.Select(ActorPath.Parse).ToImmutableHashSet();
+                            _contactPaths = contacts.ContactPoints.Select(ActorPath.Parse).ToImmutableHashSet(ActorPathComparer.Instance);
                             _contacts = _contactPaths.Select(Context.ActorSelection).ToArray();
                         }
                         PublishContactPoints();
