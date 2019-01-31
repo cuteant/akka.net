@@ -14,6 +14,12 @@ namespace Akka.Serialization
         static readonly ILogger s_logger = TraceLogger.GetLogger<SerializationInitializer>();
         static readonly ConcurrentHashSet<Type> s_resolverFactoryTypes = new ConcurrentHashSet<Type>();
 
+        public SerializationInitializer()
+        {
+            // First Registration
+            var defaultResolver = MsgPackSerializerHelper.DefaultResolver;
+        }
+
         public virtual void InitActorSystem(ExtendedActorSystem system)
         {
             var resolversConfig = system.Settings.Config.GetConfig("akka.actor.serialization-resolver-factories").AsEnumerable().ToList();

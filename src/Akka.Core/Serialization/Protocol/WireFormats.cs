@@ -51,6 +51,6 @@ namespace Akka.Serialization.Protocol
         public bool IsEmtpy => null == Message || Message.Length == 0;
 
         [IgnoreMember, IgnoreDataMember]
-        public bool NoeEmtpy => Message != null || Message.Length > 0;
+        public bool NoeEmtpy => Message != null && Message.Length > 0;
     }
 }
