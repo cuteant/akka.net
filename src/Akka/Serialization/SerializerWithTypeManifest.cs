@@ -32,13 +32,13 @@ namespace Akka.Serialization
         public sealed override Payload ToPayloadWithAddress(Address address, object obj)
         {
             var typeKey = TypeSerializer.GetTypeKeyFromType(obj.GetType());
-            return new Payload(ToBinaryWithAddress(address, obj), Identifier, typeKey.TypeName, typeKey.HashCode);
+            return new Payload(Serialization.SerializeWithTransport(system, address, this, obj), Identifier, typeKey.TypeName, typeKey.HashCode);
         }
 
         /// <inheritdoc />
         public sealed override object FromPayload(in Payload payload)
         {
-            var typeKey = new TypeKey(payload.TypeHashCode, payload.MessageManifest);
+            var typeKey = new TypeKey(payload.ExtensibleData, payload.MessageManifest);
             Type type = null;
             try
             {

@@ -207,7 +207,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static byte[] ThrowArgumentException_Serializer_SystemMsg_NoMessage()
+        internal static T ThrowArgumentException_Serializer_SystemMsg_NoMessage<T>()
         {
             throw GetException();
             ArgumentException GetException()
@@ -217,17 +217,17 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_SystemMsg(Type type)
+        internal static object ThrowArgumentException_Serializer_SystemMsg(int manifest)
         {
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{type.TypeQualifiedName()}] in [${nameof(Akka.Remote.Serialization.SystemMessageSerializer)}]");
+                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(Akka.Remote.Serialization.SystemMessageSerializer)}]");
             }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_Primitive(string manifest)
+        internal static object ThrowArgumentException_Serializer_Primitive(int manifest)
         {
             throw GetException();
             ArgumentException GetException()
@@ -307,7 +307,7 @@ namespace Akka.Remote
         #region -- SerializationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowSerializationException_Serializer_MiscFrom(string manifest)
+        internal static object ThrowSerializationException_Serializer_MiscFrom(int manifest)
         {
             throw GetException();
             SerializationException GetException()

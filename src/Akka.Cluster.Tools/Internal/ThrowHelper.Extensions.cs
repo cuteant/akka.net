@@ -280,7 +280,7 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_ClusterClientMessage(string manifest)
+        internal static object ThrowArgumentException_Serializer_ClusterClientMessage(int manifest)
         {
             throw GetException();
             ArgumentException GetException()
@@ -300,7 +300,7 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_DistributedPubSubMessage(string manifest)
+        internal static object ThrowArgumentException_Serializer_DistributedPubSubMessage(int manifest)
         {
             throw GetException();
             ArgumentException GetException()
@@ -310,7 +310,7 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_ClusterSingletonMessage(string manifest)
+        internal static object ThrowArgumentException_Serializer_ClusterSingletonMessage(int manifest)
         {
             throw GetException();
             ArgumentException GetException()

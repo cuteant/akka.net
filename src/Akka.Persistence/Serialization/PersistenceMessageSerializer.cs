@@ -26,6 +26,8 @@ namespace Akka.Persistence.Serialization
     public sealed class PersistenceMessageSerializer : SerializerWithTypeManifest
     {
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
+        private static readonly CachedReadConcurrentDictionary<Type, bool> s_persistentFSMSnapshotMap =
+            new CachedReadConcurrentDictionary<Type, bool>(DictionaryCacheConstants.SIZE_MEDIUM);
 
         public PersistenceMessageSerializer(ExtendedActorSystem system) : base(system)
         {
@@ -44,8 +46,7 @@ namespace Akka.Persistence.Serialization
                 case PersistentFSM.StateChangeEvent stateEvent:
                     return MessagePackSerializer.Serialize(GetStateChangeEvent(stateEvent), s_defaultResolver);
                 default:
-                    if (obj.GetType().GetTypeInfo().IsGenericType
-                        && obj.GetType().GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>))
+                    if (s_persistentFSMSnapshotMap.GetOrAdd(obj.GetType(), s_isPersistentFSMSnapshotFunc))
                     {
                         return MessagePackSerializer.Serialize(GetPersistentFSMSnapshot(obj), s_defaultResolver);
                     }
@@ -148,13 +149,18 @@ namespace Akka.Persistence.Serialization
                         return GetStateChangeEvent(bytes);
                 }
             }
-            if (type.GetTypeInfo().IsGenericType
-                && type.GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>))
+            if (s_persistentFSMSnapshotMap.GetOrAdd(type, s_isPersistentFSMSnapshotFunc))
             {
                 return GetPersistentFSMSnapshot(type, bytes);
             }
 
             return ThrowHelper.ThrowSerializationException(type);
+        }
+
+        private static readonly Func<Type, bool> s_isPersistentFSMSnapshotFunc = IsPersistentFSMSnapshot;
+        private static bool IsPersistentFSMSnapshot(Type type)
+        {
+            return type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>);
         }
 
         private static IPersistentRepresentation GetPersistentRepresentation(ExtendedActorSystem system, PersistentMessage message)

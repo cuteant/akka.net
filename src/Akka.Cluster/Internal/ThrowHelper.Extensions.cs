@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Cluster.Serialization;
 using Akka.Configuration;
+using Akka.Util;
 
 namespace Akka.Cluster
 {
@@ -162,7 +163,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static byte[] ThrowArgumentException_Serializer_ClusterMessage(object obj)
+        internal static T ThrowArgumentException_Serializer_ClusterMessage<T>(object obj)
         {
             throw GetException();
             ArgumentException GetException()
@@ -172,12 +173,24 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_ClusterMessage(Type type)
+        internal static object ThrowArgumentException_Serializer_ClusterMessage(int manifest)
         {
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"{nameof(ClusterMessageSerializer)} cannot deserialize object of type {type}");
+                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterMessageSerializer)}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static T ThrowArgumentException_Serializer_D<T>(object obj)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                var type = obj as Type;
+                var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
             }
         }
 

@@ -16,8 +16,45 @@ using MessagePack;
 
 namespace Akka.Remote.Serialization
 {
-    public sealed class SystemMessageSerializer : Akka.Serialization.SerializerWithTypeManifest
+    public sealed class SystemMessageSerializer : Akka.Serialization.SerializerWithIntegerManifest
     {
+        #region manifests
+
+        static class _
+        {
+            internal const int CreateManifest = 100;
+            internal const int RecreateManifest = 101;
+            internal const int SuspendManifest = 102;
+            internal const int ResumeManifest = 103;
+            internal const int TerminateManifest = 104;
+            internal const int SuperviseManifest = 105;
+            internal const int WatchManifest = 106;
+            internal const int UnwatchManifest = 107;
+            internal const int FailedManifest = 108;
+            internal const int DeathWatchNotificationManifest = 109;
+        }
+
+        private static readonly Dictionary<Type, int> ManifestMap;
+
+        static SystemMessageSerializer()
+        {
+            ManifestMap = new Dictionary<Type, int>()
+            {
+                { typeof(Create), _.CreateManifest },
+                { typeof(Recreate), _.RecreateManifest },
+                { typeof(Suspend), _.SuspendManifest },
+                { typeof(Resume), _.ResumeManifest },
+                { typeof(Terminate), _.TerminateManifest },
+                { typeof(Supervise), _.SuperviseManifest },
+                { typeof(Watch), _.WatchManifest },
+                { typeof(Unwatch), _.UnwatchManifest },
+                { typeof(Failed), _.FailedManifest },
+                { typeof(DeathWatchNotification), _.DeathWatchNotificationManifest },
+            };
+        }
+
+        #endregion
+
         private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
         private static readonly byte[] EmptyBytes = EmptyArray<byte>.Instance;
@@ -54,69 +91,122 @@ namespace Akka.Remote.Serialization
                 case DeathWatchNotification deathWatchNotification:
                     return DeathWatchNotificationToProto(deathWatchNotification);
                 case NoMessage noMessage:
-                    return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg_NoMessage();
+                    return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg_NoMessage<byte[]>();
                 default:
                     return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
             }
         }
 
-        static class _
+        /// <inheritdoc />
+        public override byte[] ToBinary(object obj, out int manifest)
         {
-            internal const int Create = 0;
-            internal const int Recreate = 1;
-            internal const int Suspend = 2;
-            internal const int Resume = 3;
-            internal const int Terminate = 4;
-            internal const int Supervise = 5;
-            internal const int Watch = 6;
-            internal const int Unwatch = 7;
-            internal const int Failed = 8;
-            internal const int DeathWatchNotification = 9;
+            switch (obj)
+            {
+                case Create create:
+                    manifest = _.CreateManifest;
+                    return CreateToProto(system, create);
+                case Recreate recreate:
+                    manifest = _.RecreateManifest;
+                    return RecreateToProto(system, recreate);
+                case Suspend suspend:
+                    manifest = _.SuspendManifest;
+                    return EmptyBytes;
+                case Resume resume:
+                    manifest = _.ResumeManifest;
+                    return ResumeToProto(system, resume);
+                case Terminate terminate:
+                    manifest = _.TerminateManifest;
+                    return EmptyBytes;
+                case Supervise supervise:
+                    manifest = _.SuperviseManifest;
+                    return SuperviseToProto(supervise);
+                case Watch watch:
+                    manifest = _.WatchManifest;
+                    return WatchToProto(watch);
+                case Unwatch unwatch:
+                    manifest = _.UnwatchManifest;
+                    return UnwatchToProto(unwatch);
+                case Failed failed:
+                    manifest = _.FailedManifest;
+                    return FailedToProto(system, failed);
+                case DeathWatchNotification deathWatchNotification:
+                    manifest = _.DeathWatchNotificationManifest;
+                    return DeathWatchNotificationToProto(deathWatchNotification);
+                case NoMessage noMessage:
+                    manifest = 0;
+                    return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg_NoMessage<byte[]>();
+                default:
+                    manifest = 0; return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
+            }
         }
-        private static readonly Dictionary<Type, int> s_fromBinaryMap = new Dictionary<Type, int>()
-        {
-            { typeof(Create), _.Create },
-            { typeof(Recreate), _.Recreate },
-            { typeof(Suspend), _.Suspend },
-            { typeof(Resume), _.Resume },
-            { typeof(Terminate), _.Terminate },
-            { typeof(Supervise), _.Supervise },
-            { typeof(Watch), _.Watch },
-            { typeof(Unwatch), _.Unwatch },
-            { typeof(Failed), _.Failed },
-            { typeof(DeathWatchNotification), _.DeathWatchNotification },
-        };
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, Type type)
+        public override object FromBinary(byte[] bytes, int manifest)
         {
-            if (s_fromBinaryMap.TryGetValue(type, out var flag))
+            switch (manifest)
             {
-                switch (flag)
-                {
-                    case _.Create:
-                        return CreateFromProto(system, bytes);
-                    case _.Recreate:
-                        return RecreateFromProto(system, bytes);
-                    case _.Suspend:
-                        return new Suspend();
-                    case _.Resume:
-                        return ResumeFromProto(system, bytes);
-                    case _.Terminate:
-                        return new Terminate();
-                    case _.Supervise:
-                        return SuperviseFromProto(system, bytes);
-                    case _.Watch:
-                        return WatchFromProto(system, bytes);
-                    case _.Unwatch:
-                        return UnwatchFromProto(system, bytes);
-                    case _.Failed:
-                        return FailedFromProto(system, bytes);
-                    case _.DeathWatchNotification:
-                        return DeathWatchNotificationFromProto(system, bytes);
-                }
+                case _.CreateManifest:
+                    return CreateFromProto(system, bytes);
+                case _.RecreateManifest:
+                    return RecreateFromProto(system, bytes);
+                case _.SuspendManifest:
+                    return new Suspend();
+                case _.ResumeManifest:
+                    return ResumeFromProto(system, bytes);
+                case _.TerminateManifest:
+                    return new Terminate();
+                case _.SuperviseManifest:
+                    return SuperviseFromProto(system, bytes);
+                case _.WatchManifest:
+                    return WatchFromProto(system, bytes);
+                case _.UnwatchManifest:
+                    return UnwatchFromProto(system, bytes);
+                case _.FailedManifest:
+                    return FailedFromProto(system, bytes);
+                case _.DeathWatchNotificationManifest:
+                    return DeathWatchNotificationFromProto(system, bytes);
             }
-            return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg(type);
+            return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg(manifest);
+        }
+
+        /// <inheritdoc />
+        protected override int GetManifest(Type type)
+        {
+            if (null == type) { return 0; }
+            if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
+            return ThrowHelper.ThrowArgumentException_Serializer_D<int>(type);
+        }
+
+        /// <inheritdoc />
+        public override int Manifest(object o)
+        {
+            switch (o)
+            {
+                case Create create:
+                    return _.CreateManifest;
+                case Recreate recreate:
+                    return _.RecreateManifest;
+                case Suspend suspend:
+                    return _.SuspendManifest;
+                case Resume resume:
+                    return _.ResumeManifest;
+                case Terminate terminate:
+                    return _.TerminateManifest;
+                case Supervise supervise:
+                    return _.SuperviseManifest;
+                case Watch watch:
+                    return _.WatchManifest;
+                case Unwatch unwatch:
+                    return _.UnwatchManifest;
+                case Failed failed:
+                    return _.FailedManifest;
+                case DeathWatchNotification deathWatchNotification:
+                    return _.DeathWatchNotificationManifest;
+                case NoMessage noMessage:
+                    return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg_NoMessage<int>();
+                default:
+                    return ThrowHelper.ThrowArgumentException_Serializer_D<int>(o);
+            }
         }
 
         //

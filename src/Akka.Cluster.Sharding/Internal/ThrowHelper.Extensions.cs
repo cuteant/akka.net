@@ -202,7 +202,7 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_ClusterShardingMessage(string manifest)
+        internal static object ThrowArgumentException_Serializer_ClusterShardingMessage(int manifest)
         {
             throw GetException();
             ArgumentException GetException()

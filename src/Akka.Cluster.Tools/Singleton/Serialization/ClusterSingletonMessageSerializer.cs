@@ -10,36 +10,26 @@ using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt;
-using CuteAnt.Text;
 
 namespace Akka.Cluster.Tools.Singleton.Serialization
 {
     /// <summary>
     /// TBD
     /// </summary>
-    public class ClusterSingletonMessageSerializer : SerializerWithStringManifest
+    public class ClusterSingletonMessageSerializer : SerializerWithIntegerManifest
     {
         #region manifest
 
-        private const string HandOverToMeManifest = "A";
-        private static readonly byte[] HandOverToMeManifestBytes;
-        private const string HandOverInProgressManifest = "B";
-        private static readonly byte[] HandOverInProgressManifestBytes;
-        private const string HandOverDoneManifest = "C";
-        private static readonly byte[] HandOverDoneManifestBytes;
-        private const string TakeOverFromMeManifest = "D";
-        private static readonly byte[] TakeOverFromMeManifestBytes;
+        private const int HandOverToMeManifest = 440;
+        private const int HandOverInProgressManifest = 441;
+        private const int HandOverDoneManifest = 442;
+        private const int TakeOverFromMeManifest = 443;
 
-        private static readonly Dictionary<Type, string> ManifestMap;
+        private static readonly Dictionary<Type, int> ManifestMap;
 
         static ClusterSingletonMessageSerializer()
         {
-            HandOverToMeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverToMeManifest);
-            HandOverInProgressManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverInProgressManifest);
-            HandOverDoneManifestBytes = StringHelper.UTF8NoBOM.GetBytes(HandOverDoneManifest);
-            TakeOverFromMeManifestBytes = StringHelper.UTF8NoBOM.GetBytes(TakeOverFromMeManifest);
-
-            ManifestMap = new Dictionary<Type, string>
+            ManifestMap = new Dictionary<Type, int>
             {
                 { typeof(HandOverToMe), HandOverToMeManifest},
                 { typeof(HandOverInProgress), HandOverInProgressManifest},
@@ -58,15 +48,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         /// <param name="system">The actor system to associate with this serializer.</param>
         public ClusterSingletonMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
-        /// <summary>
-        /// Serializes the given object into a byte array
-        /// </summary>
-        /// <param name="obj">The object to serialize</param>
-        /// <exception cref="System.ArgumentException">
-        /// This exception is thrown when the specified <paramref name="obj"/> is of an unknown type.
-        /// Acceptable values include: <see cref="HandOverToMe"/> | <see cref="HandOverInProgress"/> | <see cref="HandOverDone"/> | <see cref="TakeOverFromMe"/>
-        /// </exception>
-        /// <returns>A byte array containing the serialized object</returns>
+        /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
             switch (obj)
@@ -81,16 +63,30 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
             }
         }
 
-        /// <summary>
-        /// Deserializes a byte array into an object using an optional <paramref name="manifest" /> (type hint).
-        /// </summary>
-        /// <param name="bytes">The array containing the serialized object</param>
-        /// <param name="manifest">The type hint used to deserialize the object contained in the array.</param>
-        /// <exception cref="ArgumentException">
-        /// This exception is thrown when the specified <paramref name="bytes"/>cannot be deserialized using the specified <paramref name="manifest"/>.
-        /// </exception>
-        /// <returns>The object contained in the array</returns>
-        public override object FromBinary(byte[] bytes, string manifest)
+        /// <inheritdoc />
+        public override byte[] ToBinary(object obj, out int manifest)
+        {
+            switch (obj)
+            {
+                case HandOverToMe _:
+                    manifest = HandOverToMeManifest;
+                    return EmptyBytes;
+                case HandOverInProgress _:
+                    manifest = HandOverInProgressManifest;
+                    return EmptyBytes;
+                case HandOverDone _:
+                    manifest = HandOverDoneManifest;
+                    return EmptyBytes;
+                case TakeOverFromMe _:
+                    manifest = TakeOverFromMeManifest;
+                    return EmptyBytes;
+                default:
+                    manifest = 0; return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<byte[]>(obj);
+            }
+        }
+
+        /// <inheritdoc />
+        public override object FromBinary(byte[] bytes, int manifest)
         {
             switch (manifest)
             {
@@ -108,25 +104,15 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         }
 
         /// <inheritdoc />
-        protected override string GetManifest(Type type)
+        protected override int GetManifest(Type type)
         {
-            if (null == type) { return string.Empty; }
+            if (null == type) { return 0; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<string>(type);
+            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<int>(type);
         }
 
-        /// <summary>
-        /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(System.Byte[],System.String)" /> method.
-        /// <note>
-        /// This method returns <see cref="String.Empty" /> if a manifest is not needed.
-        /// </note>
-        /// </summary>
-        /// <param name="o">The object for which the manifest is needed.</param>
-        /// <exception cref="ArgumentException">
-        /// This exception is thrown when the specified <paramref name="o"/> does not have an associated manifest.
-        /// </exception>
-        /// <returns>The manifest needed for the deserialization of the specified <paramref name="o" />.</returns>
-        public override string Manifest(object o)
+        /// <inheritdoc />
+        public override int Manifest(object o)
         {
             switch (o)
             {
@@ -139,28 +125,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMe _:
                     return TakeOverFromMeManifest;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<string>(o);
-            }
-        }
-        /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out byte[] manifest)
-        {
-            switch (obj)
-            {
-                case HandOverToMe _:
-                    manifest = HandOverToMeManifestBytes;
-                    return EmptyBytes;
-                case HandOverInProgress _:
-                    manifest = HandOverInProgressManifestBytes;
-                    return EmptyBytes;
-                case HandOverDone _:
-                    manifest = HandOverDoneManifestBytes;
-                    return EmptyBytes;
-                case TakeOverFromMe _:
-                    manifest = TakeOverFromMeManifestBytes;
-                    return EmptyBytes;
-                default:
-                    manifest = null; return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<byte[]>(obj);
+                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<int>(o);
             }
         }
     }

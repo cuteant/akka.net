@@ -91,6 +91,25 @@ namespace Akka.Serialization
             return res;
         }
 
+        /// <summary>TBD</summary>
+        /// <param name="system"></param>
+        /// <param name="address"></param>
+        /// <param name="serializer"></param>
+        /// <param name="obj"></param>
+        /// <param name="manifest"></param>
+        /// <returns></returns>
+        public static byte[] SerializeWithTransport(ActorSystem system, Address address, SerializerWithIntegerManifest serializer, object obj, out int manifest)
+        {
+            _currentTransportInformation = new Information()
+            {
+                System = system,
+                Address = address
+            };
+            var res = serializer.ToBinary(obj, out manifest);
+            _currentTransportInformation = null;
+            return res;
+        }
+
         private readonly Serializer _nullSerializer;
 
         private readonly CachedReadConcurrentDictionary<Type, Serializer> _serializerMap = new CachedReadConcurrentDictionary<Type, Serializer>();

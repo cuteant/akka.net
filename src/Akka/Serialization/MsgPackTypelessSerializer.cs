@@ -2,11 +2,9 @@
 using System.Threading;
 using Akka.Actor;
 using Akka.Configuration;
-using Akka.Util;
+using Akka.Serialization.Resolvers;
 using CuteAnt;
-using Hyperion;
 using MessagePack;
-using MessagePack.Resolvers;
 
 namespace Akka.Serialization
 {
@@ -16,32 +14,20 @@ namespace Akka.Serialization
         private readonly IFormatterResolver _resolver;
         private readonly int _initialBufferSize;
 
-        public MsgPackTypelessSerializer(ExtendedActorSystem system) : this(system, MsgPackSerializerSettings.Default) { }
+        public MsgPackTypelessSerializer(ExtendedActorSystem system)
+            : this(system, MsgPackSerializerSettings.Default, HyperionSerializerSettings.Default) { }
 
-        public MsgPackTypelessSerializer(ExtendedActorSystem system, Config config) : this(system, MsgPackSerializerSettings.Create(config)) { }
+        public MsgPackTypelessSerializer(ExtendedActorSystem system, Config config)
+            : this(system, MsgPackSerializerSettings.Create(config), HyperionSerializerSettings.Create(config)) { }
 
-        public MsgPackTypelessSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings) : base(system)
+        public MsgPackTypelessSerializer(ExtendedActorSystem system, MsgPackSerializerSettings settings, HyperionSerializerSettings hyperionSettings)
+            : base(system)
         {
             _settings = settings;
             _initialBufferSize = settings.InitialBufferSize;
 
-            var akkaSurrogate =
-                Surrogate
-                .Create<ISurrogated, ISurrogate>(
-                from => from.ToSurrogate(system),
-                to => to.FromSurrogate(system));
-
-            var serializer = new Hyperion.Serializer(
-                new SerializerOptions(
-                    versionTolerance: true,
-                    preserveObjectReferences: true,
-                    surrogates: new[] { akkaSurrogate }
-                ));
-
-            _resolver = new TypelessDefaultResolver();
-            _resolver.Context.Add(HyperionConstants.HyperionSerializer, serializer);
-            _resolver.Context2.Add(HyperionConstants.HyperionSerializerIdentifier, serializer);
-            _resolver.Context2.Add(MsgPackSerializerHelper.ActorSystemIdentifier, system);
+            var serializer = HyperionSerializerHelper.CreateSerializer(system, hyperionSettings);
+            _resolver = new AkkaTypelessResolver(system, serializer);
 
             Interlocked.CompareExchange(ref MsgPackSerializerHelper.DefaultResolver, _resolver, null);
         }

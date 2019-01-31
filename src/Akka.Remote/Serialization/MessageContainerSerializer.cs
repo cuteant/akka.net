@@ -56,6 +56,16 @@ namespace Akka.Remote.Serialization
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
+        /// <inheritdoc />
+        public override object FromBinary(byte[] bytes, Type type)
+        {
+            var selectionEnvelope = MessagePackSerializer.Deserialize<Protocol.SelectionEnvelope>(bytes, s_defaultResolver);
+
+            var message = system.Deserialize(selectionEnvelope.Payload);
+            var elements = ParsePattern(selectionEnvelope.Pattern);
+            return new ActorSelectionMessage(message, elements);
+        }
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal static List<Protocol.Selection> GetPattern(ActorSelectionMessage sel)
         {
@@ -102,16 +112,6 @@ namespace Akka.Remote.Serialization
                 }
             }
             return elements;
-        }
-
-        /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            var selectionEnvelope = MessagePackSerializer.Deserialize<Protocol.SelectionEnvelope>(bytes, s_defaultResolver);
-
-            var message = system.Deserialize(selectionEnvelope.Payload);
-            var elements = ParsePattern(selectionEnvelope.Pattern);
-            return new ActorSelectionMessage(message, elements);
         }
 
         internal static Protocol.Selection BuildPattern(string matcher, Protocol.Selection.PatternType patternType)

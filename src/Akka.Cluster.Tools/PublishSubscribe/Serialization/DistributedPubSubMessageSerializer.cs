@@ -12,9 +12,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe.Internal;
-using Akka.Remote.Serialization;
 using Akka.Serialization;
-using CuteAnt.Text;
 using MessagePack;
 using AddressData = Akka.Remote.Serialization.Protocol.AddressData;
 
@@ -23,35 +21,22 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
     /// <summary>
     /// Protobuf serializer of DistributedPubSubMediator messages.
     /// </summary>
-    public class DistributedPubSubMessageSerializer : SerializerWithStringManifest
+    public class DistributedPubSubMessageSerializer : SerializerWithIntegerManifest
     {
         #region manifests
 
-        private const string StatusManifest = "A";
-        private static readonly byte[] StatusManifestBytes;
-        private const string DeltaManifest = "B";
-        private static readonly byte[] DeltaManifestBytes;
-        private const string SendManifest = "C";
-        private static readonly byte[] SendManifestBytes;
-        private const string SendToAllManifest = "D";
-        private static readonly byte[] SendToAllManifestBytes;
-        private const string PublishManifest = "E";
-        private static readonly byte[] PublishManifestBytes;
-        private const string SendToOneSubscriberManifest = "F";
-        private static readonly byte[] SendToOneSubscriberManifestBytes;
+        private const int StatusManifest = 470;
+        private const int DeltaManifest = 471;
+        private const int SendManifest = 472;
+        private const int SendToAllManifest = 473;
+        private const int PublishManifest = 474;
+        private const int SendToOneSubscriberManifest = 475;
 
-        private static readonly Dictionary<Type, string> ManifestMap;
+        private static readonly Dictionary<Type, int> ManifestMap;
 
         static DistributedPubSubMessageSerializer()
         {
-            StatusManifestBytes = StringHelper.UTF8NoBOM.GetBytes(StatusManifest);
-            DeltaManifestBytes = StringHelper.UTF8NoBOM.GetBytes(DeltaManifest);
-            SendManifestBytes = StringHelper.UTF8NoBOM.GetBytes(SendManifest);
-            SendToAllManifestBytes = StringHelper.UTF8NoBOM.GetBytes(SendToAllManifest);
-            PublishManifestBytes = StringHelper.UTF8NoBOM.GetBytes(PublishManifest);
-            SendToOneSubscriberManifestBytes = StringHelper.UTF8NoBOM.GetBytes(SendToOneSubscriberManifest);
-
-            ManifestMap = new Dictionary<Type, string>
+            ManifestMap = new Dictionary<Type, int>
             {
                 { typeof(Internal.Status), StatusManifest},
                 { typeof(Internal.Delta), DeltaManifest},
@@ -72,16 +57,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         /// <param name="system">The actor system to associate with this serializer.</param>
         public DistributedPubSubMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
-        /// <summary>
-        /// Serializes the given object into a byte array
-        /// </summary>
-        /// <param name="obj">The object to serialize</param>
-        /// <exception cref="ArgumentException">
-        /// This exception is thrown when the specified <paramref name="obj"/> is of an unknown type.
-        /// Acceptable types include:
-        /// <see cref="Akka.Cluster.Tools.PublishSubscribe.Internal.Status"/> | <see cref="Akka.Cluster.Tools.PublishSubscribe.Internal.Delta"/> | <see cref="Send"/> | <see cref="SendToAll"/> | <see cref="Publish"/>
-        /// </exception>
-        /// <returns>A byte array containing the serialized object</returns>
+        /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
             switch (obj)
@@ -103,16 +79,36 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             }
         }
 
-        /// <summary>
-        /// Deserializes a byte array into an object using an optional <paramref name="manifest" /> (type hint).
-        /// </summary>
-        /// <param name="bytes">The array containing the serialized object</param>
-        /// <param name="manifest">The type hint used to deserialize the object contained in the array.</param>
-        /// <exception cref="ArgumentException">
-        /// This exception is thrown when the specified <paramref name="bytes"/>cannot be deserialized using the specified <paramref name="manifest"/>.
-        /// </exception>
-        /// <returns>The object contained in the array</returns>
-        public override object FromBinary(byte[] bytes, string manifest)
+        /// <inheritdoc />
+        public override byte[] ToBinary(object obj, out int manifest)
+        {
+            switch (obj)
+            {
+                case Internal.Status status:
+                    manifest = StatusManifest;
+                    return StatusToProto(status);
+                case Internal.Delta delta:
+                    manifest = DeltaManifest;
+                    return DeltaToProto(delta);
+                case Send send:
+                    manifest = SendManifest;
+                    return SendToProto(send);
+                case SendToAll sendToAll:
+                    manifest = SendToAllManifest;
+                    return SendToAllToProto(sendToAll);
+                case Publish publish:
+                    manifest = PublishManifest;
+                    return PublishToProto(publish);
+                case SendToOneSubscriber sub:
+                    manifest = SendToOneSubscriberManifest;
+                    return SendToOneSubscriberToProto(sub);
+                default:
+                    manifest = 0; return ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage<byte[]>(obj);
+            }
+        }
+
+        /// <inheritdoc />
+        public override object FromBinary(byte[] bytes, int manifest)
         {
             switch (manifest)
             {
@@ -134,25 +130,15 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         }
 
         /// <inheritdoc />
-        protected override string GetManifest(Type type)
+        protected override int GetManifest(Type type)
         {
-            if (null == type) { return string.Empty; }
+            if (null == type) { return 0; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<string>(type);
+            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<int>(type);
         }
 
-        /// <summary>
-        /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(System.Byte[],System.String)" /> method.
-        /// <note>
-        /// This method returns <see cref="String.Empty" /> if a manifest is not needed.
-        /// </note>
-        /// </summary>
-        /// <param name="o">The object for which the manifest is needed.</param>
-        /// <exception cref="ArgumentException">
-        /// This exception is thrown when the specified <paramref name="o"/> does not have an associated manifest.
-        /// </exception>
-        /// <returns>The manifest needed for the deserialization of the specified <paramref name="o" />.</returns>
-        public override string Manifest(object o)
+        /// <inheritdoc />
+        public override int Manifest(object o)
         {
             switch (o)
             {
@@ -169,34 +155,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 case SendToOneSubscriber _:
                     return SendToOneSubscriberManifest;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage<string>(o);
-            }
-        }
-        /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out byte[] manifest)
-        {
-            switch (obj)
-            {
-                case Internal.Status status:
-                    manifest = StatusManifestBytes;
-                    return StatusToProto(status);
-                case Internal.Delta delta:
-                    manifest = DeltaManifestBytes;
-                    return DeltaToProto(delta);
-                case Send send:
-                    manifest = SendManifestBytes;
-                    return SendToProto(send);
-                case SendToAll sendToAll:
-                    manifest = SendToAllManifestBytes;
-                    return SendToAllToProto(sendToAll);
-                case Publish publish:
-                    manifest = PublishManifestBytes;
-                    return PublishToProto(publish);
-                case SendToOneSubscriber sub:
-                    manifest = SendToOneSubscriberManifestBytes;
-                    return SendToOneSubscriberToProto(sub);
-                default:
-                    manifest = null; return ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage<byte[]>(obj);
+                    return ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage<int>(o);
             }
         }
 

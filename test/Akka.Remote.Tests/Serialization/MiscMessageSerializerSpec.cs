@@ -122,7 +122,7 @@ namespace Akka.Remote.Tests.Serialization
             var props = Props.Create<BlackHoleActor>().WithDeploy(new Deploy(new RemoteScope(address)));
             var actorRef = remoteSystem.ActorOf(props, "hello");
 
-            var serializer = remoteSystem.Serialization.FindSerializerFor(actorRef).AsInstanceOf<SerializerWithStringManifest>();
+            var serializer = remoteSystem.Serialization.FindSerializerFor(actorRef).AsInstanceOf<SerializerWithIntegerManifest>();
             var serializedBytes = serializer.ToBinary(actorRef);
             var deserialized = serializer.FromBinary(serializedBytes, serializer.Manifest(actorRef));
             deserialized.Should().Be(actorRef);
@@ -352,7 +352,7 @@ namespace Akka.Remote.Tests.Serialization
         public void Serializer_must_reject_deserialization_with_invalid_manifest()
         {
             var serializer = new MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
-            Action comparison = () => serializer.FromBinary(new byte[0], "INVALID");
+            var INVALID = 0; Action comparison = () => serializer.FromBinary(new byte[0], INVALID);
             comparison.Should().Throw<SerializationException>();
         }
 
@@ -365,9 +365,9 @@ namespace Akka.Remote.Tests.Serialization
             Assert.True(type == typeof(MiscMessageSerializer) || type == typeof(MsgPackTypelessSerializer) || type == typeof(MsgPackSerializer));
             var serializedBytes = serializer.ToBinary(message);
 
-            if (serializer is SerializerWithStringManifest)
+            if (serializer is SerializerWithIntegerManifest)
             {
-                var serializerManifest = (SerializerWithStringManifest)serializer;
+                var serializerManifest = (SerializerWithIntegerManifest)serializer;
                 return (T)serializerManifest.FromBinary(serializedBytes, serializerManifest.Manifest(message));
             }
             return (T)serializer.FromBinary(serializedBytes, typeof(T));

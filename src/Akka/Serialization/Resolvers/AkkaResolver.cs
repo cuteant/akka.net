@@ -6,15 +6,58 @@ using Akka.Serialization.Formatters;
 using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
+using MessagePack.Resolvers;
 
 namespace Akka.Serialization.Resolvers
 {
-    #region == AkkaResolver ==
+    #region -- AkkaDefaultResolver --
 
-    internal sealed class AkkaResolver : FormatterResolver
+    public sealed class AkkaDefaultResolver : DefaultResolver, IFormatterResolverContext<ExtendedActorSystem>, IFormatterResolverContext<Hyperion.Serializer>
     {
-        public static IFormatterResolver Instance = new AkkaResolver();
-        private AkkaResolver() { }
+        private readonly ExtendedActorSystem _system;
+        private readonly Hyperion.Serializer _serializer;
+
+        public AkkaDefaultResolver(ExtendedActorSystem system, Hyperion.Serializer serializer)
+            : base()
+        {
+            _system = system;
+            _serializer = serializer;
+        }
+
+        ExtendedActorSystem IFormatterResolverContext<ExtendedActorSystem>.Value => _system;
+
+        Hyperion.Serializer IFormatterResolverContext<Hyperion.Serializer>.Value => _serializer;
+    }
+
+    #endregion
+
+    #region -- AkkaTypelessResolver --
+
+    public sealed class AkkaTypelessResolver : TypelessDefaultResolver, IFormatterResolverContext<ExtendedActorSystem>, IFormatterResolverContext<Hyperion.Serializer>
+    {
+        private readonly ExtendedActorSystem _system;
+        private readonly Hyperion.Serializer _serializer;
+
+        public AkkaTypelessResolver(ExtendedActorSystem system, Hyperion.Serializer serializer)
+            : base()
+        {
+            _system = system;
+            _serializer = serializer;
+        }
+
+        ExtendedActorSystem IFormatterResolverContext<ExtendedActorSystem>.Value => _system;
+
+        Hyperion.Serializer IFormatterResolverContext<Hyperion.Serializer>.Value => _serializer;
+    }
+
+    #endregion
+
+    #region == AkkaResolverCore ==
+
+    internal sealed class AkkaResolverCore : FormatterResolver
+    {
+        public static IFormatterResolver Instance = new AkkaResolverCore();
+        private AkkaResolverCore() { }
         public override IMessagePackFormatter<T> GetFormatter<T>() => FormatterCache<T>.Formatter;
 
         private static class FormatterCache<T>

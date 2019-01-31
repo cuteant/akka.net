@@ -20,14 +20,14 @@ namespace Akka.Serialization.Protocol
         public readonly byte[] MessageManifest;
 
         [Key(3)]
-        public readonly int TypeHashCode;
+        public readonly int ExtensibleData;
 
         public Payload(byte[] message, int serializerId)
         {
             Message = message;
             SerializerId = serializerId;
             MessageManifest = null;
-            TypeHashCode = 0;
+            ExtensibleData = 0;
         }
 
         public Payload(byte[] message, int serializerId, byte[] messageManifest)
@@ -35,16 +35,24 @@ namespace Akka.Serialization.Protocol
             Message = message;
             SerializerId = serializerId;
             MessageManifest = messageManifest;
-            TypeHashCode = 0;
+            ExtensibleData = 0;
+        }
+
+        public Payload(byte[] message, int serializerId, int extensibleData)
+        {
+            Message = message;
+            SerializerId = serializerId;
+            MessageManifest = null;
+            ExtensibleData = extensibleData;
         }
 
         [SerializationConstructor]
-        public Payload(byte[] message, int serializerId, byte[] messageManifest, int typeHashCode)
+        public Payload(byte[] message, int serializerId, byte[] messageManifest, int extensibleData)
         {
             Message = message;
             SerializerId = serializerId;
             MessageManifest = messageManifest;
-            TypeHashCode = typeHashCode;
+            ExtensibleData = extensibleData;
         }
 
         [IgnoreMember, IgnoreDataMember]

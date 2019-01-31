@@ -6,9 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using Akka.Actor;
 using Akka.Annotations;
@@ -18,6 +16,8 @@ using CuteAnt.Reflection;
 
 namespace Akka.Serialization
 {
+    #region -- Serializer --
+
     /// <summary>
     /// A Serializer represents a bimap between an object and an array of bytes representing that object.
     ///
@@ -143,22 +143,19 @@ namespace Akka.Serialization
         }
     }
 
-    /// <summary>
-    /// TBD
-    /// </summary>
-    public abstract class SerializerWithStringManifest : Serializer
-    {
-        /// <summary>
-        /// Initializes a new instance of the <see cref="SerializerWithStringManifest"/> class.
-        /// </summary>
-        /// <param name="system">The actor system to associate with this serializer.</param>
-        protected SerializerWithStringManifest(ExtendedActorSystem system) : base(system)
-        {
-        }
+    #endregion
 
-        /// <summary>
-        /// Returns whether this serializer needs a manifest in the fromBinary method
-        /// </summary>
+    #region -- SerializerWithManifest --
+
+    /// <summary>TBD</summary>
+    /// <typeparam name="TManifest"></typeparam>
+    public abstract class SerializerWithManifest<TManifest> : Serializer
+    {
+        /// <summary>Initializes a new instance of the <see cref="SerializerWithManifest{TManifest}"/> class.</summary>
+        /// <param name="system">The actor system to associate with this serializer.</param>
+        protected SerializerWithManifest(ExtendedActorSystem system) : base(system) { }
+
+        /// <summary>Returns whether this serializer needs a manifest in the fromBinary method.</summary>
         public sealed override bool IncludeManifest => true;
 
         /// <inheritdoc />
@@ -171,9 +168,7 @@ namespace Akka.Serialization
             return FromBinary(bts, manifest);
         }
 
-        /// <summary>
-        /// Deserializes a byte array into an object of type <paramref name="type" />.
-        /// </summary>
+        /// <summary>Deserializes a byte array into an object of type <paramref name="type" />.</summary>
         /// <param name="bytes">The array containing the serialized object</param>
         /// <param name="type">The type of object contained in the array</param>
         /// <returns>The object contained in the array</returns>
@@ -183,53 +178,31 @@ namespace Akka.Serialization
             return FromBinary(bytes, manifest);
         }
 
-        /// <summary>Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.</summary>
-        /// <param name="type">The type of object contained in the array</param>
-        /// <returns></returns>
-        protected abstract string GetManifest(Type type);
-
-        /// <summary>
-        /// Deserializes a byte array into an object using an optional <paramref name="manifest"/> (type hint).
-        /// </summary>
+        /// <summary>Deserializes a byte array into an object using an optional <paramref name="manifest"/> (type hint).</summary>
         /// <param name="bytes">The array containing the serialized object</param>
         /// <param name="manifest">The type hint used to deserialize the object contained in the array.</param>
         /// <returns>The object contained in the array</returns>
-        public abstract object FromBinary(byte[] bytes, string manifest);
+        public abstract object FromBinary(byte[] bytes, TManifest manifest);
 
-        /// <summary>
-        /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.
-        /// 
-        /// <note>
-        /// This method returns <see cref="String.Empty"/> if a manifest is not needed.
-        /// </note>
-        /// </summary>
+        /// <summary>Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.</summary>
+        /// <param name="type">The type of object contained in the array</param>
+        /// <returns></returns>
+        protected abstract TManifest GetManifest(Type type);
+
+        /// <summary>Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.</summary>
         /// <param name="o">The object for which the manifest is needed.</param>
         /// <returns>The manifest needed for the deserialization of the specified <paramref name="o"/>.</returns>
-        public abstract string Manifest(object o);
+        public abstract TManifest Manifest(object o);
+    }
 
-        /// <summary>
-        /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.
-        /// 
-        /// <note>
-        /// This method returns <see cref="String.Empty"/> if a manifest is not needed.
-        /// </note>
-        /// </summary>
-        /// <param name="o">The object for which the manifest is needed.</param>
-        /// <param name="manifest"></param>
-        /// <returns>The manifest needed for the deserialization of the specified <paramref name="o"/>.</returns>
+    /// <summary>TBD</summary>
+    public abstract class SerializerWithStringManifest : SerializerWithManifest<string>
+    {
+        /// <summary>Initializes a new instance of the <see cref="SerializerWithStringManifest"/> class.</summary>
+        /// <param name="system">The actor system to associate with this serializer.</param>
+        protected SerializerWithStringManifest(ExtendedActorSystem system) : base(system) { }
+
         public abstract byte[] ToBinary(object o, out byte[] manifest);
-
-        /// <summary>
-        /// Serializes the given object into a byte array and uses the given address to decorate serialized ActorRef's
-        /// </summary>
-        /// <param name="address">The address to use when serializing local ActorRef´s</param>
-        /// <param name="obj">The object to serialize</param>
-        /// <param name="manifest"></param>
-        /// <returns>TBD</returns>
-        public byte[] ToBinaryWithAddress(Address address, object obj, out byte[] manifest)
-        {
-            return Serialization.SerializeWithTransport(system, address, this, obj, out manifest);
-        }
 
         /// <inheritdoc />
         public sealed override Payload ToPayload(object obj)
@@ -251,6 +224,40 @@ namespace Akka.Serialization
             return FromBinary(payload.Message, Encoding.UTF8.GetString(payload.MessageManifest));
         }
     }
+
+    /// <summary>TBD</summary>
+    public abstract class SerializerWithIntegerManifest : SerializerWithManifest<int>
+    {
+        /// <summary>Initializes a new instance of the <see cref="SerializerWithIntegerManifest"/> class.</summary>
+        /// <param name="system">The actor system to associate with this serializer.</param>
+        protected SerializerWithIntegerManifest(ExtendedActorSystem system) : base(system) { }
+
+        public abstract byte[] ToBinary(object o, out int manifest);
+
+        /// <inheritdoc />
+        public sealed override Payload ToPayload(object obj)
+        {
+            var payload = ToBinary(obj, out var manifest);
+            return new Payload(payload, Identifier, manifest);
+        }
+
+        /// <inheritdoc />
+        public sealed override Payload ToPayloadWithAddress(Address address, object obj)
+        {
+            var payload = Serialization.SerializeWithTransport(system, address, this, obj, out var manifest);
+            return new Payload(payload, Identifier, manifest);
+        }
+
+        /// <inheritdoc />
+        public sealed override object FromPayload(in Payload payload)
+        {
+            return FromBinary(payload.Message, payload.ExtensibleData);
+        }
+    }
+
+    #endregion
+
+    #region -- SerializerIdentifierHelper --
 
     /// <summary>
     /// INTERNAL API.
@@ -281,5 +288,7 @@ namespace Akka.Serialization
             return value;
         }
     }
+
+    #endregion
 }
 

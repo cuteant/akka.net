@@ -26,22 +26,21 @@ namespace Akka.Serialization
             MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance, AkkaTypelessFormatter.Instance);
 
             MessagePackStandardResolver.Register(
-                AkkaResolver.Instance,
+                AkkaResolverCore.Instance,
 
                 ImmutableCollectionResolver.Instance,
 
                 HyperionExceptionResolver2.Instance,
 
-                HyperionExpressionResolver.Instance,
+                HyperionExpressionResolver2.Instance,
 
                 AkkaHyperionResolver.Instance
             );
         }
 
-        public const int ActorSystemIdentifier = 1;
         [MethodImpl(InlineMethod.Value)]
         public static ExtendedActorSystem GetActorSystem(this IFormatterResolver formatterResolver)
-            => formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
+            => ((IFormatterResolverContext<ExtendedActorSystem>)formatterResolver).Value;
 
         /// <summary>Deserializes the specified message.</summary>
         /// <param name="formatterResolver">The formatter resolver.</param>
@@ -54,7 +53,7 @@ namespace Akka.Serialization
             try
             {
 #endif
-                var system = formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
+                var system = formatterResolver.GetActorSystem();
                 return system.Serialization.Deserialize(messageProtocol);
 #if DEBUG
             }
@@ -75,7 +74,7 @@ namespace Akka.Serialization
         {
             if (null == message) { return SerializedMessage.Null; }
 
-            var system = formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
+            var system = formatterResolver.GetActorSystem();
             var serializer = system.Serialization.FindSerializerForType(message.GetType());
             return serializer.ToPayload(message);
         }
@@ -94,7 +93,7 @@ namespace Akka.Serialization
             try
             {
 #endif
-                var system = formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
+                var system = formatterResolver.GetActorSystem();
                 var serializer = system.Serialization.FindSerializerForType(message.GetType());
                 return serializer.ToPayloadWithAddress(address, message);
 #if DEBUG

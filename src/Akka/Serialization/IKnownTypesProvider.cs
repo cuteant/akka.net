@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using CuteAnt;
 
 namespace Akka.Serialization
 {
@@ -23,6 +24,6 @@ namespace Akka.Serialization
 
     internal sealed class NoKnownTypes : IKnownTypesProvider
     {
-        public IEnumerable<Type> GetKnownTypes() => new Type[0];
+        public IEnumerable<Type> GetKnownTypes() => EmptyArray<Type>.Instance;
     }
 }
