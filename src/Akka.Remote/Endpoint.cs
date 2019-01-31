@@ -73,7 +73,7 @@ namespace Akka.Remote
         /// <param name="senderOption">TBD</param>
         public void Dispatch(IInternalActorRef recipient, Address recipientAddress, in SerializedMessage message, IActorRef senderOption = null)
         {
-            var payload = MessageSerializer.Deserialize(_system, message);
+            var payload = _system.Deserialize(message);
             Type payloadClass = payload?.GetType();
             var sender = senderOption ?? _system.DeadLetters;
             var originalReceiver = recipient.Path;

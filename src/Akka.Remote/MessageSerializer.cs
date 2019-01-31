@@ -23,28 +23,6 @@ namespace Akka.Remote
         private static readonly ILogger s_logger = TraceLogger.GetLogger(typeof(MessageSerializer));
 #endif
 
-        /// <summary>Deserializes the specified message.</summary>
-        /// <param name="system">The system.</param>
-        /// <param name="messageProtocol">The message protocol.</param>
-        /// <returns>System.Object.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object Deserialize(ActorSystem system, in SerializedMessage messageProtocol)
-        {
-#if DEBUG
-            try
-            {
-#endif
-                return system.Serialization.Deserialize(messageProtocol);
-#if DEBUG
-            }
-            catch (Exception exc)
-            {
-                s_logger.LogWarning(exc, $"Unimplemented deserialization of message with serializerId [{messageProtocol.SerializerId}]");
-                throw;
-            }
-#endif
-        }
-
         /// <summary>Serializes the specified message.</summary>
         /// <param name="system">The system.</param>
         /// <param name="address">TBD</param>

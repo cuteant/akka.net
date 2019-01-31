@@ -1,10 +1,4 @@
 ﻿using System.Runtime.CompilerServices;
-using Akka.Actor;
-using Akka.Serialization.Formatters;
-using Akka.Serialization.Resolvers;
-using CuteAnt;
-using MessagePack;
-using MessagePack.ImmutableCollection;
 using SerializedMessage = Akka.Serialization.Protocol.Payload;
 #if DEBUG
 using System;
@@ -12,49 +6,26 @@ using Akka.Util;
 using Microsoft.Extensions.Logging;
 #endif
 
-namespace Akka.Serialization
+namespace Akka.Actor
 {
-    public static class MsgPackSerializerHelper
+    /// <summary>This class contains extension methods used for working with <see cref="ActorSystem"/>s.</summary>
+    public static class ActorSystemExtensions
     {
 #if DEBUG
         private static readonly ILogger s_logger = TraceLogger.GetLogger(typeof(ActorSystemExtensions));
 #endif
-        internal static IFormatterResolver DefaultResolver;
-
-        static MsgPackSerializerHelper()
-        {
-            MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance, AkkaTypelessFormatter.Instance);
-
-            MessagePackStandardResolver.Register(
-                AkkaResolver.Instance,
-
-                ImmutableCollectionResolver.Instance,
-
-                HyperionExceptionResolver2.Instance,
-
-                HyperionExpressionResolver.Instance,
-
-                AkkaHyperionResolver.Instance
-            );
-        }
-
-        public const int ActorSystemIdentifier = 1;
-        [MethodImpl(InlineMethod.Value)]
-        public static ExtendedActorSystem GetActorSystem(this IFormatterResolver formatterResolver)
-            => formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
 
         /// <summary>Deserializes the specified message.</summary>
-        /// <param name="formatterResolver">The formatter resolver.</param>
+        /// <param name="system">The system.</param>
         /// <param name="messageProtocol">The message protocol.</param>
         /// <returns>System.Object.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object Deserialize(this IFormatterResolver formatterResolver, in SerializedMessage messageProtocol)
+        public static object Deserialize(this ActorSystem system, in SerializedMessage messageProtocol)
         {
 #if DEBUG
             try
             {
 #endif
-                var system = formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
                 return system.Serialization.Deserialize(messageProtocol);
 #if DEBUG
             }
@@ -67,26 +38,25 @@ namespace Akka.Serialization
         }
 
         /// <summary>Serializes the specified message.</summary>
-        /// <param name="formatterResolver">The formatter resolver.</param>
+        /// <param name="system">The system.</param>
         /// <param name="message">The message.</param>
         /// <returns>SerializedMessage.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedMessage Serialize(this IFormatterResolver formatterResolver, object message)
+        public static SerializedMessage Serialize(this ActorSystem system, object message)
         {
             if (null == message) { return SerializedMessage.Null; }
 
-            var system = formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
             var serializer = system.Serialization.FindSerializerForType(message.GetType());
             return serializer.ToPayload(message);
         }
 
         /// <summary>Serializes the specified message.</summary>
-        /// <param name="formatterResolver">The formatter resolver.</param>
+        /// <param name="system">The system.</param>
         /// <param name="address">TBD</param>
         /// <param name="message">The message.</param>
         /// <returns>SerializedMessage.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedMessage Serialize(this IFormatterResolver formatterResolver, Address address, object message)
+        public static SerializedMessage Serialize(this ActorSystem system, Address address, object message)
         {
             if (null == message) { return SerializedMessage.Null; }
 
@@ -94,7 +64,6 @@ namespace Akka.Serialization
             try
             {
 #endif
-                var system = formatterResolver.GetContextValue<ExtendedActorSystem>(ActorSystemIdentifier);
                 var serializer = system.Serialization.FindSerializerForType(message.GetType());
                 return serializer.ToPayloadWithAddress(address, message);
 #if DEBUG

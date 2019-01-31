@@ -70,7 +70,7 @@ namespace Akka.Remote.Serialization
             return new Protocol.PropsData(
                 DeployToProto(system, props.Deploy),
                 props.Type.TypeQualifiedName(),
-                props.Arguments.Select(_ => WrappedPayloadSupport.PayloadToProto(system, _)).ToArray());
+                props.Arguments.Select(_ => system.Serialize(_)).ToArray());
 
         }
 
@@ -83,7 +83,7 @@ namespace Akka.Remote.Serialization
                 var args = new object[propsArgs.Length];
                 for (int i = 0; i < args.Length; i++)
                 {
-                    args[i] = WrappedPayloadSupport.PayloadFrom(system, propsArgs[i]);
+                    args[i] = system.Deserialize(propsArgs[i]);
                 }
                 return new Props(DeployFromProto(system, protoProps.Deploy), actorClass, args);
             }
@@ -100,20 +100,20 @@ namespace Akka.Remote.Serialization
         {
             return new Protocol.DeployData(
                 deploy.Path,
-                WrappedPayloadSupport.PayloadToProto(system, deploy.Config),
-                deploy.RouterConfig != NoRouter.Instance ? WrappedPayloadSupport.PayloadToProto(system, deploy.RouterConfig) : Payload.Null,
-                deploy.Scope != Deploy.NoScopeGiven ? WrappedPayloadSupport.PayloadToProto(system, deploy.Scope) : Payload.Null,
+                system.Serialize(deploy.Config),
+                deploy.RouterConfig != NoRouter.Instance ? system.Serialize(deploy.RouterConfig) : Payload.Null,
+                deploy.Scope != Deploy.NoScopeGiven ? system.Serialize(deploy.Scope) : Payload.Null,
                 deploy.Dispatcher != Deploy.NoDispatcherGiven ? deploy.Dispatcher : null
                 );
         }
 
         internal static Deploy DeployFromProto(ExtendedActorSystem system, in Protocol.DeployData protoDeploy)
         {
-            var config = WrappedPayloadSupport.PayloadFrom(system, protoDeploy.Config)?.AsInstanceOf<Config>() ?? Config.Empty;
+            var config = system.Deserialize(protoDeploy.Config)?.AsInstanceOf<Config>() ?? Config.Empty;
 
-            var routerConfig = WrappedPayloadSupport.PayloadFrom(system, protoDeploy.RouterConfig)?.AsInstanceOf<RouterConfig>() ?? NoRouter.Instance;
+            var routerConfig = system.Deserialize(protoDeploy.RouterConfig)?.AsInstanceOf<RouterConfig>() ?? NoRouter.Instance;
 
-            var scope = WrappedPayloadSupport.PayloadFrom(system, protoDeploy.Scope)?.AsInstanceOf<Scope>() ?? Deploy.NoScopeGiven;
+            var scope = system.Deserialize(protoDeploy.Scope)?.AsInstanceOf<Scope>() ?? Deploy.NoScopeGiven;
 
             var dispatcher = !string.IsNullOrEmpty(protoDeploy.Dispatcher)
                 ? protoDeploy.Dispatcher

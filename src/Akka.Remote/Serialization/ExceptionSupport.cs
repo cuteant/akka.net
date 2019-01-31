@@ -72,7 +72,7 @@ namespace Akka.Remote.Serialization
             foreach (var info in serializationInfo)
             {
                 if (DefaultProperties.Contains(info.Name)) continue;
-                var preparedValue = WrappedPayloadSupport.PayloadToProto(system, info.Value);
+                var preparedValue = system.Serialize(info.Value);
                 customFields.Add(info.Name, preparedValue);
             }
             if (customFields.Count > 0) { message.CustomFields = customFields; }
@@ -110,7 +110,7 @@ namespace Akka.Remote.Serialization
             {
                 foreach (var field in customFields)
                 {
-                    serializationInfo.AddValue(field.Key, WrappedPayloadSupport.PayloadFrom(system, field.Value));
+                    serializationInfo.AddValue(field.Key, system.Deserialize(field.Value));
                 }
             }
 

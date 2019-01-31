@@ -35,9 +35,9 @@ namespace Akka.Remote.Serialization
             if (null == sel) { ThrowHelper.ThrowArgumentException_Serializer_ActorSel(source); }
 
             var pattern = GetPattern(sel);
-            var payload = WrappedPayloadSupport.PayloadToProto(system, sel.Message);
+            var payload = system.Serialize(sel.Message);
 
-            var message = WrappedPayloadSupport.PayloadFrom(system, payload);
+            var message = system.Deserialize(payload);
             var elements = ParsePattern(pattern);
 
             return new ActorSelectionMessage(message, elements);
@@ -50,7 +50,7 @@ namespace Akka.Remote.Serialization
             if (null == sel) { ThrowHelper.ThrowArgumentException_Serializer_ActorSel(obj); }
 
             var protoMessage = new Protocol.SelectionEnvelope(
-                WrappedPayloadSupport.PayloadToProto(system, sel.Message),
+                system.Serialize(sel.Message),
                 GetPattern(sel));
 
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
@@ -109,7 +109,7 @@ namespace Akka.Remote.Serialization
         {
             var selectionEnvelope = MessagePackSerializer.Deserialize<Protocol.SelectionEnvelope>(bytes, s_defaultResolver);
 
-            var message = WrappedPayloadSupport.PayloadFrom(system, selectionEnvelope.Payload);
+            var message = system.Deserialize(selectionEnvelope.Payload);
             var elements = ParsePattern(selectionEnvelope.Pattern);
             return new ActorSelectionMessage(message, elements);
         }

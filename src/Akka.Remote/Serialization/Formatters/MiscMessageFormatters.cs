@@ -30,7 +30,7 @@ namespace Akka.Remote.Serialization.Formatters
                 (uint)pool.NrOfInstances,
                 pool.RouterDispatcher,
                 pool.UsePoolDispatcher,
-                WrappedPayloadSupport.PayloadToProto(system, pool.Resizer)
+                system.Serialize(pool.Resizer)
             );
         }
 
@@ -81,14 +81,14 @@ namespace Akka.Remote.Serialization.Formatters
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.Identify>();
             var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
 
-            return new Identify(WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), protoMessage.MessageId));
+            return new Identify(formatterResolver.Deserialize(protoMessage.MessageId));
         }
 
         public override int Serialize(ref byte[] bytes, int offset, Identify value, IFormatterResolver formatterResolver)
         {
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
-            var protoIdentify = new Protocol.Identify(WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.MessageId));
+            var protoIdentify = new Protocol.Identify(formatterResolver.Serialize(value.MessageId));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.Identify>();
             return formatter.Serialize(ref bytes, offset, protoIdentify, DefaultResolver);
@@ -113,7 +113,7 @@ namespace Akka.Remote.Serialization.Formatters
             var system = formatterResolver.GetActorSystem();
             var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
 
-            return new ActorIdentity(WrappedPayloadSupport.PayloadFrom(system, protoMessage.CorrelationId), ResolveActorRef(system, protoMessage.Path));
+            return new ActorIdentity(system.Deserialize(protoMessage.CorrelationId), ResolveActorRef(system, protoMessage.Path));
         }
 
         public override int Serialize(ref byte[] bytes, int offset, ActorIdentity value, IFormatterResolver formatterResolver)
@@ -121,7 +121,7 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var protoIdentify = new Protocol.ActorIdentity(
-                WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.MessageId),
+                formatterResolver.Serialize(value.MessageId),
                 Akka.Serialization.Serialization.SerializedActorPath(value.Subject)
             );
 
@@ -282,7 +282,7 @@ namespace Akka.Remote.Serialization.Formatters
 
             var rawResizer = fromConfig.Resizer;
             Resizer resizer = rawResizer.NoeEmtpy
-                ? (Resizer)WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), rawResizer)
+                ? (Resizer)formatterResolver.Deserialize(rawResizer)
                 : null;
 
             var routerDispatcher = !string.IsNullOrEmpty(fromConfig.RouterDispatcher)
@@ -298,7 +298,7 @@ namespace Akka.Remote.Serialization.Formatters
 
             var system = formatterResolver.GetActorSystem();
             var protoMessage = new Protocol.FromConfig(
-                WrappedPayloadSupport.PayloadToProto(system, fromConfig.Resizer),
+                system.Serialize(fromConfig.Resizer),
                 fromConfig.RouterDispatcher);
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.FromConfig>();
@@ -371,7 +371,7 @@ namespace Akka.Remote.Serialization.Formatters
 
             var rawResizer = broadcastPool.Resizer;
             Resizer resizer = rawResizer.NoeEmtpy
-                ? (Resizer)WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), rawResizer)
+                ? (Resizer)formatterResolver.Deserialize(rawResizer)
                 : null;
 
             var routerDispatcher = !string.IsNullOrEmpty(broadcastPool.RouterDispatcher)
@@ -416,7 +416,7 @@ namespace Akka.Remote.Serialization.Formatters
 
             var rawResizer = broadcastPool.Resizer;
             Resizer resizer = rawResizer.NoeEmtpy
-                ? (Resizer)WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), rawResizer)
+                ? (Resizer)formatterResolver.Deserialize(rawResizer)
                 : null;
             var routerDispatcher = !string.IsNullOrEmpty(broadcastPool.RouterDispatcher)
                 ? broadcastPool.RouterDispatcher
@@ -460,7 +460,7 @@ namespace Akka.Remote.Serialization.Formatters
 
             var rawResizer = randomPool.Resizer;
             Resizer resizer = rawResizer.NoeEmtpy
-                ? (Resizer)WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), rawResizer)
+                ? (Resizer)formatterResolver.Deserialize(rawResizer)
                 : null;
 
             var routerDispatcher = !string.IsNullOrEmpty(randomPool.RouterDispatcher)
@@ -505,7 +505,7 @@ namespace Akka.Remote.Serialization.Formatters
 
             var rawResizer = scatterGatherFirstCompletedPool.Generic.Resizer;
             Resizer resizer = rawResizer.NoeEmtpy
-                ? (Resizer)WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), rawResizer)
+                ? (Resizer)formatterResolver.Deserialize(rawResizer)
                 : null;
 
             var routerDispatcher = !string.IsNullOrEmpty(scatterGatherFirstCompletedPool.Generic.RouterDispatcher)
@@ -554,7 +554,7 @@ namespace Akka.Remote.Serialization.Formatters
 
             var rawResizer = tailChoppingPool.Generic.Resizer;
             Resizer resizer = rawResizer.NoeEmtpy
-                ? (Resizer)WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), rawResizer)
+                ? (Resizer)formatterResolver.Deserialize(rawResizer)
                 : null;
 
             var routerDispatcher = !string.IsNullOrEmpty(tailChoppingPool.Generic.RouterDispatcher)
@@ -605,7 +605,7 @@ namespace Akka.Remote.Serialization.Formatters
 
             var rawResizer = consistentHashingPool.Resizer;
             Resizer resizer = rawResizer.NoeEmtpy
-                ? (Resizer)WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), rawResizer)
+                ? (Resizer)formatterResolver.Deserialize(rawResizer)
                 : null;
             var routerDispatcher = !string.IsNullOrEmpty(consistentHashingPool.RouterDispatcher)
                 ? consistentHashingPool.RouterDispatcher
@@ -648,7 +648,7 @@ namespace Akka.Remote.Serialization.Formatters
             var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
 
             return new RemoteRouterConfig(
-                WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), protoMessage.Local).AsInstanceOf<Pool>(),
+                formatterResolver.Deserialize(protoMessage.Local).AsInstanceOf<Pool>(),
                 protoMessage.Nodes.Select(_ => AddressFrom(_)));
         }
 
@@ -657,7 +657,7 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var protoMessage = new Protocol.RemoteRouterConfig(
-                WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.Local),
+                formatterResolver.Serialize(value.Local),
                 value.Nodes.Select(AddressMessageBuilder).ToArray()
             );
 

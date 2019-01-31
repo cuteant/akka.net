@@ -22,7 +22,7 @@ namespace Akka.Remote.Serialization.Formatters
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SelectionEnvelope>();
             var selectionEnvelope = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
 
-            var message = WrappedPayloadSupport.PayloadFrom(formatterResolver.GetActorSystem(), selectionEnvelope.Payload);
+            var message = formatterResolver.Deserialize(selectionEnvelope.Payload);
             var elements = MessageContainerSerializer.ParsePattern(selectionEnvelope.Pattern);
             return new ActorSelectionMessage(message, elements);
         }
@@ -32,7 +32,7 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var protoMessage = new Protocol.SelectionEnvelope(
-                WrappedPayloadSupport.PayloadToProto(formatterResolver.GetActorSystem(), value.Message),
+                formatterResolver.Serialize(value.Message),
                 MessageContainerSerializer.GetPattern(value));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SelectionEnvelope>();

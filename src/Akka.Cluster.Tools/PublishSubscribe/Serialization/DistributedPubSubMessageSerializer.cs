@@ -269,7 +269,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             var protoMessage = new Protocol.Send(
                 send.Path,
                 send.LocalAffinity,
-                WrappedPayloadSupport.PayloadToProto(system, send.Message)
+                system.Serialize(send.Message)
             );
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
@@ -277,7 +277,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         private Send SendFrom(byte[] bytes)
         {
             var sendProto = MessagePackSerializer.Deserialize<Protocol.Send>(bytes, s_defaultResolver);
-            return new Send(sendProto.Path, WrappedPayloadSupport.PayloadFrom(system, sendProto.Payload), sendProto.LocalAffinity);
+            return new Send(sendProto.Path, system.Deserialize(sendProto.Payload), sendProto.LocalAffinity);
         }
 
         private byte[] SendToAllToProto(SendToAll sendToAll)
@@ -285,7 +285,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             var protoMessage = new Protocol.SendToAll(
                 sendToAll.Path,
                 sendToAll.ExcludeSelf,
-                WrappedPayloadSupport.PayloadToProto(system, sendToAll.Message)
+                system.Serialize(sendToAll.Message)
             );
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
@@ -293,14 +293,14 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         private SendToAll SendToAllFrom(byte[] bytes)
         {
             var sendToAllProto = MessagePackSerializer.Deserialize<Protocol.SendToAll>(bytes, s_defaultResolver);
-            return new SendToAll(sendToAllProto.Path, WrappedPayloadSupport.PayloadFrom(system, sendToAllProto.Payload), sendToAllProto.AllButSelf);
+            return new SendToAll(sendToAllProto.Path, system.Deserialize(sendToAllProto.Payload), sendToAllProto.AllButSelf);
         }
 
         private byte[] PublishToProto(Publish publish)
         {
             var protoMessage = new Protocol.Publish(
                 publish.Topic,
-                WrappedPayloadSupport.PayloadToProto(system, publish.Message)
+                system.Serialize(publish.Message)
             );
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
@@ -308,19 +308,19 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         private Publish PublishFrom(byte[] bytes)
         {
             var publishProto = MessagePackSerializer.Deserialize<Protocol.Publish>(bytes, s_defaultResolver);
-            return new Publish(publishProto.Topic, WrappedPayloadSupport.PayloadFrom(system, publishProto.Payload));
+            return new Publish(publishProto.Topic, system.Deserialize(publishProto.Payload));
         }
 
         private byte[] SendToOneSubscriberToProto(SendToOneSubscriber sendToOneSubscriber)
         {
-            var protoMessage = new Protocol.SendToOneSubscriber(WrappedPayloadSupport.PayloadToProto(system, sendToOneSubscriber.Message));
+            var protoMessage = new Protocol.SendToOneSubscriber(system.Serialize(sendToOneSubscriber.Message));
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
         private SendToOneSubscriber SendToOneSubscriberFrom(byte[] bytes)
         {
             var sendToOneSubscriberProto = MessagePackSerializer.Deserialize<Protocol.SendToOneSubscriber>(bytes, s_defaultResolver);
-            return new SendToOneSubscriber(WrappedPayloadSupport.PayloadFrom(system, sendToOneSubscriberProto.Payload));
+            return new SendToOneSubscriber(system.Deserialize(sendToOneSubscriberProto.Payload));
         }
 
         //
