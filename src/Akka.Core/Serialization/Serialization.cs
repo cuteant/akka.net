@@ -32,8 +32,22 @@ namespace Akka.Serialization
     /// <summary>TBD</summary>
     public sealed class Serialization
     {
+        #region -- SerializeWithTransport --
+
         [ThreadStatic]
         private static Information _currentTransportInformation;
+        private static Information TransportInformationCache
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => _currentTransportInformation ?? EnsureTransportInformationCreated();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Information EnsureTransportInformationCreated()
+        {
+            _currentTransportInformation = new Information();
+            return _currentTransportInformation;
+        }
 
         /// <summary>TBD</summary>
         /// <typeparam name="T">TBD</typeparam>
@@ -44,13 +58,14 @@ namespace Akka.Serialization
         /// <returns>TBD</returns>
         public static T SerializeWithTransport<T>(ActorSystem system, Address address, Func<object, T> func, object obj)
         {
-            _currentTransportInformation = new Information()
-            {
-                System = system,
-                Address = address
-            };
+            var currentTransportInformation = TransportInformationCache;
+            currentTransportInformation.System = system;
+            currentTransportInformation.Address = address;
+
             var res = func(obj);
-            _currentTransportInformation = null;
+
+            currentTransportInformation.System = null;
+            currentTransportInformation.Address = null;
             return res;
         }
 
@@ -62,13 +77,14 @@ namespace Akka.Serialization
         /// <returns></returns>
         public static byte[] SerializeWithTransport(ActorSystem system, Address address, Serializer serializer, object obj)
         {
-            _currentTransportInformation = new Information()
-            {
-                System = system,
-                Address = address
-            };
+            var currentTransportInformation = TransportInformationCache;
+            currentTransportInformation.System = system;
+            currentTransportInformation.Address = address;
+
             var res = serializer.ToBinary(obj);
-            _currentTransportInformation = null;
+
+            currentTransportInformation.System = null;
+            currentTransportInformation.Address = null;
             return res;
         }
 
@@ -81,13 +97,14 @@ namespace Akka.Serialization
         /// <returns></returns>
         public static byte[] SerializeWithTransport(ActorSystem system, Address address, SerializerWithStringManifest serializer, object obj, out byte[] manifest)
         {
-            _currentTransportInformation = new Information()
-            {
-                System = system,
-                Address = address
-            };
+            var currentTransportInformation = TransportInformationCache;
+            currentTransportInformation.System = system;
+            currentTransportInformation.Address = address;
+
             var res = serializer.ToBinary(obj, out manifest);
-            _currentTransportInformation = null;
+
+            currentTransportInformation.System = null;
+            currentTransportInformation.Address = null;
             return res;
         }
 
@@ -100,15 +117,18 @@ namespace Akka.Serialization
         /// <returns></returns>
         public static byte[] SerializeWithTransport(ActorSystem system, Address address, SerializerWithIntegerManifest serializer, object obj, out int manifest)
         {
-            _currentTransportInformation = new Information()
-            {
-                System = system,
-                Address = address
-            };
+            var currentTransportInformation = TransportInformationCache;
+            currentTransportInformation.System = system;
+            currentTransportInformation.Address = address;
+
             var res = serializer.ToBinary(obj, out manifest);
-            _currentTransportInformation = null;
+
+            currentTransportInformation.System = null;
+            currentTransportInformation.Address = null;
             return res;
         }
+
+        #endregion
 
         private readonly Serializer _nullSerializer;
 
@@ -301,6 +321,7 @@ namespace Akka.Serialization
                 {
                     ThrowSerializationException_D(manifest, serializerId, ex);
                 }
+
                 return serializer.FromBinary(bytes, type);
             }
 
