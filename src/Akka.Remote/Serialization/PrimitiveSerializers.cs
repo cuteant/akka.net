@@ -47,24 +47,6 @@ namespace Akka.Remote.Serialization
         public override object DeepCopy(object source) => source;
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
-        {
-            switch (obj)
-            {
-                //case ByteString bytes:
-                //    return ProtobufUtil.GetBuffer(bytes);
-                case string str:
-                    return s_encodingUtf8.GetBytes(str);
-                case int intValue:
-                    return BitConverter.GetBytes(intValue);
-                case long longValue:
-                    return BitConverter.GetBytes(longValue);
-                default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
-            }
-        }
-
-        /// <inheritdoc />
         public override byte[] ToBinary(object o, out int manifest)
         {
             switch (o)

@@ -206,24 +206,6 @@ namespace Akka.Persistence.TCK.Serialization
 
             public override int Identifier => 77125;
 
-            public override byte[] ToBinary(object obj)
-            {
-                if (obj is MyPayload2 payload)
-                {
-                    return Encoding.UTF8.GetBytes($".{payload.Data}:{payload.N}");
-                }
-
-                return null;
-            }
-
-            protected override string GetManifest(Type type)
-            {
-                return _manifestV2;
-            }
-            public override string Manifest(object o)
-            {
-                return _manifestV2;
-            }
             /// <inheritdoc />
             public override byte[] ToBinary(object obj, out byte[] manifest)
             {
@@ -235,6 +217,15 @@ namespace Akka.Persistence.TCK.Serialization
 
                 manifest = null;
                 return null;
+            }
+
+            protected override string GetManifest(Type type)
+            {
+                return _manifestV2;
+            }
+            public override string Manifest(object o)
+            {
+                return _manifestV2;
             }
 
             public override object FromBinary(byte[] bytes, string manifest)

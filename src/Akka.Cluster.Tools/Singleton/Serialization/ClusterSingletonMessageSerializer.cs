@@ -49,21 +49,6 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         public ClusterSingletonMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
-        {
-            switch (obj)
-            {
-                case HandOverToMe _:
-                case HandOverInProgress _:
-                case HandOverDone _:
-                case TakeOverFromMe _:
-                    return EmptyBytes;
-                default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<byte[]>(obj);
-            }
-        }
-
-        /// <inheritdoc />
         public override byte[] ToBinary(object obj, out int manifest)
         {
             switch (obj)

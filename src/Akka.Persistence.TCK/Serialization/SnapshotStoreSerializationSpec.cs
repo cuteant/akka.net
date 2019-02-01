@@ -172,9 +172,15 @@ namespace Akka.Persistence.TCK.Serialization
             public MySnapshotSerializer2(ExtendedActorSystem system) : base(system) { }
             public override int Identifier => 77126;
 
-            public override byte[] ToBinary(object obj)
+            /// <inheritdoc />
+            public override byte[] ToBinary(object obj, out byte[] manifest)
             {
-                if (obj is MySnapshot2 snapshot) return Encoding.UTF8.GetBytes($".{snapshot.Data}");
+                if (obj is MySnapshot2 snapshot)
+                {
+                    manifest = ContactsManifestBytes;
+                    return Encoding.UTF8.GetBytes($".{snapshot.Data}");
+                }
+                manifest = null;
                 throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MySnapshotSerializer2)}]");
             }
 
@@ -186,17 +192,6 @@ namespace Akka.Persistence.TCK.Serialization
             public override string Manifest(object obj)
             {
                 if (obj is MySnapshot2) return ContactsManifest;
-                throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MySnapshotSerializer2)}]");
-            }
-            /// <inheritdoc />
-            public override byte[] ToBinary(object obj, out byte[] manifest)
-            {
-                if (obj is MySnapshot2 snapshot)
-                {
-                    manifest = ContactsManifestBytes;
-                    return Encoding.UTF8.GetBytes($".{snapshot.Data}");
-                }
-                manifest = null;
                 throw new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(MySnapshotSerializer2)}]");
             }
 

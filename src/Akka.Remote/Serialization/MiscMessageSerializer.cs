@@ -98,53 +98,6 @@ namespace Akka.Remote.Serialization
         }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
-        {
-            switch (obj)
-            {
-                case Identify identify:
-                    return MessagePackSerializer.Serialize(identify, _defaultResolver);
-                case ActorIdentity actorIdentity:
-                    return MessagePackSerializer.Serialize(actorIdentity, _defaultResolver);
-                case IActorRef actorRef:
-                    return ActorRefToProto(actorRef);
-                case RemoteWatcher.HeartbeatRsp heartbeatRsp:
-                    return MessagePackSerializer.Serialize(heartbeatRsp, _defaultResolver);
-                case RemoteScope remoteScope:
-                    return MessagePackSerializer.Serialize(remoteScope, _defaultResolver);
-                case Config config:
-                    return ConfigToProto(config);
-                case FromConfig fromConfig:
-                    return MessagePackSerializer.Serialize(fromConfig, _defaultResolver);
-                case DefaultResizer defaultResizer:
-                    return MessagePackSerializer.Serialize(defaultResizer, _defaultResolver);
-                case RoundRobinPool roundRobinPool:
-                    return MessagePackSerializer.Serialize(roundRobinPool, _defaultResolver);
-                case BroadcastPool broadcastPool:
-                    return MessagePackSerializer.Serialize(broadcastPool, _defaultResolver);
-                case RandomPool randomPool:
-                    return MessagePackSerializer.Serialize(randomPool, _defaultResolver);
-                case ScatterGatherFirstCompletedPool scatterPool:
-                    return MessagePackSerializer.Serialize(scatterPool, _defaultResolver);
-                case TailChoppingPool tailChoppingPool:
-                    return MessagePackSerializer.Serialize(tailChoppingPool, _defaultResolver);
-                case ConsistentHashingPool hashingPool:
-                    return MessagePackSerializer.Serialize(hashingPool, _defaultResolver);
-                case RemoteRouterConfig remoteRouterConfig:
-                    return MessagePackSerializer.Serialize(remoteRouterConfig, _defaultResolver);
-
-                case PoisonPill _:
-                case Kill _:
-                case RemoteWatcher.Heartbeat _:
-                case LocalScope _:
-                    return EmptyBytes;
-
-                default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
-            }
-        }
-
-        /// <inheritdoc />
         public override byte[] ToBinary(object obj, out int manifest)
         {
             switch (obj)

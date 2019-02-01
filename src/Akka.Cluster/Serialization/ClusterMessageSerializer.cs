@@ -68,42 +68,6 @@ namespace Akka.Cluster.Serialization
         public ClusterMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
-        {
-            switch (obj)
-            {
-                case ClusterHeartbeatSender.Heartbeat heartbeat:
-                    return MessagePackSerializer.Serialize(AddressToProto(heartbeat.From), s_defaultResolver);
-                case ClusterHeartbeatSender.HeartbeatRsp heartbeatRsp:
-                    return MessagePackSerializer.Serialize(UniqueAddressToProto(heartbeatRsp.From), s_defaultResolver);
-                case GossipEnvelope gossipEnvelope:
-                    return GossipEnvelopeToProto(gossipEnvelope);
-                case GossipStatus gossipStatus:
-                    return GossipStatusToProto(gossipStatus);
-                case InternalClusterAction.Join @join:
-                    return JoinToByteArray(@join);
-                case InternalClusterAction.Welcome welcome:
-                    return WelcomeMessageBuilder(welcome);
-                case ClusterUserAction.Leave leave:
-                    return MessagePackSerializer.Serialize(AddressToProto(leave.Address), s_defaultResolver);
-                case ClusterUserAction.Down down:
-                    return MessagePackSerializer.Serialize(AddressToProto(down.Address), s_defaultResolver);
-                case InternalClusterAction.InitJoin _:
-                    return CuteAnt.EmptyArray<byte>.Instance; // new Google.Protobuf.WellKnownTypes.Empty().ToByteArray();
-                case InternalClusterAction.InitJoinAck initJoinAck:
-                    return MessagePackSerializer.Serialize(AddressToProto(initJoinAck.Address), s_defaultResolver);
-                case InternalClusterAction.InitJoinNack initJoinNack:
-                    return MessagePackSerializer.Serialize(AddressToProto(initJoinNack.Address), s_defaultResolver);
-                case InternalClusterAction.ExitingConfirmed exitingConfirmed:
-                    return MessagePackSerializer.Serialize(UniqueAddressToProto(exitingConfirmed.Address), s_defaultResolver);
-                case ClusterRouterPool pool:
-                    return ClusterRouterPoolToByteArray(pool);
-                default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage<byte[]>(obj);
-            }
-        }
-
-        /// <inheritdoc />
         public override byte[] ToBinary(object obj, out int manifest)
         {
             switch (obj)

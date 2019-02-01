@@ -66,38 +66,6 @@ namespace Akka.Remote.Serialization
         public SystemMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
-        {
-            switch (obj)
-            {
-                case Create create:
-                    return CreateToProto(system, create);
-                case Recreate recreate:
-                    return RecreateToProto(system, recreate);
-                case Suspend suspend:
-                    return EmptyBytes;
-                case Resume resume:
-                    return ResumeToProto(system, resume);
-                case Terminate terminate:
-                    return EmptyBytes;
-                case Supervise supervise:
-                    return SuperviseToProto(supervise);
-                case Watch watch:
-                    return WatchToProto(watch);
-                case Unwatch unwatch:
-                    return UnwatchToProto(unwatch);
-                case Failed failed:
-                    return FailedToProto(system, failed);
-                case DeathWatchNotification deathWatchNotification:
-                    return DeathWatchNotificationToProto(deathWatchNotification);
-                case NoMessage noMessage:
-                    return ThrowHelper.ThrowArgumentException_Serializer_SystemMsg_NoMessage<byte[]>();
-                default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_S(obj);
-            }
-        }
-
-        /// <inheritdoc />
         public override byte[] ToBinary(object obj, out int manifest)
         {
             switch (obj)

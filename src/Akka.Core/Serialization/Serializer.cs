@@ -149,9 +149,10 @@ namespace Akka.Serialization
 
     /// <summary>TBD</summary>
     /// <typeparam name="TManifest"></typeparam>
-    public abstract class SerializerWithManifest<TManifest> : Serializer
+    /// <typeparam name="TSerializationManifest"></typeparam>
+    public abstract class SerializerWithManifest<TManifest, TSerializationManifest> : Serializer
     {
-        /// <summary>Initializes a new instance of the <see cref="SerializerWithManifest{TManifest}"/> class.</summary>
+        /// <summary>Initializes a new instance of the <see cref="SerializerWithManifest{TManifest,TPersistenceManifest}"/> class.</summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
         protected SerializerWithManifest(ExtendedActorSystem system) : base(system) { }
 
@@ -167,6 +168,15 @@ namespace Akka.Serialization
             var bts = ToBinary(source);
             return FromBinary(bts, manifest);
         }
+
+        /// <inheritdoc />
+        public sealed override byte[] ToBinary(object obj) => ToBinary(obj, out _);
+
+        /// <summary>Serializes the given object into a byte array</summary>
+        /// <param name="obj">The object to serialize </param>
+        /// <param name="manifest">The type hint used to deserialize the object contained in the array.</param>
+        /// <returns>A byte array containing the serialized object</returns>
+        public abstract byte[] ToBinary(object obj, out TSerializationManifest manifest);
 
         /// <summary>Deserializes a byte array into an object of type <paramref name="type" />.</summary>
         /// <param name="bytes">The array containing the serialized object</param>
@@ -196,13 +206,11 @@ namespace Akka.Serialization
     }
 
     /// <summary>TBD</summary>
-    public abstract class SerializerWithStringManifest : SerializerWithManifest<string>
+    public abstract class SerializerWithStringManifest : SerializerWithManifest<string, byte[]>
     {
         /// <summary>Initializes a new instance of the <see cref="SerializerWithStringManifest"/> class.</summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
         protected SerializerWithStringManifest(ExtendedActorSystem system) : base(system) { }
-
-        public abstract byte[] ToBinary(object o, out byte[] manifest);
 
         /// <inheritdoc />
         public sealed override Payload ToPayload(object obj)
@@ -226,13 +234,11 @@ namespace Akka.Serialization
     }
 
     /// <summary>TBD</summary>
-    public abstract class SerializerWithIntegerManifest : SerializerWithManifest<int>
+    public abstract class SerializerWithIntegerManifest : SerializerWithManifest<int, int>
     {
         /// <summary>Initializes a new instance of the <see cref="SerializerWithIntegerManifest"/> class.</summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
         protected SerializerWithIntegerManifest(ExtendedActorSystem system) : base(system) { }
-
-        public abstract byte[] ToBinary(object o, out int manifest);
 
         /// <inheritdoc />
         public sealed override Payload ToPayload(object obj)

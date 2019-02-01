@@ -54,22 +54,6 @@ namespace Akka.Cluster.Tools.Client.Serialization
         public ClusterClientMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
-        {
-            switch (obj)
-            {
-                case ClusterReceptionist.Contacts contacts:
-                    return ContactsToProto(contacts);
-                case ClusterReceptionist.GetContacts _:
-                case ClusterReceptionist.Heartbeat _:
-                case ClusterReceptionist.HeartbeatRsp _:
-                    return EmptyBytes;
-                default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterClientMessage(obj);
-            }
-        }
-
-        /// <inheritdoc />
         public override byte[] ToBinary(object obj, out int manifest)
         {
             switch (obj)

@@ -100,48 +100,6 @@ namespace Akka.Cluster.Sharding.Serialization
         /// <param name="system">The actor system to associate with this serializer.</param>
         public ClusterShardingMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
-        /// <summary>
-        /// Serializes the given object into a byte array
-        /// </summary>
-        /// <param name="obj">The object to serialize</param>
-        /// <exception cref="ArgumentException">
-        /// This exception is thrown when the specified <paramref name="obj"/> is of an unknown type.
-        /// </exception>
-        /// <returns>A byte array containing the serialized object</returns>
-        public override byte[] ToBinary(object obj)
-        {
-            switch (obj)
-            {
-                case PersistentShardCoordinator.State o: return MessagePackSerializer.Serialize(CoordinatorStateToProto(o), s_defaultResolver);
-                case PersistentShardCoordinator.ShardRegionRegistered o: return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.Region), s_defaultResolver);
-                case PersistentShardCoordinator.ShardRegionProxyRegistered o: return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.RegionProxy), s_defaultResolver);
-                case PersistentShardCoordinator.ShardRegionTerminated o: return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.Region), s_defaultResolver);
-                case PersistentShardCoordinator.ShardRegionProxyTerminated o: return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.RegionProxy), s_defaultResolver);
-                case PersistentShardCoordinator.ShardHomeAllocated o: return MessagePackSerializer.Serialize(ShardHomeAllocatedToProto(o), s_defaultResolver);
-                case PersistentShardCoordinator.ShardHomeDeallocated o: return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
-                case PersistentShardCoordinator.Register o: return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.ShardRegion), s_defaultResolver);
-                case PersistentShardCoordinator.RegisterProxy o: return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.ShardRegionProxy), s_defaultResolver);
-                case PersistentShardCoordinator.RegisterAck o: return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.Coordinator), s_defaultResolver);
-                case PersistentShardCoordinator.GetShardHome o: return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
-                case PersistentShardCoordinator.ShardHome o: return MessagePackSerializer.Serialize(ShardHomeToProto(o), s_defaultResolver);
-                case PersistentShardCoordinator.HostShard o: return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
-                case PersistentShardCoordinator.ShardStarted o: return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
-                case PersistentShardCoordinator.BeginHandOff o: return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
-                case PersistentShardCoordinator.BeginHandOffAck o: return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
-                case PersistentShardCoordinator.HandOff o: return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
-                case PersistentShardCoordinator.ShardStopped o: return MessagePackSerializer.Serialize(ShardIdMessageToProto(o.Shard), s_defaultResolver);
-                case PersistentShardCoordinator.GracefulShutdownRequest o: return MessagePackSerializer.Serialize(ActorRefMessageToProto(o.ShardRegion), s_defaultResolver);
-                case Shard.ShardState o: return MessagePackSerializer.Serialize(EntityStateToProto(o), s_defaultResolver);
-                case Shard.EntityStarted o: return MessagePackSerializer.Serialize(EntityStartedToProto(o), s_defaultResolver);
-                case Shard.EntityStopped o: return MessagePackSerializer.Serialize(EntityStoppedToProto(o), s_defaultResolver);
-                case ShardRegion.StartEntity o: return MessagePackSerializer.Serialize(StartEntityToProto(o), s_defaultResolver);
-                case ShardRegion.StartEntityAck o: return MessagePackSerializer.Serialize(StartEntityAckToProto(o), s_defaultResolver);
-                case Shard.GetShardStats _: return EmptyArray<byte>.Instance;
-                case Shard.ShardStats o: return MessagePackSerializer.Serialize(ShardStatsToProto(o), s_defaultResolver);
-            }
-            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<byte[]>(obj);
-        }
-
         /// <inheritdoc />
         public override byte[] ToBinary(object obj, out int manifest)
         {
@@ -318,17 +276,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<int>(type);
         }
 
-        /// <summary>
-        /// Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(System.Byte[],System.String)" /> method.
-        /// <note>
-        /// This method returns <see cref="String.Empty" /> if a manifest is not needed.
-        /// </note>
-        /// </summary>
-        /// <param name="o">The object for which the manifest is needed.</param>
-        /// <exception cref="ArgumentException">
-        /// This exception is thrown when the specified <paramref name="o"/> does not have an associated manifest.
-        /// </exception>
-        /// <returns>The manifest needed for the deserialization of the specified <paramref name="o" />.</returns>
+        /// <inheritdoc />
         public override int Manifest(object o)
         {
             switch (o)

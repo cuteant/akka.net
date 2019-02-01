@@ -58,28 +58,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         public DistributedPubSubMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
-        {
-            switch (obj)
-            {
-                case Internal.Status status:
-                    return StatusToProto(status);
-                case Internal.Delta delta:
-                    return DeltaToProto(delta);
-                case Send send:
-                    return SendToProto(send);
-                case SendToAll sendToAll:
-                    return SendToAllToProto(sendToAll);
-                case Publish publish:
-                    return PublishToProto(publish);
-                case SendToOneSubscriber sub:
-                    return SendToOneSubscriberToProto(sub);
-                default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_DistributedPubSubMessage(obj);
-            }
-        }
-
-        /// <inheritdoc />
         public override byte[] ToBinary(object obj, out int manifest)
         {
             switch (obj)
