@@ -10,12 +10,10 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Persistence.Fsm;
 using Akka.Persistence.Serialization.Protocol;
 using Akka.Serialization;
-using Akka.Serialization.Protocol;
 using CuteAnt;
 using CuteAnt.Collections;
 using CuteAnt.Reflection;
@@ -63,20 +61,11 @@ namespace Akka.Persistence.Serialization
             if (persistent.WriterGuid != null) message.WriterGuid = persistent.WriterGuid;
             if (persistent.Sender != null) message.Sender = Akka.Serialization.Serialization.SerializedActorPath(persistent.Sender);
 
-            message.Payload = GetPersistentPayload(persistent.Payload);
+            message.Payload = system.Serialize(persistent.Payload);
             message.SequenceNr = persistent.SequenceNr;
             message.Deleted = persistent.IsDeleted;
 
             return message;
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Payload GetPersistentPayload(object obj)
-        {
-            if (null == obj) { return Payload.Null; }
-
-            var serializer = system.Serialization.FindSerializerForType(obj.GetType());
-            return serializer.ToPayload(obj);
         }
 
         private Protocol.AtomicWrite GetAtomicWrite(AtomicWrite write)
@@ -87,7 +76,7 @@ namespace Akka.Persistence.Serialization
         private Protocol.AtLeastOnceDeliverySnapshot GetAtLeastOnceDeliverySnapshot(AtLeastOnceDeliverySnapshot snapshot)
         {
             var unconfirmedDeliveries = snapshot.UnconfirmedDeliveries?
-                .Select(_ => new Protocol.UnconfirmedDelivery(_.DeliveryId, _.Destination.ToString(), GetPersistentPayload(_.Message))).ToArray();
+                .Select(_ => new Protocol.UnconfirmedDelivery(_.DeliveryId, _.Destination.ToString(), system.Serialize(_.Message))).ToArray();
             return new Protocol.AtLeastOnceDeliverySnapshot(
                 snapshot.CurrentDeliveryId,
                 unconfirmedDeliveries
@@ -111,7 +100,7 @@ namespace Akka.Persistence.Serialization
             var timeout = fsmSnapshot.Timeout;
             return new PersistentFSMSnapshot(
                 fsmSnapshot.StateIdentifier,
-                GetPersistentPayload(fsmSnapshot.Data),
+                system.Serialize(fsmSnapshot.Data),
                 timeout.HasValue ? (long)timeout.Value.TotalMilliseconds : 0L
             );
         }
@@ -172,7 +161,7 @@ namespace Akka.Persistence.Serialization
             }
 
             return new Persistent(
-                system.Serialization.Deserialize(message.Payload),
+                system.Deserialize(message.Payload),
                 message.SequenceNr,
                 message.PersistenceId,
                 message.Manifest,
@@ -202,7 +191,7 @@ namespace Akka.Persistence.Serialization
                 foreach (var unconfirmed in message.UnconfirmedDeliveries)
                 {
                     ActorPath.TryParse(unconfirmed.Destination, out var actorPath);
-                    unconfirmedDeliveries.Add(new UnconfirmedDelivery(unconfirmed.DeliveryId, actorPath, system.Serialization.Deserialize(unconfirmed.Payload)));
+                    unconfirmedDeliveries.Add(new UnconfirmedDelivery(unconfirmed.DeliveryId, actorPath, system.Deserialize(unconfirmed.Payload)));
                 }
             }
             return new AtLeastOnceDeliverySnapshot(message.CurrentDeliveryId, unconfirmedDeliveries.ToArray());
@@ -239,7 +228,7 @@ namespace Akka.Persistence.Serialization
                 return instanceType.MakeDelegateForCtor(types);
             }
 
-            object[] arguments = { message.StateIdentifier, system.Serialization.Deserialize(message.Data), timeout };
+            object[] arguments = { message.StateIdentifier, system.Deserialize(message.Data), timeout };
 
             var ctorInvoker = s_ctorInvokerCache.GetOrAdd(type, MakeDelegateForCtor);
 

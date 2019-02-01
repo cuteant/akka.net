@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Serialization;
 using Akka.Serialization.Protocol;
@@ -26,43 +25,26 @@ namespace Akka.Persistence.Serialization
             var snapShot = source as Snapshot;
             if (null == snapShot) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(source); }
 
-            var payload = GetPersistentPayload(snapShot);
-            return new Snapshot(system.Serialization.Deserialize(payload));
+            var payload = system.Serialize(snapShot.Data);
+            return new Snapshot(system.Deserialize(payload));
         }
 
         public override byte[] ToBinary(object obj)
         {
             if (obj is Snapshot snapShot)
             {
-                return MessagePackSerializer.Serialize(GetPersistentPayload(snapShot), s_defaultResolver);
+                return MessagePackSerializer.Serialize(system.Serialize(snapShot.Data), s_defaultResolver);
             }
 
             return ThrowHelper.ThrowArgumentException_SnapshotSerializer(obj);
         }
 
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private Payload GetPersistentPayload(Snapshot snapShot)
-        {
-            var snapshotData = snapShot.Data;
-            if (null == snapshotData) { return Payload.Null; }
-
-            var serializer = system.Serialization.FindSerializerForType(snapshotData.GetType());
-            return serializer.ToPayload(snapshotData);
-        }
-
         public override object FromBinary(byte[] bytes, Type type)
         {
             var payload = MessagePackSerializer.Deserialize<Payload>(bytes, s_defaultResolver);
-            return new Snapshot(system.Serialization.Deserialize(payload));
+            return new Snapshot(system.Deserialize(payload));
             //if (type == typeof(Snapshot)) return GetSnapshot(bytes);
             //return ThrowHelper.ThrowArgumentException_SnapshotSerializer(type);
         }
-
-        //[MethodImpl(MethodImplOptions.AggressiveInlining)]
-        //private Snapshot GetSnapshot(byte[] bytes)
-        //{
-        //    var payload = MessagePackSerializer.Deserialize<Payload>(bytes, s_defaultResolver);
-        //    return new Snapshot(system.Serialization.Deserialize(payload));
-        //}
     }
 }
