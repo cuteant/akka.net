@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using static Akka.IO.IpExtensions;
+//using static Akka.IO.IpExtensions;
 
 namespace Akka.Tests.IO
 {

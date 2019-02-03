@@ -23,7 +23,8 @@ namespace Akka.Remote.Transport.DotNetty
     ///
     /// Defines the settings for the <see cref="DotNettyTransport"/>.
     /// </summary>
-    internal sealed class DotNettyTransportSettings
+    [Akka.Annotations.InternalApi]
+    public sealed class DotNettyTransportSettings  // public for Akka.Tests.FsCheck
     {
         public static DotNettyTransportSettings Create(ActorSystem system)
         {
@@ -244,7 +245,8 @@ namespace Akka.Remote.Transport.DotNetty
 
     #region == enum TransportMode ==
 
-    internal enum TransportMode
+    [Akka.Annotations.InternalApi]
+    public enum TransportMode // public for Akka.Tests.FsCheck
     {
         Tcp,
         Udp
@@ -254,7 +256,8 @@ namespace Akka.Remote.Transport.DotNetty
 
     #region == class SslSettings ==
 
-    internal sealed class SslSettings
+    [Akka.Annotations.InternalApi]
+    public sealed class SslSettings // public for Akka.Tests.FsCheck
     {
         public static readonly SslSettings Empty = new SslSettings();
 

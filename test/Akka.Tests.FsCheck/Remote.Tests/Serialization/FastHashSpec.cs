@@ -5,7 +5,6 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-#if FSCHECK
 using System.Linq;
 using Akka.Remote.Serialization;
 using FsCheck;
@@ -27,4 +26,3 @@ namespace Akka.Remote.Tests.Serialization
         }
     }
 }
-#endif

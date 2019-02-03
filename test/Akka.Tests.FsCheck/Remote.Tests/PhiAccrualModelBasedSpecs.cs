@@ -5,7 +5,6 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-#if FSCHECK
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -165,4 +164,3 @@ namespace Akka.Remote.Tests
         }
     }
 }
-#endif

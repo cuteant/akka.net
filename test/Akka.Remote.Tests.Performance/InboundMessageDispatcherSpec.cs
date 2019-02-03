@@ -8,7 +8,7 @@
 using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
-using SerializedMessage = Akka.Remote.Serialization.Protocol.Payload;
+using SerializedMessage = Akka.Serialization.Protocol.Payload;
 using Akka.Util.Internal;
 using NBench;
 
@@ -84,7 +84,7 @@ namespace Akka.Remote.Tests.Performance
             _actorSystem = ActorSystem.Create("MessageDispatcher" + Counter.GetAndIncrement(), RemoteHocon);
             _systemAddress = RARP.For(_actorSystem).Provider.DefaultAddress;
             _inboundMessageDispatcherCounter = context.GetCounter(MessageDispatcherThroughputCounterName);
-            _message = new SerializedMessage { SerializerId = 0, Message = Encoding.UTF8.GetBytes("foo") };
+            _message = new SerializedMessage(Encoding.UTF8.GetBytes("foo"), 0);
             _dispatcher = new DefaultMessageDispatcher(_actorSystem, RARP.For(_actorSystem).Provider, _actorSystem.Log);
             _targetActorRef = new BenchmarkActorRef(_inboundMessageDispatcherCounter, RARP.For(_actorSystem).Provider);
         }

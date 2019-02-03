@@ -221,16 +221,19 @@ namespace Akka.Cluster
             }
         }
 
-        /// <summary>
-        /// Compares members by their upNumber to determine which is oldest / youngest.
-        /// </summary>
-        internal static readonly AgeComparer AgeOrdering = new AgeComparer();
+        /// <summary>Compares members by their upNumber to determine which is oldest / youngest.
+        /// public for Akka.Tests.FsCheck.</summary>
+        [Akka.Annotations.InternalApi, System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public static readonly IComparer<Member> AgeOrdering = AgeComparer.Instance;
 
         /// <summary>
         ///  INTERNAL API
         /// </summary>
-        internal class AgeComparer : IComparer<Member>
+        internal sealed class AgeComparer : IComparer<Member>
         {
+            public static readonly IComparer<Member> Instance = new AgeComparer();
+            private AgeComparer() { }
+
             /// <inheritdoc cref="IComparer{Member}.Compare"/>
             public int Compare(Member a, Member b)
             {
@@ -395,10 +398,10 @@ namespace Akka.Cluster
             return m1;
         }
 
-        /// <summary>
-        /// All of the legal state transitions for a cluster member
-        /// </summary>
-        internal static readonly ImmutableDictionary<MemberStatus, ImmutableHashSet<MemberStatus>> AllowedTransitions =
+        /// <summary>All of the legal state transitions for a cluster member
+        /// public for Akka.Tests.FsCheck.</summary>
+        [Akka.Annotations.InternalApi, System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public static readonly ImmutableDictionary<MemberStatus, ImmutableHashSet<MemberStatus>> AllowedTransitions =
             new Dictionary<MemberStatus, ImmutableHashSet<MemberStatus>>
             {
                 {MemberStatus.Joining, ImmutableHashSet.Create(MemberStatus.WeaklyUp, MemberStatus.Up,MemberStatus.Leaving, MemberStatus.Down, MemberStatus.Removed)},

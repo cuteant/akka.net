@@ -22,7 +22,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <SignAssembly>false</SignAssembly>
+    <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SourceRoot)/build/StrongKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
 
@@ -44,7 +44,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <TieredCompilation>true</TieredCompilation>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <DefineConstants>$(DefineConstants);NET_3_5_GREATER;</DefineConstants>
+    <DefineConstants>$(DefineConstants);NET_3_5_GREATER;SIGNED</DefineConstants>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

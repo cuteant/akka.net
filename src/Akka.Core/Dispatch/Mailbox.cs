@@ -218,8 +218,8 @@ namespace Akka.Dispatch
         /// <summary>
         /// Returns <c>true</c> if the mailbox is currently suspended from processing. <c>false</c> otherwise.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal bool IsSuspended() { return (CurrentStatus() & MailboxStatus.SuspendMask) != 0; }
+        [MethodImpl(MethodImplOptions.AggressiveInlining), System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        public bool IsSuspended() { return (CurrentStatus() & MailboxStatus.SuspendMask) != 0; } // public for Akka.Tests.FsCheck
 
         /// <summary>
         /// Returns <c>true</c> if the mailbox is closed. <c>false</c> otherwise.

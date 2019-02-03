@@ -41,7 +41,8 @@ namespace Akka.Remote
     /// (used for forcing all /system level remoting actors onto a dedicated dispatcher)
     /// </summary>
     // ReSharper disable once InconsistentNaming
-    internal sealed class RARP : ExtensionIdProvider<RARP>, IExtension
+    [Akka.Annotations.InternalApi]
+    public sealed class RARP : ExtensionIdProvider<RARP>, IExtension // public for Akka.Tests.FsCheck
     {
         //this is why this extension is called "RARP"
         private readonly IRemoteActorRefProvider _provider;

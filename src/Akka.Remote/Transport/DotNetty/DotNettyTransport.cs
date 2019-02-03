@@ -127,7 +127,8 @@ namespace Akka.Remote.Transport.DotNetty
 
     #region == class DotNettyTransport ==
 
-    internal abstract class DotNettyTransport : Transport
+    [Akka.Annotations.InternalApi]
+    public abstract class DotNettyTransport : Transport // public for Akka.Tests.FsCheck
     {
         internal readonly ConcurrentSet<IChannel> ConnectionGroup;
 

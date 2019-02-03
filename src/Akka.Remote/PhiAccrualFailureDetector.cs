@@ -254,7 +254,8 @@ namespace Akka.Remote
     ///
     /// The stats (mean, variance, stdDeviation) are not defined for empty <see
     /// cref="HeartbeatHistory"/>, i.e. throws Exception.</summary>
-    internal class HeartbeatHistory
+    [Akka.Annotations.InternalApi]
+    public class HeartbeatHistory // public for Akka.Tests.FsCheck
     {
         #region @@ Fields @@
 

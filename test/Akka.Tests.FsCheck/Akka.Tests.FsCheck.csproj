@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <TargetFrameworks>net471;net452</TargetFrameworks>
+    <RootNamespace>Akka</RootNamespace>
+    <AssemblyName>Akka.Tests.FsCheck</AssemblyName>
+    <DefineConstants>$(DefineConstants);CONFIGURATION;SERIALIZATION;UNSAFE_THREADING</DefineConstants>
+    <SignAssembly>false</SignAssembly>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
+    <Reference Include="System.Configuration" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\Akka.Tests\IO\TestUtils.cs" Link="Tests\IO\TestUtils.cs" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="FsCheck" Version="$(FsCheckPackageVersion)" />
+    <PackageReference Include="FsCheck.Xunit" Version="$(FsCheckXunitPackageVersion)" />
+    <PackageReference Include="FSharp.Core" Version="$(FSharpCorePackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Cluster\Akka.Cluster.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
+    <ProjectReference Include="..\..\src\Akka.TestKit\Akka.TestKit.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+    <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
+  </ItemGroup>
+
+</Project>

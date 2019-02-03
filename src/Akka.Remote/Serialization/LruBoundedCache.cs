@@ -16,7 +16,8 @@ namespace Akka.Remote.Serialization
     /// <remarks>
     /// Fast hash based on the 128 bit Xorshift128+ PRNG. Mixes in character bits into the random generator state.
     /// </remarks>
-    internal static class FastHash
+    [Akka.Annotations.InternalApi]
+    public static class FastHash // public for Akka.Tests.FsCheck
     {
         /// <summary>
         /// Allocatey, but safe implementation of FastHash
