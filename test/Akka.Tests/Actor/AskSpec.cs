@@ -12,7 +12,7 @@ using System;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Util.Internal;
-using Nito.AsyncEx;
+using CuteAnt.AsyncEx;
 
 namespace Akka.Tests.Actor
 {

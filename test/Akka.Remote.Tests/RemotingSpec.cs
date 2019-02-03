@@ -18,7 +18,7 @@ using Akka.Util;
 using Akka.Util.Internal;
 using Xunit;
 using Xunit.Abstractions;
-using Nito.AsyncEx;
+using CuteAnt.AsyncEx;
 
 namespace Akka.Remote.Tests
 {
