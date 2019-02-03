@@ -13,6 +13,7 @@ using Xunit;
 
 namespace Akka.Remote.Tests.Serialization
 {
+    [Collection("Akka.Remote.Tests")]
     public class FastHashSpec
     {
         [Property]

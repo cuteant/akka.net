@@ -6,6 +6,7 @@
     <AssemblyName>Akka.Tests.FsCheck</AssemblyName>
     <DefineConstants>$(DefineConstants);CONFIGURATION;SERIALIZATION;UNSAFE_THREADING</DefineConstants>
     <SignAssembly>false</SignAssembly>
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
 
   <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
@@ -17,17 +18,12 @@
   </ItemGroup>
 
   <ItemGroup>
+    <PackageReference Include="Akka.Cluster.Unofficial" Version="$(AkkaClusterUnofficialPackageVersion)" />
+    <PackageReference Include="Akka.Remote.Unofficial" Version="$(AkkaRemoteUnofficialPackageVersion)" />
+    <PackageReference Include="Akka.Tests.Shared.Unofficial" Version="$(AkkaTestsSharedUnofficialPackageVersion)" />
     <PackageReference Include="FsCheck" Version="$(FsCheckPackageVersion)" />
     <PackageReference Include="FsCheck.Xunit" Version="$(FsCheckXunitPackageVersion)" />
     <PackageReference Include="FSharp.Core" Version="$(FSharpCorePackageVersion)" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\Akka.Cluster\Akka.Cluster.csproj" />
-    <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
-    <ProjectReference Include="..\..\src\Akka.TestKit\Akka.TestKit.csproj" />
-    <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
-    <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
   </ItemGroup>
 
 </Project>

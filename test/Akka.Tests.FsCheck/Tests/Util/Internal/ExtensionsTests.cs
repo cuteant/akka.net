@@ -17,7 +17,7 @@ using Xunit;
 
 namespace Akka.Tests.Util.Internal
 {
-
+    [Collection("Akka.Tests")]
     public class ExtensionsTests
     {
         [Fact]

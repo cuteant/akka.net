@@ -18,6 +18,7 @@ namespace Akka.Tests.Util
     /// <summary>
     /// TODO: Should we use the FsCheck.XUnit integration when they upgrade to xUnit 2
     /// </summary>
+    [Collection("Akka.Tests")]
     public class ByteStringSpec
     {
         class Generators

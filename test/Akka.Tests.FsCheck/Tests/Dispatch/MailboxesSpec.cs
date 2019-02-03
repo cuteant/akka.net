@@ -122,6 +122,7 @@ namespace Akka.Tests.Dispatch
         public class Start { }
     }
 
+    [Collection("Akka.Tests")]
     public class MailboxesSpec : AkkaSpec
     {
         public MailboxesSpec() : base(GetConfig())

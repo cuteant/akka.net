@@ -17,9 +17,11 @@ using Akka.Util.Internal;
 using FsCheck;
 using FsCheck.Experimental;
 using FsCheck.Xunit;
+using Xunit;
 
 namespace Akka.Cluster.Tests
 {
+    [Collection("Akka.Cluster.Tests")]
     public class MemberOrderingModelBasedTests
     {
         public MemberOrderingModelBasedTests()

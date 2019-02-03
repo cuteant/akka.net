@@ -21,6 +21,7 @@ using FluentAssertions.Extensions;
 
 namespace Akka.Tests.IO
 {
+    [Collection("Akka.Tests")]
     public class UdpIntegrationSpec : AkkaSpec
     {
         private readonly IPEndPoint[] _addresses;

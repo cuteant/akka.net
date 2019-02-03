@@ -11,6 +11,7 @@ using Akka.Actor;
 using Akka.TestKit;
 using FsCheck;
 using FsCheck.Xunit;
+using Xunit;
 using static Akka.Util.RuntimeDetector;
 
 namespace Akka.Tests.Actor
@@ -75,6 +76,7 @@ namespace Akka.Tests.Actor
     /// Used to verify that actor primitives like <see cref="Address"/> and <see cref="ActorPath"/> can properly
     /// handle each of the following scenarios: IPV4, IVP6, DNS
     /// </summary>
+    [Collection("Akka.Tests")]
     public class RemotePathParsingSpec : AkkaSpec
     {
         public RemotePathParsingSpec()
