@@ -4,6 +4,16 @@
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.TestKit</RootNamespace>
+    <AssemblyName>Akka.Tests.Shared.Internals</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Tests.Shared.Unofficial</PackageId>
+    <Title>Akka.Tests.Shared.Internals (Unofficial)</Title>
+    <Description>TestKit for writing tests for Akka.NET using xUnit.</Description>
+    <PackageTags>$(AkkaPackageTags);testkit;xunit</PackageTags>
   </PropertyGroup>
 
   <ItemGroup>
