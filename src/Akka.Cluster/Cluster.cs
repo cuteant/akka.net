@@ -470,7 +470,7 @@ namespace Akka.Cluster
         /// <summary>
         /// The current snapshot state of the cluster.
         /// </summary>
-        public ClusterEvent.CurrentClusterState State { get { return _readView._state; } }
+        public ClusterEvent.CurrentClusterState State { get { return _readView.State; } }
 
         /// <summary>
         /// Access to the current member info for this node.

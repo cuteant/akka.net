@@ -9,6 +9,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
@@ -165,10 +166,16 @@ namespace Akka.Actor.Internal
             return _provider.SystemGuardian.Cell.AttachChild(Props.Create<TActor>(), true, name);
         }
 
+        private int _aborting = Constants.False;
         /// <summary>
         /// If <c>true</c>, then the <see cref="ActorSystem"/> is attempting to abort.
         /// </summary>
-        internal volatile bool Aborting = false;
+        internal bool Aborting
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Constants.True == Volatile.Read(ref _aborting);
+            set => Interlocked.Exchange(ref _aborting, value ? Constants.True : Constants.False);
+        }
 
         /// <summary>
         /// Shuts down the <see cref="ActorSystem"/> without all of the usual guarantees,
@@ -476,9 +483,29 @@ namespace Akka.Actor.Internal
 
         /// <summary>
         /// <para>
+        /// Registers a block of code (callback) to run after ActorSystem.shutdown has been issued and all actors
+        /// in this actor system have been stopped. Multiple code blocks may be registered by calling this method
+        /// multiple times.
+        /// </para>
+        /// <para>
+        /// The callbacks will be run sequentially in reverse order of registration, i.e. last registration is run first.
+        /// </para>
+        /// </summary>
+        /// <param name="code">The code to run</param>
+        /// <param name="state"></param>
+        /// <exception cref="Exception">
+        /// This exception is thrown if the system has already shut down or if shutdown has been initiated.
+        /// </exception>
+        public override void RegisterOnTermination(Action<object> code, object state)
+        {
+            _terminationCallbacks.Add(code, state);
+        }
+
+        /// <summary>
+        /// <para>
         /// Terminates this actor system. This will stop the guardian actor, which in turn will recursively stop
         /// all its child actors, then the system guardian (below which the logging actors reside) and the execute
-        /// all registered termination handlers (<see cref="ActorSystem.RegisterOnTermination" />).
+        /// all registered termination handlers (<see cref="ActorSystem.RegisterOnTermination(Action)" />).
         /// </para>
         /// <para>
         /// Be careful to not schedule any operations on completion of the returned task using the `dispatcher`
@@ -523,7 +550,7 @@ namespace Akka.Actor.Internal
     /// <summary>
     /// This class represents a callback used to run a task when the actor system is terminating.
     /// </summary>
-    class TerminationCallbacks
+    sealed class TerminationCallbacks
     {
         private Task _terminationTask;
         private readonly AtomicReference<Task> _atomicRef;
@@ -536,11 +563,15 @@ namespace Akka.Actor.Internal
         {
             _atomicRef = new AtomicReference<Task>(new Task(() => { }));
 
-            upStreamTerminated.ContinueWith(_ =>
-            {
-                _terminationTask = _atomicRef.GetAndSet(null);
-                _terminationTask.Start();
-            });
+            upStreamTerminated.LinkOutcome(AfterUpStreamTerminatedAction, this, _atomicRef);
+        }
+
+        private static readonly Action<Task, TerminationCallbacks, AtomicReference<Task>> AfterUpStreamTerminatedAction = AfterUpStreamTerminated;
+        private static void AfterUpStreamTerminated(Task t, TerminationCallbacks owner, AtomicReference<Task> atomicRef)
+        {
+            var terminationTask = atomicRef.GetAndSet(null);
+            owner._terminationTask = terminationTask;
+            terminationTask.Start();
         }
 
         /// <summary>
@@ -558,11 +589,40 @@ namespace Akka.Actor.Internal
 
             if (_atomicRef.CompareAndSet(previous, t))
             {
-                t.ContinueWith(_ => previous.Start());
+                t.LinkOutcome(InvokeTaskStartAction, previous);
                 return;
             }
 
             Add(code);
+        }
+
+        /// <summary>
+        /// Adds a continuation to the current task being performed.
+        /// </summary>
+        /// <param name="code">The method to run as part of the continuation</param>
+        /// <param name="state"></param>
+        /// <exception cref="InvalidOperationException">This exception is thrown if the actor system has been terminated.</exception>
+        public void Add(Action<object> code, object state)
+        {
+            var previous = _atomicRef.Value;
+
+            if (_atomicRef.Value == null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorSystem_AlreadyTerminated);
+
+            var t = new Task(code, state);
+
+            if (_atomicRef.CompareAndSet(previous, t))
+            {
+                t.LinkOutcome(InvokeTaskStartAction, previous);
+                return;
+            }
+
+            Add(code, state);
+        }
+
+        private static readonly Action<Task, Task> InvokeTaskStartAction = InvokeTaskStart;
+        private static void InvokeTaskStart(Task t, Task previous)
+        {
+            previous.Start();
         }
 
         /// <summary>

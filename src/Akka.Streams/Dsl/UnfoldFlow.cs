@@ -61,15 +61,17 @@ namespace Akka.Streams.Dsl
         {
             // Do Nothing until `timeout` to try and intercept completion as downstream,
             // but cancel stream after timeout if inlet is not closed to prevent deadlock.
-            Materializer.ScheduleOnce(_timeout, () =>
+            Materializer.ScheduleOnce(_timeout, InvokeOnDownstreamFinishAction, this, _nextElem, _timeout);
+        }
+        private static readonly Action<UnfoldFlowGraphStageLogic<TIn, TState, TOut>, Inlet<TIn>, TimeSpan> InvokeOnDownstreamFinishAction = InvokeOnDownstreamFinish;
+        private static void InvokeOnDownstreamFinish(UnfoldFlowGraphStageLogic<TIn, TState, TOut> owner, Inlet<TIn> nextElem, TimeSpan timeout)
+        {
+            var cb = owner.GetAsyncCallback(() =>
             {
-                var cb = GetAsyncCallback(() =>
-                {
-                    if (!IsClosed(_nextElem))
-                        FailStage(new InvalidOperationException($"unfoldFlow source's inner flow canceled only upstream, while downstream remain available for {_timeout}"));
-                });
-                cb();
+                if (!owner.IsClosed(nextElem))
+                    owner.FailStage(new InvalidOperationException($"unfoldFlow source's inner flow canceled only upstream, while downstream remain available for {timeout}"));
             });
+            cb();
         }
     }
 
@@ -82,7 +84,7 @@ namespace Akka.Streams.Dsl
         {
             _generateGraphStageLogic = generateGraphStageLogic;
 
-            Shape = new FanOutShape<TIn, TState, TOut>("unfoldFlow");            
+            Shape = new FanOutShape<TIn, TState, TOut>("unfoldFlow");
         }
 
         public override FanOutShape<TIn, TState, TOut> Shape { get; }

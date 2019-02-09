@@ -569,18 +569,9 @@ namespace Akka.Remote
             * */
             void HandleListen(Listen listen)
             {
-                Listens.ContinueWith<INoSerializationVerificationNeeded>(listens =>
-                {
-                    if (listens.IsFaulted)
-                    {
-                        return new ListensFailure(listen.AddressesPromise, listens.Exception);
-                    }
-                    else
-                    {
-                        return new ListensResult(listen.AddressesPromise, listens.Result);
-                    }
-                }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
-                    .PipeTo(Self);
+                Listens.LinkOutcome(InvokeHandleListenFunc, listen,
+                        CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+                       .PipeTo(Self);
             }
             Receive<Listen>(HandleListen);
 
@@ -615,7 +606,7 @@ namespace Akka.Remote
 
             #endregion
 
-            Receive<ListensFailure>(failure => failure.AddressesPromise.SetException(failure.Cause));
+            Receive<ListensFailure>(failure => failure.AddressesPromise.TrySetUnwrappedException(failure.Cause));
 
             // defer the inbound association until we can enter "Accepting" behavior
 
@@ -628,6 +619,19 @@ namespace Akka.Remote
                  Sender.Tell(true);
                  Context.Stop(Self);
              });
+        }
+
+        private static readonly Func<Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>>, Listen, INoSerializationVerificationNeeded> InvokeHandleListenFunc = InvokeHandleListen;
+        private static INoSerializationVerificationNeeded InvokeHandleListen(Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>> listens, Listen listen)
+        {
+            if (listens.IsSuccessfully())
+            {
+                return new ListensResult(listen.AddressesPromise, listens.Result);
+            }
+            else
+            {
+                return new ListensFailure(listen.AddressesPromise, listens.Exception);
+            }
         }
 
         #endregion
@@ -650,10 +654,7 @@ namespace Akka.Remote
                 var sender = Sender;
                 var allStatuses = _transportMapping.Values.Select(x => x.ManagementCommand(mc.Cmd));
                 Task.WhenAll(allStatuses)
-                    .ContinueWith(x =>
-                    {
-                        return new ManagementCommandAck(x.Result.All(y => y));
-                    }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+                    .Then(CheckManagementCommandFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
                     .PipeTo(sender);
             }
             Receive<ManagementCommand>(HandleManagement);
@@ -895,28 +896,12 @@ namespace Akka.Remote
 
                 // The construction of the Task for shutdownStatus has to happen after the
                 // flushStatus future has been finished so that endpoints are shut down before transports.
-                var shutdownStatus = Task.WhenAll(_endpoints.AllEndpoints.Select(
-                    x => x.GracefulStop(_settings.FlushWait, EndpointWriter.FlushAndStop.Instance))).ContinueWith(
-                        result =>
-                        {
-                            if (result.IsFaulted || result.IsCanceled)
-                            {
-                                if (result.Exception != null) { result.Exception.Handle(e => true); }
-                                return false;
-                            }
-                            return result.Result.All(x => x);
-                        }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                var shutdownStatus = Task
+                    .WhenAll(_endpoints.AllEndpoints.Select(
+                        x => x.GracefulStop(_settings.FlushWait, EndpointWriter.FlushAndStop.Instance)))
+                    .ContinueWith(CheckGracefulStopFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
-                shutdownStatus.ContinueWith(tr => Task.WhenAll(_transportMapping.Values.Select(x => x.Shutdown())).ContinueWith(
-                          result =>
-                          {
-                              if (result.IsFaulted || result.IsCanceled)
-                              {
-                                  if (result.Exception != null) { result.Exception.Handle(e => true); }
-                                  return false;
-                              }
-                              return result.Result.All(x => x) && tr.Result;
-                          }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)).Unwrap().PipeTo(sender);
+                shutdownStatus.Then(AfterGracefulStopFunc, _transportMapping).PipeTo(sender);
 
                 foreach (var handoff in _pendingReadHandoffs.Values)
                 {
@@ -930,6 +915,41 @@ namespace Akka.Remote
             Receive<ShutdownAndFlush>(HandleShutdownAndFlush);
 
             #endregion
+        }
+
+        private static readonly Func<bool[], ManagementCommandAck> CheckManagementCommandFunc = CheckManagementCommand;
+        private static ManagementCommandAck CheckManagementCommand(bool[] result)
+        {
+            return new ManagementCommandAck(result.All(y => y));
+        }
+
+        private static readonly Func<Task<bool[]>, bool> CheckGracefulStopFunc = CheckGracefulStop;
+        private static bool CheckGracefulStop(Task<bool[]> result)
+        {
+            if (result.IsSuccessfully())
+            {
+                return result.Result.All(x => x);
+            }
+            if (result.Exception != null) { result.Exception.Handle(e => true); }
+            return false;
+        }
+
+        private static readonly Func<bool, Dictionary<Address, AkkaProtocolTransport>, Task<bool>> AfterGracefulStopFunc = AfterGracefulStop;
+        private static Task<bool> AfterGracefulStop(bool status, Dictionary<Address, AkkaProtocolTransport> transportMapping)
+        {
+            return Task.WhenAll(transportMapping.Values.Select(x => x.Shutdown()))
+                       .LinkOutcome(CheckShutdownFunc, status, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        private static readonly Func<Task<bool[]>, bool, bool> CheckShutdownFunc = CheckShutdown;
+        private static bool CheckShutdown(Task<bool[]> result, bool shutdownStatus)
+        {
+            if (result.IsSuccessfully())
+            {
+                return result.Result.All(x => x) && shutdownStatus;
+            }
+            if (result.Exception != null) { result.Exception.Handle(e => true); }
+            return false;
         }
 
         #endregion
@@ -1085,11 +1105,7 @@ namespace Akka.Remote
                         catch (Exception ex)
                         {
                             var ei = System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex);
-                            var task = new Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>>(() =>
-                            {
-                                ei.Throw();
-                                return null;
-                            });
+                            var task = new Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>>(InvokeOnListenFailFunc, ei);
                             task.RunSynchronously();
                             _listens = task;
                             return _listens;
@@ -1109,12 +1125,25 @@ namespace Akka.Remote
                     }
 
                     // Collect all transports, listen addresses, and listener promises in one Task
-                    var tasks = transports.Select(x => x.Listen().ContinueWith(
-                        result => Tuple.Create(new ProtocolTransportAddressPair(x, result.Result.Item1), result.Result.Item2), TaskContinuationOptions.ExecuteSynchronously));
+                    var tasks = transports.Select(x => x.Listen().Then(AfterListenFunc, x, TaskContinuationOptions.ExecuteSynchronously));
                     _listens = Task.WhenAll(tasks).ContinueWith(transportResults => transportResults.Result.ToList(), TaskContinuationOptions.ExecuteSynchronously);
                 }
                 return _listens;
             }
+        }
+
+        private static readonly Func<object, List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>> InvokeOnListenFailFunc = InvokeOnListenFail;
+        private static List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>> InvokeOnListenFail(object state)
+        {
+            ((System.Runtime.ExceptionServices.ExceptionDispatchInfo)state).Throw();
+            return null;
+        }
+
+        private static readonly Func<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>, AkkaProtocolTransport, Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>> AfterListenFunc = AfterListen;
+        private static Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>> AfterListen(
+            Tuple<Address, TaskCompletionSource<IAssociationEventListener>> result, AkkaProtocolTransport transport)
+        {
+            return Tuple.Create(new ProtocolTransportAddressPair(transport, result.Item1), result.Item2);
         }
 
         #endregion

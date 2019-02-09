@@ -643,7 +643,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public Action CurrentAction { get; set; }
+        public IRunnable CurrentAction { get; set; }
         /// <summary>
         /// TBD
         /// </summary>

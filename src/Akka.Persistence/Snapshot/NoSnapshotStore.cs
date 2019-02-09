@@ -116,7 +116,7 @@ namespace Akka.Persistence.Snapshot
         private Task Flop()
         {
             var promise = new TaskCompletionSource<object>();
-            promise.SetException(new NoSnapshotStoreException("No snapshot store configured."));
+            promise.TrySetException(new NoSnapshotStoreException("No snapshot store configured."));
             return promise.Task;
         }
     }

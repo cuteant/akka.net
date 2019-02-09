@@ -654,7 +654,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public Action CurrentAction { get; set; }
+        public IRunnable CurrentAction { get; set; }
 
         /// <summary>
         /// TBD
@@ -746,17 +746,24 @@ namespace Akka.Streams.Implementation
         {
             OutputBunch.MarkAllOutputs();
 
-            InitialPhase(1, new TransferPhase(PrimaryInputs.NeedsInput.And(OutputBunch.AllOfMarkedOutputs), () =>
-            {
-                var message = PrimaryInputs.DequeueInputElement();
+            InitialPhase(1, 
+                new TransferPhase(PrimaryInputs.NeedsInput.And(OutputBunch.AllOfMarkedOutputs),
+                    Runnable.Create(InvokeDequeueInputElementAction, this))
+            );
+        }
 
-                if (message is Tuple<T, T> tuple)
-                {
-                    OutputBunch.Enqueue(0, tuple.Item1);
-                    OutputBunch.Enqueue(1, tuple.Item2);
-                }
-                ThrowHelper.ThrowArgumentException_Unzip(message);
-            }));
+        private static readonly Action<Unzip<T>> InvokeDequeueInputElementAction = InvokeDequeueInputElement;
+        private static void InvokeDequeueInputElement(Unzip<T> owner)
+        {
+            var message = owner.PrimaryInputs.DequeueInputElement();
+
+            if (message is Tuple<T, T> tuple)
+            {
+                var outputBunch = owner.OutputBunch;
+                outputBunch.Enqueue(0, tuple.Item1);
+                outputBunch.Enqueue(1, tuple.Item2);
+            }
+            ThrowHelper.ThrowArgumentException_Unzip(message);
         }
     }
 }

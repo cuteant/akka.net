@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Akka.Configuration;
 using Akka.Event;
@@ -19,8 +20,14 @@ namespace Akka.Remote
         private readonly Clock _clock;
 
         private long _heartbeatTimestamp = 0L; //not used until active (first heartbeat)
-        private volatile bool _active = false;
         private readonly long _deadlineMillis;
+        private int _active = Constants.False;
+        private bool Active
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Constants.True == Volatile.Read(ref _active);
+            set => Interlocked.Exchange(ref _active, value ? Constants.True : Constants.False);
+        }
 
         /// <summary>Obsolete. Use <see cref="DeadlineFailureDetector(TimeSpan, TimeSpan, Clock)"/> instead.</summary>
         /// <param name="acceptableHeartbeatPause">N/A</param>
@@ -82,19 +89,19 @@ namespace Akka.Remote
 
         private bool IsAvailableTicks(long timestamp)
         {
-            if (_active) return (Interlocked.Read(ref _heartbeatTimestamp) + _deadlineMillis) > timestamp;
+            if (Active) return (Interlocked.Read(ref _heartbeatTimestamp) + _deadlineMillis) > timestamp;
             return true; //treat unmanaged connections, e.g. with zero heartbeats, as healthy connections
         }
 
         /// <summary>Determines whether the failure detector has received any heartbeats or has started
         /// monitoring the resource.</summary>
-        public override bool IsMonitoring => _active;
+        public override bool IsMonitoring => Active;
 
         /// <summary>Notifies the failure detector that a heartbeat arrived from the monitored resource.</summary>
         public override void HeartBeat()
         {
             Interlocked.Exchange(ref _heartbeatTimestamp, _clock());
-            _active = true;
+            Active = true;
         }
     }
 }

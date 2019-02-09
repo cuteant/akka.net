@@ -1,0 +1,74 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using System.Threading.Tasks;
+
+<# var count = 7; #>
+namespace Akka.Actor
+{
+    public static class CoordinatedShutdownExtensions
+    {
+        /// <summary>
+        /// Add a task to a phase. It doesn't remove previously added tasks.
+        ///
+        /// Tasks added to the same phase are executed in parallel without any
+        /// ordering assumptions. Next phase will not start until all tasks of
+        /// previous phase have completed.
+        /// </summary>
+        /// <param name="coord">TBD.</param>
+        /// <param name="phase">The phase to add this task to.</param>
+        /// <param name="taskName">The name of the task to add to this phase.</param>
+        /// <param name="task">The delegate that produces a <see cref="Task"/> that will be executed.</param>
+        /// <remarks>
+        /// Tasks should typically be registered as early as possible after system
+        /// startup. When running the <see cref="CoordinatedShutdown"/> tasks that have been
+        /// registered will be performed but tasks that are added too late will not be run.
+        ///
+        ///
+        /// It is possible to add a task to a later phase from within a task in an earlier phase
+        /// and it will be performed.
+        /// </remarks>
+        public static void AddTask(this CoordinatedShutdown coord, string phase, string taskName, Func<Task<Done>> task)
+            => coord.AddTask(phase, taskName, Runnable.CreateTask(task));
+
+<# for (int i = 1; i <= count; i++) {
+    var types = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x));
+    var arguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "arg" + x));
+    var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
+#>
+        /// <summary>
+        /// Add a task to a phase. It doesn't remove previously added tasks.
+        ///
+        /// Tasks added to the same phase are executed in parallel without any
+        /// ordering assumptions. Next phase will not start until all tasks of
+        /// previous phase have completed.
+        /// </summary>
+<# for (var t = 1; t <= i; t++) { #>
+        /// <typeparam name="TArg<#= t #>">TBD</typeparam>
+<# } #>
+        /// <param name="coord">TBD.</param>
+        /// <param name="phase">The phase to add this task to.</param>
+        /// <param name="taskName">The name of the task to add to this phase.</param>
+        /// <param name="task">The delegate that produces a <see cref="Task"/> that will be executed.</param>
+<# for (var t = 1; t <= i; t++) { #>
+        /// <param name="arg<#= t #>">TBD</param>
+<# } #>
+        /// <remarks>
+        /// Tasks should typically be registered as early as possible after system
+        /// startup. When running the <see cref="CoordinatedShutdown"/> tasks that have been
+        /// registered will be performed but tasks that are added too late will not be run.
+        ///
+        ///
+        /// It is possible to add a task to a later phase from within a task in an earlier phase
+        /// and it will be performed.
+        /// </remarks>
+        public static void AddTask<<#= types #>>(this CoordinatedShutdown coord, string phase, string taskName, Func<<#= types #>, Task<Done>> task, <#= typeAndArguments #>)
+            => coord.AddTask(phase, taskName, Runnable.CreateTask(task, <#= arguments #>));
+
+<# } #>
+    }
+}

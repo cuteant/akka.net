@@ -9,6 +9,7 @@ using System;
 using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Akka.Dispatch.SysMsg;
+using Akka.Util;
 using Akka.Util.Internal;
 
 namespace Akka.Actor
@@ -63,32 +64,34 @@ namespace Akka.Actor
             internalTarget.SendSystemMessage(new Watch(internalTarget, promiseRef));
             target.Tell(stopMessage, ActorRefs.NoSender);
 
-            bool continuationFunction(Task<object> t)
+            return promiseRef.Result.LinkOutcome(InvokeGracefulStopFunc, internalTarget, promiseRef, TaskContinuationOptions.ExecuteSynchronously);
+        }
+
+        private static readonly Func<Task<object>, IInternalActorRef, PromiseActorRef, bool> InvokeGracefulStopFunc = InvokeGracefulStop;
+        private static bool InvokeGracefulStop(Task<object> t, IInternalActorRef internalTarget, PromiseActorRef promiseRef)
+        {
+            if (t.IsSuccessfully())
             {
-                if (t.Status == TaskStatus.RanToCompletion)
+                switch (t.Result)
                 {
-                    switch (t.Result)
-                    {
-                        case Terminated terminated:
-                            return (terminated.ActorRef.Path.Equals(target.Path));
-                        default:
-                            internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
-                            return false;
-                    }
-                }
-                else
-                {
-                    internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
-                    return ThrowFailureAfterCompletion(t);
+                    case Terminated terminated:
+                        return (terminated.ActorRef.Path.Equals(internalTarget.Path));
+                    default:
+                        internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
+                        return false;
                 }
             }
-            return promiseRef.Result.ContinueWith(continuationFunction, TaskContinuationOptions.ExecuteSynchronously);
+            else
+            {
+                internalTarget.SendSystemMessage(new Unwatch(internalTarget, promiseRef));
+                return ThrowFailureAfterCompletion(t);
+            }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         static bool ThrowFailureAfterCompletion(Task t)
         {
-            if (t.Status == TaskStatus.Canceled)
+            if (t.IsCanceled)
                 throw new TaskCanceledException();
             else
                 throw t.Exception;

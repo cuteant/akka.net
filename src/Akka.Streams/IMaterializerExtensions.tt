@@ -1,0 +1,82 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using Akka.Actor;
+
+<# var count = 7; #>
+namespace Akka.Streams
+{
+    public static class IMaterializerExtensions
+    {
+        /// <summary>TBD</summary>
+        /// <param name="materializer">TBD</param>
+        /// <param name="delay">TBD</param>
+        /// <param name="action">TBD</param>
+        /// <returns>TBD</returns>
+        public static ICancelable ScheduleOnce(this IMaterializer materializer, TimeSpan delay, Action action)
+        {
+            return materializer.ScheduleOnce(delay, Runnable.Create(action));
+        }
+
+        /// <summary>TBD</summary>
+        /// <param name="materializer">TBD</param>
+        /// <param name="initialDelay">TBD</param>
+        /// <param name="interval">TBD</param>
+        /// <param name="action">TBD</param>
+        /// <returns>TBD</returns>
+        public static ICancelable ScheduleRepeatedly(this IMaterializer materializer, TimeSpan initialDelay, TimeSpan interval, Action action)
+        {
+            return materializer.ScheduleRepeatedly(initialDelay, interval, Runnable.Create(action));
+        }
+
+<# for (int i = 1; i <= count; i++) {
+    var types = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x));
+    var arguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "arg" + x));
+    var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
+#>
+        /// <summary>
+        /// Interface for stages that need timer services for their functionality. Schedules a
+        /// single task with the given delay.
+        /// </summary>
+        /// <param name="materializer">TBD</param>
+        /// <param name="delay">TBD</param>
+        /// <param name="action">TBD</param>
+<# for (var t = 1; t <= i; t++) { #>
+        /// <param name="arg<#= t #>">TBD</param>
+<# } #>
+        /// <returns>
+        /// A <see cref="ICancelable"/> that allows cancelling the timer. Cancelling is best effort, 
+        /// if the event has been already enqueued it will not have an effect.
+        /// </returns>
+        public static ICancelable ScheduleOnce<<#= types #>>(this IMaterializer materializer, TimeSpan delay, Action<<#= types #>> action, <#= typeAndArguments #>)
+        {
+            return materializer.ScheduleOnce(delay, Runnable.Create(action, <#= arguments #>));
+        }
+
+        /// <summary>
+        /// Interface for stages that need timer services for their functionality. Schedules a
+        /// repeated task with the given interval between invocations.
+        /// </summary>
+        /// <param name="materializer">TBD</param>
+        /// <param name="initialDelay">TBD</param>
+        /// <param name="interval">TBD</param>
+        /// <param name="action">TBD</param>
+<# for (var t = 1; t <= i; t++) { #>
+        /// <param name="arg<#= t #>">TBD</param>
+<# } #>
+        /// <returns>
+        /// A <see cref="ICancelable"/> that allows cancelling the timer. Cancelling is best effort, 
+        /// if the event has been already enqueued it will not have an effect.
+        /// </returns>
+        public static ICancelable ScheduleRepeatedly<<#= types #>>(this IMaterializer materializer, TimeSpan initialDelay, TimeSpan interval, Action<<#= types #>> action, <#= typeAndArguments #>)
+        {
+            return materializer.ScheduleRepeatedly(initialDelay, interval, Runnable.Create(action, <#= arguments #>));
+        }
+
+<# } #>
+    }
+}

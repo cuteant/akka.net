@@ -203,12 +203,12 @@ namespace Akka.Actor
                 else
                 {
                     var gotType = mailbox.MessageQueue == null ? "null" : mailbox.MessageQueue.GetType().FullName;
-                    createMessage = new Create(new ActorInitializationException(Self,$"Actor [{Self}] requires mailbox type [{req}] got [{gotType}]"));
+                    createMessage = new Create(new ActorInitializationException(Self, $"Actor [{Self}] requires mailbox type [{req}] got [{gotType}]"));
                 }
             }
             else
             {
-               createMessage = new Create(null);
+                createMessage = new Create(null);
             }
 
             SwapMailbox(mailbox);
@@ -218,7 +218,7 @@ namespace Akka.Actor
             var self = Self;
             mailbox.SystemEnqueue(self, createMessage);
 
-            if(sendSupervise)
+            if (sendSupervise)
             {
                 Parent.SendSystemMessage(new Supervise(self, async: false));
             }
@@ -326,7 +326,7 @@ namespace Akka.Actor
             PrepareForNewActor();
             ActorBase instance = null;
             //set the thread static context or things will break
-            UseThreadContext(() =>
+            void LocalAction()
             {
                 _state = _state.ClearBehaviorStack();
                 instance = CreateNewActorInstance();
@@ -334,7 +334,8 @@ namespace Akka.Actor
                 //We should investigate what we can do to handle this better
                 instance.SupervisorStrategyInternal = _props.SupervisorStrategy;
                 //defaults to null - won't affect lazy instantiation unless explicitly set in props
-            });
+            }
+            UseThreadContext(LocalAction);
             return instance;
         }
 
@@ -369,6 +370,69 @@ namespace Akka.Actor
             try
             {
                 action();
+            }
+            finally
+            {
+                //ensure we set back the old context
+                InternalCurrentActorCellKeeper.Current = tmp;
+            }
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="action">TBD</param>
+        /// <param name="state"></param>
+        public void UseThreadContext<T>(Action<T> action, T state)
+        {
+            var tmp = InternalCurrentActorCellKeeper.Current;
+            InternalCurrentActorCellKeeper.Current = this;
+            try
+            {
+                action(state);
+            }
+            finally
+            {
+                //ensure we set back the old context
+                InternalCurrentActorCellKeeper.Current = tmp;
+            }
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="action">TBD</param>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        public void UseThreadContext<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
+        {
+            var tmp = InternalCurrentActorCellKeeper.Current;
+            InternalCurrentActorCellKeeper.Current = this;
+            try
+            {
+                action(arg1, arg2);
+            }
+            finally
+            {
+                //ensure we set back the old context
+                InternalCurrentActorCellKeeper.Current = tmp;
+            }
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="action">TBD</param>
+        /// <param name="arg1"></param>
+        /// <param name="arg2"></param>
+        /// <param name="arg3"></param>
+        public void UseThreadContext<T1, T2, T3>(Action<T1, T2, T3> action, T1 arg1, T2 arg2, T3 arg3)
+        {
+            var tmp = InternalCurrentActorCellKeeper.Current;
+            InternalCurrentActorCellKeeper.Current = this;
+            try
+            {
+                action(arg1, arg2, arg3);
             }
             finally
             {

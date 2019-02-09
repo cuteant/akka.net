@@ -624,7 +624,11 @@ namespace Akka.Streams.Implementation
 
         #endregion
 
-        private static readonly Action s_defaultAction= () => { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_NonInitialized); };
+        private static readonly IRunnable s_defaultAction = Runnable.Create(InvokeNonInitialized);
+        private static void InvokeNonInitialized()
+        {
+            ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_NonInitialized);
+        }
 
         /// <summary>
         /// TBD
@@ -726,7 +730,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public Action CurrentAction { get; set; }
+        public IRunnable CurrentAction { get; set; }
 
         /// <summary>
         /// TBD

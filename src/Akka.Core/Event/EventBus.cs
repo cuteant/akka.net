@@ -9,6 +9,7 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 
 namespace Akka.Event
 {
@@ -137,7 +138,7 @@ namespace Akka.Event
 
         private void ClearCache()
         {
-            _cache = new ConcurrentDictionary<TClassifier, List<TSubscriber>>();
+            Interlocked.Exchange(ref _cache, new ConcurrentDictionary<TClassifier, List<TSubscriber>>());
         }
 
         /// <summary>

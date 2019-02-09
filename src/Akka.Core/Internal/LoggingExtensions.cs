@@ -89,9 +89,8 @@ namespace Akka
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void PerformingPhaseWithTasks(this ILoggingAdapter logger, string phase, object tasks)
+        internal static void PerformingPhaseWithTasks(this ILoggingAdapter logger, string phase, ImmutableList<Tuple<string, IRunnableTask<Done>>> phaseTasks)
         {
-            var phaseTasks = (ImmutableList<Tuple<string, Func<Task<Done>>>>)tasks;
             logger.Debug("Performing phase [{0}] with [{1}] tasks: [{2}]", phase, phaseTasks.Count, string.Join(",", phaseTasks.Select(x => x.Item1)));
         }
 

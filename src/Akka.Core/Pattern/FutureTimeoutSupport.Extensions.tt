@@ -1,0 +1,40 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using System.Threading.Tasks;
+using Akka.Actor;
+
+<# var count = 7; #>
+namespace Akka.Pattern
+{
+    partial class FutureTimeoutSupport
+    {
+<# for (int i = 1; i <= count; i++) {
+    var types = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x));
+    var arguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "arg" + x));
+    var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
+#>
+        /// <summary>Returns a <see cref="Task"/> that will be completed with the success or failure
+        /// of the provided value after the specified duration.</summary>
+        /// <typeparam name="T">The return type of task.</typeparam>
+<# for (var t = 1; t <= i; t++) { #>
+        /// <typeparam name="TArg<#= t #>">TBD</typeparam>
+<# } #>
+        /// <param name="duration">The duration to wait.</param>
+        /// <param name="scheduler">The scheduler instance to use.</param>
+        /// <param name="value">The task we're going to wrap.</param>
+<# for (var t = 1; t <= i; t++) { #>
+        /// <param name="arg<#= t #>">TBD</param>
+<# } #>
+        /// <returns>a <see cref="Task{T}"/> that will be completed with the success or failure
+        /// of the provided value after the specified duration</returns>
+        public static Task<T> After<<#= types #>, T>(TimeSpan duration, IScheduler scheduler, Func<<#= types #>, Task<T>> value, <#= typeAndArguments #>)
+            => After(duration, scheduler, Runnable.CreateTask(value, <#= arguments #>));
+
+<# } #>
+    }
+}

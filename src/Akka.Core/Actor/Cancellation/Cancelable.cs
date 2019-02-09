@@ -173,9 +173,11 @@ namespace Akka.Actor
             }
             else
             {
-                _scheduler.ScheduleOnce(delay, () => _source.Cancel(), this);
+                _scheduler.ScheduleOnce(delay, InvokeCancelAction, _source, this);
             }
         }
+        private static readonly Action<CancellationTokenSource> InvokeCancelAction = InvokeCancel;
+        private static void InvokeCancel(CancellationTokenSource source) => source.Cancel();
 
         /// <summary>
         /// Returns a <see cref="ICancelable"/> that has already been canceled.

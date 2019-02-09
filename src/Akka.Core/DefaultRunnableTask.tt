@@ -1,0 +1,32 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using System.Threading.Tasks;
+
+<# var count = 7; #>
+namespace Akka
+{
+<# for (int i = 1; i <= count; i++) {
+    var types = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x));
+    var arguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "arg" + x));
+    var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
+#>
+    /// <summary><see cref="IRunnableTask"/> which executes an <see cref="Func{Task}"/>.</summary>
+    public sealed class DefaultRunnableTask<<#= types #>> : DefaultRunnable<<#= types #>, Task>, IRunnableTask
+    {
+        /// <summary>TBD</summary>
+        public DefaultRunnableTask(Func<<#= types #>, Task> func, <#= typeAndArguments #>) : base(func, <#= arguments #>) { }
+    }
+
+    /// <summary><see cref="IRunnableTask"/> which executes an <see cref="Func{Task}"/>.</summary>
+    public sealed class DefaultRunnableWithResultTask<<#= types #>, TResult> : DefaultRunnable<<#= types #>, Task<TResult>>, IRunnableTask<TResult>
+    {
+        /// <summary>TBD</summary>
+        public DefaultRunnableWithResultTask(Func<<#= types #>, Task<TResult>> func, <#= typeAndArguments #>) : base(func, <#= arguments #>) { }
+    }
+<# } #>
+}

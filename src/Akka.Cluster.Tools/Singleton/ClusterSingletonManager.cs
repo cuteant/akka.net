@@ -588,26 +588,33 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void SetupCoordinatedShutdown()
         {
-            var self = Self;
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "wait-singleton-exiting", () =>
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "wait-singleton-exiting", InvokeWaitSingletonExitingFunc, this);
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "singleton-exiting-2", InvokeSingletonExitingFunc, this, Self);
+        }
+
+        private static readonly Func<ClusterSingletonManager, Task<Done>> InvokeWaitSingletonExitingFunc = InvokeWaitSingletonExiting;
+        private static Task<Done> InvokeWaitSingletonExiting(ClusterSingletonManager owner)
+        {
+            var cluster = owner._cluster;
+            if (cluster.IsTerminated || cluster.SelfMember.Status == MemberStatus.Down)
+                return Task.FromResult(Done.Instance);
+            else
+                return owner._memberExitingProgress.Task;
+        }
+
+        private static readonly Func<ClusterSingletonManager, IActorRef, Task<Done>> InvokeSingletonExitingFunc = InvokeSingletonExiting;
+        private static Task<Done> InvokeSingletonExiting(ClusterSingletonManager owner, IActorRef self)
+        {
+            var cluster = owner._cluster;
+            if (cluster.IsTerminated || cluster.SelfMember.Status == MemberStatus.Down)
             {
-                if (_cluster.IsTerminated || _cluster.SelfMember.Status == MemberStatus.Down)
-                    return Task.FromResult(Done.Instance);
-                else
-                    return _memberExitingProgress.Task;
-            });
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "singleton-exiting-2", () =>
+                return Task.FromResult(Done.Instance);
+            }
+            else
             {
-                if (_cluster.IsTerminated || _cluster.SelfMember.Status == MemberStatus.Down)
-                {
-                    return Task.FromResult(Done.Instance);
-                }
-                else
-                {
-                    var timeout = _coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterExiting);
-                    return self.Ask(SelfExiting.Instance, timeout).ContinueWith(tr => Done.Instance);
-                }
-            });
+                var timeout = owner._coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterExiting);
+                return self.Ask(SelfExiting.Instance, timeout).ContinueWith(tr => Done.Instance);
+            }
         }
 
         private ILoggingAdapter Log { get { return _log ?? (_log = Context.GetLogger()); } }

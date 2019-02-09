@@ -169,11 +169,13 @@ namespace Akka.DistributedData.Serialization
                 writeAckBytes = stream.ToArray();
             }
 
-            system.Scheduler.Advanced.ScheduleRepeatedly(cacheTtl, new TimeSpan(cacheTtl.Ticks / 2), () =>
-            {
-                readCache.Evict();
-                writeCache.Evict();
-            });
+            system.Scheduler.Advanced.ScheduleRepeatedly(cacheTtl, new TimeSpan(cacheTtl.Ticks / 2), InvokeEvictCacheAction, this);
+        }
+        private static readonly Action<ReplicatorMessageSerializer> InvokeEvictCacheAction = InvokeEvictCache;
+        private static void InvokeEvictCache(ReplicatorMessageSerializer serializer)
+        {
+            serializer.readCache.Evict();
+            serializer.writeCache.Evict();
         }
 
         public override byte[] ToBinary(object obj)

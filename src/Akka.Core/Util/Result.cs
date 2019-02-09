@@ -137,7 +137,7 @@ namespace Akka.Util
         /// <returns>TBD</returns>
         public static Result<T> FromTask<T>(Task<T> task)
         {
-            return task.IsCanceled || task.IsFaulted ? new Result<T>(task.Exception) : new Result<T>(task.Result);
+            return task.IsSuccessfully() ? new Result<T>(task.Result) : new Result<T>(task.Exception);
         }
 
         /// <summary>

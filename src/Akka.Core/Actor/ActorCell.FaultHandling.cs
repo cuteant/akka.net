@@ -73,11 +73,7 @@ namespace Akka.Actor
                 }
                 catch (Exception e)
                 {
-                    HandleNonFatalOrInterruptedException(() =>
-                    {
-                        var ex = new PreRestartException(_self, e, cause, optionalMessage);
-                        Publish(new Error(ex, _self.Path.ToString(), failedActor.GetType(), e.Message));
-                    });
+                    HandleNonFatalOrInterruptedException(InvokePublishOnFaultRecreate, cause, e, optionalMessage, failedActor);
                 }
                 finally
                 {
@@ -95,6 +91,12 @@ namespace Akka.Actor
                 // need to keep that suspend counter balanced
                 FaultResume(null);
             }
+        }
+
+        private void InvokePublishOnFaultRecreate(Exception cause, Exception e, object optionalMessage, ActorBase failedActor)
+        {
+            var ex = new PreRestartException(_self, e, cause, optionalMessage);
+            Publish(new Error(ex, _self.Path.ToString(), failedActor.GetType(), e.Message));
         }
 
         /// <summary>
@@ -176,7 +178,7 @@ namespace Akka.Actor
             }
             catch (Exception e)
             {
-                HandleNonFatalOrInterruptedException(() => HandleInvokeFailure(e));
+                HandleNonFatalOrInterruptedException(HandleInvokeFailure, arg1: e, arg2: default(IEnumerable<IActorRef>));
             }
         }
 
@@ -247,20 +249,22 @@ namespace Akka.Actor
                 }
                 catch (Exception e)
                 {
-                    HandleNonFatalOrInterruptedException(() =>
-                    {
-                        Publish(new Error(e, _self.Path.ToString(), _actor.GetType(), "Emergency stop: exception in failure handling for " + cause));
-                        try
-                        {
-                            StopChildren();
-                        }
-                        finally
-                        {
-                            FinishTerminate();
-                        }
-                    });
+                    HandleNonFatalOrInterruptedException(InvokePublishOnHandleInvokeFailure, cause, e);
                 }
 
+            }
+        }
+
+        private void InvokePublishOnHandleInvokeFailure(Exception cause, Exception e)
+        {
+            Publish(new Error(e, _self.Path.ToString(), _actor.GetType(), "Emergency stop: exception in failure handling for " + cause));
+            try
+            {
+                StopChildren();
+            }
+            finally
+            {
+                FinishTerminate();
             }
         }
 
@@ -293,8 +297,7 @@ namespace Akka.Actor
             }
             catch (Exception x)
             {
-                HandleNonFatalOrInterruptedException(
-                    () => Publish(new Error(x, _self.Path.ToString(), ActorType, x.Message)));
+                HandleNonFatalOrInterruptedException(InvokePulishOnFinishTerminate, x);
             }
             finally
             {
@@ -325,6 +328,11 @@ namespace Akka.Actor
             }
         }
 
+        private void InvokePulishOnFinishTerminate(Exception x)
+        {
+            Publish(new Error(x, _self.Path.ToString(), ActorType, x.Message));
+        }
+
         private void FinishRecreate(Exception cause, ActorBase failedActor)
         {
             // need to keep a snapshot of the surviving children before the new actor instance creates new ones
@@ -339,7 +347,7 @@ namespace Akka.Actor
                 if (ReferenceEquals(freshActor, failedActor))
                     SetActorFields(freshActor); // If the creator returns the same instance, we need to restore our nulled out fields.
 
-                UseThreadContext(() => freshActor.AroundPostRestart(cause, null));
+                UseThreadContext(InvokeAroundPostRestartAction, freshActor, cause);
 
                 if (System.Settings.DebugLifecycle)
                     Publish(new Debug(_self.Path.ToString(), freshActor.GetType(), "Restarted (" + freshActor + ")"));
@@ -354,7 +362,7 @@ namespace Akka.Actor
                     catch (Exception e)
                     {
                         var child = survivingChild;    //Needed since otherwise it would be access to foreach variable in closure
-                        HandleNonFatalOrInterruptedException(() => Publish(new Error(e, _self.Path.ToString(), freshActor.GetType(), "restarting (" + child + ")")));
+                        HandleNonFatalOrInterruptedException(InvokePublishOnFinishRecreate, e, freshActor, child);
                     }
                 }
             }
@@ -366,6 +374,16 @@ namespace Akka.Actor
 
         }
 
+        private static readonly Action<ActorBase, Exception> InvokeAroundPostRestartAction = InvokeAroundPostRestart;
+        private static void InvokeAroundPostRestart(ActorBase freshActor, Exception cause)
+        {
+            freshActor.AroundPostRestart(cause, null);
+        }
+
+        private void InvokePublishOnFinishRecreate(Exception e, ActorBase freshActor, IInternalActorRef child)
+        {
+            Publish(new Error(e, _self.Path.ToString(), freshActor.GetType(), "restarting (" + child + ")"));
+        }
 
         private void HandleFailed(Failed f) //Called handleFailure in Akka JVM
         {
@@ -412,11 +430,7 @@ namespace Akka.Actor
                 }
                 catch (Exception e)
                 {
-                    HandleNonFatalOrInterruptedException(() =>
-                    {
-                        Publish(new Error(e, _self.Path.ToString(), _actor.GetType(), "HandleChildTerminated failed"));
-                        HandleInvokeFailure(e);
-                    });
+                    HandleNonFatalOrInterruptedException(InvokePublishOnHandleChildTerminated, e);
                 }
             }
 
@@ -442,6 +456,12 @@ namespace Akka.Actor
             }
         }
 
+        private void InvokePublishOnHandleChildTerminated(Exception e)
+        {
+            Publish(new Error(e, _self.Path.ToString(), _actor.GetType(), "HandleChildTerminated failed"));
+            HandleInvokeFailure(e);
+        }
+
         /// <summary>
         ///     Handles the non fatal or interrupted exception.
         /// </summary>
@@ -451,6 +471,54 @@ namespace Akka.Actor
             try
             {
                 action();
+            }
+            catch
+            {
+                //TODO: Hmmm?
+            }
+        }
+
+        private void HandleNonFatalOrInterruptedException<T>(Action<T> action, T state)
+        {
+            try
+            {
+                action(state);
+            }
+            catch
+            {
+                //TODO: Hmmm?
+            }
+        }
+
+        private void HandleNonFatalOrInterruptedException<T1, T2>(Action<T1, T2> action, T1 arg1, T2 arg2)
+        {
+            try
+            {
+                action(arg1, arg2);
+            }
+            catch
+            {
+                //TODO: Hmmm?
+            }
+        }
+
+        private void HandleNonFatalOrInterruptedException<T1, T2, T3>(Action<T1, T2, T3> action, T1 arg1, T2 arg2, T3 arg3)
+        {
+            try
+            {
+                action(arg1, arg2, arg3);
+            }
+            catch
+            {
+                //TODO: Hmmm?
+            }
+        }
+
+        private void HandleNonFatalOrInterruptedException<T1, T2, T3, T4>(Action<T1, T2, T3, T4> action, T1 arg1, T2 arg2, T3 arg3, T4 arg4)
+        {
+            try
+            {
+                action(arg1, arg2, arg3, arg4);
             }
             catch
             {

@@ -4,6 +4,7 @@
     internal enum AkkaExceptionArgument
     {
         array,
+        action,
         assembly,
         buffer,
         destination,

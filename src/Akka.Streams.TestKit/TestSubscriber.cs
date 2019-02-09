@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Streams.Actors;
@@ -97,7 +98,7 @@ namespace Akka.Streams.TestKit
             /// </summary>
             public ISubscription ExpectSubscription()
             {
-                _subscription = _probe.ExpectMsg<OnSubscribe>().Subscription;
+                Interlocked.Exchange(ref _subscription, _probe.ExpectMsg<OnSubscribe>().Subscription);
                 return _subscription;
             }
 

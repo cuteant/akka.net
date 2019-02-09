@@ -12,7 +12,6 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Configuration;
-using Akka.Dispatch;
 using Akka.Event;
 using Akka.Util;
 
@@ -339,9 +338,9 @@ namespace Akka.Actor
         /// <param name="delay">TBD</param>
         /// <param name="action">TBD</param>
         /// <param name="cancelable">TBD</param>
-        protected override void InternalScheduleOnce(TimeSpan delay, Action action, ICancelable cancelable)
+        protected override void InternalScheduleOnce(TimeSpan delay, IRunnable action, ICancelable cancelable)
         {
-            InternalSchedule(delay, TimeSpan.Zero, new ActionRunnable(action), cancelable);
+            InternalSchedule(delay, TimeSpan.Zero, action, cancelable);
         }
 
         /// <summary>
@@ -351,9 +350,9 @@ namespace Akka.Actor
         /// <param name="interval">TBD</param>
         /// <param name="action">TBD</param>
         /// <param name="cancelable">TBD</param>
-        protected override void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action, ICancelable cancelable)
+        protected override void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action, ICancelable cancelable)
         {
-            InternalSchedule(initialDelay, interval, new ActionRunnable(action), cancelable);
+            InternalSchedule(initialDelay, interval, action, cancelable);
         }
 
         private AtomicReference<TaskCompletionSource<IEnumerable<SchedulerRegistration>>> _stopped = new AtomicReference<TaskCompletionSource<IEnumerable<SchedulerRegistration>>>();

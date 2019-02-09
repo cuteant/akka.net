@@ -427,8 +427,7 @@ namespace Akka.Persistence
         {
             void wrapAsyncHandler(T m)
             {
-                Task wrap() => asyncHandler(m);
-                RunTask(wrap);
+                RunTask(asyncHandler, m);
             }
             return wrapAsyncHandler;
         }

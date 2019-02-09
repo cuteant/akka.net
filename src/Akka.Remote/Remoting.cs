@@ -15,6 +15,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
 using Akka.Remote.Transport;
+using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.AsyncEx;
 
@@ -140,9 +141,9 @@ namespace Akka.Remote
             if (_endpointManager == null)
             {
                 if (_log.IsInfoEnabled) _log.StartingRemoting();
-                _endpointManager = System.SystemActorOf(RARP.For(System).ConfigureDispatcher(
+                Interlocked.Exchange(ref _endpointManager, System.SystemActorOf(RARP.For(System).ConfigureDispatcher(
                     Props.Create(() => new EndpointManager(System.Settings.Config, _log)).WithDeploy(Deploy.Local)),
-                    EndpointManagerName);
+                    EndpointManagerName));
 
                 try
                 {
@@ -158,18 +159,18 @@ namespace Akka.Remote
                     {
                         ThrowHelper.ThrowConfigurationException();
                     }
-                    _addresses = new HashSet<Address>(akkaProtocolTransports.Select(a => a.Address), AddressComparer.Instance);
+                    //_addresses = new HashSet<Address>(akkaProtocolTransports.Select(a => a.Address), AddressComparer.Instance);
 
                     var tmp = akkaProtocolTransports.GroupBy(t => t.ProtocolTransport.SchemeIdentifier);
-                    _transportMapping = new Dictionary<string, HashSet<ProtocolTransportAddressPair>>(StringComparer.Ordinal);
+                    Interlocked.Exchange(ref _transportMapping, new Dictionary<string, HashSet<ProtocolTransportAddressPair>>(StringComparer.Ordinal));
                     foreach (var g in tmp)
                     {
                         var set = new HashSet<ProtocolTransportAddressPair>(g);
                         _transportMapping.Add(g.Key, set);
                     }
 
-                    _defaultAddress = akkaProtocolTransports.Head().Address;
-                    _addresses = new HashSet<Address>(akkaProtocolTransports.Select(x => x.Address), AddressComparer.Instance);
+                    Interlocked.Exchange(ref _defaultAddress, akkaProtocolTransports.Head().Address);
+                    Interlocked.Exchange(ref _addresses, new HashSet<Address>(akkaProtocolTransports.Select(x => x.Address), AddressComparer.Instance));
 
                     if (_log.IsInfoEnabled)
                     {
@@ -217,28 +218,35 @@ namespace Akka.Remote
             else
             {
                 var timeout = Provider.RemoteSettings.ShutdownTimeout;
-                void finalize()
-                {
-                    _eventPublisher.NotifyListeners(new RemotingShutdownEvent());
-                    _endpointManager = null;
-                }
 
-                return _endpointManager.Ask<bool>(new EndpointManager.ShutdownAndFlush(), timeout).ContinueWith(result =>
+                return _endpointManager
+                    .Ask<bool>(new EndpointManager.ShutdownAndFlush(), timeout)
+                    .LinkOutcome(ShutdownContinuationAction, this, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            }
+        }
+
+        private static readonly Action<Task<bool>, Remoting> ShutdownContinuationAction = ShutdownContinuation;
+        private static void ShutdownContinuation(Task<bool> result, Remoting owner)
+        {
+            void finalize()
+            {
+                owner._eventPublisher.NotifyListeners(new RemotingShutdownEvent());
+                Interlocked.Exchange(ref owner._endpointManager, null);
+            }
+
+            if (result.IsSuccessfully()) //Shutdown was successful
+            {
+                if (!result.Result)
                 {
-                    if (result.IsFaulted || result.IsCanceled) //Shutdown was not successful
-                    {
-                        NotifyError("Failure during shutdown of remoting", result.Exception);
-                        finalize();
-                    }
-                    else
-                    {
-                        if (!result.Result)
-                        {
-                            if (_log.IsWarningEnabled) _log.ShutdownFinishedButFlushingMightNotHaveBeenSuccessful();
-                        }
-                        finalize();
-                    }
-                }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                    var log = owner._log;
+                    if (log.IsWarningEnabled) log.ShutdownFinishedButFlushingMightNotHaveBeenSuccessful();
+                }
+                finalize();
+            }
+            else
+            {
+                owner.NotifyError("Failure during shutdown of remoting", result.Exception);
+                finalize();
             }
         }
 
@@ -270,14 +278,16 @@ namespace Akka.Remote
         {
             if (null == _endpointManager) { ThrowHelper.ThrowRemoteTransportException_EndpointManager_Cmd(); }
 
-            return
-                _endpointManager.Ask<EndpointManager.ManagementCommandAck>(new EndpointManager.ManagementCommand(cmd),
-                    Provider.RemoteSettings.CommandAckTimeout)
-                    .ContinueWith(result =>
-                    {
-                        if (result.IsCanceled || result.IsFaulted) { return false; }
-                        return result.Result.Status;
-                    }, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            return _endpointManager
+                .Ask<EndpointManager.ManagementCommandAck>(new EndpointManager.ManagementCommand(cmd), Provider.RemoteSettings.CommandAckTimeout)
+                .ContinueWith(CheckManagementCommandFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        private static readonly Func<Task<EndpointManager.ManagementCommandAck>, bool> CheckManagementCommandFunc = CheckManagementCommand;
+        private static bool CheckManagementCommand(Task<EndpointManager.ManagementCommandAck> result)
+        {
+            if (result.IsSuccessfully()) { return result.Result.Status; }
+            return false;
         }
 
         #endregion

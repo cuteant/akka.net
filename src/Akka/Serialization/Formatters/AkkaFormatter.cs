@@ -69,9 +69,7 @@ namespace Akka.Serialization.Formatters
 
     internal class SingletonMessageFormatter<T> : IMessagePackFormatter<T>
     {
-        //const int c_totalSize = 3;
         const byte c_valueSize = 1;
-        //const byte c_empty = 1;
         private static readonly T s_instance;
 
         static SingletonMessageFormatter()
@@ -104,20 +102,12 @@ namespace Akka.Serialization.Formatters
         public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
         {
             readSize = c_valueSize;
-            //readSize = c_totalSize;
             return s_instance;
         }
 
         public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
         {
             return MessagePackBinary.WriteNil(ref bytes, offset);
-            //MessagePackBinary.EnsureCapacity(ref bytes, offset, c_totalSize);
-
-            //bytes[offset] = MessagePackCode.Bin8;
-            //bytes[offset + 1] = c_valueSize;
-            //bytes[offset + 2] = c_empty;
-
-            //return c_totalSize;
         }
     }
 
@@ -131,10 +121,6 @@ namespace Akka.Serialization.Formatters
 
         protected override byte[] TranslateTypeName(Type actualType, out Type expectedType)
         {
-            //if (typeof(IInternalActorRef).GetTypeInfo().IsAssignableFrom(actualType.GetTypeInfo()))
-            //{
-            //    expectedType = typeof(IInternalActorRef);
-            //}
             if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(actualType.GetTypeInfo()))
             {
                 expectedType = typeof(IActorRef);

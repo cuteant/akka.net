@@ -9,7 +9,9 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
+using System.Threading;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Event;
@@ -178,7 +180,13 @@ namespace Akka.Streams.Implementation
         private readonly AtomicReference<ImmutableList<ISubscriber<TOut>>> _pendingSubscribers =
             new AtomicReference<ImmutableList<ISubscriber<TOut>>>(ImmutableList<ISubscriber<TOut>>.Empty);
 
-        private volatile Exception _shutdownReason;
+        private Exception __shutdownReason;
+        private Exception ShutdownReason
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Volatile.Read(ref __shutdownReason);
+            set => Interlocked.Exchange(ref __shutdownReason, value);
+        }
 
         /// <summary>
         /// TBD
@@ -239,7 +247,7 @@ namespace Akka.Streams.Implementation
         /// <param name="reason">TBD</param>
         public void Shutdown(Exception reason)
         {
-            _shutdownReason = reason;
+            ShutdownReason = reason;
             var pending = _pendingSubscribers.GetAndSet(null);
             if (pending != null)
             {
@@ -252,19 +260,20 @@ namespace Akka.Streams.Implementation
         {
             try
             {
-                if (_shutdownReason == null)
+                var shutdownReason = ShutdownReason;
+                if (shutdownReason == null)
                 {
                     ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
                     ReactiveStreamsCompliance.TryOnComplete(subscriber);
                 }
-                else if (_shutdownReason is ISpecViolation)
+                else if (shutdownReason is ISpecViolation)
                 {
                     // ok, not allowed to call OnError
                 }
                 else
                 {
                     ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
-                    ReactiveStreamsCompliance.TryOnError(subscriber, _shutdownReason);
+                    ReactiveStreamsCompliance.TryOnError(subscriber, shutdownReason);
                 }
             }
             catch (Exception exception)

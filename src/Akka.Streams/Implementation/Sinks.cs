@@ -533,7 +533,7 @@ namespace Akka.Streams.Implementation
             public override void OnUpstreamFailure(Exception e)
             {
                 _prev = default;
-                _promise.TrySetException(e);
+                _promise.TrySetUnwrappedException(e);
                 FailStage(e);
             }
 
@@ -611,7 +611,7 @@ namespace Akka.Streams.Implementation
 
             public override void OnUpstreamFailure(Exception e)
             {
-                _promise.TrySetException(e);
+                _promise.TrySetUnwrappedException(e);
                 _completionSignalled = true;
                 FailStage(e);
             }
@@ -697,7 +697,7 @@ namespace Akka.Streams.Implementation
 
             public override void OnUpstreamFailure(Exception e)
             {
-                _promise.TrySetException(e);
+                _promise.TrySetUnwrappedException(e);
                 _completionSignalled = true;
                 FailStage(e);
             }
@@ -803,7 +803,7 @@ namespace Akka.Streams.Implementation
             {
                 StopCallback(
                     promise =>
-                            promise.SetException(new IllegalStateException("Stream is terminated. QueueSink is detached")));
+                            promise.TrySetException(new IllegalStateException("Stream is terminated. QueueSink is detached")));
             }
 
             private Action<TaskCompletionSource<Option<T>>> Callback()
@@ -812,7 +812,7 @@ namespace Akka.Streams.Implementation
                     promise =>
                     {
                         if (_currentRequest.HasValue)
-                            promise.SetException(
+                            promise.TrySetException(
                                 new IllegalStateException(
                                     "You have to wait for previous future to be resolved to send another request"));
                         else
@@ -840,7 +840,7 @@ namespace Akka.Streams.Implementation
                 }
                 else
                 {
-                    promise.SetException(e.Exception);
+                    promise.TrySetUnwrappedException(e.Exception);
                     FailStage(e.Exception);
                 }
             }
@@ -993,7 +993,7 @@ namespace Akka.Streams.Implementation
                 }
                 catch (Exception ex)
                 {
-                    _completion.SetException(ex);
+                    _completion.TrySetUnwrappedException(ex);
                 }
             }
 
@@ -1010,7 +1010,7 @@ namespace Akka.Streams.Implementation
             private void Failure(Exception ex)
             {
                 FailStage(ex);
-                _completion.SetException(ex);
+                _completion.TrySetUnwrappedException(ex);
             }
 
             private void InitInternalSource(Sink<TIn, TMat> sink, TIn firstElement)
@@ -1024,7 +1024,7 @@ namespace Akka.Streams.Implementation
                 }
                 catch (Exception ex)
                 {
-                    _completion.TrySetException(ex);
+                    _completion.TrySetUnwrappedException(ex);
                     FailStage(ex);
                 }
                 

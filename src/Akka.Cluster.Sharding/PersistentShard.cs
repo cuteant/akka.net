@@ -9,6 +9,7 @@ using System;
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Persistence;
+using Akka.Util;
 using Akka.Util.Internal;
 using System.Threading.Tasks;
 using Akka.Event;
@@ -147,9 +148,14 @@ namespace Akka.Cluster.Sharding
 
         private void RestartRememberedEntities()
         {
-            RememberedEntitiesRecoveryStrategy.RecoverEntities(State.Entries).ForEach(scheduledRecovery =>
-                scheduledRecovery.ContinueWith(t => new Shard.RestartEntities(t.Result), TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self, Self));
+            foreach(var scheduledRecovery in RememberedEntitiesRecoveryStrategy.RecoverEntities(State.Entries))
+            {
+                scheduledRecovery.Then(AfterScheduledRecoveryFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self, Self);
+            }
         }
+
+        private static readonly Func<IImmutableSet<ShardId>, Shard.RestartEntities> AfterScheduledRecoveryFunc = AfterScheduledRecovery;
+        private static Shard.RestartEntities AfterScheduledRecovery(IImmutableSet<ShardId> result) => new Shard.RestartEntities(result);
 
         public void SaveSnapshotWhenNeeded()
         {

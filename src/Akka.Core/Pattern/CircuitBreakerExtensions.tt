@@ -1,0 +1,160 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using System.Threading.Tasks;
+
+<# var count = 7; #>
+namespace Akka.Pattern
+{
+    public static class CircuitBreakerExtensions
+    {
+        /// <summary>
+        /// Wraps invocation of asynchronous calls that need to be protected
+        /// </summary>
+        /// <typeparam name="TResult">TBD</typeparam>
+        /// <param name="circuitBreaker">TBD</param>
+        /// <param name="body">Call needing protected</param>
+        /// <returns><see cref="Task"/> containing the call result</returns>
+        public static Task<TResult> WithCircuitBreaker<TResult>(this CircuitBreaker circuitBreaker, Func<Task<TResult>> body)
+        {
+            return circuitBreaker.WithCircuitBreaker<TResult>(Runnable.CreateTask(body));
+        }
+
+        /// <summary>
+        /// Wraps invocation of asynchronous calls that need to be protected
+        /// </summary>
+        /// <param name="circuitBreaker">TBD</param>
+        /// <param name="body">Call needing protected</param>
+        /// <returns><see cref="Task"/></returns>
+        public static Task WithCircuitBreaker(this CircuitBreaker circuitBreaker, Func<Task> body)
+        {
+            return circuitBreaker.WithCircuitBreaker(Runnable.CreateTask(body));
+        }
+
+        /// <summary>
+        /// The failure will be recorded farther down.
+        /// </summary>
+        /// <param name="circuitBreaker">TBD</param>
+        /// <param name="body">TBD</param>
+        public static void WithSyncCircuitBreaker(this CircuitBreaker circuitBreaker, Action body)
+        {
+            circuitBreaker.WithSyncCircuitBreaker(Runnable.Create(body));
+        }
+
+        /// <summary>
+        /// Wraps invocations of asynchronous calls that need to be protected
+        /// If this does not complete within the time allotted, it should return default(<typeparamref name="TResult"/>)
+        ///
+        /// <code>
+        ///  Await.result(
+        ///      withCircuitBreaker(try Future.successful(body) catch { case NonFatal(t) ⇒ Future.failed(t) }),
+        ///      callTimeout)
+        /// </code>
+        ///
+        /// </summary>
+        /// <typeparam name="TResult">TBD</typeparam>
+        /// <param name="circuitBreaker">TBD</param>
+        /// <param name="body">TBD</param>
+        /// <returns><typeparamref name="TResult"/> or default(<typeparamref name="TResult"/>)</returns>
+        public static TResult WithSyncCircuitBreaker<TResult>(this CircuitBreaker circuitBreaker, Func<TResult> body)
+        {
+            return circuitBreaker.WithSyncCircuitBreaker<TResult>(Runnable.Create(body));
+        }
+
+        /// <summary>Adds a callback to execute when circuit breaker opens</summary>
+        /// <param name="circuitBreaker">TBD</param>
+        /// <param name="callback"><see cref="Action"/> Handler to be invoked on state change</param>
+        /// <returns>CircuitBreaker for fluent usage</returns>
+        public static CircuitBreaker OnOpen(this CircuitBreaker circuitBreaker, Action callback)
+        {
+            return circuitBreaker.OnOpen(Runnable.Create(callback));
+        }
+
+        /// <summary>Adds a callback to execute when circuit breaker transitions to half-open</summary>
+        /// <param name="circuitBreaker">TBD</param>
+        /// <param name="callback"><see cref="Action"/> Handler to be invoked on state change</param>
+        /// <returns>CircuitBreaker for fluent usage</returns>
+        public static CircuitBreaker OnHalfOpen(this CircuitBreaker circuitBreaker, Action callback)
+        {
+            return circuitBreaker.OnHalfOpen(Runnable.Create(callback));
+        }
+
+        /// <summary>Adds a callback to execute when circuit breaker state closes</summary>
+        /// <param name="circuitBreaker">TBD</param>
+        /// <param name="callback"><see cref="Action"/> Handler to be invoked on state change</param>
+        /// <returns>CircuitBreaker for fluent usage</returns>
+        public static CircuitBreaker OnClose(this CircuitBreaker circuitBreaker, Action callback)
+        {
+            return circuitBreaker.OnClose(Runnable.Create(callback));
+        }
+
+<# for (int i = 1; i <= count; i++) {
+    var types = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x));
+    var arguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "arg" + x));
+    var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
+#>
+        /// <summary>Wraps invocation of asynchronous calls that need to be protected</summary>
+        /// <returns><see cref="Task"/> containing the call result</returns>
+        public static Task<TResult> WithCircuitBreaker<<#= types #>, TResult>(this CircuitBreaker circuitBreaker, Func<<#= types #>, Task<TResult>> body, <#= typeAndArguments #>)
+        {
+            return circuitBreaker.WithCircuitBreaker<TResult>(Runnable.CreateTask(body, <#= arguments #>));
+        }
+
+        /// <summary>Wraps invocation of asynchronous calls that need to be protected</summary>
+        /// <returns><see cref="Task"/></returns>
+        public static Task WithCircuitBreaker<<#= types #>>(this CircuitBreaker circuitBreaker, Func<<#= types #>, Task> body, <#= typeAndArguments #>)
+        {
+            return circuitBreaker.WithCircuitBreaker(Runnable.CreateTask(body, <#= arguments #>));
+        }
+
+        /// <summary>The failure will be recorded farther down.</summary>
+        public static void WithSyncCircuitBreaker<<#= types #>>(this CircuitBreaker circuitBreaker, Action<<#= types #>> body, <#= typeAndArguments #>)
+        {
+            circuitBreaker.WithSyncCircuitBreaker(Runnable.Create(body, <#= arguments #>));
+        }
+
+        /// <summary>
+        /// Wraps invocations of asynchronous calls that need to be protected
+        /// If this does not complete within the time allotted, it should return default(<typeparamref name="TResult"/>)
+        ///
+        /// <code>
+        ///  Await.result(
+        ///      withCircuitBreaker(try Future.successful(body) catch { case NonFatal(t) ⇒ Future.failed(t) }),
+        ///      callTimeout)
+        /// </code>
+        ///
+        /// </summary>
+        /// <returns><typeparamref name="TResult"/> or default(<typeparamref name="TResult"/>)</returns>
+        public static TResult WithSyncCircuitBreaker<<#= types #>, TResult>(this CircuitBreaker circuitBreaker, Func<<#= types #>, TResult> body, <#= typeAndArguments #>)
+        {
+            return circuitBreaker.WithSyncCircuitBreaker<TResult>(Runnable.Create(body, <#= arguments #>));
+        }
+
+        /// <summary>Adds a callback to execute when circuit breaker opens</summary>
+        /// <returns>CircuitBreaker for fluent usage</returns>
+        public static CircuitBreaker OnOpen<<#= types #>>(this CircuitBreaker circuitBreaker, Action<<#= types #>> callback, <#= typeAndArguments #>)
+        {
+            return circuitBreaker.OnOpen(Runnable.Create(callback, <#= arguments #>));
+        }
+
+        /// <summary>Adds a callback to execute when circuit breaker transitions to half-open</summary>
+        /// <returns>CircuitBreaker for fluent usage</returns>
+        public static CircuitBreaker OnHalfOpen<<#= types #>>(this CircuitBreaker circuitBreaker, Action<<#= types #>> callback, <#= typeAndArguments #>)
+        {
+            return circuitBreaker.OnHalfOpen(Runnable.Create(callback, <#= arguments #>));
+        }
+
+        /// <summary>Adds a callback to execute when circuit breaker state closes</summary>
+        /// <returns>CircuitBreaker for fluent usage</returns>
+        public static CircuitBreaker OnClose<<#= types #>>(this CircuitBreaker circuitBreaker, Action<<#= types #>> callback, <#= typeAndArguments #>)
+        {
+            return circuitBreaker.OnClose(Runnable.Create(callback, <#= arguments #>));
+        }
+
+<# } #>
+    }
+}

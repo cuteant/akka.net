@@ -312,6 +312,12 @@ namespace Akka
         #region -- ArgumentOutOfRangeException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ArgumentOutOfRangeException GetArgumentOutOfRangeException()
+        {
+            return new ArgumentOutOfRangeException();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentOutOfRangeException_Cancelable_Delay(TimeSpan delay)
         {
             throw GetException();

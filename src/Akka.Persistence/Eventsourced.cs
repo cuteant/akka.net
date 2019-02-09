@@ -9,9 +9,12 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Util;
 using Akka.Util.Internal;
 using CuteAnt.Collections;
 using MessagePack;
@@ -99,7 +102,13 @@ namespace Akka.Persistence
         private long _sequenceNr;
         private EventsourcedState _currentState;
         private Deque<IPersistentEnvelope> _eventBatch = new Deque<IPersistentEnvelope>();
-        private bool _asyncTaskRunning = false;
+        private int __asyncTaskRunning = Constants.False;
+        private bool AsyncTaskRunning
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Constants.True == Volatile.Read(ref __asyncTaskRunning);
+            set => Interlocked.Exchange(ref __asyncTaskRunning, value ? Constants.True : Constants.False);
+        }
 
         /// Used instead of iterating `pendingInvocations` in order to check if safe to revert to processing commands
         private long _pendingStashingPersistInvocations = 0L;
@@ -482,7 +491,7 @@ namespace Akka.Persistence
         {
             if (message != null)
             {
-                Log.Error(reason, "Exception in ReceiveRecover when replaying event type [{0}] with sequence number [{1}] for persistenceId [{2}]", 
+                Log.Error(reason, "Exception in ReceiveRecover when replaying event type [{0}] with sequence number [{1}] for persistenceId [{2}]",
                     message.GetType(), LastSequenceNr, PersistenceId);
             }
             else
@@ -532,28 +541,16 @@ namespace Akka.Persistence
         /// <param name="action">Async task to run</param>
         protected void RunTask(Func<Task> action)
         {
-            if (_asyncTaskRunning) ThrowHelper.ThrowNotSupportedException_AsyncTaskRun();
+            if (AsyncTaskRunning) ThrowHelper.ThrowNotSupportedException_AsyncTaskRun();
             Task wrap()
             {
                 Task t = action();
                 if (!t.IsCompleted)
                 {
-                    _asyncTaskRunning = true;
+                    AsyncTaskRunning = true;
                     var tcs = new TaskCompletionSource<object>();
 
-                    t.ContinueWith(r =>
-                    {
-                        _asyncTaskRunning = false;
-
-                        OnProcessingCommandsAroundReceiveComplete(r.IsFaulted || r.IsCanceled);
-
-                        if (r.IsFaulted)
-                            tcs.TrySetException(r.Exception);
-                        else if (r.IsCanceled)
-                            tcs.TrySetCanceled();
-                        else
-                            tcs.TrySetResult(null);
-                    }, TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
+                    t.ContinueWith(RunTaskContinuationAction, Tuple.Create(this, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
 
                     t = tcs.Task;
                 }
@@ -561,6 +558,60 @@ namespace Akka.Persistence
             }
 
             Dispatch.ActorTaskScheduler.RunTask(wrap);
+        }
+
+        /// <summary>
+        /// Runs an asynchronous task for incoming messages in context of <see cref="ReceiveCommand(object)"/> .
+        /// <remarks>The actor will be suspended until the task returned by <paramref name="action"/> completes, including the <see cref="Eventsourced.Persist{TEvent}(TEvent, Action{TEvent})" />
+        /// and <see cref="Eventsourced.PersistAll{TEvent}(IEnumerable{TEvent}, Action{TEvent})" /> calls.</remarks>
+        /// </summary>
+        /// <param name="action">Async task to run</param>
+        /// <param name="state"></param>
+        protected void RunTask<T>(Func<T, Task> action, T state)
+        {
+            if (AsyncTaskRunning) ThrowHelper.ThrowNotSupportedException_AsyncTaskRun();
+            Task wrap(object s)
+            {
+                Task t = action((T)s);
+                if (!t.IsCompleted)
+                {
+                    AsyncTaskRunning = true;
+                    var tcs = new TaskCompletionSource<object>();
+
+                    t.ContinueWith(RunTaskContinuationAction, Tuple.Create(this, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
+
+                    t = tcs.Task;
+                }
+                return t;
+            }
+
+            Dispatch.ActorTaskScheduler.RunTask(wrap, (object)state);
+        }
+
+        private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;
+        private static void RunTaskContinuation(Task r, object state)
+        {
+            var wrapped = (Tuple<Eventsourced, TaskCompletionSource<object>>)state;
+            var owner = wrapped.Item1;
+            var tcs = wrapped.Item2;
+
+            try
+            {
+                owner.AsyncTaskRunning = false;
+
+                owner.OnProcessingCommandsAroundReceiveComplete(r.IsFaulted || r.IsCanceled);
+
+                if (r.IsFaulted)
+                    tcs.TrySetException(r.Exception.InnerExceptions);
+                else if (r.IsCanceled)
+                    tcs.TrySetCanceled();
+                else
+                    tcs.TrySetResult(null);
+            }
+            catch (Exception ex)
+            {
+                tcs.TrySetUnwrappedException(ex);
+            }
         }
 
         private void ChangeState(EventsourcedState state)

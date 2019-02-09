@@ -221,8 +221,11 @@ namespace Akka.Cluster.Sharding
         {
             foreach (var scheduledRecovery in RememberedEntitiesRecoveryStrategy.RecoverEntities(State.Entries))
             {
-                scheduledRecovery.ContinueWith(t => new Shard.RestartEntities(t.Result), TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self, Self);
+                scheduledRecovery.Then(AfterScheduledRecoveryFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self, Self);
             }
         }
+
+        private static readonly Func<IImmutableSet<ShardId>, Shard.RestartEntities> AfterScheduledRecoveryFunc = AfterScheduledRecovery;
+        private static Shard.RestartEntities AfterScheduledRecovery(IImmutableSet<ShardId> result) => new Shard.RestartEntities(result);
     }
 }

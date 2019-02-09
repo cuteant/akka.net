@@ -7,17 +7,19 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Dispatch.SysMsg;
+using Akka.Util;
 
 namespace Akka.Dispatch
 {
     /// <summary>
     /// TBD
     /// </summary>
-    public class ActorTaskScheduler : TaskScheduler
+    public partial class ActorTaskScheduler : TaskScheduler
     {
         private readonly ActorCell _actorCell;
         /// <summary>
@@ -106,7 +108,7 @@ namespace Akka.Dispatch
             return false;
         }
 
-        private static readonly Task s_completedTask = Akka.Util.Internal.TaskEx.CompletedTask;
+        //private static readonly Task s_completedTask = Akka.Util.Internal.TaskEx.CompletedTask;
 
         /// <summary>
         /// TBD
@@ -114,12 +116,37 @@ namespace Akka.Dispatch
         /// <param name="action">TBD</param>
         public static void RunTask(Action action)
         {
-            Task LocalRunAsync()
-            {
-                action();
-                return s_completedTask;
-            }
-            RunTask(LocalRunAsync);
+            var context = EnsureContext();
+
+            Task.Factory.StartNew(action, CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
+                        .LinkOutcome(context);
+        }
+
+        /// <summary>TBD</summary>
+        /// <param name="action">TBD</param>
+        /// <param name="state"></param>
+        public static void RunTask(Action<object> action, object state)
+        {
+            var context = EnsureContext();
+
+            Task.Factory.StartNew(action, state, CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
+                        .LinkOutcome(context);
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="asyncAction">TBD</param>
+        /// <exception cref="InvalidOperationException">
+        /// This exception is thrown if this method is called outside an actor context.
+        /// </exception>
+        public static void RunTask(IRunnable2 asyncAction)
+        {
+            var context = EnsureContext();
+
+            var task = asyncAction.WrapTask();
+            Task.Factory.StartNew(task.Task, task.State, CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
+                        .LinkOutcome(context);
         }
 
         /// <summary>
@@ -131,34 +158,11 @@ namespace Akka.Dispatch
         /// </exception>
         public static void RunTask(Func<Task> asyncAction)
         {
-            var context = ActorCell.Current;
+            var context = EnsureContext();
 
-            if (context == null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorTaskScheduler_RunTask);
-
-            var dispatcher = context.Dispatcher;
-
-            //suspend the mailbox
-            dispatcher.Suspend(context);
-
-            ActorTaskScheduler actorScheduler = context.TaskScheduler;
-            actorScheduler.CurrentMessage = context.CurrentMessage;
-
-            Task<Task>.Factory.StartNew(asyncAction, CancellationToken.None, TaskCreationOptions.None, actorScheduler)
-                              .Unwrap()
-                              .LinkOutcome(dispatcher, context, actorScheduler);
-        }
-
-        /// <summary>TBD</summary>
-        /// <param name="action">TBD</param>
-        /// <param name="state"></param>
-        public static void RunTask(Action<object> action, object state)
-        {
-            Task LocalRunAsync(object msg)
-            {
-                action(msg);
-                return s_completedTask;
-            }
-            RunTask(LocalRunAsync, state);
+            Task<Task>.Factory.StartNew(asyncAction, CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
+                              .FastUnwrap()
+                              .LinkOutcome(context);
         }
 
         /// <summary>TBD</summary>
@@ -169,6 +173,33 @@ namespace Akka.Dispatch
         /// </exception>
         public static void RunTask(Func<object, Task> asyncAction, object state)
         {
+            var context = EnsureContext();
+
+            Task<Task>.Factory.StartNew(asyncAction, state, CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
+                              .FastUnwrap()
+                              .LinkOutcome(context);
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="asyncAction">TBD</param>
+        /// <exception cref="InvalidOperationException">
+        /// This exception is thrown if this method is called outside an actor context.
+        /// </exception>
+        public static void RunTask(IRunnableTask asyncAction)
+        {
+            var context = EnsureContext();
+
+            var task = asyncAction.WrapTask();
+            Task<Task>.Factory.StartNew(task.Task, task.State, CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
+                              .FastUnwrap()
+                              .LinkOutcome(context);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ActorCell EnsureContext()
+        {
             var context = ActorCell.Current;
 
             if (context == null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorTaskScheduler_RunTask);
@@ -181,9 +212,7 @@ namespace Akka.Dispatch
             ActorTaskScheduler actorScheduler = context.TaskScheduler;
             actorScheduler.CurrentMessage = context.CurrentMessage;
 
-            Task<Task>.Factory.StartNew(asyncAction, state, CancellationToken.None, TaskCreationOptions.None, actorScheduler)
-                              .Unwrap()
-                              .LinkOutcome(dispatcher, context, actorScheduler);
+            return context;
         }
     }
 }

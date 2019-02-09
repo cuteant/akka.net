@@ -40,6 +40,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>GraphApply.tt</DependentUpon>
     </Compile>
+    <Compile Update="IMaterializerExtensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>IMaterializerExtensions.tt</DependentUpon>
+    </Compile>
     <Compile Update="Internal\Strings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -75,6 +80,10 @@
     <None Update="CodeGen\FanOutShape.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FanOutShape.cs</LastGenOutput>
+    </None>
+    <None Update="IMaterializerExtensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IMaterializerExtensions.cs</LastGenOutput>
     </None>
     <Compile Update="CodeGen\FanOutShape.cs">
       <DesignTime>True</DesignTime>

@@ -14,6 +14,7 @@ using System.Net.Sockets;
 using System.Runtime.InteropServices;
 using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
@@ -84,12 +85,8 @@ namespace Akka.Remote.Transport.DotNetty
             if (localAddress != null)
             {
                 var handle = CreateHandle(channel, localAddress, remoteAddress);
-                handle.ReadHandlerSource.Task.ContinueWith(s =>
-                {
-                    var listener = s.Result;
-                    RegisterListener(channel, listener, msg, remoteSocketAddress);
-                    channel.Configuration.AutoRead = true; // turn reads back on
-                }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled | TaskContinuationOptions.NotOnFaulted);
+                handle.ReadHandlerSource.Task.Then(AfterSetupReadHandlerAction, this, channel, remoteSocketAddress, msg,
+                    TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled | TaskContinuationOptions.NotOnFaulted);
                 op = handle;
             }
             else
@@ -97,6 +94,13 @@ namespace Akka.Remote.Transport.DotNetty
                 op = null;
                 channel.CloseAsync();
             }
+        }
+
+        private static readonly Action<IHandleEventListener, CommonHandlers, IChannel, IPEndPoint, object> AfterSetupReadHandlerAction = AfterSetupReadHandler;
+        private static void AfterSetupReadHandler(IHandleEventListener listener, CommonHandlers owner, IChannel channel, IPEndPoint remoteSocketAddress, object msg)
+        {
+            owner.RegisterListener(channel, listener, msg, remoteSocketAddress);
+            channel.Configuration.AutoRead = true; // turn reads back on
         }
     }
 
@@ -217,7 +221,7 @@ namespace Akka.Remote.Transport.DotNetty
                 // association might come in though
                 newServerChannel.Configuration.AutoRead = false;
                 ConnectionGroup.TryAdd(newServerChannel);
-                ServerChannel = newServerChannel;
+                Interlocked.Exchange(ref ServerChannel, newServerChannel);
 
                 var addr = MapSocketToAddress(
                     socketAddress: (IPEndPoint)newServerChannel.LocalAddress,
@@ -227,11 +231,11 @@ namespace Akka.Remote.Transport.DotNetty
                     publicPort: Settings.PublicPort);
 
                 if (null == addr) { ThrowHelper.ThrowConfigurationException(newServerChannel); }
-                LocalAddress = addr;
+                Interlocked.Exchange(ref LocalAddress, addr);
 
                 // resume accepting incoming connections
 #pragma warning disable 4014 // we WANT this task to run without waiting
-                AssociationListenerPromise.Task.ContinueWith(result => newServerChannel.Configuration.AutoRead = true,
+                AssociationListenerPromise.Task.LinkOutcome(InvokeResumeAcceptingIncomingConnsAction, newServerChannel,
                     TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
 #pragma warning restore 4014
 
@@ -251,6 +255,10 @@ namespace Akka.Remote.Transport.DotNetty
                 throw;
             }
         }
+
+        private static readonly Action<Task<IAssociationEventListener>, IChannel> InvokeResumeAcceptingIncomingConnsAction = InvokeResumeAcceptingIncomingConns;
+        private static void InvokeResumeAcceptingIncomingConns(Task<IAssociationEventListener> result, IChannel newServerChannel)
+            => newServerChannel.Configuration.AutoRead = true;
 
         public override async Task<AssociationHandle> Associate(Address remoteAddress)
         {

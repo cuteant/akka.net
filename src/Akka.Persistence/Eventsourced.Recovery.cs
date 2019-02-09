@@ -317,7 +317,7 @@ namespace Akka.Persistence
         {
             if (_eventBatch.Count > 0) FlushBatch();
 
-            if (_asyncTaskRunning)
+            if (AsyncTaskRunning)
             {
                 //do nothing, wait for the task to finish
             }

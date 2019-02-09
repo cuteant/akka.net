@@ -135,12 +135,12 @@ namespace Akka.Pattern
         /// <summary>
         /// Wraps invocation of asynchronous calls that need to be protected
         /// </summary>
-        /// <typeparam name="T">TBD</typeparam>
+        /// <typeparam name="TResult">TBD</typeparam>
         /// <param name="body">Call needing protected</param>
         /// <returns><see cref="Task"/> containing the call result</returns>
-        public Task<T> WithCircuitBreaker<T>(Func<Task<T>> body)
+        public Task<TResult> WithCircuitBreaker<TResult>(IRunnableTask<TResult> body)
         {
-            return CurrentState.Invoke<T>(body);
+            return CurrentState.Invoke<TResult>(body);
         }
 
         /// <summary>
@@ -148,7 +148,7 @@ namespace Akka.Pattern
         /// </summary>
         /// <param name="body">Call needing protected</param>
         /// <returns><see cref="Task"/></returns>
-        public Task WithCircuitBreaker(Func<Task> body)
+        public Task WithCircuitBreaker(IRunnableTask body)
         {
             return CurrentState.Invoke(body);
         }
@@ -156,10 +156,15 @@ namespace Akka.Pattern
         /// <summary>
         /// The failure will be recorded farther down.
         /// </summary>
-        /// <param name="body">TBD</param>
-        public void WithSyncCircuitBreaker(Action body)
+        /// <param name="task">TBD</param>
+        public void WithSyncCircuitBreaker(IRunnable2 task)
         {
-            var cbTask = WithCircuitBreaker(() => Task.Factory.StartNew(body));
+            Task LocalWrapTask()
+            {
+                var wrapped = task.WrapTask();
+                return Task.Factory.StartNew(wrapped.Task, wrapped.State);
+            }
+            var cbTask = WithCircuitBreaker(Runnable.CreateTask(LocalWrapTask));
             if (!cbTask.Wait(CallTimeout))
             {
                 //throw new TimeoutException( string.Format( "Execution did not complete within the time allotted {0} ms", CallTimeout.TotalMilliseconds ) );
@@ -172,7 +177,7 @@ namespace Akka.Pattern
 
         /// <summary>
         /// Wraps invocations of asynchronous calls that need to be protected
-        /// If this does not complete within the time allotted, it should return default(<typeparamref name="T"/>)
+        /// If this does not complete within the time allotted, it should return default(<typeparamref name="TResult"/>)
         ///
         /// <code>
         ///  Await.result(
@@ -181,21 +186,26 @@ namespace Akka.Pattern
         /// </code>
         ///
         /// </summary>
-        /// <typeparam name="T">TBD</typeparam>
-        /// <param name="body">TBD</param>
-        /// <returns><typeparamref name="T"/> or default(<typeparamref name="T"/>)</returns>
-        public T WithSyncCircuitBreaker<T>(Func<T> body)
+        /// <typeparam name="TResult">TBD</typeparam>
+        /// <param name="task">TBD</param>
+        /// <returns><typeparamref name="TResult"/> or default(<typeparamref name="TResult"/>)</returns>
+        public TResult WithSyncCircuitBreaker<TResult>(IRunnable<TResult> task)
         {
-            var cbTask = WithCircuitBreaker(() => Task.Factory.StartNew(body));
-            return cbTask.Wait(CallTimeout) ? cbTask.Result : default(T);
+            Task<TResult> LocalWrapTask()
+            {
+                var wrapped = task.WrapTask();
+                return Task.Factory.StartNew(wrapped.Task, wrapped.State);
+            }
+            var cbTask = WithCircuitBreaker(Runnable.CreateTask(LocalWrapTask));
+            return cbTask.Wait(CallTimeout) ? cbTask.Result : default;
         }
 
         /// <summary>
         /// Adds a callback to execute when circuit breaker opens
         /// </summary>
-        /// <param name="callback"><see cref="Action"/> Handler to be invoked on state change</param>
+        /// <param name="callback"><see cref="IRunnable"/> Handler to be invoked on state change</param>
         /// <returns>CircuitBreaker for fluent usage</returns>
-        public CircuitBreaker OnOpen(Action callback)
+        public CircuitBreaker OnOpen(IRunnable callback)
         {
             Open.AddListener(callback);
             return this;
@@ -204,9 +214,9 @@ namespace Akka.Pattern
         /// <summary>
         /// Adds a callback to execute when circuit breaker transitions to half-open
         /// </summary>
-        /// <param name="callback"><see cref="Action"/> Handler to be invoked on state change</param>
+        /// <param name="callback"><see cref="IRunnable"/> Handler to be invoked on state change</param>
         /// <returns>CircuitBreaker for fluent usage</returns>
-        public CircuitBreaker OnHalfOpen(Action callback)
+        public CircuitBreaker OnHalfOpen(IRunnable callback)
         {
             HalfOpen.AddListener(callback);
             return this;
@@ -215,9 +225,9 @@ namespace Akka.Pattern
         /// <summary>
         /// Adds a callback to execute when circuit breaker state closes
         /// </summary>
-        /// <param name="callback"><see cref="Action"/> Handler to be invoked on state change</param>
+        /// <param name="callback"><see cref="IRunnable"/> Handler to be invoked on state change</param>
         /// <returns>CircuitBreaker for fluent usage</returns>
-        public CircuitBreaker OnClose(Action callback)
+        public CircuitBreaker OnClose(IRunnable callback)
         {
             Closed.AddListener(callback);
             return this;

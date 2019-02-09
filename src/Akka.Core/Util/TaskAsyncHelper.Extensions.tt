@@ -1,0 +1,422 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Akka.Util.Internal;
+
+
+<# var count = 7; #>
+namespace Akka.Util
+{
+    partial class TaskAsyncHelper
+    {
+<# for (int i = 1; i <= count; i++) {
+    var types = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x));
+    var arguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "arg" + x));
+    var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
+#>
+        /// <summary>TBD</summary>
+        public static Task FromMethod<<#= types #>>(Action<<#= types #>> func, <#= typeAndArguments #>)
+        {
+            try
+            {
+                func(<#= arguments #>);
+                return TaskEx.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                return TaskEx.FromException(ex);
+            }
+        }
+
+        /// <summary>TBD</summary>
+        public static Task FromMethod<<#= types #>>(Func<<#= types #>, Task> func, <#= typeAndArguments #>)
+        {
+            try
+            {
+                return func(<#= arguments #>);
+            }
+            catch (Exception ex)
+            {
+                return TaskEx.FromException(ex);
+            }
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> FromMethod<<#= types #>, TResult>(Func<<#= types #>, TResult> func, <#= typeAndArguments #>)
+        {
+            try
+            {
+                return Task.FromResult(func(<#= arguments #>));
+            }
+            catch (Exception ex)
+            {
+                return TaskEx.FromException<TResult>(ex);
+            }
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> FromMethod<<#= types #>, TResult>(Func<<#= types #>, Task<TResult>> func, <#= typeAndArguments #>)
+        {
+            try
+            {
+                return func(<#= arguments #>);
+            }
+            catch (Exception ex)
+            {
+                return TaskEx.FromException<TResult>(ex);
+            }
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<<#= types #>>(this Task task, Action<<#= types #>> successor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, <#= arguments #>), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<<#= types #>>(this Task task, Action<<#= types #>> successor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, <#= arguments #>), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<<#= types #>, TResult>(this Task task, Func<<#= types #>, TResult> successor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, <#= arguments #>), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<<#= types #>, TResult>(this Task task, Func<<#= types #>, TResult> successor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, <#= arguments #>), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<<#= types #>>(this Task task, Func<<#= types #>, Task> successor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.CreateTask(successor, <#= arguments #>), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<<#= types #>>(this Task task, Func<<#= types #>, Task> successor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.CreateTask(successor, <#= arguments #>), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<<#= types #>, TResult>(this Task task, Func<<#= types #>, Task<TResult>> successor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.CreateTask(successor, <#= arguments #>), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<<#= types #>, TResult>(this Task task, Func<<#= types #>, Task<TResult>> successor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.CreateTask(successor, <#= arguments #>), cancellationToken, continuationOptions, scheduler);
+        }
+
+<#
+    if (i < count)
+    {
+#>
+
+        /// <summary>TBD</summary>
+        public static Task Then<TResult, <#= types #>>(this Task<TResult> task, Action<TResult, <#= types #>> successor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, successor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<TResult, <#= types #>>(this Task<TResult> task, Action<TResult, <#= types #>> successor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+#if NETCOREAPP
+            if (task.IsCompletedSuccessfully)
+            {
+                return FromMethod(successor, task.Result, <#= arguments #>);
+            }
+            else if (task.IsCanceled || task.IsFaulted)
+            {
+                return task;
+            }
+#else
+            if (task.IsCanceled || task.IsFaulted)
+            {
+                return task;
+            }
+            else if (task.IsCompleted)
+            {
+                return FromMethod(successor, task.Result, <#= arguments #>);
+            }
+#endif
+            return TaskRunners<TResult>
+                .RunTask(task, (IArgumentOverrides<TResult>)Runnable.Create(successor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<TResult, <#= types #>>(this Task<TResult> task, Func<TResult, <#= types #>, Task> successor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, successor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<TResult, <#= types #>>(this Task<TResult> task, Func<TResult, <#= types #>, Task> successor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+#if NETCOREAPP
+            if (task.IsCompletedSuccessfully)
+            {
+                return FromMethod(successor, task.Result, <#= arguments #>);
+            }
+            else if (task.IsCanceled || task.IsFaulted)
+            {
+                return task;
+            }
+#else
+            if (task.IsCanceled || task.IsFaulted)
+            {
+                return task;
+            }
+            else if (task.IsCompleted)
+            {
+                return FromMethod(successor, task.Result, <#= arguments #>);
+            }
+#endif
+            return TaskRunners<TResult, Task>
+                .RunTask(task, (IArgumentOverrides<TResult, Task>)Runnable.CreateTask(successor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> Then<TResult, <#= types #>, TNewResult>(this Task<TResult> task, Func<TResult, <#= types #>, TNewResult> successor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, successor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> Then<TResult, <#= types #>, TNewResult>(this Task<TResult> task, Func<TResult, <#= types #>, TNewResult> successor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+#if NETCOREAPP
+            if (task.IsCompletedSuccessfully)
+            {
+                return FromMethod(successor, task.Result, <#= arguments #>);
+            }
+            else if (task.IsCanceled)
+            {
+                return Canceled<TNewResult>();
+            }
+            else if (task.IsFaulted)
+            {
+                return TaskEx.FromException<TNewResult>(task.Exception);
+            }
+#else
+            if (task.IsCanceled)
+            {
+                return Canceled<TNewResult>();
+            }
+            else if (task.IsFaulted)
+            {
+                return TaskEx.FromException<TNewResult>(task.Exception);
+            }
+            else if (task.IsCompleted)
+            {
+                return FromMethod(successor, task.Result, <#= arguments #>);
+            }
+#endif
+            return TaskRunners<TResult, TNewResult>
+                .RunTask(task, (IArgumentOverrides<TResult, TNewResult>)Runnable.Create(successor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> Then<TResult, <#= types #>, TNewResult>(this Task<TResult> task, Func<TResult, <#= types #>, Task<TNewResult>> successor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, successor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> Then<TResult, <#= types #>, TNewResult>(this Task<TResult> task, Func<TResult, <#= types #>, Task<TNewResult>> successor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+#if NETCOREAPP
+            if (task.IsCompletedSuccessfully)
+            {
+                return FromMethod(successor, task.Result, <#= arguments #>);
+            }
+            else if (task.IsCanceled)
+            {
+                return Canceled<TNewResult>();
+            }
+            else if (task.IsFaulted)
+            {
+                return TaskEx.FromException<TNewResult>(task.Exception);
+            }
+#else
+            if (task.IsCanceled)
+            {
+                return Canceled<TNewResult>();
+            }
+            else if (task.IsFaulted)
+            {
+                return TaskEx.FromException<TNewResult>(task.Exception);
+            }
+            else if (task.IsCompleted)
+            {
+                return FromMethod(successor, task.Result, <#= arguments #>);
+            }
+#endif
+            return TaskRunners<TResult, Task<TNewResult>>
+                .RunTask(task, (IArgumentOverrides<TResult, Task<TNewResult>>)Runnable.CreateTask(successor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<<#= types #>>(this Task task, Action<Task, <#= types #>> processor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return LinkOutcome(task, processor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<<#= types #>>(this Task task, Action<Task, <#= types #>> processor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromMethod(processor, task, <#= arguments #>); }
+            return LinkOutcomeHelper
+                .RunTask(task, (IArgumentOverrides<Task>)Runnable.Create(processor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<<#= types #>>(this Task task, Func<Task, <#= types #>, Task> processor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return LinkOutcome(task, processor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<<#= types #>>(this Task task, Func<Task, <#= types #>, Task> processor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromMethod(processor, task, <#= arguments #>); }
+            return LinkOutcomeHelper<Task>
+                .RunTask(task, (IArgumentOverrides<Task, Task>)Runnable.CreateTask(processor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> LinkOutcome<<#= types #>, TResult>(this Task task, Func<Task, <#= types #>, TResult> processor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return LinkOutcome(task, processor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> LinkOutcome<<#= types #>, TResult>(this Task task, Func<Task, <#= types #>, TResult> processor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromMethod(processor, task, <#= arguments #>); }
+            return LinkOutcomeHelper<TResult>
+                .RunTask(task, (IArgumentOverrides<Task, TResult>)Runnable.Create(processor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> LinkOutcome<<#= types #>, TResult>(this Task task, Func<Task, <#= types #>, Task<TResult>> processor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return LinkOutcome(task, processor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> LinkOutcome<<#= types #>, TResult>(this Task task, Func<Task, <#= types #>, Task<TResult>> processor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromMethod(processor, task, <#= arguments #>); }
+            return LinkOutcomeHelper<Task<TResult>>
+                .RunTask(task, (IArgumentOverrides<Task, Task<TResult>>)Runnable.CreateTask(processor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<TResult, <#= types #>>(this Task<TResult> task, Action<Task<TResult>, <#= types #>> processor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return LinkOutcome(task, processor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<TResult, <#= types #>>(this Task<TResult> task, Action<Task<TResult>, <#= types #>> processor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromMethod(processor, task, <#= arguments #>); }
+            return LinkOutcomeHelper<TResult>
+                .RunTask(task, (IArgumentOverrides<Task<TResult>>)Runnable.Create(processor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<TResult, <#= types #>>(this Task<TResult> task, Func<Task<TResult>, <#= types #>, Task> processor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return LinkOutcome(task, processor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<TResult, <#= types #>>(this Task<TResult> task, Func<Task<TResult>, <#= types #>, Task> processor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromMethod(processor, task, <#= arguments #>); }
+            return LinkOutcomeHelper<TResult, Task>
+                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task>)Runnable.CreateTask(processor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> LinkOutcome<TResult, <#= types #>, TNewResult>(this Task<TResult> task, Func<Task<TResult>, <#= types #>, TNewResult> processor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return LinkOutcome(task, processor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> LinkOutcome<TResult, <#= types #>, TNewResult>(this Task<TResult> task, Func<Task<TResult>, <#= types #>, TNewResult> processor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromMethod(processor, task, <#= arguments #>); }
+            return LinkOutcomeHelper<TResult, TNewResult>
+                .RunTask(task, (IArgumentOverrides<Task<TResult>, TNewResult>)Runnable.Create(processor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> LinkOutcome<TResult, <#= types #>, TNewResult>(this Task<TResult> task, Func<Task<TResult>, <#= types #>, Task<TNewResult>> processor, <#= typeAndArguments #>, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return LinkOutcome(task, processor, <#= arguments #>, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> LinkOutcome<TResult, <#= types #>, TNewResult>(this Task<TResult> task, Func<Task<TResult>, <#= types #>, Task<TNewResult>> processor, <#= typeAndArguments #>,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromMethod(processor, task, <#= arguments #>); }
+            return LinkOutcomeHelper<TResult, Task<TNewResult>>
+                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task<TNewResult>>)Runnable.CreateTask(processor, default, <#= arguments #>),
+                    cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+<# } #>
+
+<# } #>
+    }
+}

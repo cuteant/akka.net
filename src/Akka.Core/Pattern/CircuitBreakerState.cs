@@ -37,7 +37,7 @@ namespace Akka.Pattern
         /// <param name="body">N/A</param>
         /// <exception cref="OpenCircuitException">This exception is thrown automatically since the circuit is open.</exception>
         /// <returns>N/A</returns>
-        public override Task<T> Invoke<T>(Func<Task<T>> body)
+        public override Task<T> Invoke<T>(IRunnableTask<T> body)
         {
             throw new OpenCircuitException();
         }
@@ -48,7 +48,7 @@ namespace Akka.Pattern
         /// <param name="body">N/A</param>
         /// <exception cref="OpenCircuitException">This exception is thrown automatically since the circuit is open.</exception>
         /// <returns>N/A</returns>
-        public override Task Invoke(Func<Task> body)
+        public override Task Invoke(IRunnableTask body)
         {
             throw new OpenCircuitException();
         }
@@ -75,8 +75,11 @@ namespace Akka.Pattern
         /// </summary>
         protected override void EnterInternal()
         {
-            Task.Delay(_breaker.ResetTimeout).ContinueWith(task => _breaker.AttemptReset());
+            Task.Delay(_breaker.ResetTimeout).Then(InvokeAttemptResetAction, _breaker);
         }
+
+        private static readonly Action<CircuitBreaker> InvokeAttemptResetAction = InvokeAttemptReset;
+        private static void InvokeAttemptReset(CircuitBreaker breaker) => breaker.AttemptReset();
     }
 
     /// <summary>
@@ -106,7 +109,7 @@ namespace Akka.Pattern
         /// <param name="body">Implementation of the call that needs protected</param>
         /// <exception cref="OpenCircuitException">TBD</exception>
         /// <returns><see cref="Task"/> containing result of protected call</returns>
-        public override Task<T> Invoke<T>(Func<Task<T>> body)
+        public override Task<T> Invoke<T>(IRunnableTask<T> body)
         {
             if (!_lock.CompareAndSet(true, false))
             {
@@ -122,7 +125,7 @@ namespace Akka.Pattern
         /// <param name="body">Implementation of the call that needs protected</param>
         /// <exception cref="OpenCircuitException">TBD</exception>
         /// <returns><see cref="Task"/> containing result of protected call</returns>
-        public override Task Invoke(Func<Task> body)
+        public override Task Invoke(IRunnableTask body)
         {
             if (!_lock.CompareAndSet(true, false))
             {
@@ -188,7 +191,7 @@ namespace Akka.Pattern
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="body">Implementation of the call that needs protected</param>
         /// <returns><see cref="Task"/> containing result of protected call</returns>
-        public override Task<T> Invoke<T>(Func<Task<T>> body)
+        public override Task<T> Invoke<T>(IRunnableTask<T> body)
         {
             return CallThrough(body);
         }
@@ -198,7 +201,7 @@ namespace Akka.Pattern
         /// </summary>
         /// <param name="body">Implementation of the call that needs protected</param>
         /// <returns><see cref="Task"/> containing result of protected call</returns>
-        public override Task Invoke(Func<Task> body)
+        public override Task Invoke(IRunnableTask body)
         {
             return CallThrough(body);
         }

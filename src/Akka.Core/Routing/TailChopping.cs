@@ -105,7 +105,7 @@ namespace Akka.Routing
             var cancelable = new Cancelable(_scheduler);
 
             completion.Task
-                .ContinueWith(task => cancelable.Cancel(false));
+                .LinkOutcome(InvokeCancelAction, cancelable);
 
             if (_routees.Length == 0)
             {
@@ -113,27 +113,37 @@ namespace Akka.Routing
             }
             else
             {
-                _scheduler.Advanced.ScheduleRepeatedly(TimeSpan.Zero, _interval, async () =>
-                {
-                    var currentIndex = routeeIndex.GetAndIncrement();
-                    if (currentIndex >= _routees.Length) 
-                        return;
-
-                    try
-                    {
-
-                        completion.TrySetResult(await (_routees[currentIndex].Ask(message, _within)).ConfigureAwait(false));
-                    }
-                    catch (TaskCanceledException)
-                    {
-                        completion.TrySetResult(
-                            new Status.Failure(
-                                new AskTimeoutException($"Ask timed out on {sender} after {_within}")));
-                    }
-                }, cancelable);
+                _scheduler.Advanced.ScheduleRepeatedly(TimeSpan.Zero, _interval,
+                    InvokeSendAction, this, routeeIndex, completion, message, sender,
+                    cancelable);
             }
 
             completion.Task.PipeTo(sender);
+        }
+
+        private static readonly Action<Task<object>, Cancelable> InvokeCancelAction = InvokeCancel;
+        private static void InvokeCancel(Task<object> t, Cancelable cancelable) => cancelable.Cancel(false);
+
+        private static readonly Action<TailChoppingRoutee, AtomicCounter, TaskCompletionSource<object>, object, IActorRef> InvokeSendAction = InvokeSend;
+        private static async void InvokeSend(TailChoppingRoutee owner,
+            AtomicCounter routeeIndex, TaskCompletionSource<object> completion, object message, IActorRef sender)
+        {
+            var currentIndex = routeeIndex.GetAndIncrement();
+            var routees = owner._routees;
+            if (currentIndex >= routees.Length) { return; }
+
+            var within = owner._within;
+            try
+            {
+
+                completion.TrySetResult(await (routees[currentIndex].Ask(message, within)).ConfigureAwait(false));
+            }
+            catch (TaskCanceledException)
+            {
+                completion.TrySetResult(
+                    new Status.Failure(
+                        new AskTimeoutException($"Ask timed out on {sender} after {within}")));
+            }
         }
     }
 
@@ -421,7 +431,7 @@ namespace Akka.Routing
             IEnumerable<string> routeePaths,
             TimeSpan within,
             TimeSpan interval,
-            string routerDispatcher) 
+            string routerDispatcher)
             : base(routeePaths, routerDispatcher)
         {
             Within = within;
@@ -445,7 +455,7 @@ namespace Akka.Routing
         /// <returns>The newly created router tied to the given system.</returns>
         public override Router CreateRouter(ActorSystem system)
         {
-            
+
             return new Router(new TailChopping(system.Scheduler, Within, Interval));
         }
 

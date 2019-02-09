@@ -9,6 +9,7 @@ using System;
 using System.Threading.Tasks;
 using Akka.Streams.Stage;
 using Akka.Streams.Supervision;
+using Akka.Util;
 
 namespace Akka.Streams.Implementation.Stages
 {
@@ -545,7 +546,7 @@ namespace Akka.Streams.Implementation.Stages
 
             public override void OnUpstreamFailure(Exception e)
             {
-                _promise.TrySetException(e);
+                _promise.TrySetUnwrappedException(e);
                 FailStage(e);
             }
 
@@ -632,7 +633,7 @@ namespace Akka.Streams.Implementation.Stages
 
             public override void OnUpstreamFailure(Exception e)
             {
-                _promise.TrySetException(e);
+                _promise.TrySetUnwrappedException(e);
                 FailStage(e);
             }
 

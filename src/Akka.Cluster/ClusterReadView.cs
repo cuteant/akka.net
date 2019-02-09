@@ -8,9 +8,10 @@
 using System;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using Akka.Actor;
 using Akka.Event;
-using Akka.Util.Internal;
 
 namespace Akka.Cluster
 {
@@ -22,36 +23,36 @@ namespace Akka.Cluster
     /// </summary>
     internal class ClusterReadView : IDisposable
     {
+        private ClusterEvent.CurrentClusterState __state;
+        /// <summary>Current state</summary>
+        public ClusterEvent.CurrentClusterState State
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Volatile.Read(ref __state);
+            set => Interlocked.Exchange(ref __state, value);
+        }
+
+        private Reachability __reachability;
         /// <summary>
         /// TBD
         /// </summary>
-        public ClusterEvent.CurrentClusterState State { get { return _state; } }
+        internal Reachability Reachability
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Volatile.Read(ref __reachability);
+            set => Interlocked.Exchange(ref __reachability, value);
+        }
 
-        /// <summary>
-        /// Current state
-        /// </summary>
-        internal volatile ClusterEvent.CurrentClusterState _state;
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        internal Reachability Reachability { get { return _reachability; } }
-
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        internal volatile Reachability _reachability;
-
-        /// <summary>
-        /// INTERNAL API
-        /// </summary>
-        internal ClusterEvent.CurrentInternalStats LatestStats { get { return _latestStats; } }
-
+        private ClusterEvent.CurrentInternalStats __latestStats;
         /// <summary>
         /// Current internal cluster stats, updated periodically via event bus.
         /// </summary>
-        internal volatile ClusterEvent.CurrentInternalStats _latestStats;
+        internal ClusterEvent.CurrentInternalStats LatestStats
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Volatile.Read(ref __latestStats);
+            set => Interlocked.Exchange(ref __latestStats, value);
+        }
 
         readonly Address _selfAddress;
 
@@ -74,9 +75,9 @@ namespace Akka.Cluster
         public ClusterReadView(Cluster cluster)
         {
             _cluster = cluster;
-            _state = new ClusterEvent.CurrentClusterState();
-            _reachability = Reachability.Empty;
-            _latestStats = new ClusterEvent.CurrentInternalStats(new GossipStats(), new VectorClockStats());
+            State = new ClusterEvent.CurrentClusterState();
+            Reachability = Reachability.Empty;
+            LatestStats = new ClusterEvent.CurrentInternalStats(new GossipStats(), new VectorClockStats());
             _selfAddress = cluster.SelfAddress;
 
             _eventBusListener =
@@ -96,8 +97,8 @@ namespace Akka.Cluster
 
             private ClusterEvent.CurrentClusterState State
             {
-                get { return _readView._state; }
-                set { _readView._state = value; }
+                get { return _readView.State; }
+                set { _readView.State = value; }
             }
 
             public EventBusListener(Cluster cluster, ClusterReadView readView)
@@ -114,7 +115,7 @@ namespace Akka.Cluster
                             break;
 
                         case ClusterEvent.ReachabilityChanged changed:
-                            _readView._reachability = changed.Reachability;
+                            _readView.Reachability = changed.Reachability;
                             break;
 
                         case ClusterEvent.MemberRemoved removed:
@@ -149,7 +150,7 @@ namespace Akka.Cluster
                             break;
 
                         case ClusterEvent.CurrentInternalStats stats:
-                            readView._latestStats = stats;
+                            readView.LatestStats = stats;
                             break;
 
                         case ClusterEvent.ClusterShuttingDown _:
@@ -184,7 +185,7 @@ namespace Akka.Cluster
         {
             get
             {
-                return _state.Members.SingleOrDefault(member => member.UniqueAddress == _cluster.SelfUniqueAddress)
+                return State.Members.SingleOrDefault(member => member.UniqueAddress == _cluster.SelfUniqueAddress)
                     ?? Member.Create(_cluster.SelfUniqueAddress, _cluster.SelfRoles).Copy(MemberStatus.Removed);
             }
         }

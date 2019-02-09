@@ -266,11 +266,14 @@ namespace Akka.Streams.Stage
         {
             CancelTimer(timerKey);
             var id = _timerIdGen.IncrementAndGet();
-            var task = Interpreter.Materializer.ScheduleRepeatedly(initialDelay, interval, () =>
-            {
-                TimerAsyncCallback(new TimerMessages.Scheduled(timerKey, id, isRepeating: true));
-            });
+            var task = Interpreter.Materializer.ScheduleRepeatedly(initialDelay, interval,
+                InvokeScheduleRepeatedlyAction, this, timerKey, id);
             _keyToTimers[timerKey] = new TimerMessages.Timer(id, task);
+        }
+        private static readonly Action<TimerGraphStageLogic, object, int> InvokeScheduleRepeatedlyAction = InvokeScheduleRepeatedly;
+        private static void InvokeScheduleRepeatedly(TimerGraphStageLogic owner, object timerKey, int id)
+        {
+            owner.TimerAsyncCallback(new TimerMessages.Scheduled(timerKey, id, isRepeating: true));
         }
 
         /// <summary>
@@ -295,11 +298,13 @@ namespace Akka.Streams.Stage
         {
             CancelTimer(timerKey);
             var id = _timerIdGen.IncrementAndGet();
-            var task = Interpreter.Materializer.ScheduleOnce(delay, () =>
-            {
-                TimerAsyncCallback(new TimerMessages.Scheduled(timerKey, id, isRepeating: false));
-            });
+            var task = Interpreter.Materializer.ScheduleOnce(delay, InvokeScheduleOnceAction, this, timerKey, id);
             _keyToTimers[timerKey] = new TimerMessages.Timer(id, task);
+        }
+        private static readonly Action<TimerGraphStageLogic, object, int> InvokeScheduleOnceAction = InvokeScheduleOnce;
+        private static void InvokeScheduleOnce(TimerGraphStageLogic owner, object timerKey, int id)
+        {
+            owner.TimerAsyncCallback(new TimerMessages.Scheduled(timerKey, id, isRepeating: false));
         }
 
         /// <summary>
@@ -2376,7 +2381,13 @@ namespace Akka.Streams.Stage
         private readonly Action<Tuple<IActorRef, object>> _callback;
         private readonly AtomicReference<IImmutableSet<IActorRef>> _watchedBy = new AtomicReference<IImmutableSet<IActorRef>>(ImmutableHashSet<IActorRef>.Empty);
 
-        private volatile Receive _behavior;
+        private Receive __behavior;
+        private Receive Behavior
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Volatile.Read(ref __behavior);
+            set => Interlocked.Exchange(ref __behavior, value);
+        }
         private IImmutableSet<IActorRef> _watching = ImmutableHashSet<IActorRef>.Empty;
 
         /// <summary>
@@ -2392,10 +2403,10 @@ namespace Akka.Streams.Stage
         {
             Log = log;
             Provider = provider;
-            _behavior = initialReceive;
+            Behavior = initialReceive;
             Path = path;
 
-            _callback = getAsyncCallback(args => _behavior(args));
+            _callback = getAsyncCallback(args => Behavior(args));
         }
 
         /// <summary>
@@ -2466,7 +2477,7 @@ namespace Akka.Streams.Stage
         /// TBD
         /// </summary>
         /// <param name="behavior">TBD</param>
-        public void Become(Receive behavior) => _behavior = behavior;
+        public void Become(Receive behavior) => Behavior = behavior;
 
         private void SendTerminated()
         {

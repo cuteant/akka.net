@@ -12,7 +12,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
-using Akka.Pattern;
+using Akka.Util;
 using MessagePack;
 
 namespace Akka.Cluster.Sharding
@@ -383,20 +383,22 @@ namespace Akka.Cluster.Sharding
 
         private void SetupCoordinatedShutdown()
         {
-            var self = Self;
-            var cluster = Cluster;
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterShardingShutdownRegion, "region-shutdown", () =>
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterShardingShutdownRegion, "region-shutdown",
+                InvokeRegionShutdownFunc, this, Self, Cluster);
+        }
+
+        private static readonly Func<ShardRegion, IActorRef, Cluster, Task<Done>> InvokeRegionShutdownFunc = InvokeRegionShutdown;
+        private static Task<Done> InvokeRegionShutdown(ShardRegion owner, IActorRef self, Cluster cluster)
+        {
+            if (cluster.IsTerminated || cluster.SelfMember.Status == MemberStatus.Down)
             {
-                if (cluster.IsTerminated || cluster.SelfMember.Status == MemberStatus.Down)
-                {
-                    return Task.FromResult(Done.Instance);
-                }
-                else
-                {
-                    self.Tell(GracefulShutdown.Instance);
-                    return _gracefulShutdownProgress.Task;
-                }
-            });
+                return Task.FromResult(Done.Instance);
+            }
+            else
+            {
+                self.Tell(GracefulShutdown.Instance);
+                return owner._gracefulShutdownProgress.Task;
+            }
         }
 
         private ILoggingAdapter _log;
@@ -726,39 +728,47 @@ namespace Akka.Cluster.Sharding
         private void ReplyToRegionStateQuery(IActorRef sender)
         {
             AskAllShardsAsync<Shard.CurrentShardState>(Shard.GetCurrentShardState.Instance)
-                .ContinueWith(shardStates =>
-                {
-                    if (shardStates.IsCanceled)
-                        return new CurrentShardRegionState(ImmutableHashSet<ShardState>.Empty);
+                .ContinueWith(AskCurrentShardStateContinuationFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
+        }
 
-                    if (shardStates.IsFaulted)
-                        throw shardStates.Exception; //TODO check if this is the right way
+        private static readonly Func<Task<Tuple<ShardId, Shard.CurrentShardState>[]>, CurrentShardRegionState> AskCurrentShardStateContinuationFunc = AskCurrentShardStateContinuation;
+        private static CurrentShardRegionState AskCurrentShardStateContinuation(Task<Tuple<ShardId, Shard.CurrentShardState>[]> shardStates)
+        {
+            if (shardStates.IsCanceled)
+                return new CurrentShardRegionState(ImmutableHashSet<ShardState>.Empty);
 
-                    return new CurrentShardRegionState(shardStates.Result.Select(x => new ShardState(x.Item1, x.Item2.EntityIds.ToImmutableHashSet(StringComparer.Ordinal))).ToImmutableHashSet());
-                }, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
+            if (shardStates.IsFaulted)
+                throw shardStates.Exception; //TODO check if this is the right way
+
+            return new CurrentShardRegionState(shardStates.Result.Select(x => new ShardState(x.Item1, x.Item2.EntityIds.ToImmutableHashSet(StringComparer.Ordinal))).ToImmutableHashSet());
         }
 
         private void ReplyToRegionStatsQuery(IActorRef sender)
         {
             AskAllShardsAsync<Shard.ShardStats>(Shard.GetShardStats.Instance)
-                .ContinueWith(shardStats =>
-                {
-                    if (shardStats.IsCanceled)
-                        return new ShardRegionStats(ImmutableDictionary<string, int>.Empty);
+                .ContinueWith(AskShardStatsContinuationFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
+        }
 
-                    if (shardStats.IsFaulted)
-                        throw shardStats.Exception; //TODO check if this is the right way
+        private static readonly Func<Task<Tuple<ShardId, Shard.ShardStats>[]>, ShardRegionStats> AskShardStatsContinuationFunc = AskShardStatsContinuation;
+        private static ShardRegionStats AskShardStatsContinuation(Task<Tuple<ShardId, Shard.ShardStats>[]> shardStats)
+        {
+            if (shardStats.IsCanceled)
+                return new ShardRegionStats(ImmutableDictionary<string, int>.Empty);
 
-                    return new ShardRegionStats(shardStats.Result.ToImmutableDictionary(x => x.Item1, x => x.Item2.EntityCount));
-                }, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
+            if (shardStats.IsFaulted)
+                throw shardStats.Exception; //TODO check if this is the right way
+
+            return new ShardRegionStats(shardStats.Result.ToImmutableDictionary(x => x.Item1, x => x.Item2.EntityCount));
         }
 
         private Task<Tuple<ShardId, T>[]> AskAllShardsAsync<T>(object message)
         {
             var timeout = TimeSpan.FromSeconds(3);
-            var tasks = Shards.Select(entity => entity.Value.Ask<T>(message, timeout).ContinueWith(t => Tuple.Create(entity.Key, t.Result), TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion));
+            var tasks = Shards.Select(entity => entity.Value.Ask<T>(message, timeout).Then(AfterAskShard, entity.Key, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion));
             return Task.WhenAll(tasks);
         }
+
+        private static Tuple<ShardId, T> AfterAskShard<T>(T result, ShardId shardId) => Tuple.Create(shardId, result);
 
         private List<ActorSelection> GracefulShutdownCoordinatorSelections
         {

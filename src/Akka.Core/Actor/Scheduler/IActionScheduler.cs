@@ -22,7 +22,7 @@ namespace Akka.Actor
         /// <param name="delay">The time period that has to pass before the action is invoked.</param>
         /// <param name="action">The action that is being scheduled.</param>
         /// <param name="cancelable">A cancelable used to cancel the action from being executed.</param>
-        void ScheduleOnce(TimeSpan delay, Action action, ICancelable cancelable);
+        void ScheduleOnce(TimeSpan delay, IRunnable action, ICancelable cancelable);
 
         /// <summary>
         /// Schedules an action to be invoked after a delay. The action is wrapped so that it
@@ -31,7 +31,7 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="delay">The time period that has to pass before the action is invoked.</param>
         /// <param name="action">The action that is being scheduled.</param>
-        void ScheduleOnce(TimeSpan delay, Action action);
+        void ScheduleOnce(TimeSpan delay, IRunnable action);
 
         /// <summary>
         /// Schedules an action to be invoked after an initial delay and then repeatedly.
@@ -43,7 +43,7 @@ namespace Akka.Actor
         /// <param name="interval">The time period that has to pass between each invocation of the action.</param>
         /// <param name="action">The action that is being scheduled.</param>
         /// <param name="cancelable">A cancelable used to cancel the action from being executed.</param>
-        void ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action, ICancelable cancelable);
+        void ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action, ICancelable cancelable);
 
         /// <summary>
         /// Schedules an action to be invoked after an initial delay and then repeatedly.
@@ -54,7 +54,7 @@ namespace Akka.Actor
         /// <param name="initialDelay">The time period that has to pass before first invocation of the action.</param>
         /// <param name="interval">The time period that has to pass between each invocation of the action.</param>
         /// <param name="action">The action that is being scheduled.</param>
-        void ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action);
+        void ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action);
     }
 }
 

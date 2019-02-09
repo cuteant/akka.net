@@ -113,6 +113,20 @@ namespace Akka.Actor
 
         #region Action Scheduling
         /// <summary>
+        /// Schedules an action to be invoked after a delay. The action is wrapped so that it
+        /// completes inside the currently active actor if it is called from within an actor.
+        /// <remarks>Note! It's considered bad practice to use concurrency inside actors, and very easy to get wrong so usage is discouraged.</remarks>
+        /// </summary>
+        /// <param name="scheduler">The scheduler used to schedule the invocation of the action.</param>
+        /// <param name="delay">The time period that has to pass before the action is invoked.</param>
+        /// <param name="action">The action that is being scheduled.</param>
+        /// <param name="cancelable">A cancelable used to cancel the action from being executed.</param>
+        public static void ScheduleOnce(this IActionScheduler scheduler, TimeSpan delay, Action action, ICancelable cancelable = null)
+        {
+            scheduler.ScheduleOnce(delay, Runnable.Create(action), cancelable);
+        }
+
+        /// <summary>
         /// Schedules an action to be invoked after an delay. The action is wrapped so that it
         /// completes inside the currently active actor if it is called from within an actor.
         /// <remarks>Note! It's considered bad practice to use concurrency inside actors, and very easy to get wrong so usage is discouraged.</remarks>
@@ -123,7 +137,23 @@ namespace Akka.Actor
         /// <param name="cancelable">OPTIONAL. A cancelable that can be used to cancel the action from being executed. Defaults to <c>null</c></param>
         public static void ScheduleOnce(this IActionScheduler scheduler, int millisecondsDelay, Action action, ICancelable cancelable = null)
         {
-            scheduler.ScheduleOnce(TimeSpan.FromMilliseconds(millisecondsDelay), action, cancelable);
+            scheduler.ScheduleOnce(TimeSpan.FromMilliseconds(millisecondsDelay), Runnable.Create(action), cancelable);
+        }
+
+        /// <summary>
+        /// Schedules an action to be invoked after an initial delay and then repeatedly.
+        /// The action is wrapped so that it completes inside the currently active actor
+        /// if it is called from within an actor.
+        /// <remarks>Note! It's considered bad practice to use concurrency inside actors, and very easy to get wrong so usage is discouraged.</remarks>
+        /// </summary>
+        /// <param name="scheduler">The scheduler used to schedule the invocation of the action.</param>
+        /// <param name="initialDelay">The time period that has to pass before first invocation of the action.</param>
+        /// <param name="interval">The time period that has to pass between each invocation of the action.</param>
+        /// <param name="action">The action that is being scheduled.</param>
+        /// <param name="cancelable">A cancelable used to cancel the action from being executed.</param>
+        public static void ScheduleRepeatedly(this IActionScheduler scheduler, TimeSpan initialDelay, TimeSpan interval, Action action, ICancelable cancelable = null)
+        {
+            scheduler.ScheduleRepeatedly(initialDelay, interval, Runnable.Create(action), cancelable);
         }
 
         /// <summary>
@@ -139,7 +169,21 @@ namespace Akka.Actor
         /// <param name="cancelable">OPTIONAL. A cancelable used to cancel the action from being executed. Defaults to <c>null</c></param>
         public static void ScheduleRepeatedly(this IActionScheduler scheduler, int initialMillisecondsDelay, int millisecondsInterval, Action action, ICancelable cancelable = null)
         {
-            scheduler.ScheduleRepeatedly(TimeSpan.FromMilliseconds(initialMillisecondsDelay), TimeSpan.FromMilliseconds(millisecondsInterval), action, cancelable);
+            scheduler.ScheduleRepeatedly(TimeSpan.FromMilliseconds(initialMillisecondsDelay), TimeSpan.FromMilliseconds(millisecondsInterval), Runnable.Create(action), cancelable);
+        }
+
+        /// <summary>
+        /// Schedules an action to be invoked after a delay.
+        /// </summary>
+        /// <param name="scheduler">The scheduler used to schedule the invocation of the action.</param>
+        /// <param name="delay">The time period that has to pass before the action is invoked.</param>
+        /// <param name="action">The action that is being scheduled.</param>
+        /// <returns>A cancelable used to cancel the action from being executed.</returns>
+        public static ICancelable ScheduleOnceCancelable(this IActionScheduler scheduler, TimeSpan delay, IRunnable action)
+        {
+            var cancelable = new Cancelable(scheduler);
+            scheduler.ScheduleOnce(delay, action, cancelable);
+            return cancelable;
         }
 
         /// <summary>
@@ -152,7 +196,7 @@ namespace Akka.Actor
         public static ICancelable ScheduleOnceCancelable(this IActionScheduler scheduler, TimeSpan delay, Action action)
         {
             var cancelable = new Cancelable(scheduler);
-            scheduler.ScheduleOnce(delay, action, cancelable);
+            scheduler.ScheduleOnce(delay, Runnable.Create(action), cancelable);
             return cancelable;
         }
 
@@ -166,7 +210,22 @@ namespace Akka.Actor
         public static ICancelable ScheduleOnceCancelable(this IActionScheduler scheduler, int millisecondsDelay, Action action)
         {
             var cancelable = new Cancelable(scheduler);
-            scheduler.ScheduleOnce(millisecondsDelay, action, cancelable);
+            scheduler.ScheduleOnce(TimeSpan.FromMilliseconds(millisecondsDelay), Runnable.Create(action), cancelable);
+            return cancelable;
+        }
+
+        /// <summary>
+        /// Schedules an action to be invoked after an initial delay and then repeatedly.
+        /// </summary>
+        /// <param name="scheduler">The scheduler used to schedule the invocation of the action.</param>
+        /// <param name="initialDelay">The time period that has to pass before first invocation of the action.</param>
+        /// <param name="interval">The time period that has to pass between each invocation of the action.</param>
+        /// <param name="action">The action that is being scheduled.</param>
+        /// <returns>A cancelable used to cancel the action from being executed.</returns>
+        public static ICancelable ScheduleRepeatedlyCancelable(this IActionScheduler scheduler, TimeSpan initialDelay, TimeSpan interval, IRunnable action)
+        {
+            var cancelable = new Cancelable(scheduler);
+            scheduler.ScheduleRepeatedly(initialDelay, interval, action, cancelable);
             return cancelable;
         }
 
@@ -181,7 +240,7 @@ namespace Akka.Actor
         public static ICancelable ScheduleRepeatedlyCancelable(this IActionScheduler scheduler, TimeSpan initialDelay, TimeSpan interval, Action action)
         {
             var cancelable = new Cancelable(scheduler);
-            scheduler.ScheduleRepeatedly(initialDelay, interval, action, cancelable);
+            scheduler.ScheduleRepeatedly(initialDelay, interval, Runnable.Create(action), cancelable);
             return cancelable;
         }
 
@@ -196,7 +255,7 @@ namespace Akka.Actor
         public static ICancelable ScheduleRepeatedlyCancelable(this IActionScheduler scheduler, int initialMillisecondsDelay, int millisecondsInterval, Action action)
         {
             var cancelable = new Cancelable(scheduler);
-            scheduler.ScheduleRepeatedly(initialMillisecondsDelay, millisecondsInterval, action, cancelable);
+            scheduler.ScheduleRepeatedly(TimeSpan.FromMilliseconds(initialMillisecondsDelay), TimeSpan.FromMilliseconds(millisecondsInterval), Runnable.Create(action), cancelable);
             return cancelable;
         }
         #endregion

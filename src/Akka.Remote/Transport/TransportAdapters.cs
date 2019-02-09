@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Event;
+using Akka.Util;
 using CuteAnt.Collections;
 using CuteAnt.Reflection;
 
@@ -229,15 +230,22 @@ namespace Akka.Remote.Transport
         public override Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> Listen()
         {
             var upstreamListenerPromise = new TaskCompletionSource<IAssociationEventListener>();
-            return WrappedTransport.Listen().ContinueWith(async listenerTask =>
-            {
-                var listenAddress = listenerTask.Result.Item1;
-                var listenerPromise = listenerTask.Result.Item2;
-                listenerPromise.TrySetResult(await InterceptListen(listenAddress, upstreamListenerPromise.Task).ConfigureAwait(false));
-                return
-                    new Tuple<Address, TaskCompletionSource<IAssociationEventListener>>(
-                        SchemeAugmenter.AugmentScheme(listenAddress), upstreamListenerPromise);
-            }, TaskContinuationOptions.ExecuteSynchronously).Unwrap();
+            return WrappedTransport.Listen().Then(AfterListenFunc, this, upstreamListenerPromise, TaskContinuationOptions.ExecuteSynchronously);
+        }
+
+        private static readonly
+            Func<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>, AbstractTransportAdapter, TaskCompletionSource<IAssociationEventListener>, Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>>>
+            AfterListenFunc = AfterListen;
+        private static async Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> AfterListen(
+            Tuple<Address, TaskCompletionSource<IAssociationEventListener>> result,
+            AbstractTransportAdapter owner, TaskCompletionSource<IAssociationEventListener> upstreamListenerPromise)
+        {
+            var listenAddress = result.Item1;
+            var listenerPromise = result.Item2;
+            listenerPromise.TrySetResult(await owner.InterceptListen(listenAddress, upstreamListenerPromise.Task).ConfigureAwait(false));
+            return
+                new Tuple<Address, TaskCompletionSource<IAssociationEventListener>>(
+                    owner.SchemeAugmenter.AugmentScheme(listenAddress), upstreamListenerPromise);
         }
 
         /// <summary>TBD</summary>
@@ -442,12 +450,15 @@ namespace Akka.Remote.Transport
         /// <inheritdoc/>
         protected override Task<IAssociationEventListener> InterceptListen(Address listenAddress, Task<IAssociationEventListener> listenerTask)
         {
-            return RegisterManager().ContinueWith(mgrTask =>
-            {
-                manager = mgrTask.Result;
-                manager.Tell(new ListenUnderlying(listenAddress, listenerTask));
-                return (IAssociationEventListener)new ActorAssociationEventListener(manager);
-            }, TaskContinuationOptions.ExecuteSynchronously);
+            return RegisterManager().Then(AfterRegisterManagerFunc, this, listenAddress, listenerTask, TaskContinuationOptions.ExecuteSynchronously);
+        }
+
+        private static readonly Func<IActorRef, ActorTransportAdapter, Address, Task<IAssociationEventListener>, IAssociationEventListener> AfterRegisterManagerFunc = AfterRegisterManager;
+        private static IAssociationEventListener AfterRegisterManager(IActorRef manager, ActorTransportAdapter owner, Address listenAddress, Task<IAssociationEventListener> listenerTask)
+        {
+            Interlocked.Exchange(ref owner.manager, manager);
+            manager.Tell(new ListenUnderlying(listenAddress, listenerTask));
+            return (IAssociationEventListener)new ActorAssociationEventListener(manager);
         }
 
         /// <inheritdoc/>
@@ -459,8 +470,11 @@ namespace Akka.Remote.Transport
         {
             var stopTask = manager.GracefulStop((RARP.For(System).Provider).RemoteSettings.FlushWait);
             var transportStopTask = WrappedTransport.Shutdown();
-            return Task.WhenAll(stopTask, transportStopTask).ContinueWith(x => x.IsCompleted && !(x.IsFaulted || x.IsCanceled), TaskContinuationOptions.ExecuteSynchronously);
+            return Task.WhenAll(stopTask, transportStopTask).ContinueWith(IsShutdownSuccessFunc, TaskContinuationOptions.ExecuteSynchronously);
         }
+
+        private static readonly Func<Task<bool[]>, bool> IsShutdownSuccessFunc = IsShutdownSuccess;
+        private static bool IsShutdownSuccess(Task<bool[]> x) => x.IsSuccessfully();
     }
 
     #endregion
@@ -490,12 +504,13 @@ namespace Akka.Remote.Transport
         /// <param name="message">TBD</param>
         protected override void OnReceive(object message)
         {
+            var self = Self;
             switch (message)
             {
                 case ListenUnderlying listen:
                     LocalAddress = listen.ListenAddress;
-                    listen.UpstreamListener.ContinueWith(
-                        ContinueAction, Self,
+                    listen.UpstreamListener.Then(
+                        AfterUpstreamListenerRegisteredAction, self,
                         TaskContinuationOptions.ExecuteSynchronously);
                     break;
 
@@ -503,7 +518,7 @@ namespace Akka.Remote.Transport
                     AssociationListener = listener.Listener;
                     foreach (var dEvent in DelayedEvents)
                     {
-                        Self.Tell(dEvent, ActorRefs.NoSender);
+                        self.Tell(dEvent, ActorRefs.NoSender);
                     }
                     DelayedEvents.Clear();
                     Context.Become(Ready);
@@ -515,10 +530,10 @@ namespace Akka.Remote.Transport
             }
         }
 
-        private static void ContinueAction(Task<IAssociationEventListener> listenerRegistered, object state)
+        private static readonly Action<IAssociationEventListener, IActorRef> AfterUpstreamListenerRegisteredAction = AfterUpstreamListenerRegistered;
+        private static void AfterUpstreamListenerRegistered(IAssociationEventListener listener, IActorRef capturedSelf)
         {
-            var capturedSelf = (IActorRef)state;
-            capturedSelf.Tell(new ListenerRegistered(listenerRegistered.Result));
+            capturedSelf.Tell(new ListenerRegistered(listener));
         }
 
         /// <summary>Method to be implemented for child classes - processes messages once the transport is

@@ -8,6 +8,7 @@
 using System;
 using System.Threading.Tasks;
 using Akka.Annotations;
+using Akka.Util;
 using Reactive.Streams;
 
 namespace Akka.Streams.Implementation
@@ -54,7 +55,7 @@ namespace Akka.Streams.Implementation
         public void OnError(Exception cause)
         {
             ReactiveStreamsCompliance.RequireNonNullException(cause);
-            _whenCompleted.TrySetException(cause);
+            _whenCompleted.TrySetUnwrappedException(cause);
         }
 
         /// <summary>

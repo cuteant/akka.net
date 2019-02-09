@@ -10,6 +10,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Configuration;
@@ -228,13 +229,19 @@ namespace Akka.Actor
         internal readonly List<string> OrderedPhases;
 
         private readonly ConcurrentBag<Func<Task<Done>>> _clrShutdownTasks = new ConcurrentBag<Func<Task<Done>>>();
-        private readonly ConcurrentDictionary<string, ImmutableList<Tuple<string, Func<Task<Done>>>>> _tasks = new ConcurrentDictionary<string, ImmutableList<Tuple<string, Func<Task<Done>>>>>(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, ImmutableList<Tuple<string, IRunnableTask<Done>>>> _tasks = new ConcurrentDictionary<string, ImmutableList<Tuple<string, IRunnableTask<Done>>>>(StringComparer.Ordinal);
         private readonly AtomicReference<Reason> _runStarted = new AtomicReference<Reason>(null);
         private readonly AtomicBoolean _clrHooksStarted = new AtomicBoolean(false);
         private readonly TaskCompletionSource<Done> _runPromise = new TaskCompletionSource<Done>();
         private readonly TaskCompletionSource<Done> _hooksRunPromise = new TaskCompletionSource<Done>();
 
-        private volatile bool _runningClrHook = false;
+        private int _runningClrHook = Constants.False;
+        private bool RunningClrHook
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Constants.True == Volatile.Read(ref _runningClrHook);
+            set => Interlocked.Exchange(ref _runningClrHook, value ? Constants.True : Constants.False);
+        }
 
         /// <summary>
         /// INTERNAL API
@@ -262,7 +269,7 @@ namespace Akka.Actor
         /// It is possible to add a task to a later phase from within a task in an earlier phase
         /// and it will be performed.
         /// </remarks>
-        public void AddTask(string phase, string taskName, Func<Task<Done>> task)
+        public void AddTask(string phase, string taskName, IRunnableTask<Done> task)
         {
             if (!_knownPhases.Contains(phase))
             {
@@ -271,7 +278,7 @@ namespace Akka.Actor
 
             if (!_tasks.TryGetValue(phase, out var current))
             {
-                if (!_tasks.TryAdd(phase, ImmutableList<Tuple<string, Func<Task<Done>>>>.Empty.Add(Tuple.Create(taskName, task))))
+                if (!_tasks.TryAdd(phase, ImmutableList<Tuple<string, IRunnableTask<Done>>>.Empty.Add(Tuple.Create(taskName, task))))
                     AddTask(phase, taskName, task); // CAS failed, retry
             }
             else
@@ -311,16 +318,6 @@ namespace Akka.Actor
         {
             if (_clrHooksStarted.CompareAndSet(false, true))
             {
-                void continuationAction(Task<Done[]> tr)
-                {
-                    if (tr.IsFaulted || tr.IsCanceled)
-                        _hooksRunPromise.SetException(tr.Exception.Flatten());
-                    else
-                    {
-                        _hooksRunPromise.SetResult(Done.Instance);
-                    }
-                }
-
                 Task.WhenAll(_clrShutdownTasks.Select(hook =>
                 {
                     try
@@ -333,10 +330,23 @@ namespace Akka.Actor
                         Log.ErrorOccurredWhileExecutingCLRShutdownHook(ex);
                         return TaskEx.FromException<Done>(ex);
                     }
-                })).ContinueWith(continuationAction);
+                })).ContinueWith(AfterRunClrHooksAction, _hooksRunPromise);
             }
 
             return ClrShutdownTask;
+        }
+        private static readonly Action<Task<Done[]>, object> AfterRunClrHooksAction = AfterRunClrHooks;
+        private static void AfterRunClrHooks(Task<Done[]> tr, object state)
+        {
+            var hooksRunPromise = (TaskCompletionSource<Done>)state;
+            if (tr.IsSuccessfully())
+            {
+                hooksRunPromise.TrySetResult(Done.Instance);
+            }
+            else
+            {
+                hooksRunPromise.TrySetException(tr.Exception.InnerExceptions);
+            }
         }
 
         /// <summary>
@@ -374,133 +384,155 @@ namespace Akka.Actor
         {
             if (_runStarted.CompareAndSet(null, reason))
             {
-                var debugEnabled = Log.IsDebugEnabled;
-
-                Task<Done> Loop(List<string> remainingPhases)
-                {
-                    var phase = remainingPhases.FirstOrDefault();
-                    if (phase == null)
-                        return TaskEx.Completed;
-                    var remaining = remainingPhases.Skip(1).ToList();
-                    Task<Done> phaseResult = null;
-                    if (!_tasks.TryGetValue(phase, out var phaseTasks))
-                    {
-                        if (debugEnabled) { Log.PerformingPhaseWithTasks(phase); }
-                        phaseResult = TaskEx.Completed;
-                    }
-                    else
-                    {
-                        if (debugEnabled) { Log.PerformingPhaseWithTasks(phase, phaseTasks); }
-
-                        // note that tasks within same phase are performed in parallel
-                        var recoverEnabled = Phases[phase].Recover;
-                        var result = Task.WhenAll<Done>(phaseTasks.Select(x =>
-                            {
-                                var taskName = x.Item1;
-                                var task = x.Item2;
-                                try
-                                {
-                                    // need to begin execution of task
-                                    var r = task();
-
-                                    if (recoverEnabled)
-                                    {
-                                        return r.ContinueWith(tr =>
-                                        {
-                                            if (tr.IsCanceled || tr.IsFaulted)
-                                                Log.TaskFailedInPhase(taskName, phase, tr);
-                                            return Done.Instance;
-                                        });
-                                    }
-
-                                    return r;
-                                }
-                                catch (Exception ex)
-                                {
-                                    // in case task.Start() throws
-                                    if (recoverEnabled)
-                                    {
-                                        Log.TaskFailedInPhase(taskName, phase, ex);
-                                        return TaskEx.Completed;
-                                    }
-
-                                    return TaskEx.FromException<Done>(ex);
-                                }
-                            }))
-                            .ContinueWith(tr =>
-                            {
-                                // forces downstream error propagation if recover is disabled
-                                var force = tr.Result;
-                                return Done.Instance;
-                            });
-                        var timeout = Phases[phase].Timeout;
-                        var deadLine = MonotonicClock.Elapsed + timeout;
-                        Task<Done> timeoutFunction = null;
-                        try
-                        {
-                            timeoutFunction = After(timeout, System.Scheduler, () =>
-                            {
-                                if (phase == CoordinatedShutdown.PhaseActorSystemTerminate && MonotonicClock.ElapsedHighRes < deadLine)
-                                    return result; // too early, i.e. triggered by system termination
-
-                                if (result.IsCompleted)
-                                    return TaskEx.Completed;
-
-                                if (recoverEnabled)
-                                {
-                                    if (Log.IsWarningEnabled) Log.CoordinatedShutdownPhaseTimedOutAfter(phase, timeout);
-                                    return TaskEx.Completed;
-                                }
-
-                                return TaskEx.FromException<Done>(new TimeoutException($"Coordinated shutdown phase[{phase}] timed out after {timeout}"));
-                            });
-                        }
-                        catch (SchedulerException)
-                        {
-                            // The call to `after` threw SchedulerException, triggered by system termination
-                            timeoutFunction = result;
-                        }
-                        catch (InvalidOperationException)
-                        {
-                            // The call to `after` threw SchedulerException, triggered by Scheduler being in unset state
-                            timeoutFunction = result;
-                        }
-
-                        phaseResult = Task.WhenAny<Done>(result, timeoutFunction).Unwrap();
-                    }
-
-                    if (remaining.Count <= 0)
-                        return phaseResult;
-                    return phaseResult.ContinueWith(tr =>
-                        {
-                            // force any exceptions to be rethrown so next phase stops
-                            // and so failure gets propagated back to caller
-                            var r = tr.Result;
-                            return Loop(remaining);
-                        })
-                        .Unwrap<Done>();
-                }
-
                 var runningPhases = (fromPhase == null
                     ? OrderedPhases // all
                     : OrderedPhases.From(fromPhase)).ToList();
 
-                var done = Loop(runningPhases);
+                var done = Loop(this, runningPhases);
 
-                void continuationAction(Task<Done> tr)
-                {
-                    if (!tr.IsFaulted && !tr.IsCanceled)
-                        _runPromise.SetResult(tr.Result);
-                    else
-                    {
-                        // ReSharper disable once PossibleNullReferenceException
-                        _runPromise.SetException(tr.Exception.Flatten());
-                    }
-                }
-
-                done.ContinueWith(continuationAction);
+                done.LinkOutcome(LoopContinuationAction, _runPromise);
             }
             return _runPromise.Task;
+        }
+
+        private static readonly Action<Task<Done>, TaskCompletionSource<Done>> LoopContinuationAction = LoopContinuation;
+        private static void LoopContinuation(Task<Done> tr, TaskCompletionSource<Done> runPromise)
+        {
+            if (tr.IsSuccessfully())
+            {
+                runPromise.SetResult(tr.Result);
+            }
+            else
+            {
+                // ReSharper disable once PossibleNullReferenceException
+                runPromise.TrySetException(tr.Exception.InnerExceptions);
+            }
+        }
+
+        private static Task<Done> Loop(CoordinatedShutdown owner, List<string> remainingPhases)
+        {
+            var phase = remainingPhases.FirstOrDefault();
+            if (phase == null) { return TaskEx.Completed; }
+            var remaining = remainingPhases.Skip(1).ToList();
+            Task<Done> phaseResult = null;
+            var log = owner.Log;
+            var debugEnabled = log.IsDebugEnabled;
+            if (!owner._tasks.TryGetValue(phase, out var phaseTasks))
+            {
+                if (debugEnabled) { log.PerformingPhaseWithTasks(phase); }
+                phaseResult = TaskEx.Completed;
+            }
+            else
+            {
+                if (debugEnabled) { log.PerformingPhaseWithTasks(phase, phaseTasks); }
+
+                // note that tasks within same phase are performed in parallel
+                var phaseValue = owner.Phases[phase];
+                var recoverEnabled = phaseValue.Recover;
+                var result = Task
+                    .WhenAll<Done>(phaseTasks.Select(x =>
+                    {
+                        var taskName = x.Item1;
+                        var task = x.Item2;
+                        try
+                        {
+                            // need to begin execution of task
+                            var r = task.Run();
+
+                            if (recoverEnabled)
+                            {
+                                return r.LinkOutcome(AfterRunPhaseTaskFunc, log, taskName, phase);
+                            }
+
+                            return r;
+                        }
+                        catch (Exception ex)
+                        {
+                            // in case task.Start() throws
+                            if (recoverEnabled)
+                            {
+                                log.TaskFailedInPhase(taskName, phase, ex);
+                                return TaskEx.Completed;
+                            }
+
+                            return TaskEx.FromException<Done>(ex);
+                        }
+                    }))
+                    .ContinueWith(AfterRunPhaseTasksFunc);
+
+                Task<Done> timeoutFunction = null;
+                try
+                {
+                    timeoutFunction = After(phaseValue.Timeout, owner.System.Scheduler, InvokeTimeoutFunc, owner, result, phase, phaseValue);
+                }
+                catch (SchedulerException)
+                {
+                    // The call to `after` threw SchedulerException, triggered by system termination
+                    timeoutFunction = result;
+                }
+                catch (InvalidOperationException)
+                {
+                    // The call to `after` threw SchedulerException, triggered by Scheduler being in unset state
+                    timeoutFunction = result;
+                }
+
+                phaseResult = Task.WhenAny<Done>(result, timeoutFunction).FastUnwrap();
+            }
+
+            if (remaining.Count <= 0) { return phaseResult; }
+            return phaseResult.LinkOutcome(InvokeLoopFunc, owner, remaining);
+        }
+
+        private static readonly Func<Task<Done>, ILoggingAdapter, string, string, Done> AfterRunPhaseTaskFunc = AfterRunPhaseTask;
+        private static Done AfterRunPhaseTask(Task<Done> tr, ILoggingAdapter log, string taskName, string phase)
+        {
+            if (!tr.IsSuccessfully())
+            {
+                log.TaskFailedInPhase(taskName, phase, tr);
+            }
+            return Done.Instance;
+        }
+
+        private static readonly Func<Task<Done[]>, Done> AfterRunPhaseTasksFunc = AfterRunPhaseTasks;
+        private static Done AfterRunPhaseTasks(Task<Done[]> tr)
+        {
+            // forces downstream error propagation if recover is disabled
+            var force = tr.Result;
+            return Done.Instance;
+        }
+
+        private static readonly Func<CoordinatedShutdown, Task<Done>, string, Phase, Task<Done>> InvokeTimeoutFunc = InvokeTimeout;
+        private static Task<Done> InvokeTimeout(CoordinatedShutdown owner, Task<Done> result, string phase, Phase phaseValue)
+        {
+            var timeout = phaseValue.Timeout;
+            var deadLine = MonotonicClock.Elapsed + timeout;
+
+            if (phase == CoordinatedShutdown.PhaseActorSystemTerminate && MonotonicClock.ElapsedHighRes < deadLine)
+            {
+                return result; // too early, i.e. triggered by system termination
+            }
+
+            if (result.IsCompleted) { return TaskEx.Completed; }
+
+            // note that tasks within same phase are performed in parallel
+            var recoverEnabled = phaseValue.Recover;
+            if (recoverEnabled)
+            {
+                var log = owner.Log;
+                if (log.IsWarningEnabled) log.CoordinatedShutdownPhaseTimedOutAfter(phase, timeout);
+                return TaskEx.Completed;
+            }
+
+            return TaskEx.FromException<Done>(new TimeoutException($"Coordinated shutdown phase[{phase}] timed out after {timeout}"));
+        }
+
+        private static readonly Func<Task<Done>, CoordinatedShutdown, List<string>, Task<Done>> InvokeLoopFunc = InvokeLoop;
+        private static Task<Done> InvokeLoop(Task<Done> tr, CoordinatedShutdown owner, List<string> remaining)
+        {
+            // force any exceptions to be rethrown so next phase stops
+            // and so failure gets propagated back to caller
+            var r = tr.Result;
+            return Loop(owner, remaining);
         }
 
         /// <summary>
@@ -604,51 +636,56 @@ namespace Akka.Actor
             var exitClr = conf.GetBoolean("exit-clr");
             if (terminateActorSystem || exitClr)
             {
-                Task<Done> terminateSystem()
+                coord.AddTask(PhaseActorSystemTerminate, "terminate-system",
+                    Runnable.CreateTask(InvokeTerminateSystemAction, system, coord, terminateActorSystem, exitClr));
+            }
+        }
+
+        private static readonly Func<ActorSystem, CoordinatedShutdown, bool, bool, Task<Done>> InvokeTerminateSystemAction = InvokeTerminateSystem;
+        private static Task<Done> InvokeTerminateSystem(ActorSystem system, CoordinatedShutdown coord, bool terminateActorSystem, bool exitClr)
+        {
+            if (exitClr && terminateActorSystem)
+            {
+                // In case ActorSystem shutdown takes longer than the phase timeout,
+                // exit the JVM forcefully anyway.
+
+                // We must spawn a separate Task to not block current thread,
+                // since that would have blocked the shutdown of the ActorSystem.
+                var timeout = coord.Timeout(PhaseActorSystemTerminate);
+                Done run()
                 {
-                    if (exitClr && terminateActorSystem)
-                    {
-                        // In case ActorSystem shutdown takes longer than the phase timeout,
-                        // exit the JVM forcefully anyway.
-
-                        // We must spawn a separate Task to not block current thread,
-                        // since that would have blocked the shutdown of the ActorSystem.
-                        var timeout = coord.Timeout(PhaseActorSystemTerminate);
-                        Done run()
-                        {
-                            if (!system.WhenTerminated.Wait(timeout) && !coord._runningClrHook)
-                            {
-                                Environment.Exit(0);
-                            }
-                            return Done.Instance;
-                        }
-                        return Task.Run(run);
-                    }
-
-                    if (terminateActorSystem)
-                    {
-                        Done continuationFunc(Task tr)
-                        {
-                            if (exitClr && !coord._runningClrHook)
-                            {
-                                Environment.Exit(0);
-                            }
-                            return Done.Instance;
-                        }
-                        return system.Terminate().ContinueWith(continuationFunc);
-                    }
-                    else if (exitClr)
+                    if (!system.WhenTerminated.Wait(timeout) && !coord.RunningClrHook)
                     {
                         Environment.Exit(0);
-                        return TaskEx.Completed;
                     }
-                    else
-                    {
-                        return TaskEx.Completed;
-                    }
+                    return Done.Instance;
                 }
-                coord.AddTask(PhaseActorSystemTerminate, "terminate-system", terminateSystem);
+                return Task.Run(run);
             }
+
+            if (terminateActorSystem)
+            {
+                return system.Terminate().LinkOutcome(AfterSystemTerminateFunc, exitClr, coord.RunningClrHook);
+            }
+            else if (exitClr)
+            {
+                Environment.Exit(0);
+                return TaskEx.Completed;
+            }
+            else
+            {
+                return TaskEx.Completed;
+            }
+        }
+
+        private static readonly Func<Task, bool, bool, Done> AfterSystemTerminateFunc = AfterSystemTerminate;
+        private static Done AfterSystemTerminate(Task tr, bool exitClr, bool runningClrHook)
+        {
+            if (exitClr && !runningClrHook)
+            {
+                Environment.Exit(0);
+            }
+            return Done.Instance;
         }
 
         /// <summary>
@@ -691,7 +728,7 @@ namespace Akka.Actor
                 }
                 Task<Done> hookAsync()
                 {
-                    coord._runningClrHook = true;
+                    coord.RunningClrHook = true;
                     return Task.Run(hook);
                 }
                 coord.AddClrShutdownHook(hookAsync);

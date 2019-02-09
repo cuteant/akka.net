@@ -9,6 +9,8 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
@@ -643,8 +645,14 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         public readonly bool Inbound;
 
+        private int _writeable = Constants.True;
         /// <summary>TBD</summary>
-        internal volatile bool Writeable = true;
+        internal bool Writeable
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Constants.True == Volatile.Read(ref _writeable);
+            set => Interlocked.Exchange(ref _writeable, value ? Constants.True : Constants.False);
+        }
 
         /// <summary>TBD</summary>
         /// <param name="localAddress">TBD</param>

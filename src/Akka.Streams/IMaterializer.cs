@@ -65,7 +65,7 @@ namespace Akka.Streams
         /// A <see cref="ICancelable"/> that allows cancelling the timer. Cancelling is best effort, 
         /// if the event has been already enqueued it will not have an effect.
         /// </returns>
-        ICancelable ScheduleOnce(TimeSpan delay, Action action);
+        ICancelable ScheduleOnce(TimeSpan delay, IRunnable action);
 
         /// <summary>
         /// Interface for stages that need timer services for their functionality. Schedules a
@@ -78,7 +78,7 @@ namespace Akka.Streams
         /// A <see cref="ICancelable"/> that allows cancelling the timer. Cancelling is best effort, 
         /// if the event has been already enqueued it will not have an effect.
         /// </returns>
-        ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action);
+        ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action);
 
         /// <summary>
         /// Running a flow graph will require execution resources, as will computations
@@ -92,7 +92,7 @@ namespace Akka.Streams
     /// <summary>
     /// TBD
     /// </summary>
-    public sealed class NoMaterializer : IMaterializer
+    public sealed partial class NoMaterializer : IMaterializer
     {
         /// <summary>
         /// TBD
@@ -155,10 +155,10 @@ namespace Akka.Streams
         /// This exception is automatically thrown since <see cref="NoMaterializer"/> cannot schedule an event.
         /// </exception>
         /// <returns>N/A</returns>
-        public ICancelable ScheduleOnce(TimeSpan delay, Action action)
+        public ICancelable ScheduleOnce(TimeSpan delay, IRunnable action)
         {
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_NoMaterializer_event);
-            return default;
+            return null;
         }
 
         /// <summary>
@@ -171,7 +171,7 @@ namespace Akka.Streams
         /// This exception is automatically thrown since <see cref="NoMaterializer"/> cannot schedule a repeatable event.
         /// </exception>
         /// <returns>N/A</returns>
-        public ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action)
+        public ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action)
         {
             ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_NoMaterializer_repeatedevent);
             return null;

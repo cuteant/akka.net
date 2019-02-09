@@ -323,7 +323,7 @@ namespace Akka.Streams.Implementation.Fusing
 
             public override void OnUpstreamFailure(Exception e)
             {
-                _finishPromise.TrySetException(e);
+                _finishPromise.TrySetUnwrappedException(e);
                 _completedSignalled = true;
                 FailStage(e);
             }
@@ -840,18 +840,22 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 var callback = GetAsyncCallback<Task<T>>(t =>
                 {
-                    if (!t.IsCanceled && !t.IsFaulted)
+                    if (t.IsSuccessfully())
+                    {
                         Emit(_stage.Outlet, t.Result, CompleteStage);
+                    }
                     else
+                    {
                         FailStage(t.IsFaulted
                             ? Flatten(t.Exception)
                             : new TaskCanceledException("Task was cancelled."));
+                    }
                 });
                 _stage._task.ContinueWith(t => callback(t), TaskContinuationOptions.ExecuteSynchronously);
                 SetHandler(_stage.Outlet, EagerTerminateOutput); // After first pull we won't produce anything more
             }
 
-            private Exception Flatten(AggregateException exception)
+            private static Exception Flatten(AggregateException exception)
                 => exception.InnerExceptions.Count == 1 ? exception.InnerExceptions[0] : exception;
         }
         #endregion
@@ -929,7 +933,7 @@ namespace Akka.Streams.Implementation.Fusing
             public override void OnUpstreamFailure(Exception e)
             {
                 base.OnUpstreamFailure(e);
-                _completion.TrySetException(e);
+                _completion.TrySetUnwrappedException(e);
             }
         }
 

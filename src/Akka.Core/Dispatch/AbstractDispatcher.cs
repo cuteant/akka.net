@@ -475,15 +475,6 @@ namespace Akka.Dispatch
         }
 
         /// <summary>
-        ///     Schedules the specified delegate.
-        /// </summary>
-        /// <param name="run">The run.</param>
-        public void Schedule(Action run)
-        {
-            Schedule(new ActionRunnable(run));
-        }
-
-        /// <summary>
         /// Schedules an arbitrary task to run.
         /// </summary>
         /// <param name="run">The run.</param>
@@ -577,21 +568,23 @@ namespace Akka.Dispatch
         {
             try
             {
-                Configurator.Prerequisites.Scheduler.Advanced.ScheduleOnce(ShutdownTimeout, () =>
-                {
-                    try
-                    {
-                        _shutdownAction.Run();
-                    }
-                    catch (Exception ex)
-                    {
-                        ReportFailure(ex);
-                    }
-                });
+                Configurator.Prerequisites.Scheduler.Advanced.ScheduleOnce(ShutdownTimeout, InvokeShutdownAction, this);
             }
             catch (SchedulerException) // Scheduler has been shut down already. Need to just cleanup synchronously then.
             {
                 Shutdown();
+            }
+        }
+        private static readonly Action<MessageDispatcher> InvokeShutdownAction = InvokeShutdown;
+        private static void InvokeShutdown(MessageDispatcher dispatcher)
+        {
+            try
+            {
+                dispatcher._shutdownAction.Run();
+            }
+            catch (Exception ex)
+            {
+                dispatcher.ReportFailure(ex);
             }
         }
 

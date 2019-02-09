@@ -11,6 +11,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
+using Akka.Dispatch;
 using Akka.Event;
 
 namespace Akka.TestKit
@@ -51,7 +52,7 @@ namespace Akka.TestKit
                     if (si.Type == ScheduledItem.ScheduledItemType.Message)
                         si.Receiver.Tell(si.Message, si.Sender);
                     else
-                        si.Action();
+                        si.Action.Run();
 
                     si.DeliveryCount++;
                 }
@@ -82,7 +83,7 @@ namespace Akka.TestKit
             Advance(when.Subtract(_now));
         }
 
-        private void InternalSchedule(TimeSpan? initialDelay, TimeSpan delay, ICanTell receiver, object message, Action action,
+        private void InternalSchedule(TimeSpan? initialDelay, TimeSpan delay, ICanTell receiver, object message, IRunnable action,
             IActorRef sender, ICancelable cancelable, int deliveryCount = 0)
         {
             var scheduledTime = _now.Add(initialDelay ?? delay).UtcTicks;
@@ -159,9 +160,9 @@ namespace Akka.TestKit
         /// <param name="delay">TBD</param>
         /// <param name="action">TBD</param>
         /// <param name="cancelable">TBD</param>
-        public void ScheduleOnce(TimeSpan delay, Action action, ICancelable cancelable)
+        public void ScheduleOnce(TimeSpan delay, IRunnable action, ICancelable cancelable)
         {
-            InternalSchedule(null, delay, null, null, action, null, null);
+            InternalSchedule(null, delay, null, null, action, null, cancelable);
         }
 
         /// <summary>
@@ -169,7 +170,7 @@ namespace Akka.TestKit
         /// </summary>
         /// <param name="delay">TBD</param>
         /// <param name="action">TBD</param>
-        public void ScheduleOnce(TimeSpan delay, Action action)
+        public void ScheduleOnce(TimeSpan delay, IRunnable action)
         {
             InternalSchedule(null, delay, null, null, action, null, null);
         }
@@ -181,7 +182,7 @@ namespace Akka.TestKit
         /// <param name="interval">TBD</param>
         /// <param name="action">TBD</param>
         /// <param name="cancelable">TBD</param>
-        public void ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action, ICancelable cancelable)
+        public void ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action, ICancelable cancelable)
         {
             InternalSchedule(initialDelay, interval, null, null, action, null, cancelable);
         }
@@ -192,7 +193,7 @@ namespace Akka.TestKit
         /// <param name="initialDelay">TBD</param>
         /// <param name="interval">TBD</param>
         /// <param name="action">TBD</param>
-        public void ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action)
+        public void ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action)
         {
             InternalSchedule(initialDelay, interval, null, null, action, null, null);
         }
@@ -246,7 +247,7 @@ namespace Akka.TestKit
             /// <summary>
             /// TBD
             /// </summary>
-            public Action Action { get; set; }
+            public IRunnable Action { get; set; }
             /// <summary>
             /// TBD
             /// </summary>
@@ -295,7 +296,7 @@ namespace Akka.TestKit
             /// <param name="receiver">TBD</param>
             /// <param name="sender">TBD</param>
             /// <param name="cancelable">TBD</param>
-            public ScheduledItem(TimeSpan initialDelay, TimeSpan delay, ScheduledItemType type, object message, Action action, bool repeating, ICanTell receiver, 
+            public ScheduledItem(TimeSpan initialDelay, TimeSpan delay, ScheduledItemType type, object message, IRunnable action, bool repeating, ICanTell receiver, 
                 IActorRef sender, ICancelable cancelable)
             {
                 InitialDelay = initialDelay;

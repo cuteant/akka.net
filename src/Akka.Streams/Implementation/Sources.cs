@@ -175,7 +175,7 @@ namespace Akka.Streams.Implementation
                     if (input is Offer<TOut> offer)
                     {
                         var promise = offer.CompletionSource;
-                        promise.SetException(new IllegalStateException("Stream is terminated. SourceQueue is detached."));
+                        promise.TrySetException(new IllegalStateException("Stream is terminated. SourceQueue is detached."));
                     }
                 });
             }
@@ -213,12 +213,12 @@ namespace Akka.Streams.Implementation
                             var bufferOverflowException =
                                 new BufferOverflowException($"Buffer overflow (max capacity was: {_stage._maxBuffer})!");
                             offer.CompletionSource.SetResult(new QueueOfferResult.Failure(bufferOverflowException));
-                            _completion.SetException(bufferOverflowException);
+                            _completion.TrySetException(bufferOverflowException);
                             FailStage(bufferOverflowException);
                             break;
                         case OverflowStrategy.Backpressure:
                             if (_pendingOffer != null)
-                                offer.CompletionSource.SetException(
+                                offer.CompletionSource.TrySetException(
                                     new IllegalStateException(
                                         "You have to wait for previous offer to be resolved to send another request."));
                             else
@@ -262,7 +262,7 @@ namespace Akka.Streams.Implementation
                                         offer.CompletionSource.SetResult(QueueOfferResult.Dropped.Instance);
                                         break;
                                     case OverflowStrategy.Backpressure:
-                                        offer.CompletionSource.SetException(
+                                        offer.CompletionSource.TrySetException(
                                             new IllegalStateException(
                                                 "You have to wait for previous offer to be resolved to send another request"));
                                         break;
@@ -271,7 +271,7 @@ namespace Akka.Streams.Implementation
                                             new BufferOverflowException(
                                                 $"Buffer overflow (max capacity was: {_stage._maxBuffer})!");
                                         offer.CompletionSource.SetResult(new QueueOfferResult.Failure(bufferOverflowException));
-                                        _completion.SetException(bufferOverflowException);
+                                        _completion.TrySetException(bufferOverflowException);
                                         FailStage(bufferOverflowException);
                                         break;
                                     default:
@@ -292,7 +292,7 @@ namespace Akka.Streams.Implementation
                             }
                             break;
                         case Failure failure:
-                            _completion.SetException(failure.Ex);
+                            _completion.TrySetUnwrappedException(failure.Ex);
                             FailStage(failure.Ex);
                             break;
                         default:
@@ -587,7 +587,7 @@ namespace Akka.Streams.Implementation
                     {
                         void Continune(Task<Option<TOut>> t)
                         {
-                            if (!t.IsFaulted && !t.IsCanceled)
+                            if (t.IsSuccessfully())
                                 _createdCallback(new Left<Option<TOut>, Exception>(t.Result));
                             else
                                 _createdCallback(new Right<Option<TOut>, Exception>(t.Exception));
@@ -628,7 +628,7 @@ namespace Akka.Streams.Implementation
 
                 void CloseHandler(Tuple<Action, Task> t)
                 {
-                    if (t.Item2.IsCompleted && !t.Item2.IsFaulted)
+                    if (t.Item2.IsSuccessfully())
                     {
                         _open = false;
                         t.Item1();
@@ -665,10 +665,10 @@ namespace Akka.Streams.Implementation
                     void Continue(Task<TSource> t)
                     {
 
-                        if (t.IsCanceled || t.IsFaulted)
-                            cb(new Right<TSource, Exception>(t.Exception));
-                        else
+                        if (t.IsSuccessfully())
                             cb(new Left<TSource, Exception>(t.Result));
+                        else
+                            cb(new Right<TSource, Exception>(t.Exception));
                     }
 
                     _source._create().ContinueWith(Continue);
@@ -679,11 +679,11 @@ namespace Akka.Streams.Implementation
                 }
             }
 
-            private void OnResourceReady(Action<TSource> action) => _resource.Task.ContinueWith(t =>
-            {
-                if (!t.IsFaulted && !t.IsCanceled)
-                    action(t.Result);
-            });
+            private void OnResourceReady(Action<TSource> action) => _resource.Task.Then(action); //.ContinueWith(t =>
+            //{
+            //    if (!t.IsFaulted && !t.IsCanceled)
+            //        action(t.Result);
+            //});
 
             private void ErrorHandler(Exception ex)
             {
@@ -826,7 +826,7 @@ namespace Akka.Streams.Implementation
 
             public override void OnDownstreamFinish()
             {
-                _completion.SetException(new Exception("Downstream canceled without triggering lazy source materialization"));
+                _completion.TrySetException(new Exception("Downstream canceled without triggering lazy source materialization"));
                 CompleteStage();
             }
 
@@ -855,7 +855,7 @@ namespace Akka.Streams.Implementation
                 {
                     subSink.Cancel();
                     FailStage(e);
-                    _completion.TrySetException(e);
+                    _completion.TrySetUnwrappedException(e);
                 }
             }
 

@@ -456,7 +456,7 @@ namespace Akka.Actor
             {
                 var created = NewActor();
                 _actor = created;
-                UseThreadContext(() => created.AroundPreStart());
+                UseThreadContext(InvokeAroundPreStartAction, created);
                 CheckReceiveTimeout();
                 if (System.Settings.DebugLifecycle)
                 {
@@ -473,6 +473,8 @@ namespace Akka.Actor
                 AkkaThrowHelper.ThrowActorInitializationException_ActorCell_CreateEx(_self, e);
             }
         }
+        private static readonly Action<ActorBase> InvokeAroundPreStartAction = InvokeAroundPreStart;
+        private static void InvokeAroundPreStart(ActorBase created) => created.AroundPreStart();
 
         /// <summary>
         ///     Starts this instance.

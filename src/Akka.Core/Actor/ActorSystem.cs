@@ -181,9 +181,26 @@ namespace Akka.Actor
 
         /// <summary>
         /// <para>
+        /// Registers a block of code (callback) to run after ActorSystem.shutdown has been issued and all actors
+        /// in this actor system have been stopped. Multiple code blocks may be registered by calling this method
+        /// multiple times.
+        /// </para>
+        /// <para>
+        /// The callbacks will be run sequentially in reverse order of registration, i.e. last registration is run first.
+        /// </para>
+        /// </summary>
+        /// <param name="code">The code to run</param>
+        /// <param name="state"></param>
+        /// <exception cref="Exception">
+        /// This exception is thrown if the system has already shut down or if shutdown has been initiated.
+        /// </exception>
+        public abstract void RegisterOnTermination(Action<object> code, object state);
+
+        /// <summary>
+        /// <para>
         /// Terminates this actor system. This will stop the guardian actor, which in turn will recursively stop
         /// all its child actors, then the system guardian (below which the logging actors reside) and the execute
-        /// all registered termination handlers (<see cref="ActorSystem.RegisterOnTermination" />).
+        /// all registered termination handlers (<see cref="ActorSystem.RegisterOnTermination(Action)" />).
         /// </para>
         /// <para>
         /// Be careful to not schedule any operations on completion of the returned task using the `dispatcher`

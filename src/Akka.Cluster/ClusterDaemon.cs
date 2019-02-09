@@ -828,22 +828,31 @@ namespace Akka.Cluster
 
         private void AddCoordinatedLeave()
         {
-            var sys = Context.System;
-            var self = Self;
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterLeave, "leave", () =>
-            {
-                if (Cluster.Get(sys).IsTerminated || Cluster.Get(sys).SelfMember.Status == MemberStatus.Down)
-                {
-                    return Task.FromResult(Done.Instance);
-                }
-                else
-                {
-                    var timeout = _coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterLeave);
-                    return self.Ask<Done>(CoordinatedShutdownLeave.LeaveReq.Instance, timeout);
-                }
-            });
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterLeave, "leave",
+                InvokeClusterLeaveFunc, Context.System, Self, _coordShutdown);
 
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterShutdown, "wait-shutdown", () => _clusterPromise.Task);
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterShutdown, "wait-shutdown",
+                InvokeWaitShutdownFunc, _clusterPromise);
+        }
+
+        private static readonly Func<ActorSystem, IActorRef, CoordinatedShutdown, Task<Done>> InvokeClusterLeaveFunc = InvokeClusterLeave;
+        private static Task<Done> InvokeClusterLeave(ActorSystem sys, IActorRef self, CoordinatedShutdown coordShutdown)
+        {
+            if (Cluster.Get(sys).IsTerminated || Cluster.Get(sys).SelfMember.Status == MemberStatus.Down)
+            {
+                return Task.FromResult(Done.Instance);
+            }
+            else
+            {
+                var timeout = coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterLeave);
+                return self.Ask<Done>(CoordinatedShutdownLeave.LeaveReq.Instance, timeout);
+            }
+        }
+
+        private static readonly Func<TaskCompletionSource<Done>, Task<Done>> InvokeWaitShutdownFunc = InvokeWaitShutdown;
+        private static Task<Done> InvokeWaitShutdown(TaskCompletionSource<Done> clusterPromise)
+        {
+            return clusterPromise.Task;
         }
 
         private void CreateChildren()
@@ -1030,25 +1039,30 @@ namespace Akka.Cluster
 
         private void AddCoordinatedLeave()
         {
-            var sys = Context.System;
-            var self = Self;
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "wait-exiting", () =>
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "wait-exiting", InvokeWaitExitingFunc, this);
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExitingDone, "exiting-completed",
+                InvokeExitingCompletedFunc, Context.System, Self, _coordShutdown);
+        }
+
+        private static readonly Func<ClusterCoreDaemon, Task<Done>> InvokeWaitExitingFunc = InvokeWaitExiting;
+        private static Task<Done> InvokeWaitExiting(ClusterCoreDaemon owner)
+        {
+            if (owner._latestGossip.Members.IsEmpty)
+                return Task.FromResult(Done.Instance); // not joined yet
+            else
+                return owner._selfExiting.Task;
+        }
+
+        private static readonly Func<ActorSystem, IActorRef, CoordinatedShutdown, Task<Done>> InvokeExitingCompletedFunc = InvokeExitingCompleted;
+        private static Task<Done> InvokeExitingCompleted(ActorSystem sys, IActorRef self, CoordinatedShutdown coordShutdown)
+        {
+            if (Cluster.Get(sys).IsTerminated || Cluster.Get(sys).SelfMember.Status == MemberStatus.Down)
+                return TaskEx.Completed;
+            else
             {
-                if (_latestGossip.Members.IsEmpty)
-                    return Task.FromResult(Done.Instance); // not joined yet
-                else
-                    return _selfExiting.Task;
-            });
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExitingDone, "exiting-completed", () =>
-            {
-                if (Cluster.Get(sys).IsTerminated || Cluster.Get(sys).SelfMember.Status == MemberStatus.Down)
-                    return TaskEx.Completed;
-                else
-                {
-                    var timeout = _coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterExitingDone);
-                    return self.Ask(InternalClusterAction.ExitingCompleted.Instance, timeout).ContinueWith(tr => Done.Instance);
-                }
-            });
+                var timeout = coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterExitingDone);
+                return self.Ask(InternalClusterAction.ExitingCompleted.Instance, timeout).ContinueWith(tr => Done.Instance);
+            }
         }
 
         ActorSelection ClusterCore(Address address)
@@ -2704,7 +2718,7 @@ namespace Akka.Cluster
                     if (_timeout.HasTimeLeft)
                     {
                         var ctx = Context;
-                        var ctxParentPath= ctx.Parent.Path;
+                        var ctxParentPath = ctx.Parent.Path;
                         // send InitJoin to remaining seed nodes (except myself)
                         foreach (var seed in _remainingSeeds.Select(
                                     x => ctx.ActorSelection(ctxParentPath.ToStringWithAddress(x))))

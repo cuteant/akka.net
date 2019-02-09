@@ -6,11 +6,12 @@
 //-----------------------------------------------------------------------
 
 using System;
-using Akka.Actor;
-using Akka.Event;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Akka.Actor;
+using Akka.Event;
+using Akka.Util;
 
 namespace Akka.Cluster.Sharding
 {
@@ -73,7 +74,7 @@ namespace Akka.Cluster.Sharding
                                 var regionTask = coordinator.AllocationStrategy.AllocateShard(getShardHomeSender, shard, activeRegions);
 
                                 // if task completed immediately, just continue
-                                if (regionTask.IsCompleted && !regionTask.IsFaulted)
+                                if (regionTask.IsSuccessfully())
                                     ContinueGetShardHome(coordinator, shard, regionTask.Result, getShardHomeSender);
                                 else
                                     regionTask.PipeTo(coordinator.Self,
@@ -279,14 +280,20 @@ namespace Akka.Cluster.Sharding
             if (coordinator.CurrentState.Regions.Count != 0)
             {
                 var shardsTask = coordinator.AllocationStrategy.Rebalance(coordinator.CurrentState.Regions, coordinator.RebalanceInProgress.Keys.ToImmutableHashSet(StringComparer.Ordinal));
-                if (shardsTask.IsCompleted && !shardsTask.IsFaulted)
+                if (shardsTask.IsSuccessfully())
                     ContinueRebalance(coordinator, shardsTask.Result);
                 else
-                    shardsTask.ContinueWith(t => !(t.IsFaulted || t.IsCanceled)
-                        ? new PersistentShardCoordinator.RebalanceResult(t.Result)
-                        : new PersistentShardCoordinator.RebalanceResult(ImmutableHashSet<ShardId>.Empty), TaskContinuationOptions.ExecuteSynchronously)
-                    .PipeTo(coordinator.Self);
+                    shardsTask.ContinueWith(RebalanceContinuationFunc, TaskContinuationOptions.ExecuteSynchronously)
+                              .PipeTo(coordinator.Self);
             }
+        }
+
+        private static readonly Func<Task<IImmutableSet<ShardId>>, PersistentShardCoordinator.RebalanceResult> RebalanceContinuationFunc = RebalanceContinuation;
+        private static PersistentShardCoordinator.RebalanceResult RebalanceContinuation(Task<IImmutableSet<ShardId>> t)
+        {
+            return t.IsSuccessfully()
+                ? new PersistentShardCoordinator.RebalanceResult(t.Result)
+                : new PersistentShardCoordinator.RebalanceResult(ImmutableHashSet<ShardId>.Empty);
         }
 
         private static void HandleResendShardHost<TCoordinator>(this TCoordinator coordinator, ResendShardHost resend) where TCoordinator : IShardCoordinator
@@ -447,25 +454,32 @@ namespace Akka.Cluster.Sharding
         private static void HandleGetClusterShardingStats<TCoordinator>(this TCoordinator coordinator, GetClusterShardingStats message) where TCoordinator : IShardCoordinator
         {
             var sender = coordinator.Sender;
-            Task.WhenAll(
-                coordinator.AliveRegions.Select(regionActor => regionActor.Ask<ShardRegionStats>(GetShardRegionStats.Instance, message.Timeout).ContinueWith(r => Tuple.Create(regionActor, r.Result), TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion))
-                ).ContinueWith(allRegionStats =>
-                {
-                    if (allRegionStats.IsCanceled)
-                        return new ClusterShardingStats(ImmutableDictionary<Address, ShardRegionStats>.Empty);
+            Task.WhenAll(coordinator.AliveRegions.Select(regionActor =>
+                    regionActor.Ask<ShardRegionStats>(GetShardRegionStats.Instance, message.Timeout)
+                               .Then(AfterAskShardRegionStatsFunc, regionActor, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion))
+                )
+                .LinkOutcome(AfterAskAllShardRegionStats, coordinator, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
+        }
 
-                    if (allRegionStats.IsFaulted)
-                        throw allRegionStats.Exception; //TODO check if this is the right way
+        private static readonly Func<ShardRegionStats, IActorRef, Tuple<IActorRef, ShardRegionStats>> AfterAskShardRegionStatsFunc = AfterAskShardRegionStats;
+        private static Tuple<IActorRef, ShardRegionStats> AfterAskShardRegionStats(ShardRegionStats result, IActorRef regionActor) => Tuple.Create(regionActor, result);
 
-                    var regions = allRegionStats.Result.ToImmutableDictionary(i =>
-                    {
-                        Address regionAddress = i.Item1.Path.Address;
-                        Address address = (regionAddress.HasLocalScope && regionAddress.System == coordinator.Cluster.SelfAddress.System) ? coordinator.Cluster.SelfAddress : regionAddress;
-                        return address;
-                    }, j => j.Item2);
+        private static ClusterShardingStats AfterAskAllShardRegionStats<TCoordinator>(Task<Tuple<IActorRef, ShardRegionStats>[]> allRegionStats, TCoordinator coordinator) where TCoordinator : IShardCoordinator
+        {
+            if (allRegionStats.IsCanceled)
+                return new ClusterShardingStats(ImmutableDictionary<Address, ShardRegionStats>.Empty);
 
-                    return new ClusterShardingStats(regions);
-                }, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
+            if (allRegionStats.IsFaulted)
+                throw allRegionStats.Exception; //TODO check if this is the right way
+
+            var regions = allRegionStats.Result.ToImmutableDictionary(i =>
+            {
+                Address regionAddress = i.Item1.Path.Address;
+                Address address = (regionAddress.HasLocalScope && regionAddress.System == coordinator.Cluster.SelfAddress.System) ? coordinator.Cluster.SelfAddress : regionAddress;
+                return address;
+            }, j => j.Item2);
+
+            return new ClusterShardingStats(regions);
         }
 
         private static bool ShuttingDown(object message)

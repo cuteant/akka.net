@@ -48,14 +48,14 @@ namespace Akka.Tests.Actor.Scheduler
                 receiver.Tell(message, sender);
             }
 
-            protected override void InternalScheduleOnce(TimeSpan delay, Action action, ICancelable cancelable)
+            protected override void InternalScheduleOnce(TimeSpan delay, IRunnable action, ICancelable cancelable)
             {
-                action();
+                action.Run();
             }
 
-            protected override void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action, ICancelable cancelable)
+            protected override void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action, ICancelable cancelable)
             {
-                action();
+                action.Run();
             }
 
             public void Dispose()

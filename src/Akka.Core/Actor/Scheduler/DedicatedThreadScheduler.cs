@@ -125,12 +125,14 @@ namespace Akka.Actor
             IActorRef sender, ICancelable cancelable)
         {
             var cancellationToken = cancelable == null ? CancellationToken.None : cancelable.Token;
-            InternalScheduleOnce(delay, () =>
-            {
-                receiver.Tell(message, sender);
-            }, cancellationToken);
+            InternalScheduleOnce(delay,
+                Runnable.Create(InvokeTellOnce, receiver, message, sender),
+                cancellationToken);
         }
-
+        private static void InvokeTellOnce(ICanTell receiver, object message, IActorRef sender)
+        {
+            receiver.Tell(message, sender);
+        }
         /// <summary>
         /// Obsolete. Use <see cref="HashedWheelTimerScheduler.InternalScheduleTellRepeatedly(TimeSpan, TimeSpan, ICanTell, object, IActorRef, ICancelable)"/> instead.
         /// </summary>
@@ -144,29 +146,31 @@ namespace Akka.Actor
             ICanTell receiver, object message, IActorRef sender, ICancelable cancelable)
         {
             var cancellationToken = cancelable == null ? CancellationToken.None : cancelable.Token;
-            InternalScheduleRepeatedly(initialDelay, interval, () => receiver.Tell(message, sender), cancellationToken);
+            InternalScheduleRepeatedly(initialDelay, interval,
+                Runnable.Create(InvokeTellOnce, receiver, message, sender),
+                cancellationToken);
         }
 
         /// <summary>
-        /// Obsolete. Use <see cref="HashedWheelTimerScheduler.InternalScheduleOnce(TimeSpan, Action, ICancelable)"/> instead.
+        /// Obsolete. Use <see cref="HashedWheelTimerScheduler.InternalScheduleOnce(TimeSpan, IRunnable, ICancelable)"/> instead.
         /// </summary>
         /// <param name="delay">N/A</param>
         /// <param name="action">N/A</param>
         /// <param name="cancelable">N/A</param>
-        protected override void InternalScheduleOnce(TimeSpan delay, Action action, ICancelable cancelable)
+        protected override void InternalScheduleOnce(TimeSpan delay, IRunnable action, ICancelable cancelable)
         {
             var cancellationToken = cancelable == null ? CancellationToken.None : cancelable.Token;
             InternalScheduleOnce(delay, action, cancellationToken);
         }
 
         /// <summary>
-        /// Obsolete. Use <see cref="HashedWheelTimerScheduler.InternalScheduleRepeatedly(TimeSpan, TimeSpan, Action, ICancelable)"/> instead.
+        /// Obsolete. Use <see cref="HashedWheelTimerScheduler.InternalScheduleRepeatedly(TimeSpan, TimeSpan, IRunnable, ICancelable)"/> instead.
         /// </summary>
         /// <param name="initialDelay">N/A</param>
         /// <param name="interval">N/A</param>
         /// <param name="action">N/A</param>
         /// <param name="cancelable">N/A</param>
-        protected override void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action,
+        protected override void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action,
             ICancelable cancelable)
         {
             var cancellationToken = cancelable == null ? CancellationToken.None : cancelable.Token;
@@ -174,7 +178,7 @@ namespace Akka.Actor
         }
 
 
-        private void InternalScheduleOnce(TimeSpan initialDelay, Action action, CancellationToken token)
+        private void InternalScheduleOnce(TimeSpan initialDelay, IRunnable action, CancellationToken token)
         {
             void executeAction()
             {
@@ -183,7 +187,7 @@ namespace Akka.Actor
 
                 try
                 {
-                    action();
+                    action.Run();
                 }
                 catch (OperationCanceledException)
                 {
@@ -198,7 +202,7 @@ namespace Akka.Actor
         }
 
 
-        private void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action,
+        private void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action,
             CancellationToken token)
         {
             void executeAction()
@@ -208,7 +212,7 @@ namespace Akka.Actor
 
                 try
                 {
-                    action();
+                    action.Run();
                     if (token.IsCancellationRequested)
                         return;
 

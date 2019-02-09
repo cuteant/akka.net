@@ -363,14 +363,13 @@ namespace Akka.Actor
             //    string.Format("Ask timed out on [{0}] after [{1} ms]. Sender[{2}] sent message of type {3}.", targetName, timeout.TotalMilliseconds, sender, messageClassName)))),
             //    c);
 
-            void continuationAction(Task<object> task)
-            {
-                a.Stop();
-            }
-            result.Task.ContinueWith(continuationAction, TaskContinuationOptions.ExecuteSynchronously);
+            result.Task.LinkOutcome(InvokeStopAction, a, TaskContinuationOptions.ExecuteSynchronously);
 
             return a;
         }
+
+        private static readonly Action<Task<object>, PromiseActorRef> InvokeStopAction = InvokeStop;
+        private static void InvokeStop(Task<object> task, PromiseActorRef a) => a.Stop();
 
         #endregion
 
@@ -476,7 +475,7 @@ namespace Akka.Actor
 
                     case ActorPath actorPath:
                         return actorPath;
-                    case StoppedWithPath  stoppedWithPath:
+                    case StoppedWithPath stoppedWithPath:
                         return stoppedWithPath.Path;
                     case Stopped _:
                         //even if we are already stopped we still need to produce a proper path

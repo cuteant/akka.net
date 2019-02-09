@@ -8,11 +8,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Runtime.Serialization;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Util;
-using Akka.Util.Internal;
 using CuteAnt.AsyncEx;
 using MessagePack;
 
@@ -188,7 +188,7 @@ namespace Akka.Remote.Transport
             switch (message)
             {
                 case All all:
-                    _allMode = all.Mode;
+                    Interlocked.Exchange(ref _allMode, all.Mode);
                     return TaskConstants.BooleanTrue;
 
                 case One one:
@@ -212,14 +212,18 @@ namespace Akka.Remote.Transport
         protected override Task<IAssociationEventListener> InterceptListen(Address listenAddress, Task<IAssociationEventListener> listenerTask)
         {
             if (_log.IsWarningEnabled) _log.FailureInjectorTransportIsActiveOnThisSystem();
-            listenerTask.ContinueWith(tr =>
-            {
-                // Side effecting: As this class is not an actor, the only way to safely modify state
-                // is through volatile vars. Listen is called only during the initialization of the
-                // stack, and upstreamListener is not read before this finishes.
-                _upstreamListener = tr.Result;
-            }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
+            listenerTask.Then(AfterSetupAssociationEventListenerAction, this,
+                TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
             return Task.FromResult((IAssociationEventListener)this);
+        }
+
+        private static readonly Action<IAssociationEventListener, FailureInjectorTransportAdapter> AfterSetupAssociationEventListenerAction = AfterSetupAssociationEventListener;
+        private static void AfterSetupAssociationEventListener(IAssociationEventListener listener, FailureInjectorTransportAdapter owner)
+        {
+            // Side effecting: As this class is not an actor, the only way to safely modify state
+            // is through volatile vars. Listen is called only during the initialization of the
+            // stack, and upstreamListener is not read before this finishes.
+            Interlocked.Exchange(ref owner._upstreamListener, listener);
         }
 
         /// <summary>TBD</summary>
@@ -233,19 +237,23 @@ namespace Akka.Remote.Transport
             if (ShouldDropInbound(remoteAddress, new object(), "interceptAssociate") ||
                 ShouldDropOutbound(remoteAddress, new object(), "interceptAssociate"))
             {
-                statusPromise.SetException(
+                statusPromise.TrySetException(
                     new FailureInjectorException($"Simulated failure of association to {remoteAddress}"));
             }
             else
             {
-                WrappedTransport.Associate(remoteAddress).ContinueWith(tr =>
-                {
-                    var handle = tr.Result;
-                    addressChaosTable.AddOrUpdate(NakedAddress(handle.RemoteAddress), address => PassThru.Instance,
-                        (address, mode) => PassThru.Instance);
-                    statusPromise.SetResult(new FailureInjectorHandle(handle, this));
-                }, TaskContinuationOptions.ExecuteSynchronously);
+                WrappedTransport
+                    .Associate(remoteAddress)
+                    .Then(AfterConnectionIsOpenedAction, this, statusPromise, TaskContinuationOptions.ExecuteSynchronously);
             }
+        }
+
+        private static readonly Action<AssociationHandle, FailureInjectorTransportAdapter, TaskCompletionSource<AssociationHandle>> AfterConnectionIsOpenedAction = AfterConnectionIsOpened;
+        private static void AfterConnectionIsOpened(AssociationHandle handle, FailureInjectorTransportAdapter owner, TaskCompletionSource<AssociationHandle> statusPromise)
+        {
+            owner.addressChaosTable.AddOrUpdate(NakedAddress(handle.RemoteAddress), address => PassThru.Instance,
+                (address, mode) => PassThru.Instance);
+            statusPromise.SetResult(new FailureInjectorHandle(handle, owner));
         }
 
         /// <summary>TBD</summary>
@@ -377,11 +385,14 @@ namespace Akka.Remote.Transport
             : base(wrappedHandle, FailureInjectorTransportAdapter.FailureInjectorSchemeIdentifier)
         {
             _gremlinAdapter = gremlinAdapter;
-            ReadHandlerSource.Task.ContinueWith(tr =>
-            {
-                _upstreamListener = tr.Result;
-                WrappedHandle.ReadHandlerSource.SetResult(this);
-            }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
+            ReadHandlerSource.Task.Then(AfterSetupReadHandlerAction, this, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
+        }
+
+        private static readonly Action<IHandleEventListener, FailureInjectorHandle> AfterSetupReadHandlerAction = AfterSetupReadHandler;
+        private static void AfterSetupReadHandler(IHandleEventListener listener, FailureInjectorHandle owner)
+        {
+            Interlocked.Exchange(ref owner._upstreamListener, listener);
+            owner.WrappedHandle.ReadHandlerSource.SetResult(owner);
         }
 
         /// <summary>TBD</summary>

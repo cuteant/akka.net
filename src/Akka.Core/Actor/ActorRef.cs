@@ -100,8 +100,11 @@ namespace Akka.Actor
             _tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable = tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable;
             _unregister = unregister;
             _path = path;
-            _result.Task.ContinueWith(_ => _unregister());
+            _result.Task.LinkOutcome(InvokeUnRegisterAction, this);
         }
+
+        private static readonly Action<Task<object>, FutureActorRef> InvokeUnRegisterAction = InvokeUnRegister;
+        private static void InvokeUnRegister(Task<object> t, FutureActorRef owner) => owner._unregister();
 
         /// <summary>
         /// TBD

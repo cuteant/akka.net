@@ -7,8 +7,8 @@
 
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
@@ -114,20 +114,26 @@ namespace Akka.Dispatch
             }
         }
 
-        private volatile ActorCell _owner;
+        private ActorCell __owner;
+        private ActorCell Owner
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Volatile.Read(ref __owner);
+            set => Interlocked.Exchange(ref __owner, value);
+        }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="actor">TBD</param>
         /// <exception cref="InvalidOperationException">
-        /// This exception is thrown if the registering <paramref name="actor"/> is not the <see cref="_owner">owner</see>.
+        /// This exception is thrown if the registering <paramref name="actor"/> is not the <see cref="Owner">owner</see>.
         /// </exception>
         internal override void Register(ActorCell actor)
         {
-            var current = _owner;
-            if (current != null && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(_owner);
-            _owner = actor;
+            var current = Owner;
+            if (current != null && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(current);
+            Owner = actor;
             base.Register(actor);
         }
 
@@ -138,7 +144,7 @@ namespace Akka.Dispatch
         internal override void Unregister(ActorCell actor)
         {
             base.Unregister(actor);
-            _owner = null;
+            Owner = null;
         }
     }
 }

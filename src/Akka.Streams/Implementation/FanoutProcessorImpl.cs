@@ -242,8 +242,14 @@ namespace Akka.Streams.Implementation
                 settings.InitialInputBufferSize, Self, this, AfterFlush);
 
             var running = new TransferPhase(PrimaryInputs.NeedsInput.And(PrimaryOutputs.NeedsDemand),
-                () => PrimaryOutputs.EnqueueOutputElement(PrimaryInputs.DequeueInputElement()));
+                Runnable.Create(InvokeEnqueueOutputElementAction, this));
             InitialPhase(1, running);
+        }
+
+        private static readonly Action<FanoutProcessorImpl<T>> InvokeEnqueueOutputElementAction = InvokeEnqueueOutputElement;
+        private static void InvokeEnqueueOutputElement(FanoutProcessorImpl<T> owner)
+        {
+            owner.PrimaryOutputs.EnqueueOutputElement(owner.PrimaryInputs.DequeueInputElement());
         }
 
         /// <summary>

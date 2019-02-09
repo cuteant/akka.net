@@ -30,7 +30,7 @@ namespace Akka.Streams
     /// steps are split up into asynchronous regions is implementation
     /// dependent.
     /// </summary>
-    public abstract class ActorMaterializer : IMaterializer, IMaterializerLoggingProvider, IDisposable
+    public abstract partial class ActorMaterializer : IMaterializer, IMaterializerLoggingProvider, IDisposable
     {
         /// <summary>
         /// TBD
@@ -154,7 +154,7 @@ namespace Akka.Streams
         /// <param name="delay">TBD</param>
         /// <param name="action">TBD</param>
         /// <returns>TBD</returns>
-        public abstract ICancelable ScheduleOnce(TimeSpan delay, Action action);
+        public abstract ICancelable ScheduleOnce(TimeSpan delay, IRunnable action);
 
         /// <summary>
         /// TBD
@@ -163,7 +163,7 @@ namespace Akka.Streams
         /// <param name="interval">TBD</param>
         /// <param name="action">TBD</param>
         /// <returns>TBD</returns>
-        public abstract ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action);
+        public abstract ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action);
 
         /// <summary>
         /// TBD

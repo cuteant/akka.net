@@ -319,7 +319,7 @@ namespace Akka.Streams.Implementation
         /// <param name="delay">TBD</param>
         /// <param name="action">TBD</param>
         /// <returns>TBD</returns>
-        public override ICancelable ScheduleOnce(TimeSpan delay, Action action)
+        public override ICancelable ScheduleOnce(TimeSpan delay, IRunnable action)
             => _system.Scheduler.Advanced.ScheduleOnceCancelable(delay, action);
 
         /// <summary>
@@ -329,7 +329,7 @@ namespace Akka.Streams.Implementation
         /// <param name="interval">TBD</param>
         /// <param name="action">TBD</param>
         /// <returns>TBD</returns>
-        public override ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action)
+        public override ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action)
             => _system.Scheduler.Advanced.ScheduleRepeatedlyCancelable(initialDelay, interval, action);
 
         /// <summary>
@@ -416,7 +416,7 @@ namespace Akka.Streams.Implementation
     /// <summary>
     /// TBD
     /// </summary>
-    public class SubFusingActorMaterializerImpl : IMaterializer
+    public partial class SubFusingActorMaterializerImpl : IMaterializer
     {
         private readonly ExtendedActorMaterializer _delegateMaterializer;
         private readonly Func<GraphInterpreterShell, IActorRef> _registerShell;
@@ -465,7 +465,7 @@ namespace Akka.Streams.Implementation
         /// <param name="delay">TBD</param>
         /// <param name="action">TBD</param>
         /// <returns>TBD</returns>
-        public ICancelable ScheduleOnce(TimeSpan delay, Action action)
+        public ICancelable ScheduleOnce(TimeSpan delay, IRunnable action)
             => _delegateMaterializer.ScheduleOnce(delay, action);
 
         /// <summary>
@@ -475,7 +475,7 @@ namespace Akka.Streams.Implementation
         /// <param name="interval">TBD</param>
         /// <param name="action">TBD</param>
         /// <returns>TBD</returns>
-        public ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, Action action)
+        public ICancelable ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action)
             => _delegateMaterializer.ScheduleRepeatedly(initialDelay, interval, action);
 
         /// <summary>

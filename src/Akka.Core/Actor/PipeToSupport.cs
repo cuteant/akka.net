@@ -8,6 +8,7 @@
 using System;
 using System.Threading;
 using System.Threading.Tasks;
+using Akka.Util;
 
 namespace Akka.Actor
 {
@@ -31,18 +32,19 @@ namespace Akka.Actor
         public static Task PipeTo<T>(this Task<T> taskToPipe, ICanTell recipient, IActorRef sender = null, Func<T, object> success = null, Func<Exception, object> failure = null)
         {
             sender = sender ?? ActorRefs.NoSender;
-            void continuationAction(Task<T> tresult)
+            return taskToPipe.LinkOutcome(PipeToContinuation,
+                recipient, sender, success, failure,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        private static void PipeToContinuation<T>(Task<T> tresult, ICanTell recipient, IActorRef sender, Func<T, object> success, Func<Exception, object> failure)
+        {
+            if (tresult.IsSuccessfully())
             {
-                if (tresult.IsCanceled || tresult.IsFaulted)
-                    recipient.Tell(failure != null
-                        ? failure(tresult.Exception)
-                        : new Status.Failure(tresult.Exception), sender);
-                else if (tresult.IsCompleted)
-                    recipient.Tell(success != null
-                        ? success(tresult.Result)
-                        : tresult.Result, sender);
+                recipient.Tell(success != null ? success(tresult.Result) : tresult.Result, sender);
+                return;
             }
-            return taskToPipe.ContinueWith(continuationAction, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            recipient.Tell(failure != null ? failure(tresult.Exception) : new Status.Failure(tresult.Exception), sender);
         }
 
         /// <summary>
@@ -58,16 +60,20 @@ namespace Akka.Actor
         public static Task PipeTo(this Task taskToPipe, ICanTell recipient, IActorRef sender = null, Func<object> success = null, Func<Exception, object> failure = null)
         {
             sender = sender ?? ActorRefs.NoSender;
-            void continuationAction(Task tresult)
+            return taskToPipe.LinkOutcome(PipeToContinuationAction,
+                recipient, sender, success, failure,
+                CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+        }
+
+        private static readonly Action<Task, ICanTell, IActorRef, Func<object>, Func<Exception, object>> PipeToContinuationAction = PipeToContinuation;
+        private static void PipeToContinuation(Task tresult, ICanTell recipient, IActorRef sender, Func<object> success, Func<Exception, object> failure)
+        {
+            if (tresult.IsSuccessfully())
             {
-                if (tresult.IsCanceled || tresult.IsFaulted)
-                    recipient.Tell(failure != null
-                        ? failure(tresult.Exception)
-                        : new Status.Failure(tresult.Exception), sender);
-                else if (tresult.IsCompleted && success != null)
-                    recipient.Tell(success(), sender);
+                if (success != null) { recipient.Tell(success(), sender); }
+                return;
             }
-            return taskToPipe.ContinueWith(continuationAction, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+            recipient.Tell(failure != null ? failure(tresult.Exception) : new Status.Failure(tresult.Exception), sender);
         }
     }
 }

@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Akka.Dispatch;
 using Akka.Event;
+using Akka.Util;
 
 namespace Akka.Persistence.Snapshot
 {
@@ -68,35 +69,39 @@ namespace Akka.Persistence.Snapshot
             // Hence, an attempt to load that snapshot will fail but loading an older snapshot may succeed.
             //
             var metadata = GetSnapshotMetadata(persistenceId, criteria).Reverse().Take(_maxLoadAttempts).Reverse().ToImmutableArray();
-            return RunWithStreamDispatcher(() => Load(metadata));
+            return RunWithStreamDispatcher(Load, metadata);
         }
 
         /// <inheritdoc/>
         protected override Task SaveAsync(SnapshotMetadata metadata, object snapshot)
         {
             _saving.Add(metadata);
-            return RunWithStreamDispatcher(() =>
-            {
-                Save(metadata, snapshot);
-                return new object();
-            });
+            return RunWithStreamDispatcher(InvokeSave, metadata, snapshot);
+        }
+
+        private object InvokeSave(SnapshotMetadata metadata, object snapshot)
+        {
+            Save(metadata, snapshot);
+            return new object();
         }
 
         /// <inheritdoc/>
         protected override Task DeleteAsync(SnapshotMetadata metadata)
         {
             _saving.Remove(metadata);
-            return RunWithStreamDispatcher(() =>
+            return RunWithStreamDispatcher(InvokeDelete, metadata);
+        }
+
+        private object InvokeDelete(SnapshotMetadata metadata)
+        {
+            // multiple snapshot files here mean that there were multiple snapshots for this seqNr, we delete all of them
+            // usually snapshot-stores would keep one snapshot per sequenceNr however here in the file-based one we timestamp
+            // snapshots and allow multiple to be kept around (for the same seqNr) if desired
+            foreach (var file in GetSnapshotFiles(metadata))
             {
-                // multiple snapshot files here mean that there were multiple snapshots for this seqNr, we delete all of them
-                // usually snapshot-stores would keep one snapshot per sequenceNr however here in the file-based one we timestamp
-                // snapshots and allow multiple to be kept around (for the same seqNr) if desired
-                foreach (var file in GetSnapshotFiles(metadata))
-                {
-                    file.Delete();
-                }
-                return new object();
-            });
+                file.Delete();
+            }
+            return new object();
         }
 
         /// <inheritdoc/>
@@ -338,24 +343,46 @@ namespace Akka.Persistence.Snapshot
             return false;
         }
 
-        private Task<T> RunWithStreamDispatcher<T>(Func<T> fn)
+        private Task<TResult> RunWithStreamDispatcher<T1, TResult>(Func<T1, TResult> fn, T1 arg1)
         {
-            var promise = new TaskCompletionSource<T>();
+            var promise = new TaskCompletionSource<TResult>();
 
-            _streamDispatcher.Schedule(() =>
-            {
-                try
-                {
-                    var result = fn();
-                    promise.SetResult(result);
-                }
-                catch (Exception e)
-                {
-                    promise.SetException(e);
-                }
-            });
+            _streamDispatcher.Schedule(InvokeRunWithStreamDispatcher, fn, arg1, promise);
 
             return promise.Task;
+        }
+        private static void InvokeRunWithStreamDispatcher<T1, TResult>(Func<T1, TResult> fn, T1 arg1, TaskCompletionSource<TResult> promise)
+        {
+            try
+            {
+                var result = fn(arg1);
+                promise.SetResult(result);
+            }
+            catch (Exception e)
+            {
+                promise.TrySetUnwrappedException(e);
+            }
+        }
+
+        private Task<TResult> RunWithStreamDispatcher<T1, T2, TResult>(Func<T1, T2, TResult> fn, T1 arg1, T2 arg2)
+        {
+            var promise = new TaskCompletionSource<TResult>();
+
+            _streamDispatcher.Schedule(InvokeRunWithStreamDispatcher, fn, arg1, arg2, promise);
+
+            return promise.Task;
+        }
+        private static void InvokeRunWithStreamDispatcher<T1, T2, TResult>(Func<T1, T2, TResult> fn, T1 arg1, T2 arg2, TaskCompletionSource<TResult> promise)
+        {
+            try
+            {
+                var result = fn(arg1, arg2);
+                promise.SetResult(result);
+            }
+            catch (Exception e)
+            {
+                promise.TrySetUnwrappedException(e);
+            }
         }
     }
 }

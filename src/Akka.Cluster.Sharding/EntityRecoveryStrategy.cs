@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
+using Akka.Util;
 
 namespace Akka.Cluster.Sharding
 {
@@ -78,18 +79,23 @@ namespace Akka.Cluster.Sharding
         {
             var promise = new TaskCompletionSource<T>();
 
-            scheduler.Advanced.ScheduleOnce(timeout, () =>
-            {
-                value().ContinueWith(t =>
-                {
-                    if (t.IsFaulted || t.IsCanceled)
-                        promise.SetCanceled();
-                    else
-                        promise.SetResult(t.Result);
-                });
-            });
+            scheduler.Advanced.ScheduleOnce(timeout, LinkOutcome, value, promise);
 
             return promise.Task;
+        }
+
+        private static void LinkOutcome<T>(Func<Task<T>> value, TaskCompletionSource<T> promise)
+        {
+            value().ContinueWith(LinkOutcomeContinuation, promise);
+        }
+
+        private static void LinkOutcomeContinuation<T>(Task<T> t, object state)
+        {
+            var promise = (TaskCompletionSource<T>)state;
+            if (t.IsSuccessfully())
+                promise.SetResult(t.Result);
+            else
+                promise.SetCanceled();
         }
     }
 

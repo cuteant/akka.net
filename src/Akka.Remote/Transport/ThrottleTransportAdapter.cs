@@ -99,20 +99,29 @@ namespace Akka.Remote.Transport
             switch (message)
             {
                 case SetThrottle _:
-                    return manager.Ask(message, AskTimeout).ContinueWith(r =>
-                    {
-                        return r.Result is SetThrottleAck;
-                    });
+                    return manager.Ask(message, AskTimeout).Then(AfterSetThrottleFunc);
 
                 case ForceDisassociate _:
                 case ForceDisassociateExplicitly _:
                     return manager
                         .Ask(message, AskTimeout)
-                        .ContinueWith(r => r.Result is ForceDisassociateAck, TaskContinuationOptions.ExecuteSynchronously);
+                        .Then(AfterForceDisassociateFunc, TaskContinuationOptions.ExecuteSynchronously);
 
                 default:
                     return WrappedTransport.ManagementCommand(message);
             }
+        }
+
+        private static readonly Func<object, bool> AfterSetThrottleFunc = AfterSetThrottle;
+        private static bool AfterSetThrottle(object result)
+        {
+            return result is SetThrottleAck;
+        }
+
+        private static readonly Func<object, bool> AfterForceDisassociateFunc = AfterForceDisassociate;
+        private static bool AfterForceDisassociate(object result)
+        {
+            return result is ForceDisassociateAck;
         }
     }
 
@@ -287,17 +296,7 @@ namespace Akka.Remote.Transport
                     // a separate Task
                     var associateTask = WrappedTransport.Associate(ua.RemoteAddress);
                     var self = Self;
-                    associateTask.ContinueWith(tr =>
-                    {
-                        if (tr.IsFaulted)
-                        {
-                            ua.StatusPromise.SetException(tr.Exception ?? new Exception("association failed"));
-                        }
-                        else
-                        {
-                            self.Tell(new AssociateResult(tr.Result, ua.StatusPromise));
-                        }
-                    }, TaskContinuationOptions.ExecuteSynchronously);
+                    associateTask.LinkOutcome(AfterAssociateAction, self, ua, TaskContinuationOptions.ExecuteSynchronously);
                     break;
 
                 case AssociateResult ar:  // Finished outbound association and got back the handle
@@ -394,6 +393,19 @@ namespace Akka.Remote.Transport
 
                 default:
                     break;
+            }
+        }
+
+        private static readonly Action<Task<AssociationHandle>, IActorRef, AssociateUnderlying> AfterAssociateAction = AfterAssociate;
+        private static void AfterAssociate(Task<AssociationHandle> tr, IActorRef self, AssociateUnderlying ua)
+        {
+            if (tr.IsSuccessfully())
+            {
+                self.Tell(new AssociateResult(tr.Result, ua.StatusPromise));
+            }
+            else
+            {
+                ua.StatusPromise.TrySetUnwrappedException(tr.Exception ?? new Exception("association failed"));
             }
         }
 

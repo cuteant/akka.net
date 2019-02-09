@@ -12,6 +12,7 @@ using Akka.IO;
 using Akka.Streams.Actors;
 using Akka.Streams.Implementation.Stages;
 using Akka.Streams.IO;
+using Akka.Util;
 using Reactive.Streams;
 
 namespace Akka.Streams.Implementation.IO
@@ -164,7 +165,7 @@ namespace Akka.Streams.Implementation.IO
             }
             catch (Exception ex)
             {
-                ioResultPromise.TrySetException(ex);
+                ioResultPromise.TrySetUnwrappedException(ex);
                 pub = new ErrorPublisher<ByteString>(ex, Attributes.GetNameOrDefault("inputStreamSource"));
             }
 

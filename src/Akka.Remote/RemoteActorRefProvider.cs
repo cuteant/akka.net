@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Actor.Internal;
@@ -203,21 +204,21 @@ namespace Akka.Remote
 
             _local.Init(system);
 
-            _actorRefResolveThreadLocalCache = ActorRefResolveThreadLocalCache.For(system);
-            _actorPathThreadLocalCache = ActorPathThreadLocalCache.For(system);
+            Interlocked.Exchange(ref _actorRefResolveThreadLocalCache, ActorRefResolveThreadLocalCache.For(system));
+            Interlocked.Exchange(ref _actorPathThreadLocalCache, ActorPathThreadLocalCache.For(system));
 
-            _remotingTerminator =
+            Interlocked.Exchange(ref _remotingTerminator,
                 _system.SystemActorOf(
                     RemoteSettings.ConfigureDispatcher(Props.Create(() => new RemotingTerminator(_local.SystemGuardian))),
-                    "remoting-terminator");
+                    "remoting-terminator"));
 
-            _internals = CreateInternals();
+            Interlocked.Exchange(ref _internals, CreateInternals());
 
             _remotingTerminator.Tell(RemoteInternals);
 
             Transport.Start();
-            _remoteWatcher = CreateRemoteWatcher(system);
-            _remoteDeploymentWatcher = CreateRemoteDeploymentWatcher(system);
+            Interlocked.Exchange(ref _remoteWatcher, CreateRemoteWatcher(system));
+            Interlocked.Exchange(ref _remoteDeploymentWatcher, CreateRemoteDeploymentWatcher(system));
         }
 
         #endregion

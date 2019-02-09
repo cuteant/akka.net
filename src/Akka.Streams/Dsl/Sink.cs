@@ -14,6 +14,7 @@ using Akka.Pattern;
 using Akka.Streams.Implementation;
 using Akka.Streams.Implementation.Fusing;
 using Akka.Streams.Implementation.Stages;
+using Akka.Util;
 using Reactive.Streams;
 
 // ReSharper disable UnusedMember.Global
@@ -217,7 +218,7 @@ namespace Akka.Streams.Dsl
                 .WithAttributes(DefaultAttributes.FirstOrDefaultSink)
                 .MapMaterializedValue(e =>
                 {
-                    if (!e.IsFaulted && e.IsCompleted && e.Result == null)
+                    if (e.IsSuccessfully() && e.Result == null)
                     {
                         ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_SinkFirst_empty_stream);
                     }

@@ -84,7 +84,13 @@ namespace Akka.Dispatch
          * of the constructor, so safe publication requires that THIS WRITE BELOW
          * stay as it is.
          */
-        private volatile ActorCell _actor = null;
+        private ActorCell __actor;
+        private ActorCell InternalActor
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get => Volatile.Read(ref __actor);
+            set => Interlocked.Exchange(ref __actor, value);
+        }
         private /*volatile*/ SystemMessage _systemQueueDoNotCallMeDirectly = null; // null by default
         private /*volatile*/ int _statusDotNotCallMeDirectly; //0 by default
 
@@ -179,14 +185,14 @@ namespace Akka.Dispatch
         /// <summary>
         /// The <see cref="MessageDispatcher"/> for the underlying mailbox.
         /// </summary>
-        public MessageDispatcher Dispatcher => _actor.Dispatcher;
+        public MessageDispatcher Dispatcher => InternalActor.Dispatcher;
 
         /// <summary>
         /// INTERNAL API
         /// 
         /// <see cref="Actor"/> must not be visible to user-defined implementations
         /// </summary>
-        internal ActorCell Actor => _actor;
+        internal ActorCell Actor => InternalActor;
 
         /// <summary>
         ///     Attaches an ActorCell to the Mailbox.
@@ -194,7 +200,7 @@ namespace Akka.Dispatch
         /// <param name="actorCell">TBD</param>
         public virtual void SetActor(ActorCell actorCell)
         {
-            _actor = actorCell;
+            InternalActor = actorCell;
         }
 
         /// <summary>
@@ -251,7 +257,7 @@ namespace Akka.Dispatch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetStatus(int newStatus)
         {
-            Volatile.Write(ref _statusDotNotCallMeDirectly, newStatus);
+            Interlocked.Exchange(ref _statusDotNotCallMeDirectly, newStatus);
         }
 
         /// <summary>

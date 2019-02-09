@@ -10,6 +10,7 @@ using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Streams.Stage;
+using Akka.Util;
 
 namespace Akka.Streams
 {
@@ -177,10 +178,10 @@ namespace Akka.Streams
 
             private void OnSwitch(Task t)
             {
-                if (_terminationSignal.IsFaulted)
-                    FailStage(t.Exception);
-                else
+                if (_terminationSignal.IsSuccessfully())
                     CompleteStage();
+                else
+                    FailStage(t.Exception);
             }
         }
 
@@ -359,7 +360,7 @@ namespace Akka.Streams
         /// completion commands will be ignored.
         /// </summary>
         /// <param name="cause">TBD</param>
-        public void Abort(Exception cause) => _promise.TrySetException(cause);
+        public void Abort(Exception cause) => _promise.TrySetUnwrappedException(cause);
 
         /// <summary>
         /// TBD
@@ -469,7 +470,7 @@ namespace Akka.Streams
         /// passing around the switch instance itself.
         /// </summary>
         /// <param name="cause">The exception to be used for failing the linked <see cref="IGraph{TShape}"/>s</param>
-        public void Abort(Exception cause) => _shutdownPromise.TrySetException(cause);
+        public void Abort(Exception cause) => _shutdownPromise.TrySetUnwrappedException(cause);
 
         /// <summary>
         /// Returns a typed Flow of a requested type that will be linked to this <see cref="SharedKillSwitch"/> instance. By invoking

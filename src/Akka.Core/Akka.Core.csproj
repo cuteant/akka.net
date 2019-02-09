@@ -39,14 +39,104 @@
   </ItemGroup>
 
   <ItemGroup>
+    <None Update="Actor\CoordinatedShutdownExtensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>CoordinatedShutdownExtensions.cs</LastGenOutput>
+    </None>
+    <None Update="Actor\Scheduler\IActionSchedulerExtensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>IActionSchedulerExtensions.cs</LastGenOutput>
+    </None>
+    <None Update="DefaultRunnable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DefaultRunnable.cs</LastGenOutput>
+    </None>
+    <None Update="DefaultRunnableTask.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>DefaultRunnableTask.cs</LastGenOutput>
+    </None>
+    <None Update="Dispatch\AbstractDispatcherExtensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>AbstractDispatcherExtensions.cs</LastGenOutput>
+    </None>
+    <None Update="Dispatch\ActionWithStateRunnable.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ActionWithStateRunnable.cs</LastGenOutput>
+    </None>
+    <None Update="Dispatch\ActorTaskScheduler.Extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ActorTaskScheduler.Extensions.cs</LastGenOutput>
+    </None>
+    <None Update="Pattern\CircuitBreakerExtensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>CircuitBreakerExtensions.cs</LastGenOutput>
+    </None>
+    <None Update="Pattern\FutureTimeoutSupport.Extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FutureTimeoutSupport.Extensions.cs</LastGenOutput>
+    </None>
+    <None Update="Runnable.Extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>Runnable.Extensions.cs</LastGenOutput>
+    </None>
     <None Update="Util\MatchHandler\PartialHandlerArgumentsCapture.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>PartialHandlerArgumentsCapture.cs</LastGenOutput>
     </None>
+    <Compile Update="Actor\CoordinatedShutdownExtensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CoordinatedShutdownExtensions.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Actor\Scheduler\IActionSchedulerExtensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>IActionSchedulerExtensions.tt</DependentUpon>
+    </Compile>
+    <Compile Update="DefaultRunnable.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DefaultRunnable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="DefaultRunnableTask.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>DefaultRunnableTask.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Dispatch\AbstractDispatcherExtensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>AbstractDispatcherExtensions.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Dispatch\ActionWithStateRunnable.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ActionWithStateRunnable.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Dispatch\ActorTaskScheduler.Extensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>ActorTaskScheduler.Extensions.tt</DependentUpon>
+    </Compile>
     <Compile Update="Internal\Strings.Designer.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>Strings.resx</DependentUpon>
+    </Compile>
+    <Compile Update="Pattern\CircuitBreakerExtensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>CircuitBreakerExtensions.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Pattern\FutureTimeoutSupport.Extensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FutureTimeoutSupport.Extensions.tt</DependentUpon>
+    </Compile>
+    <Compile Update="Runnable.Extensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Runnable.Extensions.tt</DependentUpon>
     </Compile>
     <Compile Update="Util\MatchHandler\PartialHandlerArgumentsCapture.cs">
       <DesignTime>True</DesignTime>
@@ -63,6 +153,11 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>FuncMatchBuilder.tt</DependentUpon>
     </Compile>
+    <Compile Update="Util\TaskAsyncHelper.Extensions.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>TaskAsyncHelper.Extensions.tt</DependentUpon>
+    </Compile>
     <None Update="Util\MatchHandler\ActionMatchBuilder.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>ActionMatchBuilder.cs</LastGenOutput>
@@ -70,6 +165,10 @@
     <None Update="Util\MatchHandler\FuncMatchBuilder.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FuncMatchBuilder.cs</LastGenOutput>
+    </None>
+    <None Update="Util\TaskAsyncHelper.Extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TaskAsyncHelper.Extensions.cs</LastGenOutput>
     </None>
   </ItemGroup>
 

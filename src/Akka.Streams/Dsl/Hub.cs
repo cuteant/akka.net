@@ -1761,14 +1761,15 @@ namespace Akka.Streams.Dsl
                 {
                     void OnHubReady(Task<Action<IHubEvent>> t)
                     {
-                        if (t.IsCanceled || t.IsFaulted)
-                            FailStage(t.Exception);
-                        else
+                        if (t.IsSuccessfully())
                         {
                             _hubCallback = t.Result;
                             _hubCallback(RegistrationPending.Instance);
-                            if (IsAvailable(_source._out))
-                                OnPull();
+                            if (IsAvailable(_source._out)) { OnPull(); }
+                        }
+                        else
+                        {
+                            FailStage(t.Exception);
                         }
                     }
 

@@ -17,7 +17,7 @@ namespace Akka.Util.Internal
     /// </summary>
     internal abstract class AtomicState : AtomicCounterLong, IAtomicState
     {
-        private readonly ConcurrentQueue<Action> _listeners;
+        private readonly ConcurrentQueue<IRunnable> _listeners;
         private readonly TimeSpan _callTimeout;
 
         /// <summary>
@@ -28,7 +28,7 @@ namespace Akka.Util.Internal
         protected AtomicState(TimeSpan callTimeout, long startingCount)
             : base(startingCount)
         {
-            _listeners = new ConcurrentQueue<Action>();
+            _listeners = new ConcurrentQueue<IRunnable>();
             _callTimeout = callTimeout;
         }
 
@@ -36,7 +36,7 @@ namespace Akka.Util.Internal
         /// Add a listener function which is invoked on state entry
         /// </summary>
         /// <param name="listener">listener implementation</param>
-        public void AddListener(Action listener)
+        public void AddListener(IRunnable listener)
         {
             _listeners.Enqueue(listener);
         }
@@ -57,14 +57,17 @@ namespace Akka.Util.Internal
         {
             if (!HasListeners) return;
 
-            void run()
+            await Task.Factory.StartNew(InvokeNotifyTransitionListeners, _listeners).ConfigureAwait(false);
+        }
+
+        private static readonly Action<object> InvokeNotifyTransitionListeners = NotifyTransitionListeners;
+        private static void NotifyTransitionListeners(object state)
+        {
+            var listeners = (ConcurrentQueue<IRunnable>)state;
+            foreach (var listener in listeners)
             {
-                foreach (var listener in _listeners)
-                {
-                    listener.Invoke();
-                }
+                listener.Run();
             }
-            await Task.Factory.StartNew(run).ConfigureAwait(false);
         }
 
         /// <summary>
@@ -79,14 +82,14 @@ namespace Akka.Util.Internal
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="task">Implementation of the call</param>
         /// <returns>result of the call</returns>
-        public async Task<T> CallThrough<T>(Func<Task<T>> task)
+        public async Task<T> CallThrough<T>(IRunnableTask<T> task)
         {
             var deadline = DateTime.UtcNow.Add(_callTimeout);
             ExceptionDispatchInfo capturedException = null;
             T result = default;
             try
             {
-                result = await task().ConfigureAwait(false);
+                result = await task.Run().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -97,8 +100,7 @@ namespace Akka.Util.Internal
             if (throwException || DateTime.UtcNow.CompareTo(deadline) >= 0)
             {
                 CallFails();
-                if (throwException)
-                    capturedException.Throw();
+                if (throwException) { capturedException.Throw(); }
             }
             else
             {
@@ -118,14 +120,14 @@ namespace Akka.Util.Internal
         /// </summary>
         /// <param name="task"><see cref="Task"/> Implementation of the call</param>
         /// <returns><see cref="Task"/></returns>
-        public async Task CallThrough(Func<Task> task)
+        public async Task CallThrough(IRunnableTask task)
         {
             var deadline = DateTime.UtcNow.Add(_callTimeout);
             ExceptionDispatchInfo capturedException = null;
 
             try
             {
-                await task().ConfigureAwait(false);
+                await task.Run().ConfigureAwait(false);
             }
             catch (Exception ex)
             {
@@ -136,14 +138,12 @@ namespace Akka.Util.Internal
             if (throwException || DateTime.UtcNow.CompareTo(deadline) >= 0)
             {
                 CallFails();
-                if (throwException) capturedException.Throw();
+                if (throwException) { capturedException.Throw(); }
             }
             else
             {
                 CallSucceeds();
             }
-
-
         }
 
         /// <summary>
@@ -152,14 +152,14 @@ namespace Akka.Util.Internal
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="body">Implementation of the call that needs protected</param>
         /// <returns><see cref="Task"/> containing result of protected call</returns>
-        public abstract Task<T> Invoke<T>(Func<Task<T>> body);
+        public abstract Task<T> Invoke<T>(IRunnableTask<T> body);
 
         /// <summary>
         /// Abstract entry point for all states
         /// </summary>
         /// <param name="body">Implementation of the call that needs protected</param>
         /// <returns><see cref="Task"/> containing result of protected call</returns>
-        public abstract Task Invoke(Func<Task> body);
+        public abstract Task Invoke(IRunnableTask body);
 
         /// <summary>
         /// Invoked when call fails
@@ -183,7 +183,9 @@ namespace Akka.Util.Internal
         public void Enter()
         {
             EnterInternal();
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
             NotifyTransitionListeners();
+#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
         }
 
     }
@@ -197,7 +199,7 @@ namespace Akka.Util.Internal
         /// TBD
         /// </summary>
         /// <param name="listener">TBD</param>
-        void AddListener(Action listener);
+        void AddListener(IRunnable listener);
         /// <summary>
         /// TBD
         /// </summary>
@@ -208,7 +210,13 @@ namespace Akka.Util.Internal
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="body">TBD</param>
         /// <returns>TBD</returns>
-        Task<T> Invoke<T>(Func<Task<T>> body);
+        Task<T> Invoke<T>(IRunnableTask<T> body);
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="body">TBD</param>
+        /// <returns>TBD</returns>
+        Task Invoke(IRunnableTask body);
         /// <summary>
         /// TBD
         /// </summary>

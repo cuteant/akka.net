@@ -619,7 +619,7 @@ namespace Akka.Streams.Implementation.IO
             localAddressPromise.Task.ContinueWith(t =>
                 {
                     if (t.IsCanceled) outgoingConnectionPromise.TrySetCanceled();
-                    else if (t.IsFaulted) outgoingConnectionPromise.TrySetException(t.Exception);
+                    else if (t.IsFaulted) outgoingConnectionPromise.TrySetException(t.Exception.InnerExceptions);
                     else outgoingConnectionPromise.TrySetResult(new StreamTcp.OutgoingConnection(_remoteAddress, t.Result));
                 }, TaskContinuationOptions.AttachedToParent);
 

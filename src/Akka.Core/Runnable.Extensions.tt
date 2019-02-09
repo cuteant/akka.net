@@ -1,0 +1,55 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+
+<# var count = 7; #>
+namespace Akka
+{
+    partial class Runnable
+    {
+<# for (int i = 1; i <= count; i++) {
+    var types = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x));
+    var arguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "arg" + x));
+    var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
+#>
+        /// <summary>TBD</summary>
+        /// <returns>TBD</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IRunnable2 Create<<#= types #>>(Action<<#= types #>> action, <#= typeAndArguments #>)
+        {
+            return new ActionWithStateRunnable<<#= types #>>(action, <#= arguments #>);
+        }
+
+        /// <summary>TBD</summary>
+        /// <returns>TBD</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IRunnable<TResult> Create<<#= types #>, TResult>(Func<<#= types #>, TResult> func, <#= typeAndArguments #>)
+        {
+            return new DefaultRunnable<<#= types #>, TResult>(func, <#= arguments #>);
+        }
+
+        /// <summary>TBD</summary>
+        /// <returns>TBD</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IRunnableTask CreateTask<<#= types #>>(Func<<#= types #>, Task> func, <#= typeAndArguments #>)
+        {
+            return new DefaultRunnableTask<<#= types #>>(func, <#= arguments #>);
+        }
+
+        /// <summary>TBD</summary>
+        /// <returns>TBD</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static IRunnableTask<TResult> CreateTask<<#= types #>, TResult>(Func<<#= types #>, Task<TResult>> func, <#= typeAndArguments #>)
+        {
+            return new DefaultRunnableWithResultTask<<#= types #>, TResult>(func, <#= arguments #>);
+        }
+
+<# } #>
+    }
+}

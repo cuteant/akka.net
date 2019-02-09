@@ -381,7 +381,7 @@ namespace Akka.Streams.Implementation.Fusing
                     {
                         _waitingForShutdown = true;
                         Materializer.ScheduleOnce(_settings.SubscriptionTimeoutSettings.Timeout,
-                            () => Self.Tell(new ActorGraphInterpreter.Abort(this)));
+                            InvokeAbortAction, Self, this);
                     }
                 }
                 else if (Interpreter.IsSuspended && !_resumeScheduled)
@@ -394,6 +394,11 @@ namespace Akka.Streams.Implementation.Fusing
                 TryAbort(reason);
                 return actorEventLimit - 1;
             }
+        }
+        private static readonly Action<IActorRef, GraphInterpreterShell> InvokeAbortAction = InvokeAbort;
+        private static void InvokeAbort(IActorRef self, GraphInterpreterShell owner)
+        {
+            self.Tell(new ActorGraphInterpreter.Abort(owner));
         }
 
         private void SendResume(bool sendResume)

@@ -118,19 +118,22 @@ namespace Akka.Cluster.Tools.Singleton
         /// </summary>
         private void SetupCoordinatedShutdown()
         {
-            var self = Self;
-            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "singleton-exiting-1", () =>
+            _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "singleton-exiting-1", InvokeSingletonExiting1Func, this, Self);
+        }
+
+        private static readonly Func<OldestChangedBuffer, IActorRef, Task<Done>> InvokeSingletonExiting1Func = InvokeSingletonExiting1;
+        private static Task<Done> InvokeSingletonExiting1(OldestChangedBuffer owner, IActorRef self)
+        {
+            var cluster = owner._cluster;
+            if (cluster.IsTerminated || cluster.SelfMember.Status == MemberStatus.Down)
             {
-                if (_cluster.IsTerminated || _cluster.SelfMember.Status == MemberStatus.Down)
-                {
-                    return Task.FromResult(Done.Instance);
-                }
-                else
-                {
-                    var timeout = _coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterExiting);
-                    return self.Ask(SelfExiting.Instance, timeout).ContinueWith(tr => Done.Instance);
-                }
-            });
+                return Task.FromResult(Done.Instance);
+            }
+            else
+            {
+                var timeout = owner._coordShutdown.Timeout(CoordinatedShutdown.PhaseClusterExiting);
+                return self.Ask(SelfExiting.Instance, timeout).ContinueWith(tr => Done.Instance);
+            }
         }
 
         private readonly string _role;

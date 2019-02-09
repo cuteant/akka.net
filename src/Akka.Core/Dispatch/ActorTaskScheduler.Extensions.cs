@@ -1,110 +1,93 @@
 ﻿using System;
-using System.Threading;
 using System.Threading.Tasks;
-using Akka.Actor;
-using Akka.Dispatch.SysMsg;
-using Akka.Util.Internal;
 
 namespace Akka.Dispatch
 {
-    internal static class ActorTaskSchedulerExtensions
+    partial class ActorTaskScheduler
     {
-        private static void ThenRunTask(this Task parent, MessageDispatcher dispatcher, ActorCell context, ActorTaskScheduler actorScheduler)
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1>(Action<TArg1> action, TArg1 arg1)
         {
-            Exception exception = GetTaskException(parent);
-
-            if (exception == null)
-            {
-                dispatcher.Resume(context);
-
-                context.CheckReceiveTimeout();
-            }
-            else
-            {
-                context.Self.AsInstanceOf<IInternalActorRef>().SendSystemMessage(new ActorTaskSchedulerMessage(exception, actorScheduler.CurrentMessage));
-            }
-            //clear the current message field of the scheduler
-            actorScheduler.CurrentMessage = null;
+            RunTask(Runnable.Create(action, arg1));
         }
 
-        private static void ThenRunTask(this Task parent, object state)
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1>(Func<TArg1, Task> asyncAction, TArg1 arg1)
         {
-            Exception exception = GetTaskException(parent);
-            var wrapped = (Tuple<MessageDispatcher, ActorCell, ActorTaskScheduler>)state;
-            var actorScheduler = wrapped.Item3;
-            if (exception == null)
-            {
-                var context = wrapped.Item2;
-                wrapped.Item1.Resume(context);
-
-                context.CheckReceiveTimeout();
-            }
-            else
-            {
-                wrapped.Item2.Self.AsInstanceOf<IInternalActorRef>().SendSystemMessage(new ActorTaskSchedulerMessage(exception, actorScheduler.CurrentMessage));
-            }
-            //clear the current message field of the scheduler
-            actorScheduler.CurrentMessage = null;
+            RunTask(Runnable.CreateTask(asyncAction, arg1));
         }
 
-        public static void LinkOutcome(this Task parent, MessageDispatcher dispatcher, ActorCell context, ActorTaskScheduler actorScheduler)
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2>(Action<TArg1, TArg2> action, TArg1 arg1, TArg2 arg2)
         {
-            switch (parent.Status)
-            {
-                case TaskStatus.RanToCompletion:
-                case TaskStatus.Canceled:
-                case TaskStatus.Faulted:
-                    parent.ThenRunTask(dispatcher, context, actorScheduler);
-                    break;
-                default:
-                    parent.ContinueWith(
-                        LinkOutcomeContinuationAction,
-                        Tuple.Create(dispatcher, context, actorScheduler),
-                        CancellationToken.None,
-                        TaskContinuationOptions.ExecuteSynchronously,
-                        actorScheduler);
-                    break;
-            }
+            RunTask(Runnable.Create(action, arg1, arg2));
         }
 
-        static readonly Action<Task, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
-        private static void LinkOutcomeContinuation(Task t, object state)
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2>(Func<TArg1, TArg2, Task> asyncAction, TArg1 arg1, TArg2 arg2)
         {
-            switch (t.Status)
-            {
-                case TaskStatus.RanToCompletion:
-                case TaskStatus.Canceled:
-                case TaskStatus.Faulted:
-                    t.ThenRunTask(state);
-                    break;
-                default:
-                    AkkaThrowHelper.ThrowArgumentOutOfRangeException(); break;
-            }
+            RunTask(Runnable.CreateTask(asyncAction, arg1, arg2));
         }
 
-        private static Exception GetTaskException(Task task)
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3>(Action<TArg1, TArg2, TArg3> action, TArg1 arg1, TArg2 arg2, TArg3 arg3)
         {
-            switch (task.Status)
-            {
-                case TaskStatus.Canceled:
-                    return new TaskCanceledException();
-
-                case TaskStatus.Faulted:
-                    return TryUnwrapAggregateException(task.Exception);
-            }
-
-            return null;
+            RunTask(Runnable.Create(action, arg1, arg2, arg3));
         }
 
-        private static Exception TryUnwrapAggregateException(AggregateException aggregateException)
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3>(Func<TArg1, TArg2, TArg3, Task> asyncAction, TArg1 arg1, TArg2 arg2, TArg3 arg3)
         {
-            if (aggregateException == null)
-                return null;
-
-            if (aggregateException.InnerExceptions.Count == 1)
-                return aggregateException.InnerExceptions[0];
-
-            return aggregateException;
+            RunTask(Runnable.CreateTask(asyncAction, arg1, arg2, arg3));
         }
+
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3, TArg4>(Action<TArg1, TArg2, TArg3, TArg4> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4)
+        {
+            RunTask(Runnable.Create(action, arg1, arg2, arg3, arg4));
+        }
+
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3, TArg4>(Func<TArg1, TArg2, TArg3, TArg4, Task> asyncAction, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4)
+        {
+            RunTask(Runnable.CreateTask(asyncAction, arg1, arg2, arg3, arg4));
+        }
+
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3, TArg4, TArg5>(Action<TArg1, TArg2, TArg3, TArg4, TArg5> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5)
+        {
+            RunTask(Runnable.Create(action, arg1, arg2, arg3, arg4, arg5));
+        }
+
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3, TArg4, TArg5>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, Task> asyncAction, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5)
+        {
+            RunTask(Runnable.CreateTask(asyncAction, arg1, arg2, arg3, arg4, arg5));
+        }
+
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(Action<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6)
+        {
+            RunTask(Runnable.Create(action, arg1, arg2, arg3, arg4, arg5, arg6));
+        }
+
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task> asyncAction, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6)
+        {
+            RunTask(Runnable.CreateTask(asyncAction, arg1, arg2, arg3, arg4, arg5, arg6));
+        }
+
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>(Action<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7)
+        {
+            RunTask(Runnable.Create(action, arg1, arg2, arg3, arg4, arg5, arg6, arg7));
+        }
+
+        /// <summary>TBD</summary>
+        public static void RunTask<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>(Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, Task> asyncAction, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7)
+        {
+            RunTask(Runnable.CreateTask(asyncAction, arg1, arg2, arg3, arg4, arg5, arg6, arg7));
+        }
+
     }
 }

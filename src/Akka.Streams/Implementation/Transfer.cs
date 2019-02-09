@@ -371,14 +371,14 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public readonly Action Action;
+        public readonly IRunnable Action;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="precondition">TBD</param>
         /// <param name="action">TBD</param>
-        public TransferPhase(TransferState precondition, Action action) : this()
+        public TransferPhase(TransferState precondition, IRunnable action) : this()
         {
             Precondition = precondition;
             Action = action;
@@ -397,7 +397,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        Action CurrentAction { get; set; }
+        IRunnable CurrentAction { get; set; }
         /// <summary>
         /// TBD
         /// </summary>
@@ -446,7 +446,11 @@ namespace Akka.Streams.Implementation
     /// </summary>
     internal abstract class PumpBase : IPump
     {
-        internal static readonly Action s_nonInitialized = () => ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_NonInitialized);
+        internal static readonly IRunnable s_nonInitialized = Runnable.Create(InvokeNonInitialized);
+        private static void InvokeNonInitialized()
+        {
+            ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_NonInitialized);
+        }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="PumpBase" /> class.
@@ -468,7 +472,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public Action CurrentAction { get; set; }
+        public IRunnable CurrentAction { get; set; }
 
         /// <summary>
         /// TBD
@@ -535,7 +539,12 @@ namespace Akka.Streams.Implementation
             self.CurrentAction = PumpBase.s_nonInitialized;
         }
 
-        private static readonly Action s_neverExec = () => ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_CompletedPhaseNeverExec);
+        private static readonly IRunnable s_neverExec = Runnable.Create(InvokeNeverExec);
+        private static void InvokeNeverExec()
+        {
+            ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Pump_CompletedPhaseNeverExec);
+        }
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -634,7 +643,7 @@ namespace Akka.Streams.Implementation
             try
             {
                 while (self.TransferState.IsExecutable)
-                    self.CurrentAction();
+                    self.CurrentAction.Run();
             }
             catch (Exception e)
             {

@@ -1,0 +1,84 @@
+﻿<#@ template debug="false" hostspecific="false" language="C#" #>
+<#@ assembly name="System.Core" #>
+<#@ import namespace="System.Linq" #>
+<#@ import namespace="System.Text" #>
+<#@ import namespace="System.Collections.Generic" #>
+<#@ output extension=".cs" #>
+using System;
+
+<# var count = 7; #>
+namespace Akka
+{
+<# for (int i = 1; i <= count; i++) {
+    var types = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x));
+    var args = string.Join(", ", Enumerable.Range(1, i).Select(x => "owner._arg" + x));
+    var args2 = "";
+    if (i > 1)
+    {
+        args2 = string.Join(", ", Enumerable.Range(2, i - 1).Select(x => "_arg" + x));
+    }
+    var arguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "_arg" + x));
+    var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
+#>
+    /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{<#= types #>, TResult}"/>.</summary>
+    public class DefaultRunnable<<#= types #>, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    {
+        private readonly Func<<#= types #>, TResult> _func;
+<# for (var t = 1; t <= i; t++) { #>
+        private readonly TArg<#= t #> _arg<#= t #>;
+<# } #>
+
+        /// <summary>TBD</summary>
+        /// <param name="func">TBD</param>
+<# for (var t = 1; t <= i; t++) { #>
+        /// <param name="arg<#= t #>">TBD</param>
+<# } #>
+        public DefaultRunnable(Func<<#= types #>, TResult> func, <#= typeAndArguments #>)
+        {
+            _func = func;
+<# for (var t = 1; t <= i; t++) { #>
+            _arg<#= t #> = arg<#= t #>;
+<# } #>
+        }
+
+        /// <summary>TBD</summary>
+        /// <returns>TBD</returns>
+        public TResult Run()
+        {
+            return _func(<#= arguments #>);
+        }
+
+<#
+    if (i == 1)
+    {
+#>
+        public TResult Run(TArg1 arg)
+        {
+            return _func(arg);
+        }
+<#
+    }
+    else
+    {
+#>
+        public TResult Run(TArg1 arg)
+        {
+            return _func(arg, <#= args2 #>);
+        }
+<#
+    }
+#>
+
+        /// <summary>TBD</summary>
+        /// <returns>TBD</returns>
+        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
+
+        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
+        private static TResult InternalWrapTask(object state)
+        {
+            var owner = (DefaultRunnable<<#= types #>, TResult>)state;
+            return owner._func(<#= args #>);
+        }
+    }
+<# } #>
+}

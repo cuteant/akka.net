@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Event;
+using Akka.Util;
 using DotNetty.Buffers;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Libuv.Native;
@@ -363,26 +364,20 @@ namespace Akka.Remote.Transport.DotNetty
             // disable automatic reads
             channel.Configuration.AutoRead = false;
 
-            void LocalInit(IAssociationEventListener listener)
-            {
-                var remoteAddress = DotNettyTransport.MapSocketToAddress(
-                    socketAddress: socketAddress,
-                    schemeIdentifier: Transport.SchemeIdentifier,
-                    systemName: Transport.System.Name);
-                Init(channel, socketAddress, remoteAddress, msg, out var handle);
-                listener.Notify(new InboundAssociation(handle));
-            }
-            if (_associationEventListener.IsCompleted)
-            {
-                LocalInit(_associationEventListener.Result);
-            }
-            else
-            {
-                _associationEventListener.ContinueWith(r =>
-                {
-                    LocalInit(r.Result);
-                }, TaskContinuationOptions.OnlyOnRanToCompletion);
-            }
+            _associationEventListener.Then(AfterSetupAssociationEventListenerAction,
+                this, channel, socketAddress, msg, TaskContinuationOptions.OnlyOnRanToCompletion);
+        }
+
+        private static readonly Action<IAssociationEventListener, TcpServerHandler<TAssociationHandleFactory>, IChannel, IPEndPoint, object> AfterSetupAssociationEventListenerAction = AfterSetupAssociationEventListener;
+        private static void AfterSetupAssociationEventListener(IAssociationEventListener listener,
+            TcpServerHandler<TAssociationHandleFactory> owner, IChannel channel, IPEndPoint socketAddress, object msg)
+        {
+            var remoteAddress = DotNettyTransport.MapSocketToAddress(
+                socketAddress: socketAddress,
+                schemeIdentifier: owner.Transport.SchemeIdentifier,
+                systemName: owner.Transport.System.Name);
+            owner.Init(channel, socketAddress, remoteAddress, msg, out var handle);
+            listener.Notify(new InboundAssociation(handle));
         }
     }
 

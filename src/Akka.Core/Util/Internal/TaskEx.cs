@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 
 namespace Akka.Util.Internal
@@ -13,7 +14,7 @@ namespace Akka.Util.Internal
     /// <summary>
     /// INTERNAL API.
     /// 
-    /// Renamed from <see cref="Akka.Util.Internal.TaskExtensions"/> so it doesn't collide
+    /// Renamed from <see cref="T:Akka.Util.Internal.TaskExtensions"/> so it doesn't collide
     /// with a helper class in the same namespace defined in System.Threading.Tasks.
     /// </summary>
     internal static class TaskEx
@@ -68,9 +69,9 @@ namespace Akka.Util.Internal
         public static void NonBlockingTrySetException<T>(this TaskCompletionSource<T> taskCompletionSource, Exception exception)
         {
             if (IsRunContinuationsAsynchronouslyAvailable)
-                taskCompletionSource.TrySetException(exception);
+                taskCompletionSource.TrySetUnwrappedException(exception);
             else
-                Task.Run(() => taskCompletionSource.TrySetException(exception));
+                Task.Run(() => taskCompletionSource.TrySetUnwrappedException(exception));
         }
 
         /// <summary>
@@ -83,11 +84,10 @@ namespace Akka.Util.Internal
         /// </summary>
         /// <param name="ex">The exception to use to fail the task.</param>
         /// <returns>A failed task.</returns>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static Task FromException(Exception ex)
         {
-            var c = new TaskCompletionSource<Done>();
-            c.SetException(ex);
-            return c.Task;
+            return FromException<object>(ex);
         }
 
         /// <summary>
@@ -96,11 +96,12 @@ namespace Akka.Util.Internal
         /// <param name="ex">The exception to use to fail the task.</param>
         /// <returns>A failed task.</returns>
         /// <typeparam name="T">The type of <see cref="Task{T}"/></typeparam>
+        [MethodImpl(MethodImplOptions.NoInlining)]
         public static Task<T> FromException<T>(Exception ex)
         {
-            var c = new TaskCompletionSource<T>();
-            c.SetException(ex);
-            return c.Task;
+            var tcs = new TaskCompletionSource<T>();
+            tcs.TrySetUnwrappedException<T>(ex);
+            return tcs.Task;
         }
     }
 }

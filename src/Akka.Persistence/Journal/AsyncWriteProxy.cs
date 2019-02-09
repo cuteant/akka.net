@@ -12,6 +12,7 @@ using System.Linq;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Akka.Actor;
+using Akka.Util;
 using MessagePack;
 
 namespace Akka.Persistence.Journal
@@ -408,13 +409,16 @@ namespace Akka.Persistence.Journal
                 return StoreNotInitialized<long>();
 
             return _store.Ask<AsyncWriteTarget.ReplaySuccess>(new AsyncWriteTarget.ReplayMessages(persistenceId, 0, 0, 0), Timeout)
-                .ContinueWith(t => t.Result.HighestSequenceNr, TaskContinuationOptions.OnlyOnRanToCompletion);
+                .Then(AfterReplaySuccessFunc, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
+
+        private static readonly Func<AsyncWriteTarget.ReplaySuccess, long> AfterReplaySuccessFunc = AfterReplaySuccess;
+        private static long AfterReplaySuccess(AsyncWriteTarget.ReplaySuccess result) => result.HighestSequenceNr;
 
         private Task<T> StoreNotInitialized<T>()
         {
             var promise = new TaskCompletionSource<T>();
-            promise.SetException(new TimeoutException("Store not initialized."));
+            promise.TrySetException(new TimeoutException("Store not initialized."));
             return promise.Task;
         }
 
@@ -489,12 +493,12 @@ namespace Akka.Persistence.Journal
                     Context.Stop(Self);
                     return true;
                 case AsyncWriteTarget.ReplayFailure failure:
-                    _replayCompletionPromise.SetException(failure.Cause);
+                    _replayCompletionPromise.TrySetUnwrappedException(failure.Cause);
                     Context.Stop(Self);
                     return true;
                 case ReceiveTimeout _:
                     var timeoutException = new AsyncReplayTimeoutException($"Replay timed out after {_replayTimeout.TotalSeconds}s of inactivity");
-                    _replayCompletionPromise.SetException(timeoutException);
+                    _replayCompletionPromise.TrySetException(timeoutException);
                     Context.Stop(Self);
                     return true;
                 default:

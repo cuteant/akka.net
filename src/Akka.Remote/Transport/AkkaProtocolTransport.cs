@@ -11,6 +11,7 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Util;
 using Akka.Util.Internal;
 using Akka.Remote.Serialization.Protocol;
 
@@ -726,7 +727,7 @@ namespace Akka.Remote.Transport
                     case Status.Failure f:
                         if (fsmEvent.StateData is OutboundUnassociated ou)
                         {
-                            ou.StatusCompletionSource.SetException(f.Cause);
+                            ou.StatusCompletionSource.TrySetUnwrappedException(f.Cause);
                             nextState = Stop();
                         }
                         break;
@@ -1019,7 +1020,7 @@ namespace Akka.Remote.Transport
                         {
                             associationFailure = new AkkaProtocolException("Transport disassociated before handshake finished");
                         }
-                        oua.StatusCompletionSource.TrySetException(associationFailure);
+                        oua.StatusCompletionSource.TrySetUnwrappedException(associationFailure);
                         oua.WrappedHandle.Disassociate();
                         break;
 
@@ -1033,7 +1034,7 @@ namespace Akka.Remote.Transport
                         {
                             disassociateNotification = new Disassociated(DisassociateInfo.Unknown);
                         }
-                        awh.HandlerListener.ContinueWith(result => result.Result.Notify(disassociateNotification),
+                        awh.HandlerListener.Then(AfterSetupHandlerListenerAction, disassociateNotification,
                             TaskContinuationOptions.ExecuteSynchronously);
                         break;
 
@@ -1069,7 +1070,7 @@ namespace Akka.Remote.Transport
                 case OutboundUnassociated d:
                     // attempt to open underlying transport to the remote address if using DotNetty,
                     // this is where the socket connection is opened.
-                    d.Transport.Associate(d.RemoteAddress).ContinueWith(result => new HandleMsg(result.Result), TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self);
+                    d.Transport.Associate(d.RemoteAddress).Then(AfterConnectionIsOpenedFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self);
                     StartWith(AssociationState.Closed, d);
                     break;
                 case InboundUnassociated d:
@@ -1082,6 +1083,18 @@ namespace Akka.Remote.Transport
                 default:
                     break;
             }
+        }
+
+        private static readonly Action<IHandleEventListener, Disassociated> AfterSetupHandlerListenerAction = AfterSetupHandlerListener;
+        private static void AfterSetupHandlerListener(IHandleEventListener listener, Disassociated disassociateNotification)
+        {
+            listener.Notify(disassociateNotification);
+        }
+
+        private static readonly Func<AssociationHandle, HandleMsg> AfterConnectionIsOpenedFunc = AfterConnectionIsOpened;
+        private static HandleMsg AfterConnectionIsOpened(AssociationHandle handle)
+        {
+            return new HandleMsg(handle);
         }
 
         /// <summary>TBD</summary>
@@ -1156,8 +1169,13 @@ namespace Akka.Remote.Transport
 
         private void ListenForListenerRegistration(TaskCompletionSource<IHandleEventListener> readHandlerSource)
         {
-            readHandlerSource.Task.ContinueWith(rh => new HandleListenerRegistered(rh.Result),
-                TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self);
+            readHandlerSource.Task.Then(AfterSetupHandlerList1enerFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self);
+        }
+
+        private static readonly Func<IHandleEventListener, HandleListenerRegistered> AfterSetupHandlerList1enerFunc = AfterSetupHandlerListener;
+        private static HandleListenerRegistered AfterSetupHandlerListener(IHandleEventListener listener)
+        {
+            return new HandleListenerRegistered(listener);
         }
 
         private Task<IHandleEventListener> NotifyOutboundHandler(AssociationHandle wrappedHandle,
