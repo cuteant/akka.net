@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.rs.props" />
+  <Import Project="..\..\version.rs.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
+    <RootNamespace>Reactive.Streams</RootNamespace>
+    <AssemblyName>Reactive.Streams</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Reactive.Streams.Signed</PackageId>
+    <Title>Reactive.Streams (Unofficial)</Title>
+    <Description>Reactive Streams API</Description>
+    <PackageTags>reactive;stream</PackageTags>
+  </PropertyGroup>
+
+</Project>

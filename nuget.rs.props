@@ -7,14 +7,13 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <Authors>Akka.NET Team</Authors>
-    <Product>Akka.NET</Product>
-    <Copyright>Copyright © 2013-2017 Akka.NET Team</Copyright>
-    <PackageIconUrl>http://getakka.net/images/akkalogo.png</PackageIconUrl>
-    <PackageProjectUrl>https://github.com/akkadotnet/HOCON</PackageProjectUrl>
-    <PackageLicense>https://github.com/akkadotnet/HOCON/blob/master/LICENSE</PackageLicense>
+    <Authors>Reactive Streams</Authors>
+    <Product>Reactive Streams</Product>
+    <Copyright>CC0 1.0 Universal</Copyright>
+    <PackageProjectUrl>https://github.com/reactive-streams/reactive-streams-dotnet</PackageProjectUrl>
+    <PackageLicenseUrl>http://creativecommons.org/publicdomain/zero/1.0/</PackageLicenseUrl>
     <RepositoryType>git</RepositoryType>
-    <RepositoryUrl>https://github.com/akkadotnet/HOCON.git</RepositoryUrl>
+    <RepositoryUrl>https://github.com/reactive-streams/reactive-streams-dotnet.git</RepositoryUrl>
     <NeutralLanguage>en-US</NeutralLanguage>
     <IncludeSymbols>false</IncludeSymbols>
     <IncludeSource>false</IncludeSource>
