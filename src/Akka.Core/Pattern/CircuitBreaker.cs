@@ -164,7 +164,7 @@ namespace Akka.Pattern
                 var wrapped = task.WrapTask();
                 return Task.Factory.StartNew(wrapped.Task, wrapped.State);
             }
-            var cbTask = WithCircuitBreaker(Runnable.CreateTask(LocalWrapTask));
+            var cbTask = WithCircuitBreaker(Runnable.CreateTask(new Func<Task>(LocalWrapTask)));
             if (!cbTask.Wait(CallTimeout))
             {
                 //throw new TimeoutException( string.Format( "Execution did not complete within the time allotted {0} ms", CallTimeout.TotalMilliseconds ) );
@@ -196,7 +196,7 @@ namespace Akka.Pattern
                 var wrapped = task.WrapTask();
                 return Task.Factory.StartNew(wrapped.Task, wrapped.State);
             }
-            var cbTask = WithCircuitBreaker(Runnable.CreateTask(LocalWrapTask));
+            var cbTask = WithCircuitBreaker(Runnable.CreateTask(new Func<Task<TResult>>(LocalWrapTask)));
             return cbTask.Wait(CallTimeout) ? cbTask.Result : default;
         }
 

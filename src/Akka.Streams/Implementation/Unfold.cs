@@ -96,11 +96,11 @@ namespace Akka.Streams.Implementation
     public class UnfoldAsync<TState, TElement> : GraphStage<SourceShape<TElement>>
     {
         #region stage logic
-        private sealed class Logic : OutGraphStageLogic
+        private sealed class Logic : OutGraphStageLogic, IHandle<Result<Tuple<TState, TElement>>>
         {
             private readonly UnfoldAsync<TState, TElement> _stage;
             private TState _state;
-            private Action<Result<Tuple<TState, TElement>>> _asyncHandler;
+            private IHandle<Result<Tuple<TState, TElement>>> _asyncHandler;
 
             public Logic(UnfoldAsync<TState, TElement> stage) : base(stage.Shape)
             {
@@ -113,25 +113,26 @@ namespace Akka.Streams.Implementation
             public override void OnPull()
             {
                 _stage.UnfoldFunc(_state)
-                    .ContinueWith(task => _asyncHandler(Result.FromTask(task)),
+                    .ContinueWith(task => _asyncHandler.Handle(Result.FromTask(task)),
                         TaskContinuationOptions.AttachedToParent);
             }
 
             public override void PreStart()
             {
-                var ac = GetAsyncCallback<Result<Tuple<TState, TElement>>>(result =>
+                _asyncHandler = GetAsyncCallback<Result<Tuple<TState, TElement>>>(this);
+            }
+
+            void IHandle<Result<Tuple<TState, TElement>>>.Handle(Result<Tuple<TState, TElement>> result)
+            {
+                if (!result.IsSuccess)
+                    Fail(_stage.Out, result.Exception);
+                else if (result.Value == null)
+                    Complete(_stage.Out);
+                else
                 {
-                    if (!result.IsSuccess)
-                        Fail(_stage.Out, result.Exception);
-                    else if (result.Value == null)
-                        Complete(_stage.Out);
-                    else
-                    {
-                        Push(_stage.Out, result.Value.Item2);
-                        _state = result.Value.Item1;
-                    }
-                });
-                _asyncHandler = ac;
+                    Push(_stage.Out, result.Value.Item2);
+                    _state = result.Value.Item1;
+                }
             }
         }
         #endregion

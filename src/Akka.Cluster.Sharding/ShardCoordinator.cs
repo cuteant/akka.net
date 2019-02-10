@@ -458,28 +458,32 @@ namespace Akka.Cluster.Sharding
                     regionActor.Ask<ShardRegionStats>(GetShardRegionStats.Instance, message.Timeout)
                                .Then(AfterAskShardRegionStatsFunc, regionActor, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion))
                 )
-                .LinkOutcome(AfterAskAllShardRegionStats, coordinator, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
+                .LinkOutcome(Helper<TCoordinator>.AfterAskAllShardRegionStatsFunc, coordinator, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
         }
 
         private static readonly Func<ShardRegionStats, IActorRef, Tuple<IActorRef, ShardRegionStats>> AfterAskShardRegionStatsFunc = AfterAskShardRegionStats;
         private static Tuple<IActorRef, ShardRegionStats> AfterAskShardRegionStats(ShardRegionStats result, IActorRef regionActor) => Tuple.Create(regionActor, result);
 
-        private static ClusterShardingStats AfterAskAllShardRegionStats<TCoordinator>(Task<Tuple<IActorRef, ShardRegionStats>[]> allRegionStats, TCoordinator coordinator) where TCoordinator : IShardCoordinator
+        sealed class Helper<TCoordinator> where TCoordinator : IShardCoordinator
         {
-            if (allRegionStats.IsCanceled)
-                return new ClusterShardingStats(ImmutableDictionary<Address, ShardRegionStats>.Empty);
-
-            if (allRegionStats.IsFaulted)
-                throw allRegionStats.Exception; //TODO check if this is the right way
-
-            var regions = allRegionStats.Result.ToImmutableDictionary(i =>
+            public static readonly Func<Task<Tuple<IActorRef, ShardRegionStats>[]>, TCoordinator, ClusterShardingStats> AfterAskAllShardRegionStatsFunc = AfterAskAllShardRegionStats;
+            private static ClusterShardingStats AfterAskAllShardRegionStats(Task<Tuple<IActorRef, ShardRegionStats>[]> allRegionStats, TCoordinator coordinator)
             {
-                Address regionAddress = i.Item1.Path.Address;
-                Address address = (regionAddress.HasLocalScope && regionAddress.System == coordinator.Cluster.SelfAddress.System) ? coordinator.Cluster.SelfAddress : regionAddress;
-                return address;
-            }, j => j.Item2);
+                if (allRegionStats.IsCanceled)
+                    return new ClusterShardingStats(ImmutableDictionary<Address, ShardRegionStats>.Empty);
 
-            return new ClusterShardingStats(regions);
+                if (allRegionStats.IsFaulted)
+                    throw allRegionStats.Exception; //TODO check if this is the right way
+
+                var regions = allRegionStats.Result.ToImmutableDictionary(i =>
+                {
+                    Address regionAddress = i.Item1.Path.Address;
+                    Address address = (regionAddress.HasLocalScope && regionAddress.System == coordinator.Cluster.SelfAddress.System) ? coordinator.Cluster.SelfAddress : regionAddress;
+                    return address;
+                }, j => j.Item2);
+
+                return new ClusterShardingStats(regions);
+            }
         }
 
         private static bool ShuttingDown(object message)

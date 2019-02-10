@@ -54,41 +54,46 @@ namespace Akka.Pattern
             }
 
             var tcs = new TaskCompletionSource<T>();
-            scheduler.Advanced.ScheduleOnce(duration, LinkOutcome, task, tcs);
+            scheduler.Advanced.ScheduleOnce(duration, Helper<T>.LinkOutcomeAction, task, tcs);
             return tcs.Task;
         }
 
-        private static void LinkOutcome<T>(IRunnableTask<T> task, TaskCompletionSource<T> tcs)
+        private sealed class Helper<T>
         {
-            try
+            public static readonly Action<IRunnableTask<T>, TaskCompletionSource<T>> LinkOutcomeAction = LinkOutcome;
+            private static void LinkOutcome(IRunnableTask<T> task, TaskCompletionSource<T> tcs)
             {
-                task.Run().ContinueWith(LinkOutcomeContinuation, tcs);
+                try
+                {
+                    task.Run().ContinueWith(LinkOutcomeContinuationAction, tcs);
+                }
+                catch (Exception ex)
+                {
+                    // in case the value() function faults
+                    tcs.TrySetUnwrappedException(ex);
+                }
             }
-            catch (Exception ex)
-            {
-                // in case the value() function faults
-                tcs.TrySetUnwrappedException(ex);
-            }
-        }
 
-        private static void LinkOutcomeContinuation<T>(Task<T> tr, object state)
-        {
-            var tcs = (TaskCompletionSource<T>)state;
-            try
+            private static readonly Action<Task<T>, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
+            private static void LinkOutcomeContinuation(Task<T> tr, object state)
             {
-                if (tr.IsSuccessfully())
+                var tcs = (TaskCompletionSource<T>)state;
+                try
                 {
-                    tcs.TrySetResult(tr.Result);
+                    if (tr.IsSuccessfully())
+                    {
+                        tcs.TrySetResult(tr.Result);
+                    }
+                    else
+                    {
+                        tcs.TrySetException(tr.Exception.InnerException);
+                    }
                 }
-                else
+                catch (AggregateException ex)
                 {
-                    tcs.TrySetException(tr.Exception.InnerException);
+                    // in case the task faults
+                    tcs.TrySetException(ex.InnerExceptions);
                 }
-            }
-            catch (AggregateException ex)
-            {
-                // in case the task faults
-                tcs.TrySetException(ex.InnerExceptions);
             }
         }
     }

@@ -31,8 +31,8 @@ namespace Akka.Persistence.Fsm
         /// </summary>
         protected PersistentFSMBase()
         {
-            if (this is ILoggingFSM)
-                _debugEvent = Context.System.Settings.FsmDebugEvent;
+            if (this is ILoggingFSM) { _debugEvent = Context.System.Settings.FsmDebugEvent; }
+            _defaultHandleEventFunc = DefaultHandleEventInternal;
         }
 
         /// <summary>
@@ -260,7 +260,7 @@ namespace Akka.Persistence.Fsm
         /// <param name="stateFunction">TBD</param>
         public void WhenUnhandled(StateFunction stateFunction)
         {
-            HandleEvent = OrElse(stateFunction, HandleEventDefault);
+            HandleEvent = OrElse(stateFunction, _defaultHandleEventFunc);
         }
 
         /// <summary>
@@ -374,8 +374,9 @@ namespace Akka.Persistence.Fsm
         }
 
         // Unhandled event handler
-        private StateFunction HandleEventDefault => DefaultHandleEventInternal;
+        private StateFunction HandleEventDefault => _defaultHandleEventFunc;
 
+        private readonly StateFunction _defaultHandleEventFunc;
         State<TState, TData, TEvent> DefaultHandleEventInternal(FSMBase.Event<TData> @event, State<TState, TData, TEvent> state = null)
         {
             if (_log.IsWarningEnabled) _log.UnhandledEventInState(@event, StateName);
@@ -386,7 +387,7 @@ namespace Akka.Persistence.Fsm
 
         private StateFunction HandleEvent
         {
-            get { return _handleEvent ?? (_handleEvent = HandleEventDefault); }
+            get { return _handleEvent ?? (_handleEvent = _defaultHandleEventFunc); }
             set { _handleEvent = value; }
         }
 
@@ -644,14 +645,14 @@ namespace Akka.Persistence.Fsm
         /// </returns>
         private static StateFunction OrElse(StateFunction original, StateFunction fallback)
         {
-            State<TState, TData, TEvent> chained(FSMBase.Event<TData> @event, State<TState, TData, TEvent> state = null)
+            State<TState, TData, TEvent> LocalChained(FSMBase.Event<TData> @event, State<TState, TData, TEvent> state = null)
             {
                 var originalResult = original.Invoke(@event, state);
                 if (originalResult == null) return fallback.Invoke(@event, state);
                 return originalResult;
             }
 
-            return chained;
+            return new StateFunction(LocalChained);
         }
     }
 }

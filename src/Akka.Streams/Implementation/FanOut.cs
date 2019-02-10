@@ -12,7 +12,7 @@ using Akka.Actor;
 using Akka.Annotations;
 using Akka.Event;
 using Akka.Pattern;
-using MessagePack; 
+using MessagePack;
 using Reactive.Streams;
 
 namespace Akka.Streams.Implementation
@@ -80,7 +80,7 @@ namespace Akka.Streams.Implementation
                 isCompleted: () => _markedCanceled == _markedCount,
                 isReady: () => _markedPending > 0);
 
-            bool receiveFunc(object message)
+            bool LocalReceive(object message)
             {
                 switch (message)
                 {
@@ -125,7 +125,7 @@ namespace Akka.Streams.Implementation
                 }
             }
             // FIXME: Eliminate re-wraps
-            SubReceive = new SubReceive(receiveFunc);
+            SubReceive = new SubReceive(new Receive(LocalReceive));
         }
 
         /// <summary>
@@ -731,7 +731,7 @@ namespace Akka.Streams.Implementation
     /// since we need to cast messages into a tuple and therefore maybe need additional type parameters
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    internal sealed class Unzip<T> : FanOut<T>
+    internal sealed class Unzip<T> : FanOut<T>, IRunnable
     {
         /// <summary>
         /// TBD
@@ -746,20 +746,16 @@ namespace Akka.Streams.Implementation
         {
             OutputBunch.MarkAllOutputs();
 
-            InitialPhase(1, 
-                new TransferPhase(PrimaryInputs.NeedsInput.And(OutputBunch.AllOfMarkedOutputs),
-                    Runnable.Create(InvokeDequeueInputElementAction, this))
-            );
+            InitialPhase(1, new TransferPhase(PrimaryInputs.NeedsInput.And(OutputBunch.AllOfMarkedOutputs), this));
         }
 
-        private static readonly Action<Unzip<T>> InvokeDequeueInputElementAction = InvokeDequeueInputElement;
-        private static void InvokeDequeueInputElement(Unzip<T> owner)
+        void IRunnable.Run()
         {
-            var message = owner.PrimaryInputs.DequeueInputElement();
+            var message = PrimaryInputs.DequeueInputElement();
 
             if (message is Tuple<T, T> tuple)
             {
-                var outputBunch = owner.OutputBunch;
+                var outputBunch = OutputBunch;
                 outputBunch.Enqueue(0, tuple.Item1);
                 outputBunch.Enqueue(1, tuple.Item2);
             }

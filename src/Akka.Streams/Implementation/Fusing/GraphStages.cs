@@ -525,13 +525,13 @@ namespace Akka.Streams.Implementation.Fusing
         #region internal classes
         
         [SuppressMessage("ReSharper", "MethodSupportsCancellation")]
-        private sealed class Logic : TimerGraphStageLogic, ICancelable
+        private sealed class Logic : TimerGraphStageLogic, ICancelable, IHandle<NotUsed>
         {
             private readonly TickSource<T> _stage;
             private readonly AtomicBoolean _cancelled = new AtomicBoolean();
 
-            private readonly AtomicReference<Action<NotUsed>> _cancelCallback =
-                new AtomicReference<Action<NotUsed>>(null);
+            private readonly AtomicReference<IHandle<NotUsed>> _cancelCallback =
+                new AtomicReference<IHandle<NotUsed>>(null);
 
             public Logic(TickSource<T> stage) : base(stage.Shape)
             {
@@ -542,12 +542,17 @@ namespace Akka.Streams.Implementation.Fusing
 
             public override void PreStart()
             {
-                _cancelCallback.Value = GetAsyncCallback<NotUsed>(_ => CompleteStage());
+                _cancelCallback.Value = GetAsyncCallback<NotUsed>(this);
 
                 if(_cancelled)
                     CompleteStage();
                 else
                     ScheduleRepeatedly("TickTimer", _stage._initialDelay, _stage._interval);
+            }
+
+            void IHandle<NotUsed>.Handle(NotUsed message)
+            {
+                CompleteStage();
             }
 
             protected internal override void OnTimer(object timerKey)
@@ -559,7 +564,7 @@ namespace Akka.Streams.Implementation.Fusing
             public void Cancel()
             {
                 if(!_cancelled.GetAndSet(true))
-                    _cancelCallback.Value?.Invoke(NotUsed.Instance);
+                    _cancelCallback.Value?.Handle(NotUsed.Instance);
             }
 
             public bool IsCancellationRequested => _cancelled;
@@ -668,7 +673,7 @@ namespace Akka.Streams.Implementation.Fusing
     {
         #region internal classes
 
-        private sealed class Logic : GraphStageLogic
+        private sealed class Logic : GraphStageLogic, IHandle<T>
         {
             private readonly MaterializedValueSource<T> _source;
 
@@ -680,8 +685,13 @@ namespace Akka.Streams.Implementation.Fusing
 
             public override void PreStart()
             {
-                var cb = GetAsyncCallback<T>(element => Emit(_source.Outlet, element, CompleteStage));
-                _source._promise.Task.ContinueWith(task => cb(task.Result), TaskContinuationOptions.ExecuteSynchronously);
+                var cb = GetAsyncCallback<T>(this);
+                _source._promise.Task.ContinueWith(task => cb.Handle(task.Result), TaskContinuationOptions.ExecuteSynchronously);
+            }
+
+            void IHandle<T>.Handle(T element)
+            {
+                Emit(_source.Outlet, element, CompleteStage);
             }
         }
 
@@ -825,7 +835,7 @@ namespace Akka.Streams.Implementation.Fusing
     public sealed class TaskSource<T> : GraphStage<SourceShape<T>>
     {
         #region Internal classes
-        private sealed class Logic : OutGraphStageLogic
+        private sealed class Logic : OutGraphStageLogic, IHandle<Task<T>>
         {
             private readonly TaskSource<T> _stage;
 
@@ -836,22 +846,24 @@ namespace Akka.Streams.Implementation.Fusing
                 SetHandler(stage.Outlet, this);
             }
 
+            void IHandle<Task<T>>.Handle(Task<T> t)
+            {
+                if (t.IsSuccessfully())
+                {
+                    Emit(_stage.Outlet, t.Result, CompleteStage);
+                }
+                else
+                {
+                    FailStage(t.IsFaulted
+                        ? Flatten(t.Exception)
+                        : new TaskCanceledException("Task was cancelled."));
+                }
+            }
+
             public override void OnPull()
             {
-                var callback = GetAsyncCallback<Task<T>>(t =>
-                {
-                    if (t.IsSuccessfully())
-                    {
-                        Emit(_stage.Outlet, t.Result, CompleteStage);
-                    }
-                    else
-                    {
-                        FailStage(t.IsFaulted
-                            ? Flatten(t.Exception)
-                            : new TaskCanceledException("Task was cancelled."));
-                    }
-                });
-                _stage._task.ContinueWith(t => callback(t), TaskContinuationOptions.ExecuteSynchronously);
+                var callback = GetAsyncCallback<Task<T>>(this);
+                _stage._task.ContinueWith(t => callback.Handle(t), TaskContinuationOptions.ExecuteSynchronously);
                 SetHandler(_stage.Outlet, EagerTerminateOutput); // After first pull we won't produce anything more
             }
 

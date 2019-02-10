@@ -290,20 +290,19 @@ namespace Akka.Persistence.Journal
                 }
                 else
                 {
-                    void LocalRecoveryCallback(IPersistentRepresentation p)
-                    {
-                        if (!p.IsDeleted) // old records from pre 1.0.7 may still have the IsDeleted flag
-                        {
-                            foreach (var adaptedRepresentation in owner.AdaptFromJournal(p))
-                            {
-                                replyTo.Tell(new ReplayedMessage(adaptedRepresentation), ActorRefs.NoSender);
-                            }
-                        }
-                    }
                     // Send replayed messages and replay result to persistentActor directly. No need
                     // to resequence replayed messages relative to written and looped messages.
                     // not possible to use circuit breaker here
-                    owner.ReplayMessagesAsync(context, message.PersistenceId, message.FromSequenceNr, toSequenceNr, message.Max, LocalRecoveryCallback)
+                    owner.ReplayMessagesAsync(context, message.PersistenceId, message.FromSequenceNr, toSequenceNr, message.Max, p =>
+                            {
+                                if (!p.IsDeleted) // old records from pre 1.0.7 may still have the IsDeleted flag
+                                {
+                                    foreach (var adaptedRepresentation in owner.AdaptFromJournal(p))
+                                    {
+                                        replyTo.Tell(new ReplayedMessage(adaptedRepresentation), ActorRefs.NoSender);
+                                    }
+                                }
+                            })
                          .LinkOutcome(AfterReplayMessagesAction, promise, highSequenceNr, _continuationOptions);
                 }
             }

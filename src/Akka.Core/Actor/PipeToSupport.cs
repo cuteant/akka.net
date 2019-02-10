@@ -32,19 +32,24 @@ namespace Akka.Actor
         public static Task PipeTo<T>(this Task<T> taskToPipe, ICanTell recipient, IActorRef sender = null, Func<T, object> success = null, Func<Exception, object> failure = null)
         {
             sender = sender ?? ActorRefs.NoSender;
-            return taskToPipe.LinkOutcome(PipeToContinuation,
+            return taskToPipe.LinkOutcome(PipeToHelper<T>.PipeToContinuationAction,
                 recipient, sender, success, failure,
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
-        private static void PipeToContinuation<T>(Task<T> tresult, ICanTell recipient, IActorRef sender, Func<T, object> success, Func<Exception, object> failure)
+        sealed class PipeToHelper<T>
         {
-            if (tresult.IsSuccessfully())
+            public static readonly Action<Task<T>, ICanTell, IActorRef, Func<T, object>, Func<Exception, object>> PipeToContinuationAction = PipeToContinuation;
+
+            private static void PipeToContinuation(Task<T> tresult, ICanTell recipient, IActorRef sender, Func<T, object> success, Func<Exception, object> failure)
             {
-                recipient.Tell(success != null ? success(tresult.Result) : tresult.Result, sender);
-                return;
+                if (tresult.IsSuccessfully())
+                {
+                    recipient.Tell(success != null ? success(tresult.Result) : tresult.Result, sender);
+                    return;
+                }
+                recipient.Tell(failure != null ? failure(tresult.Exception) : new Status.Failure(tresult.Exception), sender);
             }
-            recipient.Tell(failure != null ? failure(tresult.Exception) : new Status.Failure(tresult.Exception), sender);
         }
 
         /// <summary>

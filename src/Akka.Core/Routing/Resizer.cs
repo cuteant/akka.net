@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Configuration;
 using MessagePack;
@@ -76,6 +77,9 @@ namespace Akka.Routing
     [MessagePackObject]
     public sealed class DefaultResizer : Resizer, IEquatable<DefaultResizer>
     {
+        [IgnoreMember, IgnoreDataMember]
+        private readonly Func<Routee, bool> _pressurePredicate;
+
         /// <summary>
         /// Initializes a new instance of the <see cref="DefaultResizer"/> class.
         /// </summary>
@@ -123,6 +127,7 @@ namespace Akka.Routing
             BackoffThreshold = backoffThreshold;
             BackoffRate = backoffRate;
             MessagesPerResize = messagesPerResize;
+            _pressurePredicate = Pressure;
         }
 
         /// <summary>
@@ -213,32 +218,33 @@ namespace Akka.Routing
         /// <returns>The number of routees considered to be above pressure level.</returns>
         public int Pressure(IEnumerable<Routee> currentRoutees)
         {
-            bool filter(Routee routee)
-            {
-                if (routee is ActorRefRoutee actorRefRoutee && actorRefRoutee.Actor is ActorRefWithCell actorRef)
-                {
-                    var underlying = actorRef.Underlying;
-                    if (underlying is ActorCell cell)
-                    {
-                        if (PressureThreshold == 1)
-                            return cell.Mailbox.IsScheduled() && cell.Mailbox.HasMessages;
-                        if (PressureThreshold < 1)
-                            return cell.Mailbox.IsScheduled() && cell.CurrentMessage != null;
+            return currentRoutees.Count(_pressurePredicate);
+        }
 
-                        return cell.Mailbox.NumberOfMessages >= PressureThreshold;
-                    }
-                    else
-                    {
-                        if (PressureThreshold == 1)
-                            return underlying.HasMessages;
-                        if (PressureThreshold < 1)
-                            return true; //unstarted cells are always busy, for instance
-                        return underlying.NumberOfMessages >= PressureThreshold;
-                    }
+        private bool Pressure(Routee routee)
+        {
+            if (routee is ActorRefRoutee actorRefRoutee && actorRefRoutee.Actor is ActorRefWithCell actorRef)
+            {
+                var underlying = actorRef.Underlying;
+                if (underlying is ActorCell cell)
+                {
+                    if (PressureThreshold == 1)
+                        return cell.Mailbox.IsScheduled() && cell.Mailbox.HasMessages;
+                    if (PressureThreshold < 1)
+                        return cell.Mailbox.IsScheduled() && cell.CurrentMessage != null;
+
+                    return cell.Mailbox.NumberOfMessages >= PressureThreshold;
                 }
-                return false;
+                else
+                {
+                    if (PressureThreshold == 1)
+                        return underlying.HasMessages;
+                    if (PressureThreshold < 1)
+                        return true; //unstarted cells are always busy, for instance
+                    return underlying.NumberOfMessages >= PressureThreshold;
+                }
             }
-            return currentRoutees.Count(filter);
+            return false;
         }
 
         /// <summary>

@@ -652,15 +652,14 @@ namespace Akka.Actor
                 // We must spawn a separate Task to not block current thread,
                 // since that would have blocked the shutdown of the ActorSystem.
                 var timeout = coord.Timeout(PhaseActorSystemTerminate);
-                Done run()
+                return Task.Run(() =>
                 {
                     if (!system.WhenTerminated.Wait(timeout) && !coord.RunningClrHook)
                     {
                         Environment.Exit(0);
                     }
                     return Done.Instance;
-                }
-                return Task.Run(run);
+                });
             }
 
             if (terminateActorSystem)
@@ -709,29 +708,27 @@ namespace Akka.Actor
 #else
                 // TODO: what to do for NetCore?
 #endif
-                Done hook()
-                {
-                    if (!system.WhenTerminated.IsCompleted)
-                    {
-                        var coordLog = coord.Log;
-                        if (coordLog.IsInfoEnabled) coordLog.StartingCoordinatedShutdownFromCLRTerminationHook();
-                        try
-                        {
-                            coord.Run(ClrExitReason.Instance).Wait(coord.TotalTimeout);
-                        }
-                        catch (Exception ex)
-                        {
-                            if (coordLog.IsWarningEnabled) coordLog.CoordinatedShutdownFromCLRShutdownFailed(ex);
-                        }
-                    }
-                    return Done.Instance;
-                }
-                Task<Done> hookAsync()
+                coord.AddClrShutdownHook(() =>
                 {
                     coord.RunningClrHook = true;
-                    return Task.Run(hook);
-                }
-                coord.AddClrShutdownHook(hookAsync);
+                    return Task.Run(() =>
+                    {
+                        if (!system.WhenTerminated.IsCompleted)
+                        {
+                            var coordLog = coord.Log;
+                            if (coordLog.IsInfoEnabled) coordLog.StartingCoordinatedShutdownFromCLRTerminationHook();
+                            try
+                            {
+                                coord.Run(ClrExitReason.Instance).Wait(coord.TotalTimeout);
+                            }
+                            catch (Exception ex)
+                            {
+                                if (coordLog.IsWarningEnabled) coordLog.CoordinatedShutdownFromCLRShutdownFailed(ex);
+                            }
+                        }
+                        return Done.Instance;
+                    });
+                });
             }
         }
     }

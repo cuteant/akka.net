@@ -61,17 +61,39 @@ namespace Akka.Streams.Dsl
         {
             // Do Nothing until `timeout` to try and intercept completion as downstream,
             // but cancel stream after timeout if inlet is not closed to prevent deadlock.
-            Materializer.ScheduleOnce(_timeout, InvokeOnDownstreamFinishAction, this, _nextElem, _timeout);
+            Materializer.ScheduleOnce(_timeout, new ScheduledRunnable(this, _nextElem, _timeout));
         }
-        private static readonly Action<UnfoldFlowGraphStageLogic<TIn, TState, TOut>, Inlet<TIn>, TimeSpan> InvokeOnDownstreamFinishAction = InvokeOnDownstreamFinish;
-        private static void InvokeOnDownstreamFinish(UnfoldFlowGraphStageLogic<TIn, TState, TOut> owner, Inlet<TIn> nextElem, TimeSpan timeout)
+
+        sealed class DownstreamFinishRunnable : IRunnable
         {
-            var cb = owner.GetAsyncCallback(() =>
+            private readonly UnfoldFlowGraphStageLogic<TIn, TState, TOut> _owner;
+            private readonly Inlet<TIn> _nextElem;
+            private readonly TimeSpan _timeout;
+
+            public DownstreamFinishRunnable(UnfoldFlowGraphStageLogic<TIn, TState, TOut> owner, Inlet<TIn> nextElem, TimeSpan timeout)
             {
-                if (!owner.IsClosed(nextElem))
-                    owner.FailStage(new InvalidOperationException($"unfoldFlow source's inner flow canceled only upstream, while downstream remain available for {timeout}"));
-            });
-            cb();
+                _owner = owner;
+                _nextElem = nextElem;
+                _timeout = timeout;
+            }
+
+            public void Run()
+            {
+                if (!_owner.IsClosed(_nextElem))
+                    _owner.FailStage(new InvalidOperationException($"unfoldFlow source's inner flow canceled only upstream, while downstream remain available for {_timeout}"));
+            }
+        }
+
+        sealed class ScheduledRunnable : IRunnable
+        {
+            private readonly IRunnable _runnable;
+
+            public ScheduledRunnable(UnfoldFlowGraphStageLogic<TIn, TState, TOut> owner, Inlet<TIn> nextElem, TimeSpan timeout)
+            {
+                _runnable = owner.GetAsyncCallback(new DownstreamFinishRunnable(owner, nextElem, timeout));
+            }
+
+            public void Run() => _runnable.Run();
         }
     }
 

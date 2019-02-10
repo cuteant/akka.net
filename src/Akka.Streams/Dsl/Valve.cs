@@ -41,10 +41,10 @@ namespace Akka.Streams.Dsl
 
     class ValveSwitch : IValveSwitch
     {
-        private readonly Action<Tuple<SwitchMode, TaskCompletionSource<bool>>> _flipCallback;
-        private readonly Action<TaskCompletionSource<SwitchMode>> _getModeCallback;
+        private readonly IHandle<Tuple<SwitchMode, TaskCompletionSource<bool>>> _flipCallback;
+        private readonly IHandle<TaskCompletionSource<SwitchMode>> _getModeCallback;
 
-        public ValveSwitch(Action<Tuple<SwitchMode, TaskCompletionSource<bool>>> flipCallback, Action<TaskCompletionSource<SwitchMode>> getModeCallback)
+        public ValveSwitch(IHandle<Tuple<SwitchMode, TaskCompletionSource<bool>>> flipCallback, IHandle<TaskCompletionSource<SwitchMode>> getModeCallback)
         {
             _flipCallback = flipCallback;
             _getModeCallback = getModeCallback;
@@ -53,14 +53,14 @@ namespace Akka.Streams.Dsl
         public Task<bool> Flip(SwitchMode flipToMode)
         {
             var completion = new TaskCompletionSource<bool>();
-            _flipCallback(Tuple.Create(flipToMode, completion));
+            _flipCallback.Handle(Tuple.Create(flipToMode, completion));
             return completion.Task;
         }
 
         public Task<SwitchMode> GetMode()
         {
             var completion = new TaskCompletionSource<SwitchMode>();
-            _getModeCallback(completion);
+            _getModeCallback.Handle(completion);
             return completion.Task;
         }
     }
@@ -75,7 +75,9 @@ namespace Akka.Streams.Dsl
     {
         #region Logic
 
-        private sealed class ValveGraphStageLogic : GraphStageLogic, IInHandler, IOutHandler
+        private sealed class ValveGraphStageLogic : GraphStageLogic, IInHandler, IOutHandler,
+            IHandle<Tuple<SwitchMode, TaskCompletionSource<bool>>>,
+            IHandle<TaskCompletionSource<SwitchMode>>
         {
             private readonly Valve<T> _valve;
             private readonly TaskCompletionSource<IValveSwitch> _completion;
@@ -90,8 +92,8 @@ namespace Akka.Streams.Dsl
                 _completion = completion;
                 _mode = valve._mode;
 
-                var flipCallback = GetAsyncCallback<Tuple<SwitchMode, TaskCompletionSource<bool>>>(FlipHandler);
-                var getModeCallback = GetAsyncCallback<TaskCompletionSource<SwitchMode>>(t => t.SetResult(_mode));
+                var flipCallback = GetAsyncCallback<Tuple<SwitchMode, TaskCompletionSource<bool>>>(this);
+                var getModeCallback = GetAsyncCallback<TaskCompletionSource<SwitchMode>>(this);
 
                 _switch = new ValveSwitch(flipCallback, getModeCallback);
 
@@ -104,7 +106,12 @@ namespace Akka.Streams.Dsl
                 _completion.SetResult(_switch);
             }
 
-            void FlipHandler(Tuple<SwitchMode, TaskCompletionSource<bool>> t)
+            void IHandle<TaskCompletionSource<SwitchMode>>.Handle(TaskCompletionSource<SwitchMode> t)
+            {
+                t.SetResult(_mode);
+            }
+
+            void IHandle<Tuple<SwitchMode, TaskCompletionSource<bool>>>.Handle(Tuple<SwitchMode, TaskCompletionSource<bool>> t) //FlipHandler
             {
                 var flipToMode = t.Item1;
                 var completion = t.Item2;

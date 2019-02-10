@@ -215,7 +215,7 @@ namespace Akka.Streams.Stage
     {
         private readonly IDictionary<object, TimerMessages.Timer> _keyToTimers = new Dictionary<object, TimerMessages.Timer>();
         private readonly AtomicCounter _timerIdGen = new AtomicCounter(0);
-        private Action<TimerMessages.Scheduled> _timerAsyncCallback;
+        private IHandle<TimerMessages.Scheduled> _timerAsyncCallback;
 
         /// <summary>
         /// TBD
@@ -223,19 +223,21 @@ namespace Akka.Streams.Stage
         /// <param name="shape">TBD</param>
         protected TimerGraphStageLogic(Shape shape) : base(shape)
         {
+            _onInternalTimerAction = OnInternalTimer;
         }
 
-        private Action<TimerMessages.Scheduled> TimerAsyncCallback
+        private IHandle<TimerMessages.Scheduled> TimerAsyncCallback
         {
             get
             {
                 if (_timerAsyncCallback is null)
-                    _timerAsyncCallback = GetAsyncCallback<TimerMessages.Scheduled>(OnInternalTimer);
+                    _timerAsyncCallback = GetAsyncCallback<TimerMessages.Scheduled>(_onInternalTimerAction);
 
                 return _timerAsyncCallback;
             }
         }
 
+        private readonly Action<TimerMessages.Scheduled> _onInternalTimerAction;
         private void OnInternalTimer(TimerMessages.Scheduled scheduled)
         {
             var id = scheduled.TimerId;
@@ -267,13 +269,13 @@ namespace Akka.Streams.Stage
             CancelTimer(timerKey);
             var id = _timerIdGen.IncrementAndGet();
             var task = Interpreter.Materializer.ScheduleRepeatedly(initialDelay, interval,
-                InvokeScheduleRepeatedlyAction, this, timerKey, id);
+                InvokeScheduleRepeatedlyAction, TimerAsyncCallback, timerKey, id);
             _keyToTimers[timerKey] = new TimerMessages.Timer(id, task);
         }
-        private static readonly Action<TimerGraphStageLogic, object, int> InvokeScheduleRepeatedlyAction = InvokeScheduleRepeatedly;
-        private static void InvokeScheduleRepeatedly(TimerGraphStageLogic owner, object timerKey, int id)
+        private static readonly Action<IHandle<TimerMessages.Scheduled>, object, int> InvokeScheduleRepeatedlyAction = InvokeScheduleRepeatedly;
+        private static void InvokeScheduleRepeatedly(IHandle<TimerMessages.Scheduled> handler, object timerKey, int id)
         {
-            owner.TimerAsyncCallback(new TimerMessages.Scheduled(timerKey, id, isRepeating: true));
+            handler.Handle(new TimerMessages.Scheduled(timerKey, id, isRepeating: true));
         }
 
         /// <summary>
@@ -298,13 +300,13 @@ namespace Akka.Streams.Stage
         {
             CancelTimer(timerKey);
             var id = _timerIdGen.IncrementAndGet();
-            var task = Interpreter.Materializer.ScheduleOnce(delay, InvokeScheduleOnceAction, this, timerKey, id);
+            var task = Interpreter.Materializer.ScheduleOnce(delay, InvokeScheduleOnceAction, TimerAsyncCallback, timerKey, id);
             _keyToTimers[timerKey] = new TimerMessages.Timer(id, task);
         }
-        private static readonly Action<TimerGraphStageLogic, object, int> InvokeScheduleOnceAction = InvokeScheduleOnce;
-        private static void InvokeScheduleOnce(TimerGraphStageLogic owner, object timerKey, int id)
+        private static readonly Action<IHandle<TimerMessages.Scheduled>, object, int> InvokeScheduleOnceAction = InvokeScheduleOnce;
+        private static void InvokeScheduleOnce(IHandle<TimerMessages.Scheduled> handler, object timerKey, int id)
         {
-            owner.TimerAsyncCallback(new TimerMessages.Scheduled(timerKey, id, isRepeating: false));
+            handler.Handle(new TimerMessages.Scheduled(timerKey, id, isRepeating: false));
         }
 
         /// <summary>
@@ -1591,8 +1593,62 @@ namespace Akka.Streams.Stage
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="handler">TBD</param>
         /// <returns>TBD</returns>
-        protected Action<T> GetAsyncCallback<T>(Action<T> handler)
-            => @event => Interpreter.OnAsyncInput(this, @event, x => handler((T)x));
+        protected IHandle<T> GetAsyncCallback<T>(Action<T> handler)
+            => new AsyncCallbackWrapper<T>(this, new ActionHandler<T>(handler));
+
+        /// <summary>
+        /// Obtain a callback object that can be used asynchronously to re-enter the
+        /// current <see cref="GraphStage{TShape}"/> with an asynchronous notification. The delegate returned 
+        /// is safe to be called from other threads and it will in the background thread-safely
+        /// delegate to the passed callback function. I.e. it will be called by the external world and
+        /// the passed handler will be invoked eventually in a thread-safe way by the execution environment.
+        /// 
+        /// This object can be cached and reused within the same <see cref="GraphStageLogic"/>.
+        /// </summary>
+        /// <typeparam name="T">TBD</typeparam>
+        /// <param name="handler">TBD</param>
+        /// <returns>TBD</returns>
+        protected IHandle<T> GetAsyncCallback<T>(IHandle<T> handler)
+            => new AsyncCallbackWrapper<T>(this, handler);
+
+        [InternalApi]
+        sealed class AsyncCallbackWrapper<T> : IHandle<T>
+        {
+            private readonly GraphStageLogic _logic;
+            private readonly IHandle<object> _handler;
+
+            private IAsyncInputHandle _onAsyncInput;
+            private IAsyncInputHandle OnAsyncInput
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _onAsyncInput ?? EnsureSharedCreated();
+            }
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private IAsyncInputHandle EnsureSharedCreated()
+            {
+                _onAsyncInput = _logic.Interpreter.OnAsyncInput;
+                return _onAsyncInput;
+            }
+
+            public AsyncCallbackWrapper(GraphStageLogic logic, IHandle<T> handler)
+            {
+                _logic = logic;
+                _handler = new DelegatingHandle(handler);
+            }
+
+            public void Handle(T message)
+            {
+                OnAsyncInput.Handle(_logic, message, _handler);
+            }
+
+            [InternalApi]
+            sealed class DelegatingHandle : IHandle<object>
+            {
+                private readonly IHandle<T> _handler;
+                public DelegatingHandle(IHandle<T> handler) => _handler = handler;
+                public void Handle(object message) => _handler.Handle((T)message);
+            }
+        }
 
         /// <summary>
         /// Obtain a callback object that can be used asynchronously to re-enter the
@@ -1605,12 +1661,65 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <param name="handler">TBD</param>
         /// <returns>TBD</returns>
-        protected Action GetAsyncCallback(Action handler)
-            => () => Interpreter.OnAsyncInput(this, NotUsed.Instance, _ => handler());
+        protected IRunnable GetAsyncCallback(Action handler)
+            => new AsyncCallbackWrapper(this, new ActionRunnable(handler));
+
+        /// <summary>
+        /// Obtain a callback object that can be used asynchronously to re-enter the
+        /// current <see cref="GraphStage{TShape}"/> with an asynchronous notification. The delegate returned 
+        /// is safe to be called from other threads and it will in the background thread-safely
+        /// delegate to the passed callback function. I.e. it will be called by the external world and
+        /// the passed handler will be invoked eventually in a thread-safe way by the execution environment.
+        /// 
+        /// This object can be cached and reused within the same <see cref="GraphStageLogic"/>.
+        /// </summary>
+        /// <param name="handler">TBD</param>
+        /// <returns>TBD</returns>
+        protected IRunnable GetAsyncCallback(IRunnable handler)
+            => new AsyncCallbackWrapper(this, handler);
+
+        [InternalApi]
+        sealed class AsyncCallbackWrapper : IRunnable
+        {
+            private readonly GraphStageLogic _logic;
+            private readonly IHandle<object> _handler;
+
+            private IAsyncInputHandle _onAsyncInput;
+            private IAsyncInputHandle OnAsyncInput
+            {
+                [MethodImpl(MethodImplOptions.AggressiveInlining)]
+                get => _onAsyncInput ?? EnsureSharedCreated();
+            }
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private IAsyncInputHandle EnsureSharedCreated()
+            {
+                _onAsyncInput = _logic.Interpreter.OnAsyncInput;
+                return _onAsyncInput;
+            }
+
+            public AsyncCallbackWrapper(GraphStageLogic logic, IRunnable handler)
+            {
+                _logic = logic;
+                _handler = new DelegatingHandle(handler);
+            }
+
+            public void Run()
+            {
+                OnAsyncInput.Handle(_logic, NotUsed.Instance, _handler);
+            }
+
+            [InternalApi]
+            sealed class DelegatingHandle : IHandle<object>
+            {
+                private readonly IRunnable _handler;
+                public DelegatingHandle(IRunnable handler) => _handler = handler;
+                public void Handle(object message) => _handler.Run();
+            }
+        }
 
         /// <summary>
         /// Initialize a <see cref="StageActorRef"/> which can be used to interact with from the outside world "as-if" an actor.
-        /// The messages are looped through the <see cref="GetAsyncCallback{T}"/> mechanism of <see cref="GraphStage{TShape}"/> so they are safe to modify
+        /// The messages are looped through the <see cref="GetAsyncCallback{T}(IHandle{T})"/> mechanism of <see cref="GraphStage{TShape}"/> so they are safe to modify
         /// internal state of this stage.
         /// 
         /// This method must (the earliest) be called after the <see cref="GraphStageLogic"/> constructor has finished running,
@@ -1632,7 +1741,7 @@ namespace Akka.Streams.Stage
                 var actorMaterializer = ActorMaterializerHelper.Downcast(Interpreter.Materializer);
                 var provider = ((IInternalActorRef)actorMaterializer.Supervisor).Provider;
                 var path = actorMaterializer.Supervisor.Path / StageActorRef.Name.Next();
-                _stageActorRef = new StageActorRef(provider, actorMaterializer.Logger, r => GetAsyncCallback<Tuple<IActorRef, object>>(tuple => r(tuple)), receive, path);
+                _stageActorRef = new StageActorRef(provider, actorMaterializer.Logger, tupleHandler => GetAsyncCallback<Tuple<IActorRef, object>>(tupleHandler), receive, path);
             }
             else
                 _stageActorRef.Become(receive);
@@ -1677,7 +1786,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <typeparam name="T">TBD</typeparam>
         [InternalApi]
-        protected class SubSinkInlet<T>
+        protected class SubSinkInlet<T> : IHandle<IActorSubscriberMessage>
         {
             private readonly string _name;
             private InHandler _handler;
@@ -1694,28 +1803,29 @@ namespace Akka.Streams.Stage
             public SubSinkInlet(GraphStageLogic logic, string name)
             {
                 _name = name;
-                _sink = new SubSink<T>(name, logic.GetAsyncCallback<IActorSubscriberMessage>(
-                    msg =>
-                    {
-                        if (_closed) { return; }
+                _sink = new SubSink<T>(name, logic.GetAsyncCallback<IActorSubscriberMessage>(this));
+            }
 
-                        switch (msg)
-                        {
-                            case OnNext next:
-                                _elem = (T)next.Element;
-                                _pulled = false;
-                                _handler.OnPush();
-                                break;
-                            case OnComplete _:
-                                _closed = true;
-                                _handler.OnUpstreamFinish();
-                                break;
-                            case OnError error:
-                                _closed = true;
-                                _handler.OnUpstreamFailure(error.Cause);
-                                break;
-                        }
-                    }));
+            void IHandle<IActorSubscriberMessage>.Handle(IActorSubscriberMessage msg)
+            {
+                if (_closed) { return; }
+
+                switch (msg)
+                {
+                    case OnNext next:
+                        _elem = (T)next.Element;
+                        _pulled = false;
+                        _handler.OnPush();
+                        break;
+                    case OnComplete _:
+                        _closed = true;
+                        _handler.OnUpstreamFinish();
+                        break;
+                    case OnError error:
+                        _closed = true;
+                        _handler.OnUpstreamFailure(error.Cause);
+                        break;
+                }
             }
 
             /// <summary>
@@ -1809,7 +1919,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         /// <typeparam name="T">TBD</typeparam>
         [InternalApi]
-        protected class SubSourceOutlet<T>
+        protected class SubSourceOutlet<T> : IHandle<SubSink.ICommand>
         {
             private readonly string _name;
             private readonly SubSource<T> _source;
@@ -1826,28 +1936,30 @@ namespace Akka.Streams.Stage
             {
                 _name = name;
 
-                _source = new SubSource<T>(name, logic.GetAsyncCallback<SubSink.ICommand>(command =>
-                {
-                    switch (command)
-                    {
-                        case SubSink.RequestOne _:
-                            if (!_closed)
-                            {
-                                _available = true;
-                                _handler.OnPull();
-                            }
-                            break;
+                _source = new SubSource<T>(name, logic.GetAsyncCallback<SubSink.ICommand>(this));
+            }
 
-                        case SubSink.Cancel _:
-                            if (!_closed)
-                            {
-                                _available = false;
-                                _closed = true;
-                                _handler.OnDownstreamFinish();
-                            }
-                            break;
-                    }
-                }));
+            void IHandle<SubSink.ICommand>.Handle(SubSink.ICommand command)
+            {
+                switch (command)
+                {
+                    case SubSink.RequestOne _:
+                        if (!_closed)
+                        {
+                            _available = true;
+                            _handler.OnPull();
+                        }
+                        break;
+
+                    case SubSink.Cancel _:
+                        if (!_closed)
+                        {
+                            _available = false;
+                            _closed = true;
+                            _handler.OnDownstreamFinish();
+                        }
+                        break;
+                }
             }
 
             /// <summary>
@@ -2356,7 +2468,7 @@ namespace Akka.Streams.Stage
     /// <summary>
     /// Minimal actor to work with other actors and watch them in a synchronous ways.
     /// </summary>
-    public sealed class StageActorRef : MinimalActorRef
+    public sealed class StageActorRef : MinimalActorRef, IHandle<Tuple<IActorRef, object>>
     {
         /// <summary>
         /// TBD
@@ -2378,7 +2490,7 @@ namespace Akka.Streams.Stage
         /// TBD
         /// </summary>
         public readonly ILoggingAdapter Log;
-        private readonly Action<Tuple<IActorRef, object>> _callback;
+        private readonly IHandle<Tuple<IActorRef, object>> _callback;
         private readonly AtomicReference<IImmutableSet<IActorRef>> _watchedBy = new AtomicReference<IImmutableSet<IActorRef>>(ImmutableHashSet<IActorRef>.Empty);
 
         private Receive __behavior;
@@ -2390,6 +2502,11 @@ namespace Akka.Streams.Stage
         }
         private IImmutableSet<IActorRef> _watching = ImmutableHashSet<IActorRef>.Empty;
 
+        void IHandle<Tuple<IActorRef, object>>.Handle(Tuple<IActorRef, object> message)
+        {
+            Behavior(message);
+        }
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -2399,14 +2516,14 @@ namespace Akka.Streams.Stage
         /// <param name="initialReceive">TBD</param>
         /// <param name="path">TBD</param>
         /// <returns>TBD</returns>
-        public StageActorRef(IActorRefProvider provider, ILoggingAdapter log, Func<Receive, Action<Tuple<IActorRef, object>>> getAsyncCallback, Receive initialReceive, ActorPath path)
+        public StageActorRef(IActorRefProvider provider, ILoggingAdapter log, Func<IHandle<Tuple<IActorRef, object>>, IHandle<Tuple<IActorRef, object>>> getAsyncCallback, Receive initialReceive, ActorPath path)
         {
             Log = log;
             Provider = provider;
             Behavior = initialReceive;
             Path = path;
 
-            _callback = getAsyncCallback(args => Behavior(args));
+            _callback = getAsyncCallback(this);
         }
 
         /// <summary>
@@ -2443,12 +2560,12 @@ namespace Akka.Streams.Stage
                     if (_watching.Contains(t.ActorRef))
                     {
                         _watching.Remove(t.ActorRef);
-                        _callback(Tuple.Create(sender, message));
+                        _callback.Handle(Tuple.Create(sender, message));
                         break;
                     }
                     else return;
                 default:
-                    _callback(Tuple.Create(sender, message));
+                    _callback.Handle(Tuple.Create(sender, message));
                     break;
             }
         }
@@ -2628,9 +2745,9 @@ namespace Akka.Streams.Stage
 
         private sealed class Initialized : ICallbackState
         {
-            public Action<T> Callback { get; }
+            public IHandle<T> Callback { get; }
 
-            public Initialized(Action<T> callback) => Callback = callback;
+            public Initialized(IHandle<T> callback) => Callback = callback;
         }
 
         private sealed class Stopped : ICallbackState
@@ -2681,13 +2798,19 @@ namespace Akka.Streams.Stage
         /// TBD
         /// </summary>
         /// <param name="callback">TBD</param>
-        protected void InitCallback(Action<T> callback) //=> Locked(() =>
+        protected void InitCallback(IHandle<T> callback) //=> Locked(() =>
         {
             Monitor.Enter(this);
             try
             {
                 var state = _callbackState.GetAndSet(new Initialized(callback));
-                (state as NotInitialized)?.Args.ForEach(callback);
+                if (state is NotInitialized notInitialized)
+                {
+                    foreach (var item in notInitialized.Args)
+                    {
+                        callback.Handle(item);
+                    }
+                }
             }
             finally
             {
@@ -2707,7 +2830,7 @@ namespace Akka.Streams.Stage
                 switch (_callbackState.Value)
                 {
                     case Initialized initialized:
-                        initialized.Callback(arg);
+                        initialized.Callback.Handle(arg);
                         break;
                     case NotInitialized notInitialized:
                         notInitialized.Args.Add(arg);

@@ -97,7 +97,7 @@ namespace Akka.Streams.Implementation.Fusing
     /// INTERNAL API
     /// </summary>
     [InternalApi]
-    public sealed class GraphInterpreterShell
+    public sealed class GraphInterpreterShell : IAsyncInputHandle, IRunnable
     {
         private readonly GraphAssembly _assembly;
         private readonly Connection[] _connections;
@@ -380,8 +380,7 @@ namespace Akka.Streams.Implementation.Fusing
                     else
                     {
                         _waitingForShutdown = true;
-                        Materializer.ScheduleOnce(_settings.SubscriptionTimeoutSettings.Timeout,
-                            InvokeAbortAction, Self, this);
+                        Materializer.ScheduleOnce(_settings.SubscriptionTimeoutSettings.Timeout, this);
                     }
                 }
                 else if (Interpreter.IsSuspended && !_resumeScheduled)
@@ -395,11 +394,8 @@ namespace Akka.Streams.Implementation.Fusing
                 return actorEventLimit - 1;
             }
         }
-        private static readonly Action<IActorRef, GraphInterpreterShell> InvokeAbortAction = InvokeAbort;
-        private static void InvokeAbort(IActorRef self, GraphInterpreterShell owner)
-        {
-            self.Tell(new ActorGraphInterpreter.Abort(owner));
-        }
+
+        void IRunnable.Run() => Self.Tell(new ActorGraphInterpreter.Abort(this));
 
         private void SendResume(bool sendResume)
         {
@@ -412,16 +408,17 @@ namespace Akka.Streams.Implementation.Fusing
 
         private GraphInterpreter GetInterpreter()
         {
-            return new GraphInterpreter(_assembly, Materializer, Log, _logics, _connections,
-                (logic, @event, handler) =>
-                {
-                    var asyncInput = new ActorGraphInterpreter.AsyncInput(this, logic, @event, handler);
-                    var currentInterpreter = CurrentInterpreterOrNull;
-                    if (currentInterpreter == null || !Equals(currentInterpreter.Context, Self))
-                        Self.Tell(new ActorGraphInterpreter.AsyncInput(this, logic, @event, handler));
-                    else
-                        _enqueueToShortCircuit(asyncInput);
-                }, _settings.IsFuzzingMode, Self);
+            return new GraphInterpreter(_assembly, Materializer, Log, _logics, _connections, this, _settings.IsFuzzingMode, Self);
+        }
+
+        void IAsyncInputHandle.Handle(GraphStageLogic logic, object @event, IHandle<object> handler)
+        {
+            var asyncInput = new ActorGraphInterpreter.AsyncInput(this, logic, @event, handler);
+            var currentInterpreter = CurrentInterpreterOrNull;
+            if (currentInterpreter == null || !Equals(currentInterpreter.Context, Self))
+                Self.Tell(asyncInput);
+            else
+                _enqueueToShortCircuit(asyncInput);
         }
 
         private BusLogging GetLogger()
@@ -709,7 +706,7 @@ namespace Akka.Streams.Implementation.Fusing
             /// <summary>
             /// TBD
             /// </summary>
-            public readonly Action<object> Handler;
+            public readonly IHandle<object> Handler;
             /// <summary>
             /// TBD
             /// </summary>
@@ -718,7 +715,7 @@ namespace Akka.Streams.Implementation.Fusing
             /// <param name="event">TBD</param>
             /// <param name="handler">TBD</param>
             /// <returns>TBD</returns>
-            public AsyncInput(GraphInterpreterShell shell, GraphStageLogic logic, object @event, Action<object> handler)
+            public AsyncInput(GraphInterpreterShell shell, GraphStageLogic logic, object @event, IHandle<object> handler)
             {
                 Shell = shell;
                 Logic = logic;
@@ -1515,19 +1512,14 @@ namespace Akka.Streams.Implementation.Fusing
         {
             var ex = new AbruptTerminationException(Self);
             foreach (var shell in _activeInterpreters)
+            {
                 shell.TryAbort(ex);
+            }
             _activeInterpreters.Clear();// = new HashSet<GraphInterpreterShell>();
-
-            void processItem(GraphInterpreterShell shell)
+            _newShells.ForEach(shell =>
             {
                 if (TryInit(shell)) { shell.TryAbort(ex); }
-            }
-            _newShells.ForEach(processItem);
-            //foreach (var shell in _newShells)
-            //{
-            //    if (TryInit(shell))
-            //        shell.TryAbort(ex);
-            //}
+            });
         }
     }
 }

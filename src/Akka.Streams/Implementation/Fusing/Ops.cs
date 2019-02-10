@@ -984,13 +984,13 @@ namespace Akka.Streams.Implementation.Fusing
     {
         #region Logic
 
-        private sealed class Logic : InAndOutGraphStageLogic
+        private sealed class Logic : InAndOutGraphStageLogic, IHandle<Result<TOut>>
         {
             private TOut _current;
             private Task<TOut> _evemtualCurrent;
             private readonly ScanAsync<TIn, TOut> _stage;
             private readonly Decider _decider;
-            private readonly Action<Result<TOut>> _callback;
+            private readonly IHandle<Result<TOut>> _callback;
 
             public Logic(ScanAsync<TIn, TOut> stage, Attributes inheritedAttributes) : base(stage.Shape)
             {
@@ -1001,19 +1001,7 @@ namespace Akka.Streams.Implementation.Fusing
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
                 _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
 
-                _callback = GetAsyncCallback<Result<TOut>>(result =>
-                {
-                    if (result.IsSuccess && result.Value != null)
-                    {
-                        _current = result.Value;
-                        PushAndPullOrFinish(_current);
-                        return;
-                    }
-
-                    DoSupervision(result.IsSuccess
-                        ? ReactiveStreamsCompliance.ElementMustNotBeNullException
-                        : result.Exception);
-                });
+                _callback = GetAsyncCallback<Result<TOut>>(this);
 
                 SetHandler(_stage.Out, () =>
                 {
@@ -1027,6 +1015,20 @@ namespace Akka.Streams.Implementation.Fusing
                     Push(_stage.Out, _current);
                     CompleteStage();
                 }));
+            }
+
+            void IHandle<Result<TOut>>.Handle(Result<TOut> result)
+            {
+                if (result.IsSuccess && result.Value != null)
+                {
+                    _current = result.Value;
+                    PushAndPullOrFinish(_current);
+                    return;
+                }
+
+                DoSupervision(result.IsSuccess
+                    ? ReactiveStreamsCompliance.ElementMustNotBeNullException
+                    : result.Exception);
             }
 
             private void OnRestart() => _current = _stage._zero;
@@ -1071,9 +1073,9 @@ namespace Akka.Streams.Implementation.Fusing
                     _evemtualCurrent = _stage._aggregate(_current, Grab(_stage.In));
 
                     if (_evemtualCurrent.IsCompleted)
-                        _callback(Result.FromTask(_evemtualCurrent));
+                        _callback.Handle(Result.FromTask(_evemtualCurrent));
                     else
-                        _evemtualCurrent.ContinueWith(t => _callback(Result.FromTask(t)),
+                        _evemtualCurrent.ContinueWith(t => _callback.Handle(Result.FromTask(t)),
                             TaskContinuationOptions.ExecuteSynchronously);
                 }
                 catch (Exception ex)
@@ -1292,11 +1294,11 @@ namespace Akka.Streams.Implementation.Fusing
     {
         #region Logic
 
-        private sealed class Logic : InAndOutGraphStageLogic
+        private sealed class Logic : InAndOutGraphStageLogic, IHandle<Result<TOut>>
         {
             private readonly AggregateAsync<TIn, TOut> _stage;
             private readonly Decider _decider;
-            private readonly Action<Result<TOut>> _taskCallback;
+            private readonly IHandle<Result<TOut>> _taskCallback;
             private TOut _aggregator;
             private Task<TOut> _aggregating;
 
@@ -1310,47 +1312,49 @@ namespace Akka.Streams.Implementation.Fusing
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
                 _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
 
-                _taskCallback = GetAsyncCallback<Result<TOut>>(result =>
-                {
-                    if (result.IsSuccess && result.Value != null)
-                    {
-                        var update = result.Value;
-                        _aggregator = update;
-
-                        if (IsClosed(stage.In))
-                        {
-                            Push(stage.Out, update);
-                            CompleteStage();
-                        }
-                        else if (IsAvailable(stage.Out) && !HasBeenPulled(stage.In))
-                            TryPull(stage.In);
-                    }
-                    else
-                    {
-                        var ex = !result.IsSuccess
-                            ? result.Exception
-                            : ReactiveStreamsCompliance.ElementMustNotBeNullException;
-
-                        var supervision = _decider(ex);
-                        if (supervision == Directive.Stop)
-                            FailStage(ex);
-                        else
-                        {
-                            if (supervision == Directive.Restart)
-                                OnRestart();
-
-                            if (IsClosed(stage.In))
-                            {
-                                Push(stage.Out, _aggregator);
-                                CompleteStage();
-                            }
-                            else if (IsAvailable(stage.Out) && !HasBeenPulled(stage.In))
-                                TryPull(stage.In);
-                        }
-                    }
-                });
+                _taskCallback = GetAsyncCallback<Result<TOut>>(this);
 
                 SetHandler(stage.In, stage.Out, this);
+            }
+
+            void IHandle<Result<TOut>>.Handle(Result<TOut> result)
+            {
+                if (result.IsSuccess && result.Value != null)
+                {
+                    var update = result.Value;
+                    _aggregator = update;
+
+                    if (IsClosed(_stage.In))
+                    {
+                        Push(_stage.Out, update);
+                        CompleteStage();
+                    }
+                    else if (IsAvailable(_stage.Out) && !HasBeenPulled(_stage.In))
+                        TryPull(_stage.In);
+                }
+                else
+                {
+                    var ex = !result.IsSuccess
+                        ? result.Exception
+                        : ReactiveStreamsCompliance.ElementMustNotBeNullException;
+
+                    var supervision = _decider(ex);
+                    if (supervision == Directive.Stop)
+                        FailStage(ex);
+                    else
+                    {
+                        if (supervision == Directive.Restart)
+                            OnRestart();
+
+                        if (IsClosed(_stage.In))
+                        {
+                            Push(_stage.Out, _aggregator);
+                            CompleteStage();
+                        }
+                        else if (IsAvailable(_stage.Out) && !HasBeenPulled(_stage.In))
+                            TryPull(_stage.In);
+                    }
+                }
             }
 
             public override void OnPush()
@@ -1383,9 +1387,9 @@ namespace Akka.Streams.Implementation.Fusing
             private void HandleAggregatingValue()
             {
                 if (_aggregating.IsCompleted)
-                    _taskCallback(Result.FromTask(_aggregating));
+                    _taskCallback.Handle(Result.FromTask(_aggregating));
                 else
-                    _aggregating.ContinueWith(t => _taskCallback(Result.FromTask(t)),
+                    _aggregating.ContinueWith(t => _taskCallback.Handle(Result.FromTask(t)),
                         TaskContinuationOptions.ExecuteSynchronously);
             }
 
@@ -2488,13 +2492,13 @@ namespace Akka.Streams.Implementation.Fusing
     {
         #region internal classes
 
-        private sealed class Logic : InAndOutGraphStageLogic
+        private sealed class Logic : InAndOutGraphStageLogic, IHandle<Logic.Holder<TOut>>
         {
-            private class Holder<T>
+            public class Holder<T>
             {
-                private readonly Action<Holder<T>> _callback;
+                private readonly IHandle<Holder<T>> _callback;
 
-                public Holder(Result<T> element, Action<Holder<T>> callback)
+                public Holder(Result<T> element, IHandle<Holder<T>> callback)
                 {
                     _callback = callback;
                     Element = element;
@@ -2512,7 +2516,7 @@ namespace Akka.Streams.Implementation.Fusing
                 public void Invoke(in Result<T> result)
                 {
                     SetElement(result);
-                    _callback(this);
+                    _callback.Handle(this);
                 }
             }
 
@@ -2521,7 +2525,7 @@ namespace Akka.Streams.Implementation.Fusing
             private readonly SelectAsync<TIn, TOut> _stage;
             private readonly Decider _decider;
             private IBuffer<Holder<TOut>> _buffer;
-            private readonly Action<Holder<TOut>> _taskCallback;
+            private readonly IHandle<Holder<TOut>> _taskCallback;
 
             public Logic(Attributes inheritedAttributes, SelectAsync<TIn, TOut> stage) : base(stage.Shape)
             {
@@ -2529,7 +2533,7 @@ namespace Akka.Streams.Implementation.Fusing
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
                 _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
 
-                _taskCallback = GetAsyncCallback<Holder<TOut>>(HolderCompleted);
+                _taskCallback = GetAsyncCallback<Holder<TOut>>(this);
 
                 SetHandler(stage.In, stage.Out, this);
             }
@@ -2547,7 +2551,7 @@ namespace Akka.Streams.Implementation.Fusing
                     if (task.IsCompleted)
                     {
                         holder.SetElement(Result.FromTask(task));
-                        HolderCompleted(holder);
+                        Handle(holder);
                     }
                     else
                         task.ContinueWith(t => holder.Invoke(Result.FromTask(t)),
@@ -2606,7 +2610,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
             }
 
-            private void HolderCompleted(Holder<TOut> holder)
+            public void Handle(Holder<TOut> holder) // HolderCompleted
             {
                 var element = holder.Element;
                 if (!element.IsSuccess && _decider(element.Exception) == Directive.Stop)
@@ -2673,12 +2677,12 @@ namespace Akka.Streams.Implementation.Fusing
     {
         #region internal classes
 
-        private sealed class Logic : InAndOutGraphStageLogic
+        private sealed class Logic : InAndOutGraphStageLogic, IHandle<Result<TOut>>
         {
             private readonly SelectAsyncUnordered<TIn, TOut> _stage;
             private readonly Decider _decider;
             private IBuffer<TOut> _buffer;
-            private readonly Action<Result<TOut>> _taskCallback;
+            private readonly IHandle<Result<TOut>> _taskCallback;
             private int _inFlight;
 
             public Logic(Attributes inheritedAttributes, SelectAsyncUnordered<TIn, TOut> stage) : base(stage.Shape)
@@ -2687,7 +2691,7 @@ namespace Akka.Streams.Implementation.Fusing
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
                 _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
 
-                _taskCallback = GetAsyncCallback<Result<TOut>>(TaskCompleted);
+                _taskCallback = GetAsyncCallback<Result<TOut>>(this);
 
                 SetHandler(_stage.In, this);
                 SetHandler(_stage.Out, this);
@@ -2701,9 +2705,9 @@ namespace Akka.Streams.Implementation.Fusing
                     _inFlight++;
 
                     if (task.IsCompleted)
-                        TaskCompleted(Result.FromTask(task));
+                        Handle(Result.FromTask(task));
                     else
-                        task.ContinueWith(t => _taskCallback(Result.FromTask(t)),
+                        task.ContinueWith(t => _taskCallback.Handle(Result.FromTask(t)),
                             TaskContinuationOptions.ExecuteSynchronously);
                 }
                 catch (Exception e)
@@ -2734,7 +2738,7 @@ namespace Akka.Streams.Implementation.Fusing
                     TryPull(inlet);
             }
 
-            private void TaskCompleted(Result<TOut> result)
+            public void Handle(Result<TOut> result) // TaskCompleted
             {
                 _inFlight--;
                 if (result.IsSuccess && result.Value != null)

@@ -32,44 +32,47 @@ namespace Akka.Pattern
             _maxBackoff = maxBackoff;
             _randomFactor = randomFactor;
             _strategy = strategy;
+            _localOnlyDeciderFunc = LocalOnlyDecider;
         }
 
         protected override SupervisorStrategy SupervisorStrategy()
         {
-            Directive localOnlyDecider(Exception ex)
+            return new OneForOneStrategy(_strategy.MaxNumberOfRetries, _strategy.WithinTimeRangeMilliseconds, _localOnlyDeciderFunc);
+        }
+
+        private readonly Func<Exception, Directive> _localOnlyDeciderFunc;
+        private Directive LocalOnlyDecider(Exception ex)
+        {
+            var directive = _strategy.Decider?.Decide(ex) ?? Actor.SupervisorStrategy.DefaultStrategy.Decider.Decide(ex);
+
+            // Whatever the final Directive is, we will translate all Restarts
+            // to our own Restarts, which involves stopping the child.
+            if (directive == Directive.Restart)
             {
-                var directive = _strategy.Decider?.Decide(ex) ?? Actor.SupervisorStrategy.DefaultStrategy.Decider.Decide(ex);
-
-                // Whatever the final Directive is, we will translate all Restarts
-                // to our own Restarts, which involves stopping the child.
-                if (directive == Directive.Restart)
+                if (_strategy.WithinTimeRangeMilliseconds > 0 && RestartCountN == 0)
                 {
-                    if (_strategy.WithinTimeRangeMilliseconds > 0 && RestartCountN == 0)
-                    {
-                        // If the user has defined a time range for the MaxNumberOfRetries, we'll schedule a message
-                        // to ourselves every time that range elapses, to reset the restart counter. We hide it
-                        // behind this conditional to avoid queuing the message unnecessarily
-                        Context.System.Scheduler.ScheduleTellOnce(_strategy.WithinTimeRangeMilliseconds, Self, new BackoffSupervisor.ResetRestartCount(RestartCountN), Self);
-                    }
-                    var childRef = Sender;
-                    var nextRestartCount = RestartCountN + 1;
-                    if (_strategy.MaxNumberOfRetries >= 0 && nextRestartCount > _strategy.MaxNumberOfRetries)
-                    {
-                        // If we've exceeded the maximum # of retries allowed by the Strategy, die.
-                        if (_log.IsDebugEnabled) _log.TerminatingOnRestartWhichExceedsMaxAllowedRestarts(nextRestartCount, _strategy.MaxNumberOfRetries);
-                        Become(Receive);
-                        Context.Stop(Self);
-                    }
-                    else
-                    {
-                        Become(WaitChildTerminatedBeforeBackoff(childRef));
-                    }
-
-                    return Directive.Stop;
+                    // If the user has defined a time range for the MaxNumberOfRetries, we'll schedule a message
+                    // to ourselves every time that range elapses, to reset the restart counter. We hide it
+                    // behind this conditional to avoid queuing the message unnecessarily
+                    Context.System.Scheduler.ScheduleTellOnce(_strategy.WithinTimeRangeMilliseconds, Self, new BackoffSupervisor.ResetRestartCount(RestartCountN), Self);
                 }
-                return directive;
+                var childRef = Sender;
+                var nextRestartCount = RestartCountN + 1;
+                if (_strategy.MaxNumberOfRetries >= 0 && nextRestartCount > _strategy.MaxNumberOfRetries)
+                {
+                    // If we've exceeded the maximum # of retries allowed by the Strategy, die.
+                    if (_log.IsDebugEnabled) _log.TerminatingOnRestartWhichExceedsMaxAllowedRestarts(nextRestartCount, _strategy.MaxNumberOfRetries);
+                    Become(Receive);
+                    Context.Stop(Self);
+                }
+                else
+                {
+                    Become(WaitChildTerminatedBeforeBackoff(childRef));
+                }
+
+                return Directive.Stop;
             }
-            return new OneForOneStrategy(_strategy.MaxNumberOfRetries, _strategy.WithinTimeRangeMilliseconds, localOnlyDecider);
+            return directive;
         }
 
         protected override bool Receive(object message)

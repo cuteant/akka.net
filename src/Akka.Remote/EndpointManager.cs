@@ -334,6 +334,9 @@ namespace Akka.Remote
             _log = log;
             _eventPublisher = new EventPublisher(Context.System, log, Logging.LogLevelFor(_settings.RemoteLifecycleEventsLogLevel));
 
+            _onlyDeciderStrategy = OnlyDeciderStrategy;
+            _handleInboundAssociationAction = HandleInboundAssociation;
+
             Receiving();
         }
 
@@ -442,67 +445,68 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         protected override SupervisorStrategy SupervisorStrategy()
         {
-            Directive localOnlyDecider(Exception ex)
+            return new OneForOneStrategy(_onlyDeciderStrategy, false);
+        }
+
+        private readonly Func<Exception, Directive> _onlyDeciderStrategy;
+        private Directive OnlyDeciderStrategy(Exception ex)
+        {
+            switch (ex)
             {
-                switch (ex)
-                {
-                    case InvalidAssociation ia:
-                        KeepQuarantinedOr(ia.RemoteAddress, () =>
-                        {
-                            if (_log.IsWarningEnabled) _log.TriedToAssociateWithUnreachableRemoteAddress(ia, _settings);
-                            _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
-                        });
-
-                        if (ia.DisassociationInfo.HasValue && ia.DisassociationInfo == DisassociateInfo.Quarantined)
-                            Context.System.EventStream.Publish(new ThisActorSystemQuarantinedEvent(ia.LocalAddress, ia.RemoteAddress));
-
-                        return Directive.Stop;
-
-                    case ShutDownAssociation shutdown:
-                        KeepQuarantinedOr(shutdown.RemoteAddress, () =>
-                        {
-                            if (_log.IsDebugEnabled) _log.RemoteSystemWithAddressHasShutDown(shutdown, _settings);
-                            _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
-                        });
-                        return Directive.Stop;
-
-                    case HopelessAssociation hopeless:
-                        if (hopeless.Uid.HasValue)
-                        {
-                            _log.AssociationToWithUidIsIrrecoverablyFailed(hopeless);
-                            if (_settings.QuarantineDuration.HasValue)
-                            {
-                                _endpoints.MarkAsQuarantined(hopeless.RemoteAddress, hopeless.Uid.Value,
-                               Deadline.Now + _settings.QuarantineDuration.Value);
-                                _eventPublisher.NotifyListeners(new QuarantinedEvent(hopeless.RemoteAddress,
-                                    hopeless.Uid.Value));
-                            }
-                        }
-                        else
-                        {
-                            if (_log.IsWarningEnabled) _log.AssociationToWithUnknownUIDIsIrrecoverablyFailed(hopeless, _settings);
-                            _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
-                        }
-                        return Directive.Stop;
-
-                    default:
-                        switch (ex)
-                        {
-                            case EndpointDisassociatedException _:
-                            case EndpointAssociationException _:
-                                // no logging
-                                break;
-
-                            default:
-                                _log.LogErrorX(ex);
-                                break;
-                        }
+                case InvalidAssociation ia:
+                    KeepQuarantinedOr(ia.RemoteAddress, () =>
+                    {
+                        if (_log.IsWarningEnabled) _log.TriedToAssociateWithUnreachableRemoteAddress(ia, _settings);
                         _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
-                        return Directive.Stop;
-                }
-            }
+                    });
 
-            return new OneForOneStrategy(localOnlyDecider, false);
+                    if (ia.DisassociationInfo.HasValue && ia.DisassociationInfo == DisassociateInfo.Quarantined)
+                        Context.System.EventStream.Publish(new ThisActorSystemQuarantinedEvent(ia.LocalAddress, ia.RemoteAddress));
+
+                    return Directive.Stop;
+
+                case ShutDownAssociation shutdown:
+                    KeepQuarantinedOr(shutdown.RemoteAddress, () =>
+                    {
+                        if (_log.IsDebugEnabled) _log.RemoteSystemWithAddressHasShutDown(shutdown, _settings);
+                        _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
+                    });
+                    return Directive.Stop;
+
+                case HopelessAssociation hopeless:
+                    if (hopeless.Uid.HasValue)
+                    {
+                        _log.AssociationToWithUidIsIrrecoverablyFailed(hopeless);
+                        if (_settings.QuarantineDuration.HasValue)
+                        {
+                            _endpoints.MarkAsQuarantined(hopeless.RemoteAddress, hopeless.Uid.Value,
+                           Deadline.Now + _settings.QuarantineDuration.Value);
+                            _eventPublisher.NotifyListeners(new QuarantinedEvent(hopeless.RemoteAddress,
+                                hopeless.Uid.Value));
+                        }
+                    }
+                    else
+                    {
+                        if (_log.IsWarningEnabled) _log.AssociationToWithUnknownUIDIsIrrecoverablyFailed(hopeless, _settings);
+                        _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
+                    }
+                    return Directive.Stop;
+
+                default:
+                    switch (ex)
+                    {
+                        case EndpointDisassociatedException _:
+                        case EndpointAssociationException _:
+                            // no logging
+                            break;
+
+                        default:
+                            _log.LogErrorX(ex);
+                            break;
+                    }
+                    _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
+                    return Directive.Stop;
+            }
         }
 
         #endregion
@@ -567,13 +571,12 @@ namespace Akka.Remote
             * those results will then be piped back to Remoting, who waits for the results of
             * listen.AddressPromise.
             * */
-            void HandleListen(Listen listen)
+            Receive<Listen>(listen =>
             {
                 Listens.LinkOutcome(InvokeHandleListenFunc, listen,
                         CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
                        .PipeTo(Self);
-            }
-            Receive<Listen>(HandleListen);
+            });
 
             #endregion
 
@@ -615,10 +618,10 @@ namespace Akka.Remote
             Receive<ManagementCommand>(mc => Sender.Tell(new ManagementCommandAck(status: false)));
             Receive<StartupFinished>(sf => Become(Accepting));
             Receive<ShutdownAndFlush>(sf =>
-             {
-                 Sender.Tell(true);
-                 Context.Stop(Self);
-             });
+            {
+                Sender.Tell(true);
+                Context.Stop(Self);
+            });
         }
 
         private static readonly Func<Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>>, Listen, INoSerializationVerificationNeeded> InvokeHandleListenFunc = InvokeHandleListen;
@@ -644,7 +647,7 @@ namespace Akka.Remote
         {
             #region ManagementCommand
 
-            void HandleManagement(ManagementCommand mc)
+            Receive<ManagementCommand>(mc =>
             {
                 /*
                 * applies a management command to all available transports.
@@ -656,14 +659,13 @@ namespace Akka.Remote
                 Task.WhenAll(allStatuses)
                     .Then(CheckManagementCommandFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
                     .PipeTo(sender);
-            }
-            Receive<ManagementCommand>(HandleManagement);
+            });
 
             #endregion
 
             #region Quarantine
 
-            void HandleQuarantine(Quarantine quarantine)
+            Receive<Quarantine>(quarantine =>
             {
                 var context = Context;
                 var remoteAddr = quarantine.RemoteAddress;
@@ -751,37 +753,36 @@ namespace Akka.Remote
 
                 // Stop all matching pending read handoffs
                 _pendingReadHandoffs = _pendingReadHandoffs.Where(x =>
-                 {
-                     var drop = MatchesQuarantine(x.Value);
-                     // Side-effecting here
-                     if (drop)
-                     {
-                         x.Value.Disassociate();
-                         context.Stop(x.Key);
-                     }
-                     return !drop;
-                 }).ToDictionary(key => key.Key, value => value.Value, ActorRefComparer.Instance);
+                {
+                    var drop = MatchesQuarantine(x.Value);
+                    // Side-effecting here
+                    if (drop)
+                    {
+                        x.Value.Disassociate();
+                        context.Stop(x.Key);
+                    }
+                    return !drop;
+                }).ToDictionary(key => key.Key, value => value.Value, ActorRefComparer.Instance);
 
                 // Stop all matching stashed connections
                 _stashedInbound = _stashedInbound.Select(x =>
-                 {
-                     var associations = x.Value.Where(assoc =>
-                     {
-                         var handle = assoc.Association.AsInstanceOf<AkkaProtocolHandle>();
-                         var drop = MatchesQuarantine(handle);
-                         if (drop) { handle.Disassociate(); }
-                         return !drop;
-                     }).ToList();
-                     return new KeyValuePair<IActorRef, List<InboundAssociation>>(x.Key, associations);
-                 }).ToDictionary(k => k.Key, v => v.Value, ActorRefComparer.Instance);
-            }
-            Receive<Quarantine>(HandleQuarantine);
+                {
+                    var associations = x.Value.Where(assoc =>
+                    {
+                        var handle = assoc.Association.AsInstanceOf<AkkaProtocolHandle>();
+                        var drop = MatchesQuarantine(handle);
+                        if (drop) { handle.Disassociate(); }
+                        return !drop;
+                    }).ToList();
+                    return new KeyValuePair<IActorRef, List<InboundAssociation>>(x.Key, associations);
+                }).ToDictionary(k => k.Key, v => v.Value, ActorRefComparer.Instance);
+            });
 
             #endregion
 
             #region Send
 
-            void HandleSend(Send send)
+            Receive<Send>(send =>
             {
                 var recipientAddress = send.Recipient.Path.Address;
                 IActorRef CreateAndRegisterWritingEndpoint(int? refuseUid) => _endpoints.RegisterWritableEndpoint(recipientAddress, CreateEndpoint(recipientAddress, send.Recipient.LocalAddressToUse, _transportMapping[send.Recipient.LocalAddressToUse], _settings, writing: true, handleOption: null, refuseUid: refuseUid), uid: null, refuseUid: refuseUid);
@@ -816,24 +817,22 @@ namespace Akka.Remote
                         CreateAndRegisterWritingEndpoint(null).Tell(send);
                         break;
                 }
-            }
-            Receive<Send>(HandleSend);
+            });
 
             #endregion
 
-            Receive<InboundAssociation>(HandleInboundAssociation);
+            Receive<InboundAssociation>(_handleInboundAssociationAction);
             Receive<EndpointWriter.StoppedReading>(endpoint => AcceptPendingReader(endpoint.Writer));
 
             #region Terminated
 
-            void HandleTerminated(Terminated terminated)
+            Receive<Terminated>(terminated =>
             {
                 var actorRef = terminated.ActorRef;
                 AcceptPendingReader(actorRef);
                 _endpoints.UnregisterEndpoint(actorRef);
                 HandleStashedInbound(actorRef, writerIsIdle: false);
-            }
-            Receive<Terminated>(HandleTerminated);
+            });
 
             #endregion
 
@@ -841,7 +840,7 @@ namespace Akka.Remote
 
             #region ReliableDeliverySupervisor.GotUid
 
-            void HandleGotUid(ReliableDeliverySupervisor.GotUid gotuid)
+            Receive<ReliableDeliverySupervisor.GotUid>(gotuid =>
             {
                 var remoteAddr = gotuid.RemoteAddress;
                 var uid = gotuid.Uid;
@@ -879,8 +878,7 @@ namespace Akka.Remote
                         // the GotUid might have lost the race with some failure
                         break;
                 }
-            }
-            Receive<ReliableDeliverySupervisor.GotUid>(HandleGotUid);
+            });
 
             #endregion
 
@@ -889,7 +887,7 @@ namespace Akka.Remote
 
             #region ShutdownAndFlush
 
-            void HandleShutdownAndFlush(ShutdownAndFlush shutdown)
+            Receive<ShutdownAndFlush>(shutdown =>
             {
                 //Shutdown all endpoints and signal to Sender when ready (and whether all endpoints were shutdown gracefully)
                 var sender = Sender;
@@ -911,8 +909,7 @@ namespace Akka.Remote
                 //Ignore all other writes
                 _normalShutdown = true;
                 Become(Flushing);
-            }
-            Receive<ShutdownAndFlush>(HandleShutdownAndFlush);
+            });
 
             #endregion
         }
@@ -973,6 +970,7 @@ namespace Akka.Remote
 
         #region * HandleInboundAssociation *
 
+        private readonly Action<InboundAssociation> _handleInboundAssociationAction;
         private void HandleInboundAssociation(InboundAssociation ia) => HandleInboundAssociation(ia, false);
         private void HandleInboundAssociation(InboundAssociation ia, bool writerIsIdle)
         {

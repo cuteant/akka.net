@@ -105,7 +105,7 @@ namespace Akka.Streams
                             ? GetAsyncCallback(OnCancelComplete)
                             : GetAsyncCallback(OnCancelFail);
 
-                        _registration = _stage._cancellationToken.Register(onCancel);
+                        _registration = _stage._cancellationToken.Register(new Action(onCancel.Run));
                     }
                 }
 
@@ -150,7 +150,7 @@ namespace Akka.Streams
         /// <summary>
         /// TBD
         /// </summary>
-        internal abstract class KillableGraphStageLogic : InAndOutGraphStageLogic
+        internal abstract class KillableGraphStageLogic : InAndOutGraphStageLogic, IHandle<Task>
         {
             private readonly Task _terminationSignal;
 
@@ -170,13 +170,19 @@ namespace Akka.Streams
             public override void PreStart()
             {
                 if (_terminationSignal.IsCompleted)
-                    OnSwitch(_terminationSignal);
+                    Handle(_terminationSignal);
                 else
                     // callback.invoke is a simple actor send, so it is fine to run on the invoking thread
-                    _terminationSignal.ContinueWith(t => GetAsyncCallback<Task>(OnSwitch)(t));
+                    _terminationSignal.LinkOutcome(TerminationSignalContinuationAction, this);
             }
 
-            private void OnSwitch(Task t)
+            private static readonly Action<Task, KillableGraphStageLogic> TerminationSignalContinuationAction = TerminationSignalContinuation;
+            private static void TerminationSignalContinuation(Task t, KillableGraphStageLogic logic)
+            {
+                logic.GetAsyncCallback<Task>(logic).Handle(t);
+            }
+
+            public void Handle(Task t) // OnSwitch
             {
                 if (_terminationSignal.IsSuccessfully())
                     CompleteStage();

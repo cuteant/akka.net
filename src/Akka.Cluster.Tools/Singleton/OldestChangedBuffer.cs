@@ -105,6 +105,8 @@ namespace Akka.Cluster.Tools.Singleton
         public OldestChangedBuffer(string role)
         {
             _role = role;
+            _onDeliverNextAction = OnDeliverNext;
+
             SetupCoordinatedShutdown();
         }
 
@@ -237,7 +239,7 @@ namespace Akka.Cluster.Tools.Singleton
                 case GetNext _:
                     if (_changes.IsEmpty)
                     {
-                        Context.BecomeStacked(OnDeliverNext);
+                        Context.BecomeStacked(_onDeliverNextAction);
                     }
                     else
                     {
@@ -251,6 +253,7 @@ namespace Akka.Cluster.Tools.Singleton
             }
         }
 
+        private readonly UntypedReceive _onDeliverNextAction;
         /// <summary>
         /// The buffer was empty when GetNext was received, deliver next event immediately.
         /// </summary>

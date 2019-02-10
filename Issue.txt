@@ -1,13 +1,13 @@
 ﻿☆标志 - 未解决
 ★标志 - 已解决
 
-Issue.001 ☆ 优化只读结构
+Issue.001 ★ 优化只读结构
 
-Issue.002 ☆ Throw
+Issue.002 ★ Throw
 
-Issue.003 ☆ 
+Issue.003 ☆ 表达式优化，优化(EventStream)
 
-Issue.004 ☆ 
+Issue.004 ☆ 测试 EventBus._cache 能否取消 volatile
 
 Issue.005 ☆ 
 

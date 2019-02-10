@@ -6,11 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using Akka.Actor;
-using Akka.Persistence.Internal;
-using CuteAnt.Collections;
 
 namespace Akka.Persistence
 {
@@ -61,6 +57,23 @@ namespace Akka.Persistence
             return new EventsourcedState("waiting for recovery permit", s_trueIsRecoveryRunning, stateReceive);
         }
 
+        private readonly Receive _recoveryBehaviorFunc;
+        bool RecoveryBehavior(object message)
+        {
+            //Receive receiveRecover = ReceiveRecover;
+            switch (message)
+            {
+                case IPersistentRepresentation pp when (IsRecovering):
+                    return ReceiveRecover(pp.Payload);
+                case SnapshotOffer snapshotOffer:
+                    return ReceiveRecover(snapshotOffer);
+                case RecoveryCompleted _:
+                    return ReceiveRecover(RecoveryCompleted.Instance);
+                default:
+                    return false;
+            }
+        }
+
         /// <summary>
         /// Processes a loaded snapshot, if any. A loaded snapshot is offered with a <see cref="SnapshotOffer"/>
         /// message to the actor's <see cref="ReceiveRecover"/>. Then initiates a message replay, either starting
@@ -74,23 +87,7 @@ namespace Akka.Persistence
             var timeout = Extension.JournalConfigFor(JournalPluginId).GetTimeSpan("recovery-event-timeout", null, false);
             var timeoutCancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(timeout, Self, new RecoveryTick(true), Self);
 
-            bool recoveryBehavior(object message)
-            {
-                Receive receiveRecover = ReceiveRecover;
-                switch (message)
-                {
-                    case IPersistentRepresentation pp when (IsRecovering):
-                        return receiveRecover(pp.Payload);
-                    case SnapshotOffer snapshotOffer:
-                        return receiveRecover(snapshotOffer);
-                    case RecoveryCompleted _:
-                        return receiveRecover(RecoveryCompleted.Instance);
-                    default:
-                        return false;
-                }
-            }
-
-            void stateReceive(Receive receive, object message)
+            void LocalStateReceive(Receive receive, object message)
             {
                 try
                 {
@@ -103,14 +100,14 @@ namespace Akka.Persistence
                                 var offer = new SnapshotOffer(res.Snapshot.Metadata, res.Snapshot.Snapshot);
                                 var seqNr = LastSequenceNr;
                                 LastSequenceNr = res.Snapshot.Metadata.SequenceNr;
-                                if (!base.AroundReceive(recoveryBehavior, offer))
+                                if (!base.AroundReceive(_recoveryBehaviorFunc, offer))
                                 {
                                     LastSequenceNr = seqNr;
                                     Unhandled(offer);
                                 }
                             }
 
-                            ChangeState(Recovering(recoveryBehavior, timeout));
+                            ChangeState(Recovering(_recoveryBehaviorFunc, timeout));
                             Journal.Tell(new ReplayMessages(LastSequenceNr + 1L, res.ToSequenceNr, maxReplays, PersistenceId, Self));
                             break;
                         case LoadSnapshotFailed failed:
@@ -150,7 +147,7 @@ namespace Akka.Persistence
                 }
             }
 
-            return new EventsourcedState("recovery started - replay max: " + maxReplays, s_trueIsRecoveryRunning, stateReceive);
+            return new EventsourcedState("recovery started - replay max: " + maxReplays, s_trueIsRecoveryRunning, new StateReceive(LocalStateReceive));
         }
 
         /// <summary>
@@ -170,7 +167,7 @@ namespace Akka.Persistence
             var eventSeenInInterval = false;
             var recoveryRunning = true;
 
-            void stateReceive(Receive receive, object message)
+            void LocalStateReceive(Receive receive, object message)
             {
                 try
                 {
@@ -261,7 +258,7 @@ namespace Akka.Persistence
 
             bool isRecoveryRunning() => recoveryRunning;
 
-            return new EventsourcedState("replay started", isRecoveryRunning, stateReceive);
+            return new EventsourcedState("replay started", isRecoveryRunning, new StateReceive(LocalStateReceive));
         }
 
         private void ReturnRecoveryPermit() =>
@@ -288,29 +285,33 @@ namespace Akka.Persistence
         /// </summary>
         private EventsourcedState ProcessingCommands()
         {
-            void stateReceive(Receive receive, object message)
+            return new EventsourcedState("processing commands", s_falseIsRecoveryRunning, _receiveCommandsAction);
+        }
+
+        private readonly Action<bool> _onWriteCommandCompleteAction;
+        private void OnWriteCommandComplete(bool err)
+        {
+            _pendingInvocations.RemoveFromFront(); // Pop
+            UnstashInternally(err);
+        }
+
+        private readonly StateReceive _receiveCommandsAction;
+        private void ReceiveCommands(Receive receive, object message)
+        {
+            var handled = CommonProcessingStateBehavior(message, _onWriteCommandCompleteAction);
+            if (!handled)
             {
-                void onWriteMessageComplete(bool err)
+                try
                 {
-                    _pendingInvocations.RemoveFromFront(); // Pop
-                    UnstashInternally(err);
+                    base.AroundReceive(receive, message);
+                    OnProcessingCommandsAroundReceiveComplete(false);
                 }
-                var handled = CommonProcessingStateBehavior(message, onWriteMessageComplete);
-                if (!handled)
+                catch (Exception)
                 {
-                    try
-                    {
-                        base.AroundReceive(receive, message);
-                        OnProcessingCommandsAroundReceiveComplete(false);
-                    }
-                    catch (Exception)
-                    {
-                        OnProcessingCommandsAroundReceiveComplete(true);
-                        throw;
-                    }
+                    OnProcessingCommandsAroundReceiveComplete(true);
+                    throw;
                 }
             }
-            return new EventsourcedState("processing commands", s_falseIsRecoveryRunning, stateReceive);
         }
 
         private void OnProcessingCommandsAroundReceiveComplete(bool err)
@@ -344,28 +345,32 @@ namespace Akka.Persistence
         /// </summary>
         private EventsourcedState PersistingEvents()
         {
-            void stateReceive(Receive receive, object message)
+            return new EventsourcedState("persisting events", s_falseIsRecoveryRunning, _receiveEventsAction);
+        }
+
+        private readonly Action<bool> _onWriteEventCompleteAction;
+        private void OnWriteEventComplete(bool err)
+        {
+            var invocation = _pendingInvocations.RemoveFromFront(); // Pop
+
+            // enables an early return to `processingCommands`, because if this counter hits `0`,
+            // we know the remaining pendingInvocations are all `persistAsync` created, which
+            // means we can go back to processing commands also - and these callbacks will be called as soon as possible
+            if (invocation is StashingHandlerInvocation) { _pendingStashingPersistInvocations--; }
+
+            if (_pendingStashingPersistInvocations == 0)
             {
-                void onWriteMessageComplete(bool err)
-                {
-                    var invocation = _pendingInvocations.RemoveFromFront(); // Pop
-
-                    // enables an early return to `processingCommands`, because if this counter hits `0`,
-                    // we know the remaining pendingInvocations are all `persistAsync` created, which
-                    // means we can go back to processing commands also - and these callbacks will be called as soon as possible
-                    if (invocation is StashingHandlerInvocation) { _pendingStashingPersistInvocations--; }
-
-                    if (_pendingStashingPersistInvocations == 0)
-                    {
-                        ChangeState(ProcessingCommands());
-                        UnstashInternally(err);
-                    }
-                }
-                var handled = CommonProcessingStateBehavior(message, onWriteMessageComplete);
-
-                if (!handled) { StashInternally(message); }
+                ChangeState(ProcessingCommands());
+                UnstashInternally(err);
             }
-            return new EventsourcedState("persisting events", s_falseIsRecoveryRunning, stateReceive);
+        }
+
+        private readonly StateReceive _receiveEventsAction;
+        private void ReceiveEvents(Receive receive, object message)
+        {
+            var handled = CommonProcessingStateBehavior(message, _onWriteEventCompleteAction);
+
+            if (!handled) { StashInternally(message); }
         }
 
         private void PeekApplyHandler(object payload)

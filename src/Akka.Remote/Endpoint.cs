@@ -7,8 +7,8 @@
 
 using System;
 using System.Collections.Concurrent;
-using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Akka.Actor;
@@ -721,14 +721,13 @@ namespace Akka.Remote
         private void FlushWait()
         {
             Receive<IsIdle>(idle => { }); // Do not reply, we will Terminate soon, which will do the inbound connection unstashing
-            void handleTerminated(Terminated terminated)
+            Receive<Terminated>(terminated =>
             {
                 //Clear buffer to prevent sending system messages to dead letters -- at this point we are shutting down and
                 //don't know if they were properly delivered or not
                 _resendBuffer = new AckedSendBuffer<EndpointManager.Send>(0);
                 Context.Stop(Self);
-            }
-            Receive<Terminated>(handleTerminated);
+            });
             ReceiveAny(o => { }); // ignore
         }
 
@@ -1009,6 +1008,9 @@ namespace Akka.Remote
             _ackDeadline = NewAckDeadline();
             _handle = handleOrActive;
             _remoteMetrics = RemoteMetricsExtension.Create(_system.AsInstanceOf<ExtendedActorSystem>());
+
+            _writeSendFunc = new Predicate<EndpointManager.Send>(WriteSend);
+            _sendSuccessFunc = new Predicate<object>(SendSuccess);
 
             if (_handle == null)
             {
@@ -1405,6 +1407,7 @@ namespace Akka.Remote
             }
         }
 
+        private readonly Predicate<EndpointManager.Send> _writeSendFunc;
         private bool WriteSend(EndpointManager.Send send)
         {
             try
@@ -1475,33 +1478,34 @@ namespace Akka.Remote
             return false;
         }
 
+        private readonly Predicate<object> _sendSuccessFunc;
+        private bool SendSuccess(object msg)
+        {
+            switch (msg)
+            {
+                case EndpointManager.Send s:
+                    return WriteSend(s);
+
+                case FlushAndStop _:
+                    DoFlushAndStop();
+                    return false;
+
+                case StopReading stop:
+                    _reader?.Tell(stop, stop.ReplyTo);
+                    return true;
+
+                default:
+                    return true;
+            }
+        }
+
         private void SendBufferedMessages()
         {
-            bool SendDelegate(object msg)
-            {
-                switch (msg)
-                {
-                    case EndpointManager.Send s:
-                        return WriteSend(s);
-
-                    case FlushAndStop _:
-                        DoFlushAndStop();
-                        return false;
-
-                    case StopReading stop:
-                        _reader?.Tell(stop, stop.ReplyTo);
-                        return true;
-
-                    default:
-                        return true;
-                }
-            }
-
             bool WriteLoop(int count)
             {
                 if (count > 0 && _buffer.NonEmpty)
                 {
-                    if (_buffer.TryRemoveFromFrontIf(SendDelegate, out _))
+                    if (_buffer.TryRemoveFromFrontIf(_sendSuccessFunc, out _))
                     {
                         _writeCount += 1;
                         return WriteLoop(count - 1);
@@ -1515,7 +1519,7 @@ namespace Akka.Remote
             bool WritePrioLoop()
             {
                 if (_prioBuffer.IsEmpty) { return true; }
-                if (_prioBuffer.TryRemoveFromFrontIf(WriteSend, out _))
+                if (_prioBuffer.TryRemoveFromFrontIf(_writeSendFunc, out _))
                 {
                     return WritePrioLoop();
                 }
@@ -1937,21 +1941,31 @@ namespace Akka.Remote
             switch (info)
             {
                 case DisassociateInfo.Quarantined:
-                    throw GetInvalidAssociation();
+                    ThrowInvalidAssociation(); break;
                 case DisassociateInfo.Shutdown:
-                    throw GetShutDownAssociation();
+                    ThrowShutDownAssociation(); break;
                 case DisassociateInfo.Unknown:
                 default:
-                    Context.Stop(Self);
-                    break;
+                    Context.Stop(Self); break;
             }
 
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ThrowInvalidAssociation()
+        {
+            throw GetInvalidAssociation();
             InvalidAssociation GetInvalidAssociation()
             {
                 return new InvalidAssociation("The remote system has quarantined this system. No further associations " +
                                               "to the remote system are possible until this system is restarted.", LocalAddress, RemoteAddress, disassociateInfo: DisassociateInfo.Quarantined);
             }
+        }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ThrowShutDownAssociation()
+        {
+            throw GetShutDownAssociation();
             ShutDownAssociation GetShutDownAssociation()
             {
                 return new ShutDownAssociation($"The remote system terminated the association because it is shutting down. Shut down address: {RemoteAddress}", LocalAddress, RemoteAddress); ;

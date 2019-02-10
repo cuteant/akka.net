@@ -115,17 +115,16 @@ namespace Akka.Actor.Internal
         {
             //if(_theStash.Count > 0)
             //{
-            void Enqueue(Envelope item)
-            {
-                if (predicate(item)) { EnqueueFirst(item); }
-            }
             try
             {
                 //foreach (var item in _theStash.Reverse().Where(predicate))
                 //{
                 //    EnqueueFirst(item);
                 //}
-                _theStash.Reverse(Enqueue);
+                _theStash.Reverse(item =>
+                {
+                    if (predicate(item)) { EnqueueFirst(item); }
+                });
             }
             finally
             {

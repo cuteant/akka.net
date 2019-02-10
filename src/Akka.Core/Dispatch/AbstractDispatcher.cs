@@ -317,7 +317,7 @@ namespace Akka.Dispatch
     /// Class responsible for pushing messages from an actor's mailbox into its
     /// receive methods. Comes in many different flavors.
     /// </summary>
-    public abstract class MessageDispatcher
+    public abstract class MessageDispatcher : IRunnable
     {
         private const int Unscheduled = 0;
         private const int Scheduled = 1;
@@ -568,23 +568,24 @@ namespace Akka.Dispatch
         {
             try
             {
-                Configurator.Prerequisites.Scheduler.Advanced.ScheduleOnce(ShutdownTimeout, InvokeShutdownAction, this);
+                Configurator.Prerequisites.Scheduler.Advanced.ScheduleOnce(ShutdownTimeout, this, cancelable: null);
             }
             catch (SchedulerException) // Scheduler has been shut down already. Need to just cleanup synchronously then.
             {
                 Shutdown();
             }
         }
-        private static readonly Action<MessageDispatcher> InvokeShutdownAction = InvokeShutdown;
-        private static void InvokeShutdown(MessageDispatcher dispatcher)
+
+        [InternalApi]
+        void IRunnable.Run()
         {
             try
             {
-                dispatcher._shutdownAction.Run();
+                _shutdownAction.Run();
             }
             catch (Exception ex)
             {
-                dispatcher.ReportFailure(ex);
+                ReportFailure(ex);
             }
         }
 

@@ -795,23 +795,11 @@ namespace Akka.Streams.Dsl
             {
                 _stage = stage;
 
-                void DispatchRight(T right) => Dispatch(_other, right);
-                void DispatchLeft(T left) => Dispatch(left, _other);
+                _readRight = ReadRight;
+                _readLeft = ReadLeft;
 
-                void PassRight() => Emit(_stage.Out, _other, () =>
-                {
-                    NullOut();
-                    PassAlong(_stage.Right, _stage.Out, doPull: true);
-                });
-
-                void PassLeft() => Emit(_stage.Out, _other, () =>
-                {
-                    NullOut();
-                    PassAlong(_stage.Left, _stage.Out, doPull: true);
-                });
-
-                _readRight = () => Read(_stage.Right, DispatchRight, PassLeft);
-                _readLeft = () => Read(_stage.Left, DispatchLeft, PassRight);
+                _dispatchRight = DispatchRight;
+                _dispatchLeft = DispatchLeft;
 
                 SetHandler(_stage.Left, IgnoreTerminateInput);
                 SetHandler(_stage.Right, IgnoreTerminateInput);
@@ -829,6 +817,32 @@ namespace Akka.Streams.Dsl
                 },
                 () => PassAlong(_stage.Right, _stage.Out));
             }
+
+            private void ReadRight() => Read(_stage.Right, DispatchRight, PassLeft);
+
+            private void ReadLeft() => Read(_stage.Left, DispatchLeft, PassRight);
+
+            private void PassRight() => Emit(_stage.Out, _other, AfterPassRight);
+
+            private void AfterPassRight()
+            {
+                NullOut();
+                PassAlong(_stage.Right, _stage.Out, doPull: true);
+            }
+
+            private void PassLeft() => Emit(_stage.Out, _other, AfterPassLeft);
+
+            private void AfterPassLeft()
+            {
+                NullOut();
+                PassAlong(_stage.Left, _stage.Out, doPull: true);
+            }
+
+            private readonly Action<T> _dispatchRight;
+            private void DispatchRight(T right) => Dispatch(_other, right);
+
+            private readonly Action<T> _dispatchLeft;
+            private void DispatchLeft(T left) => Dispatch(left, _other);
 
             private void NullOut() => _other = default;
 

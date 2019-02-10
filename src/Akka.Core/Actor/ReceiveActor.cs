@@ -70,15 +70,18 @@ namespace Akka.Actor
         {
             //Seal the method so that implementors cannot use it. They should only use Receive and Become
 
-            ExecutePartialMessageHandler(message, _partialReceive);
-        }
-
-        private void ExecutePartialMessageHandler(object message, PartialAction<object> partialAction)
-        {
-            var wasHandled = partialAction(message);
+            //ExecutePartialMessageHandler(message, _partialReceive);
+            var wasHandled = _partialReceive(message);
             if (!wasHandled && _shouldUnhandle)
                 Unhandled(message);
         }
+
+        //private void ExecutePartialMessageHandler(object message, PartialAction<object> partialAction)
+        //{
+        //    var wasHandled = partialAction(message);
+        //    if (!wasHandled && _shouldUnhandle)
+        //        Unhandled(message);
+        //}
 
         /// <summary>
         /// Changes the actor's behavior and replaces the current receive handler with the specified handler.
@@ -87,7 +90,15 @@ namespace Akka.Actor
         protected void Become(Action configure)
         {
             var newHandler = CreateNewHandler(configure);
-            base.Become(m => ExecutePartialMessageHandler(m, newHandler));
+            //base.Become(m => ExecutePartialMessageHandler(m, newHandler));
+            void LocalReceive(object message)
+            {
+                var wasHandled = newHandler(message);
+                if (!wasHandled && _shouldUnhandle)
+                    Unhandled(message);
+            }
+            UntypedReceive receiveAction = LocalReceive;
+            base.Become(receiveAction);
         }
 
         /// <summary>
@@ -100,7 +111,15 @@ namespace Akka.Actor
         protected void BecomeStacked(Action configure)
         {
             var newHandler = CreateNewHandler(configure);
-            base.BecomeStacked(m => ExecutePartialMessageHandler(m, newHandler));
+            //base.BecomeStacked(m => ExecutePartialMessageHandler(m, newHandler));
+            void LocalReceive(object message)
+            {
+                var wasHandled = newHandler(message);
+                if (!wasHandled && _shouldUnhandle)
+                    Unhandled(message);
+            }
+            UntypedReceive receiveAction = LocalReceive;
+            base.BecomeStacked(receiveAction);
         }
 
         private PartialAction<object> CreateNewHandler(Action configure)
@@ -113,15 +132,11 @@ namespace Akka.Actor
 
         private Action<T> WrapAsyncHandler<T>(Func<T, Task> asyncHandler)
         {
-            Task WrapHandler(object s)
-            {
-                return asyncHandler((T)s);
-            }
             void WrapRunTask(T m)
             {
-                ActorTaskScheduler.RunTask(WrapHandler, state: m);
+                ActorTaskScheduler.RunTask(asyncHandler, m);
             }
-            return WrapRunTask;
+            return new Action<T>(WrapRunTask);
         }
 
         /// <summary>

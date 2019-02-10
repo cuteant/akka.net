@@ -1258,7 +1258,7 @@ namespace Akka.Streams.Dsl.Internal
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
             }
 
-            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
+            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, new Func<Sink<T, TMat>, TClosed>(finish));
         }
 
         /// <summary>
@@ -1376,7 +1376,7 @@ namespace Akka.Streams.Dsl.Internal
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
             }
 
-            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
+            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, new Func<Sink<T, TMat>, TClosed>(finish));
         }
 
         /// <summary>
@@ -1481,7 +1481,7 @@ namespace Akka.Streams.Dsl.Internal
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
             }
 
-            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
+            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, new Func<Sink<T, TMat>, TClosed>(finish));
         }
 
         /// <summary>

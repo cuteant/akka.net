@@ -70,7 +70,7 @@ namespace Akka.Persistence
         /// </summary>
         private ViewState RecoveryStarted(long replayMax)
         {
-            void stateReceive(Receive receive, object message)
+            void LocalStateReceive(Receive receive, object message)
             {
                 if (message is LoadSnapshotResult loadResult)
                 {
@@ -85,7 +85,7 @@ namespace Akka.Persistence
                 }
                 else _internalStash.Stash();
             }
-            return new ViewState("recovery started - replayMax: " + replayMax, true, stateReceive);
+            return new ViewState("recovery started - replayMax: " + replayMax, true, new StateReceive(LocalStateReceive));
         }
 
         /// <summary>
@@ -103,7 +103,7 @@ namespace Akka.Persistence
         /// </summary>
         private ViewState ReplayStarted(bool shouldAwait)
         {
-            void stateReceive(Receive receive, object message)
+            void LocalStateReceive(Receive receive, object message)
             {
                 switch (message)
                 {
@@ -159,7 +159,7 @@ namespace Akka.Persistence
                         break;
                 }
             }
-            return new ViewState("replay started", true, stateReceive);
+            return new ViewState("replay started", true, new StateReceive(LocalStateReceive));
         }
 
         /// <summary>
@@ -177,7 +177,7 @@ namespace Akka.Persistence
         /// </summary>
         private ViewState IgnoreRemainingReplay(Exception cause)
         {
-            void stateReceive(Receive receive, object message)
+            void LocalStateReceive(Receive receive, object message)
             {
                 switch (message)
                 {
@@ -199,7 +199,7 @@ namespace Akka.Persistence
                         break;
                 }
             }
-            return new ViewState("replay failed", true, stateReceive);
+            return new ViewState("replay failed", true, new StateReceive(LocalStateReceive));
         }
 
         private void OnReplayFailureCompleted(Exception cause)
@@ -216,7 +216,7 @@ namespace Akka.Persistence
         /// </summary>
         private ViewState Idle()
         {
-            void stateReceive(Receive receive, object message)
+            void LocalStateReceive(Receive receive, object message)
             {
                 switch (message)
                 {
@@ -239,7 +239,7 @@ namespace Akka.Persistence
                         break;
                 }
             }
-            return new ViewState("idle", false, stateReceive);
+            return new ViewState("idle", false, new StateReceive(LocalStateReceive));
         }
 
         private void ChangeStateToReplayStarted(bool isAwait, long replayMax)

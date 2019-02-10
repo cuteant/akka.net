@@ -22,14 +22,13 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         public RemoteDeploymentWatcher()
         {
-            void HandleWatchRemote(WatchRemote w)
+            Receive<WatchRemote>(w =>
             {
                 _supervisors.Add(w.Actor, w.Supervisor);
                 Context.Watch(w.Actor);
-            }
-            Receive<WatchRemote>(HandleWatchRemote);
+            });
 
-            void HandleTerminated(Terminated t)
+            Receive<Terminated>(t =>
             {
                 if (_supervisors.TryGetValue(t.ActorRef, out var supervisor))
                 {
@@ -38,8 +37,7 @@ namespace Akka.Remote
                         t.AddressTerminated));
                     _supervisors.Remove(t.ActorRef);
                 }
-            }
-            Receive<Terminated>(HandleTerminated);
+            });
         }
 
         /// <summary>TBD</summary>

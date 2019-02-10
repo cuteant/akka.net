@@ -189,7 +189,7 @@ namespace Akka.Streams.Implementation.Fusing
     /// </summary>
     /// <typeparam name="TIn">TBD</typeparam>
     /// <typeparam name="TOut">TBD</typeparam>
-    internal sealed class EnumeratorInterpreter<TIn, TOut> : IEnumerable<TOut>
+    internal sealed class EnumeratorInterpreter<TIn, TOut> : IEnumerable<TOut>, GraphInterpreter.IAsyncInputHandle
     {
         private readonly IEnumerable<PushPullStage<TIn, TOut>> _ops;
         private readonly EnumeratorInterpreter.EnumeratorUpstream<TIn> _upstream;
@@ -249,12 +249,17 @@ namespace Akka.Streams.Implementation.Fusing
                 log: NoLogger.Instance,
                 connections: connections,
                 logics: logics,
-                onAsyncInput: (_1, _2, _3) => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_IteratorInterpreter),
+                onAsyncInput: this,
                 fuzzingMode: false,
                 context: null);
             interpreter.AttachUpstreamBoundary(0, _upstream);
             interpreter.AttachDownstreamBoundary(length, _downstream);
             interpreter.Init(null);
+        }
+
+        void GraphInterpreter.IAsyncInputHandle.Handle(GraphStageLogic logic, object @event, IHandle<object> handler)
+        {
+            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_IteratorInterpreter);
         }
 
         /// <summary>

@@ -1097,24 +1097,26 @@ namespace Akka.Streams.Implementation.Fusing
     {
         #region internal classes
 
-        private sealed class Logic : InGraphStageLogic
+        private sealed class Logic : InGraphStageLogic, IHandle<SubSink.ICommand>
         {
             private readonly SubSink<T> _stage;
+            private readonly IHandle<IActorSubscriberMessage> _handler;
 
             public Logic(SubSink<T> stage) : base(stage.Shape)
             {
                 _stage = stage;
+                _handler = stage._externalCallback;
 
                 SetHandler(stage._in, this);
             }
 
-            public override void OnPush() => _stage._externalCallback(new OnNext(Grab(_stage._in)));
+            public override void OnPush() => _handler.Handle(new OnNext(Grab(_stage._in)));
 
-            public override void OnUpstreamFinish() => _stage._externalCallback(OnComplete.Instance);
+            public override void OnUpstreamFinish() => _handler.Handle(OnComplete.Instance);
 
-            public override void OnUpstreamFailure(Exception e) => _stage._externalCallback(new OnError(e));
+            public override void OnUpstreamFailure(Exception e) => _handler.Handle(new OnError(e));
 
-            private void SetCallback(Action<SubSink.ICommand> callback)
+            private void SetCallback(IHandle<SubSink.ICommand> callback)
             {
                 var status = _stage._status;
                 switch (status.Value)
@@ -1130,14 +1132,14 @@ namespace Akka.Streams.Implementation.Fusing
                         {
                             // between those two lines a new command might have been scheduled, but that will go through the
                             // async interface, so that the ordering is still kept
-                            callback(command.Command);
+                            callback.Handle(command.Command);
                         }
                         else
                         {
                             SetCallback(callback);
                         }
                         break;
-                    case Action<SubSink.ICommand> _: /* Materialized */
+                    case IHandle<SubSink.ICommand> _: /* Materialized */
                         FailStage(new IllegalStateException("Substream Source cannot be materialized more than once"));
                         break;
                 }
@@ -1145,18 +1147,20 @@ namespace Akka.Streams.Implementation.Fusing
 
             public override void PreStart()
             {
-                SetCallback(command =>
+                SetCallback(this);
+            }
+
+            void IHandle<SubSink.ICommand>.Handle(SubSink.ICommand command)
+            {
+                switch (command)
                 {
-                    switch (command)
-                    {
-                        case SubSink.RequestOne _:
-                            TryPull(_stage._in);
-                            break;
-                        case SubSink.Cancel _:
-                            CompleteStage();
-                            break;
-                    }
-                });
+                    case SubSink.RequestOne _:
+                        TryPull(_stage._in);
+                        break;
+                    case SubSink.Cancel _:
+                        CompleteStage();
+                        break;
+                }
             }
         }
 
@@ -1165,14 +1169,14 @@ namespace Akka.Streams.Implementation.Fusing
         private readonly Inlet<T> _in = new Inlet<T>("SubSink.in");
         private readonly AtomicReference<object> _status = new AtomicReference<object>(SubSink.Uninitialized.Instance);
         private readonly string _name;
-        private readonly Action<IActorSubscriberMessage> _externalCallback;
+        private readonly IHandle<IActorSubscriberMessage> _externalCallback;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="name">TBD</param>
         /// <param name="externalCallback">TBD</param>
-        public SubSink(string name, Action<IActorSubscriberMessage> externalCallback)
+        public SubSink(string name, IHandle<IActorSubscriberMessage> externalCallback)
         {
             _name = name;
             _externalCallback = externalCallback;
@@ -1205,7 +1209,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             switch (_status.Value)
             {
-                case Action<SubSink.ICommand> callback: callback(newState.Command); break;
+                case IHandle<SubSink.ICommand> callback: callback.Handle(newState.Command); break;
                 case SubSink.Uninitialized _:
                     if (!_status.CompareAndSet(SubSink.Uninitialized.Instance, newState))
                     {
@@ -1261,7 +1265,7 @@ namespace Akka.Streams.Implementation.Fusing
             switch (s.Module)
             {
                 case GraphStageModule module when module.Stage is SubSource<T> sub:
-                    sub.ExternalCallback(SubSink.Cancel.Instance);
+                    sub.ExternalCallback.Handle(SubSink.Cancel.Instance);
                     return;
                 case PublisherSource<T> pub:
                     pub.Create(default, out _).Subscribe(CancelingSubscriber<T>.Instance);
@@ -1285,22 +1289,23 @@ namespace Akka.Streams.Implementation.Fusing
     {
         #region internal classes 
 
-        private sealed class Logic : OutGraphStageLogic
+        private sealed class Logic : OutGraphStageLogic, IHandle<IActorSubscriberMessage>
         {
             private readonly SubSource<T> _stage;
-
+            private readonly IHandle<SubSink.ICommand> _handler;
             public Logic(SubSource<T> stage) : base(stage.Shape)
             {
                 _stage = stage;
+                _handler = stage.ExternalCallback;
 
                 SetHandler(stage._out, this);
             }
 
-            public override void OnPull() => _stage.ExternalCallback(SubSink.RequestOne.Instance);
+            public override void OnPull() => _handler.Handle(SubSink.RequestOne.Instance);
 
-            public override void OnDownstreamFinish() => _stage.ExternalCallback(SubSink.Cancel.Instance);
+            public override void OnDownstreamFinish() => _handler.Handle(SubSink.Cancel.Instance);
 
-            private void SetCallback(Action<IActorSubscriberMessage> callback)
+            private void SetCallback(IHandle<IActorSubscriberMessage> callback)
             {
                 var status = _stage._status.Value;
 
@@ -1318,31 +1323,33 @@ namespace Akka.Streams.Implementation.Fusing
                         FailStage(onError.Cause);
                         break;
 
-                    case Action<IActorSubscriberMessage> _:
+                    case IHandle<IActorSubscriberMessage> _:
                         ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Substream_Source);
+                        break;
+                }
+            }
+
+            void IHandle<IActorSubscriberMessage>.Handle(IActorSubscriberMessage msg)
+            {
+                switch (msg)
+                {
+                    case OnComplete _:
+                        CompleteStage();
+                        break;
+
+                    case OnError onError:
+                        FailStage(onError.Cause);
+                        break;
+
+                    case OnNext onNext:
+                        Push(_stage._out, (T)onNext.Element);
                         break;
                 }
             }
 
             public override void PreStart()
             {
-                var ourOwnCallback = GetAsyncCallback<IActorSubscriberMessage>(msg =>
-                {
-                    switch (msg)
-                    {
-                        case OnComplete _:
-                            CompleteStage();
-                            break;
-
-                        case OnError onError:
-                            FailStage(onError.Cause);
-                            break;
-
-                        case OnNext onNext:
-                            Push(_stage._out, (T)onNext.Element);
-                            break;
-                    }
-                });
+                var ourOwnCallback = GetAsyncCallback<IActorSubscriberMessage>(this);
                 SetCallback(ourOwnCallback);
             }
         }
@@ -1358,7 +1365,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </summary>
         /// <param name="name">TBD</param>
         /// <param name="externalCallback">TBD</param>
-        public SubSource(string name, Action<SubSink.ICommand> externalCallback)
+        public SubSource(string name, IHandle<SubSink.ICommand> externalCallback)
         {
             _name = name;
 
@@ -1380,7 +1387,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// TBD
         /// </summary>
-        internal Action<SubSink.ICommand> ExternalCallback { get; }
+        internal IHandle<SubSink.ICommand> ExternalCallback { get; }
 
         /// <summary>
         /// TBD
@@ -1389,9 +1396,9 @@ namespace Akka.Streams.Implementation.Fusing
         /// <exception cref="IllegalStateException">TBD</exception>
         public void PushSubstream(T elem)
         {
-            var f = _status.Value as Action<IActorSubscriberMessage>;
+            var f = _status.Value as IHandle<IActorSubscriberMessage>;
             if (null == f) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_uninitialized_substream); }
-            f(new OnNext(elem));
+            f.Handle(new OnNext(elem));
         }
 
         /// <summary>
@@ -1401,13 +1408,13 @@ namespace Akka.Streams.Implementation.Fusing
         {
             var s = _status.Value;
 
-            if (s is Action<IActorSubscriberMessage> f)
+            if (s is IHandle<IActorSubscriberMessage> f)
             {
-                f(OnComplete.Instance);
+                f.Handle(OnComplete.Instance);
             }
             else if (!_status.CompareAndSet(null, OnComplete.Instance))
             {
-                ((Action<IActorSubscriberMessage>)s)(OnComplete.Instance);
+                ((IHandle<IActorSubscriberMessage>)s).Handle(OnComplete.Instance);
             }
         }
 
@@ -1420,13 +1427,13 @@ namespace Akka.Streams.Implementation.Fusing
             var s = _status.Value;
             var failure = new OnError(ex);
 
-            if (s is Action<IActorSubscriberMessage> f)
+            if (s is IHandle<IActorSubscriberMessage> f)
             {
-                f(failure);
+                f.Handle(failure);
             }
             else if (!_status.CompareAndSet(null, failure))
             {
-                ((Action<IActorSubscriberMessage>)s)(failure);
+                ((IHandle<IActorSubscriberMessage>)s).Handle(failure);
             }
         }
 

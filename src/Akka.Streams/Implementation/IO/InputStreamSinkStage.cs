@@ -153,29 +153,31 @@ namespace Akka.Streams.Implementation.IO
             void WakeUp(IAdapterToStageMessage msg);
         }
 
-        private sealed class Logic : InGraphStageLogic, IStageWithCallback
+        private sealed class Logic : InGraphStageLogic, IStageWithCallback, IHandle<IAdapterToStageMessage>
         {
             private readonly InputStreamSinkStage _stage;
-            private readonly Action<IAdapterToStageMessage> _callback;
+            private readonly IHandle<IAdapterToStageMessage> _callback;
             private bool _completionSignalled;
 
             public Logic(InputStreamSinkStage stage) : base(stage.Shape)
             {
                 _stage = stage;
-                _callback = GetAsyncCallback((IAdapterToStageMessage message) =>
-                {
-                    switch (message)
-                    {
-                        case ReadElementAcknowledgement _:
-                            SendPullIfAllowed();
-                            break;
-                        case Close _:
-                            CompleteStage();
-                            break;
-                    }
-                });
+                _callback = GetAsyncCallback(this);
 
                 SetHandler(stage._in, this);
+            }
+
+            void IHandle<IAdapterToStageMessage>.Handle(IAdapterToStageMessage message)
+            {
+                switch (message)
+                {
+                    case ReadElementAcknowledgement _:
+                        SendPullIfAllowed();
+                        break;
+                    case Close _:
+                        CompleteStage();
+                        break;
+                }
             }
 
             public override void OnPush()
@@ -214,7 +216,7 @@ namespace Akka.Streams.Implementation.IO
                     _stage._dataQueue.Add(new Failed(new AbruptStageTerminationException(this)));
             }
 
-            public void WakeUp(IAdapterToStageMessage msg) => _callback(msg);
+            public void WakeUp(IAdapterToStageMessage msg) => _callback.Handle(msg);
 
             private void SendPullIfAllowed()
             {
@@ -361,15 +363,15 @@ namespace Akka.Streams.Implementation.IO
         {
             base.Dispose(disposing);
 
-            ExecuteIfNotClosed(() =>
+            if (ExecuteIfNotClosed())
             {
                 // at this point Subscriber may be already terminated
                 if (_isStageAlive)
                     _sendToStage.WakeUp(InputStreamSinkStage.Close.Instance);
 
                 _isActive = false;
-                return NotUsed.Instance;
-            });
+                //return NotUsed.Instance;
+            }
         }
 
         /// <summary>
@@ -442,15 +444,17 @@ namespace Akka.Streams.Implementation.IO
                 }
                 return ThrowHelper.ThrowIllegalStateException<int>(ExceptionResource.IllegalState_init_mus_first);
             }
-            return ExecuteIfNotClosed(ExecuteFunc);
+
+            ExecuteIfNotClosed();
+            return ExecuteFunc();
         }
 
-        private T ExecuteIfNotClosed<T>(Func<T> f)
+        private bool ExecuteIfNotClosed()
         {
             if (!_isActive) { ThrowHelper.ThrowIOException_SubscriberClosed(); }
 
             WaitIfNotInitialized();
-            return f();
+            return true;
         }
 
         private void WaitIfNotInitialized()

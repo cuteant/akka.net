@@ -167,7 +167,7 @@ namespace Akka.Streams.Implementation
         {
             ReactiveStreamsCompliance.RequireNonNullElement(element);
             _downstreamBufferSpace -= 1;
-            PushToDownstream((T) element);
+            PushToDownstream((T)element);
         }
 
         /// <summary>
@@ -217,7 +217,7 @@ namespace Akka.Streams.Implementation
     /// TBD
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    internal sealed class FanoutProcessorImpl<T> : ActorProcessorImpl
+    internal sealed class FanoutProcessorImpl<T> : ActorProcessorImpl, IRunnable
     {
         /// <summary>
         /// TBD
@@ -241,16 +241,11 @@ namespace Akka.Streams.Implementation
             PrimaryOutputs = new FanoutOutputs<T>(settings.MaxInputBufferSize,
                 settings.InitialInputBufferSize, Self, this, AfterFlush);
 
-            var running = new TransferPhase(PrimaryInputs.NeedsInput.And(PrimaryOutputs.NeedsDemand),
-                Runnable.Create(InvokeEnqueueOutputElementAction, this));
+            var running = new TransferPhase(PrimaryInputs.NeedsInput.And(PrimaryOutputs.NeedsDemand), this);
             InitialPhase(1, running);
         }
 
-        private static readonly Action<FanoutProcessorImpl<T>> InvokeEnqueueOutputElementAction = InvokeEnqueueOutputElement;
-        private static void InvokeEnqueueOutputElement(FanoutProcessorImpl<T> owner)
-        {
-            owner.PrimaryOutputs.EnqueueOutputElement(owner.PrimaryInputs.DequeueInputElement());
-        }
+        void IRunnable.Run() => PrimaryOutputs.EnqueueOutputElement(PrimaryInputs.DequeueInputElement());
 
         /// <summary>
         /// TBD

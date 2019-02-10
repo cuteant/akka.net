@@ -79,23 +79,28 @@ namespace Akka.Cluster.Sharding
         {
             var promise = new TaskCompletionSource<T>();
 
-            scheduler.Advanced.ScheduleOnce(timeout, LinkOutcome, value, promise);
+            scheduler.Advanced.ScheduleOnce(timeout, Helper<T>.LinkOutcomeAction, value, promise);
 
             return promise.Task;
         }
 
-        private static void LinkOutcome<T>(Func<Task<T>> value, TaskCompletionSource<T> promise)
+        sealed class Helper<T>
         {
-            value().ContinueWith(LinkOutcomeContinuation, promise);
-        }
+            public static readonly Action<Func<Task<T>>, TaskCompletionSource<T>> LinkOutcomeAction = LinkOutcome;
+            private static void LinkOutcome(Func<Task<T>> value, TaskCompletionSource<T> promise)
+            {
+                value().ContinueWith(LinkOutcomeContinuationAction, promise);
+            }
 
-        private static void LinkOutcomeContinuation<T>(Task<T> t, object state)
-        {
-            var promise = (TaskCompletionSource<T>)state;
-            if (t.IsSuccessfully())
-                promise.SetResult(t.Result);
-            else
-                promise.SetCanceled();
+            private static readonly Action<Task<T>, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
+            private static void LinkOutcomeContinuation(Task<T> t, object state)
+            {
+                var promise = (TaskCompletionSource<T>)state;
+                if (t.IsSuccessfully())
+                    promise.SetResult(t.Result);
+                else
+                    promise.SetCanceled();
+            }
         }
     }
 

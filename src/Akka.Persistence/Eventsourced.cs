@@ -138,6 +138,12 @@ namespace Akka.Persistence
             _currentState = null;
             _internalStash = CreateStash();
             Log = Context.GetLogger();
+
+            _recoveryBehaviorFunc = RecoveryBehavior;
+            _onWriteCommandCompleteAction = OnWriteCommandComplete;
+            _receiveCommandsAction = ReceiveCommands;
+            _onWriteEventCompleteAction = OnWriteEventComplete;
+            _receiveEventsAction = ReceiveEvents;
         }
 
         /// <summary>
@@ -346,7 +352,7 @@ namespace Akka.Persistence
 
             if (events == null) return;
 
-            void Inv(object o) => handler((TEvent)o);
+            Action<object> Inv = o => handler((TEvent)o);
             var persistents = ImmutableList<IPersistentRepresentation>.Empty.ToBuilder();
             foreach (var @event in events)
             {
@@ -415,7 +421,7 @@ namespace Akka.Persistence
                 ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
-            void Inv(object o) => handler((TEvent)o);
+            Action<object> Inv = o => handler((TEvent)o);
             var enumerable = events as TEvent[] ?? events.ToArray();
             foreach (var @event in enumerable)
             {
@@ -542,75 +548,88 @@ namespace Akka.Persistence
         protected void RunTask(Func<Task> action)
         {
             if (AsyncTaskRunning) ThrowHelper.ThrowNotSupportedException_AsyncTaskRun();
-            Task wrap()
-            {
-                Task t = action();
-                if (!t.IsCompleted)
-                {
-                    AsyncTaskRunning = true;
-                    var tcs = new TaskCompletionSource<object>();
 
-                    t.ContinueWith(RunTaskContinuationAction, Tuple.Create(this, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
-
-                    t = tcs.Task;
-                }
-                return t;
-            }
-
-            Dispatch.ActorTaskScheduler.RunTask(wrap);
+            Dispatch.ActorTaskScheduler.RunTask(TaskRunners<object>.RunTaskAction, Tuple.Create(this, action));
         }
 
         /// <summary>
         /// Runs an asynchronous task for incoming messages in context of <see cref="ReceiveCommand(object)"/> .
-        /// <remarks>The actor will be suspended until the task returned by <paramref name="action"/> completes, including the <see cref="Eventsourced.Persist{TEvent}(TEvent, Action{TEvent})" />
+        /// <remarks>The actor will be suspended until the task returned by <paramref name="func"/> completes, including the <see cref="Eventsourced.Persist{TEvent}(TEvent, Action{TEvent})" />
         /// and <see cref="Eventsourced.PersistAll{TEvent}(IEnumerable{TEvent}, Action{TEvent})" /> calls.</remarks>
         /// </summary>
-        /// <param name="action">Async task to run</param>
+        /// <param name="func">Async task to run</param>
         /// <param name="state"></param>
-        protected void RunTask<T>(Func<T, Task> action, T state)
+        protected void RunTask<T>(Func<T, Task> func, T state)
         {
             if (AsyncTaskRunning) ThrowHelper.ThrowNotSupportedException_AsyncTaskRun();
-            Task wrap(object s)
+
+            Dispatch.ActorTaskScheduler.RunTask(TaskRunners<T>.RunTaskFunc, Tuple.Create(this, func, state));
+        }
+
+        sealed class TaskRunners<T>
+        {
+            public static readonly Func<object, Task> RunTaskAction = RunTask;
+            private static Task RunTask(object state)
             {
-                Task t = action((T)s);
+                var wrapped = (Tuple<Eventsourced, Func<Task>>)state;
+                var owner = wrapped.Item1;
+
+                Task t = wrapped.Item2();
                 if (!t.IsCompleted)
                 {
-                    AsyncTaskRunning = true;
+                    owner.AsyncTaskRunning = true;
                     var tcs = new TaskCompletionSource<object>();
 
-                    t.ContinueWith(RunTaskContinuationAction, Tuple.Create(this, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
+                    t.ContinueWith(RunTaskContinuationAction, Tuple.Create(owner, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
 
                     t = tcs.Task;
                 }
                 return t;
             }
 
-            Dispatch.ActorTaskScheduler.RunTask(wrap, (object)state);
-        }
-
-        private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;
-        private static void RunTaskContinuation(Task r, object state)
-        {
-            var wrapped = (Tuple<Eventsourced, TaskCompletionSource<object>>)state;
-            var owner = wrapped.Item1;
-            var tcs = wrapped.Item2;
-
-            try
+            public static readonly Func<object, Task> RunTaskFunc = RunTaskWithState;
+            private static Task RunTaskWithState(object state)
             {
-                owner.AsyncTaskRunning = false;
+                var wrapped = (Tuple<Eventsourced, Func<T, Task>, T>)state;
+                var owner = wrapped.Item1;
 
-                owner.OnProcessingCommandsAroundReceiveComplete(r.IsFaulted || r.IsCanceled);
+                Task t = wrapped.Item2(wrapped.Item3);
+                if (!t.IsCompleted)
+                {
+                    owner.AsyncTaskRunning = true;
+                    var tcs = new TaskCompletionSource<object>();
 
-                if (r.IsFaulted)
-                    tcs.TrySetException(r.Exception.InnerExceptions);
-                else if (r.IsCanceled)
-                    tcs.TrySetCanceled();
-                else
-                    tcs.TrySetResult(null);
+                    t.ContinueWith(RunTaskContinuationAction, Tuple.Create(owner, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
+
+                    t = tcs.Task;
+                }
+                return t;
             }
-            catch (Exception ex)
+
+            private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;
+            private static void RunTaskContinuation(Task r, object state)
             {
-                tcs.TrySetUnwrappedException(ex);
+                var wrapped = (Tuple<Eventsourced, TaskCompletionSource<object>>)state;
+                var owner = wrapped.Item1;
+                var tcs = wrapped.Item2;
+
+                try
+                {
+                    owner.AsyncTaskRunning = false;
+
+                    owner.OnProcessingCommandsAroundReceiveComplete(r.IsFaulted || r.IsCanceled);
+
+                    if (r.IsFaulted)
+                        tcs.TrySetException(r.Exception.InnerExceptions);
+                    else if (r.IsCanceled)
+                        tcs.TrySetCanceled();
+                    else
+                        tcs.TrySetResult(null);
+                }
+                catch (Exception ex)
+                {
+                    tcs.TrySetUnwrappedException(ex);
+                }
             }
         }
 

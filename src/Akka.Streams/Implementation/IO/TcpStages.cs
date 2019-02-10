@@ -401,6 +401,8 @@ namespace Akka.Streams.Implementation.IO
                 _bytesIn = shape.Inlet;
                 _bytesOut = shape.Outlet;
 
+                _connectedReceiveFunc = Connected;
+
                 _readHandler = new LambdaOutHandler(
                     onPull: () => _connection.Tell(Tcp.ResumeReading.Instance, StageActorRef),
                     onDownstreamFinish: () =>
@@ -462,7 +464,7 @@ namespace Akka.Streams.Implementation.IO
                 {
                     SetHandler(_bytesOut, _readHandler);
                     _connection = inbound.Connection;
-                    GetStageActorRef(Connected).Watch(_connection);
+                    GetStageActorRef(_connectedReceiveFunc).Watch(_connection);
                     _connection.Tell(new Tcp.Register(StageActorRef, keepOpenOnPeerClosed: true, useResumeWriting: false), StageActorRef);
                     Pull(_bytesIn);
                 }
@@ -488,7 +490,7 @@ namespace Akka.Streams.Implementation.IO
 
             private StageActorRef.Receive Connecting(Outbound outbound)
             {
-                return args =>
+                void LocalReceive(Tuple<IActorRef, object> args)
                 {
                     var sender = args.Item1;
                     var msg = args.Item2;
@@ -505,7 +507,7 @@ namespace Akka.Streams.Implementation.IO
                             _connection = sender;
                             SetHandler(_bytesOut, _readHandler);
                             StageActorRef.Unwatch(outbound.Manager);
-                            StageActorRef.Become(Connected);
+                            StageActorRef.Become(_connectedReceiveFunc);
                             StageActorRef.Watch(_connection);
                             _connection.Tell(new Tcp.Register(StageActorRef, keepOpenOnPeerClosed: true, useResumeWriting: false), StageActorRef);
 
@@ -517,10 +519,11 @@ namespace Akka.Streams.Implementation.IO
                         default:
                             break;
                     }
-                };
-
+                }
+                return new StageActorRef.Receive(LocalReceive);
             }
 
+            private readonly StageActorRef.Receive _connectedReceiveFunc;
             private void Connected(Tuple<IActorRef, object> args)
             {
                 var msg = args.Item2;

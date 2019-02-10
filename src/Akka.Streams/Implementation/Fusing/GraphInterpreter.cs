@@ -271,6 +271,19 @@ namespace Akka.Streams.Implementation.Fusing
 
         #endregion
 
+        public interface IAsyncInputHandle
+        {
+            void Handle(GraphStageLogic logic, object @event, IHandle<object> handler);
+        }
+
+        public sealed class NullAsyncInputHandle : IAsyncInputHandle
+        {
+            public static readonly NullAsyncInputHandle Instance = new NullAsyncInputHandle();
+            private NullAsyncInputHandle() { }
+
+            public void Handle(GraphStageLogic logic, object @event, IHandle<object> handler) { }
+        }
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -363,12 +376,12 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// TBD
         /// </summary>
-        public static GraphInterpreter CurrentInterpreterOrNull => (GraphInterpreter) CurrentInterpreter.Value[0];
+        public static GraphInterpreter CurrentInterpreterOrNull => (GraphInterpreter)CurrentInterpreter.Value[0];
 
         /// <summary>
         /// TBD
         /// </summary>
-        public static readonly Attributes[] SingleNoAttribute = {Attributes.None};
+        public static readonly Attributes[] SingleNoAttribute = { Attributes.None };
 
         /// <summary>
         /// TBD
@@ -393,7 +406,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// TBD
         /// </summary>
-        public readonly Action<GraphStageLogic, object, Action<object>> OnAsyncInput;
+        public readonly IAsyncInputHandle OnAsyncInput;
         /// <summary>
         /// TBD
         /// </summary>
@@ -441,7 +454,7 @@ namespace Akka.Streams.Implementation.Fusing
                     ILoggingAdapter log,
                     GraphStageLogic[] logics,
                     Connection[] connections,
-                    Action<GraphStageLogic, object, Action<object>> onAsyncInput,
+                    IAsyncInputHandle onAsyncInput,
                     bool fuzzingMode,
                     IActorRef context)
         {
@@ -501,7 +514,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             logic.PortToConn[logic.Out.Id + logic.InCount] = connection;
             logic.Interpreter = this;
-            connection.OutHandler = (IOutHandler) logic.Handlers[0];
+            connection.OutHandler = (IOutHandler)logic.Handlers[0];
         }
 
         /// <summary>
@@ -522,7 +535,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             logic.PortToConn[logic.In.Id] = connection;
             logic.Interpreter = this;
-            connection.InHandler = (IInHandler) logic.Handlers[0];
+            connection.InHandler = (IInHandler)logic.Handlers[0];
         }
 
         /// <summary>
@@ -765,7 +778,7 @@ namespace Akka.Streams.Implementation.Fusing
                 Enqueue(_chasedPush);
                 _chasedPush = NoEvent;
             }
-            
+
             if (_chasedPull != NoEvent)
             {
                 Enqueue(_chasedPull);
@@ -781,7 +794,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <param name="logic">TBD</param>
         /// <param name="evt">TBD</param>
         /// <param name="handler">TBD</param>
-        public void RunAsyncInput(GraphStageLogic logic, object evt, Action<object> handler)
+        public void RunAsyncInput(GraphStageLogic logic, object evt, IHandle<object> handler)
         {
             if (!IsStageCompleted(logic))
             {
@@ -794,7 +807,7 @@ namespace Akka.Streams.Implementation.Fusing
                     ActiveStage = logic;
                     try
                     {
-                        handler(evt);
+                        handler.Handle(evt);
                     }
                     catch (Exception e)
                     {
@@ -863,7 +876,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
             }
         }
-        
+
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessPush(Connection connection)
         {
@@ -1026,10 +1039,10 @@ namespace Akka.Streams.Implementation.Fusing
                 _chasedPush = NoEvent;
                 Enqueue(connection);
             }
-            else if ((currentState & (InClosed |Pushing |Pulling|OutClosed)) == 0)
+            else if ((currentState & (InClosed | Pushing | Pulling | OutClosed)) == 0)
                 Enqueue(connection);
 
-            if((currentState & OutClosed) == 0)
+            if ((currentState & OutClosed) == 0)
                 CompleteConnection(connection.OutOwnerId);
         }
 
@@ -1115,7 +1128,7 @@ namespace Akka.Streams.Implementation.Fusing
                     builder.Append($"  {NameIn(i)} -> {NameOut(i)} [label=shouldPull; color=blue];");
                 else if (state == OutReady)
                     builder.Append($"  {NameOut(i)} -> {NameIn(i)} [label=shouldPush; color=red];");
-                else if( (state | InClosed | OutClosed) == (InClosed | OutClosed))
+                else if ((state | InClosed | OutClosed) == (InClosed | OutClosed))
                     builder.Append($"  {NameIn(i)} -> {NameOut(i)} [style=dotted; label=closed dir=both];");
             }
 
@@ -1127,5 +1140,6 @@ namespace Akka.Streams.Implementation.Fusing
 
         private string NameIn(int port) => Assembly.InletOwners[port] == Boundary ? "Out" + port : "N" + port;
 
-        private string NameOut(int port) => Assembly.OutletOwners[port] == Boundary ? "Out" + port : "N" + port;}
+        private string NameOut(int port) => Assembly.OutletOwners[port] == Boundary ? "Out" + port : "N" + port;
+    }
 }

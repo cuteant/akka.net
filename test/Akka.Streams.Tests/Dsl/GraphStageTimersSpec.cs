@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Streams.Dsl;
@@ -216,11 +217,21 @@ namespace Akka.Streams.Tests.Dsl
 
         private sealed class SideChannel
         {
-            public volatile Action<object> AsyncCallback;
-            public volatile TaskCompletionSource<int> StopPromise;
+            private IHandle<object> _asyncCallback;
+            public IHandle<object> AsyncCallback
+            {
+                get => Volatile.Read(ref _asyncCallback);
+                set => Interlocked.Exchange(ref _asyncCallback, value);
+            }
+            private TaskCompletionSource<int> _stopPromise;
+            public TaskCompletionSource<int> StopPromise
+            {
+                get => Volatile.Read(ref _stopPromise);
+                set => Interlocked.Exchange(ref _stopPromise, value);
+            }
 
             public bool IsReady => AsyncCallback != null;
-            public void Tell(object message) => AsyncCallback(message);
+            public void Tell(object message) => AsyncCallback.Handle(message);
             public void StopStage() => StopPromise.TrySetResult(-1);
         }
 

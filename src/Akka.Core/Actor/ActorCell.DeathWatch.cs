@@ -29,11 +29,12 @@ namespace Akka.Actor
 
             if (!a.Equals(Self) && !WatchingContains(a))
             {
-                MaintainAddressTerminatedSubscription(InvokeWatch, a);
+                MaintainAddressTerminatedSubscription(_watchAction, a);
             }
             return a;
         }
 
+        private readonly Action<IInternalActorRef> _watchAction;
         private void InvokeWatch(IInternalActorRef a)
         {
             a.SendSystemMessage(new Watch(a, _self)); // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS
@@ -57,15 +58,9 @@ namespace Akka.Actor
 
             if (!a.Equals(Self) && !WatchingContains(a))
             {
-                MaintainAddressTerminatedSubscription(InvokeWatchWith, a, message);
+                MaintainAddressTerminatedSubscription(a, message);
             }
             return a;
-        }
-
-        private void InvokeWatchWith(IInternalActorRef a, object message)
-        {
-            a.SendSystemMessage(new Watch(a, _self)); // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS
-            _state = _state.AddWatching(a, message);
         }
 
         /// <summary>
@@ -79,12 +74,13 @@ namespace Akka.Actor
             if (!a.Equals(Self) && WatchingContains(a))
             {
                 a.SendSystemMessage(new Unwatch(a, _self));
-                MaintainAddressTerminatedSubscription(InvokeUnwatch, subject); // a
+                MaintainAddressTerminatedSubscription(_unwatchAction, subject); // a
             }
             _state = _state.RemoveTerminated(a);
             return a;
         }
 
+        private readonly Action<IActorRef> _unwatchAction;
         private void InvokeUnwatch(IActorRef a)
         {
             _state = _state.RemoveWatching(a);
@@ -114,7 +110,7 @@ namespace Akka.Actor
             // The custom termination message that was requested
             if (TryGetWatching(actor, out var message))
             {
-                MaintainAddressTerminatedSubscription(InvokeUnwatch, actor);
+                MaintainAddressTerminatedSubscription(_unwatchAction, actor);
                 if (!IsTerminating)
                 {
                     Self.Tell(message ?? new Terminated(actor, existenceConfirmed, addressTerminated), actor);
@@ -193,9 +189,10 @@ namespace Akka.Actor
 
             if (watching.Count <= 0) return;
 
-            MaintainAddressTerminatedSubscription(InvokeUnwatchWatchedActors, arg1: watching, change: null);
+            MaintainAddressTerminatedSubscription(_unwatchWatchedActorsAciton, arg1: watching, change: null);
         }
 
+        private readonly Action<List<IActorRef>> _unwatchWatchedActorsAciton;
         private void InvokeUnwatchWatchedActors(List<IActorRef> watching)
         {
             try
@@ -225,7 +222,7 @@ namespace Akka.Actor
 
             if (watcheeSelf && !watcherSelf)
             {
-                if (!_state.ContainsWatchedBy(watcher)) MaintainAddressTerminatedSubscription(InvokeAddWatcher, watcher);
+                if (!_state.ContainsWatchedBy(watcher)) MaintainAddressTerminatedSubscription(_addWatcherAction, watcher);
             }
             else if (!watcheeSelf && watcherSelf)
             {
@@ -237,6 +234,7 @@ namespace Akka.Actor
             }
         }
 
+        private readonly Action<IActorRef> _addWatcherAction;
         private void InvokeAddWatcher(IActorRef watcher)
         {
             _state = _state.AddWatchedBy(watcher);
@@ -256,7 +254,7 @@ namespace Akka.Actor
 
             if (watcheeSelf && !watcherSelf)
             {
-                if (_state.ContainsWatchedBy(watcher)) MaintainAddressTerminatedSubscription(InvokeRemWatcher, watcher);
+                if (_state.ContainsWatchedBy(watcher)) MaintainAddressTerminatedSubscription(_remWatcherAction, watcher);
             }
             else if (!watcheeSelf && watcherSelf)
             {
@@ -268,6 +266,7 @@ namespace Akka.Actor
             }
         }
 
+        private readonly Action<IActorRef> _remWatcherAction;
         private void InvokeRemWatcher(IActorRef watcher)
         {
             _state = _state.RemoveWatchedBy(watcher);
@@ -282,7 +281,7 @@ namespace Akka.Actor
         protected void AddressTerminated(Address address)
         {
             // cleanup watchedBy since we know they are dead
-            MaintainAddressTerminatedSubscription(InvokeAddressTerminated, arg1: address, change: null);
+            MaintainAddressTerminatedSubscription(_addressTerminated, arg1: address, change: null);
 
             // send DeathWatchNotification to self for all matching subjects
             // that are not child with existenceConfirmed = false because we could have been watching a
@@ -296,6 +295,7 @@ namespace Akka.Actor
             }
         }
 
+        private readonly Action<Address> _addressTerminated;
         private void InvokeAddressTerminated(Address address)
         {
             foreach (var a in _state.GetWatchedBy().Where(a => a.Path.Address == address).ToList())
@@ -373,12 +373,18 @@ namespace Akka.Actor
             }
         }
 
-        private void MaintainAddressTerminatedSubscription<T1>(Action<IInternalActorRef, T1> block, IInternalActorRef change, T1 arg1)
+        private void MaintainAddressTerminatedSubscription(IInternalActorRef change, object message)
         {
+            void LocalBlock()
+            {
+                change.SendSystemMessage(new Watch(change, _self)); // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS
+                _state = _state.AddWatching(change, message);
+            }
+
             if (IsNonLocal(change))
             {
                 var had = HasNonLocalAddress();
-                block(change, arg1);
+                LocalBlock();
                 var has = HasNonLocalAddress();
 
                 if (had && !has)
@@ -388,7 +394,7 @@ namespace Akka.Actor
             }
             else
             {
-                block(change, arg1);
+                LocalBlock();
             }
         }
 

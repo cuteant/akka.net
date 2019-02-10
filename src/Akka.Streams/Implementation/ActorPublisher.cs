@@ -261,25 +261,26 @@ namespace Akka.Streams.Implementation
             try
             {
                 var shutdownReason = ShutdownReason;
-                if (shutdownReason == null)
+                switch (shutdownReason)
                 {
-                    ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
-                    ReactiveStreamsCompliance.TryOnComplete(subscriber);
-                }
-                else if (shutdownReason is ISpecViolation)
-                {
-                    // ok, not allowed to call OnError
-                }
-                else
-                {
-                    ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
-                    ReactiveStreamsCompliance.TryOnError(subscriber, shutdownReason);
+                    case null:
+                        ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
+                        ReactiveStreamsCompliance.TryOnComplete(subscriber);
+                        break;
+
+                    case ISpecViolation _:
+                        // ok, not allowed to call OnError
+                        break;
+
+                    default:
+                        ReactiveStreamsCompliance.TryOnSubscribe(subscriber, CancelledSubscription.Instance);
+                        ReactiveStreamsCompliance.TryOnError(subscriber, shutdownReason);
+                        break;
                 }
             }
             catch (Exception exception)
             {
-                if (!(exception is ISpecViolation))
-                    throw;
+                if (!(exception is ISpecViolation)) { throw; }
             }
         }
     }

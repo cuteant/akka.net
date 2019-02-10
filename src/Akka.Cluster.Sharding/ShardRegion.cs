@@ -764,11 +764,15 @@ namespace Akka.Cluster.Sharding
         private Task<Tuple<ShardId, T>[]> AskAllShardsAsync<T>(object message)
         {
             var timeout = TimeSpan.FromSeconds(3);
-            var tasks = Shards.Select(entity => entity.Value.Ask<T>(message, timeout).Then(AfterAskShard, entity.Key, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion));
+            var tasks = Shards.Select(entity => entity.Value.Ask<T>(message, timeout).Then(Helper<T>.AfterAskShardFunc, entity.Key, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion));
             return Task.WhenAll(tasks);
         }
 
-        private static Tuple<ShardId, T> AfterAskShard<T>(T result, ShardId shardId) => Tuple.Create(shardId, result);
+        sealed class Helper<T>
+        {
+            public static readonly Func<T, ShardId, Tuple<ShardId, T>> AfterAskShardFunc = AfterAskShard;
+            private static Tuple<ShardId, T> AfterAskShard(T result, ShardId shardId) => Tuple.Create(shardId, result);
+        }
 
         private List<ActorSelection> GracefulShutdownCoordinatorSelections
         {

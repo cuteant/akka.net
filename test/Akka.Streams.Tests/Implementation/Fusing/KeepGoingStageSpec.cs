@@ -93,22 +93,22 @@ namespace Akka.Streams.Tests.Implementation.Fusing
 
         private sealed class PingRef
         {
-            private readonly Action<IPingCmd> _cb;
+            private readonly IHandle<IPingCmd> _cb;
 
-            public PingRef(Action<IPingCmd> cb)
+            public PingRef(IHandle<IPingCmd> cb)
             {
                 _cb = cb;
             }
 
-            public void Register(IActorRef probe) => _cb(new Register(probe));
+            public void Register(IActorRef probe) => _cb.Handle(new Register(probe));
 
-            public void Ping() => _cb(KeepGoingStageSpec.Ping.Instance);
+            public void Ping() => _cb.Handle(KeepGoingStageSpec.Ping.Instance);
 
-            public void Stop() => _cb(CompleteStage.Instance);
+            public void Stop() => _cb.Handle(CompleteStage.Instance);
 
-            public void Fail() => _cb(FailStage.Instance);
+            public void Fail() => _cb.Handle(FailStage.Instance);
 
-            public void ThrowEx() => _cb(Throw.Instance);
+            public void ThrowEx() => _cb.Handle(Throw.Instance);
         }
 
         private sealed class PingableSink : GraphStageWithMaterializedValue<SinkShape<int>, Task<PingRef>>

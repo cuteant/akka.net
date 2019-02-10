@@ -738,8 +738,8 @@ namespace Akka.Actor
         /// </summary>
         protected FSM()
         {
-            if (this is ILoggingFSM)
-                DebugEvent = Context.System.Settings.FsmDebugEvent;
+            if (this is ILoggingFSM) { DebugEvent = Context.System.Settings.FsmDebugEvent; }
+            _defaultHandleEventFunc = DefaultHandleEventInternal;
         }
 
         /// <summary>
@@ -874,7 +874,7 @@ namespace Akka.Actor
             public StateFunction Using(Func<State<TState, TData>, State<TState, TData>> andThen)
             {
                 State<TState, TData> continuedDelegate(Event<TData> @event) => andThen.Invoke(Func.Invoke(@event));
-                return continuedDelegate;
+                return new StateFunction(continuedDelegate);
             }
         }
 
@@ -1084,10 +1084,9 @@ namespace Akka.Actor
             }
         }
 
-        /// <summary>
-        /// Unhandled event handler
-        /// </summary>
-        private StateFunction HandleEventDefault => DefaultHandleEventInternal;
+        private readonly StateFunction _defaultHandleEventFunc;
+        /// <summary>Unhandled event handler</summary>
+        private StateFunction HandleEventDefault => _defaultHandleEventFunc;
         State<TState, TData> DefaultHandleEventInternal(Event<TData> @event)
         {
             if (_log.IsWarningEnabled) _log.UnhandledEventInState(@event, StateName);
@@ -1138,7 +1137,7 @@ namespace Akka.Actor
                 return originalResult;
             }
 
-            return LocalChained;
+            return new StateFunction(LocalChained);
         }
 
         #endregion

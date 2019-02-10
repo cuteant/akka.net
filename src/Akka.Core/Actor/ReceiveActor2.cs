@@ -71,7 +71,8 @@ namespace Akka.Actor
                 newHandler(message);
                 return true;
             }
-            base.Become(LocalReceive);
+            Receive receiveFunc = LocalReceive;
+            base.Become(receiveFunc);
         }
 
         /// <summary>Changes the actor's behavior and replaces the current receive handler with the specified handler.
@@ -98,7 +99,8 @@ namespace Akka.Actor
                 newHandler(message);
                 return true;
             }
-            base.BecomeStacked(LocalReceive);
+            Receive receiveFunc = LocalReceive;
+            base.BecomeStacked(receiveFunc);
         }
 
         private Action<object> BuildNewReceiveHandler(SimpleMatchBuilder<object> matchBuilder)

@@ -39,6 +39,9 @@ namespace Akka.Actor
         public InboxActor(int size)
         {
             _size = size;
+
+            _clientPredicate = ClientPredicate;
+            _messagePredicate = MessagePredicate;
         }
 
         /// <summary>
@@ -72,6 +75,7 @@ namespace Akka.Actor
             }
         }
 
+        private readonly Predicate<IQuery> _clientPredicate;
         /// <summary>
         /// TBD
         /// </summary>
@@ -85,6 +89,7 @@ namespace Akka.Actor
             return query is Get;
         }
 
+        private readonly Predicate<object> _messagePredicate;
         /// <summary>
         /// TBD
         /// </summary>
@@ -125,7 +130,7 @@ namespace Akka.Actor
                     else
                     {
                         _currentSelect = select;
-                        var firstMatch = _messages.DequeueFirstOrDefault(MessagePredicate);
+                        var firstMatch = _messages.DequeueFirstOrDefault(_messagePredicate);
                         if (firstMatch == null)
                         {
                             EnqueueQuery(select);
@@ -168,7 +173,7 @@ namespace Akka.Actor
                     else
                     {
                         _currentMessage = message;
-                        var firstMatch = _matched[0] = _clients.DequeueFirstOrDefault(ClientPredicate); //TODO: this should work as DequeueFirstOrDefault
+                        var firstMatch = _matched[0] = _clients.DequeueFirstOrDefault(_clientPredicate); //TODO: this should work as DequeueFirstOrDefault
                         if (firstMatch != null)
                         {
                             _clientsByTimeout.ExceptWith(_matched);

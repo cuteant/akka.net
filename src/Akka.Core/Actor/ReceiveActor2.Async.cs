@@ -79,7 +79,8 @@ namespace Akka.Actor
                 ActorTaskScheduler.RunTask(newHandler, message);
                 return true;
             }
-            base.Become(LocalReceive);
+            Receive receiveFunc = LocalReceive;
+            base.Become(receiveFunc);
         }
 
         /// <summary>Changes the actor's behavior and replaces the current receive handler with the specified handler.
@@ -104,7 +105,8 @@ namespace Akka.Actor
                 ActorTaskScheduler.RunTask(newHandler, message);
                 return true;
             }
-            base.BecomeStacked(LocalReceive);
+            Receive receiveFunc = LocalReceive;
+            base.BecomeStacked(receiveFunc);
         }
 
         private Func<object, Task> BuildNewReceiveHandler(SimpleMatchBuilder<object, Task> matchBuilder)

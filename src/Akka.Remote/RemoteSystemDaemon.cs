@@ -87,14 +87,13 @@ namespace Akka.Remote
 
         private void TerminationHookDoneWhenNoChildren()
         {
-            void LocalTermination()
+            _terminating.WhileOn(() =>
             {
                 if (!HasChildren)
                 {
                     _terminator.Tell(TerminationHookDone.Instance, this);
                 }
-            }
-            _terminating.WhileOn(LocalTermination);
+            });
         }
 
         /// <summary>Tells the internal.</summary>

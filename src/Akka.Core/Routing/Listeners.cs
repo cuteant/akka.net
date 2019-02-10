@@ -124,6 +124,10 @@ namespace Akka.Routing
         /// </summary>
         protected readonly HashSet<IActorRef> Listeners = new HashSet<IActorRef>(ActorRefComparer.Instance);
 
+        private readonly Receive _receiveFunc;
+
+        public ListenerSupport() => _receiveFunc = new Receive(Receive);
+
         /// <summary>
         /// Retrieves the wiring needed to implement listening functionality.
         /// 
@@ -131,31 +135,26 @@ namespace Akka.Routing
         /// This needs to be chained into the actor's <see cref="UntypedActor.OnReceive"/> method.
         /// </note>
         /// </summary>
-        public Receive ListenerReceive
+        public Receive ListenerReceive => _receiveFunc;
+
+        private bool Receive(object message)
         {
-            get
+            switch (message)
             {
-                bool process(object message)
-                {
-                    switch (message)
+                case Listen listen:
+                    Add(listen.Listener);
+                    return true;
+                case Deafen deafen:
+                    Remove(deafen.Listener);
+                    return true;
+                case WithListeners listeners:
+                    foreach (var listener in Listeners)
                     {
-                        case Listen listen:
-                            Add(listen.Listener);
-                            return true;
-                        case Deafen deafen:
-                            Remove(deafen.Listener);
-                            return true;
-                        case WithListeners listeners:
-                            foreach (var listener in Listeners)
-                            {
-                                listeners.ListenerFunction(listener);
-                            }
-                            return true;
-                        default:
-                            return false;
+                        listeners.ListenerFunction(listener);
                     }
-                };
-                return process;
+                    return true;
+                default:
+                    return false;
             }
         }
 

@@ -2247,7 +2247,7 @@ namespace Akka.Streams.Implementation
                 // (This is an attempt to clean up after an exception during materialization)
                 var ex = new MaterializationPanicException(cause);
 
-                void ProcessSubscribers(IDictionary<InPort, object> subMap)
+                foreach(var subMap in _subscribersStack)
                 {
                     foreach (var value in subMap.Values)
                     {
@@ -2272,9 +2272,8 @@ namespace Akka.Streams.Implementation
                         }
                     }
                 }
-                _subscribersStack.ForEach(ProcessSubscribers);
 
-                void ProcessPublishers(IDictionary<OutPort, IUntypedPublisher> pubMap)
+                foreach(var pubMap in _publishersStack)
                 {
                     foreach (var publisher in pubMap.Values)
                     {
@@ -2284,7 +2283,6 @@ namespace Akka.Streams.Implementation
                         publisher.Subscribe(UntypedSubscriber.FromTyped(subscriber));
                     }
                 }
-                _publishersStack.ForEach(ProcessPublishers);
 
                 throw;
             }

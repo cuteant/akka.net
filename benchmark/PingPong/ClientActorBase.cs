@@ -28,37 +28,38 @@ namespace PingPong
 
         protected override bool Receive(object message)
         {
-            if(message is Messages.Msg)
+            switch (message)
             {
-                _received++;
-                if(_sent < _repeat)
-                {
-                    _actor.Tell(message);
-                    _sent++;
-                }
-                else if(_received >= _repeat)
-                {
-                    //       Console.WriteLine("done {0}", Self.Path);
-                    _latch.SetResult(true);
-                }
-                return true;
+                case Messages.Msg _:
+                    _received++;
+                    if (_sent < _repeat)
+                    {
+                        _actor.Tell(message);
+                        _sent++;
+                    }
+                    else if (_received >= _repeat)
+                    {
+                        //       Console.WriteLine("done {0}", Self.Path);
+                        _latch.SetResult(true);
+                    }
+                    return true;
+
+                case Messages.Run _:
+                    var msg = new Messages.Msg();
+                    for (int i = 0; i < Math.Min(1000, _repeat); i++)
+                    {
+                        _actor.Tell(msg);
+                        _sent++;
+                    }
+                    return true;
+
+                case Messages.Started _:
+                    Sender.Tell(message);
+                    return true;
+
+                default:
+                    return false;
             }
-            if(message is Messages.Run)
-            {
-                var msg = new Messages.Msg();
-                for(int i = 0; i < Math.Min(1000, _repeat); i++)
-                {
-                    _actor.Tell(msg);
-                    _sent++;
-                }
-                return true;
-            }
-            if(message is Messages.Started)
-            {
-                Sender.Tell(message);
-                return true;
-            }
-            return false;
         }
     }
 }

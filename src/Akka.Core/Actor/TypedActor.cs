@@ -11,19 +11,6 @@ using System.Reflection;
 namespace Akka.Actor
 {
     /// <summary>
-    ///     Interface IHandle
-    /// </summary>
-    /// <typeparam name="TMessage">The type of the t message.</typeparam>
-    public interface IHandle<in TMessage>
-    {
-        /// <summary>
-        ///     Handles the specified message.
-        /// </summary>
-        /// <param name="message">The message.</param>
-        void Handle(TMessage message);
-    }
-
-    /// <summary>
     ///     Class TypedActor.
     /// </summary>
     [Obsolete("TypedActor in its current shape will be removed in v1.5")]

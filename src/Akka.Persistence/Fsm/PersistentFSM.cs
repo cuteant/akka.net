@@ -138,7 +138,7 @@ namespace Akka.Persistence.Fsm
                     }
                 }
 
-                void HandleEvent(object @event)
+                PersistAll(eventsToPersist, @event =>
                 {
                     switch (@event)
                     {
@@ -152,8 +152,7 @@ namespace Akka.Persistence.Fsm
                             ApplyStateOnLastHandler();
                             break;
                     }
-                }
-                PersistAll(eventsToPersist, HandleEvent);
+                });
             }
         }
     }

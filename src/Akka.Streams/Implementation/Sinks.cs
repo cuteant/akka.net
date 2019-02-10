@@ -764,7 +764,7 @@ namespace Akka.Streams.Implementation
     {
         #region stage logic
 
-        private sealed class Logic : GraphStageLogicWithCallbackWrapper<TaskCompletionSource<Option<T>>>, IInHandler
+        private sealed class Logic : GraphStageLogicWithCallbackWrapper<TaskCompletionSource<Option<T>>>, IInHandler, IHandle<TaskCompletionSource<Option<T>>>
         {
             private readonly QueueSink<T> _stage;
             private readonly int _maxBuffer;
@@ -806,27 +806,28 @@ namespace Akka.Streams.Implementation
                             promise.TrySetException(new IllegalStateException("Stream is terminated. QueueSink is detached")));
             }
 
-            private Action<TaskCompletionSource<Option<T>>> Callback()
+            private IHandle<TaskCompletionSource<Option<T>>> Callback()
             {
-                return GetAsyncCallback<TaskCompletionSource<Option<T>>>(
-                    promise =>
+                return GetAsyncCallback<TaskCompletionSource<Option<T>>>(this);
+            }
+
+            void IHandle<TaskCompletionSource<Option<T>>>.Handle(TaskCompletionSource<Option<T>> promise)
+            {
+                if (_currentRequest.HasValue)
+                    promise.TrySetException(
+                        new IllegalStateException(
+                            "You have to wait for previous future to be resolved to send another request"));
+                else
+                {
+                    if (_buffer.IsEmpty)
+                        _currentRequest = promise;
+                    else
                     {
-                        if (_currentRequest.HasValue)
-                            promise.TrySetException(
-                                new IllegalStateException(
-                                    "You have to wait for previous future to be resolved to send another request"));
-                        else
-                        {
-                            if (_buffer.IsEmpty)
-                                _currentRequest = promise;
-                            else
-                            {
-                                if (_buffer.Used == _maxBuffer)
-                                    TryPull(_stage.In);
-                                SendDownstream(promise);
-                            }
-                        }
-                    });
+                        if (_buffer.Used == _maxBuffer)
+                            TryPull(_stage.In);
+                        SendDownstream(promise);
+                    }
+                }
             }
 
             private void SendDownstream(TaskCompletionSource<Option<T>> promise)
@@ -954,20 +955,34 @@ namespace Akka.Streams.Implementation
                 SetHandler(stage.In, this);
             }
 
+            sealed class DelegatingHandle : IHandle<Result<Sink<TIn, TMat>>>
+            {
+                private readonly Logic _logic;
+                private readonly TIn _element;
+
+                public DelegatingHandle(Logic logic, TIn element)
+                {
+                    _logic = logic;
+                    _element = element;
+                }
+
+                public void Handle(Result<Sink<TIn, TMat>> result)
+                {
+                    if (result.IsSuccess)
+                        _logic.InitInternalSource(result.Value, _element);
+                    else
+                        _logic.Failure(result.Exception);
+                }
+            }
+
             public override void OnPush()
             {
                 try
                 {
                     var element = Grab(_stage.In);
-                    var callback = GetAsyncCallback<Result<Sink<TIn, TMat>>>(result =>
-                    {
-                        if (result.IsSuccess)
-                            InitInternalSource(result.Value, element);
-                        else
-                            Failure(result.Exception);
-                    });
+                    var callback = GetAsyncCallback<Result<Sink<TIn, TMat>>>(new DelegatingHandle(this, element));
                     _stage._sinkFactory(element)
-                        .ContinueWith(t => callback(Result.FromTask(t)),
+                        .ContinueWith(t => callback.Handle(Result.FromTask(t)),
                             TaskContinuationOptions.ExecuteSynchronously);
                     SetHandler(_stage.In, new LambdaInHandler(
                             onPush: () => { },

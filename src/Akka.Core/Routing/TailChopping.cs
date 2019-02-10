@@ -114,7 +114,7 @@ namespace Akka.Routing
             else
             {
                 _scheduler.Advanced.ScheduleRepeatedly(TimeSpan.Zero, _interval,
-                    InvokeSendAction, this, routeeIndex, completion, message, sender,
+                    new ScheduledRunnable(this, routeeIndex, completion, message, sender),
                     cancelable);
             }
 
@@ -124,25 +124,42 @@ namespace Akka.Routing
         private static readonly Action<Task<object>, Cancelable> InvokeCancelAction = InvokeCancel;
         private static void InvokeCancel(Task<object> t, Cancelable cancelable) => cancelable.Cancel(false);
 
-        private static readonly Action<TailChoppingRoutee, AtomicCounter, TaskCompletionSource<object>, object, IActorRef> InvokeSendAction = InvokeSend;
-        private static async void InvokeSend(TailChoppingRoutee owner,
-            AtomicCounter routeeIndex, TaskCompletionSource<object> completion, object message, IActorRef sender)
+        sealed class ScheduledRunnable : IRunnable
         {
-            var currentIndex = routeeIndex.GetAndIncrement();
-            var routees = owner._routees;
-            if (currentIndex >= routees.Length) { return; }
+            private TailChoppingRoutee _owner;
+            private AtomicCounter _routeeIndex;
+            private TaskCompletionSource<object> _completion;
+            private object _message;
+            private IActorRef _sender;
 
-            var within = owner._within;
-            try
+            public ScheduledRunnable(TailChoppingRoutee owner,
+                AtomicCounter routeeIndex, TaskCompletionSource<object> completion, object message, IActorRef sender)
             {
-
-                completion.TrySetResult(await (routees[currentIndex].Ask(message, within)).ConfigureAwait(false));
+                _owner = owner;
+                _routeeIndex = routeeIndex;
+                _completion = completion;
+                _message = message;
+                _sender = sender;
             }
-            catch (TaskCanceledException)
+
+            public async void Run()
             {
-                completion.TrySetResult(
-                    new Status.Failure(
-                        new AskTimeoutException($"Ask timed out on {sender} after {within}")));
+                var currentIndex = _routeeIndex.GetAndIncrement();
+                var routees = _owner._routees;
+                if (currentIndex >= routees.Length) { return; }
+
+                var within = _owner._within;
+                try
+                {
+
+                    _completion.TrySetResult(await(routees[currentIndex].Ask(_message, within)).ConfigureAwait(false));
+                }
+                catch (TaskCanceledException)
+                {
+                    _completion.TrySetResult(
+                        new Status.Failure(
+                            new AskTimeoutException($"Ask timed out on {_sender} after {within}")));
+                }
             }
         }
     }

@@ -967,7 +967,7 @@ namespace Akka.Remote.Transport
         {
             #region ThrottlerState.WaitExposedHandle
 
-            State<ThrottlerState, IThrottlerData> WaitExposedHandleFunc(Event<IThrottlerData> @event)
+            When(ThrottlerState.WaitExposedHandle, @event =>
             {
                 if (@event.FsmEvent is ThrottlerManager.Handle throttlerManagerHandle && @event.StateData is Uninitialized)
                 {
@@ -978,14 +978,13 @@ namespace Akka.Remote.Transport
                             .Using(new ExposedHandle(throttlerManagerHandle.ThrottlerHandle));
                 }
                 return null;
-            }
-            When(ThrottlerState.WaitExposedHandle, WaitExposedHandleFunc);
+            });
 
             #endregion
 
             #region ThrottlerState.WaitOrigin
 
-            State<ThrottlerState, IThrottlerData> WaitOriginFunc(Event<IThrottlerData> @event)
+            When(ThrottlerState.WaitOrigin, @event =>
             {
                 if (@event.FsmEvent is InboundPayload inboundPayload && @event.StateData is ExposedHandle exposedHandle)
                 {
@@ -1000,14 +999,13 @@ namespace Akka.Remote.Transport
                     return Stay();
                 }
                 return null;
-            }
-            When(ThrottlerState.WaitOrigin, WaitOriginFunc);
+            });
 
             #endregion
 
             #region ThrottlerState.WaitMode
 
-            State<ThrottlerState, IThrottlerData> WaitModeFunc(Event<IThrottlerData> @event)
+            When(ThrottlerState.WaitMode, @event =>
             {
                 switch (@event.FsmEvent)
                 {
@@ -1046,14 +1044,13 @@ namespace Akka.Remote.Transport
                     default:
                         return null;
                 }
-            }
-            When(ThrottlerState.WaitMode, WaitModeFunc);
+            });
 
             #endregion
 
             #region ThrottlerState.WaitUpstreamListener
 
-            State<ThrottlerState, IThrottlerData> WaitUpstreamListenerFunc(Event<IThrottlerData> @event)
+            When(ThrottlerState.WaitUpstreamListener, @event =>
             {
                 switch (@event.FsmEvent)
                 {
@@ -1069,14 +1066,13 @@ namespace Akka.Remote.Transport
                     default:
                         return null;
                 }
-            }
-            When(ThrottlerState.WaitUpstreamListener, WaitUpstreamListenerFunc);
+            });
 
             #endregion
 
             #region ThrottlerState.WaitModeAndUpstreamListener
 
-            State<ThrottlerState, IThrottlerData> WaitModeAndUpstreamListenerFunc(Event<IThrottlerData> @event)
+            When(ThrottlerState.WaitModeAndUpstreamListener, @event =>
             {
                 switch (@event.FsmEvent)
                 {
@@ -1093,14 +1089,13 @@ namespace Akka.Remote.Transport
                     default:
                         return null;
                 }
-            }
-            When(ThrottlerState.WaitModeAndUpstreamListener, WaitModeAndUpstreamListenerFunc);
+            });
 
             #endregion
 
             #region ThrottlerState.Throttling
 
-            State<ThrottlerState, IThrottlerData> ThrottlingFunc(Event<IThrottlerData> @event)
+            When(ThrottlerState.Throttling, @event =>
             {
                 switch (@event.FsmEvent)
                 {
@@ -1138,14 +1133,13 @@ namespace Akka.Remote.Transport
                     default:
                         return null;
                 }
-            }
-            When(ThrottlerState.Throttling, ThrottlingFunc);
+            });
 
             #endregion
 
             #region WhenUnhandled
 
-            State<ThrottlerState, IThrottlerData> UnhandledFunc(Event<IThrottlerData> @event)
+            WhenUnhandled(@event =>
             {
                 switch (@event.FsmEvent)
                 {
@@ -1166,8 +1160,7 @@ namespace Akka.Remote.Transport
                     default:
                         return null;
                 }
-            }
-            WhenUnhandled(UnhandledFunc);
+            });
 
             #endregion
 

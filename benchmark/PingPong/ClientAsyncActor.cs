@@ -13,7 +13,7 @@ using Akka.Actor;
 
 namespace PingPong
 {
-    public class ClientAsyncActor : ReceiveActor
+    public class ClientAsyncActor : AsyncReceiveActor2
     {
         public ClientAsyncActor(IActorRef actor, long repeat, TaskCompletionSource<bool> latch)
         {
@@ -32,7 +32,7 @@ namespace PingPong
                     latch.SetResult(true);
                 }
             });
-            Receive<Messages.Run>(r =>
+            ReceiveAsync<Messages.Run>(async r =>
             {
                 var msg = new Messages.Msg();
                 for (int i = 0; i < Math.Min(1000, repeat); i++)
@@ -41,7 +41,7 @@ namespace PingPong
                     sent++;
                 }
             });
-            Receive<Messages.Started>(s => Sender.Tell(s));
+            ReceiveAsync<Messages.Started>(async s => Sender.Tell(s));
         }
     }
 }

@@ -1187,7 +1187,7 @@ namespace Akka.Cluster.Sharding
         /// <returns>TBD</returns>
         public static ExtractEntityId ToExtractEntityId(this IMessageExtractor self)
         {
-            Tuple<string, object> extractEntityId(object msg)
+            Tuple<string, object> LocalExtractEntityId(object msg)
             {
                 if (self.EntityId(msg) != null)
                     return Tuple.Create(self.EntityId(msg), self.EntityMessage(msg));
@@ -1196,7 +1196,7 @@ namespace Akka.Cluster.Sharding
                 return null;
             }
 
-            return extractEntityId;
+            return new ExtractEntityId(LocalExtractEntityId);
         }
     }
 

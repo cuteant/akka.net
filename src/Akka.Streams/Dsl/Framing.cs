@@ -123,7 +123,7 @@ namespace Akka.Streams.Dsl
             }
         }
 
-        private static readonly Func<IEnumerator<byte>, int, int> BigEndianDecoder = BigEndianDecoderInternal;
+        private static readonly Func<IEnumerator<byte>, int, int> BigEndianDecoderFunc = BigEndianDecoderInternal;
         private static int BigEndianDecoderInternal(IEnumerator<byte> enumerator, int length)
         {
             var count = length;
@@ -139,7 +139,7 @@ namespace Akka.Streams.Dsl
             return decoded;
         }
 
-        private static readonly Func<IEnumerator<byte>, int, int> LittleEndianDecoder = LittleEndianDecoderInternal;
+        private static readonly Func<IEnumerator<byte>, int, int> LittleEndianDecoderFunc = LittleEndianDecoderInternal;
         private static int LittleEndianDecoderInternal(IEnumerator<byte> enumerator, int length)
         {
             var highestOcted = (length - 1) << 3;
@@ -438,7 +438,7 @@ namespace Akka.Streams.Dsl
                 _maximumFramelength = maximumFramelength;
                 _lengthFieldOffset = lengthFieldOffset;
                 _minimumChunkSize = lengthFieldOffset + lengthFieldLength;
-                _intDecoder = byteOrder == ByteOrder.BigEndian ? BigEndianDecoder : LittleEndianDecoder;
+                _intDecoder = byteOrder == ByteOrder.BigEndian ? BigEndianDecoderFunc : LittleEndianDecoderFunc;
             }
 
             protected override GraphStageLogic CreateLogic(Attributes inheritedAttributes) => new Logic(this);

@@ -932,9 +932,22 @@ namespace Akka.Streams.Dsl
             int maxBufferCapacity = 128,
             OverflowStrategy overflowStrategy = OverflowStrategy.DropHead)
         {
-            EventHandler<T> conversion(Action<T> onEvent) => (sender, e) => onEvent(e);
-            var wrapper = new EventWrapper<EventHandler<T>, T>(addHandler, removeHandler, conversion);
+            var wrapper = new EventWrapper<EventHandler<T>, T>(addHandler, removeHandler, Helper<T>.ConversionFunc);
             return FromGraph(new ObservableSourceStage<T>(wrapper, maxBufferCapacity, overflowStrategy));
+        }
+
+        static class Helper<T>
+        {
+            public static readonly Func<Action<T>, EventHandler<T>> ConversionFunc = Conversion;
+
+            private static EventHandler<T> Conversion(Action<T> onEvent)
+            {
+                void LocalHandle(object sender, T e)
+                {
+                    onEvent(e);
+                }
+                return new EventHandler<T>(LocalHandle);
+            }
         }
 
         /// <summary>

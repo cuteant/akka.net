@@ -99,7 +99,7 @@ namespace Akka.Actor
         /// </exception>
         public void SetDeploy(Deploy deploy)
         {
-            void add(IList<string> path, Deploy d)
+            void LocalAdd(IList<string> path, Deploy d)
             {
                 bool set;
                 do
@@ -118,7 +118,7 @@ namespace Akka.Actor
                 } while (!set);
             }
             var elements = deploy.Path.Split('/').Drop(1).ToList();
-            add(elements, deploy);
+            LocalAdd(elements, deploy);
         }
 
         /// <summary>

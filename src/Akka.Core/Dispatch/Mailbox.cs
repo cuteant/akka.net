@@ -106,6 +106,7 @@ namespace Akka.Dispatch
         public Mailbox(IMessageQueue messageQueue)
         {
             MessageQueue = messageQueue;
+            _runAction = RunCore;
         }
 
         /// <summary>
@@ -358,12 +359,7 @@ namespace Akka.Dispatch
             {
                 if (!IsClosed()) // Volatile read, needed here
                 {
-                    void process()
-                    {
-                        ProcessAllSystemMessages(); // First, deal with any system messages
-                        ProcessMailbox(); // Then deal with messages
-                    }
-                    Actor.UseThreadContext(process);
+                    Actor.UseThreadContext(_runAction);
                 }
             }
             finally
@@ -371,6 +367,13 @@ namespace Akka.Dispatch
                 SetAsIdle(); // Volatile write, needed here
                 Dispatcher.RegisterForExecution(this, false, false); // schedule to run again if there are more messages, possibly
             }
+        }
+
+        private readonly Action _runAction;
+        private void RunCore()
+        {
+            ProcessAllSystemMessages(); // First, deal with any system messages
+            ProcessMailbox(); // Then deal with messages
         }
 
         private void ProcessMailbox()

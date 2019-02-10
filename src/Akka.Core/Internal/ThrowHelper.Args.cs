@@ -23,6 +23,7 @@
         options,
         list,
         ts,
+        handler,
         other,
         pool,
         inner,

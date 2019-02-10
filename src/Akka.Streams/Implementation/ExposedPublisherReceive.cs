@@ -59,11 +59,10 @@ namespace Akka.Streams.Implementation
                 if (_stash.NonEmpty)
                 {
                     // we don't use sender() so this is alright
-                    void ProcessMsg(object msg)
+                    foreach(var msg in _stash)
                     {
                         if (!ActiveReceive(msg)) Unhandled(msg);
                     }
-                    _stash.ForEach(ProcessMsg);
                 }
             }
             else

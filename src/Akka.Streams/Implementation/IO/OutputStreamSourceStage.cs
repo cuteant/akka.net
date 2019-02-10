@@ -45,7 +45,7 @@ namespace Akka.Streams.Implementation.IO
 
             private Flush()
             {
-                
+
             }
         }
 
@@ -114,12 +114,16 @@ namespace Akka.Streams.Implementation.IO
             Task WakeUp(IAdapterToStageMessage msg);
         }
 
-        private sealed class Logic : OutGraphStageLogic, IStageWithCallback
+        private sealed class Logic :
+            OutGraphStageLogic,
+            IStageWithCallback,
+            IHandle<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>>,
+            IHandle<Either<ByteString, Exception>>
         {
             private readonly OutputStreamSourceStage _stage;
             private readonly AtomicReference<IDownstreamStatus> _downstreamStatus;
             private readonly string _dispatcherId;
-            private readonly Action<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>> _upstreamCallback;
+            private readonly IHandle<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>> _upstreamCallback;
             private readonly OnPullRunnable _pullTask;
             private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
             private BlockingCollection<ByteString> _dataQueue;
@@ -134,16 +138,18 @@ namespace Akka.Streams.Implementation.IO
                 _downstreamStatus = downstreamStatus;
                 _dispatcherId = dispatcherId;
 
-                var downstreamCallback = GetAsyncCallback<Either<ByteString, Exception>>(result =>
-                {
-                    if (result.IsLeft)
-                        OnPush(result.Value as ByteString);
-                    else
-                        FailStage(result.Value as Exception);
-                });
-                _upstreamCallback = GetAsyncCallback<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>>(OnAsyncMessage);
+                var downstreamCallback = GetAsyncCallback<Either<ByteString, Exception>>(this);
+                _upstreamCallback = GetAsyncCallback<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>>(this);
                 _pullTask = new OnPullRunnable(downstreamCallback, dataQueue, _cancellation.Token);
                 SetHandler(_stage._out, this);
+            }
+
+            void IHandle<Either<ByteString, Exception>>.Handle(Either<ByteString, Exception> result)
+            {
+                if (result.IsLeft)
+                    OnPush(result.Value as ByteString);
+                else
+                    FailStage(result.Value as Exception);
             }
 
             public override void PreStart()
@@ -163,14 +169,14 @@ namespace Akka.Streams.Implementation.IO
                 _cancellation.Cancel(false);
                 base.PostStop();
             }
-            
+
             private sealed class OnPullRunnable : IRunnable
             {
-                private readonly Action<Either<ByteString, Exception>> _callback;
+                private readonly IHandle<Either<ByteString, Exception>> _callback;
                 private readonly BlockingCollection<ByteString> _dataQueue;
                 private readonly CancellationToken _cancellationToken;
 
-                public OnPullRunnable(Action<Either<ByteString, Exception>> callback, BlockingCollection<ByteString> dataQueue, CancellationToken cancellationToken)
+                public OnPullRunnable(IHandle<Either<ByteString, Exception>> callback, BlockingCollection<ByteString> dataQueue, CancellationToken cancellationToken)
                 {
                     _callback = callback;
                     _dataQueue = dataQueue;
@@ -181,19 +187,19 @@ namespace Akka.Streams.Implementation.IO
                 {
                     try
                     {
-                        _callback(new Left<ByteString, Exception>(_dataQueue.Take(_cancellationToken)));
+                        _callback.Handle(new Left<ByteString, Exception>(_dataQueue.Take(_cancellationToken)));
                     }
                     catch (OperationCanceledException)
                     {
-                        _callback(new Left<ByteString, Exception>(ByteString.Empty));
+                        _callback.Handle(new Left<ByteString, Exception>(ByteString.Empty));
                     }
                     catch (Exception ex)
                     {
-                        _callback(new Right<ByteString, Exception>(ex));
+                        _callback.Handle(new Right<ByteString, Exception>(ex));
                     }
                 }
             }
-            
+
             public override void OnPull() => _dispatcher.Schedule(_pullTask);
 
             private void OnPush(ByteString data)
@@ -208,11 +214,12 @@ namespace Akka.Streams.Implementation.IO
             public Task WakeUp(IAdapterToStageMessage msg)
             {
                 var p = new TaskCompletionSource<NotUsed>();
-                _upstreamCallback(Tuple.Create(msg, p));
+                _upstreamCallback.Handle(Tuple.Create(msg, p));
                 return p.Task;
             }
 
-            private void OnAsyncMessage(Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>> @event)
+            // OnAsyncMessage
+            void IHandle<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>>.Handle(Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>> @event)
             {
                 switch (@event.Item1)
                 {
@@ -351,7 +358,7 @@ namespace Akka.Streams.Implementation.IO
         }
 
         #endregion
-        
+
         private readonly BlockingCollection<ByteString> _dataQueue;
         private readonly AtomicReference<IDownstreamStatus> _downstreamStatus;
         private readonly IStageWithCallback _stageWithCallback;
@@ -376,13 +383,13 @@ namespace Akka.Streams.Implementation.IO
             _writeTimeout = writeTimeout;
         }
 
-        private void Send(Action sendAction)
+        private void Send(/*Action sendAction*/)
         {
             if (_isActive)
             {
                 if (_isPublisherAlive)
                 {
-                    sendAction();
+                    //sendAction();
                 }
                 else
                 {
@@ -395,8 +402,10 @@ namespace Akka.Streams.Implementation.IO
             }
         }
 
-        private void SendData(ByteString data) => Send(() =>
+        private void SendData(ByteString data) //=> Send(() =>
         {
+            Send(); // valid
+
             _dataQueue.Add(data);
 
             if (_downstreamStatus.Value is Canceled)
@@ -404,11 +413,12 @@ namespace Akka.Streams.Implementation.IO
                 _isPublisherAlive = false;
                 ThrowHelper.ThrowIOException_PublisherClosed();
             }
-        });
+        }//);
 
 
-        private void SendMessage(IAdapterToStageMessage msg, bool handleCancelled = true) => Send(() =>
+        private void SendMessage(IAdapterToStageMessage msg, bool handleCancelled = true) //=> Send(() =>
         {
+            Send(); // valid
 
             _stageWithCallback.WakeUp(msg).Wait(_writeTimeout);
             if (_downstreamStatus.Value is Canceled && handleCancelled)
@@ -417,8 +427,8 @@ namespace Akka.Streams.Implementation.IO
                 _isPublisherAlive = false;
                 ThrowHelper.ThrowIOException_PublisherClosed();
             }
-        });
-        
+        }//);
+
 
         /// <summary>
         /// TBD

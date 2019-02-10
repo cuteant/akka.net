@@ -78,6 +78,18 @@ namespace Akka.Actor
             Parent = parent;
             Dispatcher = dispatcher;
 
+            _watchAction = InvokeWatch;
+            _unwatchAction = InvokeUnwatch;
+            _unwatchWatchedActorsAciton = InvokeUnwatchWatchedActors;
+            _addWatcherAction = InvokeAddWatcher;
+            _remWatcherAction = InvokeRemWatcher;
+            _addressTerminated = InvokeAddressTerminated;
+            _publishOnFaultRecreateAction = InvokePublishOnFaultRecreate;
+            _invokeFailureAction = HandleInvokeFailure;
+            _publishOnHandleInvokeFailureAction = InvokePublishOnHandleInvokeFailure;
+            _pulishOnFinishTerminateAction = InvokePulishOnFinishTerminate;
+            _publishOnFinishRecreateAction = InvokePublishOnFinishRecreate;
+            _publishOnHandleChildTerminatedAction = InvokePublishOnHandleChildTerminated;
         }
 
         /// <summary>
@@ -303,12 +315,24 @@ namespace Akka.Actor
 
         void IUntypedActorContext.Become(UntypedReceive receive)
         {
-            Become(m => { receive(m); return true; });
+            bool LocalReceive(object m)
+            {
+                receive(m);
+                return true;
+            }
+            Receive receiveFunc = LocalReceive;
+            Become(receiveFunc);
         }
 
         void IUntypedActorContext.BecomeStacked(UntypedReceive receive)
         {
-            BecomeStacked(m => { receive(m); return true; });
+            bool LocalReceive(object m)
+            {
+                receive(m);
+                return true;
+            }
+            Receive receiveFunc = LocalReceive;
+            BecomeStacked(receiveFunc);
         }
 
         private long NewUid()
@@ -326,7 +350,7 @@ namespace Akka.Actor
             PrepareForNewActor();
             ActorBase instance = null;
             //set the thread static context or things will break
-            void LocalAction()
+            UseThreadContext(() =>
             {
                 _state = _state.ClearBehaviorStack();
                 instance = CreateNewActorInstance();
@@ -334,8 +358,7 @@ namespace Akka.Actor
                 //We should investigate what we can do to handle this better
                 instance.SupervisorStrategyInternal = _props.SupervisorStrategy;
                 //defaults to null - won't affect lazy instantiation unless explicitly set in props
-            }
-            UseThreadContext(LocalAction);
+            });
             return instance;
         }
 

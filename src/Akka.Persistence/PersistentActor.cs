@@ -429,7 +429,7 @@ namespace Akka.Persistence
             {
                 RunTask(asyncHandler, m);
             }
-            return wrapAsyncHandler;
+            return new Action<T>(wrapAsyncHandler);
         }
 
         #region Recover helper methods

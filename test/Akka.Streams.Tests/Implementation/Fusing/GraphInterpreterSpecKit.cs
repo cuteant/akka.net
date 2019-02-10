@@ -124,7 +124,7 @@ namespace Akka.Streams.Tests.Implementation.Fusing
                         new Dictionary<IModule, object>(), s => { });
                     var connections = mat.Item1;
                     var logics = mat.Item2;
-                    var interpreter = new GraphInterpreter(assembly, NoMaterializer.Instance, _logger, logics, connections, (l, o, a) => {}, false, null);
+                    var interpreter = new GraphInterpreter(assembly, NoMaterializer.Instance, _logger, logics, connections, GraphInterpreter.NullAsyncInputHandle.Instance, false, null);
 
                     var i = 0;
                     foreach (var upstream in _upstreams)
@@ -147,7 +147,7 @@ namespace Akka.Streams.Tests.Implementation.Fusing
                     new Dictionary<IModule, object>(), s => { });
                 var connections = mat.Item1;
                 var logics = mat.Item2;
-                _interpreter = new GraphInterpreter(assembly, NoMaterializer.Instance, _logger, logics, connections, (l, o, a) => {}, false, null);
+                _interpreter = new GraphInterpreter(assembly, NoMaterializer.Instance, _logger, logics, connections, GraphInterpreter.NullAsyncInputHandle.Instance, false, null);
             }
 
             public AssemblyBuilder Builder(params IGraphStageWithMaterializedValue<Shape, object>[] stages)

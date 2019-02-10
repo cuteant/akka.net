@@ -1003,6 +1003,8 @@ namespace Akka.Cluster
             _latestGossip = Gossip.Empty;
             _eventStream = Context.System.EventStream;
 
+            _publishAction = Publish;
+
             Receive<InternalClusterAction.PublishChanges>(newGossip => PublishChanges(newGossip.NewGossip));
             Receive<ClusterEvent.CurrentInternalStats>(currentStats => PublishInternalStats(currentStats));
             Receive<InternalClusterAction.SendCurrentClusterState>(receiver => SendCurrentClusterState(receiver.Receiver));
@@ -1055,12 +1057,11 @@ namespace Akka.Cluster
         {
             if (initMode == ClusterEvent.SubscriptionInitialStateMode.InitialStateAsEvents)
             {
-                void pub(object @event)
+                PublishDiff(Gossip.Empty, _latestGossip, @event =>
                 {
                     var eventType = @event.GetType();
                     if (to.Any(o => o.IsAssignableFrom(eventType))) { subscriber.Tell(@event); }
-                }
-                PublishDiff(Gossip.Empty, _latestGossip, pub);
+                });
             }
             else if (initMode == ClusterEvent.SubscriptionInitialStateMode.InitialStateAsSnapshot)
             {
@@ -1081,7 +1082,7 @@ namespace Akka.Cluster
             var oldGossip = _latestGossip;
             // keep the _latestGossip to be sent to new subscribers
             _latestGossip = newGossip;
-            PublishDiff(oldGossip, newGossip, Publish);
+            PublishDiff(oldGossip, newGossip, _publishAction);
         }
 
         private void PublishDiff(Gossip oldGossip, Gossip newGossip, Action<object> pub)
@@ -1101,6 +1102,7 @@ namespace Akka.Cluster
             Publish(currentStats);
         }
 
+        private readonly Action<object> _publishAction;
         private void Publish(object @event)
         {
             _eventStream.Publish(@event);

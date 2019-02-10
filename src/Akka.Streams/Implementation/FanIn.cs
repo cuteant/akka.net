@@ -90,7 +90,7 @@ namespace Akka.Streams.Implementation
                 isCompleted: () => _markedDepleted == _markCount && _markedPending == 0,
                 isReady: () => _markedPending > 0);
 
-            bool receiveFucn(object msg)
+            bool LocalReceive(object msg)
             {
                 switch (msg)
                 {
@@ -130,7 +130,7 @@ namespace Akka.Streams.Implementation
                 }
             }
             // FIXME: Eliminate re-wraps
-            SubReceive = new SubReceive(receiveFucn);
+            SubReceive = new SubReceive(new Receive(LocalReceive));
         }
 
         /// <summary>

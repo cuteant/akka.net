@@ -180,7 +180,7 @@ namespace Akka.Actor
 
         private void InternalScheduleOnce(TimeSpan initialDelay, IRunnable action, CancellationToken token)
         {
-            void executeAction()
+            void LocalExecuteAction()
             {
                 if (token.IsCancellationRequested)
                     return;
@@ -197,6 +197,7 @@ namespace Akka.Actor
                     Log.DedicatedThreadSchedulerFailedToExecuteAction(x);
                 }
             }
+            Action executeAction = LocalExecuteAction;
             AddWork(initialDelay, executeAction, token);
 
         }
@@ -205,7 +206,8 @@ namespace Akka.Actor
         private void InternalScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action,
             CancellationToken token)
         {
-            void executeAction()
+            Action executeAction = null;
+            void LocalExecuteAction()
             {
                 if (token.IsCancellationRequested)
                     return;
@@ -226,7 +228,7 @@ namespace Akka.Actor
                     Log.DedicatedThreadSchedulerFailedToExecuteAction(x);
                 }
             }
-
+            executeAction = LocalExecuteAction;
             AddWork(initialDelay, executeAction, token);
 
         }

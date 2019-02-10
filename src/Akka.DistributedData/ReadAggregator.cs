@@ -131,7 +131,7 @@ namespace Akka.DistributedData
 
         private Receive WaitRepairAck(DataEnvelope envelope)
         {
-            bool ReceiveFunc(object msg)
+            bool LocalReceive(object msg)
             {
                 switch (msg)
                 {
@@ -155,7 +155,7 @@ namespace Akka.DistributedData
                         return false;
                 }
             }
-            return ReceiveFunc;
+            return new Receive(LocalReceive);
         }
     }
 
