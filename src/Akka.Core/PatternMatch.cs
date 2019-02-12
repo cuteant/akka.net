@@ -14,7 +14,6 @@ namespace Akka
     /// </summary>
     public static class PatternMatch
     {
-        
         /// <summary>
         /// Matches the specified target.
         /// </summary>

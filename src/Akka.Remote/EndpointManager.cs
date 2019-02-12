@@ -22,7 +22,7 @@ using Akka.Util.Internal;
 namespace Akka.Remote
 {
     /// <summary>INTERNAL API</summary>
-    internal sealed class EndpointManager : ReceiveActor, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal sealed class EndpointManager : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         #region -- Policy definitions --
 
@@ -334,15 +334,19 @@ namespace Akka.Remote
             _log = log;
             _eventPublisher = new EventPublisher(Context.System, log, Logging.LogLevelFor(_settings.RemoteLifecycleEventsLogLevel));
 
-            _onlyDeciderStrategy = OnlyDeciderStrategy;
-            _handleInboundAssociationAction = HandleInboundAssociation;
+            _onlyDeciderStrategyFunc = OnlyDeciderStrategy;
 
+            _acceptingPatterns = ConfigurePatterns(Accepting);
+            _flushingPatterns = ConfigurePatterns(Flushing);
             Receiving();
         }
 
         #endregion
 
         #region @@ Private members @@
+
+        private readonly PatternMatchBuilder _acceptingPatterns;
+        private readonly PatternMatchBuilder _flushingPatterns;
 
         /// <summary>Mapping between addresses and endpoint actors. If passive connections are turned off,
         /// incoming connections will not be part of this map!</summary>
@@ -445,10 +449,10 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         protected override SupervisorStrategy SupervisorStrategy()
         {
-            return new OneForOneStrategy(_onlyDeciderStrategy, false);
+            return new OneForOneStrategy(_onlyDeciderStrategyFunc, false);
         }
 
-        private readonly Func<Exception, Directive> _onlyDeciderStrategy;
+        private readonly Func<Exception, Directive> _onlyDeciderStrategyFunc;
         private Directive OnlyDeciderStrategy(Exception ex)
         {
             switch (ex)
@@ -562,8 +566,6 @@ namespace Akka.Remote
 
         private void Receiving()
         {
-            #region Listen
-
             /*
             * the first command the EndpointManager receives.
             * instructs the EndpointManager to fire off its "Listens" command, which starts
@@ -571,57 +573,25 @@ namespace Akka.Remote
             * those results will then be piped back to Remoting, who waits for the results of
             * listen.AddressPromise.
             * */
-            Receive<Listen>(listen =>
-            {
-                Listens.LinkOutcome(InvokeHandleListenFunc, listen,
-                        CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
-                       .PipeTo(Self);
-            });
+            Receive<Listen>(HandleListen);
 
-            #endregion
+            Receive<ListensResult>(HandleListensResult);
 
-            #region ListensResult
-
-            Receive<ListensResult>(listens =>
-            {
-                _transportMapping = (from mapping in listens.Results
-                                     group mapping by mapping.Item1.Address
-                                           into g
-                                     select new { address = g.Key, transports = g.ToList() }).Select(x =>
-                                     {
-                                         if (x.transports.Count > 1)
-                                         {
-                                             ThrowHelper.ThrowRemoteTransportException(x.address);
-                                         }
-                                         return new KeyValuePair<Address, AkkaProtocolTransport>(x.address,
-                                             x.transports.Head().Item1.ProtocolTransport);
-                                     }).ToDictionary(x => x.Key, v => v.Value, AddressComparer.Instance);
-
-                //Register a listener to each transport and collect mapping to addresses
-                var transportsAndAddresses = listens.Results.Select(x =>
-                {
-                    x.Item2.SetResult(new ActorAssociationEventListener(Self));
-                    return x.Item1;
-                }).ToList();
-
-                listens.AddressesPromise.SetResult(transportsAndAddresses);
-            });
-
-            #endregion
-
-            Receive<ListensFailure>(failure => failure.AddressesPromise.TrySetUnwrappedException(failure.Cause));
+            Receive<ListensFailure>(HandleListensFailure);
 
             // defer the inbound association until we can enter "Accepting" behavior
 
-            Receive<InboundAssociation>(
-                ia => Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromMilliseconds(10), Self, ia, Self));
-            Receive<ManagementCommand>(mc => Sender.Tell(new ManagementCommandAck(status: false)));
-            Receive<StartupFinished>(sf => Become(Accepting));
-            Receive<ShutdownAndFlush>(sf =>
-            {
-                Sender.Tell(true);
-                Context.Stop(Self);
-            });
+            Receive<InboundAssociation>(HandleInboundAssociationDefault);
+            Receive<ManagementCommand>(HandleManagementCommand);
+            Receive<StartupFinished>(HandleStartupFinished);
+            Receive<ShutdownAndFlush>(HandleShutdownAndFlush);
+        }
+
+        private void HandleListen(Listen listen)
+        {
+            Listens.LinkOutcome(InvokeHandleListenFunc, listen,
+                    CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+                   .PipeTo(Self);
         }
 
         private static readonly Func<Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>>, Listen, INoSerializationVerificationNeeded> InvokeHandleListenFunc = InvokeHandleListen;
@@ -637,6 +607,57 @@ namespace Akka.Remote
             }
         }
 
+        private void HandleListensResult(ListensResult listens)
+        {
+            _transportMapping = (from mapping in listens.Results
+                                 group mapping by mapping.Item1.Address
+                                       into g
+                                 select new { address = g.Key, transports = g.ToList() }).Select(x =>
+                                 {
+                                     if (x.transports.Count > 1)
+                                     {
+                                         ThrowHelper.ThrowRemoteTransportException(x.address);
+                                     }
+                                     return new KeyValuePair<Address, AkkaProtocolTransport>(x.address,
+                                         x.transports.Head().Item1.ProtocolTransport);
+                                 }).ToDictionary(x => x.Key, v => v.Value, AddressComparer.Instance);
+
+            //Register a listener to each transport and collect mapping to addresses
+            var transportsAndAddresses = listens.Results.Select(x =>
+            {
+                x.Item2.SetResult(new ActorAssociationEventListener(Self));
+                return x.Item1;
+            }).ToList();
+
+            listens.AddressesPromise.SetResult(transportsAndAddresses);
+        }
+
+        private void HandleListensFailure(ListensFailure failure)
+        {
+            failure.AddressesPromise.TrySetUnwrappedException(failure.Cause);
+        }
+
+        private void HandleInboundAssociationDefault(InboundAssociation ia)
+        {
+            Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromMilliseconds(10), Self, ia, Self);
+        }
+
+        private void HandleManagementCommand(ManagementCommand mc)
+        {
+            Sender.Tell(new ManagementCommandAck(status: false));
+        }
+
+        private void HandleStartupFinished(StartupFinished sf)
+        {
+            Become(_acceptingPatterns);
+        }
+
+        private void HandleShutdownAndFlush(ShutdownAndFlush sf)
+        {
+            Sender.Tell(true);
+            Context.Stop(Self);
+        }
+
         #endregion
 
         #region + Accepting +
@@ -645,279 +666,305 @@ namespace Akka.Remote
         /// inbound association requests.</summary>
         private void Accepting()
         {
-            #region ManagementCommand
+            Receive<ManagementCommand>(HandleManagementCommandAccepting);
 
-            Receive<ManagementCommand>(mc =>
-            {
-                /*
-                * applies a management command to all available transports.
-                *
-                * Useful for things like global restart
-                */
-                var sender = Sender;
-                var allStatuses = _transportMapping.Values.Select(x => x.ManagementCommand(mc.Cmd));
-                Task.WhenAll(allStatuses)
-                    .Then(CheckManagementCommandFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
-                    .PipeTo(sender);
-            });
+            Receive<Quarantine>(HandleQuarantine);
 
-            #endregion
+            Receive<Send>(HandleSend);
 
-            #region Quarantine
+            Receive<InboundAssociation>(HandleInboundAssociation);
+            Receive<EndpointWriter.StoppedReading>(HandleEndpointWriterStoppedReading);
 
-            Receive<Quarantine>(quarantine =>
-            {
-                var context = Context;
-                var remoteAddr = quarantine.RemoteAddress;
-                //Stop writers
-                var policy = _endpoints.WritableEndpointWithPolicyFor(remoteAddr);
-                var quarantineUid = quarantine.Uid;
-                if (quarantineUid != null)
-                {
-                    switch (policy)
-                    {
-                        case Pass pass:
-                            var uidOption = pass.Uid;
-                            if (uidOption == quarantineUid)
-                            {
-                                _endpoints.MarkAsQuarantined(remoteAddr, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
-                                _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, quarantineUid.Value));
-                                context.Stop(pass.Endpoint);
-                            }
-                            // or it does not match with the UID to be quarantined
-                            else if (!uidOption.HasValue && pass.RefuseUid != quarantineUid)
-                            {
-                                // the quarantine uid may be got fresh by cluster gossip, so update refuseUid
-                                // for late handle when the writer got uid
-                                _endpoints.RegisterWritableEndpointRefuseUid(remoteAddr, quarantineUid.Value);
-                            }
-                            else
-                            {
-                                //the quarantine uid has lost the race with some failure, do nothing
-                            }
-                            break;
+            Receive<Terminated>(HandleTerminated);
 
-                        case WasGated wg:
-                            if (wg.RefuseUid == quarantineUid)
-                            {
-                                _endpoints.RegisterWritableEndpointRefuseUid(remoteAddr, quarantineUid.Value);
-                            }
-                            break;
+            Receive<EndpointWriter.TookOver>(HandleEndpointWriterTookOver);
 
-                        case Quarantined quarantined when quarantined.Uid == quarantineUid.Value:
-                            // the UID to be quarantined already exists, do nothing
-                            break;
+            Receive<ReliableDeliverySupervisor.GotUid>(HandleGotUid);
 
-                        default:
-                            // the current state is gated or quarantined, and we know the UID, update
-                            _endpoints.MarkAsQuarantined(remoteAddr, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
-                            _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, quarantineUid.Value));
-                            break;
-                    }
-                }
-                else
-                {
-                    if (policy is Pass pass)
-                    {
-                        var endpoint = pass.Endpoint;
-                        context.Stop(endpoint);
-                        if (_log.IsWarningEnabled) _log.AssociationToWithUnknownUIDIsReportedAsQuarantined(remoteAddr, _settings);
-                        _endpoints.MarkAsFailed(endpoint, Deadline.Now + _settings.RetryGateClosedFor);
-                    }
-                    else
-                    {
-                        // the current state is Gated, WasGated, or Quarantined and we don't know the
-                        // UID, do nothing.
-                    }
-                }
+            Receive<ReliableDeliverySupervisor.Idle>(HandleIdle);
+            Receive<Prune>(HandlePrune);
 
-                // Stop inbound read-only associations
-                var readPolicy = _endpoints.ReadOnlyEndpointFor(remoteAddr);
-                if (readPolicy != null)
-                {
-                    var readPolicyActor = readPolicy.Item1;
-                    if (readPolicyActor != null)
-                    {
-                        if (quarantineUid == null)
-                        {
-                            context.Stop(readPolicyActor);
-                        }
-                        else if (readPolicy.Item2 == quarantineUid)
-                        {
-                            context.Stop(readPolicyActor);
-                        }
-                        else { } // nothing to stop
-                    }
-                }
-                bool MatchesQuarantine(AkkaProtocolHandle handle) => handle.RemoteAddress.Equals(remoteAddr) && quarantineUid == handle.HandshakeInfo.Uid;
+            Receive<ShutdownAndFlush>(HandleShutdownAndFlushAccepting);
+        }
 
-                // Stop all matching pending read handoffs
-                _pendingReadHandoffs = _pendingReadHandoffs.Where(x =>
-                {
-                    var drop = MatchesQuarantine(x.Value);
-                    // Side-effecting here
-                    if (drop)
-                    {
-                        x.Value.Disassociate();
-                        context.Stop(x.Key);
-                    }
-                    return !drop;
-                }).ToDictionary(key => key.Key, value => value.Value, ActorRefComparer.Instance);
+        #region HandleManagementCommand
 
-                // Stop all matching stashed connections
-                _stashedInbound = _stashedInbound.Select(x =>
-                {
-                    var associations = x.Value.Where(assoc =>
-                    {
-                        var handle = assoc.Association.AsInstanceOf<AkkaProtocolHandle>();
-                        var drop = MatchesQuarantine(handle);
-                        if (drop) { handle.Disassociate(); }
-                        return !drop;
-                    }).ToList();
-                    return new KeyValuePair<IActorRef, List<InboundAssociation>>(x.Key, associations);
-                }).ToDictionary(k => k.Key, v => v.Value, ActorRefComparer.Instance);
-            });
-
-            #endregion
-
-            #region Send
-
-            Receive<Send>(send =>
-            {
-                var recipientAddress = send.Recipient.Path.Address;
-                IActorRef CreateAndRegisterWritingEndpoint(int? refuseUid) => _endpoints.RegisterWritableEndpoint(recipientAddress, CreateEndpoint(recipientAddress, send.Recipient.LocalAddressToUse, _transportMapping[send.Recipient.LocalAddressToUse], _settings, writing: true, handleOption: null, refuseUid: refuseUid), uid: null, refuseUid: refuseUid);
-
-                // pattern match won't throw a NullReferenceException if one is returned by WritableEndpointWithPolicyFor
-                var endpointPolicy = _endpoints.WritableEndpointWithPolicyFor(recipientAddress);
-                switch (endpointPolicy)
-                {
-                    case Pass pass:
-                        pass.Endpoint.Tell(send);
-                        break;
-                    case Gated gated:
-                        if (gated.TimeOfRelease.IsOverdue)
-                        {
-                            CreateAndRegisterWritingEndpoint(gated.RefuseUid).Tell(send);
-                        }
-                        else
-                        {
-                            Context.System.DeadLetters.Tell(send);
-                        }
-                        break;
-                    case WasGated wasGated:
-                        CreateAndRegisterWritingEndpoint(wasGated.RefuseUid).Tell(send);
-                        break;
-                    case Quarantined quarantined:
-                        // timeOfRelease is only used for garbage collection reasons, therefore it is
-                        // ignored here. We still have the Quarantined tombstone and we know what UID
-                        // we don't want to accept, so use it.
-                        CreateAndRegisterWritingEndpoint(quarantined.Uid).Tell(send);
-                        break;
-                    default:
-                        CreateAndRegisterWritingEndpoint(null).Tell(send);
-                        break;
-                }
-            });
-
-            #endregion
-
-            Receive<InboundAssociation>(_handleInboundAssociationAction);
-            Receive<EndpointWriter.StoppedReading>(endpoint => AcceptPendingReader(endpoint.Writer));
-
-            #region Terminated
-
-            Receive<Terminated>(terminated =>
-            {
-                var actorRef = terminated.ActorRef;
-                AcceptPendingReader(actorRef);
-                _endpoints.UnregisterEndpoint(actorRef);
-                HandleStashedInbound(actorRef, writerIsIdle: false);
-            });
-
-            #endregion
-
-            Receive<EndpointWriter.TookOver>(tookover => RemovePendingReader(tookover.Writer, tookover.ProtocolHandle));
-
-            #region ReliableDeliverySupervisor.GotUid
-
-            Receive<ReliableDeliverySupervisor.GotUid>(gotuid =>
-            {
-                var remoteAddr = gotuid.RemoteAddress;
-                var uid = gotuid.Uid;
-                var policy = _endpoints.WritableEndpointWithPolicyFor(remoteAddr);
-                switch (policy)
-                {
-                    case Pass pass:
-                        if (pass.RefuseUid == uid)
-                        {
-                            _endpoints.MarkAsQuarantined(remoteAddr, uid,
-                                Deadline.Now + _settings.QuarantineDuration);
-                            _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, uid));
-                            Context.Stop(pass.Endpoint);
-                        }
-                        else
-                        {
-                            _endpoints.RegisterWritableEndpointUid(remoteAddr, uid);
-                        }
-                        HandleStashedInbound(Sender, writerIsIdle: false);
-                        break;
-                    case WasGated wg:
-                        if (wg.RefuseUid == uid)
-                        {
-                            _endpoints.MarkAsQuarantined(remoteAddr, uid,
-                                Deadline.Now + _settings.QuarantineDuration);
-                            _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, uid));
-                        }
-                        else
-                        {
-                            _endpoints.RegisterWritableEndpointUid(remoteAddr, uid);
-                        }
-                        HandleStashedInbound(Sender, writerIsIdle: false);
-                        break;
-                    default:
-                        // the GotUid might have lost the race with some failure
-                        break;
-                }
-            });
-
-            #endregion
-
-            Receive<ReliableDeliverySupervisor.Idle>(idle => HandleStashedInbound(Sender, writerIsIdle: true));
-            Receive<Prune>(prune => _endpoints.Prune());
-
-            #region ShutdownAndFlush
-
-            Receive<ShutdownAndFlush>(shutdown =>
-            {
-                //Shutdown all endpoints and signal to Sender when ready (and whether all endpoints were shutdown gracefully)
-                var sender = Sender;
-
-                // The construction of the Task for shutdownStatus has to happen after the
-                // flushStatus future has been finished so that endpoints are shut down before transports.
-                var shutdownStatus = Task
-                    .WhenAll(_endpoints.AllEndpoints.Select(
-                        x => x.GracefulStop(_settings.FlushWait, EndpointWriter.FlushAndStop.Instance)))
-                    .ContinueWith(CheckGracefulStopFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
-
-                shutdownStatus.Then(AfterGracefulStopFunc, _transportMapping).PipeTo(sender);
-
-                foreach (var handoff in _pendingReadHandoffs.Values)
-                {
-                    handoff.Disassociate(DisassociateInfo.Shutdown);
-                }
-
-                //Ignore all other writes
-                _normalShutdown = true;
-                Become(Flushing);
-            });
-
-            #endregion
+        private void HandleManagementCommandAccepting(ManagementCommand mc)
+        {
+            /*
+            * applies a management command to all available transports.
+            *
+            * Useful for things like global restart
+            */
+            var sender = Sender;
+            var allStatuses = _transportMapping.Values.Select(x => x.ManagementCommand(mc.Cmd));
+            Task.WhenAll(allStatuses)
+                .Then(CheckManagementCommandFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+                .PipeTo(sender);
         }
 
         private static readonly Func<bool[], ManagementCommandAck> CheckManagementCommandFunc = CheckManagementCommand;
         private static ManagementCommandAck CheckManagementCommand(bool[] result)
         {
             return new ManagementCommandAck(result.All(y => y));
+        }
+
+        #endregion
+
+        #region HandleQuarantine
+
+        private void HandleQuarantine(Quarantine quarantine)
+        {
+            var context = Context;
+            var remoteAddr = quarantine.RemoteAddress;
+            //Stop writers
+            var policy = _endpoints.WritableEndpointWithPolicyFor(remoteAddr);
+            var quarantineUid = quarantine.Uid;
+            if (quarantineUid != null)
+            {
+                switch (policy)
+                {
+                    case Pass pass:
+                        var uidOption = pass.Uid;
+                        if (uidOption == quarantineUid)
+                        {
+                            _endpoints.MarkAsQuarantined(remoteAddr, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
+                            _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, quarantineUid.Value));
+                            context.Stop(pass.Endpoint);
+                        }
+                        // or it does not match with the UID to be quarantined
+                        else if (!uidOption.HasValue && pass.RefuseUid != quarantineUid)
+                        {
+                            // the quarantine uid may be got fresh by cluster gossip, so update refuseUid
+                            // for late handle when the writer got uid
+                            _endpoints.RegisterWritableEndpointRefuseUid(remoteAddr, quarantineUid.Value);
+                        }
+                        else
+                        {
+                            //the quarantine uid has lost the race with some failure, do nothing
+                        }
+                        break;
+
+                    case WasGated wg:
+                        if (wg.RefuseUid == quarantineUid)
+                        {
+                            _endpoints.RegisterWritableEndpointRefuseUid(remoteAddr, quarantineUid.Value);
+                        }
+                        break;
+
+                    case Quarantined quarantined when quarantined.Uid == quarantineUid.Value:
+                        // the UID to be quarantined already exists, do nothing
+                        break;
+
+                    default:
+                        // the current state is gated or quarantined, and we know the UID, update
+                        _endpoints.MarkAsQuarantined(remoteAddr, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
+                        _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, quarantineUid.Value));
+                        break;
+                }
+            }
+            else
+            {
+                if (policy is Pass pass)
+                {
+                    var endpoint = pass.Endpoint;
+                    context.Stop(endpoint);
+                    if (_log.IsWarningEnabled) _log.AssociationToWithUnknownUIDIsReportedAsQuarantined(remoteAddr, _settings);
+                    _endpoints.MarkAsFailed(endpoint, Deadline.Now + _settings.RetryGateClosedFor);
+                }
+                else
+                {
+                    // the current state is Gated, WasGated, or Quarantined and we don't know the
+                    // UID, do nothing.
+                }
+            }
+
+            // Stop inbound read-only associations
+            var readPolicy = _endpoints.ReadOnlyEndpointFor(remoteAddr);
+            if (readPolicy != null)
+            {
+                var readPolicyActor = readPolicy.Item1;
+                if (readPolicyActor != null)
+                {
+                    if (quarantineUid == null)
+                    {
+                        context.Stop(readPolicyActor);
+                    }
+                    else if (readPolicy.Item2 == quarantineUid)
+                    {
+                        context.Stop(readPolicyActor);
+                    }
+                    else { } // nothing to stop
+                }
+            }
+            bool MatchesQuarantine(AkkaProtocolHandle handle) => handle.RemoteAddress.Equals(remoteAddr) && quarantineUid == handle.HandshakeInfo.Uid;
+
+            // Stop all matching pending read handoffs
+            _pendingReadHandoffs = _pendingReadHandoffs.Where(x =>
+            {
+                var drop = MatchesQuarantine(x.Value);
+                // Side-effecting here
+                if (drop)
+                {
+                    x.Value.Disassociate();
+                    context.Stop(x.Key);
+                }
+                return !drop;
+            }).ToDictionary(key => key.Key, value => value.Value, ActorRefComparer.Instance);
+
+            // Stop all matching stashed connections
+            _stashedInbound = _stashedInbound.Select(x =>
+            {
+                var associations = x.Value.Where(assoc =>
+                {
+                    var handle = assoc.Association.AsInstanceOf<AkkaProtocolHandle>();
+                    var drop = MatchesQuarantine(handle);
+                    if (drop) { handle.Disassociate(); }
+                    return !drop;
+                }).ToList();
+                return new KeyValuePair<IActorRef, List<InboundAssociation>>(x.Key, associations);
+            }).ToDictionary(k => k.Key, v => v.Value, ActorRefComparer.Instance);
+        }
+
+        #endregion
+
+        #region HandleSend
+
+        private void HandleSend(Send send)
+        {
+            var recipientAddress = send.Recipient.Path.Address;
+            IActorRef CreateAndRegisterWritingEndpoint(int? refuseUid) => _endpoints.RegisterWritableEndpoint(recipientAddress, CreateEndpoint(recipientAddress, send.Recipient.LocalAddressToUse, _transportMapping[send.Recipient.LocalAddressToUse], _settings, writing: true, handleOption: null, refuseUid: refuseUid), uid: null, refuseUid: refuseUid);
+
+            // pattern match won't throw a NullReferenceException if one is returned by WritableEndpointWithPolicyFor
+            var endpointPolicy = _endpoints.WritableEndpointWithPolicyFor(recipientAddress);
+            switch (endpointPolicy)
+            {
+                case Pass pass:
+                    pass.Endpoint.Tell(send);
+                    break;
+                case Gated gated:
+                    if (gated.TimeOfRelease.IsOverdue)
+                    {
+                        CreateAndRegisterWritingEndpoint(gated.RefuseUid).Tell(send);
+                    }
+                    else
+                    {
+                        Context.System.DeadLetters.Tell(send);
+                    }
+                    break;
+                case WasGated wasGated:
+                    CreateAndRegisterWritingEndpoint(wasGated.RefuseUid).Tell(send);
+                    break;
+                case Quarantined quarantined:
+                    // timeOfRelease is only used for garbage collection reasons, therefore it is
+                    // ignored here. We still have the Quarantined tombstone and we know what UID
+                    // we don't want to accept, so use it.
+                    CreateAndRegisterWritingEndpoint(quarantined.Uid).Tell(send);
+                    break;
+                default:
+                    CreateAndRegisterWritingEndpoint(null).Tell(send);
+                    break;
+            }
+        }
+
+        #endregion
+
+        private void HandleEndpointWriterStoppedReading(EndpointWriter.StoppedReading endpoint)
+        {
+            AcceptPendingReader(endpoint.Writer);
+        }
+
+        private void HandleTerminated(Terminated terminated)
+        {
+            var actorRef = terminated.ActorRef;
+            AcceptPendingReader(actorRef);
+            _endpoints.UnregisterEndpoint(actorRef);
+            HandleStashedInbound(actorRef, writerIsIdle: false);
+        }
+
+        private void HandleEndpointWriterTookOver(EndpointWriter.TookOver tookover)
+        {
+            RemovePendingReader(tookover.Writer, tookover.ProtocolHandle);
+        }
+
+        #region ReliableDeliverySupervisor.GotUid
+
+        private void HandleGotUid(ReliableDeliverySupervisor.GotUid gotuid)
+        {
+            var remoteAddr = gotuid.RemoteAddress;
+            var uid = gotuid.Uid;
+            var policy = _endpoints.WritableEndpointWithPolicyFor(remoteAddr);
+            switch (policy)
+            {
+                case Pass pass:
+                    if (pass.RefuseUid == uid)
+                    {
+                        _endpoints.MarkAsQuarantined(remoteAddr, uid,
+                            Deadline.Now + _settings.QuarantineDuration);
+                        _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, uid));
+                        Context.Stop(pass.Endpoint);
+                    }
+                    else
+                    {
+                        _endpoints.RegisterWritableEndpointUid(remoteAddr, uid);
+                    }
+                    HandleStashedInbound(Sender, writerIsIdle: false);
+                    break;
+                case WasGated wg:
+                    if (wg.RefuseUid == uid)
+                    {
+                        _endpoints.MarkAsQuarantined(remoteAddr, uid,
+                            Deadline.Now + _settings.QuarantineDuration);
+                        _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, uid));
+                    }
+                    else
+                    {
+                        _endpoints.RegisterWritableEndpointUid(remoteAddr, uid);
+                    }
+                    HandleStashedInbound(Sender, writerIsIdle: false);
+                    break;
+                default:
+                    // the GotUid might have lost the race with some failure
+                    break;
+            }
+        }
+
+        #endregion
+
+        private void HandleIdle(ReliableDeliverySupervisor.Idle idle)
+        {
+            HandleStashedInbound(Sender, writerIsIdle: true);
+        }
+
+        private void HandlePrune(Prune prune)
+        {
+            _endpoints.Prune();
+        }
+
+        #region HandleShutdownAndFlush
+
+        private void HandleShutdownAndFlushAccepting(ShutdownAndFlush shutdown)
+        {
+            //Shutdown all endpoints and signal to Sender when ready (and whether all endpoints were shutdown gracefully)
+            var sender = Sender;
+
+            // The construction of the Task for shutdownStatus has to happen after the
+            // flushStatus future has been finished so that endpoints are shut down before transports.
+            var shutdownStatus = Task
+                .WhenAll(_endpoints.AllEndpoints.Select(
+                    x => x.GracefulStop(_settings.FlushWait, EndpointWriter.FlushAndStop.Instance)))
+                .ContinueWith(CheckGracefulStopFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+
+            shutdownStatus.Then(AfterGracefulStopFunc, _transportMapping).PipeTo(sender);
+
+            foreach (var handoff in _pendingReadHandoffs.Values)
+            {
+                handoff.Disassociate(DisassociateInfo.Shutdown);
+            }
+
+            //Ignore all other writes
+            _normalShutdown = true;
+            Become(_flushingPatterns);
         }
 
         private static readonly Func<Task<bool[]>, bool> CheckGracefulStopFunc = CheckGracefulStop;
@@ -951,15 +998,26 @@ namespace Akka.Remote
 
         #endregion
 
+        #endregion
+
         #region + Flushing +
 
         /// <summary>TBD</summary>
         private void Flushing()
         {
-            Receive<Send>(send => Context.System.DeadLetters.Tell(send));
-            Receive<InboundAssociation>(
-                     ia => ia.Association.AsInstanceOf<AkkaProtocolHandle>().Disassociate(DisassociateInfo.Shutdown));
-            Receive<Terminated>(terminated => { }); // why should we care now?
+            Receive<Send>(HandleSendFlushing);
+            Receive<InboundAssociation>(HandleInboundAssociationFlushing);
+            Receive<Terminated>(PatternMatch<Terminated>.EmptyAction); // why should we care now?
+        }
+
+        private void HandleSendFlushing(Send send)
+        {
+            Context.System.DeadLetters.Tell(send);
+        }
+
+        private void HandleInboundAssociationFlushing(InboundAssociation ia)
+        {
+            ia.Association.AsInstanceOf<AkkaProtocolHandle>().Disassociate(DisassociateInfo.Shutdown);
         }
 
         #endregion
@@ -970,7 +1028,6 @@ namespace Akka.Remote
 
         #region * HandleInboundAssociation *
 
-        private readonly Action<InboundAssociation> _handleInboundAssociationAction;
         private void HandleInboundAssociation(InboundAssociation ia) => HandleInboundAssociation(ia, false);
         private void HandleInboundAssociation(InboundAssociation ia, bool writerIsIdle)
         {

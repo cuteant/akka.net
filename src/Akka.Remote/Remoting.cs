@@ -393,7 +393,7 @@ namespace Akka.Remote
     #region == class TransportSupervisor ==
 
     /// <summary>Actor responsible for supervising the creation of all transport actors</summary>
-    internal sealed class TransportSupervisor : ReceiveActor
+    internal sealed class TransportSupervisor : ReceiveActor2
     {
         private readonly SupervisorStrategy _strategy = new OneForOneStrategy(exception => Directive.Restart);
 
@@ -404,11 +404,12 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         public TransportSupervisor()
         {
-            Receive<RegisterTransportActor>(
-                r =>
-                    Sender.Tell(
-                        Context.ActorOf(RARP.For(Context.System).ConfigureDispatcher(r.Props.WithDeploy(Deploy.Local)),
-                            r.Name)));
+            Receive<RegisterTransportActor>(HandleRegisterTransportActor);
+        }
+
+        private void HandleRegisterTransportActor(RegisterTransportActor r)
+        {
+            Sender.Tell(Context.ActorOf(RARP.For(Context.System).ConfigureDispatcher(r.Props.WithDeploy(Deploy.Local)), r.Name));
         }
     }
 

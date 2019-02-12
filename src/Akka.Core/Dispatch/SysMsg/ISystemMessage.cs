@@ -755,23 +755,23 @@ namespace Akka.Dispatch.SysMsg
         }
     }
 
-    ///// <summary>
-    /////     Class Stop.
-    ///// </summary>
-    //public sealed class Stop : SystemMessage, ISingletonMessage
-    //{
-    //    private Stop() { }
-    //    public static readonly Stop Instance = new Stop();
+    /// <summary>
+    ///     Class Stop.
+    /// </summary>
+    public sealed class Stop : SystemMessage, ISingletonMessage
+    {
+        private Stop() { }
+        public static readonly Stop Instance = new Stop();
 
-    //    /// <summary>
-    //    /// TBD
-    //    /// </summary>
-    //    /// <returns>TBD</returns>
-    //    public override string ToString()
-    //    {
-    //        return "<Stop>";
-    //    }
-    //}
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <returns>TBD</returns>
+        public override string ToString()
+        {
+            return "<Stop>";
+        }
+    }
 
     /// <summary>
     ///     INTERNAL
@@ -807,36 +807,39 @@ namespace Akka.Dispatch.SysMsg
         }
     }
 
-    ///// <summary>
-    /////     Class Escalate.
-    ///// </summary>
-    //public sealed class Escalate : SystemMessage
-    //{
-    //    /// <summary>
-    //    ///     Initializes a new instance of the <see cref="Escalate" /> class.
-    //    /// </summary>
-    //    /// <param name="reason">The reason.</param>
-    //    public Escalate(Exception reason)
-    //    {
-    //        Reason = reason;
-    //    }
+    /// <summary>
+    ///     Class Escalate.
+    /// </summary>
+    [MessagePackObject]
+    public sealed class Escalate : SystemMessage
+    {
+        /// <summary>
+        ///     Initializes a new instance of the <see cref="Escalate" /> class.
+        /// </summary>
+        /// <param name="reason">The reason.</param>
+        [SerializationConstructor]
+        public Escalate(Exception reason)
+        {
+            Reason = reason;
+        }
 
-    //    /// <summary>
-    //    ///     Gets the reason.
-    //    /// </summary>
-    //    /// <value>The reason.</value>
-    //    public Exception Reason { get; private set; }
+        /// <summary>
+        ///     Gets the reason.
+        /// </summary>
+        /// <value>The reason.</value>
+        [Key(0)]
+        public Exception Reason { get; private set; }
 
 
-    //    /// <summary>
-    //    /// TBD
-    //    /// </summary>
-    //    /// <returns>TBD</returns>
-    //    public override string ToString()
-    //    {
-    //        return "<Escalate>" + (Reason == null ? "" : " Reason: " + Reason);
-    //    }
-    //}
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <returns>TBD</returns>
+        public override string ToString()
+        {
+            return "<Escalate>" + (Reason == null ? "" : " Reason: " + Reason);
+        }
+    }
 
 
     /// <summary>

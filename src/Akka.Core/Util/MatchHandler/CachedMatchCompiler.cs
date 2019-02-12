@@ -23,7 +23,8 @@ namespace Akka.Tools.MatchHandler
         private readonly IMatchExpressionBuilder _expressionBuilder;
         private readonly IPartialActionBuilder _actionBuilder;
         private readonly ILambdaExpressionCompiler _expressionCompiler;
-        private readonly ConcurrentDictionary<MatchBuilderSignature, Delegate> _cache = new ConcurrentDictionary<MatchBuilderSignature, Delegate>();
+        private readonly ConcurrentDictionary<MatchBuilderSignature, Delegate> _cache = new ConcurrentDictionary<MatchBuilderSignature, Delegate>(MatchBuilderSignatureComparer.Instance);
+
         /// <summary>
         /// TBD
         /// </summary>

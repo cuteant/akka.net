@@ -990,7 +990,7 @@ namespace Akka.Cluster
     /// 
     /// Publishes <see cref="ClusterEvent"/>s out to all subscribers.
     /// </summary>
-    internal sealed class ClusterDomainEventPublisher : ReceiveActor, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal sealed class ClusterDomainEventPublisher : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private Gossip _latestGossip;
         private readonly UniqueAddress _selfUniqueAddress = Cluster.Get(Context.System).SelfUniqueAddress;
@@ -1005,12 +1005,37 @@ namespace Akka.Cluster
 
             _publishAction = Publish;
 
-            Receive<InternalClusterAction.PublishChanges>(newGossip => PublishChanges(newGossip.NewGossip));
-            Receive<ClusterEvent.CurrentInternalStats>(currentStats => PublishInternalStats(currentStats));
-            Receive<InternalClusterAction.SendCurrentClusterState>(receiver => SendCurrentClusterState(receiver.Receiver));
-            Receive<InternalClusterAction.Subscribe>(sub => Subscribe(sub.Subscriber, sub.InitialStateMode, sub.To));
-            Receive<InternalClusterAction.Unsubscribe>(unsub => Unsubscribe(unsub.Subscriber, unsub.To));
-            Receive<InternalClusterAction.PublishEvent>(evt => Publish(evt));
+            Receive<InternalClusterAction.PublishChanges>(HandlePublishChanges);
+            Receive<ClusterEvent.CurrentInternalStats>(PublishInternalStats);
+            Receive<InternalClusterAction.SendCurrentClusterState>(HandleSendCurrentClusterState);
+            Receive<InternalClusterAction.Subscribe>(HandleSubscribe);
+            Receive<InternalClusterAction.Unsubscribe>(HandleUnsubscribe);
+            Receive<InternalClusterAction.PublishEvent>(HandlePublishEvent);
+        }
+
+        private void HandlePublishChanges(InternalClusterAction.PublishChanges newGossip)
+        {
+            PublishChanges(newGossip.NewGossip);
+        }
+
+        private void HandleSendCurrentClusterState(InternalClusterAction.SendCurrentClusterState receiver)
+        {
+            SendCurrentClusterState(receiver.Receiver);
+        }
+
+        private void HandleSubscribe(InternalClusterAction.Subscribe sub)
+        {
+            Subscribe(sub.Subscriber, sub.InitialStateMode, sub.To);
+        }
+
+        private void HandleUnsubscribe(InternalClusterAction.Unsubscribe unsub)
+        {
+            Unsubscribe(unsub.Subscriber, unsub.To);
+        }
+
+        public void HandlePublishEvent(InternalClusterAction.PublishEvent evt)
+        {
+            Publish(evt);
         }
 
         /// <inheritdoc cref="ActorBase.PreRestart"/>

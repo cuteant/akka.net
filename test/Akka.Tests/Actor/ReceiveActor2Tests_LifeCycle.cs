@@ -19,13 +19,13 @@ namespace Akka.Tests.Actor
             //Given
             var system = ActorSystem.Create("test");
             var actor = system.ActorOf<CrashActor>("crash");
-            
+
             //When
             actor.Tell("CRASH");
 
             //Then
             actor.Tell("hello", TestActor);
-            ExpectMsg((object) "1:hello");
+            ExpectMsg((object)"1:hello");
         }
 
         [Fact]
@@ -41,7 +41,7 @@ namespace Akka.Tests.Actor
 
             //Then
             actor.Tell("hello", TestActor);
-            ExpectMsg((object) "1:hello");
+            ExpectMsg((object)"1:hello");
         }
 
 
@@ -58,23 +58,23 @@ namespace Akka.Tests.Actor
 
             //Then
             actor.Tell("hello", TestActor);
-            ExpectMsg((object) "1:hello");
+            ExpectMsg((object)"1:hello");
         }
 
         private class CrashActor : ReceiveActor2
         {
+            private readonly PatternMatchBuilder _builder2;
+
             public CrashActor()
             {
-                Receive<string>(s => s == "CRASH", s => { throw new Exception("Crash!"); });
-                Receive<string>(s => s == "BECOME", _ => BecomeStacked(State2));
-                Receive<string>(s => s == "BECOME-DISCARD", _ => BecomeStacked(State2));
-                Receive<string>(s => Sender.Tell("1:"+s));
-            }
+                _builder2 = new PatternMatchBuilder();
+                _builder2.Match<string>(handler: s => { throw new Exception("Crash!"); }, s => s == "CRASH");
+                _builder2.Match<string>(handler: s => Sender.Tell("2:" + s));
 
-            private void State2()
-            {
                 Receive<string>(s => s == "CRASH", s => { throw new Exception("Crash!"); });
-                Receive<string>(s => Sender.Tell("2:" + s));
+                Receive<string>(s => s == "BECOME", _ => BecomeStacked(_builder2));
+                Receive<string>(s => s == "BECOME-DISCARD", _ => BecomeStacked(_builder2));
+                Receive<string>(s => Sender.Tell("1:" + s));
             }
         }
     }

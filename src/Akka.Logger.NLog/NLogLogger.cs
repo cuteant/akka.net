@@ -21,7 +21,7 @@ namespace Akka.Logger.NLog
     /// recognized: <see cref="Debug"/>, <see cref="Info"/>,
     /// <see cref="Warning"/> and <see cref="Error"/>.
     /// </summary>
-    public class NLogLogger : ReceiveActor, IRequiresMessageQueue<ILoggerMessageQueueSemantics>
+    public class NLogLogger : ReceiveActor2, IRequiresMessageQueue<ILoggerMessageQueueSemantics>
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
 

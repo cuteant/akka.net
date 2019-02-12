@@ -26,6 +26,7 @@
         handler,
         other,
         pool,
+        patterns,
         inner,
         policy,
         offset,

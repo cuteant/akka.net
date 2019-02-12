@@ -65,19 +65,22 @@ namespace Akka.Persistence.EventStore.Journal
 
         private bool AwaitingConnection(object message)
         {
-            return message.Match()
-                          .With<Status.Success>(success =>
-                          {
-                              UnbecomeStacked();
-                              Stash.UnstashAll();
-                          })
-                          .With<Status.Failure>(fail =>
-                          {
-                              _log.Error(fail.Cause, "Failure during {0} initialization.", Self);
-                              Context.Stop(Self);
-                          })
-                          .Default(_ => Stash.Stash())
-                          .WasHandled;
+            switch (message)
+            {
+                case Status.Success success:
+                    UnbecomeStacked();
+                    Stash.UnstashAll();
+                    return true;
+
+                case Status.Failure fail:
+                    _log.Error(fail.Cause, "Failure during {0} initialization.", Self);
+                    Context.Stop(Self);
+                    return true;
+
+                default:
+                    Stash.Stash();
+                    return true;
+            }
         }
 
         private IEventAdapter BuildDefaultJournalAdapter()

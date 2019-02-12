@@ -13,7 +13,7 @@ using Akka.Actor;
 
 namespace PingPong
 {
-    public class ClientAsyncActor : AsyncReceiveActor2
+    public class ClientAsyncActor : ReceiveActor2
     {
         public ClientAsyncActor(IActorRef actor, long repeat, TaskCompletionSource<bool> latch)
         {

@@ -21,7 +21,7 @@ namespace Akka.Cluster
     /// 
     /// Receives <see cref="ClusterHeartbeatSender.Heartbeat"/> messages and replies.
     /// </summary>
-    internal sealed class ClusterHeartbeatReceiver : ReceiveActor
+    internal sealed class ClusterHeartbeatReceiver : ReceiveActor2
     {
         private readonly Lazy<ClusterHeartbeatSender.HeartbeatRsp> _selfHeartbeatRsp;
 
@@ -35,14 +35,19 @@ namespace Akka.Cluster
             _selfHeartbeatRsp = new Lazy<ClusterHeartbeatSender.HeartbeatRsp>(() =>
                 new ClusterHeartbeatSender.HeartbeatRsp(Cluster.Get(Context.System).SelfUniqueAddress));
 
-            Receive<ClusterHeartbeatSender.Heartbeat>(heartbeat => Sender.Tell(_selfHeartbeatRsp.Value));
+            Receive<ClusterHeartbeatSender.Heartbeat>(HandleHeartbeat);
+        }
+
+        private void HandleHeartbeat(ClusterHeartbeatSender.Heartbeat heartbeat)
+        {
+            Sender.Tell(_selfHeartbeatRsp.Value);
         }
     }
 
     /// <summary>
     /// INTERNAL API
     /// </summary>
-    internal sealed class ClusterHeartbeatSender : ReceiveActor
+    internal sealed class ClusterHeartbeatSender : ReceiveActor2
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private readonly Cluster _cluster;
@@ -50,6 +55,8 @@ namespace Akka.Cluster
         private readonly Heartbeat _selfHeartbeat;
         private ClusterHeartbeatSenderState _state;
         private readonly ICancelable _heartbeatTask;
+
+        private PatternMatchBuilder _activePatterns;
 
         /// <summary>
         /// TBD
@@ -114,23 +121,26 @@ namespace Akka.Cluster
 
         private void Initializing()
         {
-            Receive<ClusterEvent.CurrentClusterState>(state =>
-            {
-                Init(state);
-                Become(Active);
-            });
-            Receive<HeartbeatTick>(tick => { }); //do nothing
+            Receive<ClusterEvent.CurrentClusterState>(HandleCurrentClusterState);
+            Receive<HeartbeatTick>(PatternMatch<HeartbeatTick>.EmptyAction); //do nothing
+        }
+
+        private void HandleCurrentClusterState(ClusterEvent.CurrentClusterState state)
+        {
+            Init(state);
+            if (_activePatterns == null) { _activePatterns = ConfigurePatterns(Active); }
+            Become(_activePatterns);
         }
 
         private void Active()
         {
-            Receive<HeartbeatTick>(tick => DoHeartbeat());
-            Receive<HeartbeatRsp>(rsp => DoHeartbeatRsp(rsp.From));
-            Receive<ClusterEvent.MemberRemoved>(removed => RemoveMember(removed.Member));
-            Receive<ClusterEvent.IMemberEvent>(evt => AddMember(evt.Member));
-            Receive<ClusterEvent.UnreachableMember>(m => UnreachableMember(m.Member));
-            Receive<ClusterEvent.ReachableMember>(m => ReachableMember(m.Member));
-            Receive<ExpectedFirstHeartbeat>(heartbeat => TriggerFirstHeart(heartbeat.From));
+            Receive<HeartbeatTick>(DoHeartbeat);
+            Receive<HeartbeatRsp>(DoHeartbeatRsp);
+            Receive<ClusterEvent.MemberRemoved>(RemoveMember);
+            Receive<ClusterEvent.IMemberEvent>(AddMember);
+            Receive<ClusterEvent.UnreachableMember>(UnreachableMember);
+            Receive<ClusterEvent.ReachableMember>(ReachableMember);
+            Receive<ExpectedFirstHeartbeat>(TriggerFirstHeart);
         }
 
         private void Init(ClusterEvent.CurrentClusterState snapshot)
@@ -140,15 +150,17 @@ namespace Akka.Cluster
             _state = _state.Init(nodes, unreachable);
         }
 
-        private void AddMember(Member m)
+        private void AddMember(ClusterEvent.IMemberEvent evt)
         {
-            if (!m.UniqueAddress.Equals(_cluster.SelfUniqueAddress) && !_state.Contains(m.UniqueAddress))
-                _state = _state.AddMember(m.UniqueAddress);
+            var addr = evt.Member.UniqueAddress;
+            if (!addr.Equals(_cluster.SelfUniqueAddress) && !_state.Contains(addr))
+                _state = _state.AddMember(addr);
         }
 
-        private void RemoveMember(Member m)
+        private void RemoveMember(ClusterEvent.MemberRemoved removed)
         {
-            if (m.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
+            var addr = removed.Member.UniqueAddress;
+            if (addr.Equals(_cluster.SelfUniqueAddress))
             {
                 // This cluster node will be shutdown, but stop this actor immediately
                 // to avoid further updates
@@ -156,21 +168,21 @@ namespace Akka.Cluster
             }
             else
             {
-                _state = _state.RemoveMember(m.UniqueAddress);
+                _state = _state.RemoveMember(addr);
             }
         }
 
-        private void UnreachableMember(Member m)
+        private void UnreachableMember(ClusterEvent.UnreachableMember m)
         {
-            _state = _state.UnreachableMember(m.UniqueAddress);
+            _state = _state.UnreachableMember(m.Member.UniqueAddress);
         }
 
-        private void ReachableMember(Member m)
+        private void ReachableMember(ClusterEvent.ReachableMember m)
         {
-            _state = _state.ReachableMember(m.UniqueAddress);
+            _state = _state.ReachableMember(m.Member.UniqueAddress);
         }
 
-        private void DoHeartbeat()
+        private void DoHeartbeat(HeartbeatTick tick)
         {
             var verboseHeartbeatLogging = _cluster.Settings.VerboseHeartbeatLogging;
             foreach (var to in _state.ActiveReceivers)
@@ -201,8 +213,9 @@ namespace Akka.Cluster
             }
         }
 
-        private void DoHeartbeatRsp(UniqueAddress from)
+        private void DoHeartbeatRsp(HeartbeatRsp rsp)
         {
+            UniqueAddress from = rsp.From;
             if (_cluster.Settings.VerboseHeartbeatLogging)
             {
                 _log.ClusterNodeHeartbeatResponseFrom(_cluster, from);
@@ -210,8 +223,9 @@ namespace Akka.Cluster
             _state = _state.HeartbeatRsp(from);
         }
 
-        private void TriggerFirstHeart(UniqueAddress from)
+        private void TriggerFirstHeart(ExpectedFirstHeartbeat heartbeat)
         {
+            var from = heartbeat.From;
             if (_state.ActiveReceivers.Contains(from) && !_failureDetector.IsMonitoring(from.Address))
             {
                 if (_cluster.Settings.VerboseHeartbeatLogging)

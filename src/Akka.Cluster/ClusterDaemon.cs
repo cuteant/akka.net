@@ -772,7 +772,7 @@ namespace Akka.Cluster
     /// <summary>
     /// Supervisor managing the different Cluster daemons.
     /// </summary>
-    internal sealed class ClusterDaemon : ReceiveActor, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal sealed class ClusterDaemon : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private IActorRef _coreSupervisor;
         private readonly ClusterSettings _settings;
@@ -796,34 +796,41 @@ namespace Akka.Cluster
 
             AddCoordinatedLeave();
 
-            Receive<InternalClusterAction.GetClusterCoreRef>(msg =>
-            {
-                if (_coreSupervisor == null)
-                    CreateChildren();
-                _coreSupervisor.Forward(msg);
-            });
+            Receive<InternalClusterAction.GetClusterCoreRef>(HandleGetClusterCoreRef);
 
-            Receive<InternalClusterAction.AddOnMemberUpListener>(msg =>
-            {
-                Context.ActorOf(
-                    Props.Create(() => new OnMemberStatusChangedListener(msg.Callback, MemberStatus.Up))
-                        .WithDeploy(Deploy.Local));
-            });
+            Receive<InternalClusterAction.AddOnMemberUpListener>(HandleAddOnMemberUpListener);
 
-            Receive<InternalClusterAction.AddOnMemberRemovedListener>(msg =>
-            {
-                Context.ActorOf(
-                    Props.Create(() => new OnMemberStatusChangedListener(msg.Callback, MemberStatus.Removed))
-                        .WithDeploy(Deploy.Local));
-            });
+            Receive<InternalClusterAction.AddOnMemberRemovedListener>(HandleAddOnMemberRemovedListener);
 
-            Receive<CoordinatedShutdownLeave.LeaveReq>(leave =>
-            {
-                var actor = Context.ActorOf(Props.Create(() => new CoordinatedShutdownLeave()));
+            Receive<CoordinatedShutdownLeave.LeaveReq>(HandleLeaveReq);
+        }
 
-                // forward the Ask request so the shutdown task gets completed
-                actor.Forward(leave);
-            });
+        private void HandleGetClusterCoreRef(InternalClusterAction.GetClusterCoreRef msg)
+        {
+            if (_coreSupervisor == null) { CreateChildren(); }
+            _coreSupervisor.Forward(msg);
+        }
+
+        private void HandleAddOnMemberUpListener(InternalClusterAction.AddOnMemberUpListener msg)
+        {
+            Context.ActorOf(
+                Props.Create(() => new OnMemberStatusChangedListener(msg.Callback, MemberStatus.Up))
+                    .WithDeploy(Deploy.Local));
+        }
+
+        private void HandleAddOnMemberRemovedListener(InternalClusterAction.AddOnMemberRemovedListener msg)
+        {
+            Context.ActorOf(
+                Props.Create(() => new OnMemberStatusChangedListener(msg.Callback, MemberStatus.Removed))
+                    .WithDeploy(Deploy.Local));
+        }
+
+        private void HandleLeaveReq(CoordinatedShutdownLeave.LeaveReq leave)
+        {
+            var actor = Context.ActorOf(Props.Create(() => new CoordinatedShutdownLeave()));
+
+            // forward the Ask request so the shutdown task gets completed
+            actor.Forward(leave);
         }
 
         private void AddCoordinatedLeave()
@@ -877,7 +884,7 @@ namespace Akka.Cluster
     /// ClusterCoreDaemon and ClusterDomainEventPublisher can't be restarted because the state
     /// would be obsolete. Shutdown the member if any those actors crashed.
     /// </summary>
-    internal class ClusterCoreSupervisor : ReceiveActor, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal class ClusterCoreSupervisor : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private IActorRef _publisher;
         private IActorRef _coreDaemon;
@@ -889,17 +896,20 @@ namespace Akka.Cluster
         /// </summary>
         public ClusterCoreSupervisor()
         {
+            _localOnlyDeciderFunc = LocalOnlyDecider;
+
             // Important - don't use Cluster(Context.System) in constructor because that would
             // cause deadlock. The Cluster extension is currently being created and is waiting
             // for response from GetClusterCoreRef in its constructor.
             // Child actors are therefore created when GetClusterCoreRef is received
 
-            Receive<InternalClusterAction.GetClusterCoreRef>(cr =>
-            {
-                if (_coreDaemon == null)
-                    CreateChildren();
-                Sender.Tell(_coreDaemon);
-            });
+            Receive<InternalClusterAction.GetClusterCoreRef>(HandleGetClusterCoreRef);
+        }
+
+        private void HandleGetClusterCoreRef(InternalClusterAction.GetClusterCoreRef cr)
+        {
+            if (_coreDaemon == null) { CreateChildren(); }
+            Sender.Tell(_coreDaemon);
         }
 
         /// <summary>
@@ -908,14 +918,17 @@ namespace Akka.Cluster
         /// <returns>TBD</returns>
         protected override SupervisorStrategy SupervisorStrategy()
         {
-            return new OneForOneStrategy(e =>
-            {
-                //TODO: JVM version matches NonFatal. Can / should we do something similar? 
-                _log.Error(e, "Cluster node [{0}] crashed, [{1}] - shutting down...",
-                    Cluster.Get(Context.System).SelfAddress, e);
-                Self.Tell(PoisonPill.Instance);
-                return Directive.Stop;
-            });
+            return new OneForOneStrategy(_localOnlyDeciderFunc);
+        }
+
+        private readonly Func<Exception, Directive> _localOnlyDeciderFunc;
+        private Directive LocalOnlyDecider(Exception e)
+        {
+            //TODO: JVM version matches NonFatal. Can / should we do something similar? 
+            _log.Error(e, "Cluster node [{0}] crashed, [{1}] - shutting down...",
+                Cluster.Get(Context.System).SelfAddress, e);
+            Self.Tell(PoisonPill.Instance);
+            return Directive.Stop;
         }
 
         /// <summary>
@@ -2893,7 +2906,7 @@ namespace Akka.Cluster
     ///
     /// The supplied callback will be run once when the current cluster member has the same status.
     /// </summary>
-    internal class OnMemberStatusChangedListener : ReceiveActor
+    internal sealed class OnMemberStatusChangedListener : ReceiveActor2
     {
         private readonly Action _callback;
         private readonly MemberStatus _status;
@@ -2931,23 +2944,26 @@ namespace Akka.Cluster
             _status = targetStatus;
             _cluster = Cluster.Get(Context.System);
 
-            Receive<ClusterEvent.CurrentClusterState>(state =>
-            {
-                if (state.Members.Any(IsTriggered))
-                    Done();
-            });
+            Receive<ClusterEvent.CurrentClusterState>(HandleCurrentClusterState);
 
-            Receive<ClusterEvent.MemberUp>(up =>
-            {
-                if (IsTriggered(up.Member))
-                    Done();
-            });
+            Receive<ClusterEvent.MemberUp>(HandleMemberUp);
 
-            Receive<ClusterEvent.MemberRemoved>(removed =>
-            {
-                if (IsTriggered(removed.Member))
-                    Done();
-            });
+            Receive<ClusterEvent.MemberRemoved>(HandleMemberRemoved);
+        }
+
+        private void HandleCurrentClusterState(ClusterEvent.CurrentClusterState state)
+        {
+            if (state.Members.Any(IsTriggered)) { Done(); }
+        }
+
+        private void HandleMemberUp(ClusterEvent.MemberUp up)
+        {
+            if (IsTriggered(up.Member)) { Done(); }
+        }
+
+        private void HandleMemberRemoved(ClusterEvent.MemberRemoved removed)
+        {
+            if (IsTriggered(removed.Member)) { Done(); }
         }
 
         /// <inheritdoc cref="ActorBase.PreStart"/>

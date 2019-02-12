@@ -14,7 +14,7 @@ namespace Akka.Remote
 {
     /// <summary>Responsible for cleaning up child references of remote deployed actors when remote node goes
     /// down (crash, network failure), i.e. triggered by Akka.Actor.Terminated.AddressTerminated.</summary>
-    internal class RemoteDeploymentWatcher : ReceiveActor, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal class RemoteDeploymentWatcher : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private readonly IDictionary<IActorRef, IInternalActorRef> _supervisors =
             new Dictionary<IActorRef, IInternalActorRef>(ActorRefComparer.Instance);
@@ -22,22 +22,25 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         public RemoteDeploymentWatcher()
         {
-            Receive<WatchRemote>(w =>
-            {
-                _supervisors.Add(w.Actor, w.Supervisor);
-                Context.Watch(w.Actor);
-            });
+            Receive<WatchRemote>(HandleWatchRemote);
+            Receive<Terminated>(HandleTerminated);
+        }
 
-            Receive<Terminated>(t =>
+        private void HandleWatchRemote(WatchRemote w)
+        {
+            _supervisors.Add(w.Actor, w.Supervisor);
+            Context.Watch(w.Actor);
+        }
+
+        private void HandleTerminated(Terminated t)
+        {
+            if (_supervisors.TryGetValue(t.ActorRef, out var supervisor))
             {
-                if (_supervisors.TryGetValue(t.ActorRef, out var supervisor))
-                {
-                    // send extra DeathWatchNotification to the supervisor so that it will remove the child
-                    supervisor.SendSystemMessage(new DeathWatchNotification(t.ActorRef, t.ExistenceConfirmed,
-                        t.AddressTerminated));
-                    _supervisors.Remove(t.ActorRef);
-                }
-            });
+                // send extra DeathWatchNotification to the supervisor so that it will remove the child
+                supervisor.SendSystemMessage(new DeathWatchNotification(t.ActorRef, t.ExistenceConfirmed,
+                    t.AddressTerminated));
+                _supervisors.Remove(t.ActorRef);
+            }
         }
 
         /// <summary>TBD</summary>

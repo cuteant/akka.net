@@ -90,7 +90,7 @@ namespace Akka.Cluster
         /// <summary>
         /// actor that subscribers to cluster eventBus to update current read view state
         /// </summary>
-        private class EventBusListener : ReceiveActor
+        private class EventBusListener : ReceiveActor2
         {
             readonly Cluster _cluster;
             private readonly ClusterReadView _readView;
@@ -106,63 +106,68 @@ namespace Akka.Cluster
                 _cluster = cluster;
                 _readView = readView;
 
-                Receive<ClusterEvent.IClusterDomainEvent>(clusterDomainEvent =>
+                Receive<ClusterEvent.IClusterDomainEvent>(HandleClusterDomainEvent);
+
+                Receive<ClusterEvent.CurrentClusterState>(HandleCurrentClusterState);
+            }
+
+            private void HandleClusterDomainEvent(ClusterEvent.IClusterDomainEvent clusterDomainEvent)
+            {
+                var state = State;
+                switch (clusterDomainEvent)
                 {
-                    switch (clusterDomainEvent)
-                    {
-                        case ClusterEvent.SeenChanged changed:
-                            State = State.Copy(seenBy: changed.SeenBy);
-                            break;
+                    case ClusterEvent.SeenChanged changed:
+                        State = state.Copy(seenBy: changed.SeenBy);
+                        break;
 
-                        case ClusterEvent.ReachabilityChanged changed:
-                            _readView.Reachability = changed.Reachability;
-                            break;
+                    case ClusterEvent.ReachabilityChanged changed:
+                        _readView.Reachability = changed.Reachability;
+                        break;
 
-                        case ClusterEvent.MemberRemoved removed:
-                            State = State.Copy(members: State.Members.Remove(removed.Member), unreachable: State.Unreachable.Remove(removed.Member));
-                            break;
+                    case ClusterEvent.MemberRemoved removed:
+                        State = state.Copy(members: state.Members.Remove(removed.Member), unreachable: state.Unreachable.Remove(removed.Member));
+                        break;
 
-                        case ClusterEvent.UnreachableMember member:
-                            // replace current member with new member (might have different status, only address is used in == comparison)
-                            State = State.Copy(unreachable: State.Unreachable.Remove(member.Member).Add(member.Member));
-                            break;
+                    case ClusterEvent.UnreachableMember member:
+                        // replace current member with new member (might have different status, only address is used in == comparison)
+                        State = state.Copy(unreachable: state.Unreachable.Remove(member.Member).Add(member.Member));
+                        break;
 
-                        case ClusterEvent.ReachableMember member:
-                            State = State.Copy(unreachable: State.Unreachable.Remove(member.Member));
-                            break;
+                    case ClusterEvent.ReachableMember member:
+                        State = state.Copy(unreachable: state.Unreachable.Remove(member.Member));
+                        break;
 
-                        case ClusterEvent.IMemberEvent memberEvent:
-                            var newUnreachable = State.Unreachable;
-                            // replace current member with new member (might have different status, only address is used in == comparison)
-                            if (State.Unreachable.Contains(memberEvent.Member))
-                                newUnreachable = State.Unreachable.Remove(memberEvent.Member).Add(memberEvent.Member);
-                            State = State.Copy(
-                                members: State.Members.Remove(memberEvent.Member).Add(memberEvent.Member),
-                                unreachable: newUnreachable);
-                            break;
+                    case ClusterEvent.IMemberEvent memberEvent:
+                        var newUnreachable = state.Unreachable;
+                        // replace current member with new member (might have different status, only address is used in == comparison)
+                        if (state.Unreachable.Contains(memberEvent.Member))
+                            newUnreachable = state.Unreachable.Remove(memberEvent.Member).Add(memberEvent.Member);
+                        State = state.Copy(
+                            members: state.Members.Remove(memberEvent.Member).Add(memberEvent.Member),
+                            unreachable: newUnreachable);
+                        break;
 
-                        case ClusterEvent.LeaderChanged changed:
-                            State = State.Copy(leader: changed.Leader);
-                            break;
+                    case ClusterEvent.LeaderChanged changed:
+                        State = state.Copy(leader: changed.Leader);
+                        break;
 
-                        case ClusterEvent.RoleLeaderChanged changed:
-                            State = State.Copy(roleLeaderMap: State.RoleLeaderMap.SetItem(changed.Role, changed.Leader));
-                            break;
+                    case ClusterEvent.RoleLeaderChanged changed:
+                        State = state.Copy(roleLeaderMap: state.RoleLeaderMap.SetItem(changed.Role, changed.Leader));
+                        break;
 
-                        case ClusterEvent.CurrentInternalStats stats:
-                            readView.LatestStats = stats;
-                            break;
+                    case ClusterEvent.CurrentInternalStats stats:
+                        _readView.LatestStats = stats;
+                        break;
 
-                        case ClusterEvent.ClusterShuttingDown _:
-                        default:
-                            break;
-                    }
-                });
+                    case ClusterEvent.ClusterShuttingDown _:
+                    default:
+                        break;
+                }
+            }
 
-                Receive<ClusterEvent.CurrentClusterState>(state =>
-                {
-                    State = state;
-                });
+            private void HandleCurrentClusterState(ClusterEvent.CurrentClusterState state)
+            {
+                State = state;
             }
 
             protected override void PreStart()

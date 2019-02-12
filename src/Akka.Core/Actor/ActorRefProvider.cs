@@ -186,6 +186,9 @@ namespace Akka.Actor
             _deployer = deployer ?? new Deployer(settings);
             _rootPath = new RootActorPath(new Address("akka", systemName));
             _log = Logging.GetLogger(eventStream, "LocalActorRefProvider(" + _rootPath.Address + ")");
+
+            _localOnlyDeciderFunc = LocalOnlyDecider;
+
             if (deadLettersFactory == null)
                 deadLettersFactory = p => new DeadLetterActorRef(this, p, _eventStream);
             _deadLetters = deadLettersFactory(_rootPath / "deadLetters");
@@ -280,14 +283,17 @@ namespace Akka.Actor
         private RootGuardianActorRef CreateRootGuardian(ActorSystemImpl system)
         {
             var supervisor = new RootGuardianSupervisor(_rootPath, this, _terminationPromise, _log);
-            var rootGuardianStrategy = new OneForOneStrategy(ex =>
-            {
-                _log.GuardianFailedShuttingDownSystem(ex);
-                return Directive.Stop;
-            });
+            var rootGuardianStrategy = new OneForOneStrategy(_localOnlyDeciderFunc);
             var props = Props.Create<GuardianActor>(rootGuardianStrategy);
             var rootGuardian = new RootGuardianActorRef(system, props, DefaultDispatcher, _defaultMailbox, supervisor, _rootPath, _deadLetters, _extraNames);
             return rootGuardian;
+        }
+
+        private readonly Func<Exception, Directive> _localOnlyDeciderFunc;
+        private Directive LocalOnlyDecider(Exception ex)
+        {
+            _log.GuardianFailedShuttingDownSystem(ex);
+            return Directive.Stop;
         }
 
         /// <summary>

@@ -180,7 +180,7 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// INTERNAL API. Sends stopMessage (e.g. <see cref="PoisonPill"/>) to the entities and when all of them have terminated it replies with `ShardStopped`.
         /// </summary>
-        internal class HandOffStopper : ReceiveActor
+        internal class HandOffStopper : ReceiveActor2
         {
             /// <summary>
             /// TBD
@@ -195,6 +195,9 @@ namespace Akka.Cluster.Sharding
                 return Actor.Props.Create(() => new HandOffStopper(shard, replyTo, entities, stopMessage)).WithDeploy(Deploy.Local);
             }
 
+            private readonly HashSet<IActorRef> _remaining;
+            private readonly ShardId _shard;
+            private readonly IActorRef _replyTo;
             /// <summary>
             /// TBD
             /// </summary>
@@ -204,22 +207,26 @@ namespace Akka.Cluster.Sharding
             /// <param name="stopMessage">TBD</param>
             public HandOffStopper(ShardId shard, IActorRef replyTo, IEnumerable<IActorRef> entities, object stopMessage)
             {
-                var remaining = new HashSet<IActorRef>(entities, ActorRefComparer.Instance);
+                _shard = shard;
+                _replyTo = replyTo;
+                _remaining = new HashSet<IActorRef>(entities, ActorRefComparer.Instance);
 
-                Receive<Terminated>(t =>
-                {
-                    remaining.Remove(t.ActorRef);
-                    if (remaining.Count == 0)
-                    {
-                        replyTo.Tell(new PersistentShardCoordinator.ShardStopped(shard));
-                        Context.Stop(Self);
-                    }
-                });
+                Receive<Terminated>(HandleTerminated);
 
-                foreach (var aref in remaining)
+                foreach (var aref in _remaining)
                 {
                     Context.Watch(aref);
                     aref.Tell(stopMessage);
+                }
+            }
+
+            private void HandleTerminated(Terminated t)
+            {
+                _remaining.Remove(t.ActorRef);
+                if (_remaining.Count == 0)
+                {
+                    _replyTo.Tell(new PersistentShardCoordinator.ShardStopped(_shard));
+                    Context.Stop(Self);
                 }
             }
         }

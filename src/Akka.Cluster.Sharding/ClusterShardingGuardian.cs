@@ -17,7 +17,7 @@ namespace Akka.Cluster.Sharding
     /// <summary>
     /// INTERNAL API: <see cref="ShardRegion"/> and <see cref="PersistentShardCoordinator"/> actors are created as children of this actor.
     /// </summary>
-    internal sealed class ClusterShardingGuardian : ReceiveActor
+    internal sealed class ClusterShardingGuardian : ReceiveActor2
     {
         #region messages
 
@@ -164,87 +164,91 @@ namespace Akka.Cluster.Sharding
         /// </summary>
         public ClusterShardingGuardian()
         {
-            Receive<Start>(start =>
+            Receive<Start>(HandleStart);
+
+            Receive<StartProxy>(HandleStartProxy);
+        }
+
+        private void HandleStart(Start start)
+        {
+            try
             {
-                try
-                {
-                    var settings = start.Settings;
-                    var encName = Uri.EscapeDataString(start.TypeName);
-                    var coordinatorSingletonManagerName = CoordinatorSingletonManagerName(encName);
-                    var coordinatorPath = CoordinatorPath(encName);
-                    var shardRegion = Context.Child(encName);
-                    var replicator = Replicator(settings);
+                var settings = start.Settings;
+                var encName = Uri.EscapeDataString(start.TypeName);
+                var coordinatorSingletonManagerName = CoordinatorSingletonManagerName(encName);
+                var coordinatorPath = CoordinatorPath(encName);
+                var shardRegion = Context.Child(encName);
+                var replicator = Replicator(settings);
 
-                    if (Equals(shardRegion, ActorRefs.Nobody))
+                if (Equals(shardRegion, ActorRefs.Nobody))
+                {
+                    if (Equals(Context.Child(coordinatorSingletonManagerName), ActorRefs.Nobody))
                     {
-                        if (Equals(Context.Child(coordinatorSingletonManagerName), ActorRefs.Nobody))
-                        {
-                            var minBackoff = settings.TunningParameters.CoordinatorFailureBackoff;
-                            var maxBackoff = new TimeSpan(minBackoff.Ticks * 5);
-                            var coordinatorProps = settings.StateStoreMode == StateStoreMode.Persistence
-                                ? PersistentShardCoordinator.Props(start.TypeName, settings, start.AllocationStrategy)
-                                : DDataShardCoordinator.Props(start.TypeName, settings, start.AllocationStrategy, replicator, _majorityMinCap, settings.RememberEntities);
+                        var minBackoff = settings.TunningParameters.CoordinatorFailureBackoff;
+                        var maxBackoff = new TimeSpan(minBackoff.Ticks * 5);
+                        var coordinatorProps = settings.StateStoreMode == StateStoreMode.Persistence
+                            ? PersistentShardCoordinator.Props(start.TypeName, settings, start.AllocationStrategy)
+                            : DDataShardCoordinator.Props(start.TypeName, settings, start.AllocationStrategy, replicator, _majorityMinCap, settings.RememberEntities);
 
-                            var singletonProps = BackoffSupervisor.Props(coordinatorProps, "coordinator", minBackoff, maxBackoff, 0.2).WithDeploy(Deploy.Local);
-                            var singletonSettings = settings.CoordinatorSingletonSettings.WithSingletonName("singleton").WithRole(settings.Role);
-                            Context.ActorOf(ClusterSingletonManager.Props(singletonProps, PoisonPill.Instance, singletonSettings).WithDispatcher(Context.Props.Dispatcher), coordinatorSingletonManagerName);
-                        }
-                        shardRegion = Context.ActorOf(ShardRegion.Props(
-                            typeName: start.TypeName,
-                            entityProps: start.EntityProps,
-                            settings: settings,
-                            coordinatorPath: coordinatorPath,
-                            extractEntityId: start.ExtractEntityId,
-                            extractShardId: start.ExtractShardId,
-                            handOffStopMessage: start.HandOffStopMessage,
-                            replicator: replicator,
-                            majorityMinCap: _majorityMinCap).WithDispatcher(Context.Props.Dispatcher), encName);
+                        var singletonProps = BackoffSupervisor.Props(coordinatorProps, "coordinator", minBackoff, maxBackoff, 0.2).WithDeploy(Deploy.Local);
+                        var singletonSettings = settings.CoordinatorSingletonSettings.WithSingletonName("singleton").WithRole(settings.Role);
+                        Context.ActorOf(ClusterSingletonManager.Props(singletonProps, PoisonPill.Instance, singletonSettings).WithDispatcher(Context.Props.Dispatcher), coordinatorSingletonManagerName);
                     }
-
-                    Sender.Tell(new Started(shardRegion));
+                    shardRegion = Context.ActorOf(ShardRegion.Props(
+                        typeName: start.TypeName,
+                        entityProps: start.EntityProps,
+                        settings: settings,
+                        coordinatorPath: coordinatorPath,
+                        extractEntityId: start.ExtractEntityId,
+                        extractShardId: start.ExtractShardId,
+                        handOffStopMessage: start.HandOffStopMessage,
+                        replicator: replicator,
+                        majorityMinCap: _majorityMinCap).WithDispatcher(Context.Props.Dispatcher), encName);
                 }
-                catch (Exception ex)
-                {
-                    //TODO: JVM version matches NonFatal. Can / should we do something similar?
-                    // don't restart
-                    // could be invalid ReplicatorSettings, or InvalidActorNameException
-                    // if it has already been started
-                    Sender.Tell(new Status.Failure(ex));
-                }
-            });
 
-            Receive<StartProxy>(startProxy =>
+                Sender.Tell(new Started(shardRegion));
+            }
+            catch (Exception ex)
             {
-                try
+                //TODO: JVM version matches NonFatal. Can / should we do something similar?
+                // don't restart
+                // could be invalid ReplicatorSettings, or InvalidActorNameException
+                // if it has already been started
+                Sender.Tell(new Status.Failure(ex));
+            }
+        }
+
+        private void HandleStartProxy(StartProxy startProxy)
+        {
+            try
+            {
+                var settings = startProxy.Settings;
+                var encName = Uri.EscapeDataString(startProxy.TypeName + "Proxy");
+                var coordinatorPath = CoordinatorPath(Uri.EscapeDataString(startProxy.TypeName));
+                var shardRegion = Context.Child(encName);
+
+                if (Equals(shardRegion, ActorRefs.Nobody))
                 {
-                    var settings = startProxy.Settings;
-                    var encName = Uri.EscapeDataString(startProxy.TypeName + "Proxy");
-                    var coordinatorPath = CoordinatorPath(Uri.EscapeDataString(startProxy.TypeName));
-                    var shardRegion = Context.Child(encName);
 
-                    if (Equals(shardRegion, ActorRefs.Nobody))
-                    {
-
-                        shardRegion = Context.ActorOf(ShardRegion.ProxyProps(
-                            typeName: startProxy.TypeName,
-                            settings: settings,
-                            coordinatorPath: coordinatorPath,
-                            extractEntityId: startProxy.ExtractEntityId,
-                            extractShardId: startProxy.ExtractShardId,
-                            replicator: Context.System.DeadLetters,
-                            majorityMinCap: _majorityMinCap).WithDispatcher(Context.Props.Dispatcher), encName);
-                    }
-
-                    Sender.Tell(new Started(shardRegion));
+                    shardRegion = Context.ActorOf(ShardRegion.ProxyProps(
+                        typeName: startProxy.TypeName,
+                        settings: settings,
+                        coordinatorPath: coordinatorPath,
+                        extractEntityId: startProxy.ExtractEntityId,
+                        extractShardId: startProxy.ExtractShardId,
+                        replicator: Context.System.DeadLetters,
+                        majorityMinCap: _majorityMinCap).WithDispatcher(Context.Props.Dispatcher), encName);
                 }
-                catch (Exception ex)
-                {
-                    //TODO: JVM version matches NonFatal. Can / should we do something similar?
-                    // don't restart
-                    // could be InvalidActorNameException if it has already been started
-                    Sender.Tell(new Status.Failure(ex));
-                }
-            });
+
+                Sender.Tell(new Started(shardRegion));
+            }
+            catch (Exception ex)
+            {
+                //TODO: JVM version matches NonFatal. Can / should we do something similar?
+                // don't restart
+                // could be InvalidActorNameException if it has already been started
+                Sender.Tell(new Status.Failure(ex));
+            }
         }
 
         private IActorRef Replicator(ClusterShardingSettings settings)

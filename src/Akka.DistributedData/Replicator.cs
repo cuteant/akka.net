@@ -258,7 +258,7 @@ namespace Akka.DistributedData
     /// </list>
     /// </para>
     /// </summary>
-    internal sealed class Replicator : ReceiveActor
+    internal sealed class Replicator : ReceiveActor2
     {
         public static Props Props(ReplicatorSettings settings) =>
             Actor.Props.Create(() => new Replicator(settings)).WithDeploy(Deploy.Local).WithDispatcher(settings.Dispatcher);
@@ -347,6 +347,8 @@ namespace Akka.DistributedData
             _log = Context.GetLogger();
             _maxDeltaSize = settings.MaxDeltaSize;
 
+            _localOnlyDeciderFunc = LocalOnlyDecider;
+
             if (_cluster.IsTerminated) ThrowHelper.ThrowArgumentException_ClusterNodeMustNotBeTerminated();
             if (!string.IsNullOrEmpty(_settings.Role) && !_cluster.SelfRoles.Contains(_settings.Role))
             {
@@ -420,7 +422,9 @@ namespace Akka.DistributedData
             _clockTask.Cancel();
         }
 
-        protected override SupervisorStrategy SupervisorStrategy() => new OneForOneStrategy(e =>
+        protected override SupervisorStrategy SupervisorStrategy() => new OneForOneStrategy(_localOnlyDeciderFunc);
+        private readonly Func<Exception, Directive> _localOnlyDeciderFunc;
+        private Directive LocalOnlyDecider(Exception e)
         {
             var fromDurableStore = Equals(Sender, _durableStore) && !Equals(Sender, Context.System.DeadLetters);
             if ((e is LoadFailedException || e is ActorInitializationException) && fromDurableStore)
@@ -430,39 +434,20 @@ namespace Akka.DistributedData
                 return Directive.Stop;
             }
             else return Actor.SupervisorStrategy.DefaultDecider.Decide(e);
-        });
+        }
 
+        private DateTime _startTime;
+        private int _count;
         private void Load()
         {
-            var startTime = DateTime.UtcNow;
-            var count = 0;
+            _startTime = DateTime.UtcNow;
+            _count = 0;
 
             NormalReceive();
 
-            Receive<LoadData>(load =>
-            {
-                count += load.Data.Count;
-                foreach (var entry in load.Data)
-                {
-                    var envelope = entry.Value.Data;
-                    var newEnvelope = Write(entry.Key, envelope);
-                    if (!ReferenceEquals(newEnvelope.Data, envelope.Data))
-                    {
-                        _durableStore.Tell(new Store(entry.Key, new DurableDataEnvelope(newEnvelope), null));
-                    }
-                }
-            });
-            Receive<LoadAllCompleted>(_ =>
-            {
-                if (_log.IsDebugEnabled) _log.LoadingEntriesFromDurableStoreTookMs(count, startTime);
-                Become(NormalReceive);
-                Self.Tell(FlushChanges.Instance);
-            });
-            Receive<GetReplicaCount>(_ =>
-            {
-                // 0 until durable data has been loaded, used by test
-                Sender.Tell(new ReplicaCount(0));
-            });
+            Receive<LoadData>(HandleLoadData);
+            Receive<LoadAllCompleted>(HandleLoadAllCompleted);
+            Receive<GetReplicaCount>(HandleGetReplicaCount0);
 
             // ignore scheduled ticks when loading durable data
             Receive(new Action<RemovedNodePruningTick>(Ignore));
@@ -476,35 +461,62 @@ namespace Akka.DistributedData
             Receive(new Action<Gossip>(IgnoreDebug));
         }
 
+        private void HandleLoadData(LoadData load)
+        {
+            _count += load.Data.Count;
+            foreach (var entry in load.Data)
+            {
+                var envelope = entry.Value.Data;
+                var newEnvelope = Write(entry.Key, envelope);
+                if (!ReferenceEquals(newEnvelope.Data, envelope.Data))
+                {
+                    _durableStore.Tell(new Store(entry.Key, new DurableDataEnvelope(newEnvelope), null));
+                }
+            }
+        }
+
+        private void HandleLoadAllCompleted(LoadAllCompleted _)
+        {
+            if (_log.IsDebugEnabled) _log.LoadingEntriesFromDurableStoreTookMs(_count, _startTime);
+            Become(NormalReceive);
+            Self.Tell(FlushChanges.Instance);
+        }
+
+        private void HandleGetReplicaCount0(GetReplicaCount _)
+        {
+            // 0 until durable data has been loaded, used by test
+            Sender.Tell(new ReplicaCount(0));
+        }
+
         private void NormalReceive()
         {
-            Receive<Get>(g => ReceiveGet(g.Key, g.Consistency, g.Request));
-            Receive<Update>(msg => ReceiveUpdate(msg.Key, msg.Modify, msg.Consistency, msg.Request));
-            Receive<Read>(r => ReceiveRead(r.Key));
-            Receive<Write>(w => ReceiveWrite(w.Key, w.Envelope));
-            Receive<ReadRepair>(rr => ReceiveReadRepair(rr.Key, rr.Envelope));
-            Receive<DeltaPropagation>(msg => ReceiveDeltaPropagation(msg.FromNode, msg.ShouldReply, msg.Deltas));
-            Receive<FlushChanges>(_ => ReceiveFlushChanges());
-            Receive<DeltaPropagationTick>(_ => ReceiveDeltaPropagationTick());
-            Receive<GossipTick>(_ => ReceiveGossipTick());
-            Receive<ClockTick>(c => ReceiveClockTick());
-            Receive<Internal.Status>(s => ReceiveStatus(s.Digests, s.Chunk, s.TotalChunks));
-            Receive<Gossip>(g => ReceiveGossip(g.UpdatedData, g.SendBack));
-            Receive<Subscribe>(s => ReceiveSubscribe(s.Key, s.Subscriber));
-            Receive<Unsubscribe>(u => ReceiveUnsubscribe(u.Key, u.Subscriber));
-            Receive<Terminated>(t => ReceiveTerminated(t.ActorRef));
-            Receive<ClusterEvent.MemberWeaklyUp>(m => ReceiveMemberWeaklyUp(m.Member));
-            Receive<ClusterEvent.MemberUp>(m => ReceiveMemberUp(m.Member));
-            Receive<ClusterEvent.MemberRemoved>(m => ReceiveMemberRemoved(m.Member));
-            Receive<ClusterEvent.IMemberEvent>(_ => { });
-            Receive<ClusterEvent.UnreachableMember>(u => ReceiveUnreachable(u.Member));
-            Receive<ClusterEvent.ReachableMember>(r => ReceiveReachable(r.Member));
-            Receive<ClusterEvent.LeaderChanged>(l => ReceiveLeaderChanged(l.Leader, null));
-            Receive<ClusterEvent.RoleLeaderChanged>(r => ReceiveLeaderChanged(r.Leader, r.Role));
-            Receive<GetKeyIds>(_ => ReceiveGetKeyIds());
-            Receive<Delete>(d => ReceiveDelete(d.Key, d.Consistency, d.Request));
-            Receive<RemovedNodePruningTick>(r => ReceiveRemovedNodePruningTick());
-            Receive<GetReplicaCount>(_ => ReceiveGetReplicaCount());
+            Receive<Get>(ReceiveGet);
+            Receive<Update>(ReceiveUpdate);
+            Receive<Read>(ReceiveRead);
+            Receive<Write>(ReceiveWrite);
+            Receive<ReadRepair>(ReceiveReadRepair);
+            Receive<DeltaPropagation>(ReceiveDeltaPropagation);
+            Receive<FlushChanges>(ReceiveFlushChanges);
+            Receive<DeltaPropagationTick>(ReceiveDeltaPropagationTick);
+            Receive<GossipTick>(ReceiveGossipTick);
+            Receive<ClockTick>(ReceiveClockTick);
+            Receive<Internal.Status>(ReceiveStatus);
+            Receive<Gossip>(ReceiveGossip);
+            Receive<Subscribe>(ReceiveSubscribe);
+            Receive<Unsubscribe>(ReceiveUnsubscribe);
+            Receive<Terminated>(ReceiveTerminated);
+            Receive<ClusterEvent.MemberWeaklyUp>(ReceiveMemberWeaklyUp);
+            Receive<ClusterEvent.MemberUp>(ReceiveMemberUp);
+            Receive<ClusterEvent.MemberRemoved>(ReceiveMemberRemoved);
+            Receive<ClusterEvent.IMemberEvent>(PatternMatch<ClusterEvent.IMemberEvent>.EmptyAction);
+            Receive<ClusterEvent.UnreachableMember>(ReceiveUnreachable);
+            Receive<ClusterEvent.ReachableMember>(ReceiveReachable);
+            Receive<ClusterEvent.LeaderChanged>(HandleLeaderChanged);
+            Receive<ClusterEvent.RoleLeaderChanged>(HandleRoleLeaderChanged);
+            Receive<GetKeyIds>(ReceiveGetKeyIds);
+            Receive<Delete>(ReceiveDelete);
+            Receive<RemovedNodePruningTick>(ReceiveRemovedNodePruningTick);
+            Receive<GetReplicaCount>(ReceiveGetReplicaCount);
         }
 
         private void IgnoreDebug<T>(T msg)
@@ -514,8 +526,11 @@ namespace Akka.DistributedData
 
         private void Ignore<T>(T msg) { }
 
-        private void ReceiveGet(IKey key, IReadConsistency consistency, object req)
+        private void ReceiveGet(Get g)
         {
+            IKey key = g.Key;
+            IReadConsistency consistency = g.Consistency;
+            object req = g.Request;
             var localValue = GetData(key.Id);
 
             if (_log.IsDebugEnabled) _log.ReceivedGetForKey(key, localValue, consistency);
@@ -538,19 +553,25 @@ namespace Akka.DistributedData
             return false;
         }
 
-        private void ReceiveRead(string key)
+        private void ReceiveRead(Read read)
         {
-            Sender.Tell(new ReadResult(GetData(key)));
+            Sender.Tell(new ReadResult(GetData(read.Key)));
         }
 
         private bool MatchingRole(Member m) => string.IsNullOrEmpty(_settings.Role) || m.HasRole(_settings.Role);
 
-        private void ReceiveUpdate(IKey key, Func<IReplicatedData, IReplicatedData> modify, IWriteConsistency consistency, object request)
+        private void ReceiveUpdate(Update msg)
         {
+            IKey key = msg.Key;
+            object request = msg.Request;
+
             var localValue = GetData(key.Id);
 
             try
             {
+                Func<IReplicatedData, IReplicatedData> modify = msg.Modify;
+                IWriteConsistency consistency = msg.Consistency;
+
                 DataEnvelope envelope;
                 IReplicatedData delta;
                 if (localValue == null)
@@ -673,9 +694,9 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveWrite(string key, DataEnvelope envelope)
+        private void ReceiveWrite(Write write)
         {
-            WriteAndStore(key, envelope, reply: true);
+            WriteAndStore(write.Key, write.Envelope, reply: true);
         }
 
         private void WriteAndStore(string key, DataEnvelope writeEnvelope, bool reply)
@@ -726,13 +747,13 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveReadRepair(string key, DataEnvelope writeEnvelope)
+        private void ReceiveReadRepair(ReadRepair rr)
         {
-            WriteAndStore(key, writeEnvelope, reply: false);
+            WriteAndStore(rr.Key, rr.Envelope, reply: false);
             Sender.Tell(ReadRepairAck.Instance);
         }
 
-        private void ReceiveGetKeyIds()
+        private void ReceiveGetKeyIds(GetKeyIds ids)
         {
             var keys = _dataEntries
                 .Where(kvp => !(kvp.Value.Item1.Data is DeletedData))
@@ -741,8 +762,12 @@ namespace Akka.DistributedData
             Sender.Tell(new GetKeysIdsResult(keys));
         }
 
-        private void ReceiveDelete(IKey key, IWriteConsistency consistency, object request)
+        private void ReceiveDelete(Delete d)
         {
+            IKey key = d.Key;
+            IWriteConsistency consistency = d.Consistency;
+            object request = d.Request;
+
             var envelope = GetData(key.Id);
             if (envelope?.Data is DeletedData)
             {
@@ -874,7 +899,7 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveFlushChanges()
+        private void ReceiveFlushChanges(FlushChanges fc)
         {
             if (_subscribers.Count != 0)
             {
@@ -907,7 +932,7 @@ namespace Akka.DistributedData
             _changed = ImmutableHashSet<string>.Empty;
         }
 
-        private void ReceiveDeltaPropagationTick()
+        private void ReceiveDeltaPropagationTick(DeltaPropagationTick dpt)
         {
             foreach (var entry in _deltaPropagationSelector.CollectPropagations())
             {
@@ -922,10 +947,14 @@ namespace Akka.DistributedData
                 _deltaPropagationSelector.CleanupDeltaEntries();
         }
 
-        private void ReceiveDeltaPropagation(UniqueAddress from, bool reply, ImmutableDictionary<string, Delta> deltas)
+        private void ReceiveDeltaPropagation(DeltaPropagation msg)
         {
+            var from = msg.FromNode;
             try
             {
+                var reply = msg.ShouldReply;
+                var deltas = msg.Deltas;
+
                 var isDebug = _log.IsDebugEnabled;
                 if (isDebug) { _log.ReceivedDeltaPropagationFromContaining(from, deltas); }
 
@@ -978,7 +1007,7 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveGossipTick()
+        private void ReceiveGossipTick(GossipTick gossipTick)
         {
             var node = SelectRandomNode(_nodes.Union(_weaklyUpNodes));
             if (node != null)
@@ -1040,8 +1069,12 @@ namespace Akka.DistributedData
             return isFound && !isEqualToOther;
         }
 
-        private void ReceiveStatus(IImmutableDictionary<string, byte[]> otherDigests, int chunk, int totChunks)
+        private void ReceiveStatus(Internal.Status s)
         {
+            var otherDigests = s.Digests;
+            var chunk = s.Chunk;
+            var totChunks = s.TotalChunks;
+
             if (_log.IsDebugEnabled)
             {
                 _log.ReceivedGossipStatusFrom(Sender, chunk, totChunks, otherDigests);
@@ -1088,8 +1121,10 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveGossip(IImmutableDictionary<string, DataEnvelope> updatedData, bool sendBack)
+        private void ReceiveGossip(Gossip g)
         {
+            var updatedData = g.UpdatedData;
+            var sendBack = g.SendBack;
             if (_log.IsDebugEnabled) { _log.ReceivedGossipFrom(Sender, updatedData); }
 
             var replyData = ImmutableDictionary<string, DataEnvelope>.Empty.ToBuilder();
@@ -1111,8 +1146,10 @@ namespace Akka.DistributedData
             if (sendBack && replyData.Count != 0) Sender.Tell(new Gossip(replyData.ToImmutable(), sendBack: false));
         }
 
-        private void ReceiveSubscribe(IKey key, IActorRef subscriber)
+        private void ReceiveSubscribe(Subscribe s)
         {
+            var key = s.Key;
+            var subscriber = s.Subscriber;
             if (!_newSubscribers.TryGetValue(key.Id, out var set))
             {
                 _newSubscribers[key.Id] = set = new HashSet<IActorRef>(ActorRefComparer.Instance);
@@ -1125,8 +1162,10 @@ namespace Akka.DistributedData
             Context.Watch(subscriber);
         }
 
-        private void ReceiveUnsubscribe(IKey key, IActorRef subscriber)
+        private void ReceiveUnsubscribe(Unsubscribe u)
         {
+            var key = u.Key;
+            var subscriber = u.Subscriber;
             if (_subscribers.TryGetValue(key.Id, out var set) && set.Remove(subscriber) && set.Count == 0)
                 _subscribers.Remove(key.Id);
 
@@ -1146,8 +1185,9 @@ namespace Akka.DistributedData
                    _newSubscribers.Any(kvp => kvp.Value.Contains(subscriber));
         }
 
-        private void ReceiveTerminated(IActorRef terminated)
+        private void ReceiveTerminated(Terminated t )
         {
+            var terminated = t.ActorRef;
             if (Equals(terminated, _durableStore))
             {
                 _log.StoppingDistributedDataReplicatorBecauseDurableStoreTerminated();
@@ -1184,16 +1224,18 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveMemberWeaklyUp(Member m)
+        private void ReceiveMemberWeaklyUp(ClusterEvent.MemberWeaklyUp weaklyUp)
         {
+            var m = weaklyUp.Member;
             if (MatchingRole(m) && m.Address != _selfAddress)
             {
                 _weaklyUpNodes = _weaklyUpNodes.Add(m.Address);
             }
         }
 
-        private void ReceiveMemberUp(Member m)
+        private void ReceiveMemberUp(ClusterEvent.MemberUp up)
         {
+            var m = up.Member;
             if (MatchingRole(m) && m.Address != _selfAddress)
             {
                 _nodes = _nodes.Add(m.Address);
@@ -1201,8 +1243,9 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveMemberRemoved(Member m)
+        private void ReceiveMemberRemoved(ClusterEvent.MemberRemoved removed)
         {
+            var m = removed.Member;
             if (m.Address == _selfAddress) { Context.Stop(Self); }
             else if (MatchingRole(m))
             {
@@ -1215,14 +1258,26 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveUnreachable(Member m)
+        private void ReceiveUnreachable(ClusterEvent.UnreachableMember um)
         {
+            var m = um.Member;
             if (MatchingRole(m)) _unreachable = _unreachable.Add(m.Address);
         }
 
-        private void ReceiveReachable(Member m)
+        private void ReceiveReachable(ClusterEvent.ReachableMember rm)
         {
+            var m = rm.Member;
             if (MatchingRole(m)) _unreachable = _unreachable.Remove(m.Address);
+        }
+
+        private void HandleLeaderChanged(ClusterEvent.LeaderChanged changed)
+        {
+            ReceiveLeaderChanged(changed.Leader, null);
+        }
+
+        private void HandleRoleLeaderChanged(ClusterEvent.RoleLeaderChanged changed)
+        {
+            ReceiveLeaderChanged(changed.Leader, changed.Role);
         }
 
         private void ReceiveLeaderChanged(Address leader, string role)
@@ -1230,7 +1285,7 @@ namespace Akka.DistributedData
             if (role == _settings.Role) _leader = leader;
         }
 
-        private void ReceiveClockTick()
+        private void ReceiveClockTick(ClockTick clockTick)
         {
             var now = DateTime.UtcNow.Ticks * TimeSpan.TicksPerMillisecond / 100; // we need ticks per nanosec.
             if (_unreachable.Count == 0)
@@ -1238,7 +1293,7 @@ namespace Akka.DistributedData
             _previousClockTime = now;
         }
 
-        private void ReceiveRemovedNodePruningTick()
+        private void ReceiveRemovedNodePruningTick(RemovedNodePruningTick r)
         {
             // See 'CRDT Garbage' section in Replicator Scaladoc for description of the process
             if (_unreachable.IsEmpty)
@@ -1388,7 +1443,7 @@ namespace Akka.DistributedData
             }
         }
 
-        private void ReceiveGetReplicaCount() => Sender.Tell(new ReplicaCount(_nodes.Count + 1));
+        private void ReceiveGetReplicaCount(GetReplicaCount c) => Sender.Tell(new ReplicaCount(_nodes.Count + 1));
 
         #region delta propagation selector
 

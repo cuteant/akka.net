@@ -121,67 +121,73 @@ namespace Akka.Event
         {
             if (system == null) { return false; }
 
-            return _initiallySubscribedOrUnsubscriber.Match().With<Left<IImmutableSet<IActorRef>>>(v =>
+            switch ((object)_initiallySubscribedOrUnsubscriber)
             {
-                if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v, Either.Right(unsubscriber)))
-                {
+                case Left<IImmutableSet<IActorRef>> v:
+                    if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v, Either.Right(unsubscriber)))
+                    {
+                        if (_debug)
+                        {
+                            Publish(new Debug(SimpleName(this), GetType(),
+                                string.Format("initialized unsubscriber to: {0}  registering {1} initial subscribers with it", unsubscriber, v.Value.Count)));
+
+                        }
+                        v.Value.ForEach(RegisterWithUnsubscriber);
+
+
+                    }
+                    else
+                    {
+                        InitUnsubscriber(unsubscriber, system);
+                    }
+                    return true;
+
+                case Right<IActorRef> presentUnsubscriber:
                     if (_debug)
                     {
                         Publish(new Debug(SimpleName(this), GetType(),
-                            string.Format("initialized unsubscriber to: {0}  registering {1} initial subscribers with it", unsubscriber, v.Value.Count)));
+                            string.Format("not using unsubscriber {0}, because already initialized with {1}", unsubscriber, presentUnsubscriber)));
 
                     }
-                    v.Value.ForEach(RegisterWithUnsubscriber);
-
-
-                }
-                else
-                {
-                    InitUnsubscriber(unsubscriber, system);
-                }
-
-
-            }).With<Right<IActorRef>>(presentUnsubscriber =>
-            {
-                if (_debug)
-                {
-                    Publish(new Debug(SimpleName(this), GetType(),
-                        string.Format("not using unsubscriber {0}, because already initialized with {1}", unsubscriber, presentUnsubscriber)));
-
-                }
-            }).WasHandled;
+                    return true;
+            }
+            return false;
         }
 
         private void RegisterWithUnsubscriber(IActorRef subscriber)
         {
-            _initiallySubscribedOrUnsubscriber.Match().With<Left<IImmutableSet<IActorRef>>>(v =>
+            switch ((object)_initiallySubscribedOrUnsubscriber)
             {
-                if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v,
-                    Either.Left<IImmutableSet<IActorRef>>(v.Value.Add(subscriber))))
-                {
-                    RegisterWithUnsubscriber(subscriber);
-                }
+                case Left<IImmutableSet<IActorRef>> v:
+                    if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v,
+                        Either.Left<IImmutableSet<IActorRef>>(v.Value.Add(subscriber))))
+                    {
+                        RegisterWithUnsubscriber(subscriber);
+                    }
+                    break; ;
 
-            }).With<Right<IActorRef>>(unsubscriber =>
-            {
-                unsubscriber.Value.Tell(new EventStreamUnsubscriber.Register(subscriber));
-            });
+                case Right<IActorRef> unsubscriber:
+                    unsubscriber.Value.Tell(new EventStreamUnsubscriber.Register(subscriber));
+                    break;
+            }
         }
 
         private void UnregisterIfNoMoreSubscribedChannels(IActorRef subscriber)
         {
-            _initiallySubscribedOrUnsubscriber.Match().With<Left<IImmutableSet<IActorRef>>>(v =>
+            switch ((object)_initiallySubscribedOrUnsubscriber)
             {
-                if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v,
-                    Either.Left<IImmutableSet<IActorRef>>(v.Value.Remove(subscriber))))
-                {
-                    UnregisterIfNoMoreSubscribedChannels(subscriber);
-                }
+                case Left<IImmutableSet<IActorRef>> v:
+                    if (_initiallySubscribedOrUnsubscriber.CompareAndSet(v,
+                        Either.Left<IImmutableSet<IActorRef>>(v.Value.Remove(subscriber))))
+                    {
+                        UnregisterIfNoMoreSubscribedChannels(subscriber);
+                    }
+                    break;
 
-            }).With<Right<IActorRef>>(unsubscriber =>
-            {
-                unsubscriber.Value.Tell(new EventStreamUnsubscriber.UnregisterIfNoMoreSubscribedChannels(subscriber));
-            });
+                case Right<IActorRef> unsubscriber:
+                    unsubscriber.Value.Tell(new EventStreamUnsubscriber.UnregisterIfNoMoreSubscribedChannels(subscriber));
+                    break;
+            }
         }
     }
 }

@@ -17,7 +17,7 @@ namespace Akka.Cluster
     /// Used for executing <see cref="CoordinatedShutdown"/> phases for graceful
     /// <see cref="Cluster.Leave"/> behaviors.
     /// </summary>
-    internal sealed class CoordinatedShutdownLeave : ReceiveActor
+    internal sealed class CoordinatedShutdownLeave : ReceiveActor2
     {
         /// <summary>
         /// A leave request for beginning the exit process from the <see cref="Cluster"/>
@@ -41,14 +41,16 @@ namespace Akka.Cluster
 
         public CoordinatedShutdownLeave()
         {
-            Receive<LeaveReq>(req =>
-            {
-                // MemberRemoved is needed in case it was downed instead
-                _cluster.Leave(_cluster.SelfAddress);
-                _cluster.Subscribe(Self, typeof(ClusterEvent.MemberLeft), typeof(ClusterEvent.MemberRemoved));
-                var s = Sender;
-                Become(() => WaitingLeaveCompleted(s));
-            });
+            Receive<LeaveReq>(HandleLeaveReq);
+        }
+
+        private void HandleLeaveReq(LeaveReq req)
+        {
+            // MemberRemoved is needed in case it was downed instead
+            _cluster.Leave(_cluster.SelfAddress);
+            _cluster.Subscribe(Self, typeof(ClusterEvent.MemberLeft), typeof(ClusterEvent.MemberRemoved));
+            var s = Sender;
+            Become(() => WaitingLeaveCompleted(s));
         }
 
         private void WaitingLeaveCompleted(IActorRef replyTo)

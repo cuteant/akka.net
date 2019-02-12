@@ -99,7 +99,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// replies.
     /// </para>
     /// </summary>
-    public class DistributedPubSubMediator : ReceiveActor
+    public class DistributedPubSubMediator : ReceiveActor2
     {
         /// <summary>
         /// TBD
@@ -167,237 +167,285 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             _pruneCancelable = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(_pruneInterval, _pruneInterval, Self, Prune.Instance, Self);
             _buffer = new PerGroupingBuffer();
 
-            Receive<Send>(send =>
+            Receive<Send>(HandleSend);
+            Receive<SendToAll>(HandleSendToAll);
+            Receive<Publish>(HandlePublish);
+            Receive<Put>(HandlePut);
+            Receive<Remove>(HandleRemove);
+            Receive<Subscribe>(HandleSubscribe);
+            Receive<RegisterTopic>(HandleRegisterTopic);
+            Receive<NoMoreSubscribers>(HandleNoMoreSubscribers);
+            Receive<NewSubscriberArrived>(HandleNewSubscriberArrived);
+            Receive<GetTopics>(HandleGetTopics);
+            Receive<Subscribed>(HandleSubscribed);
+            Receive<Unsubscribe>(HandleUnsubscribe);
+            Receive<Unsubscribed>(HandleUnsubscribed);
+            Receive<Status>(HandleStatus);
+            Receive<Delta>(HandleDelta);
+            Receive<GossipTick>(HandleGossip);
+            Receive<Prune>(HandlePrune);
+            Receive<Terminated>(HandleTerminated);
+            Receive<ClusterEvent.CurrentClusterState>(HandleCurrentClusterState);
+            Receive<ClusterEvent.MemberUp>(HandleMemberUp);
+            Receive<ClusterEvent.MemberWeaklyUp>(HandleMemberWeaklyUp);
+            Receive<ClusterEvent.MemberLeft>(HandleMemberLeft);
+            Receive<ClusterEvent.MemberRemoved>(HandleMemberRemoved);
+            Receive<ClusterEvent.IMemberEvent>(PatternMatch<ClusterEvent.IMemberEvent>.EmptyAction);
+            Receive<Count>(HandleCount);
+            Receive<DeltaCount>(HandleDeltaCount);
+            Receive<CountSubscribers>(HandleCountSubscribers);
+        }
+
+        private void HandleSend(Send send)
+        {
+            var routees = new List<Routee>();
+            if (_registry.TryGetValue(_cluster.SelfAddress, out var bucket) &&
+                bucket.Content.TryGetValue(send.Path, out var valueHolder) &&
+                send.LocalAffinity)
             {
-                var routees = new List<Routee>();
-                if (_registry.TryGetValue(_cluster.SelfAddress, out var bucket) &&
-                    bucket.Content.TryGetValue(send.Path, out var valueHolder) &&
-                    send.LocalAffinity)
+                var routee = valueHolder.Routee;
+                if (routee != null)
+                    routees.Add(routee);
+            }
+            else
+            {
+                foreach (var entry in _registry)
                 {
-                    var routee = valueHolder.Routee;
-                    if (routee != null)
-                        routees.Add(routee);
+                    if (entry.Value.Content.TryGetValue(send.Path, out valueHolder))
+                    {
+                        var routee = valueHolder.Routee;
+                        if (routee != null)
+                            routees.Add(routee);
+                    }
+                }
+            }
+
+            if (routees.Count != 0)
+                new Router(_settings.RoutingLogic, routees.ToArray()).Route(
+                    Internal.Utils.WrapIfNeeded(send.Message), Sender);
+            else
+                SendToDeadLetters(send.Message);
+        }
+
+        private void HandleSendToAll(SendToAll sendToAll)
+        {
+            PublishMessage(sendToAll.Path, sendToAll.Message, sendToAll.ExcludeSelf);
+        }
+
+        private void HandlePublish(Publish publish)
+        {
+            string path = Internal.Utils.MakeKey(Self.Path / Internal.Utils.EncodeName(publish.Topic));
+            if (publish.SendOneMessageToEachGroup)
+                PublishToEachGroup(path, publish.Message);
+            else
+                PublishMessage(path, publish.Message);
+        }
+
+        private void HandlePut(Put put)
+        {
+            if (put.Ref.Path.Address.HasGlobalScope)
+            {
+                if (Log.IsWarningEnabled) Log.RegisteredActorMustBeLocal(put);
+            }
+            else
+            {
+                PutToRegistry(Internal.Utils.MakeKey(put.Ref), put.Ref);
+                Context.Watch(put.Ref);
+            }
+        }
+
+        private void HandleRemove(Remove remove)
+        {
+            if (_registry.TryGetValue(_cluster.SelfAddress, out var bucket))
+            {
+                if (bucket.Content.TryGetValue(remove.Path, out var valueHolder) && !valueHolder.Ref.IsNobody())
+                {
+                    Context.Unwatch(valueHolder.Ref);
+                    PutToRegistry(remove.Path, null);
+                }
+            }
+        }
+
+        private void HandleSubscribe(Subscribe subscribe)
+        {
+            // each topic is managed by a child actor with the same name as the topic
+            var encodedTopic = Internal.Utils.EncodeName(subscribe.Topic);
+
+            _buffer.BufferOr(Internal.Utils.MakeKey(Self.Path / encodedTopic), subscribe, Sender, () =>
+            {
+                var child = Context.Child(encodedTopic);
+                if (!child.IsNobody())
+                    child.Forward(subscribe);
+                else
+                    NewTopicActor(encodedTopic).Forward(subscribe);
+            });
+        }
+
+        private void HandleRegisterTopic(RegisterTopic register)
+        {
+            HandleRegisterTopic(register.TopicRef);
+        }
+
+        private void HandleNoMoreSubscribers(NoMoreSubscribers _)
+        {
+            var key = Internal.Utils.MakeKey(Sender);
+            _buffer.InitializeGrouping(key);
+            Sender.Tell(TerminateRequest.Instance);
+        }
+
+        private void HandleNewSubscriberArrived(NewSubscriberArrived _)
+        {
+            var key = Internal.Utils.MakeKey(Sender);
+            _buffer.ForwardMessages(key, Sender);
+        }
+
+        private void HandleGetTopics(GetTopics getTopics)
+        {
+            Sender.Tell(new CurrentTopics(GetCurrentTopics().ToImmutableHashSet(StringComparer.Ordinal)));
+        }
+
+        private void HandleSubscribed(Subscribed subscribed)
+        {
+            subscribed.Subscriber.Tell(subscribed.Ack);
+        }
+
+        private void HandleUnsubscribe(Unsubscribe unsubscribe)
+        {
+            var encodedTopic = Internal.Utils.EncodeName(unsubscribe.Topic);
+
+            _buffer.BufferOr(Internal.Utils.MakeKey(Self.Path / encodedTopic), unsubscribe, Sender, () =>
+            {
+                var child = Context.Child(encodedTopic);
+                if (!child.IsNobody())
+                    child.Forward(unsubscribe);
+                else
+                {
+                    // no such topic here  
+                }
+            });
+        }
+
+        private void HandleUnsubscribed(Unsubscribed unsubscribed)
+        {
+            unsubscribed.Subscriber.Tell(unsubscribed.Ack);
+        }
+
+        private void HandleStatus(Status status)
+        {
+            // only accept status from known nodes, otherwise old cluster with same address may interact
+            // also accept from local for testing purposes
+            if (_nodes.Contains(Sender.Path.Address) || Sender.Path.Address.HasLocalScope)
+            {
+                // gossip chat starts with a Status message, containing the bucket versions of the other node
+                var delta = CollectDelta(status.Versions).ToArray();
+                if (delta.Length != 0)
+                    Sender.Tell(new Delta(delta));
+
+                if (!status.IsReplyToStatus && OtherHasNewerVersions(status.Versions))
+                    Sender.Tell(new Status(versions: OwnVersions, isReplyToStatus: true)); // it will reply with Delta
+            }
+        }
+
+        private void HandleDelta(Delta delta)
+        {
+            deltaCount += 1;
+
+            // reply from Status message in the gossip chat
+            // the Delta contains potential updates (newer versions) from the other node
+            // only accept deltas/buckets from known nodes, otherwise there is a risk of
+            // adding back entries when nodes are removed
+            if (_nodes.Contains(Sender.Path.Address))
+            {
+                foreach (var bucket in delta.Buckets)
+                {
+                    if (_nodes.Contains(bucket.Owner))
+                    {
+                        if (!_registry.TryGetValue(bucket.Owner, out var myBucket))
+                            myBucket = new Bucket(bucket.Owner);
+
+                        if (bucket.Version > myBucket.Version)
+                            _registry[bucket.Owner] = new Bucket(myBucket.Owner, bucket.Version, myBucket.Content.SetItems(bucket.Content));
+                    }
+                }
+            }
+        }
+
+        private void HandleTerminated(Terminated terminated)
+        {
+            var key = Internal.Utils.MakeKey(terminated.ActorRef);
+
+            if (_registry.TryGetValue(_cluster.SelfAddress, out var bucket))
+                if (bucket.Content.TryGetValue(key, out var holder) && terminated.ActorRef.Equals(holder.Ref))
+                    PutToRegistry(key, null); // remove
+
+            _buffer.RecreateAndForwardMessagesIfNeeded(key, () => NewTopicActor(terminated.ActorRef.Path.Name));
+        }
+
+        private void HandleCurrentClusterState(ClusterEvent.CurrentClusterState state)
+        {
+            var nodes = state.Members
+                .Where(m => m.Status != MemberStatus.Joining && IsMatchingRole(m))
+                .Select(m => m.Address);
+
+            _nodes = new HashSet<Address>(nodes, AddressComparer.Instance);
+        }
+
+        private void HandleMemberUp(ClusterEvent.MemberUp up)
+        {
+            if (IsMatchingRole(up.Member)) _nodes.Add(up.Member.Address);
+        }
+
+        private void HandleMemberWeaklyUp(ClusterEvent.MemberWeaklyUp weaklyUp)
+        {
+            if (IsMatchingRole(weaklyUp.Member)) _nodes.Add(weaklyUp.Member.Address);
+        }
+
+        private void HandleMemberLeft(ClusterEvent.MemberLeft left)
+        {
+            if (IsMatchingRole(left.Member))
+            {
+                _nodes.Remove(left.Member.Address);
+                _registry.Remove(left.Member.Address);
+            }
+        }
+
+        private void HandleMemberRemoved(ClusterEvent.MemberRemoved removed)
+        {
+            var member = removed.Member;
+            if (member.Address == _cluster.SelfAddress)
+                Context.Stop(Self);
+            else if (IsMatchingRole(member))
+            {
+                _nodes.Remove(member.Address);
+                _registry.Remove(member.Address);
+            }
+        }
+
+        private void HandleCount(Count _)
+        {
+            var count = _registry.Sum(entry => entry.Value.Content.Count(kv => !kv.Value.Ref.IsNobody()));
+            Sender.Tell(count);
+        }
+
+        private void HandleDeltaCount(DeltaCount _)
+        {
+            Sender.Tell(deltaCount);
+        }
+
+        private void HandleCountSubscribers(CountSubscribers msg)
+        {
+            var encTopic = Internal.Utils.EncodeName(msg.Topic);
+            _buffer.BufferOr(Internal.Utils.MakeKey(Self.Path / encTopic), msg, Sender, () =>
+            {
+                var child = Context.Child(encTopic);
+                if (!child.IsNobody())
+                {
+                    child.Tell(Count.Instance, Sender);
                 }
                 else
                 {
-                    foreach (var entry in _registry)
-                    {
-                        if (entry.Value.Content.TryGetValue(send.Path, out valueHolder))
-                        {
-                            var routee = valueHolder.Routee;
-                            if (routee != null)
-                                routees.Add(routee);
-                        }
-                    }
+                    Sender.Tell(0);
                 }
-
-                if (routees.Count != 0)
-                    new Router(_settings.RoutingLogic, routees.ToArray()).Route(
-                        Internal.Utils.WrapIfNeeded(send.Message), Sender);
-                else
-                    SendToDeadLetters(send.Message);
-            });
-            Receive<SendToAll>(sendToAll =>
-            {
-                PublishMessage(sendToAll.Path, sendToAll.Message, sendToAll.ExcludeSelf);
-            });
-            Receive<Publish>(publish =>
-            {
-                string path = Internal.Utils.MakeKey(Self.Path / Internal.Utils.EncodeName(publish.Topic));
-                if (publish.SendOneMessageToEachGroup)
-                    PublishToEachGroup(path, publish.Message);
-                else
-                    PublishMessage(path, publish.Message);
-            });
-            Receive<Put>(put =>
-            {
-                if (put.Ref.Path.Address.HasGlobalScope)
-                {
-                    if (Log.IsWarningEnabled) Log.RegisteredActorMustBeLocal(put);
-                }
-                else
-                {
-                    PutToRegistry(Internal.Utils.MakeKey(put.Ref), put.Ref);
-                    Context.Watch(put.Ref);
-                }
-            });
-            Receive<Remove>(remove =>
-            {
-                if (_registry.TryGetValue(_cluster.SelfAddress, out var bucket))
-                {
-                    if (bucket.Content.TryGetValue(remove.Path, out var valueHolder) && !valueHolder.Ref.IsNobody())
-                    {
-                        Context.Unwatch(valueHolder.Ref);
-                        PutToRegistry(remove.Path, null);
-                    }
-                }
-            });
-            Receive<Subscribe>(subscribe =>
-            {
-                // each topic is managed by a child actor with the same name as the topic
-                var encodedTopic = Internal.Utils.EncodeName(subscribe.Topic);
-
-                _buffer.BufferOr(Internal.Utils.MakeKey(Self.Path / encodedTopic), subscribe, Sender, () =>
-                {
-                    var child = Context.Child(encodedTopic);
-                    if (!child.IsNobody())
-                        child.Forward(subscribe);
-                    else
-                        NewTopicActor(encodedTopic).Forward(subscribe);
-                });
-            });
-            Receive<RegisterTopic>(register =>
-            {
-                HandleRegisterTopic(register.TopicRef);
-            });
-            Receive<NoMoreSubscribers>(msg =>
-            {
-                var key = Internal.Utils.MakeKey(Sender);
-                _buffer.InitializeGrouping(key);
-                Sender.Tell(TerminateRequest.Instance);
-            });
-            Receive<NewSubscriberArrived>(msg =>
-            {
-                var key = Internal.Utils.MakeKey(Sender);
-                _buffer.ForwardMessages(key, Sender);
-            });
-            Receive<GetTopics>(getTopics =>
-            {
-                Sender.Tell(new CurrentTopics(GetCurrentTopics().ToImmutableHashSet(StringComparer.Ordinal)));
-            });
-            Receive<Subscribed>(subscribed =>
-            {
-                subscribed.Subscriber.Tell(subscribed.Ack);
-            });
-            Receive<Unsubscribe>(unsubscribe =>
-            {
-                var encodedTopic = Internal.Utils.EncodeName(unsubscribe.Topic);
-
-                _buffer.BufferOr(Internal.Utils.MakeKey(Self.Path / encodedTopic), unsubscribe, Sender, () =>
-                {
-                    var child = Context.Child(encodedTopic);
-                    if (!child.IsNobody())
-                        child.Forward(unsubscribe);
-                    else
-                    {
-                        // no such topic here  
-                    }
-                });
-            });
-            Receive<Unsubscribed>(unsubscribed =>
-            {
-                unsubscribed.Subscriber.Tell(unsubscribed.Ack);
-            });
-            Receive<Status>(status =>
-            {
-                // only accept status from known nodes, otherwise old cluster with same address may interact
-                // also accept from local for testing purposes
-                if (_nodes.Contains(Sender.Path.Address) || Sender.Path.Address.HasLocalScope)
-                {
-                    // gossip chat starts with a Status message, containing the bucket versions of the other node
-                    var delta = CollectDelta(status.Versions).ToArray();
-                    if (delta.Length != 0)
-                        Sender.Tell(new Delta(delta));
-
-                    if (!status.IsReplyToStatus && OtherHasNewerVersions(status.Versions))
-                        Sender.Tell(new Status(versions: OwnVersions, isReplyToStatus: true)); // it will reply with Delta
-                }
-            });
-            Receive<Delta>(delta =>
-            {
-                deltaCount += 1;
-
-                // reply from Status message in the gossip chat
-                // the Delta contains potential updates (newer versions) from the other node
-                // only accept deltas/buckets from known nodes, otherwise there is a risk of
-                // adding back entries when nodes are removed
-                if (_nodes.Contains(Sender.Path.Address))
-                {
-                    foreach (var bucket in delta.Buckets)
-                    {
-                        if (_nodes.Contains(bucket.Owner))
-                        {
-                            if (!_registry.TryGetValue(bucket.Owner, out var myBucket))
-                                myBucket = new Bucket(bucket.Owner);
-
-                            if (bucket.Version > myBucket.Version)
-                                _registry[bucket.Owner] = new Bucket(myBucket.Owner, bucket.Version, myBucket.Content.SetItems(bucket.Content));
-                        }
-                    }
-                }
-            });
-            Receive<GossipTick>(_ => HandleGossip());
-            Receive<Prune>(_ => HandlePrune());
-            Receive<Terminated>(terminated =>
-            {
-                var key = Internal.Utils.MakeKey(terminated.ActorRef);
-
-                if (_registry.TryGetValue(_cluster.SelfAddress, out var bucket))
-                    if (bucket.Content.TryGetValue(key, out var holder) && terminated.ActorRef.Equals(holder.Ref))
-                        PutToRegistry(key, null); // remove
-
-                _buffer.RecreateAndForwardMessagesIfNeeded(key, () => NewTopicActor(terminated.ActorRef.Path.Name));
-            });
-            Receive<ClusterEvent.CurrentClusterState>(state =>
-            {
-                var nodes = state.Members
-                    .Where(m => m.Status != MemberStatus.Joining && IsMatchingRole(m))
-                    .Select(m => m.Address);
-
-                _nodes = new HashSet<Address>(nodes, AddressComparer.Instance);
-            });
-            Receive<ClusterEvent.MemberUp>(up =>
-            {
-                if (IsMatchingRole(up.Member)) _nodes.Add(up.Member.Address);
-            });
-            Receive<ClusterEvent.MemberWeaklyUp>(weaklyUp =>
-            {
-                if (IsMatchingRole(weaklyUp.Member)) _nodes.Add(weaklyUp.Member.Address);
-            });
-            Receive<ClusterEvent.MemberLeft>(left =>
-            {
-                if (IsMatchingRole(left.Member))
-                {
-                    _nodes.Remove(left.Member.Address);
-                    _registry.Remove(left.Member.Address);
-                }
-            });
-            Receive<ClusterEvent.MemberRemoved>(removed =>
-            {
-                var member = removed.Member;
-                if (member.Address == _cluster.SelfAddress)
-                    Context.Stop(Self);
-                else if (IsMatchingRole(member))
-                {
-                    _nodes.Remove(member.Address);
-                    _registry.Remove(member.Address);
-                }
-            });
-            Receive<ClusterEvent.IMemberEvent>(_ => { /* ignore */ });
-            Receive<Count>(_ =>
-            {
-                var count = _registry.Sum(entry => entry.Value.Content.Count(kv => !kv.Value.Ref.IsNobody()));
-                Sender.Tell(count);
-            });
-            Receive<DeltaCount>(_ =>
-            {
-                Sender.Tell(deltaCount);
-            });
-            Receive<CountSubscribers>(msg =>
-            {
-                var encTopic = Internal.Utils.EncodeName(msg.Topic);
-                _buffer.BufferOr(Internal.Utils.MakeKey(Self.Path / encTopic), msg, Sender, () =>
-                {
-                    var child = Context.Child(encTopic);
-                    if (!child.IsNobody())
-                    {
-                        child.Tell(Count.Instance, Sender);
-                    }
-                    else
-                    {
-                        Sender.Tell(0);
-                    }
-                });
             });
         }
 
@@ -561,7 +609,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             }
         }
 
-        private void HandlePrune()
+        private void HandlePrune(Prune _)
         {
             var modifications = new Dictionary<Address, Bucket>(AddressComparer.Instance);
             foreach (var entry in _registry)
@@ -585,7 +633,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             }
         }
 
-        private void HandleGossip()
+        private void HandleGossip(GossipTick _)
         {
             var node = SelectRandomNode(_nodes.Except(new[] { _cluster.SelfAddress }).ToArray());
             if (node != null)

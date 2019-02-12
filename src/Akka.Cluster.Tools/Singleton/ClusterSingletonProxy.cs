@@ -36,7 +36,7 @@ namespace Akka.Cluster.Tools.Singleton
     /// Note that this is a best effort implementation: messages can always be lost due to the distributed nature of the actors involved.
     /// </remarks>
     /// </summary>
-    public sealed class ClusterSingletonProxy : ReceiveActor
+    public sealed class ClusterSingletonProxy : ReceiveActor2
     {
         /// <summary>
         /// TBD
@@ -95,61 +95,15 @@ namespace Akka.Cluster.Tools.Singleton
             _singletonPath = (singletonManagerPath + "/" + settings.SingletonName).Split('/');
             _identityId = CreateIdentifyId(_identityCounter);
 
-            Receive<ClusterEvent.CurrentClusterState>(s => HandleInitial(s));
-            Receive<ClusterEvent.MemberUp>(m => Add(m.Member));
-            Receive<ClusterEvent.MemberExited>(m => Remove(m.Member));
-            Receive<ClusterEvent.MemberRemoved>(m =>
-            {
-                if (m.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
-                    Context.Stop(Self);
-                else
-                    Remove(m.Member);
-            });
-            Receive<ClusterEvent.IMemberEvent>(m =>
-            {
-                /* do nothing */
-            });
-            Receive<ActorIdentity>(identity =>
-                {
-                    if (identity.Subject != null)
-                    {
-                        // if the new singleton is defined, deliver all buffered messages
-                        var subject = identity.Subject;
-                        if (Log.IsInfoEnabled) Log.SingletonIdentifiedAt(subject);
-                        _singleton = subject;
-                        Context.Watch(subject);
-                        CancelTimer();
-                        SendBuffered();
-                    }
-                });
-            Receive<TryToIdentifySingleton>(_ =>
-                 {
-                     var oldest = _membersByAge.FirstOrDefault();
-                     if (oldest != null && _identityTimer != null)
-                     {
-                         var singletonAddress = new RootActorPath(oldest.Address) / _singletonPath;
-                         if (_log.IsDebugEnabled) Log.TryingToIdentifySingletonAt(singletonAddress);
-                         Context.ActorSelection(singletonAddress).Tell(new Identify(_identityId));
-                     }
-                 });
-            Receive<Terminated>(terminated =>
-                {
-                    if (Equals(_singleton, terminated.ActorRef))
-                    {
-                        // buffering mode, identification of new will start when old node is removed
-                        _singleton = null;
-                    }
-                });
-            ReceiveAny(msg =>
-                {
-                    if (_singleton != null)
-                    {
-                        if (Log.IsDebugEnabled) { Log.ForwardingMessageOfTypeToCurrentSingletonInstanceAt(msg, _singleton); }
-                        _singleton.Forward(msg);
-                    }
-                    else
-                        Buffer(msg);
-                });
+            Receive<ClusterEvent.CurrentClusterState>(HandleInitial);
+            Receive<ClusterEvent.MemberUp>(HandleMemberUp);
+            Receive<ClusterEvent.MemberExited>(HandleMemberExited);
+            Receive<ClusterEvent.MemberRemoved>(HandleMemberRemoved);
+            Receive<ClusterEvent.IMemberEvent>(PatternMatch<ClusterEvent.IMemberEvent>.EmptyAction);
+            Receive<ActorIdentity>(HandleActorIdentity);
+            Receive<TryToIdentifySingleton>(HandleTryToIdentifySingleton);
+            Receive<Terminated>(HandleTerminated);
+            ReceiveAny(HandleAny);
         }
 
         private ILoggingAdapter Log => _log ?? (_log = Context.GetLogger());
@@ -196,6 +150,51 @@ namespace Akka.Cluster.Tools.Singleton
                     .ToImmutableSortedSet(MemberAgeOrdering.Descending));
         }
 
+        private void HandleActorIdentity(ActorIdentity identity)
+        {
+            if (identity.Subject != null)
+            {
+                // if the new singleton is defined, deliver all buffered messages
+                var subject = identity.Subject;
+                if (Log.IsInfoEnabled) Log.SingletonIdentifiedAt(subject);
+                _singleton = subject;
+                Context.Watch(subject);
+                CancelTimer();
+                SendBuffered();
+            }
+        }
+
+        private void HandleTryToIdentifySingleton(TryToIdentifySingleton _)
+        {
+            var oldest = _membersByAge.FirstOrDefault();
+            if (oldest != null && _identityTimer != null)
+            {
+                var singletonAddress = new RootActorPath(oldest.Address) / _singletonPath;
+                if (_log.IsDebugEnabled) Log.TryingToIdentifySingletonAt(singletonAddress);
+                Context.ActorSelection(singletonAddress).Tell(new Identify(_identityId));
+            }
+        }
+
+        private void HandleTerminated(Terminated terminated)
+        {
+            if (Equals(_singleton, terminated.ActorRef))
+            {
+                // buffering mode, identification of new will start when old node is removed
+                _singleton = null;
+            }
+        }
+
+        private void HandleAny(object msg)
+        {
+            if (_singleton != null)
+            {
+                if (Log.IsDebugEnabled) { Log.ForwardingMessageOfTypeToCurrentSingletonInstanceAt(msg, _singleton); }
+                _singleton.Forward(msg);
+            }
+            else
+                Buffer(msg);
+        }
+
         // Discard old singleton ActorRef and send a periodic message to self to identify the singleton.
         private void IdentifySingleton()
         {
@@ -222,14 +221,28 @@ namespace Akka.Cluster.Tools.Singleton
             if (!Equals(before, after)) IdentifySingleton();
         }
 
-        private void Add(Member member)
+        private void HandleMemberRemoved(ClusterEvent.MemberRemoved m)
         {
+            if (m.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
+                Context.Stop(Self);
+            else
+                Remove(m.Member);
+        }
+
+        private void HandleMemberUp(ClusterEvent.MemberUp up)
+        {
+            var member = up.Member;
             if (MatchingRole(member))
                 TrackChanges(() =>
                 {
                     _membersByAge = _membersByAge.Remove(member); //replace
                     _membersByAge = _membersByAge.Add(member);
                 });
+        }
+
+        private void HandleMemberExited(ClusterEvent.MemberExited exited)
+        {
+            Remove(exited.Member);
         }
 
         private void Remove(Member member)
