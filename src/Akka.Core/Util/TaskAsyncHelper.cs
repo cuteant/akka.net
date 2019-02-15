@@ -226,14 +226,68 @@ namespace Akka.Util
             }
         }
 
+        /// <summary>TBD</summary>
+        private static Task FromRunnable<TResult>(IOverridingArgumentRunnable<TResult> func, TResult result)
+        {
+            try
+            {
+                func.Run(result);
+                return TaskEx.CompletedTask;
+            }
+            catch (Exception ex)
+            {
+                return TaskEx.FromException(ex);
+            }
+        }
+
+        /// <summary>TBD</summary>
+        private static Task FromRunnable<TResult>(IOverridingArgumentRunnableTask<TResult> func, TResult result)
+        {
+            try
+            {
+                return func.Run(result);
+            }
+            catch (Exception ex)
+            {
+                return TaskEx.FromException(ex);
+            }
+        }
+
+        /// <summary>TBD</summary>
+        private static Task<TNewResult> FromRunnable<TResult, TNewResult>(IOverridingArgumentRunnable<TResult, TNewResult> func, TResult result)
+        {
+            try
+            {
+                return Task.FromResult(func.Run(result));
+            }
+            catch (Exception ex)
+            {
+                return TaskEx.FromException<TNewResult>(ex);
+            }
+        }
+
+        /// <summary>TBD</summary>
+        private static Task<TNewResult> FromRunnable<TResult, TNewResult>(IOverridingArgumentRunnableTask<TResult, TNewResult> func, TResult result)
+        {
+            try
+            {
+                return func.Run(result);
+            }
+            catch (Exception ex)
+            {
+                return TaskEx.FromException<TNewResult>(ex);
+            }
+        }
+
         #endregion
 
-        #region -- LinkOutcome --
+        #region -- Task.LinkOutcome(IOverridingArgumentRunnable<Task>) --
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome(this Task task, Action<Task> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, default, continuationOptions, TaskScheduler.Current);
+            if (task.IsCompleted) { return FromMethod(processor, task); }
+            return task.ContinueWith(processor, continuationOptions);
         }
 
         /// <summary>TBD</summary>
@@ -241,32 +295,69 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             if (task.IsCompleted) { return FromMethod(processor, task); }
-            return LinkOutcomeHelper
-                .RunTask(task, (IArgumentOverrides<Task>)Runnable.Create(processor, default),
-                    cancellationToken, continuationOptions, scheduler);
+            return task.ContinueWith(processor, cancellationToken, continuationOptions, scheduler);
         }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome(this Task task, IOverridingArgumentRunnable<Task> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper.RunTask(task, processor, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome(this Task task, IOverridingArgumentRunnable<Task> processor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper.RunTask(task, processor, cancellationToken, continuationOptions, scheduler);
+        }
+
+        #endregion
+
+        #region -- Task.LinkOutcome(IOverridingArgumentRunnableTask<Task>) --
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome(this Task task, Func<Task, Task> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome(this Task task, Func<Task, Task> processor,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task); }
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome(this Task task, IOverridingArgumentRunnableTask<Task> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
             return LinkOutcomeHelper<Task>
-                .RunTask(task, (IArgumentOverrides<Task, Task>)Runnable.CreateTask(processor, default),
-                    cancellationToken, continuationOptions, scheduler)
+                .RunTask(task, processor, default, continuationOptions, TaskScheduler.Current)
                 .FastUnwrap();
         }
 
         /// <summary>TBD</summary>
+        public static Task LinkOutcome(this Task task, IOverridingArgumentRunnableTask<Task> processor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<Task>
+                .RunTask(task, processor, cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        #endregion
+
+        #region -- Task.LinkOutcome(IOverridingArgumentRunnable<Task, TResult>) --
+
+        /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TResult>(this Task task, Func<Task, TResult> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, default, continuationOptions, TaskScheduler.Current);
+            if (task.IsCompleted) { return FromMethod(processor, task); }
+            return task.ContinueWith(processor, continuationOptions);
         }
 
         /// <summary>TBD</summary>
@@ -274,36 +365,69 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             if (task.IsCompleted) { return FromMethod(processor, task); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task, TResult>)Runnable.Create(processor, default),
-                    cancellationToken, continuationOptions, scheduler);
+            return task.ContinueWith(processor, cancellationToken, continuationOptions, scheduler);
         }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> LinkOutcome<TResult>(this Task task, IOverridingArgumentRunnable<Task, TResult> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<TResult>.RunTask(task, processor, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> LinkOutcome<TResult>(this Task task, IOverridingArgumentRunnable<Task, TResult> processor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<TResult>.RunTask(task, processor, cancellationToken, continuationOptions, scheduler);
+        }
+
+        #endregion
+
+        #region -- Task.LinkOutcome(IOverridingArgumentRunnableTask<Task, TResult>) --
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TResult>(this Task task, Func<Task, Task<TResult>> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TResult>(this Task task, Func<Task, Task<TResult>> processor,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task); }
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> LinkOutcome<TResult>(this Task task, IOverridingArgumentRunnableTask<Task, TResult> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
             return LinkOutcomeHelper<Task<TResult>>
-                .RunTask(task, (IArgumentOverrides<Task, Task<TResult>>)Runnable.CreateTask(processor, default),
-                    cancellationToken, continuationOptions, scheduler)
+                .RunTask(task, processor, default, continuationOptions, TaskScheduler.Current)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> LinkOutcome<TResult>(this Task task, IOverridingArgumentRunnableTask<Task, TResult> processor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<Task<TResult>>
+                .RunTask(task, processor, cancellationToken, continuationOptions, scheduler)
                 .FastUnwrap();
         }
 
         #endregion
 
-        #region -- LinkOutcome<TResult> --
+        #region -- Task<TResult>.LinkOutcome(IOverridingArgumentRunnable<Task<TResult>>) --
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult>(this Task<TResult> task, Action<Task<TResult>> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, default, continuationOptions, TaskScheduler.Current);
+            if (task.IsCompleted) { return FromMethod(processor, task); }
+            return task.ContinueWith(processor, continuationOptions);
         }
 
         /// <summary>TBD</summary>
@@ -311,32 +435,69 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             if (task.IsCompleted) { return FromMethod(processor, task); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>>)Runnable.Create(processor, default),
-                    cancellationToken, continuationOptions, scheduler);
+            return task.ContinueWith(processor, cancellationToken, continuationOptions, scheduler);
         }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<TResult>(this Task<TResult> task, IOverridingArgumentRunnable<Task<TResult>> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<TResult>.RunTask(task, processor, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<TResult>(this Task<TResult> task, IOverridingArgumentRunnable<Task<TResult>> processor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<TResult>.RunTask(task, processor, cancellationToken, continuationOptions, scheduler);
+        }
+
+        #endregion
+
+        #region -- Task<TResult>.LinkOutcome(IOverridingArgumentRunnableTask<Task<TResult>>) --
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult>(this Task<TResult> task, Func<Task<TResult>, Task> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult>(this Task<TResult> task, Func<Task<TResult>, Task> processor,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task); }
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task LinkOutcome<TResult>(this Task<TResult> task, IOverridingArgumentRunnableTask<Task<TResult>> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
             return LinkOutcomeHelper<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task>)Runnable.CreateTask(processor, default),
-                    cancellationToken, continuationOptions, scheduler)
+                .RunTask(task, processor, default, continuationOptions, TaskScheduler.Current)
                 .FastUnwrap();
         }
 
         /// <summary>TBD</summary>
+        public static Task LinkOutcome<TResult>(this Task<TResult> task, IOverridingArgumentRunnableTask<Task<TResult>> processor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<TResult, Task>
+                .RunTask(task, processor, cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        #endregion
+
+        #region -- Task<TResult>.LinkOutcome(IOverridingArgumentRunnable<Task<TResult>, TNewResult>) --
+
+        /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TNewResult> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, default, continuationOptions, TaskScheduler.Current);
+            if (task.IsCompleted) { return FromMethod(processor, task); }
+            return task.ContinueWith(processor, continuationOptions);
         }
 
         /// <summary>TBD</summary>
@@ -344,25 +505,59 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             if (task.IsCompleted) { return FromMethod(processor, task); }
-            return LinkOutcomeHelper<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, TNewResult>)Runnable.Create(processor, default),
-                    cancellationToken, continuationOptions, scheduler);
+            return task.ContinueWith(processor, cancellationToken, continuationOptions, scheduler);
         }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> LinkOutcome<TResult, TNewResult>(this Task<TResult> task, IOverridingArgumentRunnable<Task<TResult>, TNewResult> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<TResult, TNewResult>
+                .RunTask(task, processor, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> LinkOutcome<TResult, TNewResult>(this Task<TResult> task, IOverridingArgumentRunnable<Task<TResult>, TNewResult> processor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<TResult, TNewResult>
+                .RunTask(task, processor, cancellationToken, continuationOptions, scheduler);
+        }
+
+        #endregion
+
+        #region -- Task<TResult>.LinkOutcome(IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>) --
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TNewResult>(this Task<TResult> task, Func<Task<TResult>, Task<TNewResult>> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TNewResult>(this Task<TResult> task, Func<Task<TResult>, Task<TNewResult>> processor,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task); }
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> LinkOutcome<TResult, TNewResult>(this Task<TResult> task, IOverridingArgumentRunnableTask<Task<TResult>, TNewResult> processor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
             return LinkOutcomeHelper<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task<TNewResult>>)Runnable.CreateTask(processor, default),
-                    cancellationToken, continuationOptions, scheduler)
+                .RunTask(task, processor, default, continuationOptions, TaskScheduler.Current)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> LinkOutcome<TResult, TNewResult>(this Task<TResult> task, IOverridingArgumentRunnableTask<Task<TResult>, TNewResult> processor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (task.IsCompleted) { return FromRunnable(processor, task); }
+            return LinkOutcomeHelper<TResult, Task<TNewResult>>
+                .RunTask(task, processor, cancellationToken, continuationOptions, scheduler)
                 .FastUnwrap();
         }
 
@@ -373,7 +568,7 @@ namespace Akka.Util
         private static class LinkOutcomeHelper
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal static Task RunTask(Task task, IArgumentOverrides<Task> processor,
+            internal static Task RunTask(Task task, IOverridingArgumentRunnable<Task> processor,
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<object>();
@@ -386,7 +581,7 @@ namespace Akka.Util
             private static readonly Action<Task, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
             private static void LinkOutcomeContinuation(Task task, object state)
             {
-                var wrapped = (Tuple<IArgumentOverrides<Task>, TaskCompletionSource<object>>)state;
+                var wrapped = (Tuple<IOverridingArgumentRunnable<Task>, TaskCompletionSource<object>>)state;
                 var tcs = wrapped.Item2;
                 try
                 {
@@ -407,7 +602,7 @@ namespace Akka.Util
         private static class LinkOutcomeHelper<TResult>
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal static Task RunTask(Task<TResult> task, IArgumentOverrides<Task<TResult>> processor,
+            internal static Task RunTask(Task<TResult> task, IOverridingArgumentRunnable<Task<TResult>> processor,
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<object>();
@@ -420,7 +615,7 @@ namespace Akka.Util
             private static readonly Action<Task<TResult>, object> RunWithResultTaskContinuationAction = RunWithResultTaskContinuation;
             private static void RunWithResultTaskContinuation(Task<TResult> task, object state)
             {
-                var wrapped = (Tuple<IArgumentOverrides<Task<TResult>>, TaskCompletionSource<object>>)state;
+                var wrapped = (Tuple<IOverridingArgumentRunnable<Task<TResult>>, TaskCompletionSource<object>>)state;
                 var tcs = wrapped.Item2;
                 try
                 {
@@ -434,7 +629,7 @@ namespace Akka.Util
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal static Task<TResult> RunTask(Task task, IArgumentOverrides<Task, TResult> processor,
+            internal static Task<TResult> RunTask(Task task, IOverridingArgumentRunnable<Task, TResult> processor,
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<TResult>();
@@ -447,7 +642,7 @@ namespace Akka.Util
             private static readonly Action<Task, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
             private static void LinkOutcomeContinuation(Task task, object state)
             {
-                var wrapped = (Tuple<IArgumentOverrides<Task, TResult>, TaskCompletionSource<TResult>>)state;
+                var wrapped = (Tuple<IOverridingArgumentRunnable<Task, TResult>, TaskCompletionSource<TResult>>)state;
                 var tcs = wrapped.Item2;
                 try
                 {
@@ -467,7 +662,7 @@ namespace Akka.Util
         private static class LinkOutcomeHelper<TResult, TNewResult>
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal static Task<TNewResult> RunTask(Task<TResult> task, IArgumentOverrides<Task<TResult>, TNewResult> processor,
+            internal static Task<TNewResult> RunTask(Task<TResult> task, IOverridingArgumentRunnable<Task<TResult>, TNewResult> processor,
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<TNewResult>();
@@ -481,7 +676,7 @@ namespace Akka.Util
             private static readonly Action<Task<TResult>, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
             private static void LinkOutcomeContinuation(Task<TResult> task, object state)
             {
-                var wrapped = (Tuple<IArgumentOverrides<Task<TResult>, TNewResult>, TaskCompletionSource<TNewResult>>)state;
+                var wrapped = (Tuple<IOverridingArgumentRunnable<Task<TResult>, TNewResult>, TaskCompletionSource<TNewResult>>)state;
                 var tcs = wrapped.Item2;
                 try
                 {
@@ -496,7 +691,7 @@ namespace Akka.Util
 
         #endregion
 
-        #region -- Then(IRunnable) --
+        #region -- Task.Then(IRunnable) --
 
         /// <summary>TBD</summary>
         public static Task Then(this Task task, IRunnable successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
@@ -540,7 +735,55 @@ namespace Akka.Util
 
         #endregion
 
-        #region -- Then(IRunnable<TResult>) --
+        #region -- Task.Then(IRunnableTask) --
+
+        /// <summary>TBD</summary>
+        public static Task Then(this Task task, IRunnableTask successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<Task>
+                .RunTask(task, successor, default, continuationOptions, TaskScheduler.Current)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then(this Task task, IRunnableTask successor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<Task>
+                .RunTask(task, successor, cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryRunIfCompleted(Task task, IRunnableTask successor, out Task result)
+        {
+#if NETCOREAPP
+            if (task.IsCompletedSuccessfully)
+            {
+                result = FromRunnable(successor); return true;
+            }
+            else if (task.IsCanceled || task.IsFaulted)
+            {
+                result = task; return true;
+            }
+#else
+            if (task.IsCanceled || task.IsFaulted)
+            {
+                result = task; return true;
+            }
+            else if (task.IsCompleted)
+            {
+                result = FromRunnable(successor); return true;
+            }
+#endif
+            result = null; return false;
+        }
+
+        #endregion
+
+        #region -- Task.Then(IRunnable<TResult>) --
 
         /// <summary>TBD</summary>
         public static Task<TResult> Then<TResult>(this Task task, IRunnable<TResult> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
@@ -592,55 +835,7 @@ namespace Akka.Util
 
         #endregion
 
-        #region -- Then(IRunnableTask) --
-
-        /// <summary>TBD</summary>
-        public static Task Then(this Task task, IRunnableTask successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
-        {
-            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
-            return TaskRunners<Task>
-                .RunTask(task, successor, default, continuationOptions, TaskScheduler.Current)
-                .FastUnwrap();
-        }
-
-        /// <summary>TBD</summary>
-        public static Task Then(this Task task, IRunnableTask successor,
-            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
-        {
-            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
-            return TaskRunners<Task>
-                .RunTask(task, successor, cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static bool TryRunIfCompleted(Task task, IRunnableTask successor, out Task result)
-        {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                result = FromRunnable(successor); return true;
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                result = task; return true;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                result = task; return true;
-            }
-            else if (task.IsCompleted)
-            {
-                result = FromRunnable(successor); return true;
-            }
-#endif
-            result = null; return false;
-        }
-
-        #endregion
-
-        #region -- Then(IRunnable<TResult>) --
+        #region -- Task.Then(IRunnableTask<TResult>) --
 
         /// <summary>TBD</summary>
         public static Task<TResult> Then<TResult>(this Task task, IRunnableTask<TResult> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
@@ -696,160 +891,256 @@ namespace Akka.Util
 
         #endregion
 
-        #region -- Then<TResult> --
+        #region -- Task<TResult>.Then(IOverridingArgumentRunnable<TResult>) --
 
         /// <summary>TBD</summary>
         public static Task Then<TResult>(this Task<TResult> task, Action<TResult> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult>(this Task<TResult> task, Action<TResult> successor,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<TResult>(this Task<TResult> task, IOverridingArgumentRunnable<TResult> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<TResult>.RunTask(task, successor, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<TResult>(this Task<TResult> task, IOverridingArgumentRunnable<TResult> successor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<TResult>.RunTask(task, successor, cancellationToken, continuationOptions, scheduler);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryRunIfCompleted<TResult>(Task<TResult> task, IOverridingArgumentRunnable<TResult> successor, out Task result)
+        {
 #if NETCOREAPP
             if (task.IsCompletedSuccessfully)
             {
-                return FromMethod(successor, task.Result);
+                result = FromRunnable(successor, task.Result); return true;
             }
             else if (task.IsCanceled || task.IsFaulted)
             {
-                return task;
+                result = task; return true;
             }
 #else
             if (task.IsCanceled || task.IsFaulted)
             {
-                return task;
+                result = task; return true;
             }
             else if (task.IsCompleted)
             {
-                return FromMethod(successor, task.Result);
+                result = FromRunnable(successor, task.Result); return true;
             }
 #endif
-            return TaskRunners<TResult>
-                .RunTask(task, (IArgumentOverrides<TResult>)Runnable.Create(successor, default),
-                    cancellationToken, continuationOptions, scheduler);
+            result = null; return false;
         }
+
+        #endregion
+
+        #region -- Task<TResult>.Then(IOverridingArgumentRunnableTask<TResult>) --
 
         /// <summary>TBD</summary>
         public static Task Then<TResult>(this Task<TResult> task, Func<TResult, Task> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult>(this Task<TResult> task, Func<TResult, Task> successor,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result);
-            }
-#endif
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task Then<TResult>(this Task<TResult> task, IOverridingArgumentRunnableTask<TResult> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
             return TaskRunners<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<TResult, Task>)Runnable.CreateTask(successor, default),
-                    cancellationToken, continuationOptions, scheduler)
+                .RunTask(task, successor, default, continuationOptions, TaskScheduler.Current)
                 .FastUnwrap();
         }
 
         /// <summary>TBD</summary>
+        public static Task Then<TResult>(this Task<TResult> task, IOverridingArgumentRunnableTask<TResult> successor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<TResult, Task>
+                .RunTask(task, successor, cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryRunIfCompleted<TResult>(Task<TResult> task, IOverridingArgumentRunnableTask<TResult> successor, out Task result)
+        {
+#if NETCOREAPP
+            if (task.IsCompletedSuccessfully)
+            {
+                result = FromRunnable(successor, task.Result); return true;
+            }
+            else if (task.IsCanceled || task.IsFaulted)
+            {
+                result = task; return true;
+            }
+#else
+            if (task.IsCanceled || task.IsFaulted)
+            {
+                result = task; return true;
+            }
+            else if (task.IsCompleted)
+            {
+                result = FromRunnable(successor, task.Result); return true;
+            }
+#endif
+            result = null; return false;
+        }
+
+        #endregion
+
+        #region -- Task<TResult>.Then(IOverridingArgumentRunnable<TResult, TNewResult>) --
+
+        /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TNewResult>(this Task<TResult> task, Func<TResult, TNewResult> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TNewResult>(this Task<TResult> task, Func<TResult, TNewResult> successor,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> Then<TResult, TNewResult>(this Task<TResult> task, IOverridingArgumentRunnable<TResult, TNewResult> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<TResult, TNewResult>
+                .RunTask(task, successor, default, continuationOptions, TaskScheduler.Current);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> Then<TResult, TNewResult>(this Task<TResult> task, IOverridingArgumentRunnable<TResult, TNewResult> successor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<TResult, TNewResult>
+                .RunTask(task, successor, cancellationToken, continuationOptions, scheduler);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryRunIfCompleted<TResult, TNewResult>(Task<TResult> task, IOverridingArgumentRunnable<TResult, TNewResult> successor, out Task<TNewResult> result)
+        {
 #if NETCOREAPP
             if (task.IsCompletedSuccessfully)
             {
-                return FromMethod(successor, task.Result);
+                result = FromRunnable(successor, task.Result); return true;
             }
             else if (task.IsCanceled)
             {
-                return Canceled<TNewResult>();
+                result = Canceled<TNewResult>(); return true;
             }
             else if (task.IsFaulted)
             {
-                return TaskEx.FromException<TNewResult>(task.Exception);
+                result = TaskEx.FromException<TNewResult>(task.Exception); return true;
             }
 #else
             if (task.IsCanceled)
             {
-                return Canceled<TNewResult>();
+                result = Canceled<TNewResult>(); return true;
             }
             else if (task.IsFaulted)
             {
-                return TaskEx.FromException<TNewResult>(task.Exception);
+                result = TaskEx.FromException<TNewResult>(task.Exception); return true;
             }
             else if (task.IsCompleted)
             {
-                return FromMethod(successor, task.Result);
+                result = FromRunnable(successor, task.Result); return true;
             }
 #endif
-            return TaskRunners<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<TResult, TNewResult>)Runnable.Create(successor, default),
-                    cancellationToken, continuationOptions, scheduler);
+            result = null; return false;
         }
+
+        #endregion
+
+        #region -- Task<TResult>.Then(IOverridingArgumentRunnableTask<TResult, TNewResult>) --
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TNewResult>(this Task<TResult> task, Func<TResult, Task<TNewResult>> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TNewResult>(this Task<TResult> task, Func<TResult, Task<TNewResult>> successor,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> Then<TResult, TNewResult>(this Task<TResult> task, IOverridingArgumentRunnableTask<TResult, TNewResult> successor, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<TResult, Task<TNewResult>>
+                .RunTask(task, successor, default, continuationOptions, TaskScheduler.Current)
+                .FastUnwrap();
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TNewResult> Then<TResult, TNewResult>(this Task<TResult> task, IOverridingArgumentRunnableTask<TResult, TNewResult> successor,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            if (TryRunIfCompleted(task, successor, out var result)) { return result; }
+            return TaskRunners<TResult, Task<TNewResult>>
+                .RunTask(task, successor, cancellationToken, continuationOptions, scheduler)
+                .FastUnwrap();
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool TryRunIfCompleted<TResult, TNewResult>(Task<TResult> task, IOverridingArgumentRunnableTask<TResult, TNewResult> successor, out Task<TNewResult> result)
+        {
 #if NETCOREAPP
             if (task.IsCompletedSuccessfully)
             {
-                return FromMethod(successor, task.Result);
+                result = FromRunnable(successor, task.Result); return true;
             }
             else if (task.IsCanceled)
             {
-                return Canceled<TNewResult>();
+                result = Canceled<TNewResult>(); return true;
             }
             else if (task.IsFaulted)
             {
-                return TaskEx.FromException<TNewResult>(task.Exception);
+                result = TaskEx.FromException<TNewResult>(task.Exception); return true;
             }
 #else
             if (task.IsCanceled)
             {
-                return Canceled<TNewResult>();
+                result = Canceled<TNewResult>(); return true;
             }
             else if (task.IsFaulted)
             {
-                return TaskEx.FromException<TNewResult>(task.Exception);
+                result = TaskEx.FromException<TNewResult>(task.Exception); return true;
             }
             else if (task.IsCompleted)
             {
-                return FromMethod(successor, task.Result);
+                result = FromRunnable(successor, task.Result); return true;
             }
 #endif
-            return TaskRunners<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<TResult, Task<TNewResult>>)Runnable.CreateTask(successor, default),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            result = null; return false;
         }
 
         #endregion
@@ -988,7 +1279,7 @@ namespace Akka.Util
             }
 
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal static Task RunTask(Task<TResult> task, IArgumentOverrides<TResult> successor,
+            internal static Task RunTask(Task<TResult> task, IOverridingArgumentRunnable<TResult> successor,
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<object>();
@@ -1001,7 +1292,7 @@ namespace Akka.Util
             private static readonly Action<Task<TResult>, object> RunWithResultTaskContinuationAction = RunWithResultTaskContinuation;
             private static void RunWithResultTaskContinuation(Task<TResult> task, object state)
             {
-                var wrapped = (Tuple<IArgumentOverrides<TResult>, TaskCompletionSource<object>>)state;
+                var wrapped = (Tuple<IOverridingArgumentRunnable<TResult>, TaskCompletionSource<object>>)state;
                 var tcs = wrapped.Item2;
 #if NETCOREAPP
                 if (task.IsCompletedSuccessfully)
@@ -1056,7 +1347,7 @@ namespace Akka.Util
         private static class TaskRunners<TResult, TNewResult>
         {
             [MethodImpl(MethodImplOptions.NoInlining)]
-            internal static Task<TNewResult> RunTask(Task<TResult> task, IArgumentOverrides<TResult, TNewResult> successor,
+            internal static Task<TNewResult> RunTask(Task<TResult> task, IOverridingArgumentRunnable<TResult, TNewResult> successor,
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<TNewResult>();
@@ -1070,7 +1361,7 @@ namespace Akka.Util
             private static readonly Action<Task<TResult>, object> RunTaskContinuationAction = RunTaskContinuation;
             private static void RunTaskContinuation(Task<TResult> task, object state)
             {
-                var wrapped = (Tuple<IArgumentOverrides<TResult, TNewResult>, TaskCompletionSource<TNewResult>>)state;
+                var wrapped = (Tuple<IOverridingArgumentRunnable<TResult, TNewResult>, TaskCompletionSource<TNewResult>>)state;
                 var tcs = wrapped.Item2;
 #if NETCOREAPP
                 if (task.IsCompletedSuccessfully)

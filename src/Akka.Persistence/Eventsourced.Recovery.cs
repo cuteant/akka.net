@@ -256,9 +256,7 @@ namespace Akka.Persistence
                 }
             }
 
-            bool isRecoveryRunning() => recoveryRunning;
-
-            return new EventsourcedState("replay started", isRecoveryRunning, new StateReceive(LocalStateReceive));
+            return new EventsourcedState("replay started", () => recoveryRunning, new StateReceive(LocalStateReceive));
         }
 
         private void ReturnRecoveryPermit() =>

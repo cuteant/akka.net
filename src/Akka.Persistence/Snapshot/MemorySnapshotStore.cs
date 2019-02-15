@@ -58,7 +58,8 @@ namespace Akka.Persistence.Snapshot
         {
 
             var snapshotEntry = ToSnapshotEntry(metadata, snapshot);
-            var existingSnapshot = Snapshots.FirstOrDefault(CreateSnapshotIdFilter(snapshotEntry.Id));
+            var snapshotId = snapshotEntry.Id;
+            var existingSnapshot = Snapshots.FirstOrDefault(x => string.Equals(x.Id, snapshotId, StringComparison.Ordinal));
 
             if (existingSnapshot != null)
             {
@@ -73,10 +74,10 @@ namespace Akka.Persistence.Snapshot
             return TaskEx.Completed;
         }
 
-        private static Func<SnapshotEntry, bool> CreateSnapshotIdFilter(string snapshotId)
-        {
-            return x => x.Id == snapshotId;
-        }
+        //private static Func<SnapshotEntry, bool> CreateSnapshotIdFilter(string snapshotId)
+        //{
+        //    return x => x.Id == snapshotId;
+        //}
 
         private Func<SnapshotEntry, bool> CreateRangeFilter(string persistenceId, SnapshotSelectionCriteria criteria)
         {

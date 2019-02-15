@@ -1,0 +1,101 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio 15
+VisualStudioVersion = 15.0.27004.2010
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}"
+	ProjectSection(SolutionItems) = preProject
+		src\Directory.Build.props = src\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{82EF0321-2BFA-4E09-A2E2-E0B143A238DE}"
+	ProjectSection(SolutionItems) = preProject
+		test\Directory.Build.props = test\Directory.Build.props
+	EndProjectSection
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A21675C8-61E0-413F-99FF-CF26BABF2E85}"
+	ProjectSection(SolutionItems) = preProject
+		clean.cmd = clean.cmd
+		Dependencies.Akka.props = Dependencies.Akka.props
+		Directory.Build.props = Directory.Build.props
+		Directory.Build.targets = Directory.Build.targets
+		Issue.txt = Issue.txt
+		LICENSE = LICENSE
+		NuGet.Config = NuGet.Config
+		nuget.props = nuget.props
+		src\serialization-identifiers.txt = src\serialization-identifiers.txt
+		version.props = version.props
+	EndProjectSection
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon", "src\Hocon\Hocon.csproj", "{CABBC964-5536-4FF3-B4FB-6CED4E8A861F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Configuration", "src\Hocon.Configuration\Hocon.Configuration.csproj", "{F0A1D854-3759-4DA2-8FBD-D1EF283CCC09}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Extensions.Configuration", "src\Hocon.Extensions.Configuration\Hocon.Extensions.Configuration.csproj", "{A1B27C10-1185-411A-B460-2CCB0487E942}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Tests", "test\Hocon.Tests\Hocon.Tests.csproj", "{E3A3D203-55B2-453E-A2A9-39AA07AFAF8F}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Configuration.Tests", "test\Hocon.Configuration.Test\Hocon.Configuration.Tests.csproj", "{14F0351B-0BAD-4E77-8C84-D4113622A0A7}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Extensions.Configuration.Tests", "test\Hocon.Extensions.Configuration.Tests\Hocon.Extensions.Configuration.Tests.csproj", "{06BD857F-FF82-42AF-8BB9-066D408442AE}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Tests.Net40", "test\Hocon.Tests.Net40\Hocon.Tests.Net40.csproj", "{BDA1982F-7ABF-4299-9EBC-EE40C43E7D99}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Hocon.Configuration.Tests.Net40", "test\Hocon.Configuration.Test.Net40\Hocon.Configuration.Tests.Net40.csproj", "{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{CABBC964-5536-4FF3-B4FB-6CED4E8A861F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CABBC964-5536-4FF3-B4FB-6CED4E8A861F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CABBC964-5536-4FF3-B4FB-6CED4E8A861F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CABBC964-5536-4FF3-B4FB-6CED4E8A861F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F0A1D854-3759-4DA2-8FBD-D1EF283CCC09}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F0A1D854-3759-4DA2-8FBD-D1EF283CCC09}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F0A1D854-3759-4DA2-8FBD-D1EF283CCC09}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F0A1D854-3759-4DA2-8FBD-D1EF283CCC09}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A1B27C10-1185-411A-B460-2CCB0487E942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A1B27C10-1185-411A-B460-2CCB0487E942}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A1B27C10-1185-411A-B460-2CCB0487E942}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A1B27C10-1185-411A-B460-2CCB0487E942}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E3A3D203-55B2-453E-A2A9-39AA07AFAF8F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E3A3D203-55B2-453E-A2A9-39AA07AFAF8F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E3A3D203-55B2-453E-A2A9-39AA07AFAF8F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E3A3D203-55B2-453E-A2A9-39AA07AFAF8F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{14F0351B-0BAD-4E77-8C84-D4113622A0A7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{14F0351B-0BAD-4E77-8C84-D4113622A0A7}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{14F0351B-0BAD-4E77-8C84-D4113622A0A7}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{14F0351B-0BAD-4E77-8C84-D4113622A0A7}.Release|Any CPU.Build.0 = Release|Any CPU
+		{06BD857F-FF82-42AF-8BB9-066D408442AE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{06BD857F-FF82-42AF-8BB9-066D408442AE}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{06BD857F-FF82-42AF-8BB9-066D408442AE}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{06BD857F-FF82-42AF-8BB9-066D408442AE}.Release|Any CPU.Build.0 = Release|Any CPU
+		{BDA1982F-7ABF-4299-9EBC-EE40C43E7D99}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{BDA1982F-7ABF-4299-9EBC-EE40C43E7D99}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{BDA1982F-7ABF-4299-9EBC-EE40C43E7D99}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{BDA1982F-7ABF-4299-9EBC-EE40C43E7D99}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{CABBC964-5536-4FF3-B4FB-6CED4E8A861F} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
+		{F0A1D854-3759-4DA2-8FBD-D1EF283CCC09} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
+		{A1B27C10-1185-411A-B460-2CCB0487E942} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
+		{E3A3D203-55B2-453E-A2A9-39AA07AFAF8F} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+		{14F0351B-0BAD-4E77-8C84-D4113622A0A7} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+		{06BD857F-FF82-42AF-8BB9-066D408442AE} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+		{BDA1982F-7ABF-4299-9EBC-EE40C43E7D99} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+		{1826DC0C-00B8-42BA-81ED-F2F77AA9CE12} = {82EF0321-2BFA-4E09-A2E2-E0B143A238DE}
+	EndGlobalSection
+	GlobalSection(ExtensibilityGlobals) = postSolution
+		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}
+	EndGlobalSection
+EndGlobal

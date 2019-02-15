@@ -159,7 +159,7 @@ namespace Akka.Dispatch
     internal sealed class ForkJoinExecutor : ExecutorService
     {
         private DedicatedThreadPool _dedicatedThreadPool;
-        private byte _shuttingDown = 0;
+        private int _shuttingDown = Constants.False;
 
         /// <summary>
         /// TBD
@@ -180,7 +180,7 @@ namespace Akka.Dispatch
         /// </exception>
         public override void Execute(IRunnable run)
         {
-            if (Volatile.Read(ref _shuttingDown) == 1) AkkaThrowHelper.ThrowRejectedExecutionException();
+            if (Volatile.Read(ref _shuttingDown) == Constants.True) AkkaThrowHelper.ThrowRejectedExecutionException();
             _dedicatedThreadPool.QueueUserWorkItem(run.Run);
         }
 
@@ -190,7 +190,7 @@ namespace Akka.Dispatch
         public override void Shutdown()
         {
             // shut down the dedicated threadpool and null it out
-            Volatile.Write(ref _shuttingDown, 1);
+            Interlocked.Exchange(ref _shuttingDown, Constants.True);
             _dedicatedThreadPool?.Dispose();
             _dedicatedThreadPool = null;
         }

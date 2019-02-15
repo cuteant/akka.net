@@ -32,23 +32,33 @@ namespace Akka.Actor
         public static Task PipeTo<T>(this Task<T> taskToPipe, ICanTell recipient, IActorRef sender = null, Func<T, object> success = null, Func<Exception, object> failure = null)
         {
             sender = sender ?? ActorRefs.NoSender;
-            return taskToPipe.LinkOutcome(PipeToHelper<T>.PipeToContinuationAction,
-                recipient, sender, success, failure,
+            return taskToPipe.LinkOutcome(new PipeToRunnable<T>(recipient, sender, success, failure),
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
-        sealed class PipeToHelper<T>
+        sealed class PipeToRunnable<T> : IOverridingArgumentRunnable<Task<T>>
         {
-            public static readonly Action<Task<T>, ICanTell, IActorRef, Func<T, object>, Func<Exception, object>> PipeToContinuationAction = PipeToContinuation;
+            private readonly ICanTell _recipient;
+            private readonly IActorRef _sender;
+            private readonly Func<T, object> _success;
+            private readonly Func<Exception, object> _failure;
 
-            private static void PipeToContinuation(Task<T> tresult, ICanTell recipient, IActorRef sender, Func<T, object> success, Func<Exception, object> failure)
+            public PipeToRunnable(ICanTell recipient, IActorRef sender, Func<T, object> success, Func<Exception, object> failure)
+            {
+                _recipient = recipient;
+                _sender = sender;
+                _success = success;
+                _failure = failure;
+            }
+
+            public void Run(Task<T> tresult)
             {
                 if (tresult.IsSuccessfully())
                 {
-                    recipient.Tell(success != null ? success(tresult.Result) : tresult.Result, sender);
+                    _recipient.Tell(_success != null ? _success(tresult.Result) : tresult.Result, _sender);
                     return;
                 }
-                recipient.Tell(failure != null ? failure(tresult.Exception) : new Status.Failure(tresult.Exception), sender);
+                _recipient.Tell(_failure != null ? _failure(tresult.Exception) : new Status.Failure(tresult.Exception), _sender);
             }
         }
 
@@ -65,20 +75,34 @@ namespace Akka.Actor
         public static Task PipeTo(this Task taskToPipe, ICanTell recipient, IActorRef sender = null, Func<object> success = null, Func<Exception, object> failure = null)
         {
             sender = sender ?? ActorRefs.NoSender;
-            return taskToPipe.LinkOutcome(PipeToContinuationAction,
-                recipient, sender, success, failure,
+            return taskToPipe.LinkOutcome(new PipeToRunnable(recipient, sender, success, failure),
                 CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
-        private static readonly Action<Task, ICanTell, IActorRef, Func<object>, Func<Exception, object>> PipeToContinuationAction = PipeToContinuation;
-        private static void PipeToContinuation(Task tresult, ICanTell recipient, IActorRef sender, Func<object> success, Func<Exception, object> failure)
+        sealed class PipeToRunnable : IOverridingArgumentRunnable<Task>
         {
-            if (tresult.IsSuccessfully())
+            private readonly ICanTell _recipient;
+            private readonly IActorRef _sender;
+            private readonly Func<object> _success;
+            private readonly Func<Exception, object> _failure;
+
+            public PipeToRunnable(ICanTell recipient, IActorRef sender, Func<object> success, Func<Exception, object> failure)
             {
-                if (success != null) { recipient.Tell(success(), sender); }
-                return;
+                _recipient = recipient;
+                _sender = sender;
+                _success = success;
+                _failure = failure;
             }
-            recipient.Tell(failure != null ? failure(tresult.Exception) : new Status.Failure(tresult.Exception), sender);
+
+            public void Run(Task tresult)
+            {
+                if (tresult.IsSuccessfully())
+                {
+                    if (_success != null) { _recipient.Tell(_success(), _sender); }
+                    return;
+                }
+                _recipient.Tell(_failure != null ? _failure(tresult.Exception) : new Status.Failure(tresult.Exception), _sender);
+            }
         }
     }
 }

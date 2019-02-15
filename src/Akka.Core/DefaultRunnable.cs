@@ -3,7 +3,7 @@
 namespace Akka
 {
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TResult}"/>.</summary>
-    public class DefaultRunnable<TArg1, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    public class DefaultRunnable<TArg1, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
     {
         private readonly Func<TArg1, TResult> _func;
         private readonly TArg1 _arg1;
@@ -24,7 +24,8 @@ namespace Akka
             return _func(_arg1);
         }
 
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg);
         }
@@ -41,7 +42,7 @@ namespace Akka
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TResult}"/>.</summary>
-    public class DefaultRunnable<TArg1, TArg2, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    public class DefaultRunnable<TArg1, TArg2, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
     {
         private readonly Func<TArg1, TArg2, TResult> _func;
         private readonly TArg1 _arg1;
@@ -65,7 +66,8 @@ namespace Akka
             return _func(_arg1, _arg2);
         }
 
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2);
         }
@@ -82,7 +84,7 @@ namespace Akka
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TResult}"/>.</summary>
-    public class DefaultRunnable<TArg1, TArg2, TArg3, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    public class DefaultRunnable<TArg1, TArg2, TArg3, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
     {
         private readonly Func<TArg1, TArg2, TArg3, TResult> _func;
         private readonly TArg1 _arg1;
@@ -109,7 +111,8 @@ namespace Akka
             return _func(_arg1, _arg2, _arg3);
         }
 
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3);
         }
@@ -126,7 +129,7 @@ namespace Akka
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TArg4, TResult}"/>.</summary>
-    public class DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    public class DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
     {
         private readonly Func<TArg1, TArg2, TArg3, TArg4, TResult> _func;
         private readonly TArg1 _arg1;
@@ -156,7 +159,8 @@ namespace Akka
             return _func(_arg1, _arg2, _arg3, _arg4);
         }
 
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3, _arg4);
         }
@@ -173,7 +177,7 @@ namespace Akka
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TArg4, TArg5, TResult}"/>.</summary>
-    public class DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    public class DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
     {
         private readonly Func<TArg1, TArg2, TArg3, TArg4, TArg5, TResult> _func;
         private readonly TArg1 _arg1;
@@ -206,7 +210,8 @@ namespace Akka
             return _func(_arg1, _arg2, _arg3, _arg4, _arg5);
         }
 
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3, _arg4, _arg5);
         }
@@ -223,7 +228,7 @@ namespace Akka
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult}"/>.</summary>
-    public class DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    public class DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
     {
         private readonly Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> _func;
         private readonly TArg1 _arg1;
@@ -259,7 +264,8 @@ namespace Akka
             return _func(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6);
         }
 
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3, _arg4, _arg5, _arg6);
         }
@@ -276,7 +282,7 @@ namespace Akka
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult}"/>.</summary>
-    public class DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    public class DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
     {
         private readonly Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult> _func;
         private readonly TArg1 _arg1;
@@ -315,7 +321,8 @@ namespace Akka
             return _func(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7);
         }
 
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7);
         }

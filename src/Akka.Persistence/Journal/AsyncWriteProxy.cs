@@ -409,11 +409,11 @@ namespace Akka.Persistence.Journal
                 return StoreNotInitialized<long>();
 
             return _store.Ask<AsyncWriteTarget.ReplaySuccess>(new AsyncWriteTarget.ReplayMessages(persistenceId, 0, 0, 0), Timeout)
-                .Then(AfterReplaySuccessFunc, TaskContinuationOptions.OnlyOnRanToCompletion);
+                .ContinueWith(AfterReplaySuccessFunc, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
 
-        private static readonly Func<AsyncWriteTarget.ReplaySuccess, long> AfterReplaySuccessFunc = AfterReplaySuccess;
-        private static long AfterReplaySuccess(AsyncWriteTarget.ReplaySuccess result) => result.HighestSequenceNr;
+        private static readonly Func<Task<AsyncWriteTarget.ReplaySuccess>, long> AfterReplaySuccessFunc = AfterReplaySuccess;
+        private static long AfterReplaySuccess(Task<AsyncWriteTarget.ReplaySuccess> t) => t.Result.HighestSequenceNr;
 
         private Task<T> StoreNotInitialized<T>()
         {

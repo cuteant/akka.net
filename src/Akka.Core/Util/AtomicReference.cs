@@ -49,7 +49,7 @@ namespace Akka.Util
         public T Value
         {
             get { return Volatile.Read(ref atomicValue); }
-            set { Volatile.Write(ref atomicValue, value); }
+            set { Interlocked.Exchange(ref atomicValue, value); }
         }
 
         /// <summary>

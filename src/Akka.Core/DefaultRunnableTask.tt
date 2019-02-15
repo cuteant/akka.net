@@ -16,14 +16,14 @@ namespace Akka
     var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
 #>
     /// <summary><see cref="IRunnableTask"/> which executes an <see cref="Func{Task}"/>.</summary>
-    public sealed class DefaultRunnableTask<<#= types #>> : DefaultRunnable<<#= types #>, Task>, IRunnableTask
+    public sealed class DefaultRunnableTask<<#= types #>> : DefaultRunnable<<#= types #>, Task>, IRunnableTask, IOverridingArgumentRunnableTask<TArg1>
     {
         /// <summary>TBD</summary>
         public DefaultRunnableTask(Func<<#= types #>, Task> func, <#= typeAndArguments #>) : base(func, <#= arguments #>) { }
     }
 
     /// <summary><see cref="IRunnableTask"/> which executes an <see cref="Func{Task}"/>.</summary>
-    public sealed class DefaultRunnableWithResultTask<<#= types #>, TResult> : DefaultRunnable<<#= types #>, Task<TResult>>, IRunnableTask<TResult>
+    public sealed class DefaultRunnableWithResultTask<<#= types #>, TResult> : DefaultRunnable<<#= types #>, Task<TResult>>, IRunnableTask<TResult>, IOverridingArgumentRunnableTask<TArg1, TResult>
     {
         /// <summary>TBD</summary>
         public DefaultRunnableWithResultTask(Func<<#= types #>, Task<TResult>> func, <#= typeAndArguments #>) : base(func, <#= arguments #>) { }

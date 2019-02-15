@@ -800,7 +800,7 @@ namespace Akka.Cluster.Sharding
         }
 
         /// <summary>
-        /// Result of <see cref="PersistentShardCoordinator.AllocateShard"/> is piped to self with this message.
+        /// Result of <see cref="T:PersistentShardCoordinator.AllocateShard"/> is piped to self with this message.
         /// </summary>
         [MessagePackObject]
         public sealed class AllocateShardResult
@@ -1242,7 +1242,7 @@ namespace Akka.Cluster.Sharding
         /// </summary>
         public readonly string TypeName;
 
-        public ILoggingAdapter Log { get; }
+        ILoggingAdapter IShardCoordinator.Log => this.Log;
         public ImmutableDictionary<string, ICancelable> UnAckedHostShards { get; set; } = ImmutableDictionary<string, ICancelable>.Empty;
         public ImmutableDictionary<string, ImmutableHashSet<IActorRef>> RebalanceInProgress { get; set; } = ImmutableDictionary<string, ImmutableHashSet<IActorRef>>.Empty;
         // regions that have requested handoff, for graceful shutdown
@@ -1270,7 +1270,7 @@ namespace Akka.Cluster.Sharding
             Settings = settings;
             PersistenceId = Self.Path.ToStringWithoutAddress();
 
-            Log = Context.GetLogger();
+            //Log = Context.GetLogger();
             CurrentState = State.Empty.WithRememberEntities(settings.RememberEntities);
 
             AllocationStrategy = allocationStrategy;

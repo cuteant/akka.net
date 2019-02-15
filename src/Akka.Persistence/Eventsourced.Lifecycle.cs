@@ -137,9 +137,9 @@ namespace Akka.Persistence
                     }
                     break;
                 default:
+                    base.Unhandled(message);
                     break;
             }
-            base.Unhandled(message);
         }
     }
 }

@@ -23,7 +23,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{<#= types #>}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<<#= types #>> : IRunnable2, IArgumentOverrides<TArg1>
+    public class ActionWithStateRunnable<<#= types #>> : OverridingArgumentRunnable<TArg1>, IRunnable2
     {
         private readonly Action<<#= types #>> _actionWithState;
 <# for (var t = 1; t <= i; t++) { #>
@@ -57,7 +57,8 @@ namespace Akka/*.Dispatch*/
     if (i == 1)
     {
 #>
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg);
         }
@@ -66,7 +67,8 @@ namespace Akka/*.Dispatch*/
     else
     {
 #>
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg, <#= args2 #>);
         }

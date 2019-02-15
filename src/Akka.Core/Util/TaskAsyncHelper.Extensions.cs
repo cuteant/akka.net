@@ -75,19 +75,6 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TResult>(this Task task, Func<TArg1, TResult> successor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
-        {
-            return Then(task, Runnable.Create(successor, arg1), continuationOptions);
-        }
-
-        /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TResult>(this Task task, Func<TArg1, TResult> successor, TArg1 arg1,
-            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
-        {
-            return Then(task, Runnable.Create(successor, arg1), cancellationToken, continuationOptions, scheduler);
-        }
-
-        /// <summary>TBD</summary>
         public static Task Then<TArg1>(this Task task, Func<TArg1, Task> successor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
             return Then(task, Runnable.CreateTask(successor, arg1), continuationOptions);
@@ -98,6 +85,19 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             return Then(task, Runnable.CreateTask(successor, arg1), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TResult>(this Task task, Func<TArg1, TResult> successor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, arg1), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TResult>(this Task task, Func<TArg1, TResult> successor, TArg1 arg1,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -117,287 +117,157 @@ namespace Akka.Util
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1>(this Task<TResult> task, Action<TResult, TArg1> successor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1>(this Task<TResult> task, Action<TResult, TArg1> successor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1);
-            }
-#endif
-            return TaskRunners<TResult>
-                .RunTask(task, (IArgumentOverrides<TResult>)Runnable.Create(successor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1>(this Task<TResult> task, Func<TResult, TArg1, Task> successor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1>(this Task<TResult> task, Func<TResult, TArg1, Task> successor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1);
-            }
-#endif
-            return TaskRunners<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<TResult, Task>)Runnable.CreateTask(successor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TNewResult> successor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TNewResult> successor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1);
-            }
-#endif
-            return TaskRunners<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<TResult, TNewResult>)Runnable.Create(successor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, Task<TNewResult>> successor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, Task<TNewResult>> successor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1);
-            }
-#endif
-            return TaskRunners<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<TResult, Task<TNewResult>>)Runnable.CreateTask(successor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1>(this Task task, Action<Task, TArg1> processor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1>(this Task task, Action<Task, TArg1> processor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1); }
-            return LinkOutcomeHelper
-                .RunTask(task, (IArgumentOverrides<Task>)Runnable.Create(processor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1>(this Task task, Func<Task, TArg1, Task> processor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1>(this Task task, Func<Task, TArg1, Task> processor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1); }
-            return LinkOutcomeHelper<Task>
-                .RunTask(task, (IArgumentOverrides<Task, Task>)Runnable.CreateTask(processor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TResult>(this Task task, Func<Task, TArg1, TResult> processor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TResult>(this Task task, Func<Task, TArg1, TResult> processor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task, TResult>)Runnable.Create(processor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TResult>(this Task task, Func<Task, TArg1, Task<TResult>> processor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TResult>(this Task task, Func<Task, TArg1, Task<TResult>> processor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1); }
-            return LinkOutcomeHelper<Task<TResult>>
-                .RunTask(task, (IArgumentOverrides<Task, Task<TResult>>)Runnable.CreateTask(processor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1>(this Task<TResult> task, Action<Task<TResult>, TArg1> processor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1>(this Task<TResult> task, Action<Task<TResult>, TArg1> processor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>>)Runnable.Create(processor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1>(this Task<TResult> task, Func<Task<TResult>, TArg1, Task> processor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1>(this Task<TResult> task, Func<Task<TResult>, TArg1, Task> processor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1); }
-            return LinkOutcomeHelper<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task>)Runnable.CreateTask(processor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TNewResult> processor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TNewResult> processor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1); }
-            return LinkOutcomeHelper<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, Task<TNewResult>> processor, TArg1 arg1, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, Task<TNewResult>> processor, TArg1 arg1,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1); }
-            return LinkOutcomeHelper<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task<TNewResult>>)Runnable.CreateTask(processor, default, arg1),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -467,19 +337,6 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TResult>(this Task task, Func<TArg1, TArg2, TResult> successor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2), continuationOptions);
-        }
-
-        /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TResult>(this Task task, Func<TArg1, TArg2, TResult> successor, TArg1 arg1, TArg2 arg2,
-            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2), cancellationToken, continuationOptions, scheduler);
-        }
-
-        /// <summary>TBD</summary>
         public static Task Then<TArg1, TArg2>(this Task task, Func<TArg1, TArg2, Task> successor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2), continuationOptions);
@@ -490,6 +347,19 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TResult>(this Task task, Func<TArg1, TArg2, TResult> successor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TResult>(this Task task, Func<TArg1, TArg2, TResult> successor, TArg1 arg1, TArg2 arg2,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -509,287 +379,157 @@ namespace Akka.Util
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2>(this Task<TResult> task, Action<TResult, TArg1, TArg2> successor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2>(this Task<TResult> task, Action<TResult, TArg1, TArg2> successor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2);
-            }
-#endif
-            return TaskRunners<TResult>
-                .RunTask(task, (IArgumentOverrides<TResult>)Runnable.Create(successor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2>(this Task<TResult> task, Func<TResult, TArg1, TArg2, Task> successor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2>(this Task<TResult> task, Func<TResult, TArg1, TArg2, Task> successor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2);
-            }
-#endif
-            return TaskRunners<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<TResult, Task>)Runnable.CreateTask(successor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TNewResult> successor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TNewResult> successor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2);
-            }
-#endif
-            return TaskRunners<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2);
-            }
-#endif
-            return TaskRunners<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<TResult, Task<TNewResult>>)Runnable.CreateTask(successor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2>(this Task task, Action<Task, TArg1, TArg2> processor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2>(this Task task, Action<Task, TArg1, TArg2> processor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2); }
-            return LinkOutcomeHelper
-                .RunTask(task, (IArgumentOverrides<Task>)Runnable.Create(processor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2>(this Task task, Func<Task, TArg1, TArg2, Task> processor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2>(this Task task, Func<Task, TArg1, TArg2, Task> processor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2); }
-            return LinkOutcomeHelper<Task>
-                .RunTask(task, (IArgumentOverrides<Task, Task>)Runnable.CreateTask(processor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TResult>(this Task task, Func<Task, TArg1, TArg2, TResult> processor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TResult>(this Task task, Func<Task, TArg1, TArg2, TResult> processor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task, TResult>)Runnable.Create(processor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TResult>(this Task task, Func<Task, TArg1, TArg2, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TResult>(this Task task, Func<Task, TArg1, TArg2, Task<TResult>> processor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2); }
-            return LinkOutcomeHelper<Task<TResult>>
-                .RunTask(task, (IArgumentOverrides<Task, Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2> processor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2> processor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, Task> processor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, Task> processor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2); }
-            return LinkOutcomeHelper<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task>)Runnable.CreateTask(processor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TNewResult> processor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TNewResult> processor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2); }
-            return LinkOutcomeHelper<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2); }
-            return LinkOutcomeHelper<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task<TNewResult>>)Runnable.CreateTask(processor, default, arg1, arg2),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -859,19 +599,6 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3), continuationOptions);
-        }
-
-        /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
-            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
-        }
-
-        /// <summary>TBD</summary>
         public static Task Then<TArg1, TArg2, TArg3>(this Task task, Func<TArg1, TArg2, TArg3, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3), continuationOptions);
@@ -882,6 +609,19 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -901,287 +641,157 @@ namespace Akka.Util
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3>(this Task<TResult> task, Action<TResult, TArg1, TArg2, TArg3> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3>(this Task<TResult> task, Action<TResult, TArg1, TArg2, TArg3> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3);
-            }
-#endif
-            return TaskRunners<TResult>
-                .RunTask(task, (IArgumentOverrides<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3);
-            }
-#endif
-            return TaskRunners<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<TResult, Task>)Runnable.CreateTask(successor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TNewResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TNewResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3);
-            }
-#endif
-            return TaskRunners<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3);
-            }
-#endif
-            return TaskRunners<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<TResult, Task<TNewResult>>)Runnable.CreateTask(successor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3>(this Task task, Action<Task, TArg1, TArg2, TArg3> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3>(this Task task, Action<Task, TArg1, TArg2, TArg3> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3); }
-            return LinkOutcomeHelper
-                .RunTask(task, (IArgumentOverrides<Task>)Runnable.Create(processor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3>(this Task task, Func<Task, TArg1, TArg2, TArg3, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3>(this Task task, Func<Task, TArg1, TArg2, TArg3, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3); }
-            return LinkOutcomeHelper<Task>
-                .RunTask(task, (IArgumentOverrides<Task, Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3); }
-            return LinkOutcomeHelper<Task<TResult>>
-                .RunTask(task, (IArgumentOverrides<Task, Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2, TArg3> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2, TArg3> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3); }
-            return LinkOutcomeHelper<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TNewResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TNewResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3); }
-            return LinkOutcomeHelper<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3); }
-            return LinkOutcomeHelper<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task<TNewResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -1251,19 +861,6 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4), continuationOptions);
-        }
-
-        /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
-            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
-        }
-
-        /// <summary>TBD</summary>
         public static Task Then<TArg1, TArg2, TArg3, TArg4>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3, arg4), continuationOptions);
@@ -1274,6 +871,19 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -1293,287 +903,157 @@ namespace Akka.Util
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4>(this Task<TResult> task, Action<TResult, TArg1, TArg2, TArg3, TArg4> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4>(this Task<TResult> task, Action<TResult, TArg1, TArg2, TArg3, TArg4> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4);
-            }
-#endif
-            return TaskRunners<TResult>
-                .RunTask(task, (IArgumentOverrides<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4);
-            }
-#endif
-            return TaskRunners<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<TResult, Task>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4);
-            }
-#endif
-            return TaskRunners<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4);
-            }
-#endif
-            return TaskRunners<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<TResult, Task<TNewResult>>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4>(this Task task, Action<Task, TArg1, TArg2, TArg3, TArg4> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4>(this Task task, Action<Task, TArg1, TArg2, TArg3, TArg4> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4); }
-            return LinkOutcomeHelper
-                .RunTask(task, (IArgumentOverrides<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4); }
-            return LinkOutcomeHelper<Task>
-                .RunTask(task, (IArgumentOverrides<Task, Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4); }
-            return LinkOutcomeHelper<Task<TResult>>
-                .RunTask(task, (IArgumentOverrides<Task, Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2, TArg3, TArg4> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2, TArg3, TArg4> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4); }
-            return LinkOutcomeHelper<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TNewResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TNewResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4); }
-            return LinkOutcomeHelper<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4); }
-            return LinkOutcomeHelper<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task<TNewResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -1643,19 +1123,6 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5), continuationOptions);
-        }
-
-        /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
-            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
-        }
-
-        /// <summary>TBD</summary>
         public static Task Then<TArg1, TArg2, TArg3, TArg4, TArg5>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3, arg4, arg5), continuationOptions);
@@ -1666,6 +1133,19 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -1685,287 +1165,157 @@ namespace Akka.Util
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(this Task<TResult> task, Action<TResult, TArg1, TArg2, TArg3, TArg4, TArg5> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(this Task<TResult> task, Action<TResult, TArg1, TArg2, TArg3, TArg4, TArg5> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5);
-            }
-#endif
-            return TaskRunners<TResult>
-                .RunTask(task, (IArgumentOverrides<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5);
-            }
-#endif
-            return TaskRunners<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<TResult, Task>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5);
-            }
-#endif
-            return TaskRunners<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5);
-            }
-#endif
-            return TaskRunners<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<TResult, Task<TNewResult>>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5>(this Task task, Action<Task, TArg1, TArg2, TArg3, TArg4, TArg5> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5>(this Task task, Action<Task, TArg1, TArg2, TArg3, TArg4, TArg5> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5); }
-            return LinkOutcomeHelper
-                .RunTask(task, (IArgumentOverrides<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5); }
-            return LinkOutcomeHelper<Task>
-                .RunTask(task, (IArgumentOverrides<Task, Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5); }
-            return LinkOutcomeHelper<Task<TResult>>
-                .RunTask(task, (IArgumentOverrides<Task, Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5); }
-            return LinkOutcomeHelper<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5); }
-            return LinkOutcomeHelper<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5); }
-            return LinkOutcomeHelper<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task<TNewResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -2035,19 +1385,6 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
-        }
-
-        /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
-            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
-        }
-
-        /// <summary>TBD</summary>
         public static Task Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
@@ -2058,6 +1395,19 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -2077,287 +1427,157 @@ namespace Akka.Util
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task<TResult> task, Action<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task<TResult> task, Action<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5, arg6);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5, arg6);
-            }
-#endif
-            return TaskRunners<TResult>
-                .RunTask(task, (IArgumentOverrides<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5, arg6);
-            }
-            else if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-#else
-            if (task.IsCanceled || task.IsFaulted)
-            {
-                return task;
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5, arg6);
-            }
-#endif
-            return TaskRunners<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<TResult, Task>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5, arg6);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5, arg6);
-            }
-#endif
-            return TaskRunners<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler);
+            return Then(task, (IOverridingArgumentRunnable<TResult, TNewResult>)Runnable.Create(successor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return Then(task, successor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> Then<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult>(this Task<TResult> task, Func<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task<TNewResult>> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-#if NETCOREAPP
-            if (task.IsCompletedSuccessfully)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5, arg6);
-            }
-            else if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-#else
-            if (task.IsCanceled)
-            {
-                return Canceled<TNewResult>();
-            }
-            else if (task.IsFaulted)
-            {
-                return TaskEx.FromException<TNewResult>(task.Exception);
-            }
-            else if (task.IsCompleted)
-            {
-                return FromMethod(successor, task.Result, arg1, arg2, arg3, arg4, arg5, arg6);
-            }
-#endif
-            return TaskRunners<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<TResult, Task<TNewResult>>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return Then(task, (IOverridingArgumentRunnableTask<TResult, TNewResult>)Runnable.CreateTask(successor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task task, Action<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task task, Action<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5, arg6); }
-            return LinkOutcomeHelper
-                .RunTask(task, (IArgumentOverrides<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5, arg6); }
-            return LinkOutcomeHelper<Task>
-                .RunTask(task, (IArgumentOverrides<Task, Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5, arg6); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task, TResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TResult> LinkOutcome<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>(this Task task, Func<Task, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task<TResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5, arg6); }
-            return LinkOutcomeHelper<Task<TResult>>
-                .RunTask(task, (IArgumentOverrides<Task, Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task, TResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task<TResult> task, Action<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5, arg6); }
-            return LinkOutcomeHelper<TResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5, arg6); }
-            return LinkOutcomeHelper<TResult, Task>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5, arg6); }
-            return LinkOutcomeHelper<TResult, TNewResult>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler);
+            return LinkOutcome(task, (IOverridingArgumentRunnable<Task<TResult>, TNewResult>)Runnable.Create(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
-            return LinkOutcome(task, processor, arg1, arg2, arg3, arg4, arg5, arg6, default, continuationOptions, TaskScheduler.Current);
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), continuationOptions);
         }
 
         /// <summary>TBD</summary>
         public static Task<TNewResult> LinkOutcome<TResult, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TNewResult>(this Task<TResult> task, Func<Task<TResult>, TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, Task<TNewResult>> processor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6,
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
-            if (task.IsCompleted) { return FromMethod(processor, task, arg1, arg2, arg3, arg4, arg5, arg6); }
-            return LinkOutcomeHelper<TResult, Task<TNewResult>>
-                .RunTask(task, (IArgumentOverrides<Task<TResult>, Task<TNewResult>>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6),
-                    cancellationToken, continuationOptions, scheduler)
-                .FastUnwrap();
+            return LinkOutcome(task, (IOverridingArgumentRunnableTask<Task<TResult>, TNewResult>)Runnable.CreateTask(processor, default, arg1, arg2, arg3, arg4, arg5, arg6), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>
@@ -2427,19 +1647,6 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5, arg6, arg7), continuationOptions);
-        }
-
-        /// <summary>TBD</summary>
-        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7,
-            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
-        {
-            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5, arg6, arg7), cancellationToken, continuationOptions, scheduler);
-        }
-
-        /// <summary>TBD</summary>
         public static Task Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, Task> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3, arg4, arg5, arg6, arg7), continuationOptions);
@@ -2450,6 +1657,19 @@ namespace Akka.Util
             CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
         {
             return Then(task, Runnable.CreateTask(successor, arg1, arg2, arg3, arg4, arg5, arg6, arg7), cancellationToken, continuationOptions, scheduler);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7, TaskContinuationOptions continuationOptions = TaskContinuationOptions.None)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5, arg6, arg7), continuationOptions);
+        }
+
+        /// <summary>TBD</summary>
+        public static Task<TResult> Then<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult>(this Task task, Func<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult> successor, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7,
+            CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
+        {
+            return Then(task, Runnable.Create(successor, arg1, arg2, arg3, arg4, arg5, arg6, arg7), cancellationToken, continuationOptions, scheduler);
         }
 
         /// <summary>TBD</summary>

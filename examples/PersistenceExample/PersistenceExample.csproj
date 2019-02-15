@@ -7,8 +7,10 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' ">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Akka.Persistence\Akka.Persistence.csproj" />
+    <PackageReference Include="Akka.Unofficial" Version="$(AkkaUnofficialPackageVersion)" />
+    <PackageReference Include="Akka.Persistence.Unofficial" Version="$(AkkaPersistenceUnofficialPackageVersion)" />
   </ItemGroup>
 
 </Project>

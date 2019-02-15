@@ -7,8 +7,9 @@
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' ">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
+
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Akka.Streams\Akka.Streams.csproj" />
+    <PackageReference Include="Akka.Streams.Unofficial" Version="$(AkkaStreamsUnofficialPackageVersion)" />
   </ItemGroup>
 
 </Project>

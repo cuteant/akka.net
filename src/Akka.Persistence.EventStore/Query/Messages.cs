@@ -2,8 +2,6 @@
 using Akka.Actor;
 using Akka.Event;
 
-
-
 namespace Akka.Persistence.EventStore.Query
 {
     
@@ -84,9 +82,9 @@ namespace Akka.Persistence.EventStore.Query
     }
 
 //    [Serializable]
-    public sealed class CaughtUp : IDeadLetterSuppression
+    public sealed class CaughtUp : IDeadLetterSuppression, ISingletonMessage
     {
-        public static CaughtUp Instance => new CaughtUp();
+        public static readonly CaughtUp Instance = new CaughtUp();
     }
 
     /// <summary>

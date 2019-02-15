@@ -686,51 +686,59 @@ namespace Akka.Remote
 
             private void InitFSM()
             {
-                When(TerminatorState.Uninitialized, @event =>
-                {
-                    if (@event.FsmEvent is Internals internals)
-                    {
-                        _systemGuardian.Tell(RegisterTerminationHook.Instance);
-                        return GoTo(TerminatorState.Idle).Using(internals);
-                    }
-                    return null;
-                });
+                When(TerminatorState.Uninitialized, HandleWhenUninitialized);
 
-                When(TerminatorState.Idle, @event =>
-                {
-                    if (@event.StateData != null && @event.FsmEvent is TerminationHook)
-                    {
-                        if (_log.IsInfoEnabled) _log.ShuttingDownRemoteDaemon();
-                        @event.StateData.RemoteDaemon.Tell(TerminationHook.Instance);
-                        return GoTo(TerminatorState.WaitDaemonShutdown);
-                    }
-                    return null;
-                });
+                When(TerminatorState.Idle, HandleWhenIdle);
 
                 // TODO: state timeout
-                When(TerminatorState.WaitDaemonShutdown, @event =>
-                {
-                    if (@event.StateData != null && @event.FsmEvent is TerminationHookDone)
-                    {
-                        if (_log.IsInfoEnabled) _log.RemoteDaemonShutDown();
-                        @event.StateData.Transport.Shutdown()
-                            .ContinueWith(t => TransportShutdown.Instance,
-                                TaskContinuationOptions.ExecuteSynchronously)
-                            .PipeTo(Self);
-                        return GoTo(TerminatorState.WaitTransportShutdown);
-                    }
+                When(TerminatorState.WaitDaemonShutdown, HandleWhenWaitDaemonShutdown);
 
-                    return null;
-                });
-
-                When(TerminatorState.WaitTransportShutdown, @event =>
-                {
-                    if (_log.IsInfoEnabled) _log.RemotingShutDown();
-                    _systemGuardian.Tell(TerminationHookDone.Instance);
-                    return Stop();
-                });
+                When(TerminatorState.WaitTransportShutdown, HandleWhenWaitTransportShutdown);
 
                 StartWith(TerminatorState.Uninitialized, null);
+            }
+
+            private State<TerminatorState, Internals> HandleWhenUninitialized(Event<Internals> @event)
+            {
+                if (@event.FsmEvent is Internals internals)
+                {
+                    _systemGuardian.Tell(RegisterTerminationHook.Instance);
+                    return GoTo(TerminatorState.Idle).Using(internals);
+                }
+                return null;
+            }
+
+            private State<TerminatorState, Internals> HandleWhenIdle(Event<Internals> @event)
+            {
+                if (@event.StateData != null && @event.FsmEvent is TerminationHook)
+                {
+                    if (_log.IsInfoEnabled) _log.ShuttingDownRemoteDaemon();
+                    @event.StateData.RemoteDaemon.Tell(TerminationHook.Instance);
+                    return GoTo(TerminatorState.WaitDaemonShutdown);
+                }
+                return null;
+            }
+
+            private State<TerminatorState, Internals> HandleWhenWaitDaemonShutdown(Event<Internals> @event)
+            {
+                if (@event.StateData != null && @event.FsmEvent is TerminationHookDone)
+                {
+                    if (_log.IsInfoEnabled) _log.RemoteDaemonShutDown();
+                    @event.StateData.Transport.Shutdown()
+                        .ContinueWith(t => TransportShutdown.Instance,
+                            TaskContinuationOptions.ExecuteSynchronously)
+                        .PipeTo(Self);
+                    return GoTo(TerminatorState.WaitTransportShutdown);
+                }
+
+                return null;
+            }
+
+            private State<TerminatorState, Internals> HandleWhenWaitTransportShutdown(Event<Internals> @event)
+            {
+                if (_log.IsInfoEnabled) _log.RemotingShutDown();
+                _systemGuardian.Tell(TerminationHookDone.Instance);
+                return Stop();
             }
 
             public sealed class TransportShutdown : ISingletonMessage

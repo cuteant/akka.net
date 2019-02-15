@@ -21,7 +21,7 @@ namespace Akka
     var typeAndArguments = string.Join(", ", Enumerable.Range(1, i).Select(x => "TArg" + x + " arg" + x));
 #>
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{<#= types #>, TResult}"/>.</summary>
-    public class DefaultRunnable<<#= types #>, TResult> : IRunnable<TResult>, IArgumentOverrides<TArg1, TResult>
+    public class DefaultRunnable<<#= types #>, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
     {
         private readonly Func<<#= types #>, TResult> _func;
 <# for (var t = 1; t <= i; t++) { #>
@@ -52,7 +52,8 @@ namespace Akka
     if (i == 1)
     {
 #>
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg);
         }
@@ -61,7 +62,8 @@ namespace Akka
     else
     {
 #>
-        public TResult Run(TArg1 arg)
+        /// <inheritdoc />
+        public override TResult Run(TArg1 arg)
         {
             return _func(arg, <#= args2 #>);
         }

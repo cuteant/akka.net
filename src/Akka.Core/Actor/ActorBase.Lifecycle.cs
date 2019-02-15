@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Linq;
+
 namespace Akka.Actor
 {
     public abstract partial class ActorBase
@@ -60,11 +60,12 @@ namespace Akka.Actor
         /// <param name="message">optionally the current message the actor processed when failing, if applicable.</param>
         protected virtual void PreRestart(Exception reason, object message)
         {
-            Context.GetChildren().ToList().ForEach(c =>
+            var context = Context;
+            foreach(var c in context.GetChildren())
             {
-                Context.Unwatch(c);
-                Context.Stop(c);
-            });
+                context.Unwatch(c);
+                context.Stop(c);
+            }
             PostStop();
         }
 

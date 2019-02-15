@@ -28,9 +28,20 @@ namespace Akka
         RunnableTaskWrapper<TResult> WrapTask();
     }
 
-    public interface IArgumentOverrides<T, TResult>
+    /// <summary>TBD</summary>
+    public interface IOverridingArgumentRunnable<T, TResult>
     {
+        /// <summary>TBD</summary>
+        /// <returns>TBD</returns>
         TResult Run(T arg);
+    }
+
+    /// <summary>TBD</summary>
+    public abstract class OverridingArgumentRunnable<T, TResult> : IOverridingArgumentRunnable<T, TResult>
+    {
+        /// <summary>TBD</summary>
+        /// <returns>TBD</returns>
+        public abstract TResult Run(T arg);
     }
 
     /// <summary>An asynchronous operation</summary>
@@ -38,6 +49,12 @@ namespace Akka
 
     /// <summary>An asynchronous operation</summary>
     public interface IRunnableTask<TResult> : IRunnable<Task<TResult>> { }
+
+    /// <summary>An asynchronous operation</summary>
+    public interface IOverridingArgumentRunnableTask<T> : IOverridingArgumentRunnable<T, Task> { }
+
+    /// <summary>An asynchronous operation</summary>
+    public interface IOverridingArgumentRunnableTask<T, TResult> : IOverridingArgumentRunnable<T, Task<TResult>> { }
 
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TResult}"/>.</summary>
     /// <typeparam name="TResult">TBD</typeparam>

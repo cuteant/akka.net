@@ -965,204 +965,19 @@ namespace Akka.Remote.Transport
 
         private void InitializeFSM()
         {
-            #region ThrottlerState.WaitExposedHandle
+            When(ThrottlerState.WaitExposedHandle, HandleWhenWaitExposedHandle);
 
-            When(ThrottlerState.WaitExposedHandle, @event =>
-            {
-                if (@event.FsmEvent is ThrottlerManager.Handle throttlerManagerHandle && @event.StateData is Uninitialized)
-                {
-                    // register to downstream layer and wait for origin
-                    OriginalHandle.ReadHandlerSource.SetResult(new ActorHandleEventListener(Self));
-                    return
-                        GoTo(ThrottlerState.WaitOrigin)
-                            .Using(new ExposedHandle(throttlerManagerHandle.ThrottlerHandle));
-                }
-                return null;
-            });
+            When(ThrottlerState.WaitOrigin, HandleWhenWaitOrigin);
 
-            #endregion
+            When(ThrottlerState.WaitMode, HandleWhenWaitMode);
 
-            #region ThrottlerState.WaitOrigin
+            When(ThrottlerState.WaitUpstreamListener, HandleWhenWaitUpstreamListener);
 
-            When(ThrottlerState.WaitOrigin, @event =>
-            {
-                if (@event.FsmEvent is InboundPayload inboundPayload && @event.StateData is ExposedHandle exposedHandle)
-                {
-                    var b = inboundPayload.Payload;
-                    ThrottledMessages.Enqueue(b);
-                    var origin = PeekOrigin(b);
-                    if (origin != null)
-                    {
-                        Manager.Tell(new ThrottlerManager.Checkin(origin, exposedHandle.Handle));
-                        return GoTo(ThrottlerState.WaitMode);
-                    }
-                    return Stay();
-                }
-                return null;
-            });
+            When(ThrottlerState.WaitModeAndUpstreamListener, HandleWhenWaitModeAndUpstreamListener);
 
-            #endregion
+            When(ThrottlerState.Throttling, HandleWhenThrottling);
 
-            #region ThrottlerState.WaitMode
-
-            When(ThrottlerState.WaitMode, @event =>
-            {
-                switch (@event.FsmEvent)
-                {
-                    case InboundPayload inboundPayload:
-                        var b = inboundPayload.Payload;
-                        ThrottledMessages.Enqueue(b);
-                        return Stay();
-
-                    case ThrottleMode mode when @event.StateData is ExposedHandle exposedHandler:
-                        var exposedHandle = exposedHandler.Handle;
-                        InboundThrottleMode = mode;
-                        try
-                        {
-                            if (mode is Blackhole)
-                            {
-                                ThrottledMessages.Clear();// = new Queue<byte[]>();
-                                exposedHandle.Disassociate();
-                                return Stop();
-                            }
-                            else
-                            {
-                                AssociationHandler.Notify(new InboundAssociation(exposedHandle));
-                                var self = Self;
-                                exposedHandle.ReadHandlerSource.Task.ContinueWith(
-                                    r => new ThrottlerManager.Listener(r.Result),
-                                    TaskContinuationOptions.ExecuteSynchronously)
-                                    .PipeTo(self);
-                                return GoTo(ThrottlerState.WaitUpstreamListener);
-                            }
-                        }
-                        finally
-                        {
-                            Sender.Tell(SetThrottleAck.Instance);
-                        }
-
-                    default:
-                        return null;
-                }
-            });
-
-            #endregion
-
-            #region ThrottlerState.WaitUpstreamListener
-
-            When(ThrottlerState.WaitUpstreamListener, @event =>
-            {
-                switch (@event.FsmEvent)
-                {
-                    case InboundPayload inboundPayload:
-                        ThrottledMessages.Enqueue(inboundPayload.Payload);
-                        return Stay();
-
-                    case ThrottlerManager.Listener throttlerManagerListener:
-                        UpstreamListener = throttlerManagerListener.HandleEventListener;
-                        Self.Tell(new Dequeue());
-                        return GoTo(ThrottlerState.Throttling);
-
-                    default:
-                        return null;
-                }
-            });
-
-            #endregion
-
-            #region ThrottlerState.WaitModeAndUpstreamListener
-
-            When(ThrottlerState.WaitModeAndUpstreamListener, @event =>
-            {
-                switch (@event.FsmEvent)
-                {
-                    case ThrottlerManager.ListenerAndMode listenerAndMode:
-                        UpstreamListener = listenerAndMode.HandleEventListener;
-                        InboundThrottleMode = listenerAndMode.Mode;
-                        Self.Tell(new Dequeue());
-                        return GoTo(ThrottlerState.Throttling);
-
-                    case InboundPayload inboundPayload:
-                        ThrottledMessages.Enqueue(inboundPayload.Payload);
-                        return Stay();
-
-                    default:
-                        return null;
-                }
-            });
-
-            #endregion
-
-            #region ThrottlerState.Throttling
-
-            When(ThrottlerState.Throttling, @event =>
-            {
-                switch (@event.FsmEvent)
-                {
-                    case ThrottleMode mode:
-                        InboundThrottleMode = mode;
-                        if (mode is Blackhole) { ThrottledMessages.Clear(); /*= new Queue<byte[]>();*/ }
-                        CancelTimer(DequeueTimerName);
-                        if (ThrottledMessages.Count > 0)
-                        {
-                            var bts = MessagePackSerializer.Serialize<object>(ThrottledMessages.Peek(), s_defaultResolver);
-                            ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), bts.Length));
-                        }
-                        Sender.Tell(SetThrottleAck.Instance);
-                        return Stay();
-
-                    case InboundPayload inboundPayload:
-                        ForwardOrDelay(inboundPayload.Payload);
-                        return Stay();
-
-                    case Dequeue _:
-                        if (ThrottledMessages.Count > 0)
-                        {
-                            var payload = ThrottledMessages.Dequeue();
-                            UpstreamListener.Notify(new InboundPayload(payload));
-                            var bts = MessagePackSerializer.Serialize<object>(payload, s_defaultResolver);
-                            InboundThrottleMode = InboundThrottleMode.TryConsumeTokens(MonotonicClock.GetNanos(), bts.Length).Item1;
-                            if (ThrottledMessages.Count > 0)
-                            {
-                                bts = MessagePackSerializer.Serialize<object>(ThrottledMessages.Peek(), s_defaultResolver);
-                                ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), bts.Length));
-                            }
-                        }
-                        return Stay();
-
-                    default:
-                        return null;
-                }
-            });
-
-            #endregion
-
-            #region WhenUnhandled
-
-            WhenUnhandled(@event =>
-            {
-                switch (@event.FsmEvent)
-                {
-                    // we should always set the throttling mode
-                    case ThrottleMode throttleMode:
-                        InboundThrottleMode = throttleMode;
-                        Sender.Tell(SetThrottleAck.Instance);
-                        return Stay();
-
-                    case Disassociated _:
-                        return Stop(); // not notifying the upstream handler is intentional: we are relying on heartbeating
-
-                    case FailWith failWith:
-                        var reason = failWith.FailReason;
-                        if (UpstreamListener != null) UpstreamListener.Notify(new Disassociated(reason));
-                        return Stop();
-
-                    default:
-                        return null;
-                }
-            });
-
-            #endregion
+            WhenUnhandled(HandleWhenUnhandled);
 
             if (Inbound)
             {
@@ -1172,6 +987,177 @@ namespace Akka.Remote.Transport
             {
                 OriginalHandle.ReadHandlerSource.SetResult(new ActorHandleEventListener(Self));
                 StartWith(ThrottlerState.WaitModeAndUpstreamListener, Uninitialized.Instance);
+            }
+        }
+
+        private State<ThrottlerState, IThrottlerData> HandleWhenWaitExposedHandle(Event<IThrottlerData> @event)
+        {
+            if (@event.FsmEvent is ThrottlerManager.Handle throttlerManagerHandle && @event.StateData is Uninitialized)
+            {
+                // register to downstream layer and wait for origin
+                OriginalHandle.ReadHandlerSource.SetResult(new ActorHandleEventListener(Self));
+                return
+                    GoTo(ThrottlerState.WaitOrigin)
+                        .Using(new ExposedHandle(throttlerManagerHandle.ThrottlerHandle));
+            }
+            return null;
+        }
+
+        private State<ThrottlerState, IThrottlerData> HandleWhenWaitOrigin(Event<IThrottlerData> @event)
+        {
+            if (@event.FsmEvent is InboundPayload inboundPayload && @event.StateData is ExposedHandle exposedHandle)
+            {
+                var b = inboundPayload.Payload;
+                ThrottledMessages.Enqueue(b);
+                var origin = PeekOrigin(b);
+                if (origin != null)
+                {
+                    Manager.Tell(new ThrottlerManager.Checkin(origin, exposedHandle.Handle));
+                    return GoTo(ThrottlerState.WaitMode);
+                }
+                return Stay();
+            }
+            return null;
+        }
+
+        private State<ThrottlerState, IThrottlerData> HandleWhenWaitMode(Event<IThrottlerData> @event)
+        {
+            switch (@event.FsmEvent)
+            {
+                case InboundPayload inboundPayload:
+                    var b = inboundPayload.Payload;
+                    ThrottledMessages.Enqueue(b);
+                    return Stay();
+
+                case ThrottleMode mode when @event.StateData is ExposedHandle exposedHandler:
+                    var exposedHandle = exposedHandler.Handle;
+                    InboundThrottleMode = mode;
+                    try
+                    {
+                        if (mode is Blackhole)
+                        {
+                            ThrottledMessages.Clear();// = new Queue<byte[]>();
+                            exposedHandle.Disassociate();
+                            return Stop();
+                        }
+                        else
+                        {
+                            AssociationHandler.Notify(new InboundAssociation(exposedHandle));
+                            var self = Self;
+                            exposedHandle.ReadHandlerSource.Task.ContinueWith(
+                                r => new ThrottlerManager.Listener(r.Result),
+                                TaskContinuationOptions.ExecuteSynchronously)
+                                .PipeTo(self);
+                            return GoTo(ThrottlerState.WaitUpstreamListener);
+                        }
+                    }
+                    finally
+                    {
+                        Sender.Tell(SetThrottleAck.Instance);
+                    }
+
+                default:
+                    return null;
+            }
+        }
+
+        private State<ThrottlerState, IThrottlerData> HandleWhenWaitUpstreamListener(Event<IThrottlerData> @event)
+        {
+            switch (@event.FsmEvent)
+            {
+                case InboundPayload inboundPayload:
+                    ThrottledMessages.Enqueue(inboundPayload.Payload);
+                    return Stay();
+
+                case ThrottlerManager.Listener throttlerManagerListener:
+                    UpstreamListener = throttlerManagerListener.HandleEventListener;
+                    Self.Tell(new Dequeue());
+                    return GoTo(ThrottlerState.Throttling);
+
+                default:
+                    return null;
+            }
+        }
+
+        private State<ThrottlerState, IThrottlerData> HandleWhenWaitModeAndUpstreamListener(Event<IThrottlerData> @event)
+        {
+            switch (@event.FsmEvent)
+            {
+                case ThrottlerManager.ListenerAndMode listenerAndMode:
+                    UpstreamListener = listenerAndMode.HandleEventListener;
+                    InboundThrottleMode = listenerAndMode.Mode;
+                    Self.Tell(new Dequeue());
+                    return GoTo(ThrottlerState.Throttling);
+
+                case InboundPayload inboundPayload:
+                    ThrottledMessages.Enqueue(inboundPayload.Payload);
+                    return Stay();
+
+                default:
+                    return null;
+            }
+        }
+
+        private State<ThrottlerState, IThrottlerData> HandleWhenThrottling(Event<IThrottlerData> @event)
+        {
+            switch (@event.FsmEvent)
+            {
+                case ThrottleMode mode:
+                    InboundThrottleMode = mode;
+                    if (mode is Blackhole) { ThrottledMessages.Clear(); /*= new Queue<byte[]>();*/ }
+                    CancelTimer(DequeueTimerName);
+                    if (ThrottledMessages.Count > 0)
+                    {
+                        var bts = MessagePackSerializer.Serialize<object>(ThrottledMessages.Peek(), s_defaultResolver);
+                        ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), bts.Length));
+                    }
+                    Sender.Tell(SetThrottleAck.Instance);
+                    return Stay();
+
+                case InboundPayload inboundPayload:
+                    ForwardOrDelay(inboundPayload.Payload);
+                    return Stay();
+
+                case Dequeue _:
+                    if (ThrottledMessages.Count > 0)
+                    {
+                        var payload = ThrottledMessages.Dequeue();
+                        UpstreamListener.Notify(new InboundPayload(payload));
+                        var bts = MessagePackSerializer.Serialize<object>(payload, s_defaultResolver);
+                        InboundThrottleMode = InboundThrottleMode.TryConsumeTokens(MonotonicClock.GetNanos(), bts.Length).Item1;
+                        if (ThrottledMessages.Count > 0)
+                        {
+                            bts = MessagePackSerializer.Serialize<object>(ThrottledMessages.Peek(), s_defaultResolver);
+                            ScheduleDequeue(InboundThrottleMode.TimeToAvailable(MonotonicClock.GetNanos(), bts.Length));
+                        }
+                    }
+                    return Stay();
+
+                default:
+                    return null;
+            }
+        }
+
+        private State<ThrottlerState, IThrottlerData> HandleWhenUnhandled(Event<IThrottlerData> @event)
+        {
+            switch (@event.FsmEvent)
+            {
+                // we should always set the throttling mode
+                case ThrottleMode throttleMode:
+                    InboundThrottleMode = throttleMode;
+                    Sender.Tell(SetThrottleAck.Instance);
+                    return Stay();
+
+                case Disassociated _:
+                    return Stop(); // not notifying the upstream handler is intentional: we are relying on heartbeating
+
+                case FailWith failWith:
+                    var reason = failWith.FailReason;
+                    if (UpstreamListener != null) UpstreamListener.Notify(new Disassociated(reason));
+                    return Stop();
+
+                default:
+                    return null;
             }
         }
 

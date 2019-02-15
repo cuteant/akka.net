@@ -49,7 +49,7 @@ namespace PersistenceExample
             Events = events ?? new List<string>();
         }
 
-        public IEnumerable<string> Events { get; private set; }
+        public List<string> Events { get; private set; }
 
         public ExampleState Update(Event evt)
         {

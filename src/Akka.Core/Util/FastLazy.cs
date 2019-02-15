@@ -24,8 +24,8 @@ namespace Akka.Util
     public sealed class FastLazy<T>
     {
         private readonly Func<T> _producer;
-        private byte _created = 0;
-        private byte _creating = 0;
+        private int _created = Constants.False;
+        private int _creating = Constants.False;
         private T _createdValue;
 
         /// <summary>
@@ -49,13 +49,13 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsValueCreatedInternal()
         {
-            return Volatile.Read(ref _created) == 1;
+            return Volatile.Read(ref _created) == Constants.True;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsValueCreationInProgress()
         {
-            return Volatile.Read(ref _creating) == 1;
+            return Volatile.Read(ref _creating) == Constants.True;
         }
 
         /// <summary>
@@ -69,9 +69,9 @@ namespace Akka.Util
                     return _createdValue;
                 if (!IsValueCreationInProgress())
                 {
-                    Volatile.Write(ref _creating, 1);
+                    Interlocked.Exchange(ref _creating, Constants.True);
                     _createdValue = _producer();
-                    Volatile.Write(ref _created, 1);
+                    Interlocked.Exchange(ref _created, Constants.True);
                 }
                 else
                 {
@@ -97,8 +97,8 @@ namespace Akka.Util
     public sealed class FastLazy<S, T>
     {
         private readonly Func<S, T> _producer;
-        private byte _created = 0;
-        private byte _creating = 0;
+        private int _created = Constants.False;
+        private int _creating = Constants.False;
         private T _createdValue;
         private S _state;
 
@@ -125,13 +125,13 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsValueCreatedInternal()
         {
-            return Volatile.Read(ref _created) == 1;
+            return Volatile.Read(ref _created) == Constants.True;
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool IsValueCreationInProgress()
         {
-            return Volatile.Read(ref _creating) == 1;
+            return Volatile.Read(ref _creating) == Constants.True;
         }
 
         /// <summary>
@@ -145,9 +145,9 @@ namespace Akka.Util
                     return _createdValue;
                 if (!IsValueCreationInProgress())
                 {
-                    Volatile.Write(ref _creating, 1);
+                    Interlocked.Exchange(ref _creating, Constants.True);
                     _createdValue = _producer(_state);
-                    Volatile.Write(ref _created, 1);
+                    Interlocked.Exchange(ref _created, Constants.True);
                     _state = default; // for reference types to make it suitable for gc
                 }
                 else

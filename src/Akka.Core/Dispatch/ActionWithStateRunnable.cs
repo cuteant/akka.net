@@ -5,7 +5,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{TArg1}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<TArg1> : IRunnable2, IArgumentOverrides<TArg1>
+    public class ActionWithStateRunnable<TArg1> : OverridingArgumentRunnable<TArg1>, IRunnable2
     {
         private readonly Action<TArg1> _actionWithState;
         private readonly TArg1 _arg1;
@@ -29,7 +29,8 @@ namespace Akka/*.Dispatch*/
             _actionWithState(_arg1);
         }
 
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg);
         }
@@ -48,7 +49,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{TArg1, TArg2}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<TArg1, TArg2> : IRunnable2, IArgumentOverrides<TArg1>
+    public class ActionWithStateRunnable<TArg1, TArg2> : OverridingArgumentRunnable<TArg1>, IRunnable2
     {
         private readonly Action<TArg1, TArg2> _actionWithState;
         private readonly TArg1 _arg1;
@@ -75,7 +76,8 @@ namespace Akka/*.Dispatch*/
             _actionWithState(_arg1, _arg2);
         }
 
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg, _arg2);
         }
@@ -94,7 +96,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{TArg1, TArg2, TArg3}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<TArg1, TArg2, TArg3> : IRunnable2, IArgumentOverrides<TArg1>
+    public class ActionWithStateRunnable<TArg1, TArg2, TArg3> : OverridingArgumentRunnable<TArg1>, IRunnable2
     {
         private readonly Action<TArg1, TArg2, TArg3> _actionWithState;
         private readonly TArg1 _arg1;
@@ -124,7 +126,8 @@ namespace Akka/*.Dispatch*/
             _actionWithState(_arg1, _arg2, _arg3);
         }
 
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg, _arg2, _arg3);
         }
@@ -143,7 +146,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{TArg1, TArg2, TArg3, TArg4}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4> : IRunnable2, IArgumentOverrides<TArg1>
+    public class ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4> : OverridingArgumentRunnable<TArg1>, IRunnable2
     {
         private readonly Action<TArg1, TArg2, TArg3, TArg4> _actionWithState;
         private readonly TArg1 _arg1;
@@ -176,7 +179,8 @@ namespace Akka/*.Dispatch*/
             _actionWithState(_arg1, _arg2, _arg3, _arg4);
         }
 
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg, _arg2, _arg3, _arg4);
         }
@@ -195,7 +199,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{TArg1, TArg2, TArg3, TArg4, TArg5}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5> : IRunnable2, IArgumentOverrides<TArg1>
+    public class ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5> : OverridingArgumentRunnable<TArg1>, IRunnable2
     {
         private readonly Action<TArg1, TArg2, TArg3, TArg4, TArg5> _actionWithState;
         private readonly TArg1 _arg1;
@@ -231,7 +235,8 @@ namespace Akka/*.Dispatch*/
             _actionWithState(_arg1, _arg2, _arg3, _arg4, _arg5);
         }
 
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg, _arg2, _arg3, _arg4, _arg5);
         }
@@ -250,7 +255,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{TArg1, TArg2, TArg3, TArg4, TArg5, TArg6}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> : IRunnable2, IArgumentOverrides<TArg1>
+    public class ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> : OverridingArgumentRunnable<TArg1>, IRunnable2
     {
         private readonly Action<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> _actionWithState;
         private readonly TArg1 _arg1;
@@ -289,7 +294,8 @@ namespace Akka/*.Dispatch*/
             _actionWithState(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6);
         }
 
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg, _arg2, _arg3, _arg4, _arg5, _arg6);
         }
@@ -308,7 +314,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7> : IRunnable2, IArgumentOverrides<TArg1>
+    public class ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7> : OverridingArgumentRunnable<TArg1>, IRunnable2
     {
         private readonly Action<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7> _actionWithState;
         private readonly TArg1 _arg1;
@@ -350,7 +356,8 @@ namespace Akka/*.Dispatch*/
             _actionWithState(_arg1, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7);
         }
 
-        public void Run(TArg1 arg)
+        /// <inheritdoc />
+        public override void Run(TArg1 arg)
         {
             _actionWithState(arg, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7);
         }

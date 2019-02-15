@@ -20,11 +20,21 @@ namespace Akka/*.Dispatch*/
         void Run();
     }
 
-    public interface IArgumentOverrides<T>
+    /// <summary>TBD</summary>
+    public interface IOverridingArgumentRunnable<T>
     {
+        /// <summary>TBD</summary>
         void Run(T arg);
     }
 
+    /// <summary>TBD</summary>
+    public abstract class OverridingArgumentRunnable<T> : IOverridingArgumentRunnable<T>
+    {
+        /// <summary>TBD</summary>
+        public abstract void Run(T arg);
+    }
+
+    /// <summary>TBD</summary>
     public interface IRunnable2 : IRunnable
     {
         /// <summary>TBD</summary>

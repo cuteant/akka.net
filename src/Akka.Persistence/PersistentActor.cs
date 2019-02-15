@@ -12,7 +12,6 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Actor.Internal;
 using Akka.Configuration;
-using Akka.Serialization.Formatters;
 using Akka.Tools.MatchHandler;
 using MessagePack;
 

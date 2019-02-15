@@ -352,7 +352,9 @@ namespace Akka.Persistence
 
             if (events == null) return;
 
+#pragma warning disable IDE0039 // 使用本地函数
             Action<object> Inv = o => handler((TEvent)o);
+#pragma warning restore IDE0039 // 使用本地函数
             var persistents = ImmutableList<IPersistentRepresentation>.Empty.ToBuilder();
             foreach (var @event in events)
             {
@@ -421,7 +423,9 @@ namespace Akka.Persistence
                 ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
+#pragma warning disable IDE0039 // 使用本地函数
             Action<object> Inv = o => handler((TEvent)o);
+#pragma warning restore IDE0039 // 使用本地函数
             var enumerable = events as TEvent[] ?? events.ToArray();
             foreach (var @event in enumerable)
             {

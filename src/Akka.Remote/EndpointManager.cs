@@ -699,14 +699,14 @@ namespace Akka.Remote
             var sender = Sender;
             var allStatuses = _transportMapping.Values.Select(x => x.ManagementCommand(mc.Cmd));
             Task.WhenAll(allStatuses)
-                .Then(CheckManagementCommandFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
+                .LinkOutcome(CheckManagementCommandFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default)
                 .PipeTo(sender);
         }
 
-        private static readonly Func<bool[], ManagementCommandAck> CheckManagementCommandFunc = CheckManagementCommand;
-        private static ManagementCommandAck CheckManagementCommand(bool[] result)
+        private static readonly Func<Task<bool[]>, ManagementCommandAck> CheckManagementCommandFunc = CheckManagementCommand;
+        private static ManagementCommandAck CheckManagementCommand(Task<bool[]> t)
         {
-            return new ManagementCommandAck(result.All(y => y));
+            return new ManagementCommandAck(t.Result.All(y => y));
         }
 
         #endregion
@@ -953,7 +953,7 @@ namespace Akka.Remote
             var shutdownStatus = Task
                 .WhenAll(_endpoints.AllEndpoints.Select(
                     x => x.GracefulStop(_settings.FlushWait, EndpointWriter.FlushAndStop.Instance)))
-                .ContinueWith(CheckGracefulStopFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
+                .LinkOutcome(CheckGracefulStopFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
 
             shutdownStatus.Then(AfterGracefulStopFunc, _transportMapping).PipeTo(sender);
 

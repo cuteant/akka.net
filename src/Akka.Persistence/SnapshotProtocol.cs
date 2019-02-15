@@ -7,7 +7,6 @@
 
 using System;
 using System.Collections.Generic;
-using Akka.Serialization.Formatters;
 using MessagePack;
 
 namespace Akka.Persistence

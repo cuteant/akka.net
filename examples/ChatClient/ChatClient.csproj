@@ -9,7 +9,10 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
+    <PackageReference Include="Akka.Remote.Unofficial" Version="$(AkkaRemoteUnofficialPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\ChatMessages\ChatMessages.csproj" />
   </ItemGroup>
 

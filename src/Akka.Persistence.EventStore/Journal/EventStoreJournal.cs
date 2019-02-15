@@ -1,16 +1,14 @@
-﻿using Akka.Actor;
-using Akka.Persistence.Journal;
-using EventStore.ClientAPI;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading.Tasks;
+using Akka.Actor;
 using Akka.Event;
-using Akka.IO;
-using Akka.Persistence.EventStore.Common;
 using Akka.Persistence.EventStore.Query;
+using Akka.Persistence.Journal;
 using Akka.Util.Internal;
+using EventStore.ClientAPI;
 
 namespace Akka.Persistence.EventStore.Journal
 {

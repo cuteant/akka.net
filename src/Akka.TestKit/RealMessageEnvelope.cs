@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------
 
 using Akka.Actor;
-using Akka.Serialization.Formatters;
 using MessagePack;
 
 namespace Akka.TestKit
