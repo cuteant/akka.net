@@ -80,52 +80,53 @@ namespace Akka.Streams.Implementation
                 isCompleted: () => _markedCanceled == _markedCount,
                 isReady: () => _markedPending > 0);
 
-            bool LocalReceive(object message)
-            {
-                switch (message)
-                {
-                    case FanOut.ExposedPublishers<T> exposed:
-                        var publishers = exposed.Publishers.GetEnumerator();
-                        var outputs = _outputs.AsEnumerable().GetEnumerator();
-
-                        while (publishers.MoveNext() && outputs.MoveNext())
-                        {
-                            outputs.Current.SubReceive.CurrentReceive(new ExposedPublisher(publishers.Current));
-                        }
-                        return true;
-
-                    case FanOut.SubstreamRequestMore more:
-                        if (more.Demand < 1)
-                            // According to Reactive Streams Spec 3.9, with non-positive demand must yield onError
-                            Error(more.Id, ReactiveStreamsCompliance.NumberOfElementsInRequestMustBePositiveException);
-                        else
-                        {
-                            if (_marked[more.Id] && !_pending[more.Id]) { _markedPending += 1; }
-                            _pending[more.Id] = true;
-                            _outputs[more.Id].SubReceive.CurrentReceive(new RequestMore(null, more.Demand));
-                        }
-                        return true;
-
-                    case FanOut.SubstreamCancel cancel:
-                        if (_unmarkCancelled) { UnmarkOutput(cancel.Id); }
-
-                        if (_marked[cancel.Id] && !_cancelled[cancel.Id]) { _markedCanceled += 1; }
-
-                        _cancelled[cancel.Id] = true;
-                        OnCancel(cancel.Id);
-                        _outputs[cancel.Id].SubReceive.CurrentReceive(new Cancel(null));
-                        return true;
-
-                    case FanOut.SubstreamSubscribePending pending:
-                        _outputs[pending.Id].SubReceive.CurrentReceive(SubscribePending.Instance);
-                        return true;
-
-                    default:
-                        return false;
-                }
-            }
             // FIXME: Eliminate re-wraps
-            SubReceive = new SubReceive(new Receive(LocalReceive));
+            SubReceive = new SubReceive(OnReceive);
+        }
+
+        private bool OnReceive(object message)
+        {
+            switch (message)
+            {
+                case FanOut.ExposedPublishers<T> exposed:
+                    var publishers = exposed.Publishers.GetEnumerator();
+                    var outputs = _outputs.AsEnumerable().GetEnumerator();
+
+                    while (publishers.MoveNext() && outputs.MoveNext())
+                    {
+                        outputs.Current.SubReceive.CurrentReceive(new ExposedPublisher(publishers.Current));
+                    }
+                    return true;
+
+                case FanOut.SubstreamRequestMore more:
+                    if (more.Demand < 1)
+                        // According to Reactive Streams Spec 3.9, with non-positive demand must yield onError
+                        Error(more.Id, ReactiveStreamsCompliance.NumberOfElementsInRequestMustBePositiveException);
+                    else
+                    {
+                        if (_marked[more.Id] && !_pending[more.Id]) { _markedPending += 1; }
+                        _pending[more.Id] = true;
+                        _outputs[more.Id].SubReceive.CurrentReceive(new RequestMore(null, more.Demand));
+                    }
+                    return true;
+
+                case FanOut.SubstreamCancel cancel:
+                    if (_unmarkCancelled) { UnmarkOutput(cancel.Id); }
+
+                    if (_marked[cancel.Id] && !_cancelled[cancel.Id]) { _markedCanceled += 1; }
+
+                    _cancelled[cancel.Id] = true;
+                    OnCancel(cancel.Id);
+                    _outputs[cancel.Id].SubReceive.CurrentReceive(new Cancel(null));
+                    return true;
+
+                case FanOut.SubstreamSubscribePending pending:
+                    _outputs[pending.Id].SubReceive.CurrentReceive(SubscribePending.Instance);
+                    return true;
+
+                default:
+                    return false;
+            }
         }
 
         /// <summary>

@@ -11,7 +11,7 @@ namespace Akka
         /// <param name="action">TBD</param>
         /// <returns>TBD</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IRunnable2 Create(Action action)
+        public static IRunnable Create(Action action)
         {
             return new ActionRunnable(action);
         }

@@ -147,7 +147,7 @@ namespace Akka.Persistence
                 }
             }
 
-            return new EventsourcedState("recovery started - replay max: " + maxReplays, s_trueIsRecoveryRunning, new StateReceive(LocalStateReceive));
+            return new EventsourcedState("recovery started - replay max: " + maxReplays, s_trueIsRecoveryRunning, LocalStateReceive);
         }
 
         /// <summary>
@@ -256,7 +256,7 @@ namespace Akka.Persistence
                 }
             }
 
-            return new EventsourcedState("replay started", () => recoveryRunning, new StateReceive(LocalStateReceive));
+            return new EventsourcedState("replay started", () => recoveryRunning, LocalStateReceive);
         }
 
         private void ReturnRecoveryPermit() =>

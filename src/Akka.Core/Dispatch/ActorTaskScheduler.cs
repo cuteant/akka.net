@@ -136,16 +136,15 @@ namespace Akka.Dispatch
         /// <summary>
         /// TBD
         /// </summary>
-        /// <param name="asyncAction">TBD</param>
+        /// <param name="runnable">TBD</param>
         /// <exception cref="InvalidOperationException">
         /// This exception is thrown if this method is called outside an actor context.
         /// </exception>
-        public static void RunTask(IRunnable2 asyncAction)
+        public static void RunTask(IRunnable runnable)
         {
             var context = EnsureContext();
 
-            var task = asyncAction.WrapTask();
-            Task.Factory.StartNew(task.Task, task.State, CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
+            Task.Factory.StartNew(() => runnable.Run(), CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
                         .LinkOutcome(context);
         }
 
@@ -183,16 +182,15 @@ namespace Akka.Dispatch
         /// <summary>
         /// TBD
         /// </summary>
-        /// <param name="asyncAction">TBD</param>
+        /// <param name="task">TBD</param>
         /// <exception cref="InvalidOperationException">
         /// This exception is thrown if this method is called outside an actor context.
         /// </exception>
-        public static void RunTask(IRunnableTask asyncAction)
+        public static void RunTask(IRunnableTask task)
         {
             var context = EnsureContext();
 
-            var task = asyncAction.WrapTask();
-            Task<Task>.Factory.StartNew(task.Task, task.State, CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
+            Task<Task>.Factory.StartNew(() => task.Run(), CancellationToken.None, TaskCreationOptions.None, context.TaskScheduler)
                               .FastUnwrap()
                               .LinkOutcome(context);
         }

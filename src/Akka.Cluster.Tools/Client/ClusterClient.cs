@@ -386,7 +386,7 @@ namespace Akka.Cluster.Tools.Client
                         return ContactPointMessages(message);
                 }
             }
-            return new Receive(LocalReceive);
+            return LocalReceive;
         }
 
         private bool ContactPointMessages(object message)

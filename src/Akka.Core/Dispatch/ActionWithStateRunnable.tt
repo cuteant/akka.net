@@ -23,7 +23,7 @@ namespace Akka/*.Dispatch*/
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action{<#= types #>}"/> representing the state.
     /// </summary>
-    public class ActionWithStateRunnable<<#= types #>> : OverridingArgumentRunnable<TArg1>, IRunnable2
+    public class ActionWithStateRunnable<<#= types #>> : OverridingArgumentRunnable<TArg1>, IRunnable
     {
         private readonly Action<<#= types #>> _actionWithState;
 <# for (var t = 1; t <= i; t++) { #>
@@ -75,17 +75,6 @@ namespace Akka/*.Dispatch*/
 <#
     }
 #>
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper WrapTask() => new RunnableTaskWrapper(InternalWrapTaskAction, this);
-
-        private static readonly Action<object> InternalWrapTaskAction = InternalWrapTask;
-        private static void InternalWrapTask(object state)
-        {
-            var owner = (ActionWithStateRunnable<<#= types #>>)state;
-            owner._actionWithState(<#= args #>);
-        }
     }
 <# } #>
 }

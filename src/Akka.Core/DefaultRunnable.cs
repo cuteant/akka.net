@@ -29,17 +29,6 @@ namespace Akka
         {
             return _func(arg);
         }
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<TArg1, TResult>)state;
-            return owner._func(owner._arg1);
-        }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TResult}"/>.</summary>
     public class DefaultRunnable<TArg1, TArg2, TResult> : OverridingArgumentRunnable<TArg1, TResult>, IRunnable<TResult>
@@ -70,17 +59,6 @@ namespace Akka
         public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2);
-        }
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<TArg1, TArg2, TResult>)state;
-            return owner._func(owner._arg1, owner._arg2);
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TResult}"/>.</summary>
@@ -115,17 +93,6 @@ namespace Akka
         public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3);
-        }
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<TArg1, TArg2, TArg3, TResult>)state;
-            return owner._func(owner._arg1, owner._arg2, owner._arg3);
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TArg4, TResult}"/>.</summary>
@@ -163,17 +130,6 @@ namespace Akka
         public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3, _arg4);
-        }
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TResult>)state;
-            return owner._func(owner._arg1, owner._arg2, owner._arg3, owner._arg4);
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TArg4, TArg5, TResult}"/>.</summary>
@@ -214,17 +170,6 @@ namespace Akka
         public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3, _arg4, _arg5);
-        }
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TResult>)state;
-            return owner._func(owner._arg1, owner._arg2, owner._arg3, owner._arg4, owner._arg5);
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult}"/>.</summary>
@@ -268,17 +213,6 @@ namespace Akka
         public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3, _arg4, _arg5, _arg6);
-        }
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TResult>)state;
-            return owner._func(owner._arg1, owner._arg2, owner._arg3, owner._arg4, owner._arg5, owner._arg6);
         }
     }
     /// <summary><see cref="IRunnable{TResult}"/> which executes an <see cref="Func{TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult}"/>.</summary>
@@ -325,17 +259,6 @@ namespace Akka
         public override TResult Run(TArg1 arg)
         {
             return _func(arg, _arg2, _arg3, _arg4, _arg5, _arg6, _arg7);
-        }
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7, TResult>)state;
-            return owner._func(owner._arg1, owner._arg2, owner._arg3, owner._arg4, owner._arg5, owner._arg6, owner._arg7);
         }
     }
 }

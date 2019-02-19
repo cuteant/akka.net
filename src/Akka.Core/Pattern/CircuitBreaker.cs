@@ -157,14 +157,9 @@ namespace Akka.Pattern
         /// The failure will be recorded farther down.
         /// </summary>
         /// <param name="task">TBD</param>
-        public void WithSyncCircuitBreaker(IRunnable2 task)
+        public void WithSyncCircuitBreaker(IRunnable task)
         {
-            Task LocalWrapTask()
-            {
-                var wrapped = task.WrapTask();
-                return Task.Factory.StartNew(wrapped.Task, wrapped.State);
-            }
-            var cbTask = WithCircuitBreaker(Runnable.CreateTask(new Func<Task>(LocalWrapTask)));
+            var cbTask = WithCircuitBreaker(new CircuitBreakerRunnableTask(task));
             if (!cbTask.Wait(CallTimeout))
             {
                 //throw new TimeoutException( string.Format( "Execution did not complete within the time allotted {0} ms", CallTimeout.TotalMilliseconds ) );
@@ -173,6 +168,15 @@ namespace Akka.Pattern
             {
                 ExceptionDispatchInfo.Capture(cbTask.Exception).Throw();
             }
+        }
+
+        sealed class CircuitBreakerRunnableTask : IRunnableTask
+        {
+            private readonly IRunnable _task;
+
+            public CircuitBreakerRunnableTask(IRunnable task) => _task = task;
+
+            public Task Run() => Task.Factory.StartNew(() => _task.Run());
         }
 
         /// <summary>
@@ -191,13 +195,17 @@ namespace Akka.Pattern
         /// <returns><typeparamref name="TResult"/> or default(<typeparamref name="TResult"/>)</returns>
         public TResult WithSyncCircuitBreaker<TResult>(IRunnable<TResult> task)
         {
-            Task<TResult> LocalWrapTask()
-            {
-                var wrapped = task.WrapTask();
-                return Task.Factory.StartNew(wrapped.Task, wrapped.State);
-            }
-            var cbTask = WithCircuitBreaker(Runnable.CreateTask(new Func<Task<TResult>>(LocalWrapTask)));
+            var cbTask = WithCircuitBreaker(new CircuitBreakerRunnableTask<TResult>(task));
             return cbTask.Wait(CallTimeout) ? cbTask.Result : default;
+        }
+
+        sealed class CircuitBreakerRunnableTask<TResult> : IRunnableTask<TResult>
+        {
+            private readonly IRunnable<TResult> _task;
+
+            public CircuitBreakerRunnableTask(IRunnable<TResult> task) => _task = task;
+
+            public Task<TResult> Run() => Task.Factory.StartNew(() => _task.Run());
         }
 
         /// <summary>

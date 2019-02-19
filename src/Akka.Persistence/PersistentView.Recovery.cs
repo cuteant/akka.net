@@ -85,7 +85,7 @@ namespace Akka.Persistence
                 }
                 else _internalStash.Stash();
             }
-            return new ViewState("recovery started - replayMax: " + replayMax, true, new StateReceive(LocalStateReceive));
+            return new ViewState("recovery started - replayMax: " + replayMax, true, LocalStateReceive);
         }
 
         /// <summary>
@@ -159,7 +159,7 @@ namespace Akka.Persistence
                         break;
                 }
             }
-            return new ViewState("replay started", true, new StateReceive(LocalStateReceive));
+            return new ViewState("replay started", true, LocalStateReceive);
         }
 
         /// <summary>
@@ -199,7 +199,7 @@ namespace Akka.Persistence
                         break;
                 }
             }
-            return new ViewState("replay failed", true, new StateReceive(LocalStateReceive));
+            return new ViewState("replay failed", true, LocalStateReceive);
         }
 
         private void OnReplayFailureCompleted(Exception cause)
@@ -239,7 +239,7 @@ namespace Akka.Persistence
                         break;
                 }
             }
-            return new ViewState("idle", false, new StateReceive(LocalStateReceive));
+            return new ViewState("idle", false, LocalStateReceive);
         }
 
         private void ChangeStateToReplayStarted(bool isAwait, long replayMax)

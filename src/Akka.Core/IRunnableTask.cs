@@ -4,28 +4,11 @@ using System.Threading.Tasks;
 namespace Akka
 {
     /// <summary>An asynchronous operation</summary>
-    public readonly struct RunnableTaskWrapper<TResult>
-    {
-        public readonly Func<object, TResult> Task;
-        public readonly object State;
-
-        public RunnableTaskWrapper(Func<object, TResult> task, object state)
-        {
-            Task = task;
-            State = state;
-        }
-    }
-
-    /// <summary>An asynchronous operation</summary>
     public interface IRunnable<TResult>
     {
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         TResult Run();
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        RunnableTaskWrapper<TResult> WrapTask();
     }
 
     /// <summary>TBD</summary>
@@ -69,17 +52,6 @@ namespace Akka
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         public TResult Run() => _func();
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<TResult>)state;
-            return owner._func();
-        }
     }
 
     /// <summary><see cref="IRunnableTask"/> which executes an <see cref="Func{Task}"/>.</summary>

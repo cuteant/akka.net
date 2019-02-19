@@ -570,44 +570,61 @@ namespace Akka.Persistence
             Dispatch.ActorTaskScheduler.RunTask(TaskRunners<T>.RunTaskFunc, Tuple.Create(this, func, state));
         }
 
+        /// <summary>
+        /// Runs an asynchronous task for incoming messages in context of <see cref="ReceiveCommand(object)"/> .
+        /// <remarks>The actor will be suspended until the task returned by <paramref name="runnable"/> completes, including the <see cref="Eventsourced.Persist{TEvent}(TEvent, Action{TEvent})" />
+        /// and <see cref="Eventsourced.PersistAll{TEvent}(IEnumerable{TEvent}, Action{TEvent})" /> calls.</remarks>
+        /// </summary>
+        /// <param name="runnable">Async task to run</param>
+        protected void RunTask(IRunnableTask runnable)
+        {
+            if (AsyncTaskRunning) ThrowHelper.ThrowNotSupportedException_AsyncTaskRun();
+
+            Dispatch.ActorTaskScheduler.RunTask(TaskRunners<object>.RunRunnableTaskFunc, Tuple.Create(this, runnable));
+        }
+
         sealed class TaskRunners<T>
         {
             public static readonly Func<object, Task> RunTaskAction = RunTask;
             private static Task RunTask(object state)
             {
                 var wrapped = (Tuple<Eventsourced, Func<Task>>)state;
-                var owner = wrapped.Item1;
 
                 Task t = wrapped.Item2();
-                if (!t.IsCompleted)
-                {
-                    owner.AsyncTaskRunning = true;
-                    var tcs = new TaskCompletionSource<object>();
+                if (t.IsCompleted) { return t; }
 
-                    t.ContinueWith(RunTaskContinuationAction, Tuple.Create(owner, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
-
-                    t = tcs.Task;
-                }
-                return t;
+                return LinkOutcome(t, wrapped.Item1);
             }
 
             public static readonly Func<object, Task> RunTaskFunc = RunTaskWithState;
             private static Task RunTaskWithState(object state)
             {
                 var wrapped = (Tuple<Eventsourced, Func<T, Task>, T>)state;
-                var owner = wrapped.Item1;
 
                 Task t = wrapped.Item2(wrapped.Item3);
-                if (!t.IsCompleted)
-                {
-                    owner.AsyncTaskRunning = true;
-                    var tcs = new TaskCompletionSource<object>();
+                if (t.IsCompleted) { return t; }
 
-                    t.ContinueWith(RunTaskContinuationAction, Tuple.Create(owner, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
+                return LinkOutcome(t, wrapped.Item1);
+            }
 
-                    t = tcs.Task;
-                }
-                return t;
+            public static readonly Func<object, Task> RunRunnableTaskFunc = RunRunnableTask;
+            private static Task RunRunnableTask(object state)
+            {
+                var wrapped = (Tuple<Eventsourced, IRunnableTask>)state;
+
+                Task t = wrapped.Item2.Run();
+                if (t.IsCompleted) { return t; }
+
+                return LinkOutcome(t, wrapped.Item1);
+            }
+
+            private static Task LinkOutcome(Task t, Eventsourced owner)
+            {
+                owner.AsyncTaskRunning = true;
+
+                var tcs = new TaskCompletionSource<object>();
+                t.ContinueWith(RunTaskContinuationAction, Tuple.Create(owner, tcs), TaskContinuationOptions.AttachedToParent & TaskContinuationOptions.ExecuteSynchronously);
+                return tcs.Task;
             }
 
             private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;

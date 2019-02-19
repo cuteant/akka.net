@@ -136,7 +136,7 @@ namespace Akka.Actor
             {
                 ActorTaskScheduler.RunTask(asyncHandler, m);
             }
-            return new Action<T>(WrapRunTask);
+            return WrapRunTask;
         }
 
         /// <summary>

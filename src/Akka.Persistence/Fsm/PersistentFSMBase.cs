@@ -652,7 +652,7 @@ namespace Akka.Persistence.Fsm
                 return originalResult;
             }
 
-            return new StateFunction(LocalChained);
+            return LocalChained;
         }
     }
 }

@@ -126,7 +126,7 @@ namespace Akka.Routing
 
         private readonly Receive _receiveFunc;
 
-        public ListenerSupport() => _receiveFunc = new Receive(Receive);
+        public ListenerSupport() => _receiveFunc = InternalReceive;
 
         /// <summary>
         /// Retrieves the wiring needed to implement listening functionality.
@@ -137,7 +137,7 @@ namespace Akka.Routing
         /// </summary>
         public Receive ListenerReceive => _receiveFunc;
 
-        private bool Receive(object message)
+        private bool InternalReceive(object message)
         {
             switch (message)
             {

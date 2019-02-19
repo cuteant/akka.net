@@ -874,7 +874,7 @@ namespace Akka.Actor
             public StateFunction Using(Func<State<TState, TData>, State<TState, TData>> andThen)
             {
                 State<TState, TData> continuedDelegate(Event<TData> @event) => andThen.Invoke(Func.Invoke(@event));
-                return new StateFunction(continuedDelegate);
+                return continuedDelegate;
             }
         }
 
@@ -1137,7 +1137,7 @@ namespace Akka.Actor
                 return originalResult;
             }
 
-            return new StateFunction(LocalChained);
+            return LocalChained;
         }
 
         #endregion

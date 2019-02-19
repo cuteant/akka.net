@@ -155,7 +155,7 @@ namespace Akka.DistributedData
                         return false;
                 }
             }
-            return new Receive(LocalReceive);
+            return LocalReceive;
         }
     }
 

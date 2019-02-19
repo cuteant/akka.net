@@ -130,7 +130,7 @@ namespace Akka.Actor
             {
                 ActorTaskScheduler.RunTask(asyncHandler, m);
             }
-            return new Action<T>(WrapRunTask);
+            return WrapRunTask;
         }
 
         /// <summary>Registers a handler for incoming messages of the specified type <typeparamref name="T"/>.
@@ -230,21 +230,6 @@ namespace Akka.Actor
         protected void ReceiveAnyAsync(Func<object, Task> handler)
         {
             ReceiveAny(WrapAsyncHandler(handler));
-        }
-
-        /// <summary>TBD</summary>
-        /// <param name="action">TBD</param>
-        protected void RunTask(Action action)
-        {
-            ActorTaskScheduler.RunTask(action);
-        }
-
-        /// <summary>TBD</summary>
-        /// <param name="action">TBD</param>
-        /// <param name="state"></param>
-        protected void RunTask(Action<object> action, object state)
-        {
-            ActorTaskScheduler.RunTask(action, state);
         }
 
         /// <summary>TBD</summary>

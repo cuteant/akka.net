@@ -14,9 +14,7 @@ namespace Akka/*.Dispatch*/
     /// </summary>
     public interface IRunnable
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         void Run();
     }
 
@@ -34,59 +32,19 @@ namespace Akka/*.Dispatch*/
         public abstract void Run(T arg);
     }
 
-    /// <summary>TBD</summary>
-    public interface IRunnable2 : IRunnable
-    {
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        RunnableTaskWrapper WrapTask();
-    }
-
-    /// <summary>An asynchronous operation</summary>
-    public readonly struct RunnableTaskWrapper
-    {
-        public readonly Action<object> Task;
-        public readonly object State;
-
-        public RunnableTaskWrapper(Action<object> task, object state)
-        {
-            Task = task;
-            State = state;
-        }
-    }
-
     /// <summary>
     /// <see cref="IRunnable"/> which executes an <see cref="Action"/>
     /// </summary>
-    public sealed class ActionRunnable : IRunnable2
+    public sealed class ActionRunnable : IRunnable
     {
         private readonly Action _action;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="action">TBD</param>
-        public ActionRunnable(Action action)
-        {
-            _action = action;
-        }
+        public ActionRunnable(Action action) => _action = action;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public void Run()
-        {
-            _action();
-        }
-
-        public RunnableTaskWrapper WrapTask() => new RunnableTaskWrapper(InternalWrapTaskAction, this);
-
-        private static readonly Action<object> InternalWrapTaskAction = InternalWrapTask;
-        private static void InternalWrapTask(object state)
-        {
-            var owner = (ActionRunnable)state;
-            owner._action();
-        }
+        /// <summary>TBD</summary>
+        public void Run() => _action();
     }
 
     /// <summary>
@@ -94,9 +52,7 @@ namespace Akka/*.Dispatch*/
     /// </summary>
     public sealed class ActionWithStateRunnable : ActionWithStateRunnable<object>
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <param name="actionWithState">TBD</param>
         /// <param name="state">TBD</param>
         public ActionWithStateRunnable(Action<object> actionWithState, object state)

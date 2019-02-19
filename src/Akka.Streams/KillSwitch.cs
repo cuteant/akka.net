@@ -105,7 +105,7 @@ namespace Akka.Streams
                             ? GetAsyncCallback(OnCancelComplete)
                             : GetAsyncCallback(OnCancelFail);
 
-                        _registration = _stage._cancellationToken.Register(new Action(onCancel.Run));
+                        _registration = _stage._cancellationToken.Register(() => onCancel.Run());
                     }
                 }
 

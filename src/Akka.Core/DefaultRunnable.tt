@@ -70,17 +70,6 @@ namespace Akka
 <#
     }
 #>
-
-        /// <summary>TBD</summary>
-        /// <returns>TBD</returns>
-        public RunnableTaskWrapper<TResult> WrapTask() => new RunnableTaskWrapper<TResult>(InternalWrapTaskFunc, this);
-
-        private static readonly Func<object, TResult> InternalWrapTaskFunc = InternalWrapTask;
-        private static TResult InternalWrapTask(object state)
-        {
-            var owner = (DefaultRunnable<<#= types #>, TResult>)state;
-            return owner._func(<#= args #>);
-        }
     }
 <# } #>
 }

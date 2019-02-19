@@ -9,7 +9,7 @@ namespace Akka
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IRunnable2 Create<TArg1>(Action<TArg1> action, TArg1 arg1)
+        public static IRunnable Create<TArg1>(Action<TArg1> action, TArg1 arg1)
         {
             return new ActionWithStateRunnable<TArg1>(action, arg1);
         }
@@ -41,7 +41,7 @@ namespace Akka
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IRunnable2 Create<TArg1, TArg2>(Action<TArg1, TArg2> action, TArg1 arg1, TArg2 arg2)
+        public static IRunnable Create<TArg1, TArg2>(Action<TArg1, TArg2> action, TArg1 arg1, TArg2 arg2)
         {
             return new ActionWithStateRunnable<TArg1, TArg2>(action, arg1, arg2);
         }
@@ -73,7 +73,7 @@ namespace Akka
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IRunnable2 Create<TArg1, TArg2, TArg3>(Action<TArg1, TArg2, TArg3> action, TArg1 arg1, TArg2 arg2, TArg3 arg3)
+        public static IRunnable Create<TArg1, TArg2, TArg3>(Action<TArg1, TArg2, TArg3> action, TArg1 arg1, TArg2 arg2, TArg3 arg3)
         {
             return new ActionWithStateRunnable<TArg1, TArg2, TArg3>(action, arg1, arg2, arg3);
         }
@@ -105,7 +105,7 @@ namespace Akka
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IRunnable2 Create<TArg1, TArg2, TArg3, TArg4>(Action<TArg1, TArg2, TArg3, TArg4> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4)
+        public static IRunnable Create<TArg1, TArg2, TArg3, TArg4>(Action<TArg1, TArg2, TArg3, TArg4> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4)
         {
             return new ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4>(action, arg1, arg2, arg3, arg4);
         }
@@ -137,7 +137,7 @@ namespace Akka
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IRunnable2 Create<TArg1, TArg2, TArg3, TArg4, TArg5>(Action<TArg1, TArg2, TArg3, TArg4, TArg5> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5)
+        public static IRunnable Create<TArg1, TArg2, TArg3, TArg4, TArg5>(Action<TArg1, TArg2, TArg3, TArg4, TArg5> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5)
         {
             return new ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5>(action, arg1, arg2, arg3, arg4, arg5);
         }
@@ -169,7 +169,7 @@ namespace Akka
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IRunnable2 Create<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(Action<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6)
+        public static IRunnable Create<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(Action<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6)
         {
             return new ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6>(action, arg1, arg2, arg3, arg4, arg5, arg6);
         }
@@ -201,7 +201,7 @@ namespace Akka
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static IRunnable2 Create<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>(Action<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7)
+        public static IRunnable Create<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>(Action<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7> action, TArg1 arg1, TArg2 arg2, TArg3 arg3, TArg4 arg4, TArg5 arg5, TArg6 arg6, TArg7 arg7)
         {
             return new ActionWithStateRunnable<TArg1, TArg2, TArg3, TArg4, TArg5, TArg6, TArg7>(action, arg1, arg2, arg3, arg4, arg5, arg6, arg7);
         }

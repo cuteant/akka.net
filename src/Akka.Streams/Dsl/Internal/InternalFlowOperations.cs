@@ -1251,14 +1251,16 @@ namespace Akka.Streams.Dsl.Internal
         {
             var merge = new GroupByMergeBack<T, TMat, TKey>(flow, maxSubstreams, groupingFunc);
 
-            TClosed finish(Sink<T, TMat> s)
+#pragma warning disable IDE0039 // 使用本地函数
+            Func<Sink<T, TMat>, TClosed> finish = s =>
+#pragma warning restore IDE0039 // 使用本地函数
             {
                 return toFunc(
                     flow.Via(new Fusing.GroupBy<T, TKey>(maxSubstreams, groupingFunc)),
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
-            }
+            };
 
-            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, new Func<Sink<T, TMat>, TClosed>(finish));
+            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
         }
 
         /// <summary>
@@ -1370,13 +1372,15 @@ namespace Akka.Streams.Dsl.Internal
         {
             var merge = new SplitWhenMergeBack<T, TMat>(flow, predicate, substreamCancelStrategy);
 
-            TClosed finish(Sink<T, TMat> s)
+#pragma warning disable IDE0039 // 使用本地函数
+            Func<Sink<T, TMat>, TClosed> finish = s =>
+#pragma warning restore IDE0039 // 使用本地函数
             {
                 return toFunc(flow.Via(Fusing.Split.When(predicate, substreamCancelStrategy)),
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
-            }
+            };
 
-            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, new Func<Sink<T, TMat>, TClosed>(finish));
+            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
         }
 
         /// <summary>
@@ -1475,13 +1479,15 @@ namespace Akka.Streams.Dsl.Internal
         {
             var merge = new SplitAfterMergeBack<T, TMat>(flow, predicate, substreamCancelStrategy);
 
-            TClosed finish(Sink<T, TMat> s)
+#pragma warning disable IDE0039 // 使用本地函数
+            Func<Sink<T, TMat>, TClosed> finish = s =>
+#pragma warning restore IDE0039 // 使用本地函数
             {
                 return toFunc(flow.Via(Fusing.Split.After(predicate, substreamCancelStrategy)),
                     Sink.ForEach<Source<T, NotUsed>>(e => e.RunWith(s, Fusing.GraphInterpreter.Current.Materializer)));
-            }
+            };
 
-            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, new Func<Sink<T, TMat>, TClosed>(finish));
+            return new SubFlowImpl<T, T, TMat, TClosed>(Flow.Create<T, TMat>(), merge, finish);
         }
 
         /// <summary>

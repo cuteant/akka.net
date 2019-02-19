@@ -450,15 +450,15 @@ namespace Akka.DistributedData
             Receive<GetReplicaCount>(HandleGetReplicaCount0);
 
             // ignore scheduled ticks when loading durable data
-            Receive(new Action<RemovedNodePruningTick>(Ignore));
-            Receive(new Action<FlushChanges>(Ignore));
-            Receive(new Action<GossipTick>(Ignore));
+            Receive<RemovedNodePruningTick>(Ignore);
+            Receive<FlushChanges>(Ignore);
+            Receive<GossipTick>(Ignore);
 
             // ignore gossip and replication when loading durable data
-            Receive(new Action<Read>(IgnoreDebug));
-            Receive(new Action<Write>(IgnoreDebug));
-            Receive(new Action<Status>(IgnoreDebug));
-            Receive(new Action<Gossip>(IgnoreDebug));
+            Receive<Read>(IgnoreDebug);
+            Receive<Write>(IgnoreDebug);
+            Receive<Status>(IgnoreDebug);
+            Receive<Gossip>(IgnoreDebug);
         }
 
         private void HandleLoadData(LoadData load)
