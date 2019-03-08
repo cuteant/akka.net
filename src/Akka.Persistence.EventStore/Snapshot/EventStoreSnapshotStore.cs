@@ -63,7 +63,7 @@ namespace Akka.Persistence.EventStore.Snapshot
             var context = new Dictionary<string, object>(5)
             {
                 [MetadataConstants.PersistenceId] = metadata.PersistenceId,
-                //[MetadataConstants.OccurredOn] = DateTime.UtcNow,
+                //[MetadataConstants.OccurredOn] = DateTime.UtcNow, // EventStore已有[Created Date]
                 [MetadataConstants.SequenceNr] = metadata.SequenceNr,
                 [MetadataConstants.Timestamp] = metadata.Timestamp,
                 [MetadataConstants.JournalType] = JournalTypes.SnapshotJournal

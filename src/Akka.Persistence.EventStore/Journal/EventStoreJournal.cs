@@ -173,7 +173,7 @@ namespace Akka.Persistence.EventStore.Journal
                 var metadata = new Dictionary<string, object>(7)
                 {
                     [MetadataConstants.PersistenceId] = persistentMessage.PersistenceId,
-                    [MetadataConstants.OccurredOn] = DateTime.UtcNow,
+                    //[MetadataConstants.OccurredOn] = DateTime.UtcNow, // EventStore已有[Created Date]
                     [MetadataConstants.Manifest] = persistentMessage.Manifest,
                     [MetadataConstants.SenderPath] = persistentMessage.Sender?.Path?.ToStringWithoutAddress() ?? string.Empty,
                     [MetadataConstants.SequenceNr] = persistentMessage.SequenceNr,
