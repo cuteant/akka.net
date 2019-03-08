@@ -48,8 +48,8 @@ namespace Akka.Serialization
             var ctor = ctors.FirstOrDefault(c =>
             {
                 var parameters = c.GetParameters();
-                return parameters.Length == 1 && (parameters[0].ParameterType == typeof(ActorSystem)
-                    || parameters[0].ParameterType == typeof(ExtendedActorSystem));
+                return 1 == parameters.Length &&
+                    (parameters[0].ParameterType == typeof(ActorSystem) || parameters[0].ParameterType == typeof(ExtendedActorSystem));
             });
 
             return ctor == null

@@ -8,18 +8,15 @@
 using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
-using CuteAnt.Buffers;
 using CuteAnt.Collections;
 using CuteAnt.Extensions.Serialization;
 using CuteAnt.Reflection;
-using CuteAnt.Text;
+using JsonExtensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
@@ -130,19 +127,16 @@ namespace Akka.Serialization
         private readonly JsonMessageFormatter _jsonFormatter;
         private readonly int _initialBufferSize;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         public JsonSerializerSettings Settings { get; }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        public object Serializer { get { return _serializer; } }
+        /// <summary>TBD</summary>
+        public object Serializer => _serializer;
 
-        /// <summary>
-        /// Initializes a new instance of the <see cref="NewtonSoftJsonSerializer" /> class.
-        /// </summary>
+        /// <inheritdoc />
+        public override bool IsJson => true;
+
+        /// <summary>Initializes a new instance of the <see cref="NewtonSoftJsonSerializer" /> class.</summary>
         /// <param name="system">The actor system to associate with this serializer. </param>
         public NewtonSoftJsonSerializer(ExtendedActorSystem system)
             : this(system, NewtonSoftJsonSerializerSettings.Default)
@@ -164,44 +158,52 @@ namespace Akka.Serialization
 
             converters.Add(new SurrogateConverter(this));
             converters.Add(new DiscriminatedUnionConverter());
+            converters.Add(JsonConvertX.DefaultCombGuidConverter);
 
-            #region ## 苦竹 修改 ##
             _initialBufferSize = settings.InitialBufferSize;
-            //Settings = new JsonSerializerSettings
-            //{
-            //    PreserveReferencesHandling = settings.PreserveObjectReferences
-            //        ? PreserveReferencesHandling.Objects
-            //        : PreserveReferencesHandling.None,
-            //    Converters = converters,
-            //    NullValueHandling = NullValueHandling.Ignore,
-            //    DefaultValueHandling = DefaultValueHandling.Ignore,
-            //    MissingMemberHandling = MissingMemberHandling.Ignore,
-            //    ObjectCreationHandling = ObjectCreationHandling.Replace, //important: if reuse, the serializer will overwrite properties in default references, e.g. Props.DefaultDeploy or Props.noArgs
-            //    ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-            //    TypeNameHandling = settings.EncodeTypeNames
-            //        ? TypeNameHandling.All
-            //        : TypeNameHandling.None,
-            //    ContractResolver = new AkkaContractResolver()
-            //};
-            var jsonSettings = JsonConvertX.CreateDefaultSerializerSettings();
-            jsonSettings.PreserveReferencesHandling = settings.PreserveObjectReferences
+            var toSettings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+
+                FloatParseHandling = FloatParseHandling.Double,
+                DateFormatHandling = DateFormatHandling.IsoDateFormat,
+
+                ObjectCreationHandling = ObjectCreationHandling.Replace, //important: if reuse, the serializer will overwrite properties in default references, e.g. Props.DefaultDeploy or Props.noArgs
+                PreserveReferencesHandling = settings.PreserveObjectReferences
                     ? PreserveReferencesHandling.Objects
-                    : PreserveReferencesHandling.None;
-            jsonSettings.TypeNameHandling = settings.EncodeTypeNames
+                    : PreserveReferencesHandling.None,
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                TypeNameHandling = settings.EncodeTypeNames
                     ? TypeNameHandling.All
-                    : TypeNameHandling.None;
-            jsonSettings.ContractResolver = new AkkaContractResolver();
-            jsonSettings.Converters = jsonSettings.Converters.Concat(converters).ToList();
-            jsonSettings.FloatParseHandling = FloatParseHandling.Double;
-            Settings = jsonSettings;
+                    : TypeNameHandling.None,
+                TypeNameAssemblyFormatHandling = TypeNameAssemblyFormatHandling.Simple,
+                ContractResolver = new AkkaContractResolver(),
+                Converters = converters,
+                SerializationBinder = JsonSerializationBinder.Instance,
+            };
+            Settings = toSettings;
+            var fromSettings = new JsonSerializerSettings
+            {
+                NullValueHandling = NullValueHandling.Ignore,
+                DefaultValueHandling = DefaultValueHandling.Ignore,
+                MissingMemberHandling = MissingMemberHandling.Ignore,
+
+                DateParseHandling = DateParseHandling.None,
+
+                ObjectCreationHandling = ObjectCreationHandling.Replace, //important: if reuse, the serializer will overwrite properties in default references, e.g. Props.DefaultDeploy or Props.noArgs
+                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
+                ContractResolver = new AkkaContractResolver(),
+                Converters = converters,
+                SerializationBinder = JsonSerializationBinder.Instance,
+            };
 
             _jsonFormatter = new JsonMessageFormatter()
             {
-                DefaultSerializerSettings = jsonSettings,
-                DefaultDeserializerSettings = jsonSettings
+                DefaultSerializerSettings = toSettings,
+                DefaultDeserializerSettings = fromSettings
             };
-
-            #endregion
 
             _serializer = JsonSerializer.Create(Settings);
         }
@@ -212,7 +214,7 @@ namespace Akka.Serialization
                 .FirstOrDefault(c =>
                 {
                     var parameters = c.GetParameters();
-                    return parameters.Length == 1 && parameters[0].ParameterType == typeof(ExtendedActorSystem);
+                    return 1 == parameters.Length && parameters[0].ParameterType == typeof(ExtendedActorSystem);
                 });
 
             return ctor == null
@@ -252,19 +254,6 @@ namespace Akka.Serialization
         /// <param name="obj">The object to serialize </param>
         /// <returns>A byte array containing the serialized object</returns>
         public override byte[] ToBinary(object obj) => _jsonFormatter.SerializeObject(obj, _initialBufferSize);
-
-        private static JsonWriter CreateJsonWriter(Stream writeStream, Encoding effectiveEncoding, IArrayPool<char> charPool, Formatting? jsonFormatting)
-        {
-            if (null == effectiveEncoding) { effectiveEncoding = StringHelper.SecureUTF8NoBOM; }
-
-            var jsonWriter = new JsonTextWriter(new StreamWriter(writeStream, effectiveEncoding)) { ArrayPool = charPool };
-            if (Formatting.Indented == jsonFormatting.GetValueOrDefault())
-            {
-                jsonWriter.Formatting = Formatting.Indented;
-            }
-
-            return jsonWriter;
-        }
 
         /// <summary>
         /// Deserializes a byte array into an object of type <paramref name="type"/>.

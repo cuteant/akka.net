@@ -92,10 +92,10 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
 </head>
 <body>
 <details>
-	<summary>Help / Instructions</summary>
-	<p>Click on a timeline to activate. Click off the timeline or press ESC to deactivate</p>
-	<p>Scroll up to zoom into an active timeline. Scroll down to zoom out of an active timeline</p>
-	<p>Click and hold to move an active timeline.</p>
+    <summary>Help / Instructions</summary>
+    <p>Click on a timeline to activate. Click off the timeline or press ESC to deactivate</p>
+    <p>Scroll up to zoom into an active timeline. Scroll down to zoom out of an active timeline</p>
+    <p>Click and hold to move an active timeline.</p>
 </details>
 ");
             
@@ -261,7 +261,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
             }
             // If we're starting off, or if the previous text ended with a newline,
             // we have to append the current indent first.
-            if (((this.GenerationEnvironment.Length == 0) 
+            if (((0u >= (uint)this.GenerationEnvironment.Length) 
                         || this.endsWithNewline))
             {
                 this.GenerationEnvironment.Append(this.currentIndentField);
@@ -274,7 +274,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
             }
             // This is an optimization. If the current indent is "", then we don't have to do any
             // of the more complex stuff further down.
-            if ((this.currentIndentField.Length == 0))
+            if ((0u >= (uint)this.currentIndentField.Length))
             {
                 this.GenerationEnvironment.Append(textToAppend);
                 return;

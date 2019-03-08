@@ -107,7 +107,7 @@ namespace Akka.Routing
             completion.Task
                 .LinkOutcome(InvokeCancelAction, cancelable);
 
-            if (_routees.Length == 0)
+            if (0u >= (uint)_routees.Length)
             {
                 completion.TrySetResult(NoRoutee);
             }
@@ -146,7 +146,7 @@ namespace Akka.Routing
             {
                 var currentIndex = _routeeIndex.GetAndIncrement();
                 var routees = _owner._routees;
-                if (currentIndex >= routees.Length) { return; }
+                if ((uint)currentIndex >= (uint)routees.Length) { return; }
 
                 var within = _owner._within;
                 try

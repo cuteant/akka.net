@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Streams.EventStore</RootNamespace>
+    <AssemblyName>Akka.Streams.EventStore</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Streams.EventStore</PackageId>
+    <Title>Akka.Streams.EventStore</Title>
+    <Description>EventStore adapter for Akka.NET Streams</Description>
+    <PackageTags>akka;actors;streams;EventStore</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="EasyEventStore.AutoSubscribing" Version="$(EasyEventStoreAutoSubscribingPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Extension.EventStore\Akka.Extension.EventStore.csproj" />
+    <ProjectReference Include="..\Akka.Streams\Akka.Streams.csproj" />
+  </ItemGroup>
+
+</Project>

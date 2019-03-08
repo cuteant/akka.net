@@ -1,0 +1,33 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Serialization</RootNamespace>
+    <AssemblyName>Akka.Serialization.ProtobufNet</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Serialization.ProtobufNet</PackageId>
+    <Title>Akka.Serialization.ProtobufNet</Title>
+    <Description>ProtobufNet serializer for Akka.NET</Description>
+    <PackageTags>akka;actors;actor model;Akka;concurrency;protobuf-net;serializer;serialization</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="CuteAnt.Runtime" Version="$(CuteAntRuntimePackageVersion)" />
+    <PackageReference Include="MessagePack.Unofficial" Version="$(MessagePackUnofficialPackageVersion)" />
+    <PackageReference Include="protobuf-net" Version="$(ProtobufNetPackageVersion)" />
+    <PackageReference Include="protobuf-net-data" Version="$(ProtobufNetDataPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Core\Akka.Core.csproj" />
+  </ItemGroup>
+
+</Project>

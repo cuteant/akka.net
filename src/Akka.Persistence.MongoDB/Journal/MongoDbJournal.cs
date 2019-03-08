@@ -75,7 +75,8 @@ namespace Akka.Persistence.MongoDb.Journal
             });
         }
 
-        public override async Task ReplayMessagesAsync(IActorContext context, string persistenceId, long fromSequenceNr, long toSequenceNr, long max, Action<IPersistentRepresentation> recoveryCallback)
+        public override async Task ReplayMessagesAsync(IActorContext context, string persistenceId,
+            long fromSequenceNr, long toSequenceNr, long max, Action<IPersistentRepresentation> recoveryCallback)
         {
             // Limit allows only integer
             var limitValue = max >= int.MaxValue ? int.MaxValue : (int)max;

@@ -123,7 +123,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static int ThrowArgumentException_MemberCompare(object obj)
+        internal static void ThrowArgumentException_MemberCompare(object obj)
         {
             throw GetException();
             ArgumentException GetException()
@@ -133,7 +133,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static int ThrowArgumentException_UniqueAddressCompare(object obj)
+        internal static void ThrowArgumentException_UniqueAddressCompare(object obj)
         {
             throw GetException();
             ArgumentException GetException()
@@ -143,7 +143,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static int ThrowArgumentException_UnknownInClusterMessage<T>(T value, string unknown)
+        internal static void ThrowArgumentException_UnknownInClusterMessage<T>(T value, string unknown)
         {
             throw GetException();
             ArgumentException GetException()
@@ -153,7 +153,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static Type ThrowArgumentException_ExpectedUpOrRemovedInOnMemberStatusChangedListener(MemberStatus status)
+        internal static void ThrowArgumentException_ExpectedUpOrRemovedInOnMemberStatusChangedListener(MemberStatus status)
         {
             throw GetException();
             ArgumentException GetException()
@@ -163,7 +163,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowArgumentException_Serializer_ClusterMessage<T>(object obj)
+        internal static void ThrowArgumentException_Serializer_ClusterMessage(object obj)
         {
             throw GetException();
             ArgumentException GetException()
@@ -173,7 +173,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_ClusterMessage(int manifest)
+        internal static void ThrowArgumentException_Serializer_ClusterMessage(int manifest)
         {
             throw GetException();
             ArgumentException GetException()
@@ -183,7 +183,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowArgumentException_Serializer_D<T>(object obj)
+        internal static void ThrowArgumentException_Serializer_D(object obj)
         {
             throw GetException();
             ArgumentException GetException()
@@ -215,7 +215,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static Deploy ThrowArgumentException_ClusterAwareRouterCanOnlyWrapPoolOrGroup(Deploy deploy)
+        internal static void ThrowArgumentException_ClusterAwareRouterCanOnlyWrapPoolOrGroup(Deploy deploy)
         {
             throw GetException();
             ArgumentException GetException()
@@ -245,7 +245,7 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ISplitBrainStrategy ThrowArgumentException_ResolveSplitBrainStrategy(string activeStrategy)
+        internal static void ThrowArgumentException_ResolveSplitBrainStrategy(string activeStrategy)
         {
             throw GetException();
             ArgumentException GetException()

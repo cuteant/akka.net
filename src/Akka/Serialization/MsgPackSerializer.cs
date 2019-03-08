@@ -30,6 +30,9 @@ namespace Akka.Serialization
         }
 
         /// <inheritdoc />
+        public override int Identifier => 101;
+
+        /// <inheritdoc />
         public sealed override object DeepCopy(object source)
         {
             if (source == null) { return null; }
@@ -39,14 +42,12 @@ namespace Akka.Serialization
             return MessagePackSerializer.NonGeneric.Deserialize(type, serializedObject, _resolver);
         }
 
-        public override byte[] ToBinary(object obj)
+        public sealed override byte[] ToBinary(object obj)
         {
-            if (null == obj) { return EmptyArray<byte>.Instance; }
+            //if (null == obj) { return EmptyArray<byte>.Instance; } // 空对象交由 NullSerializer 处理
             return MessagePackSerializer.Serialize(obj, _resolver);
         }
 
-        public override object FromBinary(byte[] bytes, Type type) => MessagePackSerializer.NonGeneric.Deserialize(type, bytes, _resolver);
-
-        public override int Identifier => 101;
+        public sealed override object FromBinary(byte[] bytes, Type type) => MessagePackSerializer.NonGeneric.Deserialize(type, bytes, _resolver);
     }
 }

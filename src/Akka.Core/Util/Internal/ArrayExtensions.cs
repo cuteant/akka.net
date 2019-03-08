@@ -8,22 +8,24 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 
 namespace Akka.Util.Internal
 {
     /// <summary>
     /// Provides extension utilities to arrays.
     /// </summary>
-    internal static class ArrayExtensions
+    public static class ArrayExtensions
     {
         /// <summary>
         /// Determines if an array is null or empty.
         /// </summary>
         /// <param name="obj">The array to check.</param>
         /// <returns>True if null or empty, false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNullOrEmpty(this Array obj)
         {
-            return ((obj == null) || (obj.Length == 0));
+            return (obj == null || 0u >= (uint)obj.Length) ? true : false;
         }
 
         /// <summary>
@@ -31,9 +33,10 @@ namespace Akka.Util.Internal
         /// </summary>
         /// <param name="obj">The array to check.</param>
         /// <returns>True if not null or empty, false otherwise.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool NonEmpty(this Array obj)
         {
-            return obj != null && obj.Length > 0;
+            return (obj != null && 0u < (uint)obj.Length) ? true : false;
         }
 
         /// <summary>

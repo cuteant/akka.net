@@ -234,7 +234,7 @@ namespace Akka.Actor
 
         /// <summary>TBD</summary>
         /// <param name="action">TBD</param>
-        protected void RunTask(Func<Task> action)
+        protected virtual void RunTask(Func<Task> action)
         {
             ActorTaskScheduler.RunTask(action);
         }
@@ -242,9 +242,16 @@ namespace Akka.Actor
         /// <summary>TBD</summary>
         /// <param name="action">TBD</param>
         /// <param name="state"></param>
-        protected void RunTask(Func<object, Task> action, object state)
+        protected virtual void RunTask(Func<object, Task> action, object state)
         {
             ActorTaskScheduler.RunTask(action, state);
+        }
+
+        /// <summary>TBD</summary>
+        /// <param name="runnable"></param>
+        protected virtual void RunTask(IRunnableTask runnable)
+        {
+            ActorTaskScheduler.RunTask(runnable);
         }
     }
 }

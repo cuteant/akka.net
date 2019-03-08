@@ -1,0 +1,29 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Streams.Amqp</RootNamespace>
+    <AssemblyName>Akka.Streams.Amqp</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Streams.Amqp</PackageId>
+    <Title>Akka.Streams.Amqp</Title>
+    <Description>AMQP adapter for Akka.NET Streams</Description>
+    <PackageTags>akka;actors;streams;AMQP;RabbitMQ</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="RabbitMQ.Client" Version="$(RabbitMQClientPackageVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Streams\Akka.Streams.csproj" />
+  </ItemGroup>
+
+</Project>

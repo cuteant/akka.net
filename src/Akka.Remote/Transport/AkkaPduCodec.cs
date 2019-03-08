@@ -11,7 +11,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Remote.Serialization;
-using Akka.Remote.Serialization.Protocol;
+using Akka.Serialization.Protocol;
 using SerializedMessage = Akka.Serialization.Protocol.Payload;
 
 namespace Akka.Remote.Transport
@@ -286,7 +286,7 @@ namespace Akka.Remote.Transport
 
             if (pdu.Payload != null) { return new Payload(pdu.Payload); }
 
-            return ThrowHelper.ThrowPduCodecException_Decode();
+            ThrowHelper.ThrowPduCodecException_Decode(); return null;
             //}
             //catch (FormatterNotRegisteredException ex) // InvalidProtocolBufferException
             //{
@@ -460,7 +460,7 @@ namespace Akka.Remote.Transport
                     return new Heartbeat();
             }
 
-            return ThrowHelper.ThrowPduCodecException_Decode(controlPdu);
+            ThrowHelper.ThrowPduCodecException_Decode(controlPdu); return null;
         }
 
         private static readonly AkkaProtocolMessage DISASSOCIATE = ConstructControlMessagePdu(CommandType.Disassociate);

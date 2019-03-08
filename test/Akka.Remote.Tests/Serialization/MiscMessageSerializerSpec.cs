@@ -343,7 +343,15 @@ namespace Akka.Remote.Tests.Serialization
         [Fact]
         public void Serializer_must_reject_invalid_manifest()
         {
-            var serializer = new MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
+            var serializer = new Akka.Serialization.MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
+            Action comparison = () => serializer.Manifest("INVALID");
+            comparison.Should().Throw<ArgumentException>();
+        }
+
+        [Fact]
+        public void Serializer_must_reject_invalid_manifest1()
+        {
+            var serializer = new Akka.Remote.Serialization.MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
             Action comparison = () => serializer.Manifest("INVALID");
             comparison.Should().Throw<ArgumentException>();
         }
@@ -351,7 +359,15 @@ namespace Akka.Remote.Tests.Serialization
         [Fact]
         public void Serializer_must_reject_deserialization_with_invalid_manifest()
         {
-            var serializer = new MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
+            var serializer = new Akka.Serialization.MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
+            var INVALID = 0; Action comparison = () => serializer.FromBinary(new byte[0], INVALID);
+            comparison.Should().Throw<SerializationException>();
+        }
+
+        [Fact]
+        public void Serializer_must_reject_deserialization_with_invalid_manifest1()
+        {
+            var serializer = new Akka.Remote.Serialization.MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
             var INVALID = 0; Action comparison = () => serializer.FromBinary(new byte[0], INVALID);
             comparison.Should().Throw<SerializationException>();
         }
@@ -362,7 +378,7 @@ namespace Akka.Remote.Tests.Serialization
             // ## 苦竹 修改 ##
             //serializer.Should().BeOfType<MiscMessageSerializer>();
             var type = serializer.GetType();
-            Assert.True(type == typeof(MiscMessageSerializer) || type == typeof(MsgPackTypelessSerializer) || type == typeof(MsgPackSerializer));
+            Assert.True(type == typeof(Akka.Serialization.MiscMessageSerializer) || type == typeof(Akka.Remote.Serialization.MiscMessageSerializer) || type == typeof(MsgPackTypelessSerializer) || type == typeof(MsgPackSerializer));
             var serializedBytes = serializer.ToBinary(message);
 
             if (serializer is SerializerWithIntegerManifest)

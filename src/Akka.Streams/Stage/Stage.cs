@@ -432,7 +432,7 @@ namespace Akka.Streams.Stage
                     return context.PushAndFinish(element);
                 }
 
-                return ThrowHelper.ThrowIllegalStateException<ISyncDirective>(ExceptionResource.IllegalState_OnPull_empty_enumerator);
+                ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnPull_empty_enumerator); return null;
             });
         }
     }
@@ -483,7 +483,7 @@ namespace Akka.Streams.Stage
         /// <returns>TBD</returns>
         public override ISyncDirective OnPush(TIn element, IContext<TOut> context)
         {
-            return ThrowHelper.ThrowIllegalStateException<ISyncDirective>(ExceptionResource.IllegalState_OnPush_not_allowed);
+            ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_OnPush_not_allowed); return null;
         }
 
         /// <summary>

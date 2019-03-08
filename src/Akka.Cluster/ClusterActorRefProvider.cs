@@ -194,7 +194,7 @@ namespace Akka.Cluster
                     }
                     else
                     {
-                        return ThrowHelper.ThrowArgumentException_ClusterAwareRouterCanOnlyWrapPoolOrGroup(deploy);
+                        ThrowHelper.ThrowArgumentException_ClusterAwareRouterCanOnlyWrapPoolOrGroup(deploy); return null;
                     }
                 }
                 else

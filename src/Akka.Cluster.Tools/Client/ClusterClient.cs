@@ -417,9 +417,9 @@ namespace Akka.Cluster.Tools.Client
         private void SendGetContacts()
         {
             ActorSelection[] sendTo;
-            if (_contacts.Length == 0)
+            if (0u >= (uint)_contacts.Length)
                 sendTo = _initialContactsSelections;
-            else if (_contacts.Length == 1)
+            else if (1u >= (uint)_contacts.Length)
                 sendTo = _initialContactsSelections.Union(_contacts).ToArray();
             else
                 sendTo = _contacts;

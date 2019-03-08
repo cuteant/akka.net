@@ -6,10 +6,11 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Configuration;
-using Akka.Util;
 using CuteAnt.Buffers;
 using CuteAnt.Reflection;
 using Google.Protobuf;
@@ -20,6 +21,8 @@ namespace Akka.Serialization
     public sealed class ProtobufSerializer : SerializerWithTypeManifest
     {
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, MessageParser> TypeLookup = new ConcurrentDictionary<RuntimeTypeHandle, MessageParser>();
+
+        private static readonly ArrayPool<byte> s_sharedBuffer = BufferManager.Shared;
 
         private readonly int _initialBufferSize;
 
@@ -32,6 +35,9 @@ namespace Akka.Serialization
         public ProtobufSerializer(ExtendedActorSystem system, ProtobufSerializerSettings settings) : base(system) => _initialBufferSize = settings.InitialBufferSize;
 
         /// <inheritdoc />
+        public sealed override int Identifier => 109;
+
+        /// <inheritdoc />
         public override object DeepCopy(object source)
         {
             if (null == source) { return null; }
@@ -42,19 +48,13 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override byte[] ToBinary(object obj)
         {
-            if (obj is IMessage message)
+            using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
-                using (var pooledStream = BufferManagerOutputStreamManager.Create())
-                {
-                    var outputStream = pooledStream.Object;
-                    outputStream.Reinitialize(_initialBufferSize, BufferManager.Shared);
-                    message.WriteTo(outputStream);
-                    return outputStream.ToByteArray();
-                }
-                //return message.ToByteArray();
+                var outputStream = pooledStream.Object;
+                outputStream.Reinitialize(_initialBufferSize, s_sharedBuffer);
+                ((IMessage)obj).WriteTo(outputStream);
+                return outputStream.ToByteArray();
             }
-
-            throw new ArgumentException($"Can't serialize a non-protobuf message using protobuf [{obj.GetType().TypeQualifiedName()}]");
         }
 
         /// <inheritdoc />
@@ -64,14 +64,18 @@ namespace Akka.Serialization
             {
                 return parser.ParseFrom(bytes);
             }
+
+            return InternalParseFrom(bytes, type);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static object InternalParseFrom(byte[] bytes, Type type)
+        {
             // MethodParser is not in the cache, look it up with reflection
-            if (ActivatorUtils.FastCreateInstance(type) is IMessage msg)
-            {
-                parser = msg.Descriptor.Parser;
-                TypeLookup.TryAdd(type.TypeHandle, parser);
-                return parser.ParseFrom(bytes);
-            }
-            throw new ArgumentException($"Can't deserialize a non-protobuf message using protobuf [{type.TypeQualifiedName()}]");
+            var msg = ActivatorUtils.FastCreateInstance<IMessage>(type);
+            var parser = msg.Descriptor.Parser;
+            TypeLookup.TryAdd(type.TypeHandle, parser);
+            return parser.ParseFrom(bytes);
         }
     }
 }

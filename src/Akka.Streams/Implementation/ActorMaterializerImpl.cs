@@ -90,7 +90,7 @@ namespace Akka.Streams.Implementation
                     return f.Result;
             }
 
-            return ThrowHelper.ThrowIllegalStateException_ActorOf(Supervisor);
+            ThrowHelper.ThrowIllegalStateException_ActorOf(Supervisor); return null;
         }
     }
 

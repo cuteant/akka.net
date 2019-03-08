@@ -175,7 +175,7 @@ namespace Akka.Remote
 
         internal static string FormatActorPath(ActorSelectionMessage sel)
         {
-            return "/" + string.Join("/", sel.Elements.Select(x => x.ToString()));
+            return sel.Elements.Join("/", "/", null);
         }
 
         #endregion
@@ -2118,11 +2118,11 @@ namespace Akka.Remote
         {
             try
             {
-                return _codec.DecodeMessage((Remote.Serialization.Protocol.AckAndEnvelopeContainer)pdu, _provider, LocalAddress);
+                return _codec.DecodeMessage((Akka.Serialization.Protocol.AckAndEnvelopeContainer)pdu, _provider, LocalAddress);
             }
             catch (Exception ex)
             {
-                return ThrowHelper.ThrowEndpointException_DecodeMessageAndAck(ex);
+                ThrowHelper.ThrowEndpointException_DecodeMessageAndAck(ex); return default;
             }
         }
 

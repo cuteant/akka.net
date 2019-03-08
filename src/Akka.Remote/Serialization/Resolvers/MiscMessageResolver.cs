@@ -1,12 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Reflection;
-using Akka.Actor;
-using Akka.Configuration;
 using Akka.Remote.Routing;
 using Akka.Remote.Serialization.Formatters;
-using Akka.Routing;
-using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
 
@@ -29,31 +24,13 @@ namespace Akka.Remote.Serialization.Resolvers
     {
         private static readonly Dictionary<Type, object> FormatterMap = new Dictionary<Type, object>
         {
-            { typeof(Identify), IdentifyFormatter.Instance },
-            { typeof(ActorIdentity), ActorIdentityFormatter.Instance },
             { typeof(RemoteWatcher.HeartbeatRsp), RemoteWatcherHeartbeatRspFormatter.Instance },
-            { typeof(Address), AddressFormatter.Instance },
-            { typeof(RemoteScope), RemoteScopeFormatter.Instance },
-            { typeof(Config), ConfigFormatter.Instance },
-            { typeof(FromConfig), FromConfigFormatter.Instance },
-            { typeof(DefaultResizer), DefaultResizerFormatter.Instance },
-            { typeof(RoundRobinPool), RoundRobinPoolFormatter.Instance },
-            { typeof(BroadcastPool), BroadcastPoolFormatter.Instance },
-            { typeof(RandomPool), RandomPoolFormatter.Instance },
-            { typeof(ScatterGatherFirstCompletedPool), ScatterGatherFirstCompletedPoolFormatter.Instance },
-            { typeof(TailChoppingPool), TailChoppingPoolFormatter.Instance },
-            { typeof(ConsistentHashingPool), ConsistentHashingPoolFormatter.Instance },
             { typeof(RemoteRouterConfig), RemoteRouterConfigFormatter.Instance },
         };
 
         internal static object GetFormatter(Type t)
         {
             if (FormatterMap.TryGetValue(t, out var formatter)) return formatter;
-
-            if (typeof(ActorInitializationException).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
-            {
-                return ActivatorUtils.FastCreateInstance(typeof(ActorInitializationExceptionFormatter<>).GetCachedGenericType(t));
-            }
 
             return null;
         }

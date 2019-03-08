@@ -71,26 +71,27 @@ namespace Akka.Serialization.Resolvers
     {
         private static readonly Dictionary<Type, object> FormatterMap = new Dictionary<Type, object>
         {
-            {typeof(ActorPath), new ActorPathFormatter<ActorPath>()},
-            {typeof(ChildActorPath), new ActorPathFormatter<ChildActorPath>()},
-            {typeof(RootActorPath), new ActorPathFormatter<RootActorPath>()},
-            {typeof(IActorRef), new ActorRefFormatter<IActorRef>()},
-            {typeof(IInternalActorRef), new ActorRefFormatter<IInternalActorRef>()},
-            {typeof(RepointableActorRef), new ActorRefFormatter<RepointableActorRef>()},
+            { typeof(ActorPath), new ActorPathFormatter<ActorPath>() },
+            { typeof(ChildActorPath), new ActorPathFormatter<ChildActorPath>() },
+            { typeof(RootActorPath), new ActorPathFormatter<RootActorPath>() },
+            { typeof(IActorRef), new ActorRefFormatter<IActorRef>() },
+            { typeof(IInternalActorRef), new ActorRefFormatter<IInternalActorRef>() },
+            { typeof(RepointableActorRef), new ActorRefFormatter<RepointableActorRef>() },
+            { typeof(ActorSelectionMessage), ActorSelectionMessageFormatter.Instance },
         };
 
         internal static object GetFormatter(Type t)
         {
             if (FormatterMap.TryGetValue(t, out var formatter)) return formatter;
 
-            //if (typeof(IInternalActorRef).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
-            //{
-            //    return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
-            //}
-
             if (typeof(ISingletonMessage).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(SingletonMessageFormatter<>).GetCachedGenericType(t));
+            }
+
+            if (typeof(ActorPath).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+            {
+                return ActivatorUtils.FastCreateInstance(typeof(ActorPathFormatter<>).MakeGenericType(t));
             }
 
             if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))

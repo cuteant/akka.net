@@ -48,7 +48,7 @@ namespace Akka.Persistence.Serialization
                     {
                         return MessagePackSerializer.Serialize(GetPersistentFSMSnapshot(obj), s_defaultResolver);
                     }
-                    return ThrowHelper.ThrowArgumentException_MessageSerializer(obj);
+                    ThrowHelper.ThrowArgumentException_MessageSerializer(obj); return null;
             }
         }
 
@@ -70,7 +70,14 @@ namespace Akka.Persistence.Serialization
 
         private Protocol.AtomicWrite GetAtomicWrite(AtomicWrite write)
         {
-            return new Protocol.AtomicWrite(((IImmutableList<IPersistentRepresentation>)write.Payload).Select(_ => GetPersistentMessage(_)).ToArray());
+            var payload = (IImmutableList<IPersistentRepresentation>)write.Payload;
+            var count = payload.Count;
+            var persistentMsgs = new PersistentMessage[count];
+            for (var idx = 0; idx < count; idx++)
+            {
+                persistentMsgs[idx] = GetPersistentMessage(payload[idx]);
+            }
+            return new Protocol.AtomicWrite(persistentMsgs);
         }
 
         private Protocol.AtLeastOnceDeliverySnapshot GetAtLeastOnceDeliverySnapshot(AtLeastOnceDeliverySnapshot snapshot)
@@ -143,7 +150,7 @@ namespace Akka.Persistence.Serialization
                 return GetPersistentFSMSnapshot(type, bytes);
             }
 
-            return ThrowHelper.ThrowSerializationException(type);
+            ThrowHelper.ThrowSerializationException(type); return null;
         }
 
         private static readonly Func<Type, bool> s_isPersistentFSMSnapshotFunc = IsPersistentFSMSnapshot;
@@ -221,18 +228,19 @@ namespace Akka.Persistence.Serialization
                 timeout = TimeSpan.FromMilliseconds(message.TimeoutMillis);
             }
 
-            CtorInvoker<object> MakeDelegateForCtor(Type instanceType)
-            {
-                // use reflection to create the generic type of PersistentFSM.PersistentFSMSnapshot
-                Type[] types = { TypeConstants.StringType, type.GenericTypeArguments[0], typeof(TimeSpan?) };
-                return instanceType.MakeDelegateForCtor(types);
-            }
-
             object[] arguments = { message.StateIdentifier, system.Deserialize(message.Data), timeout };
 
-            var ctorInvoker = s_ctorInvokerCache.GetOrAdd(type, MakeDelegateForCtor);
+            var ctorInvoker = s_ctorInvokerCache.GetOrAdd(type, s_makeDelegateForCtorFunc);
 
             return ctorInvoker(arguments);
+        }
+
+        private static readonly Func<Type, CtorInvoker<object>> s_makeDelegateForCtorFunc = MakeDelegateForCtor;
+        private static CtorInvoker<object> MakeDelegateForCtor(Type instanceType)
+        {
+            // use reflection to create the generic type of PersistentFSM.PersistentFSMSnapshot
+            Type[] types = { TypeConstants.StringType, instanceType.GenericTypeArguments[0], typeof(TimeSpan?) };
+            return instanceType.MakeDelegateForCtor(types);
         }
     }
 }

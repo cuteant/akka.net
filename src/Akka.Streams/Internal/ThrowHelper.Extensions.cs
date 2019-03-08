@@ -261,19 +261,7 @@ namespace Akka.Streams
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowArgumentException<T>(ExceptionResource resource)
-        {
-            throw GetArgumentException(resource);
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowArgumentException<T>(ExceptionResource resource, ExceptionArgument argument)
-        {
-            throw GetArgumentException(resource, argument);
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ActorMaterializer ThrowArgumentException_Downcast(IMaterializer materializer)
+        internal static void ThrowArgumentException_Downcast(IMaterializer materializer)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -433,7 +421,7 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ActorSystem ThrowArgumentException(IActorRefFactory context)
+        internal static void ThrowArgumentException(IActorRefFactory context)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -644,7 +632,7 @@ namespace Akka.Streams
             }
         }
 
-        internal static ImmutableHashSet<IModule> ThrowArgumentException_StreamLayout_Atomics(StreamLayout.IMaterializedValueNode node)
+        internal static void ThrowArgumentException_StreamLayout_Atomics(StreamLayout.IMaterializedValueNode node)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -778,16 +766,6 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowIllegalStateException<T>(ExceptionResource resource)
-        {
-            throw GetException();
-            IllegalStateException GetException()
-            {
-                return new IllegalStateException(GetResourceString(resource));
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowIllegalStateException(ExceptionResource resource)
         {
             throw GetException();
@@ -898,7 +876,7 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IActorRef ThrowIllegalStateException_ActorOf(IActorRef supervisor)
+        internal static void ThrowIllegalStateException_ActorOf(IActorRef supervisor)
         {
             throw GetException();
             IllegalStateException GetException()
@@ -908,7 +886,7 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static bool ThrowIllegalStateException_FM(object message)
+        internal static void ThrowIllegalStateException_FM(object message)
         {
             throw GetException();
             IllegalStateException GetException()
@@ -918,7 +896,7 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static bool ThrowIllegalStateException_FP(object message)
+        internal static void ThrowIllegalStateException_FP(object message)
         {
             throw GetException();
             IllegalStateException GetException()
@@ -928,7 +906,7 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static bool ThrowIllegalStateException_SL_Valid(List<string> problems)
+        internal static void ThrowIllegalStateException_SL_Valid(List<string> problems)
         {
             throw GetException();
             IllegalStateException GetException()
@@ -983,16 +961,6 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowNotSupportedException<T>(ExceptionResource resource)
-        {
-            throw GetException();
-            NotSupportedException GetException()
-            {
-                return new NotSupportedException(GetResourceString(resource));
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNotSupportedException(Supervision.Directive decision)
         {
             throw GetException();
@@ -1003,7 +971,7 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static Action<T> ThrowNotSupportedException<T>(OverflowStrategy overflowStrategy)
+        internal static void ThrowNotSupportedException<T>(OverflowStrategy overflowStrategy)
         {
             throw GetException();
             NotSupportedException GetException()
@@ -1013,7 +981,7 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowNotSupportedException<T, TMat>(Source<T, TMat> s)
+        internal static void ThrowNotSupportedException<T, TMat>(Source<T, TMat> s)
         {
             throw GetException();
             NotSupportedException GetException()
@@ -1023,7 +991,7 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static bool ThrowNotSupportedException_SL_IsIgnorable(IModule module)
+        internal static void ThrowNotSupportedException_SL_IsIgnorable(IModule module)
         {
             throw GetException();
             NotSupportedException GetException()

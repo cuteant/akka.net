@@ -350,12 +350,12 @@ namespace Akka.Remote
             }
 
             var responsibleTransports = transports.Where(t => t.ProtocolTransport.IsResponsibleFor(remote)).ToArray();
-            if (responsibleTransports.Length == 0)
+            if (0u >= (uint)responsibleTransports.Length)
             {
                 ThrowHelper.ThrowRemoteTransportException_LocalAddressForRemote(remote);
             }
 
-            if (responsibleTransports.Length > 1)
+            if (1u < (uint)responsibleTransports.Length)
             {
                 ThrowHelper.ThrowRemoteTransportException_LocalAddressForRemote(remote, responsibleTransports);
             }

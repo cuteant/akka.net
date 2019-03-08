@@ -95,7 +95,7 @@ namespace Akka.Routing
             else
             {
                 var j = Math.Abs(i + 1);
-                if (j >= NodeHashRing.Length) return 0; //after last, use first
+                if ((uint)j >= (uint)NodeHashRing.Length) return 0; //after last, use first
                 else return j; //next node clockwise
             }
         }

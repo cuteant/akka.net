@@ -92,7 +92,7 @@ namespace Akka.Cluster.Sharding
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IActorRef ThrowArgumentException_ShardTypeMustBeStartedFirst(string typeName)
+        internal static void ThrowArgumentException_ShardTypeMustBeStartedFirst(string typeName)
         {
             throw GetException();
             ArgumentException GetException()
@@ -192,7 +192,7 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowArgumentException_Serializer_ClusterShardingMessage<T>(object obj)
+        internal static void ThrowArgumentException_Serializer_ClusterShardingMessage(object obj)
         {
             throw GetException();
             ArgumentException GetException()
@@ -202,7 +202,7 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_ClusterShardingMessage(int manifest)
+        internal static void ThrowArgumentException_Serializer_ClusterShardingMessage(int manifest)
         {
             throw GetException();
             ArgumentException GetException()

@@ -523,7 +523,7 @@ namespace Akka.Streams.Implementation
                 SubReceive.Become(DownstreamRunning);
                 return true;
             }
-            return ThrowHelper.ThrowIllegalStateException_FM(message);
+            ThrowHelper.ThrowIllegalStateException_FM(message); return false;
         }
 
         /// <summary>

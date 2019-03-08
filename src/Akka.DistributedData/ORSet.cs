@@ -66,7 +66,7 @@ namespace Akka.DistributedData
                     return VersionVector.Create(acc.ToImmutable());
 
                 default:
-                    return ThrowHelper.ThrowNotSupportedException_CannotSubtractDotsFromProvidedVersionVector();
+                    ThrowHelper.ThrowNotSupportedException_CannotSubtractDotsFromProvidedVersionVector(); return null;
             }
         }
     }
@@ -193,7 +193,7 @@ namespace Akka.DistributedData
                     }
                     break;
             }
-            return ThrowHelper.ThrowNotSupportedException<T>();
+            ThrowHelper.ThrowNotSupportedException(); return null;
         });
 
         public ORSet() : this(ImmutableDictionary<T, VersionVector>.Empty, VersionVector.Empty, null)
@@ -474,7 +474,7 @@ namespace Akka.DistributedData
                         return new DeltaGroup(vector.Add(this));
                         
                     default:
-                        return ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other);
+                        ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other); return null;
                 }
             }
 
@@ -515,7 +515,7 @@ namespace Akka.DistributedData
                         return new DeltaGroup(vector.Add(this));
                         
                     default:
-                        return ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other);
+                        ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other); return null;
                 }
             }
         }
@@ -540,7 +540,7 @@ namespace Akka.DistributedData
                         return new DeltaGroup(vector.Add(this));
 
                     default:
-                        return ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other);
+                        ThrowHelper.ThrowArgumentException_UnknownDeltaOperationOfType(other); return null;
                 }
             }
         }
@@ -635,7 +635,7 @@ namespace Akka.DistributedData
                         }
                     }
                     return acc;
-                default: return ThrowHelper.ThrowArgumentException_CannotMergeDeltaOfType<T>(delta);
+                default: ThrowHelper.ThrowArgumentException_CannotMergeDeltaOfType(delta); return null;
             }
         }
 

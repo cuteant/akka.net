@@ -1093,7 +1093,7 @@ namespace Akka.Cluster.Sharding
             if (_regions.TryGetValue(typeName, out var region)) { return region; }
             if (_proxies.TryGetValue(typeName, out region)) { return region; }
 
-            return ThrowHelper.ThrowArgumentException_ShardTypeMustBeStartedFirst(typeName);
+            ThrowHelper.ThrowArgumentException_ShardTypeMustBeStartedFirst(typeName); return null;
         }
 
         /// <summary>
@@ -1109,7 +1109,7 @@ namespace Akka.Cluster.Sharding
         {
             if (_proxies.TryGetValue(typeName, out var proxy)) { return proxy; }
 
-            return ThrowHelper.ThrowArgumentException_ShardTypeMustBeStartedFirst(typeName);
+            ThrowHelper.ThrowArgumentException_ShardTypeMustBeStartedFirst(typeName); return null;
         }
 
         private IShardAllocationStrategy DefaultShardAllocationStrategy(ClusterShardingSettings settings)

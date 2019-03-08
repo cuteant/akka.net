@@ -36,7 +36,7 @@ namespace Akka.Tests.Serialization
                 var serializer = (NewtonSoftJsonSerializer)system.Serialization.FindSerializerForType(typeof(object));
                 Assert.Equal(TypeNameHandling.All, serializer.Settings.TypeNameHandling);
                 Assert.Equal(PreserveReferencesHandling.Objects, serializer.Settings.PreserveReferencesHandling);
-                Assert.Equal(5, serializer.Settings.Converters.Count);
+                Assert.Equal(3, serializer.Settings.Converters.Count);
                 Assert.Contains(serializer.Settings.Converters, x => x is DiscriminatedUnionConverter);
                 Assert.Contains(serializer.Settings.Converters, x => x is NewtonSoftJsonSerializer.SurrogateConverter);
             }
@@ -64,7 +64,7 @@ namespace Akka.Tests.Serialization
                 var serializer = (NewtonSoftJsonSerializer)system.Serialization.FindSerializerForType(typeof(object));
                 Assert.Equal(TypeNameHandling.None, serializer.Settings.TypeNameHandling);
                 Assert.Equal(PreserveReferencesHandling.None, serializer.Settings.PreserveReferencesHandling);
-                Assert.Equal(5, serializer.Settings.Converters.Count);
+                Assert.Equal(3, serializer.Settings.Converters.Count);
                 Assert.Contains(serializer.Settings.Converters, x => x is DiscriminatedUnionConverter);
                 Assert.Contains(serializer.Settings.Converters, x => x is NewtonSoftJsonSerializer.SurrogateConverter);
             }
@@ -94,7 +94,7 @@ namespace Akka.Tests.Serialization
                 var serializer = (NewtonSoftJsonSerializer)system.Serialization.FindSerializerForType(typeof(object));
                 Assert.Equal(TypeNameHandling.All, serializer.Settings.TypeNameHandling);
                 Assert.Equal(PreserveReferencesHandling.Objects, serializer.Settings.PreserveReferencesHandling);
-                Assert.Equal(7, serializer.Settings.Converters.Count);
+                Assert.Equal(5, serializer.Settings.Converters.Count);
                 Assert.Contains(serializer.Settings.Converters, x => x is DiscriminatedUnionConverter);
                 Assert.Contains(serializer.Settings.Converters, x => x is NewtonSoftJsonSerializer.SurrogateConverter);
                 Assert.Contains(serializer.Settings.Converters, x => x is DummyConverter);

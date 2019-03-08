@@ -322,7 +322,7 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="origin">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
         /// <returns>TBD</returns>
-        public override long Seek(long offset, SeekOrigin origin) => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_W);
+        public override long Seek(long offset, SeekOrigin origin) { ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_W); return 0L; }
 
         /// <summary>
         /// TBD
@@ -339,13 +339,13 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="count">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
         /// <returns>TBD</returns>
-        public override int Read(byte[] buffer, int offset, int count) => ThrowHelper.ThrowNotSupportedException<int>(ExceptionResource.NotSupported_Stream_Only_W);
+        public override int Read(byte[] buffer, int offset, int count) { ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_W); return 0; }
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <exception cref="NotSupportedException">TBD</exception>
-        public override long Length => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_W);
+        public override long Length { get { ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_W); return 0L; } }
 
         /// <summary>
         /// TBD
@@ -353,7 +353,7 @@ namespace Akka.Streams.Implementation.IO
         /// <exception cref="NotSupportedException">TBD</exception>
         public override long Position
         {
-            get => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_W);
+            get { ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_W); return 0L; }
             set => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_W);
         }
 

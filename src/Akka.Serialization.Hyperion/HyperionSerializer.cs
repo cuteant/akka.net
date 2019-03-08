@@ -70,7 +70,7 @@ namespace Akka.Serialization
         }
 
         /// <summary>Completely unique value to identify this implementation of Serializer, used to optimize network traffic.</summary>
-        public override int Identifier => -5; //104
+        public sealed override int Identifier => -5; //104
 
         /// <inheritdoc />
         public sealed override object DeepCopy(object source) => _serializer.DeepCopyObject(source);
@@ -78,13 +78,13 @@ namespace Akka.Serialization
         /// <summary>Serializes the given object into a byte array</summary>
         /// <param name="obj">The object to serialize</param>
         /// <returns>A byte array containing the serialized object</returns>
-        public override byte[] ToBinary(object obj) => _serializer.SerializeObject(obj, _initialBufferSize);
+        public sealed override byte[] ToBinary(object obj) => _serializer.SerializeObject(obj, _initialBufferSize);
 
         /// <summary>Deserializes a byte array into an object of type <paramref name="type"/>.</summary>
         /// <param name="bytes">The array containing the serialized object</param>
         /// <param name="type">The type of object contained in the array</param>
         /// <returns>The object contained in the array</returns>
-        public override object FromBinary(byte[] bytes, Type type) => _serializer.Deserialize(type, bytes);
+        public sealed override object FromBinary(byte[] bytes, Type type) => _serializer.Deserialize(type, bytes);
 
         private IKnownTypesProvider CreateKnownTypesProvider(ExtendedActorSystem system, Type type)
         {
@@ -92,7 +92,7 @@ namespace Akka.Serialization
             var ctor = ctors.FirstOrDefault(c =>
             {
                 var parameters = c.GetParameters();
-                return parameters.Length == 1 && (parameters[0].ParameterType == typeof(ActorSystem)
+                return 1 == parameters.Length && (parameters[0].ParameterType == typeof(ActorSystem)
                     || parameters[0].ParameterType == typeof(ExtendedActorSystem));
             });
 

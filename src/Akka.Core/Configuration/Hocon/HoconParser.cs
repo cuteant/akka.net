@@ -189,7 +189,7 @@ namespace Akka.Configuration.Hocon
         {
             Token ws = _reader.PullSpaceOrTab();
             //single line ws should be included if string concat
-            if (ws.Value.Length > 0)
+            if (0u < (uint)ws.Value.Length)
             {
                 var wsLit = new HoconLiteral
                 {

@@ -2924,7 +2924,7 @@ namespace Akka.Cluster
                     case MemberStatus.Removed:
                         return typeof(ClusterEvent.MemberRemoved);
                     default:
-                        return ThrowHelper.ThrowArgumentException_ExpectedUpOrRemovedInOnMemberStatusChangedListener(_status);
+                        ThrowHelper.ThrowArgumentException_ExpectedUpOrRemovedInOnMemberStatusChangedListener(_status); return null;
                 }
             }
         }

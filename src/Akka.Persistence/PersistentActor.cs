@@ -26,7 +26,7 @@ namespace Akka.Persistence
         /// The singleton instance of <see cref="RecoveryCompleted"/>.
         /// </summary>
         public static readonly RecoveryCompleted Instance = new RecoveryCompleted();
-        private RecoveryCompleted(){}
+        private RecoveryCompleted() { }
 
         public override bool Equals(object obj) => obj is RecoveryCompleted;
         public override int GetHashCode() => nameof(RecoveryCompleted).GetHashCode();
@@ -270,6 +270,8 @@ namespace Akka.Persistence
         }
     }
 
+    #region -- class UntypedPersistentActor --
+
     /// <summary>
     /// Persistent actor - can be used to implement command or eventsourcing.
     /// </summary>
@@ -333,6 +335,10 @@ namespace Akka.Persistence
         /// </summary>
         protected new static IUntypedActorContext Context => (IUntypedActorContext)ActorBase.Context;
     }
+
+    #endregion
+
+    #region -- class ReceivePersistentActor --
 
     /// <summary>
     /// TBD
@@ -519,7 +525,7 @@ namespace Akka.Persistence
         #endregion
 
         #region Command helper methods
-        
+
         private void EnsureMayConfigureCommandHandlers()
         {
             if (_matchCommandBuilders.Count <= 0) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Command_methods);
@@ -705,4 +711,6 @@ namespace Akka.Persistence
 
         #endregion
     }
+
+    #endregion
 }

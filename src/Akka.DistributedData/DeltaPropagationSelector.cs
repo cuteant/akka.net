@@ -64,7 +64,10 @@ namespace Akka.DistributedData
                 // full state gossip is not needed.
                 var sliceSize = NodeSliceSize(all.Length);
                 ImmutableArray<Address> slice;
-                if (all.Length <= sliceSize) slice = all;
+                if ((uint)sliceSize >= (uint)all.Length)
+                {
+                    slice = all;
+                }
                 else
                 {
                     var start = (int)(_deltaNodeRoundRobinCounter % all.Length);

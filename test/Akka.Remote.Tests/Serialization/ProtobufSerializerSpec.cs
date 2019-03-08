@@ -10,7 +10,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Remote.Configuration;
 using Akka.Serialization;
-using Akka.Remote.Serialization.Protocol;
+using Akka.Serialization.Protocol;
 using Akka.TestKit;
 using MessagePack;
 using FluentAssertions;

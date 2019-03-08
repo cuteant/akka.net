@@ -11,12 +11,9 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
-using Akka.IO.Buffers;
-using Akka.Util;
-using Akka.Util.Internal;
+using CuteAnt.Text;
 
 namespace Akka.IO
 {
@@ -168,7 +165,7 @@ namespace Akka.IO
         /// </summary>
         /// <param name="str">TBD</param>
         /// <returns>TBD</returns>
-        public static ByteString FromString(string str) => FromString(str, Encoding.UTF8);
+        public static ByteString FromString(string str) => FromString(str, StringHelper.UTF8NoBOM);
 
         /// <summary>
         /// Creates a new ByteString which will contain the representation of 
@@ -224,7 +221,7 @@ namespace Akka.IO
         /// block of memory.
         /// </summary>
         /// <returns>TBD</returns>
-        public bool IsCompact => _buffers.Length == 1;
+        public bool IsCompact => 1 == _buffers.Length;
 
         /// <summary>
         /// Determines if current <see cref="ByteString"/> is empty.
@@ -409,10 +406,11 @@ namespace Akka.IO
             int otherIdx = 0;
             var i = GetBufferFittingIndex(index, out int thisIdx);
             var j = 0;
-            while (j < other._buffers.Length)
+            var otherBuffers = other._buffers;
+            while ((uint)j < (uint)otherBuffers.Length)
             {
                 var buffer = _buffers[i];
-                var otherBuffer = other._buffers[j];
+                var otherBuffer = otherBuffers[j];
 
                 while (thisIdx < buffer.Count && otherIdx < otherBuffer.Count)
                 {
@@ -425,12 +423,12 @@ namespace Akka.IO
 
                 if (thisIdx >= buffer.Count)
                 {
-                    i++;
+                    i = i + 1;
                     thisIdx = 0;
                 }
                 if (otherIdx >= otherBuffer.Count)
                 {
-                    j++;
+                    j = j + 1;
                     otherIdx = 0;
                 }
             }
@@ -612,7 +610,7 @@ namespace Akka.IO
 
         #endregion
     }
-    
+
     public enum ByteOrder
     {
         BigEndian,

@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Pattern;
@@ -417,75 +418,68 @@ namespace Akka.Persistence.Fsm
         /// <inheritdoc/>
         protected override bool ReceiveCommand(object message)
         {
-            if (message is FSMBase.TimeoutMarker timeoutMarker)
+            switch (message)
             {
-                if (_generation == timeoutMarker.Generation)
-                {
-                    ProcessMsg(FSMBase.StateTimeout.Instance, "state timeout");
-                }
-                return true;
-            }
+                case FSMBase.TimeoutMarker timeoutMarker:
+                    if (_generation == timeoutMarker.Generation)
+                    {
+                        ProcessMsg(FSMBase.StateTimeout.Instance, "state timeout");
+                    }
+                    return true;
 
-            if (message is FSMBase.Timer t)
-            {
-                if (_timers.TryGetValue(t.Name, out FSMBase.Timer timer) && timer.Generation == t.Generation)
-                {
+                case FSMBase.Timer t:
+                    if (_timers.TryGetValue(t.Name, out FSMBase.Timer timer) && timer.Generation == t.Generation)
+                    {
+                        if (_timeoutFuture != null)
+                        {
+                            _timeoutFuture.Cancel(false);
+                            _timeoutFuture = null;
+                        }
+                        _generation++;
+                        if (!timer.Repeat)
+                        {
+                            _timers.Remove(timer.Name);
+                        }
+                        ProcessMsg(timer.Message, timer);
+                    }
+                    return true;
+
+                case FSMBase.SubscribeTransitionCallBack subscribeTransitionCallBack:
+                    Context.Watch(subscribeTransitionCallBack.ActorRef);
+                    Listeners.Add(subscribeTransitionCallBack.ActorRef);
+                    //send the current state back as a reference point
+                    subscribeTransitionCallBack.ActorRef.Tell(new FSMBase.CurrentState<TState>(Self, _currentState.StateName));
+                    return true;
+
+                case Listen listen:
+                    Context.Watch(listen.Listener);
+                    Listeners.Add(listen.Listener);
+                    listen.Listener.Tell(new FSMBase.CurrentState<TState>(Self, _currentState.StateName));
+                    return true;
+
+                case FSMBase.UnsubscribeTransitionCallBack unsubscribeTransitionCallBack:
+                    Context.Unwatch(unsubscribeTransitionCallBack.ActorRef);
+                    Listeners.Remove(unsubscribeTransitionCallBack.ActorRef);
+                    return true;
+
+                case Deafen deafen:
+                    Context.Unwatch(deafen.Listener);
+                    Listeners.Remove(deafen.Listener);
+                    return true;
+
+                default:
                     if (_timeoutFuture != null)
                     {
                         _timeoutFuture.Cancel(false);
                         _timeoutFuture = null;
                     }
                     _generation++;
-                    if (!timer.Repeat)
-                    {
-                        _timers.Remove(timer.Name);
-                    }
-                    ProcessMsg(timer.Message, timer);
-                }
-                return true;
+                    ProcessMsg(message, Sender);
+                    return true;
             }
-
-            if (message is FSMBase.SubscribeTransitionCallBack subscribeTransitionCallBack)
-            {
-                Context.Watch(subscribeTransitionCallBack.ActorRef);
-                Listeners.Add(subscribeTransitionCallBack.ActorRef);
-                //send the current state back as a reference point
-                subscribeTransitionCallBack.ActorRef.Tell(new FSMBase.CurrentState<TState>(Self, _currentState.StateName));
-                return true;
-            }
-
-            if (message is Listen listen)
-            {
-                Context.Watch(listen.Listener);
-                Listeners.Add(listen.Listener);
-                listen.Listener.Tell(new FSMBase.CurrentState<TState>(Self, _currentState.StateName));
-                return true;
-            }
-
-            if (message is FSMBase.UnsubscribeTransitionCallBack unsubscribeTransitionCallBack)
-            {
-                Context.Unwatch(unsubscribeTransitionCallBack.ActorRef);
-                Listeners.Remove(unsubscribeTransitionCallBack.ActorRef);
-                return true;
-            }
-
-            if (message is Deafen deafen)
-            {
-                Context.Unwatch(deafen.Listener);
-                Listeners.Remove(deafen.Listener);
-                return true;
-            }
-
-            if (_timeoutFuture != null)
-            {
-                _timeoutFuture.Cancel(false);
-                _timeoutFuture = null;
-            }
-            _generation++;
-            ProcessMsg(message, Sender);
-            return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessMsg(object any, object source)
         {
             var fsmEvent = new FSMBase.Event<TData>(any, _currentState.StateData);
@@ -535,9 +529,10 @@ namespace Akka.Persistence.Fsm
             }
             else
             {
+                var sender = Sender;
                 for (int i = nextState.Replies.Count - 1; i >= 0; i--)
                 {
-                    Sender.Tell(nextState.Replies[i]);
+                    sender.Tell(nextState.Replies[i]);
                 }
                 Terminate(nextState);
                 Context.Stop(Self);
@@ -552,9 +547,10 @@ namespace Akka.Persistence.Fsm
             }
             else
             {
+                var sender = Sender;
                 for (int i = nextState.Replies.Count - 1; i >= 0; i--)
                 {
-                    Sender.Tell(nextState.Replies[i]);
+                    sender.Tell(nextState.Replies[i]);
                 }
                 if (!_currentState.StateName.Equals(nextState.StateName) || nextState.Notifies)
                 {

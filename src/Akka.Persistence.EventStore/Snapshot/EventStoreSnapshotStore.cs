@@ -1,233 +1,190 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
-using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Akka.Event;
+using Akka.Extension.EventStore;
 using Akka.Persistence.Snapshot;
+using CuteAnt.Text;
 using EventStore.ClientAPI;
 
 namespace Akka.Persistence.EventStore.Snapshot
 {
+    /// <summary>TBD</summary>
     public class EventStoreSnapshotStore : SnapshotStore
     {
-        private class SelectedSnapshotResult
-        {
-            public long EventNumber = long.MaxValue;
-            public SelectedSnapshot Snapshot;
+        #region ** class SelectedSnapshotResult **
 
-            public static SelectedSnapshotResult Empty => new SelectedSnapshotResult();
+        private sealed class SelectedSnapshotResult
+        {
+            public readonly long EventNumber;
+            public readonly SelectedSnapshot Snapshot;
+
+            public SelectedSnapshotResult(long eventNumver, SelectedSnapshot snapshot)
+            {
+                EventNumber = eventNumver;
+                Snapshot = snapshot;
+            }
+
+            public static readonly SelectedSnapshotResult Empty = new SelectedSnapshotResult(-1L, null);
         }
 
-        private IEventStoreConnection _conn;
-        private ISnapshotAdapter _snapshotAdapter;
-        private readonly EventStoreSnapshotSettings _settings;
+        #endregion
 
+        private readonly IEventStoreConnection2 _conn;
+        private readonly IEventAdapter _eventAdapter;
+        private readonly EventStoreSnapshotSettings _settings;
         private readonly ILoggingAdapter _log;
 
-
+        /// <summary>TBD</summary>
         public EventStoreSnapshotStore()
         {
-            _settings = EventStorePersistence.Get(Context.System).SnapshotStoreSettings;
+            var system = Context.System;
+            _settings = EventStorePersistence.Get(system).SnapshotStoreSettings;
             _log = Context.GetLogger();
+            _conn = EventStoreConnector.Get(system).Connection;
+            _eventAdapter = _conn.EventAdapter;
         }
 
-        protected override void PreStart()
+        /// <inheritdoc />
+        protected override async Task<SelectedSnapshot> LoadAsync(string persistenceId, SnapshotSelectionCriteria criteria)
         {
-            base.PreStart();
-            var connectionString = _settings.ConnectionString;
-            var connectionName = _settings.ConnectionName;
-            _conn = EventStoreConnection.Create(connectionString, connectionName);
-
-            _conn.ConnectAsync().Wait();
-            _snapshotAdapter = BuildDefaultSnapshotAdapter();
-        }
-
-        protected override async Task<SelectedSnapshot> LoadAsync(string persistenceId,
-            SnapshotSelectionCriteria criteria)
-        {
-            if (criteria.Equals(SnapshotSelectionCriteria.None))
-            {
-                return null;
-            }
-
             var streamName = GetStreamName(persistenceId);
-
-
-            if (!criteria.Equals(SnapshotSelectionCriteria.Latest))
-            {
-                var result = await FindSnapshot(streamName, criteria.MaxSequenceNr, criteria.MaxTimeStamp);
-                return result.Snapshot;
-            }
-
-            var slice = await _conn.ReadStreamEventsBackwardAsync(streamName, StreamPosition.End, 1, false);
-
-            if (slice == null || slice.Status != SliceReadStatus.Success || !slice.Events.Any())
-            {
-                return null;
-            }
-
-            return slice.Events.Select(_snapshotAdapter.Adapt).First();
+            DateTime? timestamp = criteria.MaxTimeStamp;
+            if (timestamp == DateTime.MinValue || timestamp == DateTime.MaxValue) { timestamp = null; }
+            var result = await FindSnapshotAsync(streamName, criteria.MaxSequenceNr, timestamp);
+            return result.Snapshot;
         }
 
+        /// <inheritdoc />
         protected override async Task SaveAsync(SnapshotMetadata metadata, object snapshot)
         {
             var streamName = GetStreamName(metadata.PersistenceId);
+            var context = new Dictionary<string, object>(5)
+            {
+                [MetadataConstants.PersistenceId] = metadata.PersistenceId,
+                //[MetadataConstants.OccurredOn] = DateTime.UtcNow,
+                [MetadataConstants.SequenceNr] = metadata.SequenceNr,
+                [MetadataConstants.Timestamp] = metadata.Timestamp,
+                [MetadataConstants.JournalType] = JournalTypes.SnapshotJournal
+            };
             try
             {
-                var writeResult = await _conn.AppendToStreamAsync(
-                    streamName,
-                    ExpectedVersion.Any,
-                    _snapshotAdapter.Adapt(metadata, snapshot)
-                );
-                _log.Debug(
-                    "Snapshot for `{0}` committed at log position (commit: {1}, prepare: {2})",
-                    metadata.PersistenceId,
-                    writeResult.LogPosition.CommitPosition,
-                    writeResult.LogPosition.PreparePosition
-                );
+                var writeResult = await _conn.SendEventAsync(streamName, snapshot, context).ConfigureAwait(false);
+                if (_log.IsDebugEnabled) _log.SnapshotCommittedAtLogPosition(metadata, writeResult);
             }
             catch (Exception e)
             {
-                _log.Warning(
-                    "Failed to make a snapshot for {0}, failed with message `{1}`",
-                    metadata.PersistenceId,
-                    e.Message
-                );
+                if (_log.IsWarningEnabled) _log.FailedToMakeASnapshot(metadata, e);
             }
         }
 
+        /// <inheritdoc />
         protected override async Task DeleteAsync(SnapshotMetadata metadata)
         {
             var streamName = GetStreamName(metadata.PersistenceId);
-            var m = await _conn.GetStreamMetadataAsync(streamName);
-            if (m.IsStreamDeleted)
-            {
-                return;
-            }
+            var m = await _conn.GetStreamMetadataAsync(streamName).ConfigureAwait(false);
+            if (m.IsStreamDeleted) { return; }
 
             var streamMetadata = m.StreamMetadata.Copy();
-            var timestamp = metadata.Timestamp != DateTime.MinValue ? metadata.Timestamp : default(DateTime?);
+            DateTime? timestamp = metadata.Timestamp;
+            if (timestamp == DateTime.MinValue || timestamp == DateTime.MaxValue) { timestamp = null; }
 
-            var result = await FindSnapshot(streamName, metadata.SequenceNr, timestamp);
+            var result = await FindSnapshotAsync(streamName, metadata.SequenceNr, timestamp);
 
-            if (result.Snapshot == null)
-            {
-                return;
-            }
-
+            if (result.Snapshot == null) { return; }
 
             streamMetadata = streamMetadata.SetTruncateBefore(result.EventNumber + 1);
-            await _conn.SetStreamMetadataAsync(streamName, ExpectedVersion.Any, streamMetadata.Build());
+            await _conn.SetStreamMetadataAsync(streamName, ExpectedVersion.Any, streamMetadata.Build()).ConfigureAwait(false);
         }
 
+        /// <inheritdoc />
         protected override async Task DeleteAsync(string persistenceId, SnapshotSelectionCriteria criteria)
         {
             var streamName = GetStreamName(persistenceId);
-            var m = await _conn.GetStreamMetadataAsync(streamName);
+            var m = await _conn.GetStreamMetadataAsync(streamName).ConfigureAwait(false);
+            if (m.IsStreamDeleted) { return; }
+
             var streamMetadata = m.StreamMetadata.Copy();
 
+            DateTime? timestamp = criteria.MaxTimeStamp;
+            if (timestamp == DateTime.MinValue || timestamp == DateTime.MaxValue) { timestamp = null; }
 
-            if (criteria.Equals(SnapshotSelectionCriteria.Latest))
-            {
-                var slice = await _conn.ReadStreamEventsBackwardAsync(streamName, StreamPosition.End, 1, false);
-                if (slice.Events.Any())
-                {
-                    var @event = slice.Events.First();
-                    var highestEventPosition = @event.OriginalEventNumber;
-                    streamMetadata = streamMetadata
-                            .SetTruncateBefore(highestEventPosition);
-                    await _conn.SetStreamMetadataAsync(streamName, ExpectedVersion.Any, streamMetadata.Build());
-                }
-            }
-            else if (!criteria.Equals(SnapshotSelectionCriteria.None))
-            {
-                var timestamp = criteria.MaxTimeStamp != DateTime.MinValue ? criteria.MaxTimeStamp : default(DateTime?);
+            var result = await FindSnapshotAsync(streamName, criteria.MaxSequenceNr, timestamp);
 
-                var result = await FindSnapshot(streamName, criteria.MaxSequenceNr, timestamp);
+            if (result.Snapshot == null) { return; }
 
-                if (result.Snapshot == null)
-                {
-                    return;
-                }
-
-                streamMetadata = streamMetadata.SetTruncateBefore(result.EventNumber + 1);
-                await _conn.SetStreamMetadataAsync(streamName, ExpectedVersion.Any, streamMetadata.Build());
-            }
+            streamMetadata = streamMetadata.SetTruncateBefore(result.EventNumber + 1);
+            await _conn.SetStreamMetadataAsync(streamName, ExpectedVersion.Any, streamMetadata.Build()).ConfigureAwait(false);
         }
 
-        private ISnapshotAdapter BuildDefaultSnapshotAdapter()
+        private async Task<SelectedSnapshotResult> FindSnapshotAsync(string streamName, long maxSequenceNr, DateTime? maxTimeStamp)
         {
-            if (_settings.Adapter.ToLowerInvariant() == "default")
-            {
-                return new DefaultSnapshotEventAdapter();
-            }
-
-            try
-            {
-                var journalAdapterType = Type.GetType(_settings.Adapter);
-                if (journalAdapterType == null)
-                {
-                    _log.Error(
-                        $"Unable to find type [{_settings.Adapter}] Adapter for EventStoreJournal. Is the assembly referenced properly? Falling back to default");
-                    return new DefaultSnapshotEventAdapter();
-                }
-
-                var journalAdapter = Activator.CreateInstance(journalAdapterType) as ISnapshotAdapter;
-                if (journalAdapter == null)
-                {
-                    _log.Error(
-                        $"Unable to create instance of type [{journalAdapterType.AssemblyQualifiedName}] Adapter for EventStoreJournal. Do you have an empty constructor? Falling back to default.");
-                    return new DefaultSnapshotEventAdapter();
-                }
-
-                return journalAdapter;
-            }
-            catch (Exception e)
-            {
-                _log.Error(e, "Error loading Adapter for EventStoreJournal. Falling back to default");
-                return new DefaultSnapshotEventAdapter();
-            }
-        }
-
-        private async Task<SelectedSnapshotResult> FindSnapshot(string streamName, long maxSequenceNr,
-            DateTime? maxTimeStamp)
-        {
-            SelectedSnapshotResult snapshot = null;
-
-            var slice = await _conn.ReadStreamEventsBackwardAsync(streamName, StreamPosition.End, 1, false);
-            if (slice.Status != SliceReadStatus.Success)
+            var readResult = await _conn.GetLastEventAsync(streamName, false).ConfigureAwait(false);
+            if (readResult.Status != EventReadStatus.Success)
             {
                 return SelectedSnapshotResult.Empty;
             }
 
-            var from = slice.LastEventNumber;
+            var resolvedEvent = readResult.Event.Value.Event;
+            var snapshot = Adapt(resolvedEvent);
+            var snapshotMetadata = snapshot.Metadata;
+            if ((!maxTimeStamp.HasValue || snapshotMetadata.Timestamp <= maxTimeStamp.Value) && snapshotMetadata.SequenceNr <= maxSequenceNr)
+            {
+                return new SelectedSnapshotResult(resolvedEvent.EventNumber, snapshot);
+            }
+
+            var from = resolvedEvent.EventNumber - 1L;
+            if (from <= 0L) // 当前只有一条记录
+            {
+                return SelectedSnapshotResult.Empty;
+            }
+
+            return await LoopSnapshotAsync(streamName, from, maxSequenceNr, maxTimeStamp);
+        }
+
+        private async Task<SelectedSnapshotResult> LoopSnapshotAsync(string streamName, long from, long maxSequenceNr, DateTime? maxTimeStamp)
+        {
+            SelectedSnapshotResult snapshotResult = null;
+
+            StreamEventsSlice<object> slice = null;
             var take = _settings.ReadBatchSize;
             do
             {
-                if (from <= 0) break;
+                if (from <= 0L) break;
 
-                take = from > take ? take : (int) from;
-                slice = await _conn.ReadStreamEventsBackwardAsync(streamName, from, from == 0 ? 1 : take, false);
+                take = from > take ? take : (int)from;
+                slice = await _conn.GetStreamEventsBackwardAsync(streamName, from, take, false).ConfigureAwait(false);
                 from -= take;
 
-                snapshot = slice.Events
-                                .Select(e => new SelectedSnapshotResult
-                                {
-                                    EventNumber = e.OriginalEventNumber,
-                                    Snapshot = _snapshotAdapter.Adapt(e)
-                                })
+                snapshotResult = slice.Events
+                                .Select(e => new SelectedSnapshotResult(e.Event.EventNumber, Adapt(e.Event)))
                                 .FirstOrDefault(s =>
-                                        (!maxTimeStamp.HasValue ||
-                                         s.Snapshot.Metadata.Timestamp <= maxTimeStamp.Value) &&
+                                        (!maxTimeStamp.HasValue || s.Snapshot.Metadata.Timestamp <= maxTimeStamp.Value) &&
                                         s.Snapshot.Metadata.SequenceNr <= maxSequenceNr);
-            } while (snapshot == null && slice.Status == SliceReadStatus.Success);
+            } while (snapshotResult == null && slice.Status == SliceReadStatus.Success);
 
-            return snapshot ?? SelectedSnapshotResult.Empty;
+            return snapshotResult ?? SelectedSnapshotResult.Empty;
+        }
+
+        private static SelectedSnapshot Adapt(RecordedEvent<object> resolvedEvent)
+        {
+            var fullEvent = resolvedEvent.FullEvent;
+            var eventDescriptor = fullEvent.Descriptor;
+            var persistenceId = eventDescriptor.GetValue<string>(MetadataConstants.PersistenceId);
+            var sequenceNr = eventDescriptor.GetValue<long>(MetadataConstants.SequenceNr);
+            var timestamp = eventDescriptor.GetValue<DateTime>(MetadataConstants.Timestamp);
+
+            var snapshotMetadata = new SnapshotMetadata(persistenceId, sequenceNr, timestamp);
+            return new SelectedSnapshot(snapshotMetadata, fullEvent.Value);
         }
 
         private string GetStreamName(string persistenceId)
         {
-            return $"{_settings.Prefix}{persistenceId}";
+            var sb = StringBuilderCache.Acquire();
+            sb.Append(_settings.Prefix);
+            sb.Append(persistenceId);
+            return StringBuilderCache.GetStringAndRelease(sb);
         }
     }
 }

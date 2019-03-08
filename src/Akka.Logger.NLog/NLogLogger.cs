@@ -60,7 +60,8 @@ namespace Akka.Logger.NLog
             if (logger.IsEnabled(level))
             {
                 LogMessage logMessage = message as LogMessage;
-                var logEvent = (logMessage != null && logMessage.Args?.Length > 0) ?
+                var msgArgs = logMessage?.Args;
+                var logEvent = (msgArgs != null && 0u < (uint)msgArgs.Length) ?
                     new LogEventInfo(level, logger.Name, null, logMessage.Format, logMessage.Args, exception) :
                     new LogEventInfo(level, logger.Name, null, "{0}", new[] { message }, exception);
                 logEvent.Properties["logSource"] = logSource;   // TODO logSource is the same as logger.Name, now adding twice

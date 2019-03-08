@@ -1,5 +1,4 @@
 ﻿using System.Collections.Generic;
-using Akka.Remote.Serialization.Protocol;
 using Akka.Serialization.Protocol;
 using MessagePack;
 

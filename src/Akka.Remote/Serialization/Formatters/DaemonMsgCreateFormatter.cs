@@ -1,4 +1,14 @@
-﻿using Akka.Serialization;
+﻿using System.Linq;
+using System.Runtime.CompilerServices;
+using Akka.Actor;
+using Akka.Configuration;
+using Akka.Routing;
+using Akka.Serialization;
+using Akka.Serialization.Protocol;
+using Akka.Util;
+using Akka.Util.Internal;
+using CuteAnt;
+using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
 
@@ -13,15 +23,15 @@ namespace Akka.Remote.Serialization.Formatters
         {
             if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.DaemonMsgCreateData>();
+            var formatter = formatterResolver.GetFormatterWithVerify<DaemonMsgCreateData>();
             var proto = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
 
             var system = formatterResolver.GetActorSystem();
             return new DaemonMsgCreate(
-                DaemonMsgCreateSerializer.PropsFromProto(system, proto.Props),
-                DaemonMsgCreateSerializer.DeployFromProto(system, proto.Deploy),
+                PropsFromProto(system, proto.Props),
+                DeployFromProto(system, proto.Deploy),
                 proto.Path,
-                DaemonMsgCreateSerializer.DeserializeActorRef(system, proto.Supervisor));
+                DeserializeActorRef(system, proto.Supervisor));
         }
 
         public int Serialize(ref byte[] bytes, int offset, DaemonMsgCreate value, IFormatterResolver formatterResolver)
@@ -29,14 +39,89 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
 
             var system = formatterResolver.GetActorSystem();
-            var protoMessage = new Protocol.DaemonMsgCreateData(
-                    DaemonMsgCreateSerializer.PropsToProto(system, value.Props),
-                    DaemonMsgCreateSerializer.DeployToProto(system, value.Deploy),
+            var protoMessage = new DaemonMsgCreateData(
+                    PropsToProto(system, value.Props),
+                    DeployToProto(system, value.Deploy),
                     value.Path,
-                    DaemonMsgCreateSerializer.SerializeActorRef(value.Supervisor));
+                    SerializeActorRef(value.Supervisor));
 
-            var formatter = formatterResolver.GetFormatterWithVerify<Protocol.DaemonMsgCreateData>();
+            var formatter = formatterResolver.GetFormatterWithVerify<DaemonMsgCreateData>();
             return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+        }
+
+        //
+        // Props
+        //
+        private static PropsData PropsToProto(ExtendedActorSystem system, Props props)
+        {
+            return new PropsData(
+                DeployToProto(system, props.Deploy),
+                props.Type.TypeQualifiedName(),
+                props.Arguments.Select(_ => system.Serialize(_)).ToArray());
+
+        }
+
+        private static Props PropsFromProto(ExtendedActorSystem system, in PropsData protoProps)
+        {
+            var actorClass = TypeUtils.ResolveType(protoProps.Clazz);
+            var propsArgs = protoProps.Args;
+            if (propsArgs != null)
+            {
+                var args = new object[propsArgs.Length];
+                for (int i = 0; i < args.Length; i++)
+                {
+                    args[i] = system.Deserialize(propsArgs[i]);
+                }
+                return new Props(DeployFromProto(system, protoProps.Deploy), actorClass, args);
+            }
+            else
+            {
+                return new Props(DeployFromProto(system, protoProps.Deploy), actorClass, EmptyArray<object>.Instance);
+            }
+        }
+
+        //
+        // Deploy
+        //
+        private static DeployData DeployToProto(ExtendedActorSystem system, Deploy deploy)
+        {
+            return new DeployData(
+                deploy.Path,
+                system.Serialize(deploy.Config),
+                deploy.RouterConfig != NoRouter.Instance ? system.Serialize(deploy.RouterConfig) : Payload.Null,
+                deploy.Scope != Deploy.NoScopeGiven ? system.Serialize(deploy.Scope) : Payload.Null,
+                deploy.Dispatcher != Deploy.NoDispatcherGiven ? deploy.Dispatcher : null
+                );
+        }
+
+        private static Deploy DeployFromProto(ExtendedActorSystem system, in DeployData protoDeploy)
+        {
+            var config = system.Deserialize(protoDeploy.Config)?.AsInstanceOf<Config>() ?? Config.Empty;
+
+            var routerConfig = system.Deserialize(protoDeploy.RouterConfig)?.AsInstanceOf<RouterConfig>() ?? NoRouter.Instance;
+
+            var scope = system.Deserialize(protoDeploy.Scope)?.AsInstanceOf<Scope>() ?? Deploy.NoScopeGiven;
+
+            var dispatcher = !string.IsNullOrEmpty(protoDeploy.Dispatcher)
+                ? protoDeploy.Dispatcher
+                : Deploy.NoDispatcherGiven;
+
+            return new Deploy(protoDeploy.Path, config, routerConfig, scope, dispatcher);
+        }
+
+        //
+        // IActorRef
+        //
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static ReadOnlyActorRefData SerializeActorRef(IActorRef actorRef)
+        {
+            return new ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(actorRef));
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static IActorRef DeserializeActorRef(ExtendedActorSystem system, in ReadOnlyActorRefData actorRefData)
+        {
+            return system.Provider.ResolveActorRef(actorRefData.Path);
         }
     }
 }

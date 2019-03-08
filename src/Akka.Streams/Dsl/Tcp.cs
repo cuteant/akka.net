@@ -184,7 +184,7 @@ namespace Akka.Streams.Dsl
         {
             // DnsEndpoint isn't allowed
             var ipAddresses = System.Net.Dns.GetHostAddressesAsync(host).Result;
-            if (ipAddresses.Length == 0) ThrowHelper.ThrowArgumentException_Tcp_Bind(host);
+            if (0u >= (uint)ipAddresses.Length) ThrowHelper.ThrowArgumentException_Tcp_Bind(host);
 
             return Source.FromGraph(new ConnectionSourceStage(_system.Tcp(), new IPEndPoint(ipAddresses[0], port), backlog,
                 options, halfClose, idleTimeout, BindShutdownTimeout));

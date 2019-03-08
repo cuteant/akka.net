@@ -1185,7 +1185,7 @@ namespace Akka.DistributedData
                    _newSubscribers.Any(kvp => kvp.Value.Contains(subscriber));
         }
 
-        private void ReceiveTerminated(Terminated t )
+        private void ReceiveTerminated(Terminated t)
         {
             var terminated = t.ActorRef;
             if (Equals(terminated, _durableStore))
@@ -1424,7 +1424,7 @@ namespace Akka.DistributedData
                         .Select(pair => pair.Key)
                         .ToArray();
 
-                    if (toRemove.Length > 0)
+                    if (0u < (uint)toRemove.Length)
                     {
                         var removedNodesBuilder = _removedNodes.ToBuilder();
                         removedNodesBuilder.KeyComparer = UniqueAddressComparer.Instance;

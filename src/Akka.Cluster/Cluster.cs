@@ -175,7 +175,7 @@ namespace Akka.Cluster
         /// </exception>
         public void Subscribe(IActorRef subscriber, ClusterEvent.SubscriptionInitialStateMode initialStateMode, params Type[] to)
         {
-            if (to == null || to.Length == 0) { ThrowHelper.ThrowArgumentException_AtLeastOneIClusterDomainEventClassIsRequired(); }
+            if (to == null || 0u >= (uint)to.Length) { ThrowHelper.ThrowArgumentException_AtLeastOneIClusterDomainEventClassIsRequired(); }
             if (!to.All(t => typeof(ClusterEvent.IClusterDomainEvent).IsAssignableFrom(t)))
             {
                 ThrowHelper.ThrowArgumentException_SubscribeToIClusterDomainEventOrSubclasses(to);

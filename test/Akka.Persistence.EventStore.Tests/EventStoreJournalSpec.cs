@@ -4,7 +4,6 @@ using Xunit;
 
 namespace Akka.Persistence.EventStore.Tests
 {
-
     [Collection("EventStoreSpec")]
     public class EventStoreJournalSpec : JournalSpec, IClassFixture<DatabaseFixture>
     {
@@ -20,14 +19,15 @@ namespace Akka.Persistence.EventStore.Tests
         {
             var specString = @"
                 akka.test.single-expect-default = 10s
+                akka.eventstore {
+                    connection-string = """ + databaseFixture.ConnectionString + @"""
+                    connection-name = ""EventStoreJournalSpec""
+                }
                 akka.persistence {
-                    publish-plugin-commands = on
                     journal {
                         plugin = ""akka.persistence.journal.eventstore""
                         eventstore {
                             class = ""Akka.Persistence.EventStore.Journal.EventStoreJournal, Akka.Persistence.EventStore""
-                            connection-string = """ + databaseFixture.ConnectionString + @"""
-                            connection-name = ""EventStoreJournalSpec""
                             read-batch-size = 500
                         }
                     }

@@ -8,6 +8,12 @@
 
 using System;
 using Akka.Annotations;
+#if DESKTOPCLR
+using System.Runtime.InteropServices;
+using System.Runtime.Versioning;
+using System.Security;
+using FILETIME = System.Runtime.InteropServices.ComTypes.FILETIME;
+#endif
 
 namespace Akka.Util
 {
@@ -35,7 +41,7 @@ namespace Akka.Util
         {
             if (capacity < 0) AkkaThrowHelper.ThrowArgumentException_TokenBucket_Capacity();
             if (ticksBetweenTokens <= 0) AkkaThrowHelper.ThrowArgumentException_TokenBucket_Time();
-            
+
             _capacity = capacity;
             _ticksBetweenTokens = ticksBetweenTokens;
         }
@@ -81,7 +87,7 @@ namespace Akka.Util
             // Was there even a tick since last time?
             if (timeElapsed >= _ticksBetweenTokens)
             {
-                if (timeElapsed < _ticksBetweenTokens*2)
+                if (timeElapsed < _ticksBetweenTokens * 2)
                 {
                     // only one tick elapsed
                     _lastUpdate += _ticksBetweenTokens;
@@ -90,8 +96,8 @@ namespace Akka.Util
                 else
                 {
                     // Ok, no choice, do the slow integer division
-                    tokensArrived = timeElapsed/_ticksBetweenTokens;
-                    _lastUpdate += tokensArrived*_ticksBetweenTokens;
+                    tokensArrived = timeElapsed / _ticksBetweenTokens;
+                    _lastUpdate += tokensArrived * _ticksBetweenTokens;
                 }
             }
             else
@@ -108,7 +114,7 @@ namespace Akka.Util
             var remainingCost = cost - _availableTokens;
             // Tokens always arrive at exact multiples of the token generation period, we must account for that
             var timeSinceTokenArrival = now - _lastUpdate;
-            var delay = remainingCost*_ticksBetweenTokens - timeSinceTokenArrival;
+            var delay = remainingCost * _ticksBetweenTokens - timeSinceTokenArrival;
             _availableTokens = 0;
             _lastUpdate = now + delay;
             return delay;
@@ -130,9 +136,45 @@ namespace Akka.Util
         {
         }
 
+        #region take from UnsafeNativeMethods
+#if DESKTOPCLR
+        private const string KERNEL32 = "kernel32.dll";
+        [DllImport(KERNEL32, SetLastError = true)]
+        [ResourceExposure(ResourceScope.None)]
+        [SecurityCritical]
+        private static extern void GetSystemTimeAsFileTime([Out] out FILETIME time);
+
+        [SecurityCritical]
+        private static void GetSystemTimeAsFileTime(out long time)
+        {
+            FILETIME fileTime;
+            GetSystemTimeAsFileTime(out fileTime);
+            time = 0;
+            time |= (uint)fileTime.dwHighDateTime;
+            time <<= sizeof(uint) * 8;
+            time |= (uint)fileTime.dwLowDateTime;
+        }
+#endif
+        #endregion
         /// <summary>
         /// TBD
         /// </summary>
-        public override long CurrentTime => DateTime.Now.Ticks;
+        public override long CurrentTime
+        {
+            get
+            {
+#if DESKTOPCLR
+                long time;
+#pragma warning disable 1634
+#pragma warning suppress 56523 // function has no error return value
+#pragma warning restore 1634
+                //UnsafeNativeMethods.GetSystemTimeAsFileTime(out time);
+                GetSystemTimeAsFileTime(out time);
+                return time;
+#else
+                return DateTime.UtcNow.Ticks;
+#endif
+            }
+        }
     }
 }

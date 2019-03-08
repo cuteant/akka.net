@@ -14,9 +14,6 @@ namespace Akka.Persistence.EventStore.Tests
             var eventStorePersistence = EventStorePersistence.Get(Sys);
 
             eventStorePersistence.JournalSettings.ReadBatchSize.Should().Be(500);
-            eventStorePersistence.JournalSettings.Adapter.Should().Be("default");
-            eventStorePersistence.JournalSettings.ConnectionString.Should().Be(string.Empty);
-            eventStorePersistence.JournalSettings.ConnectionName.Should().Be(string.Empty);
         }
     }
 }

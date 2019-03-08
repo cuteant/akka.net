@@ -10,7 +10,9 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
+using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt.Text;
 using MessagePack;
 
 namespace Akka.Cluster
@@ -130,7 +132,7 @@ namespace Akka.Cluster
             private static Node Hash(string name)
             {
                 var md5 = System.Security.Cryptography.MD5.Create();
-                var inputBytes = Encoding.UTF8.GetBytes(name);
+                var inputBytes = StringHelper.UTF8NoBOM.GetBytes(name);
                 var hash = md5.ComputeHash(inputBytes);
 
 
@@ -482,8 +484,7 @@ namespace Akka.Cluster
         /// <inheritdoc/>
         public override string ToString()
         {
-            var versions = Versions.Select(p => p.Key + "->" + p.Value);
-            return $"VectorClock({string.Join(", ", versions)})";
+            return Versions.Select(p => p.Key + "->" + p.Value).Join(",", "VectorClock(",")");
         }
     }
 }

@@ -1,0 +1,17 @@
+PrimitiveSerializers                   => 10 - 19
+
+ProtobufDataSerializer                 => 20 - 29
+
+SystemMessageSerializer                => 100 - 199
+
+MiscMessageSerializer                  => 200 - 299
+
+ClusterShardingMessageSerializer       => 300 - 399
+
+ClusterClientMessageSerializer         => 400 - 439
+
+ClusterSingletonMessageSerializer      => 440 - 469
+
+DistributedPubSubMessageSerializer     => 470 - 499
+
+ClusterMessageSerializer               => 500 - 599

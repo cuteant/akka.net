@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
 using Akka.Actor;
@@ -18,7 +19,7 @@ using Serializer = Akka.Serialization.Serializer;
 
 namespace Akka.DistributedData.Serialization
 {
-    public sealed class ReplicatorMessageSerializer : Serializer
+    public sealed class ReplicatorMessageSerializer : Serializer, IRunnable
     {
         #region internal classes
 
@@ -121,30 +122,33 @@ namespace Akka.DistributedData.Serialization
         }
 
         #endregion
-        
+
+        private static readonly ArrayPool<byte> s_sharedBuffer = BufferManager.Shared;
         public static readonly Type WriteAckType = typeof(WriteAck);
-        
-        private readonly SmallCache<Read, byte[]> readCache;
-        private readonly SmallCache<Write, byte[]> writeCache;
-        private readonly Hyperion.Serializer serializer;
-        private readonly byte[] writeAckBytes;
+
+        private readonly SmallCache<Read, byte[]> _readCache;
+        private readonly SmallCache<Write, byte[]> _writeCache;
+        private readonly Hyperion.Serializer _serializer;
+        private readonly byte[] _writeAckBytes;
 
         public ReplicatorMessageSerializer(ExtendedActorSystem system) : base(system)
         {
+            _serializeFunc = Serialize;
+
             var cacheTtl = system.Settings.Config.GetTimeSpan("akka.cluster.distributed-data.serializer-cache-time-to-live");
-            readCache = new SmallCache<Read, byte[]>(4, cacheTtl, Serialize);
-            writeCache = new SmallCache<Write, byte[]>(4, cacheTtl, Serialize);
+            _readCache = new SmallCache<Read, byte[]>(4, cacheTtl, _serializeFunc);
+            _writeCache = new SmallCache<Write, byte[]>(4, cacheTtl, _serializeFunc);
 
             var akkaSurrogate =
                 Hyperion.Surrogate.Create<ISurrogated, ISurrogate>(
                     toSurrogate: from => from.ToSurrogate(system),
                     fromSurrogate: to => to.FromSurrogate(system));
 
-            serializer = new Hyperion.Serializer(new SerializerOptions(
+            _serializer = new Hyperion.Serializer(new SerializerOptions(
                 preserveObjectReferences: true,
                 versionTolerance: true,
                 surrogates: new[] { akkaSurrogate },
-                knownTypes: new []
+                knownTypes: new[]
                 {
                     typeof(Get),
                     typeof(GetSuccess),
@@ -164,18 +168,18 @@ namespace Akka.DistributedData.Serialization
 
             using (var stream = new MemoryStream())
             {
-                serializer.Serialize(WriteAck.Instance, stream);
+                _serializer.Serialize(WriteAck.Instance, stream);
                 stream.Position = 0;
-                writeAckBytes = stream.ToArray();
+                _writeAckBytes = stream.ToArray();
             }
 
-            system.Scheduler.Advanced.ScheduleRepeatedly(cacheTtl, new TimeSpan(cacheTtl.Ticks / 2), InvokeEvictCacheAction, this);
+            system.Scheduler.Advanced.ScheduleRepeatedly(cacheTtl, new TimeSpan(cacheTtl.Ticks / 2), this);
         }
-        private static readonly Action<ReplicatorMessageSerializer> InvokeEvictCacheAction = InvokeEvictCache;
-        private static void InvokeEvictCache(ReplicatorMessageSerializer serializer)
+
+        void IRunnable.Run()
         {
-            serializer.readCache.Evict();
-            serializer.writeCache.Evict();
+            _readCache.Evict();
+            _writeCache.Evict();
         }
 
         public override byte[] ToBinary(object obj)
@@ -183,23 +187,26 @@ namespace Akka.DistributedData.Serialization
             switch (obj)
             {
                 case Write write:
-                    return writeCache.GetOrAdd(write);
+                    return _writeCache.GetOrAdd(write);
                 case Read read:
-                    return readCache.GetOrAdd(read);
+                    return _readCache.GetOrAdd(read);
                 case WriteAck _:
-                    return writeAckBytes;
+                    return _writeAckBytes;
                 default:
-                    return Serialize(obj);
+                    return Serialize(obj, _serializer);
             }
         }
 
+        private readonly Func<object, byte[]> _serializeFunc;
+        private byte[] Serialize(object obj) => Serialize(obj, _serializer);
+
         private const int c_initialBufferSize = 1024 * 80;
-        private byte[] Serialize(object obj)
+        private static byte[] Serialize(object obj, Hyperion.Serializer serializer)
         {
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
                 var outputStream = pooledStream.Object;
-                outputStream.Reinitialize(c_initialBufferSize);
+                outputStream.Reinitialize(c_initialBufferSize, s_sharedBuffer);
 
                 serializer.Serialize(obj, outputStream);
                 return outputStream.ToByteArray();
@@ -209,9 +216,9 @@ namespace Akka.DistributedData.Serialization
         public override object FromBinary(byte[] bytes, Type type)
         {
             if (type == WriteAckType) return WriteAck.Instance;
-            using (var stream = new MemoryStream(bytes))
+            using (var inputStream = new MemoryStream(bytes))
             {
-                return serializer.Deserialize(stream);
+                return _serializer.Deserialize(inputStream);
             }
         }
     }

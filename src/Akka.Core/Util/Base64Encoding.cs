@@ -45,7 +45,7 @@ namespace Akka.Util
         /// <returns>TBD</returns>
         public static string Base64Encode(this string s)
         {
-            var bytes = System.Text.Encoding.UTF8.GetBytes(s);
+            var bytes = StringHelper.UTF8NoBOM.GetBytes(s);
             return System.Convert.ToBase64String(bytes);
         }
     }

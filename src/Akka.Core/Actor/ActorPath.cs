@@ -9,8 +9,11 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Util;
+using CuteAnt;
+using CuteAnt.Text;
 using MessagePack;
 using static System.String;
 
@@ -108,7 +111,43 @@ namespace Akka.Actor
         /// <summary>
         /// INTERNAL API
         /// </summary>
-        internal static char[] ValidSymbols = @"""-_.*$+:@&=,!~';""()".ToCharArray();
+        internal static readonly char[] ValidSymbols;
+
+        internal static readonly string[] EmptyElements;
+        internal static readonly string[] SystemElements;
+        internal static readonly string[] UserElements;
+
+        private static readonly HashSet<char> s_validChars;
+        private static readonly HashSet<char> s_hexChars;
+
+        static ActorPath()
+        {
+            ValidSymbols = @"""-_.*$+:@&=,!~';""()".ToCharArray();
+            EmptyElements = EmptyArray<string>.Instance;
+            SystemElements = new[] { "system" };
+            UserElements = new[] { "user" };
+            s_validChars = new HashSet<char>();
+            s_hexChars = new HashSet<char>();
+            for (var c = 'a'; c <= 'z'; c++)
+            {
+                s_validChars.Add(c);
+                if (c <= 'f') { s_hexChars.Add(c); }
+            }
+            for (var c = 'A'; c <= 'Z'; c++)
+            {
+                s_validChars.Add(c);
+                if (c <= 'F') { s_hexChars.Add(c); }
+            }
+            for (var c = '0'; c <= '9'; c++)
+            {
+                s_validChars.Add(c);
+                s_hexChars.Add(c);
+            }
+            foreach (var c in ValidSymbols)
+            {
+                s_validChars.Add(c);
+            }
+        }
 
         /// <summary> 
         /// Method that checks if actor name conforms to RFC 2396, http://www.ietf.org/rfc/rfc2396.txt
@@ -119,18 +158,16 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public static bool IsValidPathElement(string s)
         {
-            if (IsNullOrEmpty(s))
-            {
-                return false;
-            }
+            if (IsNullOrEmpty(s)) { return false; }
+
             return !s.StartsWith("$", StringComparison.Ordinal) && Validate(s.ToCharArray(), s.Length);
         }
 
-        private static bool IsValidChar(char c) => (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
-                                                   (c >= '0' && c <= '9') || ValidSymbols.Contains(c);
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsValidChar(char c) => s_validChars.Contains(c);
 
-        private static bool IsHexChar(char c) => (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F') ||
-                                                 (c >= '0' && c <= '9');
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static bool IsHexChar(char c) => s_hexChars.Contains(c);
 
         private static bool Validate(IReadOnlyList<char> chars, int len)
         {
@@ -183,10 +220,6 @@ namespace Akka.Actor
         /// <value> The uid. </value>
         [IgnoreMember, IgnoreDataMember]
         public long Uid { get; }
-
-        internal static readonly string[] EmptyElements = { };
-        internal static readonly string[] SystemElements = { "system" };
-        internal static readonly string[] UserElements = { "user" };
 
         /// <summary>
         /// Gets the elements.
@@ -392,8 +425,7 @@ namespace Akka.Actor
         /// <returns> System.String. </returns>
         private string Join()
         {
-            var joined = String.Join("/", Elements);
-            return "/" + joined;
+            return Elements.JoinWithPrefix("/", "/");
         }
 
         /// <summary>
@@ -422,7 +454,7 @@ namespace Akka.Actor
             var uid = Uid;
             if (uid == ActorCell.UndefinedUid)
                 return ToStringWithAddress();
-            return ToStringWithAddress() + "#" + uid;
+            return string.Concat(ToStringWithAddress(), "#", uid);
         }
 
         /// <summary>

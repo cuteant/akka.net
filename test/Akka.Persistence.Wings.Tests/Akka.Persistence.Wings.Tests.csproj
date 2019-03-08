@@ -1,0 +1,24 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.EventStore.Tests</RootNamespace>
+    <AssemblyName>Akka.Persistence.EventStore.Tests</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <PackageReference Include="CuteAnt.Wings.Sqlite" Version="$(CuteAntWingsSqlitePackageVersion)" />
+    <PackageReference Include="System.Data.SQLite.Core" Version="$(SystemDataSQLiteCorePackageVersion)" />
+  </ItemGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Persistence.TCK\Akka.Persistence.TCK.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.Wings.Query\Akka.Persistence.Wings.Query.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.Wings\Akka.Persistence.Wings.csproj" />
+  </ItemGroup>
+
+</Project>

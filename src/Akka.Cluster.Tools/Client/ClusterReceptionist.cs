@@ -313,7 +313,9 @@ namespace Akka.Cluster.Tools.Client
                 if (!string.IsNullOrEmpty(node.Host) && node.Port.HasValue)
                     return MurmurHash.StringHash(node.Host + ":" + node.Port.Value);
                 else
-                    return ThrowHelper.ThrowIllegalStateException_UnexpectedAddressWithoutHostPort(node);
+                {
+                    ThrowHelper.ThrowIllegalStateException_UnexpectedAddressWithoutHostPort(node); return 0;
+                }
             }
 
             /// <inheritdoc/>
@@ -457,7 +459,7 @@ namespace Akka.Cluster.Tools.Client
                         var addr = _consistentHash.NodeFor(Sender.Path.ToStringWithAddress(_cluster.SelfAddress));
 
                         var first = _nodes.From(addr).Tail().Take(_settings.NumberOfContacts).ToArray();
-                        var slice = first.Length == _settings.NumberOfContacts
+                        var slice = (uint)first.Length == (uint)_settings.NumberOfContacts
                             ? first
                             : first.Union(_nodes.Take(_settings.NumberOfContacts - first.Length)).ToArray();
                         var contacts = new Contacts(slice.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());

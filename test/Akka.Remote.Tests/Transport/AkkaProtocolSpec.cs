@@ -421,7 +421,7 @@ namespace Akka.Remote.Tests.Transport
                 var attempt = (WriteAttempt)associationRegistry.LogSnapshot().Last();
                 if (attempt.Sender.Equals(localAddress) && attempt.Recipient.Equals(remoteAddress))
                 {
-                    codec.DecodePdu((Remote.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
+                    codec.DecodePdu((Akka.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
                         .Match()
                         .With<Heartbeat>(h => rValue = true)
                         .Default(msg => rValue = false);
@@ -440,7 +440,7 @@ namespace Akka.Remote.Tests.Transport
                 var attempt = (WriteAttempt)associationRegistry.LogSnapshot().Last();
                 if (attempt.Sender.Equals(localAddress) && attempt.Recipient.Equals(remoteAddress))
                 {
-                    codec.DecodePdu((Remote.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
+                    codec.DecodePdu((Akka.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
                         .Match()
                         .With<Associate>(h => rValue = h.Info.Origin.Equals(localAddress) && h.Info.Uid == uid)
                         .Default(msg => rValue = false);
@@ -458,7 +458,7 @@ namespace Akka.Remote.Tests.Transport
             {
                 var attempt = (WriteAttempt)associationRegistry.LogSnapshot().Last();
                 if (attempt.Sender.Equals(localAddress) && attempt.Recipient.Equals(remoteAddress))
-                    codec.DecodePdu((Remote.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
+                    codec.DecodePdu((Akka.Serialization.Protocol.AkkaProtocolMessage)MessagePackSerializer.Deserialize<object>(attempt.Payload, s_defaultResolver))
                         .Match()
                         .With<Disassociate>(h => rValue = true)
                         .Default(msg => rValue = false);

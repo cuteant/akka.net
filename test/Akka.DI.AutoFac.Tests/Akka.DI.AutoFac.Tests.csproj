@@ -10,6 +10,7 @@
     <ProjectReference Include="..\..\src\Akka.DI.AutoFac\Akka.DI.AutoFac.csproj" />
     <ProjectReference Include="..\..\src\Akka.DI.TestKit\Akka.DI.TestKit.csproj" />
     <ProjectReference Include="..\..\src\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
+    <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
   </ItemGroup>
 
 </Project>

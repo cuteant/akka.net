@@ -13,8 +13,6 @@ namespace Akka.Remote.Serialization
         {
             return new List<IMessagePackFormatter>()
             {
-                ActorSelectionMessageFormatter.Instance,
-
                 DaemonMsgCreateFormatter.Instance,
             };
         }
@@ -23,7 +21,6 @@ namespace Akka.Remote.Serialization
         {
             return new List<IFormatterResolver>()
             {
-                SystemMessageResolver.Instance,
                 MiscMessageResolver.Instance,
             };
         }

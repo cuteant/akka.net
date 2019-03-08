@@ -196,7 +196,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static int ThrowArgumentException_ReadAggregatorDoesNotSupportReadLocal()
+        internal static void ThrowArgumentException_ReadAggregatorDoesNotSupportReadLocal()
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -206,7 +206,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static int ThrowArgumentException_InvalidConsistencyLevel()
+        internal static void ThrowArgumentException_InvalidConsistencyLevel()
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -216,7 +216,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static int ThrowArgumentException_WriteAggregatorDoesNotSupportWriteLocal()
+        internal static void ThrowArgumentException_WriteAggregatorDoesNotSupportWriteLocal()
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -246,7 +246,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IReplicatedData ThrowArgumentException_UnknownDeltaOperationOfType(IReplicatedData other)
+        internal static void ThrowArgumentException_UnknownDeltaOperationOfType(IReplicatedData other)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -266,7 +266,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ORSet<T> ThrowArgumentException_CannotMergeDeltaOfType<T>(ORSet<T>.IDeltaOperation delta)
+        internal static void ThrowArgumentException_CannotMergeDeltaOfType<T>(ORSet<T>.IDeltaOperation delta)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -304,7 +304,7 @@ namespace Akka.DistributedData
         #region -- NotSupportedException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ImmutableDictionary<T, VersionVector> ThrowNotSupportedException<T>()
+        internal static void ThrowNotSupportedException()
         {
             throw GetException();
             NotSupportedException GetException()
@@ -354,7 +354,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static VersionVector ThrowNotSupportedException_CannotSubtractDotsFromProvidedVersionVector()
+        internal static void ThrowNotSupportedException_CannotSubtractDotsFromProvidedVersionVector()
         {
             throw GetException();
             NotSupportedException GetException()
@@ -364,7 +364,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static VersionVector ThrowNotSupportedException_MultiVersionVectorDoesnotSupportMerge()
+        internal static void ThrowNotSupportedException_MultiVersionVectorDoesnotSupportMerge()
         {
             throw GetException();
             NotSupportedException GetException()
@@ -374,7 +374,7 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static VersionVector ThrowNotSupportedException_SingleVersionVectorDoesnotSupportMerge()
+        internal static void ThrowNotSupportedException_SingleVersionVectorDoesnotSupportMerge()
         {
             throw GetException();
             NotSupportedException GetException()
@@ -402,7 +402,7 @@ namespace Akka.DistributedData
         #region -- InvalidCastException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowInvalidCastException_KeyTypeCannotBeCasted<T>(IKey key, IReplicatedData data, IKey<T> key0)
+        internal static void ThrowInvalidCastException_KeyTypeCannotBeCasted<T>(IKey key, IReplicatedData data, IKey<T> key0)
             where T : IReplicatedData
         {
             throw GetException();

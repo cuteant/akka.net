@@ -1,137 +1,50 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
-using Akka.Persistence.EventStore.Query;
+using Akka.Extension.EventStore;
 using Akka.Persistence.Journal;
-using Akka.Util.Internal;
 using EventStore.ClientAPI;
+using IEsEventAdapter = EventStore.ClientAPI.IEventAdapter;
 
 namespace Akka.Persistence.EventStore.Journal
 {
-    public class EventStoreJournal : AsyncWriteJournal, IWithUnboundedStash
+    public class EventStoreJournal : AsyncWriteJournal
     {
-        public IStash Stash { get; set; }
-
-        private readonly IEventStoreConnection _connRead;
-        private readonly IEventStoreConnection _conn;
-        private IEventAdapter _eventAdapter;
+        private readonly IEventStoreConnection2 _conn;
+        private readonly IEsEventAdapter _eventAdapter;
         private readonly EventStoreJournalSettings _settings;
-        private readonly EventStoreSubscriptions _subscriptions;
         private readonly ILoggingAdapter _log;
 
         public EventStoreJournal()
         {
-            _settings = EventStorePersistence.Get(Context.System).JournalSettings;
+            var system = Context.System;
+            _settings = EventStorePersistence.Get(system).JournalSettings;
             _log = Context.GetLogger();
-            var connectionString = _settings.ConnectionString;
-            var connectionName = _settings.ConnectionName;
-            _connRead = EventStoreConnection
-                    .Create(connectionString, $"{connectionName}.Read");
-
-            _connRead.ConnectAsync().Wait();
-
-            _conn = EventStoreConnection
-                    .Create(connectionString, connectionName);
-
-            _conn.ConnectAsync()
-                 .PipeTo(
-                     Self,
-                     success: () => new Status.Success("Connected"),
-                     failure: ex => new Status.Failure(ex)
-                 );
-            
-            _subscriptions = new EventStoreSubscriptions(_connRead, Context);
+            _conn = EventStoreConnector.Get(system).Connection;
+            _eventAdapter = _conn.EventAdapter;
         }
 
-        protected override void PreStart()
-        {
-            base.PreStart();
-            _eventAdapter = BuildDefaultJournalAdapter();
-            BecomeStacked(AwaitingConnection);
-        }
-
-        protected override void PostStop()
-        {
-            base.PostStop();
-            _conn?.Dispose();
-            _connRead?.Dispose();
-        }
-
-        private bool AwaitingConnection(object message)
-        {
-            switch (message)
-            {
-                case Status.Success success:
-                    UnbecomeStacked();
-                    Stash.UnstashAll();
-                    return true;
-
-                case Status.Failure fail:
-                    _log.Error(fail.Cause, "Failure during {0} initialization.", Self);
-                    Context.Stop(Self);
-                    return true;
-
-                default:
-                    Stash.Stash();
-                    return true;
-            }
-        }
-
-        private IEventAdapter BuildDefaultJournalAdapter()
-        {
-            if (_settings.Adapter.ToLowerInvariant() == "default")
-            {
-                return new DefaultEventAdapter();
-            }
-
-            try
-            {
-                var journalAdapterType = Type.GetType(_settings.Adapter);
-                if (journalAdapterType == null)
-                {
-                    _log.Error(
-                        $"Unable to find type [{_settings.Adapter}] Adapter for EventStoreJournal. Is the assembly referenced properly? Falling back to default");
-                    return new DefaultEventAdapter();
-                }
-
-                var journalAdapter = Activator.CreateInstance(journalAdapterType) as IEventAdapter;
-                if (journalAdapter == null)
-                {
-                    _log.Error(
-                        $"Unable to create instance of type [{journalAdapterType.AssemblyQualifiedName}] Adapter for EventStoreJournal. Do you have an empty constructor? Falling back to default.");
-                    return new DefaultEventAdapter();
-                }
-
-                return journalAdapter;
-            }
-            catch (Exception e)
-            {
-                _log.Error(e, "Error loading Adapter for EventStoreJournal. Falling back to default");
-                return new DefaultEventAdapter();
-            }
-        }
-
+        /// <inheritdoc />
         public override async Task<long> ReadHighestSequenceNrAsync(string persistenceId, long fromSequenceNr)
         {
             try
             {
-                var slice = await _conn.ReadStreamEventsBackwardAsync(persistenceId, StreamPosition.End, 1, false);
+                var readResult = await _conn.GetLastEventAsync(persistenceId, false).ConfigureAwait(false);
 
-                long sequence = 0;
+                long sequence = 0L;
 
-                if (slice.Events.Any())
+                if (readResult.Status == EventReadStatus.Success)
                 {
-                    var @event = slice.Events.First();
-                    var adapted = _eventAdapter.Adapt(@event);
+                    var resolvedEvent = readResult.Event.Value.Event;
+                    var adapted = Adapt(resolvedEvent);
                     sequence = adapted.SequenceNr;
                 }
                 else
                 {
-                    var metadata = await _conn.GetStreamMetadataAsync(persistenceId);
+                    var metadata = await _conn.GetStreamMetadataAsync(persistenceId).ConfigureAwait(false);
                     if (metadata.StreamMetadata.TruncateBefore != null)
                     {
                         sequence = metadata.StreamMetadata.TruncateBefore.Value;
@@ -147,54 +60,42 @@ namespace Akka.Persistence.EventStore.Journal
             }
         }
 
-        public override async Task ReplayMessagesAsync(
-            IActorContext context,
-            string persistenceId,
-            long fromSequenceNr,
-            long toSequenceNr,
-            long max,
-            Action<IPersistentRepresentation> recoveryCallback)
+        /// <inheritdoc />
+        public override async Task ReplayMessagesAsync(IActorContext context, string persistenceId,
+            long fromSequenceNr, long toSequenceNr, long max, Action<IPersistentRepresentation> recoveryCallback)
         {
             try
             {
-                if (toSequenceNr < fromSequenceNr || max == 0) return;
+                if (toSequenceNr < fromSequenceNr || max == 0L) { return; }
 
-                if (fromSequenceNr == toSequenceNr)
-                {
-                    max = 1;
-                }
+                if (fromSequenceNr == toSequenceNr) { max = 1L; }
 
                 if (toSequenceNr > fromSequenceNr && max == toSequenceNr)
                 {
-                    max = toSequenceNr - fromSequenceNr + 1;
+                    max = toSequenceNr - fromSequenceNr + 1L;
                 }
 
                 var count = 0L;
 
-                var start = fromSequenceNr <= 0
-                        ? 0
-                        : fromSequenceNr - 1;
+                var start = fromSequenceNr <= 0L ? 0L : fromSequenceNr - 1L;
 
                 var localBatchSize = _settings.ReadBatchSize;
 
-                StreamEventsSlice slice;
+                StreamEventsSlice<object> slice;
                 do
                 {
                     if (max == long.MaxValue && toSequenceNr > fromSequenceNr)
                     {
-                        max = toSequenceNr - fromSequenceNr + 1;
+                        max = toSequenceNr - fromSequenceNr + 1L;
                     }
 
-                    if (max < localBatchSize)
-                    {
-                        localBatchSize = (int) max;
-                    }
+                    if (max < localBatchSize) { localBatchSize = (int)max; }
 
-                    slice = await _conn.ReadStreamEventsForwardAsync(persistenceId, start, localBatchSize, false);
+                    slice = await _conn.GetStreamEventsForwardAsync(persistenceId, start, localBatchSize, false).ConfigureAwait(false);
 
                     foreach (var @event in slice.Events)
                     {
-                        var representation = _eventAdapter.Adapt(@event, s =>
+                        var representation = Adapt(@event.Event, s =>
                         {
                             //TODO: Is this correct?
                             var selection = context.ActorSelection(s);
@@ -204,10 +105,7 @@ namespace Akka.Persistence.EventStore.Journal
                         recoveryCallback(representation);
                         count++;
 
-                        if (count == max)
-                        {
-                            return;
-                        }
+                        if (count == max) { return; }
                     }
 
                     start = slice.NextEventNumber;
@@ -215,41 +113,23 @@ namespace Akka.Persistence.EventStore.Journal
             }
             catch (Exception e)
             {
-                _log.Error(e, "Error replaying messages for: {0}", persistenceId);
+                _log.ErrorReplayingMessages(e, persistenceId);
                 throw;
             }
         }
 
-        protected override async Task<IImmutableList<Exception>> WriteMessagesAsync(
-            IEnumerable<AtomicWrite> atomicWrites)
+        /// <inheritdoc />
+        protected override async Task<IImmutableList<Exception>> WriteMessagesAsync(IEnumerable<AtomicWrite> atomicWrites)
         {
             var results = new List<Exception>();
             foreach (var atomicWrite in atomicWrites)
             {
-                var persistentMessages = (IImmutableList<IPersistentRepresentation>) atomicWrite.Payload;
-
+                var persistentMessages = (IImmutableList<IPersistentRepresentation>)atomicWrite.Payload;
                 var persistenceId = atomicWrite.PersistenceId;
-
-
-                var lowSequenceId = persistentMessages.Min(c => c.SequenceNr) - 2;
-
                 try
                 {
-                    var events = persistentMessages
-                                 .Select(persistentMessage => _eventAdapter.Adapt(persistentMessage)).ToArray();
-
-                    var pendingWrite = new
-                    {
-                        StreamId = persistenceId,
-                        ExpectedSequenceId = lowSequenceId,
-                        EventData = events,
-                        debugData = persistentMessages
-                    };
-                    var expectedVersion = pendingWrite.ExpectedSequenceId < 0
-                            ? ExpectedVersion.NoStream
-                            : (int) pendingWrite.ExpectedSequenceId;
-
-                    await _conn.AppendToStreamAsync(pendingWrite.StreamId, expectedVersion, pendingWrite.EventData);
+                    Adapt(_eventAdapter, persistentMessages, out var eventDatas, out var eventMetas);
+                    await _conn.SendEventsAsync(persistenceId, eventDatas, eventMetas).ConfigureAwait(false);
                     results.Add(null);
                 }
                 catch (Exception e)
@@ -261,72 +141,73 @@ namespace Akka.Persistence.EventStore.Journal
             return results.ToImmutableList();
         }
 
+        /// <inheritdoc />
         protected override async Task DeleteMessagesToAsync(string persistenceId, long toSequenceNr)
         {
             if (toSequenceNr == long.MaxValue)
             {
-                var slice = await _conn.ReadStreamEventsBackwardAsync(persistenceId, StreamPosition.End, 1, false);
-                if (slice.Events.Any())
+                var readResult = await _conn.GetLastEventAsync(persistenceId, false).ConfigureAwait(false);
+                if (readResult.Status == EventReadStatus.Success)
                 {
-                    var @event = slice.Events.First();
-                    var highestEventPosition = @event.OriginalEventNumber;
+                    var highestEventPosition = readResult.Event.Value.Event.EventNumber;
                     await _conn.SetStreamMetadataAsync(persistenceId, ExpectedVersion.Any,
-                        StreamMetadata.Create(truncateBefore: highestEventPosition + 1));
+                        StreamMetadata.Create(truncateBefore: highestEventPosition + 1)).ConfigureAwait(false);
                 }
             }
             else
             {
                 await _conn.SetStreamMetadataAsync(persistenceId, ExpectedVersion.Any,
-                    StreamMetadata.Create(truncateBefore: toSequenceNr));
+                    StreamMetadata.Create(truncateBefore: toSequenceNr)).ConfigureAwait(false);
             }
         }
 
-        protected override bool ReceivePluginInternal(object message)
+        private static void Adapt(IEsEventAdapter eventAdapter, IImmutableList<IPersistentRepresentation> persistentMessages, out object[] eventDatas, out IEventMetadata[] eventMetas)
         {
-            return message.Match()
-                          .With<ReplayTaggedMessages>(StartTaggedSubscription)
-                          .With<SubscribePersistenceId>(StartPersistenceIdSubscription)
-                          .With<SubscribeAllPersistenceIds>(SubscribeAllPersistenceIdsHandler)
-                          .With<Unsubscribe>(RemoveSubscriber)
-                          .WasHandled;
-        }
-
-        private void StartPersistenceIdSubscription(SubscribePersistenceId sub)
-        {
-            long? offset = sub.FromSequenceNr == 0 ? (long?) null : sub.FromSequenceNr;
-            _subscriptions.Subscribe(Sender, sub.PersistenceId, offset, sub.Max, e =>
+            eventDatas = new object[persistentMessages.Count];
+            eventMetas = new IEventMetadata[persistentMessages.Count];
+            for (var idx = 0; idx < persistentMessages.Count; idx++)
             {
-                var p = _eventAdapter.Adapt(e);
-                return p!= null ? new ReplayedMessage(p) : null;
-            });
+                var persistentMessage = persistentMessages[idx];
+
+                eventDatas[idx] = persistentMessage.Payload;
+                var metadata = new Dictionary<string, object>(7)
+                {
+                    [MetadataConstants.PersistenceId] = persistentMessage.PersistenceId,
+                    [MetadataConstants.OccurredOn] = DateTime.UtcNow,
+                    [MetadataConstants.Manifest] = persistentMessage.Manifest,
+                    [MetadataConstants.SenderPath] = persistentMessage.Sender?.Path?.ToStringWithoutAddress() ?? string.Empty,
+                    [MetadataConstants.SequenceNr] = persistentMessage.SequenceNr,
+                    [MetadataConstants.WriterGuid] = persistentMessage.WriterGuid,
+                    [MetadataConstants.JournalType] = JournalTypes.WriteJournal
+                };
+
+                eventMetas[idx] = eventAdapter.ToEventMetadata(metadata);
+            }
         }
 
-        private void SubscribeAllPersistenceIdsHandler(SubscribeAllPersistenceIds msg)
+        private static IPersistentRepresentation Adapt(RecordedEvent<object> resolvedEvent, Func<string, IActorRef> actorSelection = null)
         {
-            _subscriptions.Subscribe(Sender, "$streams", null, 500, e => _eventAdapter.Adapt(e));
-        }
+            var fullEvent = resolvedEvent.FullEvent;
+            var eventDescriptor = fullEvent.Descriptor;
 
+            var journalType = eventDescriptor.GetValue<string>(MetadataConstants.JournalType, null);
+            if (!string.Equals(JournalTypes.WriteJournal, journalType, StringComparison.Ordinal))
+            {
+                // since we are reading from "$streams" stream, there could be other kind of event linked, e.g. snapshot
+                // events, since IEventAdapter is storing in metadata "journalType" using Adopt while event
+                // should be adopted to EventStore message EventData.
+                // Return null in case journalType != "WriteJournal" which means some other extension stored that event in
+                // database but $streams projection picked up since it is at position 0
+                return null;
+            }
+            var stream = eventDescriptor.GetValue<string>(MetadataConstants.PersistenceId);
+            var manifest = eventDescriptor.GetValue<string>(MetadataConstants.Manifest);
+            var sequenceNr = eventDescriptor.GetValue<long>(MetadataConstants.SequenceNr);
+            var senderPath = eventDescriptor.GetValue<string>(MetadataConstants.SenderPath);
 
-        private void StartTaggedSubscription(ReplayTaggedMessages msg)
-        {
-            long? nullable = msg.FromOffset == 0 ? (long?) null : msg.FromOffset;
+            var sender = actorSelection?.Invoke(senderPath);
 
-            _subscriptions.Subscribe(
-                Sender,
-                msg.Tag,
-                nullable,
-                (int) msg.Max,
-                @event => new ReplayedTaggedMessage(
-                    _eventAdapter.Adapt(@event),
-                    msg.Tag,
-                    @event.Link?.EventNumber ?? @event.OriginalEventNumber)
-            );
-        }
-
-
-        private void RemoveSubscriber(Unsubscribe msg)
-        {
-            _subscriptions.Unsubscribe(msg.StreamId, msg.Subscriber);
+            return new Persistent(fullEvent.Value, sequenceNr, stream, manifest, false, sender);
         }
     }
 }

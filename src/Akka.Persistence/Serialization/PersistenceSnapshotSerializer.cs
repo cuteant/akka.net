@@ -31,12 +31,9 @@ namespace Akka.Persistence.Serialization
 
         public override byte[] ToBinary(object obj)
         {
-            if (obj is Snapshot snapShot)
-            {
-                return MessagePackSerializer.Serialize(system.Serialize(snapShot.Data), s_defaultResolver);
-            }
-
-            return ThrowHelper.ThrowArgumentException_SnapshotSerializer(obj);
+            var snapShot = obj as Snapshot;
+            if (null == snapShot) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(obj); }
+            return MessagePackSerializer.Serialize(system.Serialize(snapShot.Data), s_defaultResolver);
         }
 
         public override object FromBinary(byte[] bytes, Type type)

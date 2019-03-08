@@ -211,7 +211,7 @@ namespace Akka.DistributedData
         {
             if (Data is T td) return td;
 
-            return ThrowHelper.ThrowInvalidCastException_KeyTypeCannotBeCasted(Key, Data, key);
+            ThrowHelper.ThrowInvalidCastException_KeyTypeCannotBeCasted(Key, Data, key); return default;
         }
 
         /// <inheritdoc/>

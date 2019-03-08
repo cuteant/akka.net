@@ -99,7 +99,7 @@ namespace Akka.Streams
                     return null;
 
                 default:
-                    return ThrowHelper.ThrowArgumentException(context);
+                    ThrowHelper.ThrowArgumentException(context); return null;
             }
         }
 
@@ -216,7 +216,7 @@ namespace Akka.Streams
             //FIXME this method is going to cause trouble for other Materializer implementations
             if (materializer is ActorMaterializer downcast) { return downcast; }
 
-            return ThrowHelper.ThrowArgumentException_Downcast(materializer);
+            ThrowHelper.ThrowArgumentException_Downcast(materializer); return null;
         }
     }
 

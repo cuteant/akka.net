@@ -1168,7 +1168,7 @@ namespace Akka.Remote.Transport
         {
             try
             {
-                var pdu = _codec.DecodePdu((Remote.Serialization.Protocol.AkkaProtocolMessage)b);
+                var pdu = _codec.DecodePdu((Akka.Serialization.Protocol.AkkaProtocolMessage)b);
                 if (pdu is Associate associate)
                 {
                     return associate.Info.Origin;

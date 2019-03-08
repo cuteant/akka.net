@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Actor;
@@ -290,6 +289,23 @@ namespace Akka.Serialization
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
         /// optional type hint to the Serializer.</summary>
+        /// <param name="payload">TBD</param>
+        /// <exception cref="SerializationException">
+        /// This exception is thrown if the system cannot find the serializer with the given
+        /// <paramref name="payload"/>.</exception>
+        /// <returns>The resulting object</returns>
+        public object Deserialize(in ExternalPayload payload)
+        {
+            if (_serializersById.TryGetValue(payload.Identifier, out var serializer))
+            {
+                return serializer.FromExternalPayload(payload);
+            }
+
+            ThrowSerializationException(payload.Identifier); return null;
+        }
+
+        /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
+        /// optional type hint to the Serializer.</summary>
         /// <param name="bytes">TBD</param>
         /// <param name="serializerId">TBD</param>
         /// <param name="manifest">TBD</param>
@@ -330,15 +346,38 @@ namespace Akka.Serialization
 
         /// <summary>Returns the Serializer configured for the given object, returns the NullSerializer if it's null.</summary>
         /// <param name="obj">The object that needs to be serialized</param>
+        /// <returns>The serializer configured for the given object type</returns>
+        public Serializer FindSerializerFor(object obj)
+        {
+            return obj == null ? _nullSerializer : FindSerializerForType(obj.GetType());
+        }
+
+        /// <summary>Returns the Serializer configured for the given object, returns the NullSerializer if it's null.</summary>
+        /// <param name="obj">The object that needs to be serialized</param>
         /// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
         /// <returns>The serializer configured for the given object type</returns>
-        public Serializer FindSerializerFor(object obj, string defaultSerializerName = null)
+        public Serializer FindSerializerFor(object obj, string defaultSerializerName)
         {
             return obj == null ? _nullSerializer : FindSerializerForType(obj.GetType(), defaultSerializerName);
         }
 
-        //cache to eliminate lots of typeof operator calls
-        private readonly Type _objectType = TypeConstants.ObjectType;
+        /// <summary>Returns the configured Serializer for the given Class. The configured Serializer is used
+        /// if the configured class `IsAssignableFrom` from the <see cref="Type">type</see>, i.e. the
+        /// configured class is a super class or implemented interface. In case of ambiguity it is
+        /// primarily using the most specific configured class, and secondly the entry configured first.</summary>
+        /// <param name="objectType">TBD</param>
+        /// <exception cref="SerializationException">This exception is thrown if the serializer of the given <paramref name="objectType"/>
+        /// could not be found.</exception>
+        /// <returns>The serializer configured for the given object type</returns>
+        public Serializer FindSerializerForType(Type objectType)
+        {
+            if (_serializerMap.TryGetValue(objectType, out var fullMatchSerializer))
+            {
+                return fullMatchSerializer;
+            }
+
+            return InternalFindSerializerForType(this, objectType, null);
+        }
 
         /// <summary>Returns the configured Serializer for the given Class. The configured Serializer is used
         /// if the configured class `IsAssignableFrom` from the <see cref="Type">type</see>, i.e. the
@@ -349,23 +388,33 @@ namespace Akka.Serialization
         /// <exception cref="SerializationException">This exception is thrown if the serializer of the given <paramref name="objectType"/>
         /// could not be found.</exception>
         /// <returns>The serializer configured for the given object type</returns>
-        public Serializer FindSerializerForType(Type objectType, string defaultSerializerName = null)
+        public Serializer FindSerializerForType(Type objectType, string defaultSerializerName)
         {
             if (_serializerMap.TryGetValue(objectType, out var fullMatchSerializer))
             {
                 return fullMatchSerializer;
             }
 
+            return InternalFindSerializerForType(this, objectType, defaultSerializerName);
+        }
+
+        //cache to eliminate lots of typeof operator calls
+        private static readonly Type s_objectType = TypeConstants.ObjectType;
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static Serializer InternalFindSerializerForType(Serialization serialization, Type objectType, string defaultSerializerName)
+        {
             Serializer serializer = null;
-            Type type = objectType;
+            var type = objectType;
+            var serializerMap = serialization._serializerMap;
 
             // TODO: see if we can do a better job with proper type sorting here - most specific to
             //       least specific (object serializer goes last)
-            foreach (var serializerType in _serializerMap)
+            foreach (var serializerType in serializerMap)
             {
                 // force deferral of the base "object" serializer until all other higher-level types
                 // have been evaluated
-                if (serializerType.Key.IsAssignableFrom(type) && serializerType.Key != _objectType)
+                if (serializerType.Key.IsAssignableFrom(type) && serializerType.Key != s_objectType)
                 {
                     serializer = serializerType.Value;
                     break;
@@ -374,13 +423,13 @@ namespace Akka.Serialization
 
             if (serializer == null)
             {
-                serializer = GetSerializerByName(defaultSerializerName);
+                serializer = serialization.GetSerializerByName(defaultSerializerName);
             }
 
             // do a final check for the "object" serializer
             if (serializer == null)
             {
-                _serializerMap.TryGetValue(_objectType, out serializer);
+                serializerMap.TryGetValue(s_objectType, out serializer);
             }
 
             if (serializer == null)
@@ -388,7 +437,7 @@ namespace Akka.Serialization
                 ThrowSerializationException(objectType.Name);
             }
 
-            AddSerializationMap(type, serializer);
+            serialization.AddSerializationMap(type, serializer);
             return serializer;
         }
 

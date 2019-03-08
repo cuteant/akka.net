@@ -10,7 +10,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch.SysMsg;
 using Akka.Remote.Configuration;
-using Akka.Remote.Serialization;
+using Akka.Serialization;
 using Akka.TestKit;
 using Akka.TestKit.TestActors;
 using Akka.Util.Internal;

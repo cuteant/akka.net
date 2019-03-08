@@ -382,7 +382,7 @@ namespace Akka.Streams.Dsl
                 else return outlet;
             }
 
-            return ThrowHelper.ThrowArgumentException<Outlet<TOut>>(ExceptionResource.Argument_Nomore_outlets_jun);
+            ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Nomore_outlets_jun); return null;
         }
 
         /// <summary>
@@ -406,7 +406,7 @@ namespace Akka.Streams.Dsl
                 else return inlet;
             }
 
-            return ThrowHelper.ThrowArgumentException<Inlet<TIn>>(ExceptionResource.Argument_Nomore_inlets_jun);
+            ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Nomore_inlets_jun); return null;
         }
     }
 
@@ -524,7 +524,7 @@ namespace Akka.Streams.Dsl
                 return b;
             }
 
-            return ThrowHelper.ThrowArgumentException<GraphDsl.Builder<TMat>>(ExceptionResource.Argument_Nomore_inlets_free_jun, ExceptionArgument.junction);
+            ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Nomore_inlets_free_jun, ExceptionArgument.junction); return null;
         }
 
         private static Outlet<TOut2> Bind<TIn, TOut1, TOut2, TMat>(GraphDsl.ForwardOps<TOut1, TMat> ops, UniformFanOutShape<TIn, TOut2> junction) where TIn : TOut1
@@ -730,7 +730,7 @@ namespace Akka.Streams.Dsl
                 }
             }
 
-            return ThrowHelper.ThrowArgumentException<GraphDsl.Builder<TMat>>(ExceptionResource.Argument_Nomore_inlets_free_jun, ExceptionArgument.junction);
+            ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Nomore_inlets_free_jun, ExceptionArgument.junction); return null;
         }
 
         /// <summary>

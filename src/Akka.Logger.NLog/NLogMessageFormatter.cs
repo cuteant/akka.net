@@ -1,4 +1,5 @@
 ﻿using Akka.Event;
+using Akka.Util.Internal;
 using NLog;
 using NLogLevel = global::NLog.LogLevel;
 
@@ -23,7 +24,7 @@ namespace Akka.Logger.NLog
         /// </returns>
         public string Format(string format, params object[] args)
         {
-            if (args?.Length > 0)
+            if (args.NonEmpty())
             {
                 return LogEventInfo.Create(NLogLevel.Info, string.Empty, null, format, args).FormattedMessage;
             }

@@ -50,7 +50,7 @@ namespace Akka.Routing
         /// <returns>A <see cref="Routee" /> that is receives the <paramref name="message"/>.</returns>
         public override Routee Select(object message, Routee[] routees)
         {
-            if (routees.Length > 0)
+            if (0u < (uint)routees.Length)
             {
                 var size = routees.Length;
                 int index = (Interlocked.Increment(ref _next) & int.MaxValue)%size;

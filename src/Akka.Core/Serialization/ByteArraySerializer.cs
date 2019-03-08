@@ -26,6 +26,7 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override object DeepCopy(object source)
         {
+            if (null == source) { return null; }
             var bts = source as byte[];
             if (null == bts) { AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_IsNotByteArray); }
             return CopyFrom(bts, 0, bts.Length);
@@ -60,12 +61,7 @@ namespace Akka.Serialization
         /// This exception is thrown if the given <paramref name="obj"/> is not a byte array.
         /// </exception>
         /// <returns>A byte array containing the serialized object</returns>
-        public override byte[] ToBinary(object obj)
-        {
-            if (obj is byte[] bts) { return bts; }
-            if (obj != null) { AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_IsNotByteArray); }
-            return null;
-        }
+        public override byte[] ToBinary(object obj) => (byte[])obj;
 
         /// <summary>
         /// Deserializes a byte array into an object of type <paramref name="type"/>.

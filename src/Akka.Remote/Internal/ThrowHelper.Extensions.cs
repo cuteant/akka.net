@@ -5,7 +5,7 @@ using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Configuration;
-using Akka.Remote.Serialization.Protocol;
+using Akka.Serialization.Protocol;
 using Akka.Remote.Transport;
 using Akka.Util;
 using DotNetty.Transport.Channels;
@@ -207,57 +207,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowArgumentException_Serializer_SystemMsg_NoMessage<T>()
-        {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException("NoMessage should never be serialized or deserialized");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_SystemMsg(int manifest)
-        {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(Akka.Remote.Serialization.SystemMessageSerializer)}]");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer_Primitive(int manifest)
-        {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(Akka.Remote.Serialization.PrimitiveSerializers)}]");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ActorSel(object obj)
-        {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Cannot serialize object of type [{obj?.GetType().TypeQualifiedName()}]");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static byte[] ThrowArgumentException_Serializer_S(object obj)
-        {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Cannot serialize object of type [{obj?.GetType().TypeQualifiedName()}]");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowArgumentException_Serializer_D<T>(object obj)
+        internal static void ThrowArgumentException_Serializer_D(object obj)
         {
             throw GetException();
             ArgumentException GetException()
@@ -307,7 +257,7 @@ namespace Akka.Remote
         #region -- SerializationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowSerializationException_Serializer_MiscFrom(int manifest)
+        internal static void ThrowSerializationException_Serializer_MiscFrom(int manifest)
         {
             throw GetException();
             SerializationException GetException()
@@ -478,7 +428,7 @@ namespace Akka.Remote
         #region -- PduCodecException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IAkkaPdu ThrowPduCodecException_Decode()
+        internal static void ThrowPduCodecException_Decode()
         {
             throw GetException();
             PduCodecException GetException()
@@ -488,7 +438,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IAkkaPdu ThrowPduCodecException_Decode(Exception ex)
+        internal static void ThrowPduCodecException_Decode(Exception ex)
         {
             throw GetException();
             PduCodecException GetException()
@@ -498,7 +448,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IAkkaPdu ThrowPduCodecException_Decode(AkkaControlMessage controlPdu)
+        internal static void ThrowPduCodecException_Decode(AkkaControlMessage controlPdu)
         {
             throw GetException();
             PduCodecException GetException()
@@ -532,7 +482,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IAkkaPdu ThrowAkkaProtocolException_DecodePdu(object pdu, Exception ex)
+        internal static void ThrowAkkaProtocolException_DecodePdu(object pdu, Exception ex)
         {
             throw GetException();
             AkkaProtocolException GetException()
@@ -542,7 +492,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static bool ThrowAkkaProtocolException_Associate(Exception ex)
+        internal static void ThrowAkkaProtocolException_Associate(Exception ex)
         {
             throw GetException();
             AkkaProtocolException GetException()
@@ -562,7 +512,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static bool ThrowAkkaProtocolException_HeartBeat(Exception ex)
+        internal static void ThrowAkkaProtocolException_HeartBeat(Exception ex)
         {
             throw GetException();
             AkkaProtocolException GetException()
@@ -596,7 +546,7 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static AckAndMessage ThrowEndpointException_DecodeMessageAndAck(Exception ex)
+        internal static void ThrowEndpointException_DecodeMessageAndAck(Exception ex)
         {
             throw GetException();
             EndpointException GetException()

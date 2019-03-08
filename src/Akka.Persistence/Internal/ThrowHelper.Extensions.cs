@@ -147,7 +147,7 @@ namespace Akka.Persistence
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static IEventAdapter ThrowArgumentException_qualifiedName(string qualifiedName)
+        internal static void ThrowArgumentException_qualifiedName(string qualifiedName)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -188,7 +188,7 @@ namespace Akka.Persistence
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static byte[] ThrowArgumentException_MessageSerializer(object obj)
+        internal static void ThrowArgumentException_MessageSerializer(object obj)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -198,7 +198,7 @@ namespace Akka.Persistence
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static byte[] ThrowArgumentException_SnapshotSerializer(object obj)
+        internal static void ThrowArgumentException_SnapshotSerializer(object obj)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -208,7 +208,7 @@ namespace Akka.Persistence
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_SnapshotSerializer(Type type)
+        internal static void ThrowArgumentException_SnapshotSerializer(Type type)
         {
             throw GetArgumentException();
             ArgumentException GetArgumentException()
@@ -225,7 +225,7 @@ namespace Akka.Persistence
                 "CombinedReadEventAdapter must not be used when writing (creating manifests) events!");
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowIllegalStateException_OnlyReadSide<T>()
+        internal static void ThrowIllegalStateException_OnlyReadSide()
         {
             throw OnlyReadSideException;
         }
@@ -320,7 +320,7 @@ namespace Akka.Persistence
         #region -- SerializationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowSerializationException(Type type)
+        internal static void ThrowSerializationException(Type type)
         {
             throw GetException();
             SerializationException GetException()

@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Akka.Actor.Internal;
 using Akka.Event;
 using Akka.Pattern;
@@ -1210,6 +1211,7 @@ namespace Akka.Actor
             return true;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessMsg(object any, object source)
         {
             var fsmEvent = new Event<TData>(any, _currentState.StateData);
@@ -1280,9 +1282,10 @@ namespace Akka.Actor
             }
             else
             {
+                var sender = Sender;
                 for (int i = nextState.Replies.Count - 1; i >= 0; i--)
                 {
-                    Sender.Tell(nextState.Replies[i]);
+                    sender.Tell(nextState.Replies[i]);
                 }
                 Terminate(nextState);
                 Context.Stop(Self);
@@ -1297,9 +1300,10 @@ namespace Akka.Actor
             }
             else
             {
+                var sender = Sender;
                 for (int i = nextState.Replies.Count - 1; i >= 0; i--)
                 {
-                    Sender.Tell(nextState.Replies[i]);
+                    sender.Tell(nextState.Replies[i]);
                 }
                 if (!_currentState.StateName.Equals(nextState.StateName) || nextState.Notifies)
                 {

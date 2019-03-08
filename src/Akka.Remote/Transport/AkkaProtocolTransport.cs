@@ -11,9 +11,9 @@ using System.Runtime.Serialization;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
+using Akka.Serialization.Protocol;
 using Akka.Util;
 using Akka.Util.Internal;
-using Akka.Remote.Serialization.Protocol;
 
 namespace Akka.Remote.Transport
 {
@@ -1216,7 +1216,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                return ThrowHelper.ThrowAkkaProtocolException_DecodePdu(pdu, ex);
+                ThrowHelper.ThrowAkkaProtocolException_DecodePdu(pdu, ex); return null;
             }
         }
 
@@ -1233,7 +1233,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                return ThrowHelper.ThrowAkkaProtocolException_Associate(ex);
+                ThrowHelper.ThrowAkkaProtocolException_Associate(ex); return false;
             }
         }
 
@@ -1257,7 +1257,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                return ThrowHelper.ThrowAkkaProtocolException_HeartBeat(ex);
+                ThrowHelper.ThrowAkkaProtocolException_HeartBeat(ex); return false;
             }
         }
 

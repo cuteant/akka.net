@@ -71,7 +71,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                     manifest = HeartbeatRspManifest;
                     return EmptyBytes;
                 default:
-                    manifest = 0; return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<byte[]>(obj);
+                    manifest = 0; ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(obj); return null;
             }
         }
 
@@ -89,7 +89,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case HeartbeatRspManifest:
                     return ClusterReceptionist.HeartbeatRsp.Instance;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterClientMessage(manifest);
+                    ThrowHelper.ThrowArgumentException_Serializer_ClusterClientMessage(manifest); return null;
             }
         }
 
@@ -98,7 +98,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
         {
             if (null == type) { return 0; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<int>(type);
+            ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(type); return 0;
         }
 
         /// <inheritdoc />
@@ -115,7 +115,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case ClusterReceptionist.HeartbeatRsp _:
                     return HeartbeatRspManifest;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<int>(o);
+                    ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(o); return 0;
             }
         }
 

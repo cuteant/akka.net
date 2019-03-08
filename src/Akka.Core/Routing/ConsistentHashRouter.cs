@@ -162,7 +162,7 @@ namespace Akka.Routing
         /// <returns>A <see cref="Routee" /> that receives the <paramref name="message" />.</returns>
         public override Routee Select(object message, Routee[] routees)
         {
-            if (message == null || routees == null || routees.Length == 0)
+            if (message == null || routees == null || 0u >= (uint)routees.Length)
                 return Routee.NoRoutee;
 
             ConsistentHash<ConsistentRoutee> UpdateConsistentHash()

@@ -192,12 +192,20 @@ namespace Akka.Persistence
         /// <summary>
         /// TBD
         /// </summary>
-        public IActorRef Journal => _journal ?? (_journal = Extension.JournalFor(JournalPluginId));
+        public IActorRef Journal
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _journal ?? EnsureJournalCreated(); }
+        }
 
         /// <summary>
         /// TBD
         /// </summary>
-        public IActorRef SnapshotStore => _snapshotStore ?? (_snapshotStore = Extension.SnapshotStoreFor(SnapshotPluginId));
+        public IActorRef SnapshotStore
+        {
+            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            get { return _snapshotStore ?? EnsureSnapshotStoreCreated(); }
+        }
 
         /// <summary>
         /// Returns <see cref="PersistenceId"/>.
@@ -583,6 +591,8 @@ namespace Akka.Persistence
             Dispatch.ActorTaskScheduler.RunTask(TaskRunners<object>.RunRunnableTaskFunc, Tuple.Create(this, runnable));
         }
 
+        #region ** class TaskRunners<T> **
+
         sealed class TaskRunners<T>
         {
             public static readonly Func<object, Task> RunTaskAction = RunTask;
@@ -654,6 +664,8 @@ namespace Akka.Persistence
             }
         }
 
+        #endregion
+
         private void ChangeState(EventsourcedState state)
         {
             _currentState = state;
@@ -718,7 +730,21 @@ namespace Akka.Persistence
                 _internalStash.Unstash();
         }
 
-        private class InternalStashAwareStash : IStash
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private IActorRef EnsureJournalCreated()
+        {
+            _journal = Extension.JournalFor(JournalPluginId);
+            return _journal;
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private IActorRef EnsureSnapshotStoreCreated()
+        {
+            _snapshotStore = Extension.SnapshotStoreFor(SnapshotPluginId);
+            return _snapshotStore;
+        }
+
+        private sealed class InternalStashAwareStash : IStash
         {
             private readonly IStash _userStash;
             private readonly IStash _internalStash;

@@ -1,0 +1,32 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+  <Import Project="..\..\version.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.Wings.Query</RootNamespace>
+    <AssemblyName>Akka.Persistence.Wings.Query</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Persistence.Wings.Query</PackageId>
+    <Title>Akka.Persistence.Wings.Query</Title>
+    <Description>Akka.NET Persistence journal and snapshot store backed by Wings.</Description>
+    <PackageTags>$(AkkaPackageTags);persistence;</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="reference.conf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="reference.conf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Persistence.Wings\Akka.Persistence.Wings.csproj" />
+    <ProjectReference Include="..\Akka.Persistence.Query\Akka.Persistence.Query.csproj" />
+  </ItemGroup>
+
+</Project>

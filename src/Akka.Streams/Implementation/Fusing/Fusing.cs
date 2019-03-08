@@ -712,7 +712,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if (group.Count > 1)
                 {
                     var subgroups = group.GroupBy(Fusing.GetDispatcher).ToArray();
-                    if (subgroups.Length > 1)
+                    if (1u < (uint)subgroups.Length)
                     {
                         group.Clear();
                         foreach (var subgroup in subgroups)

@@ -1,7 +1,6 @@
 ﻿using System;
 using Akka.Actor;
 using Akka.Configuration;
-using CuteAnt;
 using Utf8Json;
 using Utf8Json.ImmutableCollection;
 
@@ -9,7 +8,7 @@ namespace Akka.Serialization
 {
     /// <summary>This is a special <see cref="Serializer"/> that serializes and deserializes javascript objects only.
     /// These objects need to be in the JavaScript Object Notation (JSON) format.</summary>
-    public class Utf8JsonSerializer : SerializerWithTypeManifest
+    public sealed class Utf8JsonSerializer : SerializerWithTypeManifest
     {
         private readonly IJsonFormatterResolver _resolver;
         private readonly int _initialBufferSize;
@@ -51,10 +50,13 @@ namespace Akka.Serialization
         }
 
         /// <inheritdoc />
-        public override int Identifier => 106;
+        public sealed override int Identifier => 106;
 
         /// <inheritdoc />
-        public override object DeepCopy(object source)
+        public override bool IsJson => true;
+
+        /// <inheritdoc />
+        public sealed override object DeepCopy(object source)
         {
             if (source == null) { return null; }
 
@@ -64,12 +66,12 @@ namespace Akka.Serialization
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, Type type) => JsonSerializer.NonGeneric.Deserialize(type, bytes, 0, _resolver);
+        public sealed override object FromBinary(byte[] bytes, Type type) => JsonSerializer.NonGeneric.Deserialize(type, bytes, 0, _resolver);
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
+        public sealed override byte[] ToBinary(object obj)
         {
-            if (null == obj) { return EmptyArray<byte>.Instance; }
+            //if (null == obj) { return EmptyArray<byte>.Instance; } // 空对象交由 NullSerializer 处理
             return JsonSerializer.Serialize(obj, _resolver);
         }
     }

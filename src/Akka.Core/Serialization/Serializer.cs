@@ -7,7 +7,6 @@
 
 using System;
 using System.Linq;
-using System.Text;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Serialization.Protocol;
@@ -16,8 +15,6 @@ using CuteAnt.Reflection;
 
 namespace Akka.Serialization
 {
-    #region -- Serializer --
-
     /// <summary>
     /// A Serializer represents a bimap between an object and an array of bytes representing that object.
     ///
@@ -66,6 +63,9 @@ namespace Akka.Serialization
         /// Returns whether this serializer needs a manifest in the fromBinary method
         /// </summary>
         public virtual bool IncludeManifest => false;
+
+        /// <summary>TBD</summary>
+        public virtual bool IsJson => false;
 
         /// <summary>Tries to create a copy of source.</summary>
         /// <param name="source">The item to create a copy of</param>
@@ -141,127 +141,27 @@ namespace Akka.Serialization
         {
             return FromBinary(payload.Message, null);
         }
-    }
 
-    #endregion
-
-    #region -- SerializerWithManifest --
-
-    /// <summary>TBD</summary>
-    /// <typeparam name="TManifest"></typeparam>
-    /// <typeparam name="TSerializationManifest"></typeparam>
-    public abstract class SerializerWithManifest<TManifest, TSerializationManifest> : Serializer
-    {
-        /// <summary>Initializes a new instance of the <see cref="SerializerWithManifest{TManifest,TPersistenceManifest}"/> class.</summary>
-        /// <param name="system">The actor system to associate with this serializer.</param>
-        protected SerializerWithManifest(ExtendedActorSystem system) : base(system) { }
-
-        /// <summary>Returns whether this serializer needs a manifest in the fromBinary method.</summary>
-        public sealed override bool IncludeManifest => true;
-
-        /// <inheritdoc />
-        public override object DeepCopy(object source)
-        {
-            if (null == source) { return null; }
-
-            var manifest = Manifest(source);
-            var bts = ToBinary(source);
-            return FromBinary(bts, manifest);
-        }
-
-        /// <inheritdoc />
-        public sealed override byte[] ToBinary(object obj) => ToBinary(obj, out _);
-
-        /// <summary>Serializes the given object into a byte array</summary>
+        /// <summary>
+        /// Serializes the given object into a <see cref="ExternalPayload"/>
+        /// </summary>
         /// <param name="obj">The object to serialize </param>
-        /// <param name="manifest">The type hint used to deserialize the object contained in the array.</param>
-        /// <returns>A byte array containing the serialized object</returns>
-        public abstract byte[] ToBinary(object obj, out TSerializationManifest manifest);
-
-        /// <summary>Deserializes a byte array into an object of type <paramref name="type" />.</summary>
-        /// <param name="bytes">The array containing the serialized object</param>
-        /// <param name="type">The type of object contained in the array</param>
-        /// <returns>The object contained in the array</returns>
-        public sealed override object FromBinary(byte[] bytes, Type type)
+        /// <returns>A <see cref="ExternalPayload"/> containing the serialized object</returns>
+        public virtual ExternalPayload ToExternalPayload(object obj)
         {
-            var manifest = GetManifest(type);
-            return FromBinary(bytes, manifest);
+            return new ExternalPayload(ToBinary(obj), Identifier, IsJson, obj.GetType());
         }
 
-        /// <summary>Deserializes a byte array into an object using an optional <paramref name="manifest"/> (type hint).</summary>
-        /// <param name="bytes">The array containing the serialized object</param>
-        /// <param name="manifest">The type hint used to deserialize the object contained in the array.</param>
-        /// <returns>The object contained in the array</returns>
-        public abstract object FromBinary(byte[] bytes, TManifest manifest);
-
-        /// <summary>Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.</summary>
-        /// <param name="type">The type of object contained in the array</param>
-        /// <returns></returns>
-        protected abstract TManifest GetManifest(Type type);
-
-        /// <summary>Returns the manifest (type hint) that will be provided in the <see cref="FromBinary(byte[],System.Type)"/> method.</summary>
-        /// <param name="o">The object for which the manifest is needed.</param>
-        /// <returns>The manifest needed for the deserialization of the specified <paramref name="o"/>.</returns>
-        public abstract TManifest Manifest(object o);
-    }
-
-    /// <summary>TBD</summary>
-    public abstract class SerializerWithStringManifest : SerializerWithManifest<string, byte[]>
-    {
-        /// <summary>Initializes a new instance of the <see cref="SerializerWithStringManifest"/> class.</summary>
-        /// <param name="system">The actor system to associate with this serializer.</param>
-        protected SerializerWithStringManifest(ExtendedActorSystem system) : base(system) { }
-
-        /// <inheritdoc />
-        public sealed override Payload ToPayload(object obj)
+        /// <summary>
+        /// Deserializes a <see cref="ExternalPayload"/> into an object.
+        /// </summary>
+        /// <param name="payload">The <see cref="Payload"/> containing the serialized object</param>
+        /// <returns>The object contained in the <see cref="Payload"/></returns>
+        public virtual object FromExternalPayload(in ExternalPayload payload)
         {
-            var payload = ToBinary(obj, out var manifest);
-            return new Payload(payload, Identifier, manifest);
-        }
-
-        /// <inheritdoc />
-        public sealed override Payload ToPayloadWithAddress(Address address, object obj)
-        {
-            var payload = Serialization.SerializeWithTransport(system, address, this, obj, out var manifest);
-            return new Payload(payload, Identifier, manifest);
-        }
-
-        /// <inheritdoc />
-        public sealed override object FromPayload(in Payload payload)
-        {
-            return FromBinary(payload.Message, Encoding.UTF8.GetString(payload.MessageManifest));
+            return FromBinary(payload.Message, null);
         }
     }
-
-    /// <summary>TBD</summary>
-    public abstract class SerializerWithIntegerManifest : SerializerWithManifest<int, int>
-    {
-        /// <summary>Initializes a new instance of the <see cref="SerializerWithIntegerManifest"/> class.</summary>
-        /// <param name="system">The actor system to associate with this serializer.</param>
-        protected SerializerWithIntegerManifest(ExtendedActorSystem system) : base(system) { }
-
-        /// <inheritdoc />
-        public sealed override Payload ToPayload(object obj)
-        {
-            var payload = ToBinary(obj, out var manifest);
-            return new Payload(payload, Identifier, manifest);
-        }
-
-        /// <inheritdoc />
-        public sealed override Payload ToPayloadWithAddress(Address address, object obj)
-        {
-            var payload = Serialization.SerializeWithTransport(system, address, this, obj, out var manifest);
-            return new Payload(payload, Identifier, manifest);
-        }
-
-        /// <inheritdoc />
-        public sealed override object FromPayload(in Payload payload)
-        {
-            return FromBinary(payload.Message, payload.ExtensibleData);
-        }
-    }
-
-    #endregion
 
     #region -- SerializerIdentifierHelper --
 

@@ -43,7 +43,7 @@ namespace Akka.Remote.Serialization
             if (null == msg) { ThrowHelper.ThrowArgumentException_Serializer_DaemonMsg(obj); }
 
             return MessagePackSerializer.Serialize(
-                new Protocol.DaemonMsgCreateData(PropsToProto(system, msg.Props),
+                new DaemonMsgCreateData(PropsToProto(system, msg.Props),
                     DeployToProto(system, msg.Deploy),
                     msg.Path,
                     SerializeActorRef(msg.Supervisor)),
@@ -53,7 +53,7 @@ namespace Akka.Remote.Serialization
         /// <inheritdoc />
         public override object FromBinary(byte[] bytes, Type type)
         {
-            var proto = MessagePackSerializer.Deserialize<Protocol.DaemonMsgCreateData>(bytes, s_defaultResolver);
+            var proto = MessagePackSerializer.Deserialize<DaemonMsgCreateData>(bytes, s_defaultResolver);
 
             return new DaemonMsgCreate(
                 PropsFromProto(system, proto.Props),
@@ -65,16 +65,16 @@ namespace Akka.Remote.Serialization
         //
         // Props
         //
-        internal static Protocol.PropsData PropsToProto(ExtendedActorSystem system, Props props)
+        internal static PropsData PropsToProto(ExtendedActorSystem system, Props props)
         {
-            return new Protocol.PropsData(
+            return new PropsData(
                 DeployToProto(system, props.Deploy),
                 props.Type.TypeQualifiedName(),
                 props.Arguments.Select(_ => system.Serialize(_)).ToArray());
 
         }
 
-        internal static Props PropsFromProto(ExtendedActorSystem system, in Protocol.PropsData protoProps)
+        internal static Props PropsFromProto(ExtendedActorSystem system, in PropsData protoProps)
         {
             var actorClass = TypeUtils.ResolveType(protoProps.Clazz);
             var propsArgs = protoProps.Args;
@@ -96,9 +96,9 @@ namespace Akka.Remote.Serialization
         //
         // Deploy
         //
-        internal static Protocol.DeployData DeployToProto(ExtendedActorSystem system, Deploy deploy)
+        internal static DeployData DeployToProto(ExtendedActorSystem system, Deploy deploy)
         {
-            return new Protocol.DeployData(
+            return new DeployData(
                 deploy.Path,
                 system.Serialize(deploy.Config),
                 deploy.RouterConfig != NoRouter.Instance ? system.Serialize(deploy.RouterConfig) : Payload.Null,
@@ -107,7 +107,7 @@ namespace Akka.Remote.Serialization
                 );
         }
 
-        internal static Deploy DeployFromProto(ExtendedActorSystem system, in Protocol.DeployData protoDeploy)
+        internal static Deploy DeployFromProto(ExtendedActorSystem system, in DeployData protoDeploy)
         {
             var config = system.Deserialize(protoDeploy.Config)?.AsInstanceOf<Config>() ?? Config.Empty;
 
@@ -126,13 +126,13 @@ namespace Akka.Remote.Serialization
         // IActorRef
         //
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static Protocol.ReadOnlyActorRefData SerializeActorRef(IActorRef actorRef)
+        internal static ReadOnlyActorRefData SerializeActorRef(IActorRef actorRef)
         {
-            return new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(actorRef));
+            return new ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(actorRef));
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal static IActorRef DeserializeActorRef(ExtendedActorSystem system, in Protocol.ReadOnlyActorRefData actorRefData)
+        internal static IActorRef DeserializeActorRef(ExtendedActorSystem system, in ReadOnlyActorRefData actorRefData)
         {
             return system.Provider.ResolveActorRef(actorRefData.Path);
         }

@@ -68,8 +68,8 @@ namespace Akka.DistributedData
                     var n = Nodes.Count + 1;
                     var w = CalculateMajorityWithMinCapacity(write.MinCapacity, n);
                     return n - w;
-                case WriteLocal _: return ThrowHelper.ThrowArgumentException_WriteAggregatorDoesNotSupportWriteLocal();
-                default: return ThrowHelper.ThrowArgumentException_InvalidConsistencyLevel();
+                case WriteLocal _: ThrowHelper.ThrowArgumentException_WriteAggregatorDoesNotSupportWriteLocal(); return 0;
+                default: ThrowHelper.ThrowArgumentException_InvalidConsistencyLevel(); return 0;
             }
         }
 

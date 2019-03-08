@@ -66,7 +66,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                     manifest = TakeOverFromMeManifest;
                     return EmptyBytes;
                 default:
-                    manifest = 0; return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<byte[]>(obj);
+                    manifest = 0; ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage(obj); return null;
             }
         }
 
@@ -84,7 +84,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMeManifest:
                     return TakeOverFromMe.Instance;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage(manifest);
+                    ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage(manifest); return null;
             }
         }
 
@@ -93,7 +93,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         {
             if (null == type) { return 0; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<int>(type);
+            ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(type); return 0;
         }
 
         /// <inheritdoc />
@@ -110,7 +110,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMe _:
                     return TakeOverFromMeManifest;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage<int>(o);
+                    ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage(o); return 0;
             }
         }
     }

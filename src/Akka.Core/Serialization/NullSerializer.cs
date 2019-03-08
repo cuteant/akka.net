@@ -16,7 +16,7 @@ namespace Akka.Serialization
     /// </summary>
     public class NullSerializer : Serializer
     {
-        private static readonly byte[] EmptyBytes = {};
+        private static readonly byte[] EmptyBytes = { };
 
         /// <summary>
         /// Initializes a new instance of the <see cref="NullSerializer" /> class.
@@ -55,5 +55,14 @@ namespace Akka.Serialization
 
         /// <inheritdoc />
         public override Payload ToPayloadWithAddress(Address address, object obj) => Payload.Null;
+
+        /// <inheritdoc />
+        public override object FromPayload(in Payload payload) => null;
+
+        /// <inheritdoc />
+        public override ExternalPayload ToExternalPayload(object obj) => ExternalPayload.Null;
+
+        /// <inheritdoc />
+        public override object FromExternalPayload(in ExternalPayload payload) => null;
     }
 }

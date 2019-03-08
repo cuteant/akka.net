@@ -229,7 +229,7 @@ namespace Akka.Streams
         /// <typeparam name="TAttr">TBD</typeparam>
         /// <returns>TBD</returns>
         public IEnumerable<TAttr> GetAttributeList<TAttr>() where TAttr : IAttribute
-            => _attributes.Length == 0 ? Enumerable.Empty<TAttr>() : _attributes.Where(a => a is TAttr).Cast<TAttr>();
+            => 0u >= (uint)_attributes.Length ? Enumerable.Empty<TAttr>() : _attributes.OfType<TAttr>();
 
         /// <summary>
         /// Get the last (most specific) attribute of a given type or subtype thereof.
@@ -274,7 +274,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public Attributes And(Attributes other)
         {
-            if (_attributes.Length == 0)
+            if (0u >= (uint)_attributes.Length)
                 return other;
             if (!other.AttributeList.Any())
                 return this;
@@ -301,7 +301,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public string GetNameOrDefault(string defaultIfNotFound = "unknown-operation")
         {
-            if (_attributes.Length == 0)
+            if (0u >= (uint)_attributes.Length)
                 return null;
 
             var sb = new StringBuilder();
@@ -316,7 +316,7 @@ namespace Akka.Streams
                 sb.Append(encoded);
             }
 
-            return sb.Length == 0 ? defaultIfNotFound : sb.ToString();
+            return 0u >= (uint)sb.Length ? defaultIfNotFound : sb.ToString();
         }
 
         /// <summary>

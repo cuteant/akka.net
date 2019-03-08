@@ -294,7 +294,7 @@ namespace Akka.Streams.Implementation.IO
         /// <param name="origin">TBD</param>
         /// <exception cref="NotSupportedException">TBD</exception>
         /// <returns>TBD</returns>
-        public override long Seek(long offset, SeekOrigin origin) => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_R);
+        public override long Seek(long offset, SeekOrigin origin) { ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_R); return 0L; }
 
         /// <summary>
         /// TBD
@@ -318,7 +318,7 @@ namespace Akka.Streams.Implementation.IO
         /// TBD
         /// </summary>
         /// <exception cref="NotSupportedException">TBD</exception>
-        public override long Length => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_R);
+        public override long Length { get { ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_R); return 0; } }
 
         /// <summary>
         /// TBD
@@ -326,7 +326,7 @@ namespace Akka.Streams.Implementation.IO
         /// <exception cref="NotSupportedException">TBD</exception>
         public override long Position
         {
-            get => ThrowHelper.ThrowNotSupportedException<long>(ExceptionResource.NotSupported_Stream_Only_R);
+            get { ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_R); return 0; }
             set => ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_Stream_Only_R);
         }
 
@@ -414,7 +414,7 @@ namespace Akka.Streams.Implementation.IO
         /// <returns>TBD</returns>
         public override int Read(byte[] buffer, int offset, int count)
         {
-            if (buffer.Length <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.buffer);
+            if (0u >= (uint)buffer.Length) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.buffer);
             if (offset < 0) ThrowHelper.ThrowArgumentException_GreaterThanEqualZero(ExceptionArgument.offset);
             if (count <= 0) ThrowHelper.ThrowArgumentException_GreaterThanZero(ExceptionArgument.count);
             if (offset + count > buffer.Length) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Offset_Count_Length);
@@ -442,7 +442,7 @@ namespace Akka.Streams.Implementation.IO
                         _isStageAlive = false;
                         throw failed.Cause;
                 }
-                return ThrowHelper.ThrowIllegalStateException<int>(ExceptionResource.IllegalState_init_mus_first);
+                ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_init_mus_first); return 0;
             }
 
             ExecuteIfNotClosed();

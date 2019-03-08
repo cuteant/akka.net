@@ -43,7 +43,7 @@ namespace Akka.Actor
         /// starting with "/" and separated with "/".
         /// </summary>
         [IgnoreMember, IgnoreDataMember]
-        public string PathString => "/" + string.Join("/", Path.Select(x => x.ToString()));
+        public string PathString => Path.Join("/", "/", null);
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ActorSelection" /> class.

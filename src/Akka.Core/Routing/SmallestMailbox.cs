@@ -56,7 +56,7 @@ namespace Akka.Routing
         /// <returns>A <see cref="Routee" /> that receives the <paramref name="message" />.</returns>
         public override Routee Select(object message, Routee[] routees)
         {
-            return routees == null || routees.Length == 0
+            return routees == null || 0u >= (uint)routees.Length
                 ? Routee.NoRoutee
                 : SelectNext(routees);
         }
@@ -64,11 +64,12 @@ namespace Akka.Routing
         private Routee SelectNext(Routee[] routees)
         {
             var winningScore = long.MaxValue;
+            var routeesLength = routees.Length;
 
             // round robin fallback
-            var winner = routees[(Interlocked.Increment(ref _next) & int.MaxValue) %  routees.Length];
+            var winner = routees[(Interlocked.Increment(ref _next) & int.MaxValue) % routeesLength];
 
-            for (int i = 0; i < routees.Length; i++)
+            for (int i = 0; i < routeesLength; i++)
             {
                 var routee = routees[i];
                 var cell = TryGetActorCell(routee);

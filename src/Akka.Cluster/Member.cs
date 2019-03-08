@@ -133,7 +133,7 @@ namespace Akka.Cluster
         {
             if (obj is Member member) return CompareTo(member);
 
-            return ThrowHelper.ThrowArgumentException_MemberCompare(obj);
+            ThrowHelper.ThrowArgumentException_MemberCompare(obj); return 0;
         }
 
         /// <inheritdoc cref="object.ToString"/>
@@ -534,7 +534,7 @@ namespace Akka.Cluster
         {
             if (obj is UniqueAddress address) return CompareTo(address);
 
-            return ThrowHelper.ThrowArgumentException_UniqueAddressCompare(obj);
+            ThrowHelper.ThrowArgumentException_UniqueAddressCompare(obj); return 0;
         }
 
         internal int CompareTo(UniqueAddress uniqueAddress, IComparer<Address> addresComparer)

@@ -55,10 +55,10 @@ namespace Akka.DistributedData
                     return ncount - w;
 
                 case ReadLocal _:
-                    return ThrowHelper.ThrowArgumentException_ReadAggregatorDoesNotSupportReadLocal();
+                    ThrowHelper.ThrowArgumentException_ReadAggregatorDoesNotSupportReadLocal(); return 0;
 
                 default:
-                    return ThrowHelper.ThrowArgumentException_InvalidConsistencyLevel();
+                    ThrowHelper.ThrowArgumentException_InvalidConsistencyLevel(); return 0;
             }
         }
 

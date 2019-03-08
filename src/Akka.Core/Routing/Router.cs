@@ -292,7 +292,7 @@ namespace Akka.Routing
         /// <param name="routees">TBD</param>
         public Router(RoutingLogic logic, IActorRef routee, params IActorRef[] routees)
         {
-            if (routees == null || routees.Length == 0)
+            if (routees == null || 0u >= (uint)routees.Length)
             {
                 _routees = new[] { Routee.FromActorRef(routee) };
             }

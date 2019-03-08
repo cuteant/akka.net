@@ -26,6 +26,8 @@ namespace Akka.Serialization
             MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance, AkkaTypelessFormatter.Instance);
 
             MessagePackStandardResolver.Register(
+                SystemMessageResolver.Instance,
+                MiscMessageResolver.Instance,
                 AkkaResolverCore.Instance,
 
                 ImmutableCollectionResolver.Instance,
@@ -74,9 +76,48 @@ namespace Akka.Serialization
         {
             if (null == message) { return SerializedMessage.Null; }
 
-            var system = formatterResolver.GetActorSystem();
-            var serializer = system.Serialization.FindSerializerForType(message.GetType());
-            return serializer.ToPayload(message);
+#if DEBUG
+            try
+            {
+#endif
+                var system = formatterResolver.GetActorSystem();
+                var serializer = system.Serialization.FindSerializerForType(message.GetType());
+                return serializer.ToPayload(message);
+#if DEBUG
+            }
+            catch (Exception exc)
+            {
+                s_logger.LogWarning(exc, $"Cannot serialize object of type{message?.GetType().TypeQualifiedName()}");
+                throw;
+            }
+#endif
+        }
+
+        /// <summary>Serializes the specified message.</summary>
+        /// <param name="formatterResolver">The formatter resolver.</param>
+        /// <param name="message">The message.</param>
+        /// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
+        /// <returns>SerializedMessage.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedMessage Serialize(this IFormatterResolver formatterResolver, object message, string defaultSerializerName)
+        {
+            if (null == message) { return SerializedMessage.Null; }
+
+#if DEBUG
+            try
+            {
+#endif
+                var system = formatterResolver.GetActorSystem();
+                var serializer = system.Serialization.FindSerializerForType(message.GetType(), defaultSerializerName);
+                return serializer.ToPayload(message);
+#if DEBUG
+            }
+            catch (Exception exc)
+            {
+                s_logger.LogWarning(exc, $"Cannot serialize object of type{message?.GetType().TypeQualifiedName()}");
+                throw;
+            }
+#endif
         }
 
         /// <summary>Serializes the specified message.</summary>
@@ -95,6 +136,34 @@ namespace Akka.Serialization
 #endif
                 var system = formatterResolver.GetActorSystem();
                 var serializer = system.Serialization.FindSerializerForType(message.GetType());
+                return serializer.ToPayloadWithAddress(address, message);
+#if DEBUG
+            }
+            catch (Exception exc)
+            {
+                s_logger.LogWarning(exc, $"Cannot serialize object of type{message?.GetType().TypeQualifiedName()}");
+                throw;
+            }
+#endif
+        }
+
+        /// <summary>Serializes the specified message.</summary>
+        /// <param name="formatterResolver">The formatter resolver.</param>
+        /// <param name="address">TBD</param>
+        /// <param name="message">The message.</param>
+        /// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
+        /// <returns>SerializedMessage.</returns>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static SerializedMessage Serialize(this IFormatterResolver formatterResolver, Address address, object message, string defaultSerializerName)
+        {
+            if (null == message) { return SerializedMessage.Null; }
+
+#if DEBUG
+            try
+            {
+#endif
+                var system = formatterResolver.GetActorSystem();
+                var serializer = system.Serialization.FindSerializerForType(message.GetType(), defaultSerializerName);
                 return serializer.ToPayloadWithAddress(address, message);
 #if DEBUG
             }

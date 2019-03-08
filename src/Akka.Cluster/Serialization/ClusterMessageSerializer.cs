@@ -15,7 +15,7 @@ using Akka.Cluster.Routing;
 using Akka.Serialization;
 using Akka.Util.Internal;
 using MessagePack;
-using AddressData = Akka.Remote.Serialization.Protocol.AddressData;
+using AddressData = Akka.Serialization.Protocol.AddressData;
 
 namespace Akka.Cluster.Serialization
 {
@@ -112,7 +112,7 @@ namespace Akka.Cluster.Serialization
                     manifest = _.ClusterRouterPoolManifest;
                     return ClusterRouterPoolToByteArray(pool);
                 default:
-                    manifest = 0; return ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage<byte[]>(obj);
+                    manifest = 0; ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(obj); return null;
             }
         }
 
@@ -149,7 +149,7 @@ namespace Akka.Cluster.Serialization
                     return ClusterRouterPoolFrom(bytes);
             }
 
-            return ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(manifest);
+            ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(manifest); return null;
         }
 
         /// <inheritdoc />
@@ -162,7 +162,7 @@ namespace Akka.Cluster.Serialization
             {
                 if (item.Key.IsAssignableFrom(type)) { return item.Value; }
             }
-            return ThrowHelper.ThrowArgumentException_Serializer_D<int>(type);
+            ThrowHelper.ThrowArgumentException_Serializer_D(type); return 0;
         }
 
         /// <inheritdoc />
@@ -197,7 +197,7 @@ namespace Akka.Cluster.Serialization
                 case ClusterRouterPool pool:
                     return _.ClusterRouterPoolManifest;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage<int>(obj);
+                    ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(obj); return 0;
             }
         }
 
@@ -370,14 +370,14 @@ namespace Akka.Cluster.Serialization
                     addressMapping[member.AddressIndex],
                     member.UpNumber,
                     (MemberStatus)member.Status,
-                    member.RolesIndexes.Length > 0 ?
+                    0u < (uint)member.RolesIndexes.Length ?
                         member.RolesIndexes.Select(x => roleMapping[x]).ToImmutableHashSet(StringComparer.Ordinal) :
                         ImmutableHashSet<string>.Empty);
 
             var members = gossip.Members.Select(MemberFromProto).ToImmutableSortedSet(Member.Ordering);
             var reachability = ReachabilityFromProto(gossip.Overview.ObserverReachability, addressMapping);
             var protoSeen = gossip.Overview.Seen;
-            var seen = protoSeen == null || protoSeen.Length == 0 ?
+            var seen = protoSeen == null || 0u >= (uint)protoSeen.Length ?
                 ImmutableHashSet<UniqueAddress>.Empty :
                 protoSeen.Select(x => addressMapping[x]).ToImmutableHashSet(UniqueAddressComparer.Instance);
             var overview = new GossipOverview(seen, reachability);
@@ -454,7 +454,7 @@ namespace Akka.Cluster.Serialization
         {
             if (map.TryGetValue(value, out int mapIndex)) { return mapIndex; }
 
-            return ThrowHelper.ThrowArgumentException_UnknownInClusterMessage(value, unknown);
+            ThrowHelper.ThrowArgumentException_UnknownInClusterMessage(value, unknown); return 0;
         }
 
         //

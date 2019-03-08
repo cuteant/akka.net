@@ -14,7 +14,7 @@ using Akka.Actor;
 using Akka.Cluster.Tools.PublishSubscribe.Internal;
 using Akka.Serialization;
 using MessagePack;
-using AddressData = Akka.Remote.Serialization.Protocol.AddressData;
+using AddressData = Akka.Serialization.Protocol.AddressData;
 
 namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 {
@@ -81,7 +81,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                     manifest = SendToOneSubscriberManifest;
                     return SendToOneSubscriberToProto(sub);
                 default:
-                    manifest = 0; return ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage<byte[]>(obj);
+                    manifest = 0; ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage(obj); return null;
             }
         }
 
@@ -103,7 +103,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 case SendToOneSubscriberManifest:
                     return SendToOneSubscriberFrom(bytes);
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_DistributedPubSubMessage(manifest);
+                    ThrowHelper.ThrowArgumentException_Serializer_DistributedPubSubMessage(manifest); return null;
             }
         }
 
@@ -112,7 +112,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         {
             if (null == type) { return 0; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            return ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage<int>(type);
+            ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(type); return 0;
         }
 
         /// <inheritdoc />
@@ -133,7 +133,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 case SendToOneSubscriber _:
                     return SendToOneSubscriberManifest;
                 default:
-                    return ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage<int>(o);
+                    ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage(o); return 0;
             }
         }
 

@@ -21,7 +21,7 @@ namespace Akka.Remote.TestKit
     {
         private readonly ILogger _logger = InternalLoggerFactory.DefaultFactory.CreateLogger<MsgDecoder>();
 
-        public static Address Proto2Address(in Serialization.Protocol.AddressData addr)
+        public static Address Proto2Address(in Akka.Serialization.Protocol.AddressData addr)
         {
             return new Address(addr.Protocol, addr.System, addr.Hostname, (int)addr.Port);
         }

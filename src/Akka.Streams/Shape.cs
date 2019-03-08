@@ -280,8 +280,8 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public override Shape CopyFromPorts(ImmutableArray<Inlet> inlets, ImmutableArray<Outlet> outlets)
         {
-            if (inlets.Length > 0) ThrowHelper.ThrowArgumentException_FitClosedShape(ExceptionArgument.inlets);
-            if (outlets.Length > 0) ThrowHelper.ThrowArgumentException_FitClosedShape(ExceptionArgument.outlets);
+            if (0u < (uint)inlets.Length) ThrowHelper.ThrowArgumentException_FitClosedShape(ExceptionArgument.inlets);
+            if (0u < (uint)outlets.Length) ThrowHelper.ThrowArgumentException_FitClosedShape(ExceptionArgument.outlets);
 
             return this;
         }

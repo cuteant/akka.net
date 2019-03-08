@@ -11,6 +11,7 @@ using System.Globalization;
 using System.Linq;
 using System.Runtime.Serialization;
 using Akka.Actor;
+using Akka.Util;
 using MessagePack;
 
 namespace Akka.Remote
@@ -236,7 +237,7 @@ namespace Akka.Remote
         /// <returns>A <see cref="System.String"/> that represents this instance.</returns>
         public override string ToString()
         {
-            var nacks = string.Join(",", Nacks.Select(x => x.ToString()));
+            var nacks = string.Join(",", Nacks);
             return $"ACK[{CumulativeAck}, {nacks}]";
         }
     }
@@ -350,8 +351,7 @@ namespace Akka.Remote
         /// <returns>A <see cref="System.String"/> that represents this instance.</returns>
         public override string ToString()
         {
-            var nonAcked = string.Join(",", NonAcked.Select(x => x.ToString()));
-            return $"[{nonAcked}]";
+            return NonAcked.Join(",", "[", "]");
         }
 
         #region Copy methods

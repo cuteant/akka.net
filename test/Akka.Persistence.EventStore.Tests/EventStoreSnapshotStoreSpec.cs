@@ -78,14 +78,15 @@ namespace Akka.Persistence.EventStore.Tests
         {
             var specString = @"
                 akka.test.single-expect-default = 10s
+                akka.eventstore {
+                    connection-string = """ + databaseFixture.ConnectionString + @"""
+                    connection-name = ""EventStoreSnapshotStoreSpec""
+                }
                 akka.persistence {
-                    publish-plugin-commands = on
                     snapshot-store {
                         plugin = ""akka.persistence.snapshot-store.eventstore""
                         eventstore {
                             class = ""Akka.Persistence.EventStore.Snapshot.EventStoreSnapshotStore, Akka.Persistence.EventStore""
-                            connection-string = """ + databaseFixture.ConnectionString + @"""
-                            connection-name = ""EventStoreSnapshotStoreSpec""
                             read-batch-size = 500
                         }
                     }

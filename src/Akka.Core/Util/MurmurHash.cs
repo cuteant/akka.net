@@ -182,12 +182,12 @@ namespace Akka.Util
                 var c = HiddenMagicA;
                 var k = HiddenMagicB;
                 var j = 0;
-                while (j < a.Length)
+                while ((uint)j < (uint)a.Length)
                 {
                     h = ExtendHash(h, (uint)a[j].GetHashCode(), c, k);
                     c = NextMagicA(c);
                     k = NextMagicB(k);
-                    j += 1;
+                    j = j + 1;
                 }
                 return (int)FinalizeHash(h);
             }
@@ -207,15 +207,17 @@ namespace Akka.Util
                 var c = HiddenMagicA;
                 var k = HiddenMagicB;
                 var j = 0;
-                while (j + 1 < s.Length)
+                var j1 = j + 1;
+                while ((uint)j1 < (uint)sChar.Length)
                 {
-                    var i = (uint)((sChar[j] << 16) + sChar[j + 1]);
+                    var i = (uint)((sChar[j] << 16) + sChar[j1]);
                     h = ExtendHash(h, i, c, k);
                     c = NextMagicA(c);
                     k = NextMagicB(k);
-                    j += 2;
+                    j = j + 2;
+                    j1 = j + 1;
                 }
-                if (j < s.Length) h = ExtendHash(h, sChar[j], c, k);
+                if ((uint)j < (uint)sChar.Length) h = ExtendHash(h, sChar[j], c, k);
                 return (int)FinalizeHash(h);
             }
         }

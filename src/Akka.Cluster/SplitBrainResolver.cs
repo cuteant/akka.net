@@ -43,7 +43,7 @@ namespace Akka.Cluster
                 case "keep-majority": return new KeepMajority(config.GetConfig("keep-majority"));
                 case "keep-oldest": return new KeepOldest(config.GetConfig("keep-oldest"));
                 case "keep-referee": return new KeepReferee(config.GetConfig("keep-referee"));
-                default: return ThrowHelper.ThrowArgumentException_ResolveSplitBrainStrategy(activeStrategy);
+                default: ThrowHelper.ThrowArgumentException_ResolveSplitBrainStrategy(activeStrategy); return null;
             }
         }
     }
@@ -324,7 +324,7 @@ namespace Akka.Cluster
             var context = new NetworkPartitionContext(_unreachable, _reachable);
             var nodesToDown = _strategy.Apply(context).ToImmutableArray();
 
-            if (nodesToDown.Length > 0)
+            if (0u < (uint)nodesToDown.Length)
             {
                 if (Log.IsInfoEnabled)
                 {

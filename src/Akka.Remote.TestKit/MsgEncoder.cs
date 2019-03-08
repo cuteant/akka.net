@@ -20,9 +20,9 @@ namespace Akka.Remote.TestKit
     {
         private readonly ILogger _logger = InternalLoggerFactory.DefaultFactory.CreateLogger<MsgEncoder>();
 
-        private static Serialization.Protocol.AddressData AddressMessageBuilder(Address address)
+        private static Akka.Serialization.Protocol.AddressData AddressMessageBuilder(Address address)
         {
-            var message = new Serialization.Protocol.AddressData(
+            var message = new Akka.Serialization.Protocol.AddressData(
                 address.System,
                 address.Host,
                 (uint)(address.Port ?? 0),

@@ -185,7 +185,7 @@ namespace Akka.Streams
         /// </exception>
         public MessageDispatcher ExecutionContext
         {
-            get { return ThrowHelper.ThrowNotSupportedException<MessageDispatcher>(ExceptionResource.NotSupported_NoMaterializer_excontext); }
+            get { ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_NoMaterializer_excontext); return null; }
         }
     }
 

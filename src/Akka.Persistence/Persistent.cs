@@ -311,6 +311,7 @@ namespace Akka.Persistence
         /// <param name="isDeleted">TBD</param>
         /// <param name="sender">TBD</param>
         /// <param name="writerGuid">TBD</param>
+        [SerializationConstructor]
         public Persistent(object payload, long sequenceNr = 0L, string persistenceId = null, string manifest = null, bool isDeleted = false, IActorRef sender = null, string writerGuid = null)
         {
             Payload = payload;

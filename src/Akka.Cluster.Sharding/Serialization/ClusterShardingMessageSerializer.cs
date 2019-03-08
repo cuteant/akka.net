@@ -13,7 +13,7 @@ using Akka.Actor;
 using Akka.Serialization;
 using CuteAnt;
 using MessagePack;
-using ActorRefMessage = Akka.Remote.Serialization.Protocol.ReadOnlyActorRefData;
+using ActorRefMessage = Akka.Serialization.Protocol.ReadOnlyActorRefData;
 
 namespace Akka.Cluster.Sharding.Serialization
 {
@@ -184,8 +184,7 @@ namespace Akka.Cluster.Sharding.Serialization
                     manifest = ShardStatsManifest;
                     return MessagePackSerializer.Serialize(ShardStatsToProto(o), s_defaultResolver);
             }
-            manifest = 0;
-            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<byte[]>(obj);
+            manifest = 0; ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(obj); return null;
         }
 
         /// <summary>
@@ -259,7 +258,7 @@ namespace Akka.Cluster.Sharding.Serialization
                     return StartEntityAckFromBinary(bytes);
 
                 default:
-                    return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(manifest);
+                    ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(manifest); return null;
             }
         }
 
@@ -273,7 +272,7 @@ namespace Akka.Cluster.Sharding.Serialization
             {
                 if (item.Key.IsAssignableFrom(type)) { return item.Value; }
             }
-            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<int>(type);
+            ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(type); return 0;
         }
 
         /// <inheritdoc />
@@ -308,7 +307,7 @@ namespace Akka.Cluster.Sharding.Serialization
                 case Shard.GetShardStats _: return GetShardStatsManifest;
                 case Shard.ShardStats _: return ShardStatsManifest;
             }
-            return ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage<int>(o);
+            ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(o); return 0;
         }
 
         //

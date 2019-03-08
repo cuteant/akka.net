@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Runtime.CompilerServices;
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace Akka
@@ -69,4 +71,41 @@ namespace Akka
         /// <param name="func">TBD</param>
         public DefaultRunnableWithResultTask(Func<Task<TResult>> func) : base(func) { }
     }
+
+    /// <summary>TBD</summary>
+    public interface IHasPromise<TResult>
+    {
+        /// <summary>TBD</summary>
+        TaskCompletionSource<TResult> Promise { get; }
+
+        /// <summary>TBD</summary>
+        void ResetPromise();
+    }
+
+    /// <summary>TBD</summary>
+    public abstract class RunnableBase<TResult> : IRunnable<TResult>, IHasPromise<TResult>
+    {
+        private TaskCompletionSource<TResult> _promise;
+        /// <summary>TBD</summary>
+        public TaskCompletionSource<TResult> Promise => Volatile.Read(ref _promise) ?? EnsurePromiseCreated();
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private TaskCompletionSource<TResult> EnsurePromiseCreated()
+        {
+            Interlocked.CompareExchange(ref _promise, new TaskCompletionSource<TResult>(), null);
+            return _promise;
+        }
+
+        /// <summary>TBD</summary>
+        public void ResetPromise() => Interlocked.Exchange(ref _promise, null);
+
+        /// <summary>TBD</summary>
+        public abstract TResult Run();
+    }
+
+    /// <summary>TBD</summary>
+    public abstract class RunnableTaskBase : RunnableBase<Task>, IRunnableTask { }
+
+    /// <summary>TBD</summary>
+    public abstract class RunnableTaskBase<TResult> : RunnableBase<Task<TResult>>, IRunnableTask<TResult> { }
 }

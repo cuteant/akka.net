@@ -209,7 +209,7 @@ namespace Akka.Streams.Implementation
                     $"shape has extra {ins(inset.Except(inPorts))}, module has extra {ins(inPorts.Except(inset))}");
 
             var connectedInlets = inset.Intersect(module.Upstreams.Keys).ToArray();
-            if (connectedInlets.Length > 0)
+            if (0u < (uint)connectedInlets.Length)
                 problems.Add("found connected inlets " + ins(connectedInlets));
             if (outset.Count != shape.Outlets.Count())
                 problems.Add("shape has duplicate outlets " + outs(shape.Outlets));
@@ -218,7 +218,7 @@ namespace Akka.Streams.Implementation
                     $"shape has extra {outs(outset.Except(outPorts))}, module has extra {outs(outPorts.Except(outset))}");
 
             var connectedOutlets = outset.Intersect(module.Downstreams.Keys).ToArray();
-            if (connectedOutlets.Length > 0)
+            if (0u < (uint)connectedOutlets.Length)
                 problems.Add("found connected outlets " + outs(connectedOutlets));
 
             var ups = module.Upstreams.ToImmutableHashSet();
@@ -308,7 +308,7 @@ namespace Akka.Streams.Implementation
                 case Combine c:
                     return Atomics(c.Left).Union(Atomics(c.Right));
                 default:
-                    return ThrowHelper.ThrowArgumentException_StreamLayout_Atomics(node);
+                    ThrowHelper.ThrowArgumentException_StreamLayout_Atomics(node); return null;
             }
         }
     }
@@ -602,7 +602,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public virtual bool IsAtomic => SubModules.Length <= 0;
+        public virtual bool IsAtomic => 0u >= (uint)SubModules.Length;
 
         /// <summary>
         /// TBD
@@ -775,7 +775,7 @@ namespace Akka.Streams.Implementation
                 case FusedModule fused:
                     return IsIgnorable(fused.MaterializedValueComputation);
                 default:
-                    return ThrowHelper.ThrowNotSupportedException_SL_IsIgnorable(module);
+                    ThrowHelper.ThrowNotSupportedException_SL_IsIgnorable(module); return false;
             }
         }
 
@@ -977,7 +977,7 @@ namespace Akka.Streams.Implementation
                     other.Downstreams, other.Upstreams, materialized, IsSealed ? Attributes.None : Attributes);
             }
 
-            return ThrowHelper.ThrowNotSupportedException<IModule>(ExceptionResource.NotSupported_invalid_CMV);
+            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_invalid_CMV); return null;
         }
 
         /// <summary>
@@ -1010,7 +1010,7 @@ namespace Akka.Streams.Implementation
         /// <returns>TBD</returns>
         public override IModule WithAttributes(Attributes attributes)
         {
-            return ThrowHelper.ThrowNotSupportedException<IModule>(ExceptionResource.NotSupported_EmptyModule);
+            ThrowHelper.ThrowNotSupportedException(ExceptionResource.NotSupported_EmptyModule); return null;
         }
     }
 

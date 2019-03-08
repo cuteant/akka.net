@@ -32,6 +32,8 @@ namespace Akka.Serialization
             Interlocked.CompareExchange(ref MsgPackSerializerHelper.DefaultResolver, _resolver, null);
         }
 
+        //public sealed override int Identifier => 1;
+
         /// <inheritdoc />
         public sealed override object DeepCopy(object source)
         {
@@ -41,14 +43,12 @@ namespace Akka.Serialization
             return MessagePackSerializer.Deserialize<object>(serializedObject, _resolver);
         }
 
-        public override byte[] ToBinary(object obj)
+        public sealed override byte[] ToBinary(object obj)
         {
-            if (null == obj) { return EmptyArray<byte>.Instance; }
+            //if (null == obj) { return EmptyArray<byte>.Instance; } // 空对象交由 NullSerializer 处理
             return MessagePackSerializer.Serialize(obj, _resolver);
         }
 
-        public override object FromBinary(byte[] bytes, Type type) => MessagePackSerializer.Deserialize<object>(bytes, _resolver);
-
-        //public override int Identifier => 1;
+        public sealed override object FromBinary(byte[] bytes, Type type) => MessagePackSerializer.Deserialize<object>(bytes, _resolver);
     }
 }

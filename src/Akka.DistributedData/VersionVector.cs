@@ -293,7 +293,7 @@ namespace Akka.DistributedData
                     }
 
                 default:
-                    return ThrowHelper.ThrowNotSupportedException_SingleVersionVectorDoesnotSupportMerge();
+                    ThrowHelper.ThrowNotSupportedException_SingleVersionVectorDoesnotSupportMerge(); return null;
             }
         }
 
@@ -361,7 +361,7 @@ namespace Akka.DistributedData
                     return new MultiVersionVector(merged0);
 
                 default:
-                    return ThrowHelper.ThrowNotSupportedException_MultiVersionVectorDoesnotSupportMerge();
+                    ThrowHelper.ThrowNotSupportedException_MultiVersionVectorDoesnotSupportMerge(); return null;
             }
         }
 

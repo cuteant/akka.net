@@ -9,6 +9,7 @@ using Akka.Dispatch.SysMsg;
 using Akka.Pattern;
 using Akka.Routing;
 using Akka.Tools.MatchHandler;
+using Akka.Util;
 
 namespace Akka
 {
@@ -282,7 +283,17 @@ namespace Akka
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static T ThrowArgumentException_Serializer_D<T>(object obj)
+        internal static void ThrowArgumentException_Serializer_ActorSel(object obj)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Cannot serialize object of type [{obj?.GetType().TypeQualifiedName()}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Serializer_D(object obj)
         {
             throw GetException();
             ArgumentException GetException()
@@ -290,6 +301,26 @@ namespace Akka
                 var type = obj as Type;
                 var typeQualifiedName = type != null ? type.FullName : obj?.GetType().FullName;
                 return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Serializer_SystemMsg_NoMessage()
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException("NoMessage should never be serialized or deserialized");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Serializer_S(object obj)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Cannot serialize object of type [{obj?.GetType().TypeQualifiedName()}]");
             }
         }
 

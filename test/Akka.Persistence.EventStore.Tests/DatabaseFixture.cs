@@ -151,14 +151,14 @@ namespace Akka.Persistence.EventStore.Tests
 
         private void InitializeProjections(int httpPort)
         {
-            var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), httpPort);
-            var pm = new ProjectionsManager(endpoint, TimeSpan.FromSeconds(2));
+            //var endpoint = new IPEndPoint(IPAddress.Parse("127.0.0.1"), httpPort);
+            //var pm = new ProjectionsManager(endpoint, TimeSpan.FromSeconds(2));
             
-            Tags.ForEach(async tag =>
-            {
-                var source = ReadTaggedProjectionSource(tag);
-                await pm.CreateContinuousAsync(tag, source, new UserCredentials("admin", "changeit"));
-            });
+            //Tags.ForEach(async tag =>
+            //{
+            //    var source = ReadTaggedProjectionSource(tag);
+            //    await pm.CreateContinuousAsync(tag, source, new UserCredentials("admin", "changeit"));
+            //});
         }
 
         private string ReadTaggedProjectionSource(string tag)

@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Buffers;
 using System.IO;
 using Akka.Actor;
 using Akka.Util;
@@ -17,8 +18,10 @@ namespace Akka.DistributedData.Serialization
 {
     public sealed class ReplicatedDataSerializer : Serializer
     {
+        private static readonly ArrayPool<byte> s_sharedBuffer = BufferManager.Shared;
+
         private readonly Hyperion.Serializer _serializer;
-        
+
         public ReplicatedDataSerializer(ExtendedActorSystem system) : base(system)
         {
             var akkaSurrogate =
@@ -48,7 +51,7 @@ namespace Akka.DistributedData.Serialization
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
                 var outputStream = pooledStream.Object;
-                outputStream.Reinitialize(c_initialBufferSize);
+                outputStream.Reinitialize(c_initialBufferSize, s_sharedBuffer);
 
                 _serializer.Serialize(obj, outputStream);
                 return outputStream.ToByteArray();
@@ -63,9 +66,9 @@ namespace Akka.DistributedData.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, Type type)
         {
-            using (var ms = new MemoryStream(bytes))
+            using (var inputStream = new MemoryStream(bytes))
             {
-                var res = _serializer.Deserialize(ms);
+                var res = _serializer.Deserialize(inputStream);
                 return res;
             }
         }

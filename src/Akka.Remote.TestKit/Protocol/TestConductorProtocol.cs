@@ -1,4 +1,4 @@
-﻿using Akka.Remote.Serialization.Protocol;
+﻿using Akka.Serialization.Protocol;
 using MessagePack;
 
 namespace Akka.Remote.TestKit.Protocol

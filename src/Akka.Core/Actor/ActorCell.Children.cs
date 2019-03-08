@@ -382,7 +382,7 @@ namespace Akka.Actor
         private static string CheckName(string name)
         {
             if (name == null) AkkaThrowHelper.ThrowInvalidActorNameException(AkkaExceptionResource.InvalidActorName_Null);
-            if (name.Length == 0) AkkaThrowHelper.ThrowInvalidActorNameException(AkkaExceptionResource.InvalidActorName_Empty);
+            if (0u >= (uint)name.Length) AkkaThrowHelper.ThrowInvalidActorNameException(AkkaExceptionResource.InvalidActorName_Empty);
             if (!ActorPath.IsValidPathElement(name))
             {
                 AkkaThrowHelper.ThrowInvalidActorNameException_Path(name);

@@ -202,7 +202,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public string Manifest(object evt)
         {
-            return ThrowHelper.ThrowIllegalStateException_OnlyReadSide<string>();
+            ThrowHelper.ThrowIllegalStateException_OnlyReadSide(); return null;
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public object ToJournal(object evt)
         {
-            return ThrowHelper.ThrowIllegalStateException_OnlyReadSide<object>();
+            ThrowHelper.ThrowIllegalStateException_OnlyReadSide(); return null;
         }
 
         /// <summary>
@@ -308,9 +308,10 @@ namespace Akka.Persistence.Journal
             var bindings = Sort(adapterBindings.Select(kv =>
             {
                 var type = TypeUtils.ResolveType(kv.Key);
-                var adapter = kv.Value.Length == 1
-                    ? handlers[kv.Value[0]]
-                    : new NoopWriteEventAdapter(new CombinedReadEventAdapter(kv.Value.Select(h => handlers[h])));
+                var keyValue = kv.Value;
+                var adapter = 1 == keyValue.Length
+                    ? handlers[keyValue[0]]
+                    : new NoopWriteEventAdapter(new CombinedReadEventAdapter(keyValue.Select(h => handlers[h])));
                 return new KeyValuePair<Type, IEventAdapter>(type, adapter);
             }).ToList());
 
@@ -405,7 +406,7 @@ namespace Akka.Persistence.Journal
                 return new NoopWriteEventAdapter(Instantiate<IReadEventAdapter>(qualifiedName, system));
             }
 
-            return ThrowHelper.ThrowArgumentException_qualifiedName(qualifiedName);
+            ThrowHelper.ThrowArgumentException_qualifiedName(qualifiedName); return null;
         }
 
         private static T Instantiate<T>(string qualifiedName, ExtendedActorSystem system)
