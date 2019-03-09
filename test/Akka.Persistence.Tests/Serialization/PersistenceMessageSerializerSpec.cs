@@ -30,10 +30,12 @@ namespace Akka.Persistence.Tests.Serialization
             }";
 
         private readonly PersistenceMessageSerializer _serializer;
+        private readonly PersistentFSMSnapshotSerializer _fsmSerializer;
 
         public PersistenceMessageSerializerSpec() : base(CustomSerializers)
         {
             _serializer = new PersistenceMessageSerializer(Sys.As<ExtendedActorSystem>());
+            _fsmSerializer = new PersistentFSMSnapshotSerializer(Sys.As<ExtendedActorSystem>());
         }
 
         [Fact]
@@ -79,8 +81,8 @@ namespace Akka.Persistence.Tests.Serialization
         public void MessageSerializer_should_serialize_fsm_snapshot()
         {
             var snapshot = new PersistentFSM.PersistentFSMSnapshot<MyPayload>("a", new MyPayload("b"), TimeSpan.FromSeconds(10));
-            var bytes = _serializer.ToBinary(snapshot);
-            var backSnapshot = _serializer.FromBinary<PersistentFSM.PersistentFSMSnapshot<MyPayload>>(bytes);
+            var bytes = _fsmSerializer.ToBinary(snapshot);
+            var backSnapshot = _fsmSerializer.FromBinary<PersistentFSM.PersistentFSMSnapshot<MyPayload>>(bytes);
             backSnapshot.Should().NotBeNull();
             backSnapshot.StateIdentifier.Should().Be("a");
             backSnapshot.Data.Data.Should().Be(".b.");    // custom MyPayload serializer prepends and appends .
@@ -90,17 +92,17 @@ namespace Akka.Persistence.Tests.Serialization
         [Fact]
         public void MessageSerializer_ToBinary_should_throw_an_exception_on_wrong_type()
         {
-            Action serializeAction = () => _serializer.ToBinary("non supporter string type");
+            Action serializeAction = () => _fsmSerializer.ToBinary("non supporter string type");
             serializeAction.Should().Throw<ArgumentException>()
-                .WithMessage($"Can't serialize object of type [{typeof(string)}] in [{typeof(PersistenceMessageSerializer)}]");
+                .WithMessage($"Can't serialize object of type [{typeof(string)}] in [{typeof(PersistentFSMSnapshotSerializer)}]");
 
             Action deserializeAction = () =>
             {
-                _serializer.FromBinary<string>(new byte[] { 4, 5, 6 });
+                _fsmSerializer.FromBinary<string>(new byte[] { 4, 5, 6 });
             };
 
             deserializeAction.Should().Throw<SerializationException>()
-                .WithMessage($"Unimplemented deserialization of message with type [{typeof(string)}] in [{typeof(PersistenceMessageSerializer)}]");
+                .WithMessage($"Unimplemented deserialization of message with type [{typeof(string)}] in [{typeof(PersistentFSMSnapshotSerializer)}]");
         }
     }
 }

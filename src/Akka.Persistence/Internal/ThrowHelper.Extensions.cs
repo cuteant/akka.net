@@ -9,6 +9,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Pattern;
 using Akka.Persistence.Journal;
+using Akka.Util;
 using Akka.Persistence.Serialization;
 
 namespace Akka.Persistence
@@ -193,7 +194,31 @@ namespace Akka.Persistence
             throw GetArgumentException();
             ArgumentException GetArgumentException()
             {
-                return new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{typeof(PersistenceMessageSerializer)}]");
+                var objType = obj is Type t ? t : obj?.GetType();
+                return new ArgumentException($"Can't serialize object of type [{objType}] in [{typeof(PersistenceMessageSerializer)}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_MessageSerializerFSM(object obj)
+        {
+            throw GetArgumentException();
+            ArgumentException GetArgumentException()
+            {
+                var objType = obj is Type t ? t : obj?.GetType();
+                return new ArgumentException($"Can't serialize object of type [{objType}] in [{typeof(PersistentFSMSnapshotSerializer)}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Serializer_D(object obj)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                var type = obj as Type;
+                var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
             }
         }
 
@@ -203,7 +228,7 @@ namespace Akka.Persistence
             throw GetArgumentException();
             ArgumentException GetArgumentException()
             {
-                return new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{typeof(PersistenceSnapshotSerializer)}]");
+                return new ArgumentException($"Can't serialize object of type [{obj?.GetType()}] in [{typeof(PersistenceSnapshotSerializer)}]");
             }
         }
 
@@ -214,6 +239,16 @@ namespace Akka.Persistence
             ArgumentException GetArgumentException()
             {
                 return new ArgumentException($"Unimplemented deserialization of message with type [{type}] in [{typeof(PersistenceSnapshotSerializer)}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static object ThrowArgumentException_Serializer(int manifest)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(PersistenceMessageSerializer)}]");
             }
         }
 
@@ -326,6 +361,16 @@ namespace Akka.Persistence
             SerializationException GetException()
             {
                 return new SerializationException($"Unimplemented deserialization of message with type [{type}] in [{typeof(PersistenceMessageSerializer)}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowSerializationException_FSM(Type type)
+        {
+            throw GetException();
+            SerializationException GetException()
+            {
+                return new SerializationException($"Unimplemented deserialization of message with type [{type}] in [{typeof(PersistentFSMSnapshotSerializer)}]");
             }
         }
 

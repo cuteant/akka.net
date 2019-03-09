@@ -9,46 +9,109 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
 using Akka.Actor;
 using Akka.Persistence.Fsm;
 using Akka.Persistence.Serialization.Protocol;
 using Akka.Serialization;
-using CuteAnt;
-using CuteAnt.Collections;
-using CuteAnt.Reflection;
 using MessagePack;
 
 namespace Akka.Persistence.Serialization
 {
-    public sealed class PersistenceMessageSerializer : SerializerWithTypeManifest
+    public sealed class PersistenceMessageSerializer : SerializerWithIntegerManifest
     {
-        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
-        private static readonly CachedReadConcurrentDictionary<Type, bool> s_persistentFSMSnapshotMap =
-            new CachedReadConcurrentDictionary<Type, bool>(DictionaryCacheConstants.SIZE_MEDIUM);
+        private static readonly IFormatterResolver s_defaultResolver;
 
-        public PersistenceMessageSerializer(ExtendedActorSystem system) : base(system)
+        #region manifests
+
+        private const int IPersistentManifest = 60;
+        private const int PersistentManifest = 61;
+        private const int AtomicWriteManifest = 62;
+        private const int ALODSnapshotManifest = 63;
+        private const int StateChangeEventManifest = 64;
+
+        private static readonly Dictionary<Type, int> ManifestMap;
+
+        static PersistenceMessageSerializer()
         {
+            ManifestMap = new Dictionary<Type, int>
+            {
+                { typeof(IPersistentRepresentation), IPersistentManifest },
+                { typeof(Persistent), PersistentManifest },
+                { typeof(AtomicWrite), AtomicWriteManifest },
+                { typeof(AtLeastOnceDeliverySnapshot), ALODSnapshotManifest },
+                { typeof(PersistentFSM.StateChangeEvent), StateChangeEventManifest },
+            };
+            s_defaultResolver = MessagePackSerializer.DefaultResolver;
         }
 
-        public override byte[] ToBinary(object obj)
+        #endregion
+
+        public PersistenceMessageSerializer(ExtendedActorSystem system) : base(system) { }
+
+        /// <inheritdoc />
+        public override byte[] ToBinary(object obj, out int manifest)
         {
             switch (obj)
             {
                 case IPersistentRepresentation repr:
+                    manifest = IPersistentManifest;
                     return MessagePackSerializer.Serialize(GetPersistentMessage(repr), s_defaultResolver);
                 case AtomicWrite aw:
+                    manifest = AtomicWriteManifest;
                     return MessagePackSerializer.Serialize(GetAtomicWrite(aw), s_defaultResolver);
                 case AtLeastOnceDeliverySnapshot snap:
+                    manifest = ALODSnapshotManifest;
                     return MessagePackSerializer.Serialize(GetAtLeastOnceDeliverySnapshot(snap), s_defaultResolver);
                 case PersistentFSM.StateChangeEvent stateEvent:
+                    manifest = StateChangeEventManifest;
                     return MessagePackSerializer.Serialize(GetStateChangeEvent(stateEvent), s_defaultResolver);
                 default:
-                    if (s_persistentFSMSnapshotMap.GetOrAdd(obj.GetType(), s_isPersistentFSMSnapshotFunc))
-                    {
-                        return MessagePackSerializer.Serialize(GetPersistentFSMSnapshot(obj), s_defaultResolver);
-                    }
-                    ThrowHelper.ThrowArgumentException_MessageSerializer(obj); return null;
+                    manifest = 0; ThrowHelper.ThrowArgumentException_MessageSerializer(obj); return null;
+            }
+        }
+
+        /// <inheritdoc />
+        public override object FromBinary(byte[] bytes, int manifest)
+        {
+            switch (manifest)
+            {
+                case IPersistentManifest:
+                case PersistentManifest:
+                    return GetPersistentRepresentation(system, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
+                case AtomicWriteManifest:
+                    return GetAtomicWrite(system, bytes);
+                case ALODSnapshotManifest:
+                    return GetAtLeastOnceDeliverySnapshot(system, bytes);
+                case StateChangeEventManifest:
+                    return GetStateChangeEvent(bytes);
+            }
+
+            ThrowHelper.ThrowArgumentException_Serializer(manifest); return null;
+        }
+
+        /// <inheritdoc />
+        protected sealed override int GetManifest(Type type)
+        {
+            if (null == type) { return 0; }
+            if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
+            ThrowHelper.ThrowArgumentException_Serializer_D(type); return 0;
+        }
+
+        /// <inheritdoc />
+        public sealed override int Manifest(object o)
+        {
+            switch (o)
+            {
+                case IPersistentRepresentation repr:
+                    return IPersistentManifest;
+                case AtomicWrite aw:
+                    return  AtomicWriteManifest;
+                case AtLeastOnceDeliverySnapshot snap:
+                    return  ALODSnapshotManifest;
+                case PersistentFSM.StateChangeEvent stateEvent:
+                    return  StateChangeEventManifest;
+                default:
+                    ThrowHelper.ThrowArgumentException_Serializer_D(o); return 0;
             }
         }
 
@@ -97,66 +160,6 @@ namespace Akka.Persistence.Serialization
                 changeEvent.StateIdentifier,
                 timeout.HasValue ? (long)timeout.Value.TotalMilliseconds : 0L
             );
-        }
-
-        private PersistentFSMSnapshot GetPersistentFSMSnapshot(object obj)
-        {
-            var type = obj.GetType();
-            var fsmSnapshot = obj as PersistentFSM.IPersistentFSMSnapshot;
-
-            var timeout = fsmSnapshot.Timeout;
-            return new PersistentFSMSnapshot(
-                fsmSnapshot.StateIdentifier,
-                system.Serialize(fsmSnapshot.Data),
-                timeout.HasValue ? (long)timeout.Value.TotalMilliseconds : 0L
-            );
-        }
-
-        static class _
-        {
-            internal const int Persistent = 0;
-            internal const int IPersistentRepresentation = 1;
-            internal const int AtomicWrite = 2;
-            internal const int AtLeastOnceDeliverySnapshot = 3;
-            internal const int StateChangeEvent = 4;
-        }
-        private static readonly Dictionary<Type, int> s_fromBinaryMap = new Dictionary<Type, int>()
-        {
-            { typeof(Persistent), _.Persistent },
-            { typeof(IPersistentRepresentation), _.IPersistentRepresentation },
-            { typeof(AtomicWrite), _.AtomicWrite },
-            { typeof(AtLeastOnceDeliverySnapshot), _.AtLeastOnceDeliverySnapshot },
-            { typeof(PersistentFSM.StateChangeEvent), _.StateChangeEvent },
-        };
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            if (s_fromBinaryMap.TryGetValue(type, out var flag))
-            {
-                switch (flag)
-                {
-                    case _.Persistent:
-                    case _.IPersistentRepresentation:
-                        return GetPersistentRepresentation(system, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
-                    case _.AtomicWrite:
-                        return GetAtomicWrite(system, bytes);
-                    case _.AtLeastOnceDeliverySnapshot:
-                        return GetAtLeastOnceDeliverySnapshot(system, bytes);
-                    case _.StateChangeEvent:
-                        return GetStateChangeEvent(bytes);
-                }
-            }
-            if (s_persistentFSMSnapshotMap.GetOrAdd(type, s_isPersistentFSMSnapshotFunc))
-            {
-                return GetPersistentFSMSnapshot(type, bytes);
-            }
-
-            ThrowHelper.ThrowSerializationException(type); return null;
-        }
-
-        private static readonly Func<Type, bool> s_isPersistentFSMSnapshotFunc = IsPersistentFSMSnapshot;
-        private static bool IsPersistentFSMSnapshot(Type type)
-        {
-            return type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>);
         }
 
         private static IPersistentRepresentation GetPersistentRepresentation(ExtendedActorSystem system, PersistentMessage message)
@@ -213,34 +216,6 @@ namespace Akka.Persistence.Serialization
                 timeout = TimeSpan.FromMilliseconds(message.TimeoutMillis);
             }
             return new PersistentFSM.StateChangeEvent(message.StateIdentifier, timeout);
-        }
-
-        private static readonly CachedReadConcurrentDictionary<Type, CtorInvoker<object>> s_ctorInvokerCache =
-            new CachedReadConcurrentDictionary<Type, CtorInvoker<object>>(DictionaryCacheConstants.SIZE_SMALL);
-
-        private object GetPersistentFSMSnapshot(Type type, byte[] bytes)
-        {
-            var message = MessagePackSerializer.Deserialize<PersistentFSMSnapshot>(bytes, s_defaultResolver);
-
-            TimeSpan? timeout = null;
-            if (message.TimeoutMillis > 0)
-            {
-                timeout = TimeSpan.FromMilliseconds(message.TimeoutMillis);
-            }
-
-            object[] arguments = { message.StateIdentifier, system.Deserialize(message.Data), timeout };
-
-            var ctorInvoker = s_ctorInvokerCache.GetOrAdd(type, s_makeDelegateForCtorFunc);
-
-            return ctorInvoker(arguments);
-        }
-
-        private static readonly Func<Type, CtorInvoker<object>> s_makeDelegateForCtorFunc = MakeDelegateForCtor;
-        private static CtorInvoker<object> MakeDelegateForCtor(Type instanceType)
-        {
-            // use reflection to create the generic type of PersistentFSM.PersistentFSMSnapshot
-            Type[] types = { TypeConstants.StringType, instanceType.GenericTypeArguments[0], typeof(TimeSpan?) };
-            return instanceType.MakeDelegateForCtor(types);
         }
     }
 }

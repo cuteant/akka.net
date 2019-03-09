@@ -15,8 +15,8 @@ namespace Akka.Serialization
     {
         #region manifests
 
-        private const int DataSetManifest = 20;
-        private const int DataTableManifest = 21;
+        private const int DataSetManifest = 50;
+        private const int DataTableManifest = 51;
 
         private static readonly Dictionary<Type, int> ManifestMap;
 
@@ -71,7 +71,7 @@ namespace Akka.Serialization
                         return outputStream.ToByteArray();
                     }
                 default:
-                    manifest = 0; return ThrowArgumentException_Serializer_D<byte[]>(o);
+                    manifest = 0; ThrowArgumentException_Serializer_D(o); return null;
             }
         }
 
@@ -100,7 +100,7 @@ namespace Akka.Serialization
         {
             if (null == type) { return 0; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            return ThrowArgumentException_Serializer_D<int>(type);
+            ThrowArgumentException_Serializer_D(type); return 0;
         }
 
         /// <inheritdoc />
@@ -113,7 +113,7 @@ namespace Akka.Serialization
                 case DataTable _:
                     return DataTableManifest;
                 default:
-                    return ThrowArgumentException_Serializer_D<int>(o);
+                    ThrowArgumentException_Serializer_D(o); return 0;
             }
         }
 
@@ -128,7 +128,7 @@ namespace Akka.Serialization
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static T ThrowArgumentException_Serializer_D<T>(object obj)
+        private static void ThrowArgumentException_Serializer_D(object obj)
         {
             throw GetException();
             ArgumentException GetException()

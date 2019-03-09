@@ -9,7 +9,7 @@ akka-containers           = "Akka.Serialization.MessageContainerSerializer, Akka
 akka-persistence-message  = "Akka.Persistence.Serialization.PersistenceMessageSerializer, Akka.Persistence"                            = 7
 akka-persistence-snapshot = "Akka.Persistence.Serialization.PersistenceSnapshotSerializer, Akka.Persistence"                           = 8
 akka-pubsub               = "Akka.Cluster.Tools.PublishSubscribe.Serialization.DistributedPubSubMessageSerializer, Akka.Cluster.Tools" = 9
-
+akka-fsm-snapshot         = "Akka.Persistence.Serialization.PersistentFSMSnapshotSerializer, Akka.Persistence"                         = 10
 akka-replicated-data      = "Akka.DistributedData.Serialization.ReplicatedDataSerializer, Akka.DistributedData"                        = 11
 akka-data-replication     = "Akka.DistributedData.Serialization.ReplicatorMessageSerializer, Akka.DistributedData"                     = 12
 akka-sharding             = "Akka.Cluster.Sharding.Serialization.ClusterShardingMessageSerializer, Akka.Cluster.Sharding"              = 13

@@ -6,7 +6,7 @@ namespace Akka.Extension.EventStore
 {
     public class AkkaEventMetadata : IEventMetadata
     {
-        [DataMember(Name = "clrEventType")]
+        [DataMember(Name = "clrType")]
         public string ClrEventType { get; set; }
 
         [DataMember(Name = "meta")]

@@ -1,6 +1,8 @@
-PrimitiveSerializers                   => 10 - 19
+PrimitiveSerializers                   => 01 - 49
 
-ProtobufDataSerializer                 => 20 - 29
+ProtobufDataSerializer                 => 50 - 59
+
+PersistenceMessageSerializer           => 60 - 69
 
 SystemMessageSerializer                => 100 - 199
 

@@ -144,13 +144,17 @@ namespace Akka.Serialization
             _nullSerializer = new NullSerializer(system);
             AddSerializer("null", _nullSerializer);
 
-            var initializerType = system.Settings.Config.GetString("akka.actor.serialization-initializer", "Akka.Serialization.SerializationInitializer, Akka");
+            var config = system.Settings.Config;
+            var effective = config.GetBoolean("akka.actor.serialization");
+            if (!effective) { return; }
+
+            var initializerType = config.GetString("akka.actor.serialization-initializer", "Akka.Serialization.SerializationInitializer, Akka");
             var serializationInitializer = ActivatorUtils.FastCreateInstance<ISerializationInitializer>(TypeUtil.ResolveType(initializerType));
             serializationInitializer.InitActorSystem(system);
 
-            var serializersConfig = system.Settings.Config.GetConfig("akka.actor.serializers").AsEnumerable().ToList();
-            var serializerBindingConfig = system.Settings.Config.GetConfig("akka.actor.serialization-bindings").AsEnumerable().ToList();
-            var serializerSettingsConfig = system.Settings.Config.GetConfig("akka.actor.serialization-settings");
+            var serializersConfig = config.GetConfig("akka.actor.serializers").AsEnumerable().ToList();
+            var serializerBindingConfig = config.GetConfig("akka.actor.serialization-bindings").AsEnumerable().ToList();
+            var serializerSettingsConfig = config.GetConfig("akka.actor.serialization-settings");
 
             var systemLog = system.Log;
             var warnEnabled = systemLog.IsWarningEnabled;
@@ -405,7 +409,6 @@ namespace Akka.Serialization
         private static Serializer InternalFindSerializerForType(Serialization serialization, Type objectType, string defaultSerializerName)
         {
             Serializer serializer = null;
-            var type = objectType;
             var serializerMap = serialization._serializerMap;
 
             // TODO: see if we can do a better job with proper type sorting here - most specific to
@@ -414,7 +417,7 @@ namespace Akka.Serialization
             {
                 // force deferral of the base "object" serializer until all other higher-level types
                 // have been evaluated
-                if (serializerType.Key.IsAssignableFrom(type) && serializerType.Key != s_objectType)
+                if (serializerType.Key.IsAssignableFrom(objectType) && serializerType.Key != s_objectType)
                 {
                     serializer = serializerType.Value;
                     break;
@@ -437,7 +440,7 @@ namespace Akka.Serialization
                 ThrowSerializationException(objectType.Name);
             }
 
-            serialization.AddSerializationMap(type, serializer);
+            serialization.AddSerializationMap(objectType, serializer);
             return serializer;
         }
 

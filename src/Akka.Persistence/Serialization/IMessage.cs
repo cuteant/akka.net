@@ -15,9 +15,11 @@ using Akka.Util;
 
 namespace Akka.Persistence.Serialization
 {
-    /// <summary>
-    /// Marked interface used to identify message types which are used in persistence.
-    /// <see cref="IPersistentRepresentation"/>
-    /// </summary>
+    /// <summary>Marked interface used to identify message types which are used in persistence.
+    /// <see cref="IPersistentRepresentation"/>.</summary>
     public interface IMessage { }
+
+    /// <summary>Marked interface used to identify message types which are used in persistence.
+    /// <see cref="Akka.Persistence.Fsm.PersistentFSM.IPersistentFSMSnapshot"/>.</summary>
+    public interface IFSMSnapshotMessage { }
 }

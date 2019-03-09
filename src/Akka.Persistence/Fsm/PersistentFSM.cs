@@ -223,7 +223,7 @@ namespace Akka.Persistence.Fsm
         /// FSM state and data snapshot
         /// </summary>
         [MessagePackObject]
-        public class PersistentFSMSnapshot<TD> : IMessage, IPersistentFSMSnapshot
+        public class PersistentFSMSnapshot<TD> : IFSMSnapshotMessage, IPersistentFSMSnapshot
         {
             /// <summary>
             /// Initializes a new instance of the <see cref="PersistentFSMSnapshot{TD}"/> class.
