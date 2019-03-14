@@ -249,12 +249,11 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(byte[] bytes, int serializerId, Type type)
         {
-            if (_serializersById.TryGetValue(serializerId, out var serializer))
+            if (!_serializersById.TryGetValue(serializerId, out var serializer))
             {
-                return serializer.FromBinary(bytes, type);
+                ThrowSerializationException(serializerId, type);
             }
-
-            ThrowSerializationException(serializerId); return null;
+            return serializer.FromBinary(bytes, type);
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -266,12 +265,11 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(byte[] bytes, int serializerId)
         {
-            if (_serializersById.TryGetValue(serializerId, out var serializer))
+            if (!_serializersById.TryGetValue(serializerId, out var serializer))
             {
-                return serializer.FromBinary(bytes, null);
+                ThrowSerializationException(serializerId);
             }
-
-            ThrowSerializationException(serializerId); return null;
+            return serializer.FromBinary(bytes, null);
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -283,12 +281,11 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(in Payload payload)
         {
-            if (_serializersById.TryGetValue(payload.SerializerId, out var serializer))
+            if (!_serializersById.TryGetValue(payload.SerializerId, out var serializer))
             {
-                return serializer.FromPayload(payload);
+                ThrowSerializationException(payload.SerializerId);
             }
-
-            ThrowSerializationException(payload.SerializerId); return null;
+            return serializer.FromPayload(payload);
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -300,12 +297,11 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(in ExternalPayload payload)
         {
-            if (_serializersById.TryGetValue(payload.Identifier, out var serializer))
+            if (!_serializersById.TryGetValue(payload.Identifier, out var serializer))
             {
-                return serializer.FromExternalPayload(payload);
+                ThrowSerializationException(payload.Identifier);
             }
-
-            ThrowSerializationException(payload.Identifier); return null;
+            return serializer.FromExternalPayload(payload);
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -320,32 +316,32 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(byte[] bytes, int serializerId, string manifest)
         {
-            if (_serializersById.TryGetValue(serializerId, out var serializer))
+            if (!_serializersById.TryGetValue(serializerId, out var serializer))
             {
-                if (serializer is SerializerWithStringManifest manifestSerializer)
-                {
-                    return manifestSerializer.FromBinary(bytes, manifest);
-                }
-
-                if (string.IsNullOrEmpty(manifest))
-                {
-                    return serializer.FromBinary(bytes, null);
-                }
-
-                Type type = null;
-                try
-                {
-                    type = TypeUtils.ResolveType(manifest);
-                }
-                catch (Exception ex)
-                {
-                    ThrowSerializationException_D(manifest, serializerId, ex);
-                }
-
-                return serializer.FromBinary(bytes, type);
+                ThrowSerializationException(serializerId, manifest);
             }
 
-            ThrowSerializationException(serializerId); return null;
+            if (serializer is SerializerWithStringManifest manifestSerializer)
+            {
+                return manifestSerializer.FromBinary(bytes, manifest);
+            }
+
+            if (string.IsNullOrEmpty(manifest))
+            {
+                return serializer.FromBinary(bytes, null);
+            }
+
+            Type type = null;
+            try
+            {
+                type = TypeUtils.ResolveType(manifest);
+            }
+            catch (Exception ex)
+            {
+                ThrowSerializationException_D(manifest, serializerId, ex);
+            }
+
+            return serializer.FromBinary(bytes, type);
         }
 
         /// <summary>Returns the Serializer configured for the given object, returns the NullSerializer if it's null.</summary>
@@ -502,6 +498,30 @@ namespace Akka.Serialization
             {
                 return new SerializationException(
                     $"Cannot find serializer with id [{serializerId}]. The most probable reason" +
+                    " is that the configuration entry 'akka.actor.serializers' is not in sync between the two systems.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowSerializationException(int serializerId, Type type)
+        {
+            throw GetSerializationException();
+            SerializationException GetSerializationException()
+            {
+                return new SerializationException(
+                    $"Cannot find serializer with id [{serializerId}] (class [{type?.Name}]). The most probable reason" +
+                    " is that the configuration entry 'akka.actor.serializers' is not in sync between the two systems.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static void ThrowSerializationException(int serializerId, string manifest)
+        {
+            throw GetSerializationException();
+            SerializationException GetSerializationException()
+            {
+                return new SerializationException(
+                    $"Cannot find serializer with id [{serializerId}] (manifest [{manifest}]). The most probable reason" +
                     " is that the configuration entry 'akka.actor.serializers' is not in sync between the two systems.");
             }
         }

@@ -384,7 +384,28 @@ namespace Akka.Actor
                 return;
             }
 
-            // todo: log unprocessed scheduler registrations?
+            // Execute all outstanding work items
+            foreach (var task in stopped.Result)
+            {
+                try
+                {
+                    task.Action.Run();
+                }
+                catch (SchedulerException)
+                {
+                    // ignore, this is from terminated actors
+                }
+                catch (Exception ex)
+                {
+                    Log.ExceptionWhileExecutingTimerTask(ex);
+                }
+                finally
+                {
+                    // free the object from bucket
+                    task.Reset();
+                }
+            }
+
             _unprocessedRegistrations.Clear();
         }
 

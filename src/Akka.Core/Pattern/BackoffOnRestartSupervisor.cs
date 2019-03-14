@@ -11,6 +11,10 @@ using Akka.Event;
 
 namespace Akka.Pattern
 {
+    /// <summary>
+    /// Back-off supervisor that stops and starts a child actor when the child actor restarts. 
+    /// This back-off supervisor is created by using <see cref="BackoffSupervisor.Props"/> with <see cref="Backoff.OnFailure(Props, string, TimeSpan, TimeSpan, double, int)"/>
+    /// </summary>
     internal sealed class BackoffOnRestartSupervisor : BackoffSupervisorBase
     {
         private readonly TimeSpan _minBackoff;
@@ -26,7 +30,9 @@ namespace Akka.Pattern
             TimeSpan maxBackoff,
             IBackoffReset reset,
             double randomFactor,
-            OneForOneStrategy strategy) : base(childProps, childName, reset)
+            OneForOneStrategy strategy,
+            object replyWhileStopped = null,
+            Func<object, bool> finalStopMessage = null) : base(childProps, childName, reset, replyWhileStopped, finalStopMessage)
         {
             _minBackoff = minBackoff;
             _maxBackoff = maxBackoff;
@@ -90,28 +96,29 @@ namespace Akka.Pattern
             switch (message)
             {
                 case Terminated terminated when terminated.ActorRef.Equals(childRef):
-                    Become(Receive);
-                    Child = null;
-                    var restartDelay = BackoffSupervisor.CalculateDelay(RestartCountN, _minBackoff, _maxBackoff, _randomFactor);
-                    Context.System.Scheduler.ScheduleTellOnce(restartDelay, Self, BackoffSupervisor.StartChild.Instance, Self);
-                    RestartCountN++;
-                    return true;
-
+                    {
+                        Become(Receive);
+                        Child = null;
+                        var restartDelay = BackoffSupervisor.CalculateDelay(RestartCountN, _minBackoff, _maxBackoff, _randomFactor);
+                        Context.System.Scheduler.ScheduleTellOnce(restartDelay, Self, BackoffSupervisor.StartChild.Instance, Self);
+                        RestartCountN++;
+                        break;
+                    }
                 case BackoffSupervisor.StartChild _:
                     // Ignore it, we will schedule a new one once current child terminated.
-                    return true;
-
+                    break;
                 default:
                     return false;
             }
+
+            return true;
         }
 
         private bool OnTerminated(object message)
         {
-            var child = Child;
-            if (message is Terminated terminated && terminated.ActorRef.Equals(child))
+            if (message is Terminated terminated && terminated.ActorRef.Equals(Child))
             {
-                if (_log.IsDebugEnabled) _log.TerminatingBecauseChildTerminatedItself(child);
+                _log.Debug($"Terminating, because child {Child} terminated itself");
                 Context.Stop(Self);
                 return true;
             }

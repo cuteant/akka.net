@@ -203,12 +203,12 @@ namespace Akka
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Mailboxes_VerifyRequirements_Actor(Lazy<Type> mqType, Type actorType)
+        internal static void ThrowArgumentException_Mailboxes_VerifyRequirements_Actor(Lazy<Type> mqType, Type actorType, Lazy<Type> actorRequirement)
         {
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"produced message queue type of [{mqType.Value}] does not fulfill requirement for actor class [{actorType}]." + $"Must be a subclass of [{mqType.Value}]");
+                return new ArgumentException($"produced message queue type of [{mqType.Value}] does not fulfill requirement for actor class [{actorType}]." + $"Must be a subclass of [{actorRequirement.Value}]");
             }
         }
 

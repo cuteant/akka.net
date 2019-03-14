@@ -107,9 +107,9 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void GraphOutFinished(this ILoggingAdapter logger)
+        internal static void RestartingGraphDueToFinishedUpstream(this ILoggingAdapter logger)
         {
-            logger.Debug("Graph out finished");
+            logger.Debug("Restarting graph due to finished upstream");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

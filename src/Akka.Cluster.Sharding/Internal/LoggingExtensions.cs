@@ -290,6 +290,12 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void PassivatingIdleEntities(this ILoggingAdapter logger, int idleEntitiesCount)
+        {
+            logger.Debug($"Passivating [{idleEntitiesCount}] idle entities");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void PassivationAlreadyInProgress(this ILoggingAdapter logger, IActorRef entity)
         {
             logger.Debug("Passivation already in progress for {0}. Not sending stopMessage back to entity.", entity);
@@ -402,6 +408,12 @@ namespace Akka.Cluster.Sharding
         {
             const string logMsg = "ShardRegion for [{0}] is using [{1}] of it's buffer capacity";
             logger.Info(logMsg, typeName, 100 * total / bufferSize);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void IdleEntitiesWillBePassivatedAfter(this ILoggingAdapter logger, TimeSpan passivateIdleEntityAfter)
+        {
+            logger.Info($"Idle entities will be passivated after [{passivateIdleEntityAfter}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

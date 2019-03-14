@@ -283,7 +283,7 @@ namespace Akka.Dispatch
                 if (hasMailboxRequirement && !mailboxRequirement.IsAssignableFrom(mqType.Value))
                     AkkaThrowHelper.ThrowArgumentException_Mailboxes_VerifyRequirements_Dispatcher(mqType, id, mailboxRequirement);
                 if (HasRequiredType(actorType) && !actorRequirement.Value.IsAssignableFrom(mqType.Value))
-                    AkkaThrowHelper.ThrowArgumentException_Mailboxes_VerifyRequirements_Actor(mqType, actorType);
+                    AkkaThrowHelper.ThrowArgumentException_Mailboxes_VerifyRequirements_Actor(mqType, actorType, actorRequirement);
                 return mailboxType;
             }
 

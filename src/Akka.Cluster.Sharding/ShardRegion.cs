@@ -448,9 +448,18 @@ namespace Akka.Cluster.Sharding
         }
 
         /// <inheritdoc cref="ActorBase.PreStart"/>
+        /// <summary>
+        /// Subscribe to MemberEvent, re-subscribe when restart
+        /// </summary>
         protected override void PreStart()
         {
             Cluster.Subscribe(Self, typeof(ClusterEvent.IMemberEvent));
+            var passivateIdleEntityAfter = Settings.PassivateIdleEntityAfter;
+            if (passivateIdleEntityAfter > TimeSpan.Zero)
+            {
+                var log = Log;
+                if (log.IsInfoEnabled) log.IdleEntitiesWillBePassivatedAfter(passivateIdleEntityAfter);
+            }
         }
 
         /// <inheritdoc cref="ActorBase.PostStop"/>

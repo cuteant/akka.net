@@ -20,6 +20,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="CuteAnt.Runtime" Version="$(CuteAntRuntimePackageVersion)" />
     <PackageReference Include="MessagePack.Unofficial" Version="$(MessagePackUnofficialPackageVersion)" />
     <PackageReference Include="MessagePack.Hyperion" Version="$(MessagePackHyperionPackageVersion)" />
     <PackageReference Include="MessagePack.ImmutableCollection.Unofficial" Version="$(MessagePackImmutableCollectionUnofficialPackageVersion)" />

@@ -253,5 +253,11 @@ namespace Akka
         {
             logger.Error(x, "DedicatedThreadScheduler failed to execute action");
         }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ExceptionWhileExecutingTimerTask(this ILoggingAdapter logger, Exception ex)
+        {
+            logger.Error(ex, "Exception while executing timer task.");
+        }
     }
 }
