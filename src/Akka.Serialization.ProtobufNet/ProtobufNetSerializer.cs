@@ -10,13 +10,17 @@ namespace Akka.Serialization
 {
     public sealed class ProtobufNetSerializer : Serializer
     {
-        private const int c_initialBufferSize = 80 * 1024;
-        private static readonly ArrayPool<byte> s_sharedBuffer;
+#if DESKTOPCLR
+        private const int c_initialBufferSize = 1024 * 80;
+#else
+        private const int c_initialBufferSize = 1024 * 64;
+#endif
+        private static readonly ArrayPool<byte> s_bufferPool;
         private static readonly RuntimeTypeModel s_model;
 
         static ProtobufNetSerializer()
         {
-            s_sharedBuffer = BufferManager.Shared;
+            s_bufferPool = BufferManager.Shared;
             s_model = RuntimeTypeModel.Default;
             // 考虑到类的继承问题，禁用 [DataContract] / [XmlType]
             s_model.AutoAddProtoContractTypesOnly = true;
@@ -40,7 +44,7 @@ namespace Akka.Serialization
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
                 var outputStream = pooledStream.Object;
-                outputStream.Reinitialize(c_initialBufferSize, s_sharedBuffer);
+                outputStream.Reinitialize(c_initialBufferSize, s_bufferPool);
 
                 s_model.Serialize(outputStream, obj, null);
                 return outputStream.ToByteArray();

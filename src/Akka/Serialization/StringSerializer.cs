@@ -13,7 +13,7 @@ namespace Akka.Serialization
     {
         private static readonly Encoding s_encodingUtf8 = StringHelper.UTF8NoBOM;
         private static readonly Encoding s_decodingUtf8 = Encoding.UTF8;
-        private static readonly ArrayPool<byte> s_sharedBufferPool = BufferManager.Shared;
+        private static readonly ArrayPool<byte> s_bufferPool = BufferManager.Shared;
 
         /// <summary>Initializes a new instance of the <see cref="PrimitiveSerializers" /> class.</summary>
         /// <param name="system">The actor system to associate with this serializer. </param>
@@ -37,7 +37,7 @@ namespace Akka.Serialization
             if (0u >= (uint)len) { return EmptyArray<byte>.Instance; }
 
             var bufferSize = s_encodingUtf8.GetMaxByteCount(len);
-            var buffer = s_sharedBufferPool.Rent(bufferSize);
+            var buffer = s_bufferPool.Rent(bufferSize);
             try
             {
                 var bytesCount = s_encodingUtf8.GetBytes(str, 0, len, buffer, 0);
@@ -45,7 +45,7 @@ namespace Akka.Serialization
             }
             catch (Exception ex)
             {
-                s_sharedBufferPool.Return(buffer);
+                s_bufferPool.Return(buffer);
                 throw ex;
             }
         }

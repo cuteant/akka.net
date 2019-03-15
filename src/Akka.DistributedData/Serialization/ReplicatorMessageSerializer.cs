@@ -123,7 +123,7 @@ namespace Akka.DistributedData.Serialization
 
         #endregion
 
-        private static readonly ArrayPool<byte> s_sharedBuffer = BufferManager.Shared;
+        private static readonly ArrayPool<byte> s_bufferPool = BufferManager.Shared;
         public static readonly Type WriteAckType = typeof(WriteAck);
 
         private readonly SmallCache<Read, byte[]> _readCache;
@@ -200,13 +200,17 @@ namespace Akka.DistributedData.Serialization
         private readonly Func<object, byte[]> _serializeFunc;
         private byte[] Serialize(object obj) => Serialize(obj, _serializer);
 
+#if DESKTOPCLR
         private const int c_initialBufferSize = 1024 * 80;
+#else
+        private const int c_initialBufferSize = 1024 * 64;
+#endif
         private static byte[] Serialize(object obj, Hyperion.Serializer serializer)
         {
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
                 var outputStream = pooledStream.Object;
-                outputStream.Reinitialize(c_initialBufferSize, s_sharedBuffer);
+                outputStream.Reinitialize(c_initialBufferSize, s_bufferPool);
 
                 serializer.Serialize(obj, outputStream);
                 return outputStream.ToByteArray();

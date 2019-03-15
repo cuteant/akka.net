@@ -131,6 +131,18 @@ namespace Akka.Configuration
         /// Retrieves a long value, optionally suffixed with a 'b', from the specified path in the configuration.
         /// </summary>
         /// <param name="path">The path that contains the value to retrieve.</param>
+        /// <param name="defaultValue"></param>
+        /// <exception cref="InvalidOperationException">This exception is thrown if the current node is undefined.</exception>
+        /// <returns>The long value defined in the specified path.</returns>
+        public long GetByteSize(string path, long defaultValue)
+        {
+            return GetByteSize(path) ?? defaultValue;
+        }
+
+        /// <summary>
+        /// Retrieves a long value, optionally suffixed with a 'b', from the specified path in the configuration.
+        /// </summary>
+        /// <param name="path">The path that contains the value to retrieve.</param>
         /// <exception cref="InvalidOperationException">This exception is thrown if the current node is undefined.</exception>
         /// <returns>The long value defined in the specified path.</returns>
         public virtual long? GetByteSize(string path)

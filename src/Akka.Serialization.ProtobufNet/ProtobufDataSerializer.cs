@@ -34,7 +34,11 @@ namespace Akka.Serialization
 
         #endregion
 
-        internal const int InitialBufferSize = 80 * 1024;
+#if DESKTOPCLR
+        internal const int InitialBufferSize = 1024 * 80;
+#else
+        internal const int InitialBufferSize = 1024 * 64;
+#endif
         internal static readonly ProtoDataWriterOptions DefaultWriterOptions;
         internal static readonly ArrayPool<byte> SharedBufferPool;
 

@@ -5,8 +5,15 @@ namespace Akka.Serialization
 {
     public sealed class Utf8JsonSerializerSettings
     {
+#if DESKTOPCLR
+        private const int c_initialBufferSize = 1024 * 80;
+#else
+        private const int c_initialBufferSize = 1024 * 64;
+#endif
+        private const int c_maxBufferSize = 1024 * 1024;
+
         public static readonly Utf8JsonSerializerSettings Default = new Utf8JsonSerializerSettings(
-            initialBufferSize: 1024 * 80,
+            initialBufferSize: c_initialBufferSize,
             nameMutate: "original",
             enumAsString: true);
 
@@ -15,7 +22,7 @@ namespace Akka.Serialization
             if (config == null) throw new ArgumentNullException(nameof(config), "MsgPackSerializerSettings require a config, default path: `akka.serializers.msgpack`");
 
             return new Utf8JsonSerializerSettings(
-                initialBufferSize: config.GetInt("initial-buffer-size", 1024 * 80),
+                initialBufferSize: (int)config.GetByteSize("initial-buffer-size", c_initialBufferSize),
                 nameMutate: config.GetString("name-mutate", "original"),
                 enumAsString: config.GetBoolean("enum-as-string", true));
         }
@@ -23,7 +30,7 @@ namespace Akka.Serialization
         public Utf8JsonSerializerSettings(int initialBufferSize, string nameMutate, bool enumAsString)
         {
             if (initialBufferSize < 1024) { initialBufferSize = 1024; }
-            if (initialBufferSize > 81920) { initialBufferSize = 81920; }
+            if (initialBufferSize > c_maxBufferSize) { initialBufferSize = c_maxBufferSize; }
             InitialBufferSize = initialBufferSize;
 
             NameMutate = nameMutate;

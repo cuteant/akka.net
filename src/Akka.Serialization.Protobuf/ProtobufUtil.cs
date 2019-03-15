@@ -13,7 +13,7 @@ namespace Akka.Serialization
         private const string c_byteStringUnsafeTypeName = "Google.Protobuf.ByteString+Unsafe, Google.Protobuf";
         private const string c_getBufferMethodName = "GetBuffer";
 
-        private static readonly ArrayPool<byte> s_sharedBuffer = BufferManager.Shared;
+        private static readonly ArrayPool<byte> s_bufferPool = BufferManager.Shared;
 
         internal static readonly Type ByteStringUnsafeType;
         private static readonly MethodInfo s_getBufferMethodInfo;
@@ -85,13 +85,17 @@ namespace Akka.Serialization
         public static ByteBufferWrapper ToUnpooledByteBuffer(this ByteString bytes) => new ByteBufferWrapper(GetBuffer(bytes));
 
 
+#if DESKTOPCLR
         private const int c_initialBufferSize = 1024 * 80;
+#else
+        private const int c_initialBufferSize = 1024 * 64;
+#endif
         public static byte[] ToArray(this IMessage message, int initialBufferSize = c_initialBufferSize)
         {
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
                 var outputStream = pooledStream.Object;
-                outputStream.Reinitialize(initialBufferSize, s_sharedBuffer);
+                outputStream.Reinitialize(initialBufferSize, s_bufferPool);
                 message.WriteTo(outputStream);
                 return outputStream.ToByteArray();
             }
@@ -105,7 +109,7 @@ namespace Akka.Serialization
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
                 var outputStream = pooledStream.Object;
-                outputStream.Reinitialize(initialBufferSize, s_sharedBuffer);
+                outputStream.Reinitialize(initialBufferSize, s_bufferPool);
                 message.WriteTo(outputStream);
                 return new ByteBufferWrapper(outputStream.ToArraySegment());
             }
@@ -132,7 +136,7 @@ namespace Akka.Serialization
                     Buffer.MemoryCopy(pSrc, pDst, bytes.Length, payload.Count);
                 }
 #endif
-                s_sharedBuffer.Return(payload.Array);
+                s_bufferPool.Return(payload.Array);
                 return FromBytes(bytes);
             }
             else

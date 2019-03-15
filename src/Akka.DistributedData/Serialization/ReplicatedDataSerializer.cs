@@ -18,7 +18,7 @@ namespace Akka.DistributedData.Serialization
 {
     public sealed class ReplicatedDataSerializer : Serializer
     {
-        private static readonly ArrayPool<byte> s_sharedBuffer = BufferManager.Shared;
+        private static readonly ArrayPool<byte> s_bufferPool = BufferManager.Shared;
 
         private readonly Hyperion.Serializer _serializer;
 
@@ -40,7 +40,11 @@ namespace Akka.DistributedData.Serialization
                     }));
         }
 
+#if DESKTOPCLR
         private const int c_initialBufferSize = 1024 * 80;
+#else
+        private const int c_initialBufferSize = 1024 * 64;
+#endif
         /// <summary>
         /// Serializes the given object into a byte array
         /// </summary>
@@ -51,7 +55,7 @@ namespace Akka.DistributedData.Serialization
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
                 var outputStream = pooledStream.Object;
-                outputStream.Reinitialize(c_initialBufferSize, s_sharedBuffer);
+                outputStream.Reinitialize(c_initialBufferSize, s_bufferPool);
 
                 _serializer.Serialize(obj, outputStream);
                 return outputStream.ToByteArray();

@@ -29,11 +29,18 @@ namespace Akka.Serialization
     /// </summary>
     public sealed class NewtonSoftJsonSerializerSettings
     {
+#if DESKTOPCLR
+        private const int c_initialBufferSize = 1024 * 80;
+#else
+        private const int c_initialBufferSize = 1024 * 64;
+#endif
+        private const int c_maxBufferSize = 1024 * 1024;
+
         /// <summary>
         /// A default instance of <see cref="NewtonSoftJsonSerializerSettings"/> used when no custom configuration has been provided.
         /// </summary>
         public static readonly NewtonSoftJsonSerializerSettings Default = new NewtonSoftJsonSerializerSettings(
-            initialBufferSize: 1024 * 80,
+            initialBufferSize: c_initialBufferSize,
             encodeTypeNames: true,
             preserveObjectReferences: true,
             converters: Enumerable.Empty<Type>());
@@ -55,7 +62,7 @@ namespace Akka.Serialization
                 throw new ArgumentNullException(nameof(config), $"{nameof(NewtonSoftJsonSerializerSettings)} config was not provided");
 
             return new NewtonSoftJsonSerializerSettings(
-                initialBufferSize: config.GetInt("initial-buffer-size", 1024 * 80),
+                initialBufferSize: (int)config.GetByteSize("initial-buffer-size", c_initialBufferSize),
                 encodeTypeNames: config.GetBoolean("encode-type-names", true),
                 preserveObjectReferences: config.GetBoolean("preserve-object-references", true),
                 converters: GetConverterTypes(config));
@@ -108,7 +115,7 @@ namespace Akka.Serialization
         public NewtonSoftJsonSerializerSettings(int initialBufferSize, bool encodeTypeNames, bool preserveObjectReferences, IEnumerable<Type> converters)
         {
             if (initialBufferSize < 1024) { initialBufferSize = 1024; }
-            if (initialBufferSize > 81920) { initialBufferSize = 81920; }
+            if (initialBufferSize > c_maxBufferSize) { initialBufferSize = c_maxBufferSize; }
             InitialBufferSize = initialBufferSize;
 
             EncodeTypeNames = encodeTypeNames;

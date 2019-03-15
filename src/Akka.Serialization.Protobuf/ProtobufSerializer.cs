@@ -22,7 +22,7 @@ namespace Akka.Serialization
     {
         private static readonly ConcurrentDictionary<RuntimeTypeHandle, MessageParser> TypeLookup = new ConcurrentDictionary<RuntimeTypeHandle, MessageParser>();
 
-        private static readonly ArrayPool<byte> s_sharedBuffer = BufferManager.Shared;
+        private static readonly ArrayPool<byte> s_bufferPool = BufferManager.Shared;
 
         private readonly int _initialBufferSize;
 
@@ -51,7 +51,7 @@ namespace Akka.Serialization
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {
                 var outputStream = pooledStream.Object;
-                outputStream.Reinitialize(_initialBufferSize, s_sharedBuffer);
+                outputStream.Reinitialize(_initialBufferSize, s_bufferPool);
                 ((IMessage)obj).WriteTo(outputStream);
                 return outputStream.ToByteArray();
             }
