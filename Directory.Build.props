@@ -30,6 +30,7 @@
     <DeveloperBuildTestTfms>netcoreapp2.2</DeveloperBuildTestTfms>
     <StandardTestTfms>$(DeveloperBuildTestTfms)</StandardTestTfms>
     <StandardTestTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardTestTfms);net471;net452</StandardTestTfms>
+    <Core20TestTfms>$(StandardTestTfms);netcoreapp2.0</Core20TestTfms>
     <DeveloperBuildTfms>netstandard2.0</DeveloperBuildTfms>
     <StandardDevTfms>$(DeveloperBuildTfms)</StandardDevTfms>
     <StandardDevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardDevTfms);net471;net451</StandardDevTfms>
@@ -53,6 +54,9 @@
     <ImportLibs>netcore</ImportLibs>
   </PropertyGroup>
 
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
+    <DefineConstants>$(DefineConstants);CORECLR;NETCOREAPP;NETCOREAPP_2_0_GREATER;NETCOREAPP_2_1_GREATER;NETCOREAPP_2_X_GREATER;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
+  </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.2' ">
     <DefineConstants>$(DefineConstants);CORECLR;NETCOREAPP;NETCOREAPP_2_0_GREATER;NETCOREAPP_2_1_GREATER;NET_4_0_GREATER;NET_4_5_GREATER;NET_4_6_GREATER</DefineConstants>
   </PropertyGroup>
@@ -270,6 +274,19 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp2.2|AnyCPU'">
+    <DebugType>portable</DebugType>
+    <Optimize>true</Optimize>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netcoreapp3.0|AnyCPU'">
+    <DebugSymbols>True</DebugSymbols>
+    <DebugType>portable</DebugType>
+    <Optimize>false</Optimize>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netcoreapp3.0|AnyCPU'">
     <DebugType>portable</DebugType>
     <Optimize>true</Optimize>
     <ErrorReport>prompt</ErrorReport>

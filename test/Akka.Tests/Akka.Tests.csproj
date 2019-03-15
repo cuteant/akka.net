@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(Core20TestTfms)</TargetFrameworks>
     <DefineConstants>$(DefineConstants);SERIALIZATION;UNSAFE_THREADING</DefineConstants>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">

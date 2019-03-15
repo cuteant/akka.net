@@ -116,9 +116,10 @@ namespace Akka.Pattern
 
         private bool OnTerminated(object message)
         {
-            if (message is Terminated terminated && terminated.ActorRef.Equals(Child))
+            var child = Child;
+            if (message is Terminated terminated && terminated.ActorRef.Equals(child))
             {
-                _log.Debug($"Terminating, because child {Child} terminated itself");
+                if (_log.IsDebugEnabled) _log.TerminatingBecauseChildTerminatedItself(child);
                 Context.Stop(Self);
                 return true;
             }

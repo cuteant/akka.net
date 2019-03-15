@@ -19,7 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="Autofac.Unofficial" Version="$(AutofacUnofficialPackageVersion)" />
+    <PackageReference Include="Autofac" Version="$(AutofacPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

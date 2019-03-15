@@ -55,13 +55,13 @@ namespace Akka
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void TerminatingOnRestartWhichExceedsMaxAllowedRestarts(this ILoggingAdapter logger, int nextRestartCount, int maxNumberOfRetries)
         {
-            logger.Debug($"Terminating on restart #{0} which exceeds max allowed restarts ({1})", nextRestartCount, maxNumberOfRetries);
+            logger.Debug("Terminating on restart #{0} which exceeds max allowed restarts ({1})", nextRestartCount, maxNumberOfRetries);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void TerminatingBecauseChildTerminatedItself(this ILoggingAdapter logger, IActorRef child)
         {
-            logger.Debug($"Terminating, because child {child} terminated itself");
+            logger.Debug("Terminating, because child {child} terminated itself", child);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

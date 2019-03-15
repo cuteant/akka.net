@@ -165,7 +165,8 @@ namespace Akka.Pattern
                     }
                     else
                     {
-                        Log.Debug($"Terminating on restart #{nextRestartCount} which exceeds max allowed restarts ({maxNrOfRetries})");
+                        var log = Log;
+                        if (log.IsDebugEnabled) log.TerminatingOnRestartWhichExceedsMaxAllowedRestarts(nextRestartCount, maxNrOfRetries);
                         Context.Stop(Self);
                     }
                 }
@@ -263,8 +264,8 @@ namespace Akka.Pattern
             double randomFactor)
         {
             var rand = 1.0 + ThreadLocalRandom.Current.NextDouble() * randomFactor;
-            var calculateDuration = Math.Min(maxBackoff.Ticks, minBackoff.Ticks * Math.Pow(2, restartCount)) * rand;
-            return calculateDuration < 0d || calculateDuration >= long.MaxValue ? maxBackoff : new TimeSpan((long)calculateDuration);
+            var calculateDuration = (long)(Math.Min(maxBackoff.Ticks, minBackoff.Ticks * Math.Pow(2, restartCount)) * rand);
+            return (ulong)calculateDuration >= long.MaxValue ? maxBackoff : new TimeSpan(calculateDuration);
         }
     }
 }

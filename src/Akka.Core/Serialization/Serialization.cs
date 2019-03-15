@@ -145,7 +145,7 @@ namespace Akka.Serialization
             AddSerializer("null", _nullSerializer);
 
             var config = system.Settings.Config;
-            var effective = config.GetBoolean("akka.actor.serialization");
+            var effective = config.GetBoolean("akka.actor.serialization", true);
             if (!effective) { return; }
 
             var initializerType = config.GetString("akka.actor.serialization-initializer", "Akka.Serialization.SerializationInitializer, Akka");

@@ -3,7 +3,7 @@
   <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(Core20TestTfms)</TargetFrameworks>
     <RootNamespace>Akka.DI.TestKit</RootNamespace>
     <AssemblyName>Akka.DI.TestKit</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

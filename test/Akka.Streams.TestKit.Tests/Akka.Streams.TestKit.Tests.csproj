@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(Core20TestTfms)</TargetFrameworks>
     <RootNamespace>Akka.Streams.TestKit.Tests</RootNamespace>
     <AssemblyName>Akka.Streams.TestKit.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

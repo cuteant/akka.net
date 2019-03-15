@@ -14,7 +14,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
 using CuteAnt.Collections;
-using CuteAnt.Extensions.Serialization;
+using CuteAnt.Pool;
 using CuteAnt.Reflection;
 using JsonExtensions;
 using Newtonsoft.Json;
@@ -24,9 +24,7 @@ using Newtonsoft.Json.Serialization;
 
 namespace Akka.Serialization
 {
-    /// <summary>
-    /// A typed settings for a <see cref="NewtonSoftJsonSerializer"/> class.
-    /// </summary>
+    /// <summary>A typed settings for a <see cref="NewtonSoftJsonSerializer"/> class.</summary>
     public sealed class NewtonSoftJsonSerializerSettings
     {
 #if DESKTOPCLR
@@ -124,18 +122,17 @@ namespace Akka.Serialization
         }
     }
 
-    /// <summary>
-    /// This is a special <see cref="Serializer"/> that serializes and deserializes javascript objects only.
-    /// These objects need to be in the JavaScript Object Notation (JSON) format.
-    /// </summary>
+    /// <summary>This is a special <see cref="Serializer"/> that serializes and deserializes javascript objects only.
+    /// These objects need to be in the JavaScript Object Notation (JSON) format.</summary>
     public class NewtonSoftJsonSerializer : Serializer
     {
         private readonly JsonSerializer _serializer;
-        private readonly JsonMessageFormatter _jsonFormatter;
+        private readonly JsonSerializerSettings _serializerSettings;
+        private readonly ObjectPool<JsonSerializer> _serializerPool;
         private readonly int _initialBufferSize;
 
         /// <summary>TBD</summary>
-        public JsonSerializerSettings Settings { get; }
+        public JsonSerializerSettings Settings => _serializerSettings;
 
         /// <summary>TBD</summary>
         public object Serializer => _serializer;
@@ -150,12 +147,17 @@ namespace Akka.Serialization
         {
         }
 
+        /// <summary>Initializes a new instance of the <see cref="NewtonSoftJsonSerializer" /> class.</summary>
+        /// <param name="system">The actor system to associate with this serializer. </param>
+        /// <param name="config"></param>
         public NewtonSoftJsonSerializer(ExtendedActorSystem system, Config config)
             : this(system, NewtonSoftJsonSerializerSettings.Create(config))
         {
         }
 
-
+        /// <summary>Initializes a new instance of the <see cref="NewtonSoftJsonSerializer" /> class.</summary>
+        /// <param name="system">The actor system to associate with this serializer. </param>
+        /// <param name="settings"></param>
         public NewtonSoftJsonSerializer(ExtendedActorSystem system, NewtonSoftJsonSerializerSettings settings)
             : base(system)
         {
@@ -168,7 +170,7 @@ namespace Akka.Serialization
             converters.Add(JsonConvertX.DefaultCombGuidConverter);
 
             _initialBufferSize = settings.InitialBufferSize;
-            var toSettings = new JsonSerializerSettings
+            _serializerSettings = new JsonSerializerSettings
             {
                 NullValueHandling = NullValueHandling.Ignore,
                 DefaultValueHandling = DefaultValueHandling.Ignore,
@@ -190,29 +192,10 @@ namespace Akka.Serialization
                 Converters = converters,
                 SerializationBinder = JsonSerializationBinder.Instance,
             };
-            Settings = toSettings;
-            var fromSettings = new JsonSerializerSettings
-            {
-                NullValueHandling = NullValueHandling.Ignore,
-                DefaultValueHandling = DefaultValueHandling.Ignore,
-                MissingMemberHandling = MissingMemberHandling.Ignore,
 
-                DateParseHandling = DateParseHandling.None,
+            _serializerPool = JsonConvertX.GetJsonSerializerPool(_serializerSettings);
 
-                ObjectCreationHandling = ObjectCreationHandling.Replace, //important: if reuse, the serializer will overwrite properties in default references, e.g. Props.DefaultDeploy or Props.noArgs
-                ConstructorHandling = ConstructorHandling.AllowNonPublicDefaultConstructor,
-                ContractResolver = new AkkaContractResolver(),
-                Converters = converters,
-                SerializationBinder = JsonSerializationBinder.Instance,
-            };
-
-            _jsonFormatter = new JsonMessageFormatter()
-            {
-                DefaultSerializerSettings = toSettings,
-                DefaultDeserializerSettings = fromSettings
-            };
-
-            _serializer = JsonSerializer.Create(Settings);
+            _serializer = JsonSerializer.Create(_serializerSettings);
         }
 
         private static JsonConverter CreateConverter(Type converterType, ExtendedActorSystem actorSystem)
@@ -221,7 +204,7 @@ namespace Akka.Serialization
                 .FirstOrDefault(c =>
                 {
                     var parameters = c.GetParameters();
-                    return 1 == parameters.Length && parameters[0].ParameterType == typeof(ExtendedActorSystem);
+                    return parameters.Length == 1 && parameters[0].ParameterType == typeof(ExtendedActorSystem);
                 });
 
             return ctor == null
@@ -237,8 +220,7 @@ namespace Akka.Serialization
 
                 if (!prop.Writable)
                 {
-                    var property = member as PropertyInfo;
-                    if (property != null)
+                    if (member is PropertyInfo property)
                     {
                         var hasPrivateSetter = property.GetSetMethod(true) != null;
                         prop.Writable = hasPrivateSetter;
@@ -252,26 +234,21 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override int Identifier => 105;
 
-        /// <inheritdoc />
-        public override object DeepCopy(object source) => _jsonFormatter.DeepCopyObject(source);
-
-        /// <summary>
-        /// Serializes the given object into a byte array
-        /// </summary>
+        /// <summary>Serializes the given object into a byte array.</summary>
         /// <param name="obj">The object to serialize </param>
         /// <returns>A byte array containing the serialized object</returns>
-        public override byte[] ToBinary(object obj) => _jsonFormatter.SerializeObject(obj, _initialBufferSize);
+        public override byte[] ToBinary(object obj)
+        {
+            return _serializerPool.SerializeToByteArray(obj, null, _initialBufferSize);
+        }
 
-        /// <summary>
-        /// Deserializes a byte array into an object of type <paramref name="type"/>.
-        /// </summary>
+        /// <summary>Deserializes a byte array into an object of type <paramref name="type"/>.</summary>
         /// <param name="bytes">The array containing the serialized object</param>
         /// <param name="type">The type of object contained in the array</param>
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, Type type)
         {
-            object res = _jsonFormatter.Deserialize(null, bytes);
-
+            object res = _serializerPool.DeserializeFromByteArray(bytes, type);
             return TranslateSurrogate(res, this, type);
         }
 
@@ -315,30 +292,22 @@ namespace Akka.Serialization
             }
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         internal class SurrogateConverter : JsonConverter
         {
             private readonly NewtonSoftJsonSerializer _parent;
-
-            /// <summary>
-            /// TBD
-            /// </summary>
+            /// <summary>TBD</summary>
             /// <param name="parent">TBD</param>
             public SurrogateConverter(NewtonSoftJsonSerializer parent)
             {
                 _parent = parent;
             }
 
-            private static readonly HashSet<Type> s_primitiveTypes = new HashSet<Type>(new[] { typeof(int), typeof(float), typeof(decimal) });
             private static readonly CachedReadConcurrentDictionary<Type, bool> s_canConvertedTypes =
                 new CachedReadConcurrentDictionary<Type, bool>(DictionaryCacheConstants.SIZE_SMALL);
             private static readonly Func<Type, bool> s_canConvertFunc = CanConvertInternal;
 
-            /// <summary>
-            /// Determines whether this instance can convert the specified object type.
-            /// </summary>
+            /// <summary>Determines whether this instance can convert the specified object type.</summary>
             /// <param name="objectType">Type of the object.</param>
             /// <returns><c>true</c> if this instance can convert the specified object type; otherwise, <c>false</c>.</returns>
             public override bool CanConvert(Type objectType)
@@ -347,28 +316,22 @@ namespace Akka.Serialization
             }
             private static bool CanConvertInternal(Type objectType)
             {
-                if (objectType == typeof(int) || objectType == typeof(float) || objectType == typeof(decimal))
-                    return true;
+                if (objectType == typeof(int) || objectType == typeof(float) || objectType == typeof(decimal)) { return true; }
 
-                if (typeof(ISurrogated).IsAssignableFrom(objectType))
-                    return true;
+                if (typeof(ISurrogated).IsAssignableFrom(objectType)) { return true; }
 
-                if (objectType == typeof(object))
-                    return true;
+                if (objectType == typeof(object)) { return true; }
 
                 return false;
             }
 
-            /// <summary>
-            /// Reads the JSON representation of the object.
-            /// </summary>
+            /// <summary>Reads the JSON representation of the object.</summary>
             /// <param name="reader">The <see cref="T:Newtonsoft.Json.JsonReader" /> to read from.</param>
             /// <param name="objectType">Type of the object.</param>
             /// <param name="existingValue">The existing value of object being read.</param>
             /// <param name="serializer">The calling serializer.</param>
             /// <returns>The object value.</returns>
-            public override object ReadJson(JsonReader reader, Type objectType, object existingValue,
-                JsonSerializer serializer)
+            public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
             {
                 return DeserializeFromReader(reader, serializer, objectType);
             }
@@ -379,45 +342,50 @@ namespace Akka.Serialization
                 return TranslateSurrogate(surrogate, _parent, objectType);
             }
 
-            /// <summary>
-            /// Writes the JSON representation of the object.
-            /// </summary>
+            /// <summary>Writes the JSON representation of the object.</summary>
             /// <param name="writer">The <see cref="T:Newtonsoft.Json.JsonWriter" /> to write to.</param>
             /// <param name="value">The value.</param>
             /// <param name="serializer">The calling serializer.</param>
             public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
             {
-                if (value is int || value is decimal || value is float)
+                switch (value)
                 {
-                    writer.WriteStartObject();
-                    writer.WritePropertyName("$");
-                    writer.WriteValue(GetString(value));
-                    writer.WriteEndObject();
-                }
-                else
-                {
-                    if (value is ISurrogated value1)
-                    {
-                        var surrogated = value1;
+                    case int _:
+                    case decimal _:
+                    case float _:
+                        writer.WriteStartObject();
+                        writer.WritePropertyName("$");
+                        writer.WriteValue(GetString(value));
+                        writer.WriteEndObject();
+                        break;
+
+                    case ISurrogated surrogated:
                         var surrogate = surrogated.ToSurrogate(_parent.system);
                         serializer.Serialize(writer, surrogate);
-                    }
-                    else
-                    {
+                        break;
+
+                    default:
                         serializer.Serialize(writer, value);
-                    }
+                        break;
                 }
             }
 
             private object GetString(object value)
             {
-                if (value is int intValue)
-                    return "I" + intValue.ToString(NumberFormatInfo.InvariantInfo);
-                if (value is float floatValue)
-                    return "F" + floatValue.ToString(NumberFormatInfo.InvariantInfo);
-                if (value is decimal decimalValue)
-                    return "M" + decimalValue.ToString(NumberFormatInfo.InvariantInfo);
-                throw new NotSupportedException();
+                switch (value)
+                {
+                    case int intValue:
+                        return "I" + intValue.ToString(NumberFormatInfo.InvariantInfo);
+
+                    case float floatValue:
+                        return "F" + floatValue.ToString(NumberFormatInfo.InvariantInfo);
+
+                    case decimal decimalValue:
+                        return "M" + decimalValue.ToString(NumberFormatInfo.InvariantInfo);
+
+                    default:
+                        throw new NotSupportedException();
+                }
             }
         }
     }

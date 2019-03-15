@@ -25,8 +25,11 @@ namespace Akka.Util.Internal
 #else
             Task.CompletedTask;
 #endif
-        private const int RunContinuationsAsynchronously = 64;
-        public static readonly bool IsRunContinuationsAsynchronouslyAvailable = Enum.IsDefined(typeof(TaskCreationOptions), RunContinuationsAsynchronously);
+#if NET451
+        public static readonly bool IsRunContinuationsAsynchronouslyAvailable = false;
+#else
+        public static readonly bool IsRunContinuationsAsynchronouslyAvailable = true;
+#endif
 
         /// <summary>
         /// Creates a new <see cref="TaskCompletionSource{TResult}"/> which will run in asynchronous,
@@ -36,16 +39,14 @@ namespace Akka.Util.Internal
         /// should be used only together with <see cref="NonBlockingTrySetResult{T}"/> and
         /// <see cref="NonBlockingTrySetException{T}"/>.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static TaskCompletionSource<T> NonBlockingTaskCompletionSource<T>()
         {
-            if (IsRunContinuationsAsynchronouslyAvailable)
-            {
-                return new TaskCompletionSource<T>((TaskCreationOptions)RunContinuationsAsynchronously);
-            }
-            else
-            {
-                return new TaskCompletionSource<T>();
-            }
+#if NET451
+            return new TaskCompletionSource<T>();
+#else
+            return new TaskCompletionSource<T>(TaskCreationOptions.RunContinuationsAsynchronously);
+#endif
         }
 
         /// <summary>
@@ -53,12 +54,14 @@ namespace Akka.Util.Internal
         /// fashion. For safety reasons, this method should be called only on tasks created via
         /// <see cref="NonBlockingTaskCompletionSource{T}"/> method.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void NonBlockingTrySetResult<T>(this TaskCompletionSource<T> taskCompletionSource, T value)
         {
-            if (IsRunContinuationsAsynchronouslyAvailable)
-                taskCompletionSource.TrySetResult(value);
-            else
-                Task.Run(() => taskCompletionSource.TrySetResult(value));
+#if NET451
+            Task.Run(() => taskCompletionSource.TrySetResult(value));
+#else
+            taskCompletionSource.TrySetResult(value);
+#endif
         }
 
         /// <summary>
@@ -66,12 +69,14 @@ namespace Akka.Util.Internal
         /// in asynchronous, non-blocking fashion. For safety reasons, this method should be called only
         /// on tasks created via <see cref="NonBlockingTaskCompletionSource{T}"/> method.
         /// </summary>
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void NonBlockingTrySetException<T>(this TaskCompletionSource<T> taskCompletionSource, Exception exception)
         {
-            if (IsRunContinuationsAsynchronouslyAvailable)
-                taskCompletionSource.TrySetUnwrappedException(exception);
-            else
-                Task.Run(() => taskCompletionSource.TrySetUnwrappedException(exception));
+#if NET451
+            Task.Run(() => taskCompletionSource.TrySetUnwrappedException(exception));
+#else
+            taskCompletionSource.TrySetUnwrappedException(exception);
+#endif
         }
 
         /// <summary>
