@@ -910,7 +910,7 @@ namespace Akka.Streams.Implementation.Fusing
             Type stageType;
             return module is CopiedModule copiedModule
                 && (graphStageModule = copiedModule.CopyOf as GraphStageModule) != null
-                && (stageType = graphStageModule.Stage.GetType()).GetTypeInfo().IsGenericType
+                && (stageType = graphStageModule.Stage.GetType()).IsGenericType
                 && stageType.GetGenericTypeDefinition() == typeof(MaterializedValueSource<>);
         }
 

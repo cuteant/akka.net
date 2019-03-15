@@ -41,7 +41,7 @@ namespace Akka.Serialization.Resolvers
         {
             if (s_ignoreTypes.Contains(t)) { return null; }
 
-            if (typeof(IObjectReferences).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+            if (typeof(IObjectReferences).IsAssignableFrom(t))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(SimpleHyperionFormatter2<>).GetCachedGenericType(t));
             }

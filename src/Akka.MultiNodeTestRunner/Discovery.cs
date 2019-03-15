@@ -106,21 +106,12 @@ namespace Akka.MultiNodeTestRunner
             var current = configUser;
             while (current != null)
             {
-
-#if CORECLR
-                var ctorWithConfig = current
-                    .GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
-                    .FirstOrDefault(c => null != c.GetParameters().FirstOrDefault(p => p.ParameterType.GetTypeInfo().IsSubclassOf(baseConfigType)));
-            
-                current = current.GetTypeInfo().BaseType;
-#else
                 var ctorWithConfig = current
                     .GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
                     .FirstOrDefault(c => null != c.GetParameters().FirstOrDefault(p => p.ParameterType.IsSubclassOf(baseConfigType)));
+                if (ctorWithConfig != null) return ctorWithConfig;
 
                 current = current.BaseType;
-#endif
-                if (ctorWithConfig != null) return ctorWithConfig;
             }
 
             throw new ArgumentException($"[{configUser}] or one of its base classes must specify constructor, which first parameter is a subclass of {baseConfigType}");
@@ -131,15 +122,9 @@ namespace Akka.MultiNodeTestRunner
             var ctors = configType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
             var empty = ctors.FirstOrDefault(c => !c.GetParameters().Any());
 
-#if CORECLR
-            return empty != null
-                ? new object[0]
-                : ctors.First().GetParameters().Select(p => p.ParameterType.GetTypeInfo().IsValueType ? Activator.CreateInstance(p.ParameterType) : null).ToArray();
-#else
             return empty != null
                 ? new object[0]
                 : ctors.First().GetParameters().Select(p => p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null).ToArray();
-#endif
         }
 
         /// <inheritdoc/>

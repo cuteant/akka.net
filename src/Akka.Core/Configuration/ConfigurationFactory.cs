@@ -87,7 +87,7 @@ namespace Akka.Configuration
         /// <returns>The configuration defined in the current executing assembly.</returns>
         internal static Config FromResource(string resourceName)
         {
-            Assembly assembly = typeof(ConfigurationFactory).GetTypeInfo().Assembly;
+            Assembly assembly = typeof(ConfigurationFactory).Assembly;
 
             return FromResource(resourceName, assembly);
         }
@@ -103,11 +103,11 @@ namespace Akka.Configuration
         {
             var type = instanceInAssembly as Type;
             if (type != null)
-                return FromResource(resourceName, type.GetTypeInfo().Assembly);
+                return FromResource(resourceName, type.Assembly);
             var assembly = instanceInAssembly as Assembly;
             if (assembly != null)
                 return FromResource(resourceName, assembly);
-            return FromResource(resourceName, instanceInAssembly.GetType().GetTypeInfo().Assembly);
+            return FromResource(resourceName, instanceInAssembly.GetType().Assembly);
         }
 
         /// <summary>
@@ -119,7 +119,7 @@ namespace Akka.Configuration
         /// <returns>The configuration defined in the assembly that contains the type <typeparamref name="TAssembly"/>.</returns>
         public static Config FromResource<TAssembly>(string resourceName)
         {
-            return FromResource(resourceName, typeof(TAssembly).GetTypeInfo().Assembly);
+            return FromResource(resourceName, typeof(TAssembly).Assembly);
         }
 
         /// <summary>

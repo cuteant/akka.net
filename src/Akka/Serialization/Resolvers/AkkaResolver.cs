@@ -84,17 +84,17 @@ namespace Akka.Serialization.Resolvers
         {
             if (FormatterMap.TryGetValue(t, out var formatter)) return formatter;
 
-            if (typeof(ISingletonMessage).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+            if (typeof(ISingletonMessage).IsAssignableFrom(t))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(SingletonMessageFormatter<>).GetCachedGenericType(t));
             }
 
-            if (typeof(ActorPath).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+            if (typeof(ActorPath).IsAssignableFrom(t))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(ActorPathFormatter<>).MakeGenericType(t));
             }
 
-            if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+            if (typeof(IActorRef).IsAssignableFrom(t))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(ActorRefFormatter<>).MakeGenericType(t));
             }

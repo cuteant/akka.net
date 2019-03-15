@@ -45,7 +45,7 @@ namespace Akka.Serialization.Resolvers
         {
             if (FormatterMap.TryGetValue(t, out var formatter)) return formatter;
 
-            if (typeof(ActorInitializationException).GetTypeInfo().IsAssignableFrom(t.GetTypeInfo()))
+            if (typeof(ActorInitializationException).IsAssignableFrom(t))
             {
                 return ActivatorUtils.FastCreateInstance(typeof(ActorInitializationExceptionFormatter<>).GetCachedGenericType(t));
             }

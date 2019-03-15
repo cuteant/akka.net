@@ -61,7 +61,7 @@ namespace Akka.Persistence.Serialization
         private static readonly Func<Type, bool> s_isPersistentFSMSnapshotFunc = IsPersistentFSMSnapshot;
         private static bool IsPersistentFSMSnapshot(Type type)
         {
-            return type.GetTypeInfo().IsGenericType && type.GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>);
+            return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>);
         }
 
         private static readonly CachedReadConcurrentDictionary<Type, CtorInvoker<object>> s_ctorInvokerCache =

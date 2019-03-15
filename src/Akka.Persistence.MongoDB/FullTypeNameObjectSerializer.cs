@@ -62,7 +62,7 @@ namespace Akka.Persistence.MongoDb
         protected void RegisterNewTypesToDiscriminator(Type actualType)
         {
             // we've detected a new concrete type that isn't registered in MongoDB's serializer
-            if (actualType != typeof(object) && !actualType.GetTypeInfo().IsInterface && !BsonSerializer.IsTypeDiscriminated(actualType))
+            if (actualType != typeof(object) && !actualType.IsInterface && !BsonSerializer.IsTypeDiscriminated(actualType))
             {
                 try
                 {

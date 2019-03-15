@@ -121,7 +121,7 @@ namespace Akka.Serialization.Formatters
 
         protected override byte[] TranslateTypeName(Type actualType, out Type expectedType)
         {
-            if (typeof(IActorRef).GetTypeInfo().IsAssignableFrom(actualType.GetTypeInfo()))
+            if (typeof(IActorRef).IsAssignableFrom(actualType))
             {
                 expectedType = typeof(IActorRef);
             }

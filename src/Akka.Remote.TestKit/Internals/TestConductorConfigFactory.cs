@@ -37,7 +37,7 @@ namespace Akka.Remote.TestKit.Internals
         internal static Config FromResource(string resourceName)
         {
 #if CORECLR
-            var assembly = typeof(TestConductorConfigFactory).GetTypeInfo().Assembly;
+            var assembly = typeof(TestConductorConfigFactory).Assembly;
 #else
             var assembly = typeof(TestConductorConfigFactory).Assembly;
 #endif
