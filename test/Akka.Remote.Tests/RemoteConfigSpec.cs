@@ -20,19 +20,19 @@ using static Akka.Util.RuntimeDetector;
 
 namespace Akka.Remote.Tests
 {
-    
+
     public class RemoteConfigSpec : AkkaSpec
     {
-        public RemoteConfigSpec():base(@"
+        public RemoteConfigSpec() : base(@"
                 akka.actor.provider = ""Akka.Remote.RemoteActorRefProvider, Akka.Remote""
                 akka.remote.dot-netty.tcp.port = 0
-            ") {}
-        
+            ") { }
+
 
         [Fact]
         public void Remoting_should_contain_correct_configuration_values_in_ReferenceConf()
         {
-            var remoteSettings = ((RemoteActorRefProvider)((ExtendedActorSystem) Sys).Provider).RemoteSettings;
+            var remoteSettings = ((RemoteActorRefProvider)((ExtendedActorSystem)Sys).Provider).RemoteSettings;
 
             Assert.False(remoteSettings.LogReceive);
             Assert.False(remoteSettings.LogSend);
@@ -81,7 +81,7 @@ namespace Akka.Remote.Tests
         public void Remoting_should_be_able_to_parse_AkkaProtocol_related_config_elements()
         {
             var settings = new AkkaProtocolSettings(((RemoteActorRefProvider)((ExtendedActorSystem)Sys).Provider).RemoteSettings.Config);
-            
+
             Assert.Equal(typeof(DeadlineFailureDetector), Type.GetType(settings.TransportFailureDetectorImplementationClass));
             Assert.Equal(TimeSpan.FromSeconds(4), settings.TransportHeartBeatInterval);
             Assert.Equal(TimeSpan.FromSeconds(20), settings.TransportFailureDetectorConfig.GetTimeSpan("acceptable-heartbeat-pause"));
@@ -111,6 +111,20 @@ namespace Akka.Remote.Tests
             Assert.False(s.DnsUseIpv6);
             Assert.False(s.LogTransport);
             Assert.False(s.EnableSsl);
+
+            Assert.NotNull(s.Global);
+            Assert.True(s.Global.UseDirectBuffer);
+            Assert.True(s.Global.CheckAccessible);
+            Assert.True(s.Global.CheckBounds);
+            Assert.Null(s.Global.NumHeapArena);
+            Assert.Null(s.Global.NumDirectArena);
+            Assert.Equal(1024 * 8, s.Global.PageSize.Value);
+            Assert.Equal(11, s.Global.MaxOrder.Value);
+            Assert.Equal(512, s.Global.TinyCacheSize.Value);
+            Assert.Equal(256, s.Global.SmallCacheSize.Value);
+            Assert.Equal(64, s.Global.NormalCacheSize.Value);
+            Assert.Equal(1024 * 32, s.Global.MaxCachedBufferCapacity.Value);
+            Assert.Equal(1024 * 8, s.Global.CacheTrimInterval.Value);
         }
 
         [Fact]
@@ -119,7 +133,7 @@ namespace Akka.Remote.Tests
             if (!IsMono) return; // skip IF NOT using Mono
             var c = ((RemoteActorRefProvider)((ActorSystemImpl)Sys).Provider).RemoteSettings.Config.GetConfig("akka.remote.dot-netty.tcp");
             var s = DotNettyTransportSettings.Create(c);
-            
+
             Assert.True(s.EnforceIpFamily);
         }
 
@@ -159,13 +173,13 @@ namespace Akka.Remote.Tests
         [Fact]
         public void Remoting_should_contain_correct_hostname_values_in_ReferenceConf()
         {
-           var c = ((RemoteActorRefProvider)((ActorSystemImpl)Sys).Provider).RemoteSettings.Config.GetConfig("akka.remote.dot-netty.tcp");
-           var s = DotNettyTransportSettings.Create(c);
+            var c = ((RemoteActorRefProvider)((ActorSystemImpl)Sys).Provider).RemoteSettings.Config.GetConfig("akka.remote.dot-netty.tcp");
+            var s = DotNettyTransportSettings.Create(c);
 
-           //Non-specified hostnames should default to IPAddress.Any
-           Assert.Equal(IPAddress.Any.ToString(), s.Hostname);
-           Assert.Equal(IPAddress.Any.ToString(), s.PublicHostname);
-      }
-   }
+            //Non-specified hostnames should default to IPAddress.Any
+            Assert.Equal(IPAddress.Any.ToString(), s.Hostname);
+            Assert.Equal(IPAddress.Any.ToString(), s.PublicHostname);
+        }
+    }
 }
 

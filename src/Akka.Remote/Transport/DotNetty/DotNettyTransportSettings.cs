@@ -6,9 +6,11 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Globalization;
 using System.Linq;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using System.Threading;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch;
@@ -100,10 +102,11 @@ namespace Akka.Remote.Transport.DotNetty
                 backwardsCompatibilityModeEnabled: config.GetBoolean("enable-backwards-compatibility", false),
                 logTransport: config.HasPath("log-transport") && config.GetBoolean("log-transport"),
                 byteOrder: order,
-                enableBufferPooling: config.GetBoolean("enable-pooling", true));
+                enableBufferPooling: config.GetBoolean("enable-pooling", true),
+                globalSettings: config.HasPath("global") ? DotNettyGlobalSettints.CreateDefault(config.GetConfig("global")) : null);
         }
 
-        private static int? ToNullableInt(long? value) => value.HasValue && value.Value > 0L ? (int?)value.Value : null;
+        internal static int? ToNullableInt(long? value) => value.HasValue && value.Value > 0L ? (int?)value.Value : null;
 
         private static int ComputeWorkerPoolSize(Config config)
         {
@@ -201,11 +204,13 @@ namespace Akka.Remote.Transport.DotNetty
         /// setting to <c>false</c> to disable pooling and work-around this issue at the cost of some performance.</summary>
         public readonly bool EnableBufferPooling;
 
+        public readonly DotNettyGlobalSettints Global;
+
         public DotNettyTransportSettings(TransportMode transportMode, bool enableLibuv, bool enableSsl, TimeSpan connectTimeout, string hostname, string publicHostname,
             int port, int? publicPort, int serverSocketWorkerPoolSize, int clientSocketWorkerPoolSize, int maxFrameSize, int transferBatchSize, SslSettings ssl,
             bool dnsUseIpv6, bool tcpReuseAddr, bool tcpReusePort, bool tcpKeepAlive, bool tcpNoDelay, int tcpLinger, int backlog, bool enforceIpFamily,
-            int? receiveBufferSize, int? sendBufferSize, int? writeBufferHighWaterMark, int? writeBufferLowWaterMark, bool backwardsCompatibilityModeEnabled, 
-            bool logTransport, ByteOrder byteOrder, bool enableBufferPooling)
+            int? receiveBufferSize, int? sendBufferSize, int? writeBufferHighWaterMark, int? writeBufferLowWaterMark, bool backwardsCompatibilityModeEnabled,
+            bool logTransport, ByteOrder byteOrder, bool enableBufferPooling, DotNettyGlobalSettints globalSettings)
         {
             if (maxFrameSize < 32000) throw new ArgumentException("maximum-frame-size must be at least 32000 bytes", nameof(maxFrameSize));
 
@@ -238,6 +243,7 @@ namespace Akka.Remote.Transport.DotNetty
             LogTransport = logTransport;
             ByteOrder = byteOrder;
             EnableBufferPooling = enableBufferPooling;
+            Global = globalSettings;
         }
     }
 
@@ -343,10 +349,10 @@ namespace Akka.Remote.Transport.DotNetty
             }
             finally
             {
-//#if DESKTOPCLR //netstandard1.6 doesn't have close on store.
+                //#if DESKTOPCLR //netstandard1.6 doesn't have close on store.
                 store.Close();
-//#else
-//#endif
+                //#else
+                //#endif
             }
 
         }
@@ -360,6 +366,151 @@ namespace Akka.Remote.Transport.DotNetty
 
             Certificate = new X509Certificate2(certificatePath, certificatePassword, flags);
             SuppressValidation = suppressValidation;
+        }
+    }
+
+    #endregion
+
+    #region -- class DotNettyGlobalSettints --
+
+    public sealed class DotNettyGlobalSettints
+    {
+        public bool UseDirectBuffer;
+
+        public bool CheckAccessible;
+
+        public bool CheckBounds;
+
+        public int? NumHeapArena;
+
+        public int? NumDirectArena;
+
+        public int? PageSize;
+
+        public int? MaxOrder;
+
+        public int? TinyCacheSize;
+
+        public int? SmallCacheSize;
+
+        public int? NormalCacheSize;
+
+        public int? MaxCachedBufferCapacity;
+
+        public int? CacheTrimInterval;
+
+        private DotNettyGlobalSettints(
+            bool useDirectBuffer, bool checkAccessible, bool checkBounds,
+            int? numHeapArena, int? numDirectArena, int? pageSize, int? maxOrder,
+            int? tinyCacheSize, int? smallCacheSize, int? normalCacheSize,
+            int? maxCachedBufferCapacity, int? cacheTrimInterval)
+        {
+            UseDirectBuffer = useDirectBuffer;
+            CheckAccessible = checkAccessible;
+            CheckBounds = checkBounds;
+            NumHeapArena = numHeapArena;
+            NumDirectArena = numDirectArena;
+            PageSize = pageSize;
+            MaxOrder = maxOrder;
+            TinyCacheSize = tinyCacheSize;
+            SmallCacheSize = smallCacheSize;
+            NormalCacheSize = normalCacheSize;
+            MaxCachedBufferCapacity = maxCachedBufferCapacity;
+            CacheTrimInterval = cacheTrimInterval;
+        }
+
+        private static DotNettyGlobalSettints _defaultSettings;
+        public static DotNettyGlobalSettints Default
+        {
+            get => Volatile.Read(ref _defaultSettings);
+            internal set
+            {
+                if (Interlocked.CompareExchange(ref _defaultSettings, value, null) != null) { return; }
+
+                if (!_defaultSettings.UseDirectBuffer)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.noPreferDirect", "true");
+                }
+                if (!_defaultSettings.CheckAccessible)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.buffer.checkAccessible", "false");
+                }
+                if (!_defaultSettings.CheckBounds)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.buffer.checkBounds", "false");
+                }
+                if (_defaultSettings.NumHeapArena.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.numHeapArenas",
+                        _defaultSettings.NumHeapArena.Value.ToString(CultureInfo.InvariantCulture));
+                }
+                if (_defaultSettings.NumDirectArena.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.numDirectArenas",
+                        _defaultSettings.NumDirectArena.Value.ToString(CultureInfo.InvariantCulture));
+                }
+                if (_defaultSettings.PageSize.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.pageSize",
+                        _defaultSettings.PageSize.Value.ToString(CultureInfo.InvariantCulture));
+                }
+                if (_defaultSettings.MaxOrder.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.maxOrder",
+                        _defaultSettings.MaxOrder.Value.ToString(CultureInfo.InvariantCulture));
+                }
+                if (_defaultSettings.TinyCacheSize.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.tinyCacheSize",
+                        _defaultSettings.TinyCacheSize.Value.ToString(CultureInfo.InvariantCulture));
+                }
+                if (_defaultSettings.SmallCacheSize.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.smallCacheSize",
+                        _defaultSettings.SmallCacheSize.Value.ToString(CultureInfo.InvariantCulture));
+                }
+                if (_defaultSettings.NormalCacheSize.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.normalCacheSize",
+                        _defaultSettings.NormalCacheSize.Value.ToString(CultureInfo.InvariantCulture));
+                }
+                if (_defaultSettings.MaxCachedBufferCapacity.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.maxCachedBufferCapacity",
+                        _defaultSettings.MaxCachedBufferCapacity.Value.ToString(CultureInfo.InvariantCulture));
+                }
+                if (_defaultSettings.CacheTrimInterval.HasValue)
+                {
+                    Environment.SetEnvironmentVariable("io.netty.allocator.cacheTrimInterval",
+                        _defaultSettings.CacheTrimInterval.Value.ToString(CultureInfo.InvariantCulture));
+                }
+            }
+        }
+
+        public static DotNettyGlobalSettints CreateDefault(Config config)
+        {
+            if (config == null) { return null; }
+
+            var useDirectBuffer = config.GetBoolean("buffer-prefer-direct", true);
+            var checkAccessible = config.GetBoolean("buffer-check-accessible", true);
+            var checkBounds = config.GetBoolean("buffer-check-bounds", true);
+            var numHeapArena = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-heap-arenas"));
+            var numDirectArena = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-direct-arenas"));
+            var pageSize = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-pagesize"));
+            var maxOrder = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-maxorder"));
+            var tinyCacheSize = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-tiny-cachesize"));
+            var smallCacheSize = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-small-cachesize"));
+            var normalCacheSize = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-normal-cachesize"));
+            var maxCachedBufferCapacity = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-cache-buffer-maxcapacity"));
+            var cacheTrimInterval = DotNettyTransportSettings.ToNullableInt(config.GetByteSize("io-allocator-cache-trim-interval"));
+
+            var settings = new DotNettyGlobalSettints(
+                useDirectBuffer, checkAccessible, checkBounds,
+                numHeapArena, numDirectArena, pageSize, maxOrder,
+                tinyCacheSize, smallCacheSize, normalCacheSize,
+                maxCachedBufferCapacity, cacheTrimInterval);
+            Default = settings;
+            return settings;
         }
     }
 

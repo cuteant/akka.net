@@ -454,7 +454,7 @@ namespace Akka.Configuration.Hocon
                 new ByteSize { Factor = 1024L * 1024L, Suffixes = new string[] { "M", "m", "Mi", "MiB", "mebibyte", "mebibytes" } },
                 new ByteSize { Factor = 1000L * 1000L, Suffixes = new string[] { "MB", "megabyte", "megabytes" } },
                 new ByteSize { Factor = 1024L, Suffixes = new string[] { "K", "k", "Ki", "KiB", "kibibyte", "kibibytes" } },
-                new ByteSize { Factor = 1000L, Suffixes = new string[] { "kB", "kilobyte", "kilobytes" } },
+                new ByteSize { Factor = 1000L, Suffixes = new string[] { "kB", "KB", "kilobyte", "kilobytes" } },
                 new ByteSize { Factor = 1, Suffixes = new string[] { "b", "B", "byte", "bytes" } }
             };
 
