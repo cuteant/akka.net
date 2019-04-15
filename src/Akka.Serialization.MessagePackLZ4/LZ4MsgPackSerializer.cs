@@ -2,7 +2,6 @@
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Serialization.Resolvers;
-using CuteAnt;
 using MessagePack;
 
 namespace Akka.Serialization
@@ -38,8 +37,10 @@ namespace Akka.Serialization
             if (source == null) { return null; }
 
             var type = source.GetType();
-            var serializedObject = MessagePackSerializer.SerializeUnsafe(source, _resolver);
-            return MessagePackSerializer.NonGeneric.Deserialize(type, serializedObject, _resolver);
+            using (var serializedObject = MessagePackSerializer.SerializeUnsafe(source, _resolver))
+            {
+                return MessagePackSerializer.NonGeneric.Deserialize(type, serializedObject.Span, _resolver);
+            }
         }
 
         /// <inheritdoc />

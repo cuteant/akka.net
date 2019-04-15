@@ -8,20 +8,20 @@ namespace Akka.Serialization.Formatters
     {
         public static readonly IMessagePackFormatter<ByteString> Instance = new ByteStringFormatter();
 
-        public ByteString Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public ByteString Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
-            var bts = MessagePackBinary.ReadBytes(bytes, offset, out readSize);
+            var bts = reader.ReadBytes();
             return ProtobufUtil.FromBytes(bts);
         }
 
-        public int Serialize(ref byte[] bytes, int offset, ByteString value, IFormatterResolver formatterResolver)
+        public void Serialize(ref MessagePackWriter writer, ref int idx, ByteString value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var bts = ProtobufUtil.GetBuffer(value);
-            return MessagePackBinary.WriteBytes(ref bytes, offset, bts);
+            writer.WriteBytes(bts, ref idx);
         }
     }
 }

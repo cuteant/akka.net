@@ -15,28 +15,28 @@ namespace Akka.Serialization.Formatters
 
         private ActorSelectionMessageFormatter() { }
 
-        public ActorSelectionMessage Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public ActorSelectionMessage Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SelectionEnvelope>();
-            var selectionEnvelope = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var selectionEnvelope = formatter.Deserialize(ref reader, DefaultResolver);
 
             var message = formatterResolver.Deserialize(selectionEnvelope.Payload);
             var elements = ParsePattern(selectionEnvelope.Pattern);
             return new ActorSelectionMessage(message, elements);
         }
 
-        public int Serialize(ref byte[] bytes, int offset, ActorSelectionMessage value, IFormatterResolver formatterResolver)
+        public void Serialize(ref MessagePackWriter writer, ref int idx, ActorSelectionMessage value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.SelectionEnvelope(
                 formatterResolver.Serialize(value.Message),
                 GetPattern(value));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SelectionEnvelope>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

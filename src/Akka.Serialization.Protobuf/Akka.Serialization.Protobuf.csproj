@@ -30,9 +30,8 @@
   <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
     <PackageReference Include="Microsoft.CSharp" Version="$(MicrosoftCSharpPackageVersion)" PrivateAssets="All" />
   </ItemGroup>
-  
   <ItemGroup>
-    <ProjectReference Include="..\Akka.Core\Akka.Core.csproj" />
+    <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
 
 </Project>

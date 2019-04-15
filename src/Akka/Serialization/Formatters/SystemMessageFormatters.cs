@@ -10,8 +10,8 @@ namespace Akka.Serialization.Formatters
     public abstract class SystemMessageFormatter<T> : IMessagePackFormatter<T>
     {
         protected static readonly IFormatterResolver DefaultResolver = MessagePackSerializer.DefaultResolver;
-        public abstract T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize);
-        public abstract int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver);
+        public abstract T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver);
+        public abstract void Serialize(ref MessagePackWriter writer, ref int idx, T value, IFormatterResolver formatterResolver);
 
         //
         // ActorRef
@@ -25,7 +25,7 @@ namespace Akka.Serialization.Formatters
         }
     }
 
-    public sealed class ActorInitializationExceptionFormatter: ActorInitializationExceptionFormatter<ActorInitializationException>
+    public sealed class ActorInitializationExceptionFormatter : ActorInitializationExceptionFormatter<ActorInitializationException>
     {
         public static readonly IMessagePackFormatter<ActorInitializationException> Instance = new ActorInitializationExceptionFormatter();
     }
@@ -34,24 +34,24 @@ namespace Akka.Serialization.Formatters
     {
         public ActorInitializationExceptionFormatter() { }
 
-        public override TException Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override TException Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ExceptionData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return (TException)ExceptionSupport.ExceptionFromProto(formatterResolver.GetActorSystem(), protoMessage);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, TException value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, TException value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = ExceptionSupport.ExceptionToProto(formatterResolver.GetActorSystem(), value);
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ExceptionData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -61,27 +61,27 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgCreateFormatter() { }
 
-        public override Create Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Create Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.CreateData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new Create((ActorInitializationException)ExceptionSupport.ExceptionFromProto(
                 formatterResolver.GetActorSystem(), protoMessage.Cause));
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Create value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Create value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.CreateData(ExceptionSupport.ExceptionToProto(
                 formatterResolver.GetActorSystem(),
                 value.Failure));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.CreateData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -91,27 +91,27 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgRecreateFormatter() { }
 
-        public override Recreate Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Recreate Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RecreateData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new Recreate(ExceptionSupport.ExceptionFromProto(
                 formatterResolver.GetActorSystem(), protoMessage.Cause));
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Recreate value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Recreate value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.RecreateData(ExceptionSupport.ExceptionToProto(
                 formatterResolver.GetActorSystem(),
                 value.Cause));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RecreateData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -121,15 +121,15 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgSuspendFormatter() { }
 
-        public override Suspend Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Suspend Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            readSize = 1;
+            reader.Advance(1);
             return new Suspend();
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Suspend value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Suspend value, IFormatterResolver formatterResolver)
         {
-            return MessagePackBinary.WriteNil(ref bytes, offset);
+            writer.WriteNil(ref idx); return;
         }
     }
 
@@ -139,27 +139,27 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgResumeFormatter() { }
 
-        public override Resume Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Resume Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ResumeData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new Resume(ExceptionSupport.ExceptionFromProto(
                 formatterResolver.GetActorSystem(), protoMessage.Cause));
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Resume value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Resume value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.ResumeData(ExceptionSupport.ExceptionToProto(
                 formatterResolver.GetActorSystem(),
                 value.CausedByFailure));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ResumeData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -169,15 +169,15 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgTerminateFormatter() { }
 
-        public override Terminate Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Terminate Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            readSize = 1;
+            reader.Advance(1);
             return new Terminate();
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Terminate value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Terminate value, IFormatterResolver formatterResolver)
         {
-            return MessagePackBinary.WriteNil(ref bytes, offset);
+            writer.WriteNil(ref idx); return;
         }
     }
 
@@ -187,21 +187,21 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgSuperviseFormatter() { }
 
-        public override Supervise Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Supervise Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SuperviseData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new Supervise(
                 ResolveActorRef(formatterResolver.GetActorSystem(), protoMessage.Child.Path),
                 protoMessage.Async);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Supervise value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Supervise value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.SuperviseData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Child)),
@@ -209,7 +209,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SuperviseData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -219,12 +219,12 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgWatchFormatter() { }
 
-        public override Watch Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Watch Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.WatchData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             var system = formatterResolver.GetActorSystem();
             return new Watch(
@@ -232,9 +232,9 @@ namespace Akka.Serialization.Formatters
                 ResolveActorRef(system, protoMessage.Watcher.Path).AsInstanceOf<IInternalActorRef>());
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Watch value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Watch value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.WatchData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watchee)),
@@ -242,7 +242,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.WatchData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -252,12 +252,12 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgUnwatchFormatter() { }
 
-        public override Unwatch Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Unwatch Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.WatchData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             var system = formatterResolver.GetActorSystem();
             return new Unwatch(
@@ -265,9 +265,9 @@ namespace Akka.Serialization.Formatters
                 ResolveActorRef(system, protoMessage.Watcher.Path).AsInstanceOf<IInternalActorRef>());
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Unwatch value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Unwatch value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.WatchData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watchee)),
@@ -275,7 +275,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.WatchData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -285,12 +285,12 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgFailedFormatter() { }
 
-        public override Failed Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Failed Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.FailedData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             var system = formatterResolver.GetActorSystem();
             return new Failed(
@@ -299,9 +299,9 @@ namespace Akka.Serialization.Formatters
                 (long)protoMessage.Uid);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Failed value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Failed value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.FailedData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Child)),
@@ -310,7 +310,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.FailedData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -320,12 +320,12 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgDeathWatchNotificationFormatter() { }
 
-        public override DeathWatchNotification Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override DeathWatchNotification Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.DeathWatchNotificationData>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             var system = formatterResolver.GetActorSystem();
             return new DeathWatchNotification(
@@ -334,9 +334,9 @@ namespace Akka.Serialization.Formatters
                 protoMessage.AddressTerminated);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, DeathWatchNotification value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, DeathWatchNotification value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.DeathWatchNotificationData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Actor)),
@@ -345,7 +345,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.DeathWatchNotificationData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -355,15 +355,15 @@ namespace Akka.Serialization.Formatters
 
         private SystemMsgNoMessageFormatter() { }
 
-        public override NoMessage Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override NoMessage Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            readSize = 1;
+            reader.Advance(1);
             return NoMessage.Instance;
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, NoMessage value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, NoMessage value, IFormatterResolver formatterResolver)
         {
-            return MessagePackBinary.WriteNil(ref bytes, offset);
+            writer.WriteNil(ref idx); return;
         }
     }
 }

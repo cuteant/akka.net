@@ -13,7 +13,6 @@ using DotNetty.Codecs;
 using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
 using Microsoft.Extensions.Logging;
-using CuteAnt.Extensions.Serialization;
 using MessagePack;
 using MessagePack.Resolvers;
 
@@ -25,8 +24,6 @@ namespace Akka.Remote.TestKit.Protocol
     internal sealed class ProtobufDecoder : MessageToMessageDecoder<IByteBuffer>
     {
         private readonly ILogger _logger = InternalLoggerFactory.DefaultFactory.CreateLogger<ProtobufDecoder>();
-
-        private static readonly TypelessMessagePackMessageFormatter s_formatter = TypelessMessagePackMessageFormatter.DefaultInstance;
 
         public ProtobufDecoder()
         {

@@ -16,20 +16,20 @@ namespace Akka.Serialization.Formatters
         private static readonly ProtoDataWriterOptions DefaultWriterOptions = ProtobufDataSerializer.DefaultWriterOptions;
         private static readonly ArrayPool<byte> SharedBufferPool = ProtobufDataSerializer.SharedBufferPool;
 
-        public DataSet Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public DataSet Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
-            var bts = MessagePackBinary.ReadBytes(bytes, offset, out readSize);
+            var bts = reader.ReadBytes();
             using (var inputStream = new MemoryStream(bts))
             {
                 return DataSerializer.DeserializeDataSet(inputStream);
             }
         }
 
-        public int Serialize(ref byte[] bytes, int offset, DataSet value, IFormatterResolver formatterResolver)
+        public void Serialize(ref MessagePackWriter writer, ref int idx, DataSet value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             byte[] buffer = null; int bufferSize;
             try
@@ -42,7 +42,7 @@ namespace Akka.Serialization.Formatters
                     DataSerializer.Serialize(outputStream, value, DefaultWriterOptions);
                     buffer = outputStream.ToArray(out bufferSize);
                 }
-                return MessagePackBinary.WriteBytes(ref bytes, offset, buffer, 0, bufferSize);
+                writer.WriteBytes(buffer, 0, bufferSize, ref idx);
             }
             finally { if (buffer != null) { SharedBufferPool.Return(buffer); } }
         }
@@ -56,20 +56,20 @@ namespace Akka.Serialization.Formatters
         private static readonly ProtoDataWriterOptions DefaultWriterOptions = ProtobufDataSerializer.DefaultWriterOptions;
         private static readonly ArrayPool<byte> SharedBufferPool = ProtobufDataSerializer.SharedBufferPool;
 
-        public DataTable Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public DataTable Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
-            var bts = MessagePackBinary.ReadBytes(bytes, offset, out readSize);
+            var bts = reader.ReadBytes();
             using (var inputStream = new MemoryStream(bts))
             {
                 return DataSerializer.DeserializeDataTable(inputStream);
             }
         }
 
-        public int Serialize(ref byte[] bytes, int offset, DataTable value, IFormatterResolver formatterResolver)
+        public void Serialize(ref MessagePackWriter writer, ref int idx, DataTable value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             byte[] buffer = null; int bufferSize;
             try
@@ -82,7 +82,7 @@ namespace Akka.Serialization.Formatters
                     DataSerializer.Serialize(outputStream, value, DefaultWriterOptions);
                     buffer = outputStream.ToArray(out bufferSize);
                 }
-                return MessagePackBinary.WriteBytes(ref bytes, offset, buffer, 0, bufferSize);
+                writer.WriteBytes(buffer, 0, bufferSize, ref idx);
             }
             finally { if (buffer != null) { SharedBufferPool.Return(buffer); } }
         }

@@ -18,20 +18,20 @@ namespace Akka.Remote.Serialization.Formatters
 
         private RemoteWatcherHeartbeatRspFormatter() { }
 
-        public override RemoteWatcher.HeartbeatRsp Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override RemoteWatcher.HeartbeatRsp Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
-            var uid = MessagePackBinary.ReadUInt64(bytes, offset, out readSize);
+            var uid = reader.ReadUInt64();
 
             return new RemoteWatcher.HeartbeatRsp((int)uid);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, RemoteWatcher.HeartbeatRsp value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, RemoteWatcher.HeartbeatRsp value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
-            return MessagePackBinary.WriteUInt64(ref bytes, offset, (ulong)value.AddressUid);
+            writer.WriteUInt64((ulong)value.AddressUid, ref idx);
         }
     }
 
@@ -45,21 +45,21 @@ namespace Akka.Remote.Serialization.Formatters
 
         private RemoteRouterConfigFormatter() { }
 
-        public override RemoteRouterConfig Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override RemoteRouterConfig Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<ProtocolRemoteRouterConfig>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new RemoteRouterConfig(
                 formatterResolver.Deserialize(protoMessage.Local).AsInstanceOf<Pool>(),
                 protoMessage.Nodes.Select(_ => AddressFrom(_)));
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, RemoteRouterConfig value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, RemoteRouterConfig value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new ProtocolRemoteRouterConfig(
                 formatterResolver.Serialize(value.Local),
@@ -67,7 +67,7 @@ namespace Akka.Remote.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<ProtocolRemoteRouterConfig>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 

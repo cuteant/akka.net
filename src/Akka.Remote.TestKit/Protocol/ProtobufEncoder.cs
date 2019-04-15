@@ -7,11 +7,12 @@
 
 using System;
 using System.Collections.Generic;
-using CuteAnt.Extensions.Serialization;
 using DotNetty.Buffers;
 using DotNetty.Codecs;
 using DotNetty.Common.Internal.Logging;
 using DotNetty.Transport.Channels;
+using MessagePack;
+using MessagePack.Resolvers;
 using Microsoft.Extensions.Logging;
 
 namespace Akka.Remote.TestKit.Protocol
@@ -22,8 +23,6 @@ namespace Akka.Remote.TestKit.Protocol
     internal sealed class ProtobufEncoder : MessageToMessageEncoder<IMessage>
     {
         private readonly ILogger _logger = InternalLoggerFactory.DefaultFactory.CreateLogger<ProtobufEncoder>();
-
-        private static readonly TypelessMessagePackMessageFormatter s_formatter = TypelessMessagePackMessageFormatter.DefaultInstance;
 
         protected override void Encode(IChannelHandlerContext context, IMessage message, List<object> output)
         {
@@ -38,7 +37,7 @@ namespace Akka.Remote.TestKit.Protocol
                 //    return;
                 //}
                 if (message == null) { return; }
-                buffer = Unpooled.WrappedBuffer(s_formatter.SerializeObject(message));
+                buffer = Unpooled.WrappedBuffer(MessagePackSerializer.Serialize<object>(message, TypelessDefaultResolver.Instance));
                 output.Add(buffer);
                 buffer = null;
             }

@@ -39,8 +39,10 @@ namespace Akka.Serialization
         {
             if (source == null) { return null; }
 
-            var serializedObject = MessagePackSerializer.SerializeUnsafe(source, _resolver);
-            return MessagePackSerializer.Deserialize<object>(serializedObject, _resolver);
+            using (var serializedObject = MessagePackSerializer.SerializeUnsafe(source, _resolver))
+            {
+                return MessagePackSerializer.Deserialize<object>(serializedObject.Span, _resolver);
+            }
         }
 
         public sealed override byte[] ToBinary(object obj)

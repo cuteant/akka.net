@@ -19,12 +19,12 @@ namespace Akka.Remote.Serialization.Formatters
         private static readonly IFormatterResolver DefaultResolver = MessagePackSerializer.DefaultResolver;
         public static readonly IMessagePackFormatter<DaemonMsgCreate> Instance = new DaemonMsgCreateFormatter();
 
-        public DaemonMsgCreate Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public DaemonMsgCreate Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<DaemonMsgCreateData>();
-            var proto = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var proto = formatter.Deserialize(ref reader, DefaultResolver);
 
             var system = formatterResolver.GetActorSystem();
             return new DaemonMsgCreate(
@@ -34,9 +34,9 @@ namespace Akka.Remote.Serialization.Formatters
                 DeserializeActorRef(system, proto.Supervisor));
         }
 
-        public int Serialize(ref byte[] bytes, int offset, DaemonMsgCreate value, IFormatterResolver formatterResolver)
+        public void Serialize(ref MessagePackWriter writer, ref int idx, DaemonMsgCreate value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var system = formatterResolver.GetActorSystem();
             var protoMessage = new DaemonMsgCreateData(
@@ -46,7 +46,7 @@ namespace Akka.Remote.Serialization.Formatters
                     SerializeActorRef(value.Supervisor));
 
             var formatter = formatterResolver.GetFormatterWithVerify<DaemonMsgCreateData>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
 
         //

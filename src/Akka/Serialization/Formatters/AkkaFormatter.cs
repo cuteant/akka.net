@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Reflection;
 using Akka.Actor;
-using CuteAnt.Reflection;
 using MessagePack;
 using MessagePack.Formatters;
 
@@ -14,18 +13,19 @@ namespace Akka.Serialization.Formatters
     {
         private const string c_nobody = "nobody";
 
-        public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
+        public void Serialize(ref MessagePackWriter writer, ref int idx, T value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
-            return MessagePackBinary.WriteString(ref bytes, offset, value is Nobody ? c_nobody : Serialization.SerializedActorPath(value));
+            var encodedPath = MessagePackBinary.GetEncodedStringBytes(value is Nobody ? c_nobody : Serialization.SerializedActorPath(value));
+            writer.WriteRawBytes(encodedPath, ref idx);
         }
 
-        public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
-            var path = MessagePackBinary.ReadString(bytes, offset, out readSize);
+            var path = MessagePackBinary.ResolveString(reader.ReadUtf8Span());
 
             if (string.Equals(path, c_nobody, StringComparison.Ordinal))
             {
@@ -46,18 +46,19 @@ namespace Akka.Serialization.Formatters
     // ActorPath
     internal class ActorPathFormatter<T> : IMessagePackFormatter<T> where T : ActorPath
     {
-        public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
+        public void Serialize(ref MessagePackWriter writer, ref int idx, T value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
-            return MessagePackBinary.WriteString(ref bytes, offset, value.ToSerializationFormat());
+            var encodedPath = MessagePackBinary.GetEncodedStringBytes(value.ToSerializationFormat());
+            writer.WriteRawBytes(encodedPath, ref idx);
         }
 
-        public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return null; }
+            if (reader.IsNil()) { return null; }
 
-            var path = MessagePackBinary.ReadString(bytes, offset, out readSize);
+            var path = MessagePackBinary.ResolveString(reader.ReadUtf8Span());
 
             return ActorPath.TryParse(path, out var actorPath) ? (T)actorPath : null;
         }
@@ -99,15 +100,15 @@ namespace Akka.Serialization.Formatters
             if (property != null) { s_instance = (T)property.GetValue(null); }
         }
 
-        public T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            readSize = c_valueSize;
+            reader.Advance(1);
             return s_instance;
         }
 
-        public int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver)
+        public void Serialize(ref MessagePackWriter writer, ref int idx, T value, IFormatterResolver formatterResolver)
         {
-            return MessagePackBinary.WriteNil(ref bytes, offset);
+            writer.WriteNil(ref idx);
         }
     }
 
@@ -119,17 +120,13 @@ namespace Akka.Serialization.Formatters
     {
         public new static readonly IMessagePackFormatter<object> Instance = new AkkaTypelessFormatter();
 
-        protected override byte[] TranslateTypeName(Type actualType, out Type expectedType)
+        protected override Type TranslateTypeName(Type actualType)
         {
             if (typeof(IActorRef).IsAssignableFrom(actualType))
             {
-                expectedType = typeof(IActorRef);
+                return typeof(IActorRef);
             }
-            else
-            {
-                expectedType = actualType;
-            }
-            return TypeSerializer.GetTypeKeyFromType(expectedType).TypeName;
+            return actualType;
         }
     }
 

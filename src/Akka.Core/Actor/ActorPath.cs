@@ -160,7 +160,7 @@ namespace Akka.Actor
         {
             if (IsNullOrEmpty(s)) { return false; }
 
-            return !s.StartsWith("$", StringComparison.Ordinal) && Validate(s.ToCharArray(), s.Length);
+            return !s.StartsWith("$", StringComparison.Ordinal) && Validate(s.AsSpan(), s.Length);
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -169,7 +169,7 @@ namespace Akka.Actor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsHexChar(char c) => s_hexChars.Contains(c);
 
-        private static bool Validate(IReadOnlyList<char> chars, int len)
+        private static bool Validate(ReadOnlySpan<char> chars, int len)
         {
             var pos = 0;
             while (pos < len)

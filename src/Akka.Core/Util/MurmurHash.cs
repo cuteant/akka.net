@@ -202,7 +202,7 @@ namespace Akka.Util
         {
             unchecked
             {
-                var sChar = s.ToCharArray();
+                var sChar = s.AsSpan(); //ToCharArray();
                 var h = StartHash((uint)s.Length * StringSeed);
                 var c = HiddenMagicA;
                 var k = HiddenMagicB;

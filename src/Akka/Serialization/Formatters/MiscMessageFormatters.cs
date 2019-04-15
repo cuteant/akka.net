@@ -13,8 +13,8 @@ namespace Akka.Serialization.Formatters
     {
         protected static readonly IFormatterResolver DefaultResolver = MessagePackSerializer.DefaultResolver;
 
-        public abstract T Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize);
-        public abstract int Serialize(ref byte[] bytes, int offset, T value, IFormatterResolver formatterResolver);
+        public abstract T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver);
+        public abstract void Serialize(ref MessagePackWriter writer, ref int idx, T value, IFormatterResolver formatterResolver);
 
         //
         // Generic Routing Pool
@@ -69,24 +69,24 @@ namespace Akka.Serialization.Formatters
 
         private IdentifyFormatter() { }
 
-        public override Identify Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override Identify Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.Identify>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new Identify(formatterResolver.Deserialize(protoMessage.MessageId));
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, Identify value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, Identify value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoIdentify = new Protocol.Identify(formatterResolver.Serialize(value.MessageId));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.Identify>();
-            return formatter.Serialize(ref bytes, offset, protoIdentify, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoIdentify, DefaultResolver);
         }
     }
 
@@ -100,20 +100,20 @@ namespace Akka.Serialization.Formatters
 
         private ActorIdentityFormatter() { }
 
-        public override ActorIdentity Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override ActorIdentity Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ActorIdentity>();
             var system = formatterResolver.GetActorSystem();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new ActorIdentity(system.Deserialize(protoMessage.CorrelationId), ResolveActorRef(system, protoMessage.Path));
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, ActorIdentity value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, ActorIdentity value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoIdentify = new Protocol.ActorIdentity(
                 formatterResolver.Serialize(value.MessageId),
@@ -121,7 +121,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ActorIdentity>();
-            return formatter.Serialize(ref bytes, offset, protoIdentify, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoIdentify, DefaultResolver);
         }
     }
 
@@ -135,24 +135,24 @@ namespace Akka.Serialization.Formatters
 
         public RemoteScopeFormatter() { }
 
-        public override RemoteScope Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override RemoteScope Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RemoteScope>();
-            var protoMessage = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var protoMessage = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new RemoteScope(AddressFrom(protoMessage.Node));
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, RemoteScope value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, RemoteScope value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.RemoteScope(AddressMessageBuilder(value.Address));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.RemoteScope>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -166,12 +166,12 @@ namespace Akka.Serialization.Formatters
 
         private FromConfigFormatter() { }
 
-        public override FromConfig Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override FromConfig Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return FromConfig.Instance; }
+            if (reader.IsNil()) { return FromConfig.Instance; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.FromConfig>();
-            var fromConfig = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var fromConfig = formatter.Deserialize(ref reader, DefaultResolver);
 
             var rawResizer = fromConfig.Resizer;
             Resizer resizer = rawResizer.NonEmtpy()
@@ -185,9 +185,9 @@ namespace Akka.Serialization.Formatters
             return new FromConfig(resizer, Pool.DefaultSupervisorStrategy, routerDispatcher);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, FromConfig fromConfig, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, FromConfig fromConfig, IFormatterResolver formatterResolver)
         {
-            if (fromConfig == FromConfig.Instance || null == fromConfig) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (fromConfig == FromConfig.Instance || null == fromConfig) { writer.WriteNil(ref idx); return; }
 
             var system = formatterResolver.GetActorSystem();
             var protoMessage = new Protocol.FromConfig(
@@ -195,7 +195,7 @@ namespace Akka.Serialization.Formatters
                 fromConfig.RouterDispatcher);
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.FromConfig>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -209,12 +209,12 @@ namespace Akka.Serialization.Formatters
 
         private DefaultResizerFormatter() { }
 
-        public override DefaultResizer Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override DefaultResizer Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.DefaultResizer>();
-            var resizer = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var resizer = formatter.Deserialize(ref reader, DefaultResolver);
 
             return new DefaultResizer(
                 (int)resizer.LowerBound,
@@ -226,9 +226,9 @@ namespace Akka.Serialization.Formatters
                 (int)resizer.MessagesPerResize);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, DefaultResizer defaultResizer, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, DefaultResizer defaultResizer, IFormatterResolver formatterResolver)
         {
-            if (defaultResizer == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (defaultResizer == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.DefaultResizer(
                 (uint)defaultResizer.LowerBound,
@@ -241,7 +241,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.DefaultResizer>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -255,12 +255,12 @@ namespace Akka.Serialization.Formatters
 
         private RoundRobinPoolFormatter() { }
 
-        public override RoundRobinPool Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override RoundRobinPool Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
-            var broadcastPool = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var broadcastPool = formatter.Deserialize(ref reader, DefaultResolver);
 
             var rawResizer = broadcastPool.Resizer;
             Resizer resizer = rawResizer.NonEmtpy()
@@ -279,14 +279,14 @@ namespace Akka.Serialization.Formatters
                 broadcastPool.UsePoolDispatcher);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, RoundRobinPool value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, RoundRobinPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -300,12 +300,12 @@ namespace Akka.Serialization.Formatters
 
         private BroadcastPoolFormatter() { }
 
-        public override BroadcastPool Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override BroadcastPool Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
-            var broadcastPool = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var broadcastPool = formatter.Deserialize(ref reader, DefaultResolver);
 
             var rawResizer = broadcastPool.Resizer;
             Resizer resizer = rawResizer.NonEmtpy()
@@ -323,14 +323,14 @@ namespace Akka.Serialization.Formatters
                 broadcastPool.UsePoolDispatcher);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, BroadcastPool value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, BroadcastPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -344,12 +344,12 @@ namespace Akka.Serialization.Formatters
 
         private RandomPoolFormatter() { }
 
-        public override RandomPool Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override RandomPool Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
-            var randomPool = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var randomPool = formatter.Deserialize(ref reader, DefaultResolver);
 
             var rawResizer = randomPool.Resizer;
             Resizer resizer = rawResizer.NonEmtpy()
@@ -368,14 +368,14 @@ namespace Akka.Serialization.Formatters
                 randomPool.UsePoolDispatcher);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, RandomPool value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, RandomPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -389,12 +389,12 @@ namespace Akka.Serialization.Formatters
 
         private ScatterGatherFirstCompletedPoolFormatter() { }
 
-        public override ScatterGatherFirstCompletedPool Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override ScatterGatherFirstCompletedPool Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ScatterGatherPool>();
-            var scatterGatherFirstCompletedPool = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var scatterGatherFirstCompletedPool = formatter.Deserialize(ref reader, DefaultResolver);
 
             var rawResizer = scatterGatherFirstCompletedPool.Generic.Resizer;
             Resizer resizer = rawResizer.NonEmtpy()
@@ -414,9 +414,9 @@ namespace Akka.Serialization.Formatters
                 scatterGatherFirstCompletedPool.Generic.UsePoolDispatcher);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, ScatterGatherFirstCompletedPool value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, ScatterGatherFirstCompletedPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.ScatterGatherPool(
                 GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value),
@@ -424,7 +424,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.ScatterGatherPool>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -438,12 +438,12 @@ namespace Akka.Serialization.Formatters
 
         private TailChoppingPoolFormatter() { }
 
-        public override TailChoppingPool Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override TailChoppingPool Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.TailChoppingPool>();
-            var tailChoppingPool = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var tailChoppingPool = formatter.Deserialize(ref reader, DefaultResolver);
 
             var rawResizer = tailChoppingPool.Generic.Resizer;
             Resizer resizer = rawResizer.NonEmtpy()
@@ -464,9 +464,9 @@ namespace Akka.Serialization.Formatters
                 tailChoppingPool.Generic.UsePoolDispatcher);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, TailChoppingPool value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, TailChoppingPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.TailChoppingPool(
                 GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value),
@@ -475,7 +475,7 @@ namespace Akka.Serialization.Formatters
             );
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.TailChoppingPool>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
@@ -489,12 +489,12 @@ namespace Akka.Serialization.Formatters
 
         private ConsistentHashingPoolFormatter() { }
 
-        public override ConsistentHashingPool Deserialize(byte[] bytes, int offset, IFormatterResolver formatterResolver, out int readSize)
+        public override ConsistentHashingPool Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (MessagePackBinary.IsNil(bytes, offset)) { readSize = 1; return default; }
+            if (reader.IsNil()) { return default; }
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
-            var consistentHashingPool = formatter.Deserialize(bytes, offset, DefaultResolver, out readSize);
+            var consistentHashingPool = formatter.Deserialize(ref reader, DefaultResolver);
 
             var rawResizer = consistentHashingPool.Resizer;
             Resizer resizer = rawResizer.NonEmtpy()
@@ -512,14 +512,14 @@ namespace Akka.Serialization.Formatters
                 consistentHashingPool.UsePoolDispatcher);
         }
 
-        public override int Serialize(ref byte[] bytes, int offset, ConsistentHashingPool value, IFormatterResolver formatterResolver)
+        public override void Serialize(ref MessagePackWriter writer, ref int idx, ConsistentHashingPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { return MessagePackBinary.WriteNil(ref bytes, offset); }
+            if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.GenericRoutingPool>();
-            return formatter.Serialize(ref bytes, offset, protoMessage, DefaultResolver);
+            formatter.Serialize(ref writer, ref idx, protoMessage, DefaultResolver);
         }
     }
 
