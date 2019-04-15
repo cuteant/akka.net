@@ -34,7 +34,7 @@ namespace Akka.Serialization
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private
-#if !NET451
+#if NET471
             unsafe
 #endif
             static byte[] CopyFrom(byte[] buffer, int offset, int count)
@@ -42,13 +42,14 @@ namespace Akka.Serialization
             var bytes = new byte[count];
 #if NET451
             Buffer.BlockCopy(buffer, offset, bytes, 0, count);
-#else
-
+#elif NET471
             fixed (byte* pSrc = &buffer[offset])
             fixed (byte* pDst = &bytes[0])
             {
                 Buffer.MemoryCopy(pSrc, pDst, bytes.Length, count);
             }
+#else
+            Unsafe.CopyBlockUnaligned(ref bytes[0], ref buffer[offset], unchecked((uint)count));
 #endif
             return bytes;
         }

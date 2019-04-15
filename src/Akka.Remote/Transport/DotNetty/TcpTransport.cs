@@ -61,9 +61,7 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 // no need to copy the byte buffer contents; ByteString does that automatically
                 //var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
-                var bytes = buf.GetIoBuffer();
-
-                var pdus = (List<object>)MessagePackSerializer.Deserialize<object>(bytes, DefaultResolver);
+                var pdus = (List<object>)MessagePackSerializer.Deserialize<object>(buf.UnreadSpan, DefaultResolver);
                 foreach (var raw in pdus)
                 {
                     NotifyListener(new InboundPayload(raw));
@@ -74,24 +72,10 @@ namespace Akka.Remote.Transport.DotNetty
             buf.Release(); //ReferenceCountUtil.SafeRelease(message);
         }
 
-
-        protected
-#if !NET451
-            unsafe
-#endif
-            static byte[] CopyFrom(byte[] buffer, int offset, int count)
+        protected static byte[] CopyFrom(byte[] buffer, int offset, int count)
         {
             var bytes = new byte[count];
-#if NET451
-            Buffer.BlockCopy(buffer, offset, bytes, 0, count);
-#else
-
-            fixed (byte* pSrc = &buffer[offset])
-            fixed (byte* pDst = &bytes[0])
-            {
-                Buffer.MemoryCopy(pSrc, pDst, bytes.Length, count);
-            }
-#endif
+            MessagePackBinary.CopyMemory(buffer, offset, bytes, 0, count);
             return bytes;
         }
 
