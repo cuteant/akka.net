@@ -21,22 +21,22 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
     /// <summary>
     /// Protobuf serializer of DistributedPubSubMediator messages.
     /// </summary>
-    public class DistributedPubSubMessageSerializer : SerializerWithIntegerManifest
+    public class DistributedPubSubMessageSerializer : SerializerWithStringManifest
     {
         #region manifests
 
-        private const int StatusManifest = 470;
-        private const int DeltaManifest = 471;
-        private const int SendManifest = 472;
-        private const int SendToAllManifest = 473;
-        private const int PublishManifest = 474;
-        private const int SendToOneSubscriberManifest = 475;
+        private const string StatusManifest = "A";
+        private const string DeltaManifest = "B";
+        private const string SendManifest = "C";
+        private const string SendToAllManifest = "D";
+        private const string PublishManifest = "E";
+        private const string SendToOneSubscriberManifest = "F";
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static DistributedPubSubMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
                 { typeof(Internal.Status), StatusManifest},
                 { typeof(Internal.Delta), DeltaManifest},
@@ -58,7 +58,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         public DistributedPubSubMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
@@ -81,12 +81,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                     manifest = SendToOneSubscriberManifest;
                     return SendToOneSubscriberToProto(sub);
                 default:
-                    manifest = 0; ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage(obj); return null;
+                    throw ThrowHelper.GetArgumentException_Manifest_DistributedPubSubMessage(obj);
             }
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -103,20 +103,20 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 case SendToOneSubscriberManifest:
                     return SendToOneSubscriberFrom(bytes);
                 default:
-                    ThrowHelper.ThrowArgumentException_Serializer_DistributedPubSubMessage(manifest); return null;
+                    throw ThrowHelper.GetArgumentException_Serializer_DistributedPubSubMessage(manifest);
             }
         }
 
         /// <inheritdoc />
-        protected override int GetManifest(Type type)
+        protected override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(type); return 0;
+            throw ThrowHelper.GetArgumentException_Manifest_ClusterClientMessage(type);
         }
 
         /// <inheritdoc />
-        public override int Manifest(object o)
+        public override string Manifest(object o)
         {
             switch (o)
             {
@@ -133,7 +133,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
                 case SendToOneSubscriber _:
                     return SendToOneSubscriberManifest;
                 default:
-                    ThrowHelper.ThrowArgumentException_Manifest_DistributedPubSubMessage(o); return 0;
+                    throw ThrowHelper.GetArgumentException_Manifest_DistributedPubSubMessage(o);
             }
         }
 

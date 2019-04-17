@@ -23,6 +23,8 @@ namespace Akka.Serialization
 
         static MsgPackSerializerHelper()
         {
+            MessagePackBinary.Shared = CuteAnt.Buffers.BufferManager.Shared;
+
             MessagePackStandardResolver.RegisterTypelessObjectResolver(AkkaTypelessObjectResolver.Instance, AkkaTypelessFormatter.Instance);
 
             MessagePackStandardResolver.Register(

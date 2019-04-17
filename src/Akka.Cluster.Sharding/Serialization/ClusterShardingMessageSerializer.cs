@@ -20,46 +20,46 @@ namespace Akka.Cluster.Sharding.Serialization
     /// <summary>
     /// TBD
     /// </summary>
-    public class ClusterShardingMessageSerializer : SerializerWithIntegerManifest
+    public class ClusterShardingMessageSerializer : SerializerWithStringManifest
     {
         #region manifests
 
-        private const int CoordinatorStateManifest = 300;
-        private const int ShardRegionRegisteredManifest = 301;
-        private const int ShardRegionProxyRegisteredManifest = 302;
-        private const int ShardRegionTerminatedManifest = 303;
-        private const int ShardRegionProxyTerminatedManifest = 304;
-        private const int ShardHomeAllocatedManifest = 305;
-        private const int ShardHomeDeallocatedManifest = 306;
+        private const string CoordinatorStateManifest = "AA";
+        private const string ShardRegionRegisteredManifest = "AB";
+        private const string ShardRegionProxyRegisteredManifest = "AC";
+        private const string ShardRegionTerminatedManifest = "AD";
+        private const string ShardRegionProxyTerminatedManifest = "AE";
+        private const string ShardHomeAllocatedManifest = "AF";
+        private const string ShardHomeDeallocatedManifest = "AG";
 
-        private const int RegisterManifest = 307;
-        private const int RegisterProxyManifest = 308;
-        private const int RegisterAckManifest = 309;
-        private const int GetShardHomeManifest = 310;
-        private const int ShardHomeManifest = 311;
-        private const int HostShardManifest = 312;
-        private const int ShardStartedManifest = 313;
-        private const int BeginHandOffManifest = 314;
-        private const int BeginHandOffAckManifest = 315;
-        private const int HandOffManifest = 316;
-        private const int ShardStoppedManifest = 317;
-        private const int GracefulShutdownReqManifest = 318;
+        private const string RegisterManifest = "BA";
+        private const string RegisterProxyManifest = "BB";
+        private const string RegisterAckManifest = "BC";
+        private const string GetShardHomeManifest = "BD";
+        private const string ShardHomeManifest = "BE";
+        private const string HostShardManifest = "BF";
+        private const string ShardStartedManifest = "BG";
+        private const string BeginHandOffManifest = "BH";
+        private const string BeginHandOffAckManifest = "BI";
+        private const string HandOffManifest = "BJ";
+        private const string ShardStoppedManifest = "BK";
+        private const string GracefulShutdownReqManifest = "BL";
 
-        private const int EntityStateManifest = 319;
-        private const int EntityStartedManifest = 320;
-        private const int EntityStoppedManifest = 321;
+        private const string EntityStateManifest = "CA";
+        private const string EntityStartedManifest = "CB";
+        private const string EntityStoppedManifest = "CD";
 
-        private const int StartEntityManifest = 322;
-        private const int StartEntityAckManifest = 323;
+        private const string StartEntityManifest = "EA";
+        private const string StartEntityAckManifest = "EB";
 
-        private const int GetShardStatsManifest = 324;
-        private const int ShardStatsManifest = 325;
+        private const string GetShardStatsManifest = "DA";
+        private const string ShardStatsManifest = "DB";
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static ClusterShardingMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
                 { typeof(Shard.ShardState), EntityStateManifest},
                 { typeof(Shard.EntityStarted), EntityStartedManifest},
@@ -101,7 +101,7 @@ namespace Akka.Cluster.Sharding.Serialization
         public ClusterShardingMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
@@ -183,8 +183,9 @@ namespace Akka.Cluster.Sharding.Serialization
                 case Shard.ShardStats o:
                     manifest = ShardStatsManifest;
                     return MessagePackSerializer.Serialize(ShardStatsToProto(o), s_defaultResolver);
+                default:
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterShardingMessage(obj);
             }
-            manifest = 0; ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(obj); return null;
         }
 
         /// <summary>
@@ -196,7 +197,7 @@ namespace Akka.Cluster.Sharding.Serialization
         /// This exception is thrown when the specified <paramref name="bytes"/>cannot be deserialized using the specified <paramref name="manifest"/>.
         /// </exception>
         /// <returns>The object contained in the array</returns>
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -258,25 +259,25 @@ namespace Akka.Cluster.Sharding.Serialization
                     return StartEntityAckFromBinary(bytes);
 
                 default:
-                    ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(manifest); return null;
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterShardingMessage(manifest);
             }
         }
 
         /// <inheritdoc />
-        protected override int GetManifest(Type type)
+        protected override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             var manifestMap = ManifestMap;
             if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             foreach (var item in manifestMap)
             {
                 if (item.Key.IsAssignableFrom(type)) { return item.Value; }
             }
-            ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(type); return 0;
+            throw ThrowHelper.GetArgumentException_Serializer_ClusterShardingMessage(type);
         }
 
         /// <inheritdoc />
-        public override int Manifest(object o)
+        public override string Manifest(object o)
         {
             switch (o)
             {
@@ -306,8 +307,9 @@ namespace Akka.Cluster.Sharding.Serialization
                 case ShardRegion.StartEntityAck _: return StartEntityAckManifest;
                 case Shard.GetShardStats _: return GetShardStatsManifest;
                 case Shard.ShardStats _: return ShardStatsManifest;
+                default:
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterShardingMessage(o);
             }
-            ThrowHelper.ThrowArgumentException_Serializer_ClusterShardingMessage(o); return 0;
         }
 
         //

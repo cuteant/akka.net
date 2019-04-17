@@ -16,29 +16,29 @@ using MessagePack;
 
 namespace Akka.Serialization
 {
-    public sealed class SystemMessageSerializer : SerializerWithIntegerManifest
+    public sealed class SystemMessageSerializer : SerializerWithStringManifest
     {
         #region manifests
 
         static class _
         {
-            internal const int CreateManifest = 100;
-            internal const int RecreateManifest = 101;
-            internal const int SuspendManifest = 102;
-            internal const int ResumeManifest = 103;
-            internal const int TerminateManifest = 104;
-            internal const int SuperviseManifest = 105;
-            internal const int WatchManifest = 106;
-            internal const int UnwatchManifest = 107;
-            internal const int FailedManifest = 108;
-            internal const int DeathWatchNotificationManifest = 109;
+            internal const string CreateManifest = "C";
+            internal const string RecreateManifest = "RC";
+            internal const string SuspendManifest = "S";
+            internal const string ResumeManifest = "R";
+            internal const string TerminateManifest = "T";
+            internal const string SuperviseManifest = "SV";
+            internal const string WatchManifest = "W";
+            internal const string UnwatchManifest = "UW";
+            internal const string FailedManifest = "F";
+            internal const string DeathWatchNotificationManifest = "DWN";
         }
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static SystemMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>()
+            ManifestMap = new Dictionary<Type, string>()
             {
                 { typeof(Create), _.CreateManifest },
                 { typeof(Recreate), _.RecreateManifest },
@@ -66,7 +66,7 @@ namespace Akka.Serialization
         public SystemMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
@@ -101,15 +101,14 @@ namespace Akka.Serialization
                     manifest = _.DeathWatchNotificationManifest;
                     return DeathWatchNotificationToProto(deathWatchNotification);
                 case NoMessage noMessage:
-                    manifest = 0;
-                    AkkaThrowHelper.ThrowArgumentException_Serializer_SystemMsg_NoMessage(); return null;
+                    throw AkkaThrowHelper.GetArgumentException_Serializer_SystemMsg_NoMessage();
                 default:
-                    manifest = 0; AkkaThrowHelper.ThrowArgumentException_Serializer_S(obj); return null;
+                    throw AkkaThrowHelper.GetArgumentException_Serializer_S(obj);
             }
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -134,19 +133,19 @@ namespace Akka.Serialization
                 case _.DeathWatchNotificationManifest:
                     return DeathWatchNotificationFromProto(system, bytes);
             }
-            ThrowArgumentException_Serializer_SystemMsg(manifest); return null;
+            throw GetArgumentException_Serializer_SystemMsg(manifest);
         }
 
         /// <inheritdoc />
-        protected override int GetManifest(Type type)
+        protected override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            AkkaThrowHelper.ThrowArgumentException_Serializer_D(type); return 0;
+            throw AkkaThrowHelper.GetArgumentException_Serializer_D(type);
         }
 
         /// <inheritdoc />
-        public override int Manifest(object o)
+        public override string Manifest(object o)
         {
             switch (o)
             {
@@ -171,9 +170,9 @@ namespace Akka.Serialization
                 case DeathWatchNotification deathWatchNotification:
                     return _.DeathWatchNotificationManifest;
                 case NoMessage noMessage:
-                    AkkaThrowHelper.ThrowArgumentException_Serializer_SystemMsg_NoMessage(); return 0;
+                    throw AkkaThrowHelper.GetArgumentException_Serializer_SystemMsg_NoMessage();
                 default:
-                    AkkaThrowHelper.ThrowArgumentException_Serializer_D(o); return 0;
+                    throw AkkaThrowHelper.GetArgumentException_Serializer_D(o);
             }
         }
 
@@ -341,13 +340,9 @@ namespace Akka.Serialization
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void ThrowArgumentException_Serializer_SystemMsg(int manifest)
+        private static ArgumentException GetArgumentException_Serializer_SystemMsg(string manifest)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(SystemMessageSerializer)}]");
-            }
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(SystemMessageSerializer)}]");
         }
     }
 }

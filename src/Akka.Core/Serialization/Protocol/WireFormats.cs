@@ -50,42 +50,26 @@ namespace Akka.Serialization.Protocol
         public readonly int SerializerId;
 
         [Key(2)]
-        public readonly byte[] Manifest;
+        public readonly string Manifest;
 
         [Key(3)]
-        public readonly int ExtensibleData;
+        public readonly Type MessageType;
 
         public Payload(byte[] message, int serializerId)
         {
             Message = message;
             SerializerId = serializerId;
             Manifest = null;
-            ExtensibleData = 0;
-        }
-
-        public Payload(byte[] message, int serializerId, byte[] manifest)
-        {
-            Message = message;
-            SerializerId = serializerId;
-            Manifest = manifest;
-            ExtensibleData = 0;
-        }
-
-        public Payload(byte[] message, int serializerId, int extensibleData)
-        {
-            Message = message;
-            SerializerId = serializerId;
-            Manifest = null;
-            ExtensibleData = extensibleData;
+            MessageType = null;
         }
 
         [SerializationConstructor]
-        public Payload(byte[] message, int serializerId, byte[] manifest, int extensibleData)
+        public Payload(byte[] message, int serializerId, string manifest, Type messageType)
         {
             Message = message;
             SerializerId = serializerId;
             Manifest = manifest;
-            ExtensibleData = extensibleData;
+            MessageType = messageType;
         }
     }
 

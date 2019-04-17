@@ -17,25 +17,24 @@ using MessagePack;
 
 namespace Akka.Persistence.Serialization
 {
-    public sealed class PersistenceMessageSerializer : SerializerWithIntegerManifest
+    public sealed class PersistenceMessageSerializer : SerializerWithStringManifest
     {
         private static readonly IFormatterResolver s_defaultResolver;
 
         #region manifests
 
-        private const int IPersistentManifest = 60;
-        private const int PersistentManifest = 61;
-        private const int AtomicWriteManifest = 62;
-        private const int ALODSnapshotManifest = 63;
-        private const int StateChangeEventManifest = 64;
+        private const string PersistentManifest = "P";
+        private const string AtomicWriteManifest = "AW";
+        private const string ALODSnapshotManifest = "AS";
+        private const string StateChangeEventManifest = "SCE";
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static PersistenceMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
-                { typeof(IPersistentRepresentation), IPersistentManifest },
+                { typeof(IPersistentRepresentation), PersistentManifest },
                 { typeof(Persistent), PersistentManifest },
                 { typeof(AtomicWrite), AtomicWriteManifest },
                 { typeof(AtLeastOnceDeliverySnapshot), ALODSnapshotManifest },
@@ -49,12 +48,12 @@ namespace Akka.Persistence.Serialization
         public PersistenceMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
                 case IPersistentRepresentation repr:
-                    manifest = IPersistentManifest;
+                    manifest = PersistentManifest;
                     return MessagePackSerializer.Serialize(GetPersistentMessage(repr), s_defaultResolver);
                 case AtomicWrite aw:
                     manifest = AtomicWriteManifest;
@@ -66,16 +65,15 @@ namespace Akka.Persistence.Serialization
                     manifest = StateChangeEventManifest;
                     return MessagePackSerializer.Serialize(GetStateChangeEvent(stateEvent), s_defaultResolver);
                 default:
-                    manifest = 0; ThrowHelper.ThrowArgumentException_MessageSerializer(obj); return null;
+                    throw ThrowHelper.GetArgumentException_MessageSerializer(obj);
             }
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
-                case IPersistentManifest:
                 case PersistentManifest:
                     return GetPersistentRepresentation(system, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
                 case AtomicWriteManifest:
@@ -84,34 +82,34 @@ namespace Akka.Persistence.Serialization
                     return GetAtLeastOnceDeliverySnapshot(system, bytes);
                 case StateChangeEventManifest:
                     return GetStateChangeEvent(bytes);
+                default:
+                    throw ThrowHelper.GetArgumentException_Serializer(manifest);
             }
-
-            ThrowHelper.ThrowArgumentException_Serializer(manifest); return null;
         }
 
         /// <inheritdoc />
-        protected sealed override int GetManifest(Type type)
+        protected sealed override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            ThrowHelper.ThrowArgumentException_Serializer_D(type); return 0;
+            throw ThrowHelper.GetArgumentException_Serializer_D(type);
         }
 
         /// <inheritdoc />
-        public sealed override int Manifest(object o)
+        public sealed override string Manifest(object o)
         {
             switch (o)
             {
                 case IPersistentRepresentation repr:
-                    return IPersistentManifest;
+                    return PersistentManifest;
                 case AtomicWrite aw:
-                    return  AtomicWriteManifest;
+                    return AtomicWriteManifest;
                 case AtLeastOnceDeliverySnapshot snap:
-                    return  ALODSnapshotManifest;
+                    return ALODSnapshotManifest;
                 case PersistentFSM.StateChangeEvent stateEvent:
-                    return  StateChangeEventManifest;
+                    return StateChangeEventManifest;
                 default:
-                    ThrowHelper.ThrowArgumentException_Serializer_D(o); return 0;
+                    throw ThrowHelper.GetArgumentException_Serializer_D(o);
             }
         }
 

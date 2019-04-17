@@ -23,9 +23,8 @@ namespace Akka.Serialization.Formatters
 
         public T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (reader.IsNil()) { return default; }
-
-            var path = MessagePackBinary.ResolveString(reader.ReadUtf8Span());
+            var path = reader.ReadStringWithCache();
+            if (null == path) { return default; }
 
             if (string.Equals(path, c_nobody, StringComparison.Ordinal))
             {
@@ -56,9 +55,8 @@ namespace Akka.Serialization.Formatters
 
         public T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (reader.IsNil()) { return null; }
-
-            var path = MessagePackBinary.ResolveString(reader.ReadUtf8Span());
+            var path = reader.ReadStringWithCache();
+            if (null == path) { return null; }
 
             return ActorPath.TryParse(path, out var actorPath) ? (T)actorPath : null;
         }

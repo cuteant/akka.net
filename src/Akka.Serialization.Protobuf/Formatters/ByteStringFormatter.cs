@@ -10,9 +10,9 @@ namespace Akka.Serialization.Formatters
 
         public ByteString Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (reader.IsNil()) { return default; }
-
             var bts = reader.ReadBytes();
+            if (null == bts) { return null; }
+
             return ProtobufUtil.FromBytes(bts);
         }
 

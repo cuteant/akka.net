@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MessagePack;
 
 namespace Akka.Serialization.Protocol
@@ -58,7 +59,7 @@ namespace Akka.Serialization.Protocol
         public readonly Payload MessageId;
 
         [SerializationConstructor]
-        public Identify(Payload messageId) => MessageId = messageId;
+        public Identify(in Payload messageId) => MessageId = messageId;
     }
 
     [MessagePackObject]
@@ -71,7 +72,7 @@ namespace Akka.Serialization.Protocol
         public readonly string Path;
 
         [SerializationConstructor]
-        public ActorIdentity(Payload correlationId, string path)
+        public ActorIdentity(in Payload correlationId, string path)
         {
             CorrelationId = correlationId;
             Path = path;
@@ -92,7 +93,7 @@ namespace Akka.Serialization.Protocol
     public sealed class ExceptionData
     {
         [Key(0)]
-        public string TypeName { get; set; }
+        public Type ExceptionType { get; set; }
 
         [Key(1)]
         public string Message { get; set; }
@@ -118,7 +119,7 @@ namespace Akka.Serialization.Protocol
     public readonly struct SelectionEnvelope
     {
         [SerializationConstructor]
-        public SelectionEnvelope(Payload payload, List<Selection> pattern)
+        public SelectionEnvelope(in Payload payload, List<Selection> pattern)
         {
             Payload = payload;
             Pattern = pattern;

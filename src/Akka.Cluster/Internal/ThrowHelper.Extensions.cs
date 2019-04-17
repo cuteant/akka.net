@@ -163,35 +163,23 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ClusterMessage(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_ClusterMessage(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterMessageSerializer)}]");
-            }
+            return new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ClusterMessage(int manifest)
+        internal static ArgumentException GetArgumentException_Serializer_ClusterMessage(string manifest)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterMessageSerializer)}]");
-            }
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_D(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_D(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                var type = obj as Type;
-                var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
-                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
-            }
+            var type = obj as Type;
+            var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+            return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

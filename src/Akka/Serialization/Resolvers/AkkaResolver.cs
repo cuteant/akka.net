@@ -1,15 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Reflection;
-using Akka.Actor;
-using Akka.Serialization.Formatters;
-using CuteAnt.Reflection;
-using MessagePack;
-using MessagePack.Formatters;
-using MessagePack.Resolvers;
-
-namespace Akka.Serialization.Resolvers
+﻿namespace Akka.Serialization.Resolvers
 {
+    using System;
+    using System.Collections.Generic;
+    using Akka.Actor;
+    using Akka.Serialization.Formatters;
+    using CuteAnt.Reflection;
+    using MessagePack;
+    using MessagePack.Formatters;
+    using MessagePack.Resolvers;
+
     #region -- AkkaDefaultResolver --
 
     public sealed class AkkaDefaultResolver : DefaultResolver, IFormatterResolverContext<ExtendedActorSystem>, IFormatterResolverContext<Hyperion.Serializer>
@@ -62,7 +61,7 @@ namespace Akka.Serialization.Resolvers
 
         private static class FormatterCache<T>
         {
-            public static IMessagePackFormatter<T> Formatter { get; }
+            public static readonly IMessagePackFormatter<T> Formatter;
             static FormatterCache() => Formatter = (IMessagePackFormatter<T>)AkkaResolverGetFormatterHelper.GetFormatter(typeof(T));
         }
     }
@@ -78,11 +77,18 @@ namespace Akka.Serialization.Resolvers
             { typeof(IInternalActorRef), new ActorRefFormatter<IInternalActorRef>() },
             { typeof(RepointableActorRef), new ActorRefFormatter<RepointableActorRef>() },
             { typeof(ActorSelectionMessage), ActorSelectionMessageFormatter.Instance },
+
+            // protocol
+            { typeof(Protocol.Payload), ProtocolPayloadFormatter.Instance },
+            { typeof(Protocol.ReadOnlyActorRefData), ProtocolReadOnlyActorRefDataFormatter.Instance },
+            { typeof(Protocol.ActorRefData), ProtocolActorRefDataFormatter.Instance },
+            { typeof(Protocol.AddressData), ProtocolAddressDataFormatter.Instance },
+            { typeof(Protocol.ActorIdentity), ProtocolActorIdentityFormatter.Instance },
         };
 
         internal static object GetFormatter(Type t)
         {
-            if (FormatterMap.TryGetValue(t, out var formatter)) return formatter;
+            if (FormatterMap.TryGetValue(t, out var formatter)) { return formatter; }
 
             if (typeof(ISingletonMessage).IsAssignableFrom(t))
             {
@@ -111,9 +117,7 @@ namespace Akka.Serialization.Resolvers
     {
         public static readonly IFormatterResolver Instance = new AkkaTypelessObjectResolver();
 
-        AkkaTypelessObjectResolver()
-        {
-        }
+        AkkaTypelessObjectResolver() { }
 
         public override IMessagePackFormatter<T> GetFormatter<T>()
         {

@@ -207,15 +207,11 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_D(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_D(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                var type = obj as Type;
-                var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
-                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
-            }
+            var type = obj as Type;
+            var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+            return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
         }
 
         #endregion
@@ -257,7 +253,7 @@ namespace Akka.Remote
         #region -- SerializationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowSerializationException_Serializer_MiscFrom(int manifest)
+        internal static void ThrowSerializationException_Serializer_MiscFrom(string manifest)
         {
             throw GetException();
             SerializationException GetException()

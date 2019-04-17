@@ -18,9 +18,9 @@ namespace Akka.Serialization.Formatters
 
         public DataSet Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (reader.IsNil()) { return default; }
-
             var bts = reader.ReadBytes();
+            if (null == bts) { return null; }
+
             using (var inputStream = new MemoryStream(bts))
             {
                 return DataSerializer.DeserializeDataSet(inputStream);
@@ -58,9 +58,9 @@ namespace Akka.Serialization.Formatters
 
         public DataTable Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
-            if (reader.IsNil()) { return default; }
-
             var bts = reader.ReadBytes();
+            if (null == bts) { return null; }
+
             using (var inputStream = new MemoryStream(bts))
             {
                 return DataSerializer.DeserializeDataTable(inputStream);

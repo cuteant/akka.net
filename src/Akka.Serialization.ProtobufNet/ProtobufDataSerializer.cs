@@ -11,18 +11,18 @@ using ProtoBuf.Data;
 
 namespace Akka.Serialization
 {
-    public sealed class ProtobufDataSerializer : SerializerWithIntegerManifest
+    public sealed class ProtobufDataSerializer : SerializerWithStringManifest
     {
         #region manifests
 
-        private const int DataSetManifest = 50;
-        private const int DataTableManifest = 51;
+        private const string DataSetManifest = "DS";
+        private const string DataTableManifest = "DT";
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static ProtobufDataSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
                 { typeof(DataSet), DataSetManifest },
                 { typeof(DataTable), DataTableManifest },
@@ -50,7 +50,7 @@ namespace Akka.Serialization
         public sealed override int Identifier => 108;
 
         /// <inheritdoc />
-        public sealed override byte[] ToBinary(object o, out int manifest)
+        public sealed override byte[] ToBinary(object o, out string manifest)
         {
             switch (o)
             {
@@ -75,12 +75,12 @@ namespace Akka.Serialization
                         return outputStream.ToByteArray();
                     }
                 default:
-                    manifest = 0; ThrowArgumentException_Serializer_D(o); return null;
+                    throw GetArgumentException_Serializer_D(o);
             }
         }
 
         /// <inheritdoc />
-        public sealed override object FromBinary(byte[] bytes, int manifest)
+        public sealed override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -95,20 +95,20 @@ namespace Akka.Serialization
                         return DataSerializer.DeserializeDataTable(inputStream);
                     }
                 default:
-                    return ThrowArgumentException_Serializer(manifest);
+                    throw GetArgumentException_Serializer(manifest);
             }
         }
 
         /// <inheritdoc />
-        protected sealed override int GetManifest(Type type)
+        protected sealed override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            ThrowArgumentException_Serializer_D(type); return 0;
+            throw GetArgumentException_Serializer_D(type);
         }
 
         /// <inheritdoc />
-        public sealed override int Manifest(object o)
+        public sealed override string Manifest(object o)
         {
             switch (o)
             {
@@ -117,30 +117,22 @@ namespace Akka.Serialization
                 case DataTable _:
                     return DataTableManifest;
                 default:
-                    ThrowArgumentException_Serializer_D(o); return 0;
+                    throw GetArgumentException_Serializer_D(o);
             }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static object ThrowArgumentException_Serializer(int manifest)
+        private static ArgumentException GetArgumentException_Serializer(string manifest)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(ProtobufDataSerializer)}]");
-            }
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(ProtobufDataSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void ThrowArgumentException_Serializer_D(object obj)
+        private static ArgumentException GetArgumentException_Serializer_D(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                var type = obj as Type;
-                var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
-                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
-            }
+            var type = obj as Type;
+            var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+            return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
         }
     }
 }

@@ -198,7 +198,6 @@ namespace Akka.Persistence.TCK.Serialization
         {
             private static readonly string _manifestV1 = typeof(MyPayload).TypeQualifiedName();
             private const string _manifestV2 = "MyPayload-V2";
-            private static readonly byte[] _manifestV2Bytes = StringHelper.UTF8NoBOM.GetBytes(_manifestV2);
 
             public MyPayload2Serializer(ExtendedActorSystem system) : base(system)
             {
@@ -207,11 +206,11 @@ namespace Akka.Persistence.TCK.Serialization
             public override int Identifier => 77125;
 
             /// <inheritdoc />
-            public override byte[] ToBinary(object obj, out byte[] manifest)
+            public override byte[] ToBinary(object obj, out string manifest)
             {
                 if (obj is MyPayload2 payload)
                 {
-                    manifest = _manifestV2Bytes;
+                    manifest = _manifestV2;
                     return Encoding.UTF8.GetBytes($".{payload.Data}:{payload.N}");
                 }
 

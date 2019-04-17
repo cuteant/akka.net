@@ -293,35 +293,23 @@ namespace Akka
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_D(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_D(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                var type = obj as Type;
-                var typeQualifiedName = type != null ? type.FullName : obj?.GetType().FullName;
-                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
-            }
+            var type = obj as Type;
+            var typeQualifiedName = type != null ? type.FullName : obj?.GetType().FullName;
+            return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_SystemMsg_NoMessage()
+        internal static ArgumentException GetArgumentException_Serializer_SystemMsg_NoMessage()
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException("NoMessage should never be serialized or deserialized");
-            }
+            return new ArgumentException("NoMessage should never be serialized or deserialized");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_S(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_S(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Cannot serialize object of type [{obj?.GetType().TypeQualifiedName()}]");
-            }
+            return new ArgumentException($"Cannot serialize object of type [{obj?.GetType().TypeQualifiedName()}]");
         }
 
         #endregion
@@ -500,6 +488,16 @@ namespace Akka
             InvalidOperationException GetException()
             {
                 return new InvalidOperationException($"Cannot register to anyone but {owner}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowInvalidOperationException_Payload_Format()
+        {
+            throw GetException();
+            InvalidOperationException GetException()
+            {
+                return new InvalidOperationException("Invalid Payload format");
             }
         }
 

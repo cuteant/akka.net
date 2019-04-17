@@ -1,14 +1,16 @@
-﻿using System;
-using System.Buffers;
-using System.Runtime.CompilerServices;
-using System.Text;
-using Akka.Actor;
-using CuteAnt;
-using CuteAnt.Buffers;
-using CuteAnt.Text;
-
-namespace Akka.Serialization
+﻿namespace Akka.Serialization
 {
+    using System;
+    using System.Buffers;
+    using System.Runtime.InteropServices;
+    using System.Text;
+    using Akka.Actor;
+    using CuteAnt;
+    using CuteAnt.Buffers;
+    using CuteAnt.Text;
+    using MessagePack;
+    using MessagePack.Internal;
+
     public sealed class StringSerializer : Serializer
     {
         private static readonly Encoding s_encodingUtf8 = StringHelper.UTF8NoBOM;
@@ -25,50 +27,29 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override object DeepCopy(object source) => source;
 
-        public override object FromBinary(byte[] bytes, Type type)
-        {
-            return s_decodingUtf8.GetString(bytes);
-        }
+        public override object FromBinary(byte[] bytes, Type type) => s_decodingUtf8.GetString(bytes);
 
         public override byte[] ToBinary(object obj)
         {
             var str = (string)obj;
-            var len = str.Length;
-            if (0u >= (uint)len) { return EmptyArray<byte>.Instance; }
+            var maxSize = EncodingUtils.Utf8MaxBytes(str);
+            if (0u >= (uint)maxSize) { return EmptyArray<byte>.Instance; }
 
-            var bufferSize = s_encodingUtf8.GetMaxByteCount(len);
-            var buffer = s_bufferPool.Rent(bufferSize);
+            var buffer = s_bufferPool.Rent(maxSize);
             try
             {
-                var bytesCount = s_encodingUtf8.GetBytes(str, 0, len, buffer, 0);
-                return CopyFrom(buffer, 0, bytesCount);
+                var utf16Source = MemoryMarshal.AsBytes(str.AsSpan());
+                EncodingUtils.ToUtf8(ref MemoryMarshal.GetReference(utf16Source), utf16Source.Length,
+                    ref buffer[0], maxSize, out _, out int written);
+                var utf8Bytes = new byte[written];
+                MessagePackBinary.CopyMemory(buffer, 0, utf8Bytes, 0, written);
+                return utf8Bytes;
             }
             catch (Exception ex)
             {
                 s_bufferPool.Return(buffer);
                 throw ex;
             }
-        }
-
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private
-#if !NET451
-            unsafe
-#endif
-            static byte[] CopyFrom(byte[] buffer, int offset, int count)
-        {
-            var bytes = new byte[count];
-#if NET451
-            Buffer.BlockCopy(buffer, offset, bytes, 0, count);
-#else
-
-            fixed (byte* pSrc = &buffer[offset])
-            fixed (byte* pDst = &bytes[0])
-            {
-                Buffer.MemoryCopy(pSrc, pDst, bytes.Length, count);
-            }
-#endif
-            return bytes;
         }
     }
 }

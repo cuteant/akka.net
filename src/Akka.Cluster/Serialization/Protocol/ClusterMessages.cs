@@ -19,7 +19,7 @@ namespace Akka.Cluster.Serialization.Protocol
         public readonly string[] Roles;
 
         [SerializationConstructor]
-        public Join(UniqueAddress node, string[] roles)
+        public Join(in UniqueAddress node, string[] roles)
         {
             Node = node;
             Roles = roles;
@@ -36,7 +36,7 @@ namespace Akka.Cluster.Serialization.Protocol
         public readonly Gossip Gossip;
 
         [SerializationConstructor]
-        public Welcome(UniqueAddress from, Gossip gossip)
+        public Welcome(in UniqueAddress from, Gossip gossip)
         {
             From = from;
             Gossip = gossip;
@@ -60,7 +60,7 @@ namespace Akka.Cluster.Serialization.Protocol
         public readonly byte[] SerializedGossip;
 
         [SerializationConstructor]
-        public GossipEnvelope(UniqueAddress from, UniqueAddress to, byte[] serializedGossip)
+        public GossipEnvelope(in UniqueAddress from, in UniqueAddress to, byte[] serializedGossip)
         {
             From = from;
             To = to;
@@ -80,7 +80,7 @@ namespace Akka.Cluster.Serialization.Protocol
         public readonly VectorClock Version;
 
         [SerializationConstructor]
-        public GossipStatus(UniqueAddress from, string[] allHashes, VectorClock version)
+        public GossipStatus(in UniqueAddress from, string[] allHashes, in VectorClock version)
         {
             From = from;
             AllHashes = allHashes;
@@ -251,7 +251,7 @@ namespace Akka.Cluster.Serialization.Protocol
         public readonly uint Uid;
 
         [SerializationConstructor]
-        public UniqueAddress(AddressData address, uint uid)
+        public UniqueAddress(in AddressData address, uint uid)
         {
             Address = address;
             Uid = uid;
@@ -272,7 +272,7 @@ namespace Akka.Cluster.Serialization.Protocol
         public readonly ClusterRouterPoolSettings Settings;
 
         [SerializationConstructor]
-        public ClusterRouterPool(Payload pool, ClusterRouterPoolSettings settings)
+        public ClusterRouterPool(in Payload pool, in ClusterRouterPoolSettings settings)
         {
             Pool = pool;
             Settings = settings;

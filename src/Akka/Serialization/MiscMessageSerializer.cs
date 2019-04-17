@@ -18,32 +18,33 @@ using MessagePack;
 
 namespace Akka.Serialization
 {
-    public sealed class MiscMessageSerializer : SerializerWithIntegerManifest
+    public sealed class MiscMessageSerializer : SerializerWithStringManifest
     {
         #region manifests
 
-        private const int IdentifyManifest = 200;
-        private const int ActorIdentityManifest = 201;
-        private const int ActorRefManifest = 202;
-        private const int PoisonPillManifest = 203;
-        private const int KillManifest = 204;
-        private const int LocalScopeManifest = 207;
-        private const int RemoteScopeManifest = 208;
-        private const int ConfigManifest = 209;
-        private const int FromConfigManifest = 210;
-        private const int DefaultResizerManifest = 211;
-        private const int RoundRobinPoolManifest = 212;
-        private const int BroadcastPoolManifest = 213;
-        private const int RandomPoolManifest = 214;
-        private const int ScatterGatherPoolManifest = 215;
-        private const int TailChoppingPoolManifest = 216;
-        private const int ConsistentHashingPoolManifest = 217;
+        private const string IdentifyManifest = "ID";
+        private const string ActorIdentityManifest = "AID";
+        private const string ActorRefManifest = "AR";
+        private const string PoisonPillManifest = "PP";
+        private const string KillManifest = "K";
+        private const string LocalScopeManifest = "LS";
+        private const string RemoteScopeManifest = "RS";
+        private const string ConfigManifest = "CF";
+        private const string FromConfigManifest = "FC";
+        private const string DefaultResizerManifest = "DR";
+        private const string RoundRobinPoolManifest = "RORRP";
+        private const string BroadcastPoolManifest = "ROBP";
+        private const string RandomPoolManifest = "RORP";
+        private const string ScatterGatherPoolManifest = "ROSGP";
+        private const string TailChoppingPoolManifest = "ROTCP";
+        private const string ConsistentHashingPoolManifest = "ROCHP";
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static MiscMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
                 { typeof(Identify), IdentifyManifest},
                 { typeof(ActorIdentity), ActorIdentityManifest},
@@ -90,7 +91,7 @@ namespace Akka.Serialization
         }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
@@ -145,12 +146,12 @@ namespace Akka.Serialization
                     return EmptyBytes;
 
                 default:
-                    manifest = 0; AkkaThrowHelper.ThrowArgumentException_Serializer_D(obj); return null;
+                    throw AkkaThrowHelper.GetArgumentException_Serializer_D(obj);
             }
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -188,25 +189,25 @@ namespace Akka.Serialization
                     return MessagePackSerializer.Deserialize<ConsistentHashingPool>(bytes, _defaultResolver);
 
                 default:
-                    ThrowSerializationException_Serializer_MiscFrom(manifest); return null;
+                    throw GetSerializationException_Serializer_MiscFrom(manifest);
             }
         }
 
         /// <inheritdoc />
-        protected override int GetManifest(Type type)
+        protected override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             var manifestMap = ManifestMap;
             if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             foreach (var item in manifestMap)
             {
                 if (item.Key.IsAssignableFrom(type)) { return item.Value; }
             }
-            AkkaThrowHelper.ThrowArgumentException_Serializer_D(type); return 0;
+            throw AkkaThrowHelper.GetArgumentException_Serializer_D(type);
         }
 
         /// <inheritdoc />
-        public override int Manifest(object obj)
+        public override string Manifest(object obj)
         {
             switch (obj)
             {
@@ -244,18 +245,14 @@ namespace Akka.Serialization
                     return ConsistentHashingPoolManifest;
 
                 default:
-                    AkkaThrowHelper.ThrowArgumentException_Serializer_D(obj); return 0;
+                    throw AkkaThrowHelper.GetArgumentException_Serializer_D(obj);
             }
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void ThrowSerializationException_Serializer_MiscFrom(int manifest)
+        private static SerializationException GetSerializationException_Serializer_MiscFrom(string manifest)
         {
-            throw GetException();
-            SerializationException GetException()
-            {
-                return new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(MiscMessageSerializer)}]");
-            }
+            return new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(MiscMessageSerializer)}]");
         }
     }
 }

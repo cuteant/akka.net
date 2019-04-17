@@ -57,7 +57,7 @@ namespace Akka.Serialization
 
             var exceptionType = exception.GetType();
 
-            message.TypeName = exceptionType.TypeQualifiedName();
+            message.ExceptionType = exceptionType;
             message.Message = exception.Message;
             message.StackTrace = exception.StackTrace ?? "";
             message.Source = exception.Source ?? "";
@@ -88,13 +88,13 @@ namespace Akka.Serialization
 
         public static Exception ExceptionFromProto(ExtendedActorSystem system, Protocol.ExceptionData proto)
         {
-            if (null == proto || string.IsNullOrEmpty(proto.TypeName)) { return null; }
-
-            Type exceptionType = TypeUtils.ResolveType(proto.TypeName);
+            if (null == proto) { return null; }
+            var exceptionType = proto.ExceptionType;
+            if (null == proto.ExceptionType) { return null; }
 
             var serializationInfo = new SerializationInfo(exceptionType, DefaultFormatterConverter);
 
-            serializationInfo.AddValue("ClassName", proto.TypeName);
+            serializationInfo.AddValue("ClassName", exceptionType.TypeQualifiedName());
             serializationInfo.AddValue("Message", proto.Message);
             serializationInfo.AddValue("StackTraceString", proto.StackTrace);
             serializationInfo.AddValue("Source", proto.Source);

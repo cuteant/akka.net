@@ -270,83 +270,51 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ClusterClientMessage(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_ClusterClientMessage(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
-            }
+            return new ArgumentException($"Can't serialize object of type [{obj.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ClusterClientMessage(int manifest)
+        internal static ArgumentException GetArgumentException_Serializer_ClusterClientMessage(string manifest)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(ClusterClientMessageSerializer)}");
-            }
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(ClusterClientMessageSerializer)}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_DistributedPubSubMessage(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_DistributedPubSubMessage(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Can't serialize object of type {obj.GetType()} with {nameof(DistributedPubSubMessageSerializer)}");
-            }
+            return new ArgumentException($"Can't serialize object of type {obj.GetType()} with {nameof(DistributedPubSubMessageSerializer)}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_DistributedPubSubMessage(int manifest)
+        internal static ArgumentException GetArgumentException_Serializer_DistributedPubSubMessage(string manifest)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(DistributedPubSubMessageSerializer)}");
-            }
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(DistributedPubSubMessageSerializer)}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ClusterSingletonMessage(int manifest)
+        internal static ArgumentException GetArgumentException_Serializer_ClusterSingletonMessage(string manifest)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterSingletonMessageSerializer)}]");
-            }
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterSingletonMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ClusterSingletonMessage(object o)
+        internal static ArgumentException GetArgumentException_Serializer_ClusterSingletonMessage(object o)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Cannot serialize object of type [{o.GetType()}] in [{nameof(ClusterSingletonMessageSerializer)}]");
-            }
+            return new ArgumentException($"Cannot serialize object of type [{o.GetType()}] in [{nameof(ClusterSingletonMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Manifest_ClusterClientMessage(object o)
+        internal static ArgumentException GetArgumentException_Manifest_ClusterClientMessage(object o)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Can't serialize object of type [{(o as Type) ?? o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
-            }
+            return new ArgumentException($"Can't serialize object of type [{(o as Type) ?? o.GetType()}] in [{nameof(ClusterClientMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Manifest_DistributedPubSubMessage(object o)
+        internal static ArgumentException GetArgumentException_Manifest_DistributedPubSubMessage(object o)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
-            }
+            return new ArgumentException($"Serializer {nameof(DistributedPubSubMessageSerializer)} cannot serialize message of type {o.GetType()}");
         }
 
         #endregion

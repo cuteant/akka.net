@@ -119,7 +119,7 @@ namespace Akka.Remote.Serialization.Formatters
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        private static IActorRef DeserializeActorRef(ExtendedActorSystem system, in ReadOnlyActorRefData actorRefData)
+        private static IActorRef DeserializeActorRef(ExtendedActorSystem system, ReadOnlyActorRefData actorRefData)
         {
             return system.Provider.ResolveActorRef(actorRefData.Path);
         }

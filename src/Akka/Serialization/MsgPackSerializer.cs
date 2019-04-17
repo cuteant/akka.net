@@ -2,7 +2,6 @@
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Serialization.Resolvers;
-using CuteAnt;
 using MessagePack;
 
 namespace Akka.Serialization
@@ -50,6 +49,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(obj, _resolver);
         }
 
-        public sealed override object FromBinary(byte[] bytes, Type type) => MessagePackSerializer.NonGeneric.Deserialize(type, bytes, _resolver);
+        public sealed override object FromBinary(byte[] bytes, Type type)
+            => MessagePackSerializer.NonGeneric.Deserialize(type, bytes, _resolver);
     }
 }

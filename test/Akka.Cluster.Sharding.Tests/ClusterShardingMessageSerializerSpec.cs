@@ -20,7 +20,7 @@ namespace Akka.Cluster.Sharding.Tests
 {
     public class ClusterShardingMessageSerializerSpec : AkkaSpec
     {
-        private SerializerWithIntegerManifest serializer;
+        private SerializerWithStringManifest serializer;
         private IActorRef region1;
         private IActorRef region2;
         private IActorRef region3;

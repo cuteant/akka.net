@@ -17,19 +17,19 @@ using MessagePack;
 
 namespace Akka.Remote.Serialization
 {
-    public sealed class MiscMessageSerializer : SerializerWithIntegerManifest
+    public sealed class MiscMessageSerializer : SerializerWithStringManifest
     {
         #region manifests
 
-        private const int RemoteWatcherHearthbeatManifest = 205;
-        private const int RemoteWatcherHearthbeatRspManifest = 206;
-        private const int RemoteRouterConfigManifest = 218;
+        private const string RemoteWatcherHearthbeatManifest = "RWHB";
+        private const string RemoteWatcherHearthbeatRspManifest = "RWHR";
+        private const string RemoteRouterConfigManifest = "RORRC";
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static MiscMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
                 { typeof(RemoteWatcher.Heartbeat), RemoteWatcherHearthbeatManifest},
                 { typeof(RemoteWatcher.HeartbeatRsp), RemoteWatcherHearthbeatRspManifest},
@@ -63,7 +63,7 @@ namespace Akka.Remote.Serialization
         }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
@@ -80,12 +80,12 @@ namespace Akka.Remote.Serialization
                     return EmptyBytes;
 
                 default:
-                    manifest = 0; ThrowHelper.ThrowArgumentException_Serializer_D(obj); return null;
+                    throw ThrowHelper.GetArgumentException_Serializer_D(obj);
             }
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -102,20 +102,20 @@ namespace Akka.Remote.Serialization
         }
 
         /// <inheritdoc />
-        protected override int GetManifest(Type type)
+        protected override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             var manifestMap = ManifestMap;
             if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             foreach (var item in manifestMap)
             {
                 if (item.Key.IsAssignableFrom(type)) { return item.Value; }
             }
-            ThrowHelper.ThrowArgumentException_Serializer_D(type); return 0;
+            throw ThrowHelper.GetArgumentException_Serializer_D(type);
         }
 
         /// <inheritdoc />
-        public override int Manifest(object obj)
+        public override string Manifest(object obj)
         {
             switch (obj)
             {
@@ -127,7 +127,7 @@ namespace Akka.Remote.Serialization
                     return RemoteRouterConfigManifest;
 
                 default:
-                    ThrowHelper.ThrowArgumentException_Serializer_D(obj); return 0;
+                    throw ThrowHelper.GetArgumentException_Serializer_D(obj);
             }
         }
     }

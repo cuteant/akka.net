@@ -5,6 +5,7 @@ using Akka.Actor;
 using CuteAnt.Buffers;
 using CuteAnt.Reflection;
 using Google.Protobuf;
+using MessagePack;
 
 namespace Akka.Serialization
 {
@@ -116,26 +117,15 @@ namespace Akka.Serialization
         }
 
 
-        public
-#if !NET451
-            unsafe
-#endif
-            static ByteString ToByteString(this in ByteBufferWrapper byteBuffer)
+        public static ByteString ToByteString(this in ByteBufferWrapper byteBuffer)
         {
             if (byteBuffer.IsPooled)
             {
                 var payload = byteBuffer.Payload;
                 var bytes = new byte[payload.Count];
-#if NET451
-                Buffer.BlockCopy(payload.Array, payload.Offset, bytes, 0, bytes.Length);
-#else
 
-                fixed (byte* pSrc = &payload.Array[payload.Offset])
-                fixed (byte* pDst = &bytes[0])
-                {
-                    Buffer.MemoryCopy(pSrc, pDst, bytes.Length, payload.Count);
-                }
-#endif
+                MessagePackBinary.CopyMemory(payload.Array, payload.Offset, bytes, 0, bytes.Length);
+
                 s_bufferPool.Return(payload.Array);
                 return FromBytes(bytes);
             }

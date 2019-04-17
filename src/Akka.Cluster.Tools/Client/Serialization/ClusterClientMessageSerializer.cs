@@ -19,20 +19,20 @@ namespace Akka.Cluster.Tools.Client.Serialization
     /// <summary>
     /// TBD
     /// </summary>
-    public class ClusterClientMessageSerializer : SerializerWithIntegerManifest
+    public class ClusterClientMessageSerializer : SerializerWithStringManifest
     {
         #region manifests
 
-        private const int ContactsManifest = 400;
-        private const int GetContactsManifest = 401;
-        private const int HeartbeatManifest = 402;
-        private const int HeartbeatRspManifest = 403;
+        private const string ContactsManifest = "A";
+        private const string GetContactsManifest = "B";
+        private const string HeartbeatManifest = "C";
+        private const string HeartbeatRspManifest = "D";
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static ClusterClientMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
                 { typeof(ClusterReceptionist.Contacts), ContactsManifest},
                 { typeof(ClusterReceptionist.GetContacts), GetContactsManifest},
@@ -54,7 +54,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
         public ClusterClientMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
@@ -71,12 +71,12 @@ namespace Akka.Cluster.Tools.Client.Serialization
                     manifest = HeartbeatRspManifest;
                     return EmptyBytes;
                 default:
-                    manifest = 0; ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(obj); return null;
+                    throw ThrowHelper.GetArgumentException_Manifest_ClusterClientMessage(obj);
             }
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -89,20 +89,20 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case HeartbeatRspManifest:
                     return ClusterReceptionist.HeartbeatRsp.Instance;
                 default:
-                    ThrowHelper.ThrowArgumentException_Serializer_ClusterClientMessage(manifest); return null;
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterClientMessage(manifest);
             }
         }
 
         /// <inheritdoc />
-        protected override int GetManifest(Type type)
+        protected override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(type); return 0;
+            throw ThrowHelper.GetArgumentException_Manifest_ClusterClientMessage(type);
         }
 
         /// <inheritdoc />
-        public override int Manifest(object o)
+        public override string Manifest(object o)
         {
             switch (o)
             {
@@ -115,7 +115,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case ClusterReceptionist.HeartbeatRsp _:
                     return HeartbeatRspManifest;
                 default:
-                    ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(o); return 0;
+                    throw ThrowHelper.GetArgumentException_Manifest_ClusterClientMessage(o);
             }
         }
 

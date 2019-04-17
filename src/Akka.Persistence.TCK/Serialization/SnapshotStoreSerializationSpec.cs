@@ -167,17 +167,16 @@ namespace Akka.Persistence.TCK.Serialization
         public class MySnapshotSerializer2 : SerializerWithStringManifest
         {
             private const string ContactsManifest = "A";
-            private static readonly byte[] ContactsManifestBytes = StringHelper.UTF8NoBOM.GetBytes(ContactsManifest);
 
             public MySnapshotSerializer2(ExtendedActorSystem system) : base(system) { }
             public override int Identifier => 77126;
 
             /// <inheritdoc />
-            public override byte[] ToBinary(object obj, out byte[] manifest)
+            public override byte[] ToBinary(object obj, out string manifest)
             {
                 if (obj is MySnapshot2 snapshot)
                 {
-                    manifest = ContactsManifestBytes;
+                    manifest = ContactsManifest;
                     return Encoding.UTF8.GetBytes($".{snapshot.Data}");
                 }
                 manifest = null;

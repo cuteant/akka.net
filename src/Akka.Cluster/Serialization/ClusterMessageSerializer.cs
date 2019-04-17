@@ -19,31 +19,31 @@ using AddressData = Akka.Serialization.Protocol.AddressData;
 
 namespace Akka.Cluster.Serialization
 {
-    public class ClusterMessageSerializer : SerializerWithIntegerManifest
+    public class ClusterMessageSerializer : SerializerWithStringManifest
     {
         #region manifests
 
         static class _
         {
-            internal const int HeartbeatManifest = 500;
-            internal const int HeartbeatRspManifest = 501;
-            internal const int GossipEnvelopeManifest = 502;
-            internal const int GossipStatusManifest = 503;
-            internal const int JoinManifest = 504;
-            internal const int WelcomeManifest = 505;
-            internal const int LeaveManifest = 506;
-            internal const int DownManifest = 507;
-            internal const int InitJoinManifest = 508;
-            internal const int InitJoinAckManifest = 509;
-            internal const int InitJoinNackManifest = 510;
-            internal const int ExitingConfirmedManifest = 511;
-            internal const int ClusterRouterPoolManifest = 512;
+            internal const string HeartbeatManifest = "HB";
+            internal const string HeartbeatRspManifest = "HBR";
+            internal const string GossipEnvelopeManifest = "GE";
+            internal const string GossipStatusManifest = "GS";
+            internal const string JoinManifest = "J";
+            internal const string WelcomeManifest = "WC";
+            internal const string LeaveManifest = "L";
+            internal const string DownManifest = "D";
+            internal const string InitJoinManifest = "IJ";
+            internal const string InitJoinAckManifest = "IJA";
+            internal const string InitJoinNackManifest = "IJN";
+            internal const string ExitingConfirmedManifest = "EC";
+            internal const string ClusterRouterPoolManifest = "CRP";
         }
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static ClusterMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
                 [typeof(ClusterHeartbeatSender.Heartbeat)] = _.HeartbeatManifest,
                 [typeof(ClusterHeartbeatSender.HeartbeatRsp)] = _.HeartbeatRspManifest,
@@ -68,7 +68,7 @@ namespace Akka.Cluster.Serialization
         public ClusterMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
@@ -112,12 +112,12 @@ namespace Akka.Cluster.Serialization
                     manifest = _.ClusterRouterPoolManifest;
                     return ClusterRouterPoolToByteArray(pool);
                 default:
-                    manifest = 0; ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(obj); return null;
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterMessage(obj);
             }
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -149,24 +149,24 @@ namespace Akka.Cluster.Serialization
                     return ClusterRouterPoolFrom(bytes);
             }
 
-            ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(manifest); return null;
+            throw ThrowHelper.GetArgumentException_Serializer_ClusterMessage(manifest);
         }
 
         /// <inheritdoc />
-        protected override int GetManifest(Type type)
+        protected override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             var manifestMap = ManifestMap;
             if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             foreach (var item in manifestMap)
             {
                 if (item.Key.IsAssignableFrom(type)) { return item.Value; }
             }
-            ThrowHelper.ThrowArgumentException_Serializer_D(type); return 0;
+            throw ThrowHelper.GetArgumentException_Serializer_D(type);
         }
 
         /// <inheritdoc />
-        public override int Manifest(object obj)
+        public override string Manifest(object obj)
         {
             switch (obj)
             {
@@ -197,7 +197,7 @@ namespace Akka.Cluster.Serialization
                 case ClusterRouterPool pool:
                     return _.ClusterRouterPoolManifest;
                 default:
-                    ThrowHelper.ThrowArgumentException_Serializer_ClusterMessage(obj); return 0;
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterMessage(obj);
             }
         }
 

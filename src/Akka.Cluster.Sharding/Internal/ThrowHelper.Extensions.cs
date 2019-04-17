@@ -192,23 +192,15 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ClusterShardingMessage(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_ClusterShardingMessage(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Can't serialize object of type [{(obj as Type) ?? obj.GetType()}] in [{nameof(ClusterShardingMessageSerializer)}]");
-            }
+            return new ArgumentException($"Can't serialize object of type [{(obj as Type) ?? obj.GetType()}] in [{nameof(ClusterShardingMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_ClusterShardingMessage(int manifest)
+        internal static ArgumentException GetArgumentException_Serializer_ClusterShardingMessage(string manifest)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterShardingMessageSerializer)}]");
-            }
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterShardingMessageSerializer)}]");
         }
 
         #endregion

@@ -1,11 +1,8 @@
 ﻿using System;
-using System.Globalization;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
-using System.Text;
 using Akka.Actor;
 using Akka.Serialization.Protocol;
-using CuteAnt.Collections;
 using CuteAnt.Reflection;
 
 namespace Akka.Serialization
@@ -14,10 +11,9 @@ namespace Akka.Serialization
 
     /// <summary>TBD</summary>
     /// <typeparam name="TManifest"></typeparam>
-    /// <typeparam name="TSerializationManifest"></typeparam>
-    public abstract class SerializerWithManifest<TManifest, TSerializationManifest> : Serializer
+    public abstract class SerializerWithManifest<TManifest> : Serializer
     {
-        /// <summary>Initializes a new instance of the <see cref="SerializerWithManifest{TManifest,TPersistenceManifest}"/> class.</summary>
+        /// <summary>Initializes a new instance of the <see cref="SerializerWithManifest{TManifest}"/> class.</summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
         protected SerializerWithManifest(ExtendedActorSystem system) : base(system) { }
 
@@ -29,8 +25,7 @@ namespace Akka.Serialization
         {
             if (null == source) { return null; }
 
-            var manifest = Manifest(source);
-            var bts = ToBinary(source);
+            var bts = ToBinary(source, out var manifest);
             return FromBinary(bts, manifest);
         }
 
@@ -41,7 +36,7 @@ namespace Akka.Serialization
         /// <param name="obj">The object to serialize </param>
         /// <param name="manifest">The type hint used to deserialize the object contained in the array.</param>
         /// <returns>A byte array containing the serialized object</returns>
-        public abstract byte[] ToBinary(object obj, out TSerializationManifest manifest);
+        public abstract byte[] ToBinary(object obj, out TManifest manifest);
 
         /// <summary>Deserializes a byte array into an object of type <paramref name="type" />.</summary>
         /// <param name="bytes">The array containing the serialized object</param>
@@ -75,7 +70,7 @@ namespace Akka.Serialization
     #region -- SerializerWithStringManifest --
 
     /// <summary>TBD</summary>
-    public abstract class SerializerWithStringManifest : SerializerWithManifest<string, byte[]>
+    public abstract class SerializerWithStringManifest : SerializerWithManifest<string>
     {
         /// <summary>Initializes a new instance of the <see cref="SerializerWithStringManifest"/> class.</summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
@@ -85,84 +80,33 @@ namespace Akka.Serialization
         public sealed override Payload ToPayload(object obj)
         {
             var payload = ToBinary(obj, out var manifest);
-            return new Payload(payload, Identifier, manifest);
+            return new Payload(payload, Identifier, manifest, null);
         }
 
         /// <inheritdoc />
         public sealed override Payload ToPayloadWithAddress(Address address, object obj)
         {
             var payload = Serialization.SerializeWithTransport(system, address, this, obj, out var manifest);
-            return new Payload(payload, Identifier, manifest);
+            return new Payload(payload, Identifier, manifest, null);
         }
 
         /// <inheritdoc />
         public sealed override object FromPayload(in Payload payload)
         {
-            return FromBinary(payload.Message, Encoding.UTF8.GetString(payload.Manifest));
+            return FromBinary(payload.Message, payload.Manifest);
         }
 
         /// <inheritdoc />
         public sealed override ExternalPayload ToExternalPayload(object obj)
         {
-            var payload = ToBinary(obj, out _);
-            return new ExternalPayload(payload, Identifier, Manifest(obj), IsJson, obj.GetType());
+            var payload = ToBinary(obj, out var manifest);
+            return new ExternalPayload(payload, Identifier, manifest, IsJson, obj.GetType());
         }
 
         /// <inheritdoc />
         public sealed override object FromExternalPayload(in ExternalPayload payload)
         {
             return FromBinary(payload.Message, payload.Manifest);
-        }
-    }
-
-    #endregion
-
-    #region -- SerializerWithIntegerManifest --
-
-    /// <summary>TBD</summary>
-    public abstract class SerializerWithIntegerManifest : SerializerWithManifest<int, int>
-    {
-        /// <summary>Initializes a new instance of the <see cref="SerializerWithIntegerManifest"/> class.</summary>
-        /// <param name="system">The actor system to associate with this serializer.</param>
-        protected SerializerWithIntegerManifest(ExtendedActorSystem system) : base(system) { }
-
-        /// <inheritdoc />
-        public sealed override Payload ToPayload(object obj)
-        {
-            var payload = ToBinary(obj, out var manifest);
-            return new Payload(payload, Identifier, manifest);
-        }
-
-        /// <inheritdoc />
-        public sealed override Payload ToPayloadWithAddress(Address address, object obj)
-        {
-            var payload = Serialization.SerializeWithTransport(system, address, this, obj, out var manifest);
-            return new Payload(payload, Identifier, manifest);
-        }
-
-        /// <inheritdoc />
-        public sealed override object FromPayload(in Payload payload)
-        {
-            return FromBinary(payload.Message, payload.ExtensibleData);
-        }
-
-        private static readonly CachedReadConcurrentDictionary<int, string> s_manifestInt32Map =
-            new CachedReadConcurrentDictionary<int, string>();
-        /// <inheritdoc />
-        public sealed override ExternalPayload ToExternalPayload(object obj)
-        {
-            var payload = ToBinary(obj, out var manifest);
-            return new ExternalPayload(payload, Identifier,
-                s_manifestInt32Map.GetOrAdd(manifest, _ => _.ToString(CultureInfo.InvariantCulture)),
-                IsJson, obj.GetType());
-        }
-
-        private static readonly CachedReadConcurrentDictionary<string, int> s_manifestStringMap =
-            new CachedReadConcurrentDictionary<string, int>(StringComparer.Ordinal);
-        /// <inheritdoc />
-        public sealed override object FromExternalPayload(in ExternalPayload payload)
-        {
-            return FromBinary(payload.Message, s_manifestStringMap.GetOrAdd(payload.Manifest, _ => int.Parse(_)));
         }
     }
 
@@ -182,31 +126,19 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public sealed override Payload ToPayload(object obj)
         {
-            var typeKey = TypeSerializer.GetTypeKeyFromType(obj.GetType());
-            return new Payload(ToBinary(obj), Identifier, typeKey.TypeName, typeKey.HashCode);
+            return new Payload(ToBinary(obj), Identifier, null, obj.GetType());
         }
 
         /// <inheritdoc />
         public sealed override Payload ToPayloadWithAddress(Address address, object obj)
         {
-            var typeKey = TypeSerializer.GetTypeKeyFromType(obj.GetType());
-            return new Payload(Serialization.SerializeWithTransport(system, address, this, obj), Identifier, typeKey.TypeName, typeKey.HashCode);
+            return new Payload(Serialization.SerializeWithTransport(system, address, this, obj), Identifier, null, obj.GetType());
         }
 
         /// <inheritdoc />
         public sealed override object FromPayload(in Payload payload)
         {
-            var typeKey = new TypeKey(payload.ExtensibleData, payload.Manifest);
-            Type type = null;
-            try
-            {
-                type = TypeSerializer.GetTypeFromTypeKey(typeKey);
-            }
-            catch (Exception ex)
-            {
-                ThrowSerializationException_D(typeKey, Identifier, ex);
-            }
-            return FromBinary(payload.Message, type);
+            return FromBinary(payload.Message, payload.MessageType);
         }
 
         /// <inheritdoc />
@@ -233,18 +165,6 @@ namespace Akka.Serialization
         [MethodImpl(MethodImplOptions.NoInlining)]
         private static void ThrowSerializationException_D(string typeName, int serializerId, Exception ex)
         {
-            throw GetSerializationException();
-
-            SerializationException GetSerializationException()
-            {
-                return new SerializationException($"Cannot find manifest class [{typeName}] for serializer with id [{serializerId}].", ex);
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static void ThrowSerializationException_D(in TypeKey typeKey, int serializerId, Exception ex)
-        {
-            var typeName = Encoding.UTF8.GetString(typeKey.TypeName);
             throw GetSerializationException();
 
             SerializationException GetSerializationException()

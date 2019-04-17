@@ -122,7 +122,7 @@ namespace Akka.Remote.Tests.Serialization
             var props = Props.Create<BlackHoleActor>().WithDeploy(new Deploy(new RemoteScope(address)));
             var actorRef = remoteSystem.ActorOf(props, "hello");
 
-            var serializer = remoteSystem.Serialization.FindSerializerFor(actorRef).AsInstanceOf<SerializerWithIntegerManifest>();
+            var serializer = remoteSystem.Serialization.FindSerializerFor(actorRef).AsInstanceOf<SerializerWithStringManifest>();
             var serializedBytes = serializer.ToBinary(actorRef);
             var deserialized = serializer.FromBinary(serializedBytes, serializer.Manifest(actorRef));
             deserialized.Should().Be(actorRef);
@@ -360,7 +360,7 @@ namespace Akka.Remote.Tests.Serialization
         public void Serializer_must_reject_deserialization_with_invalid_manifest()
         {
             var serializer = new Akka.Serialization.MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
-            var INVALID = 0; Action comparison = () => serializer.FromBinary(new byte[0], INVALID);
+            Action comparison = () => serializer.FromBinary(new byte[0], "INVALID");
             comparison.Should().Throw<SerializationException>();
         }
 
@@ -368,7 +368,7 @@ namespace Akka.Remote.Tests.Serialization
         public void Serializer_must_reject_deserialization_with_invalid_manifest1()
         {
             var serializer = new Akka.Remote.Serialization.MiscMessageSerializer(Sys.AsInstanceOf<ExtendedActorSystem>());
-            var INVALID = 0; Action comparison = () => serializer.FromBinary(new byte[0], INVALID);
+            Action comparison = () => serializer.FromBinary(new byte[0], "INVALID");
             comparison.Should().Throw<SerializationException>();
         }
 
@@ -381,9 +381,9 @@ namespace Akka.Remote.Tests.Serialization
             Assert.True(type == typeof(Akka.Serialization.MiscMessageSerializer) || type == typeof(Akka.Remote.Serialization.MiscMessageSerializer) || type == typeof(MsgPackTypelessSerializer) || type == typeof(MsgPackSerializer));
             var serializedBytes = serializer.ToBinary(message);
 
-            if (serializer is SerializerWithIntegerManifest)
+            if (serializer is SerializerWithStringManifest)
             {
-                var serializerManifest = (SerializerWithIntegerManifest)serializer;
+                var serializerManifest = (SerializerWithStringManifest)serializer;
                 return (T)serializerManifest.FromBinary(serializedBytes, serializerManifest.Manifest(message));
             }
             return (T)serializer.FromBinary(serializedBytes, typeof(T));

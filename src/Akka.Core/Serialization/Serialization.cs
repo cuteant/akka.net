@@ -94,27 +94,7 @@ namespace Akka.Serialization
         /// <param name="obj"></param>
         /// <param name="manifest"></param>
         /// <returns></returns>
-        public static byte[] SerializeWithTransport(ActorSystem system, Address address, SerializerWithStringManifest serializer, object obj, out byte[] manifest)
-        {
-            var currentTransportInformation = TransportInformationCache;
-            currentTransportInformation.System = system;
-            currentTransportInformation.Address = address;
-
-            var res = serializer.ToBinary(obj, out manifest);
-
-            currentTransportInformation.System = null;
-            currentTransportInformation.Address = null;
-            return res;
-        }
-
-        /// <summary>TBD</summary>
-        /// <param name="system"></param>
-        /// <param name="address"></param>
-        /// <param name="serializer"></param>
-        /// <param name="obj"></param>
-        /// <param name="manifest"></param>
-        /// <returns></returns>
-        public static byte[] SerializeWithTransport(ActorSystem system, Address address, SerializerWithIntegerManifest serializer, object obj, out int manifest)
+        public static byte[] SerializeWithTransport(ActorSystem system, Address address, SerializerWithStringManifest serializer, object obj, out string manifest)
         {
             var currentTransportInformation = TransportInformationCache;
             currentTransportInformation.System = system;

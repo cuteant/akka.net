@@ -189,14 +189,10 @@ namespace Akka.Persistence
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_MessageSerializer(object obj)
+        internal static ArgumentException GetArgumentException_MessageSerializer(object obj)
         {
-            throw GetArgumentException();
-            ArgumentException GetArgumentException()
-            {
-                var objType = obj is Type t ? t : obj?.GetType();
-                return new ArgumentException($"Can't serialize object of type [{objType}] in [{typeof(PersistenceMessageSerializer)}]");
-            }
+            var objType = obj is Type t ? t : obj?.GetType();
+            return new ArgumentException($"Can't serialize object of type [{objType}] in [{typeof(PersistenceMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -211,15 +207,11 @@ namespace Akka.Persistence
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_Serializer_D(object obj)
+        internal static ArgumentException GetArgumentException_Serializer_D(object obj)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                var type = obj as Type;
-                var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
-                return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
-            }
+            var type = obj as Type;
+            var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+            return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -243,13 +235,9 @@ namespace Akka.Persistence
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static object ThrowArgumentException_Serializer(int manifest)
+        internal static ArgumentException GetArgumentException_Serializer(string manifest)
         {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(PersistenceMessageSerializer)}]");
-            }
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${nameof(PersistenceMessageSerializer)}]");
         }
 
         #endregion

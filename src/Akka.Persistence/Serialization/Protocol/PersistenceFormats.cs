@@ -51,7 +51,7 @@ namespace Akka.Persistence.Serialization.Protocol
         public readonly PersistentPayload Payload;
 
         [SerializationConstructor]
-        public UnconfirmedDelivery(long deliveryId, string destination, PersistentPayload payload)
+        public UnconfirmedDelivery(long deliveryId, string destination, in PersistentPayload payload)
         {
             DeliveryId = deliveryId;
             Destination = destination;
@@ -106,7 +106,7 @@ namespace Akka.Persistence.Serialization.Protocol
         public readonly long TimeoutMillis;
 
         [SerializationConstructor]
-        public PersistentFSMSnapshot(string stateIdentifier, PersistentPayload data, long timeoutMillis)
+        public PersistentFSMSnapshot(string stateIdentifier, in PersistentPayload data, long timeoutMillis)
         {
             StateIdentifier = stateIdentifier;
             Data = data;

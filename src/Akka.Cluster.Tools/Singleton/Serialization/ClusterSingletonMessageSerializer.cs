@@ -16,20 +16,20 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
     /// <summary>
     /// TBD
     /// </summary>
-    public class ClusterSingletonMessageSerializer : SerializerWithIntegerManifest
+    public class ClusterSingletonMessageSerializer : SerializerWithStringManifest
     {
         #region manifest
 
-        private const int HandOverToMeManifest = 440;
-        private const int HandOverInProgressManifest = 441;
-        private const int HandOverDoneManifest = 442;
-        private const int TakeOverFromMeManifest = 443;
+        private const string HandOverToMeManifest = "A";
+        private const string HandOverInProgressManifest = "B";
+        private const string HandOverDoneManifest = "C";
+        private const string TakeOverFromMeManifest = "D";
 
-        private static readonly Dictionary<Type, int> ManifestMap;
+        private static readonly Dictionary<Type, string> ManifestMap;
 
         static ClusterSingletonMessageSerializer()
         {
-            ManifestMap = new Dictionary<Type, int>
+            ManifestMap = new Dictionary<Type, string>
             {
                 { typeof(HandOverToMe), HandOverToMeManifest},
                 { typeof(HandOverInProgress), HandOverInProgressManifest},
@@ -49,7 +49,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
         public ClusterSingletonMessageSerializer(ExtendedActorSystem system) : base(system) { }
 
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj, out int manifest)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
@@ -66,12 +66,12 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                     manifest = TakeOverFromMeManifest;
                     return EmptyBytes;
                 default:
-                    manifest = 0; ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage(obj); return null;
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterSingletonMessage(obj);
             }
         }
 
         /// <inheritdoc />
-        public override object FromBinary(byte[] bytes, int manifest)
+        public override object FromBinary(byte[] bytes, string manifest)
         {
             switch (manifest)
             {
@@ -84,20 +84,20 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMeManifest:
                     return TakeOverFromMe.Instance;
                 default:
-                    ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage(manifest); return null;
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterSingletonMessage(manifest);
             }
         }
 
         /// <inheritdoc />
-        protected override int GetManifest(Type type)
+        protected override string GetManifest(Type type)
         {
-            if (null == type) { return 0; }
+            if (null == type) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
-            ThrowHelper.ThrowArgumentException_Manifest_ClusterClientMessage(type); return 0;
+            throw ThrowHelper.GetArgumentException_Manifest_ClusterClientMessage(type);
         }
 
         /// <inheritdoc />
-        public override int Manifest(object o)
+        public override string Manifest(object o)
         {
             switch (o)
             {
@@ -110,7 +110,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMe _:
                     return TakeOverFromMeManifest;
                 default:
-                    ThrowHelper.ThrowArgumentException_Serializer_ClusterSingletonMessage(o); return 0;
+                    throw ThrowHelper.GetArgumentException_Serializer_ClusterSingletonMessage(o);
             }
         }
     }
