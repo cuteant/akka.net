@@ -181,7 +181,7 @@ namespace Akka.Dispatch
         public override void Execute(IRunnable run)
         {
             if (Volatile.Read(ref _shuttingDown) == Constants.True) AkkaThrowHelper.ThrowRejectedExecutionException();
-            _dedicatedThreadPool.QueueUserWorkItem(run.Run);
+            _dedicatedThreadPool.QueueUserWorkItem(run);
         }
 
         /// <summary>

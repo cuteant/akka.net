@@ -516,6 +516,12 @@ namespace Akka
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static NotSupportedException GetNotSupportedException()
+        {
+            return new NotSupportedException();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNotSupportedException(AkkaExceptionResource resource)
         {
             throw GetException();
