@@ -10,6 +10,8 @@ using System.Linq;
 using System.Runtime.InteropServices;
 using System.Threading;
 using System.Threading.Tasks;
+using CuteAnt.Collections;
+using Akka;
 
 namespace Helios.Concurrency
 {
@@ -148,7 +150,7 @@ namespace Helios.Concurrency
     /// <summary>
     /// TaskScheduler for working with a <see cref="DedicatedThreadPool"/> instance
     /// </summary>
-    internal class DedicatedThreadPoolTaskScheduler : TaskScheduler
+    internal class DedicatedThreadPoolTaskScheduler : TaskScheduler, IRunnable
     {
         // Indicates whether the current thread is processing work items.
         [ThreadStatic]
@@ -159,7 +161,7 @@ namespace Helios.Concurrency
         /// </summary>
         private volatile int _parallelWorkers = 0;
 
-        private readonly LinkedList<Task> _tasks = new LinkedList<Task>();
+        private readonly Deque<Task> _tasks = new Deque<Task>();
 
         private readonly DedicatedThreadPool _pool;
 
@@ -180,7 +182,7 @@ namespace Helios.Concurrency
         {
             lock (_tasks)
             {
-                _tasks.AddLast(task);
+                _tasks.AddToBack/*AddLast*/(task);
             }
 
             EnsureWorkerRequested();
@@ -240,7 +242,7 @@ namespace Helios.Concurrency
 
                 //should this be immutable?
                 if (lockTaken) return _tasks;
-                else throw new NotSupportedException();
+                else throw AkkaThrowHelper.GetNotSupportedException();
             }
             finally
             {
@@ -279,37 +281,42 @@ namespace Helios.Concurrency
 
         private void RequestWorker()
         {
-            _pool.QueueUserWorkItem(() =>
-            {
-                // this thread is now available for inlining
-                _currentThreadIsRunningTasks = true;
-                try
-                {
-                    // Process all available items in the queue. 
-                    while (true)
-                    {
-                        Task item;
-                        lock (_tasks)
-                        {
-                            // done processing
-                            if (_tasks.Count == 0)
-                            {
-                                ReleaseWorker();
-                                break;
-                            }
+            _pool.QueueUserWorkItem(this);
+        }
 
-                            // Get the next item from the queue
-                            item = _tasks.First.Value;
-                            _tasks.RemoveFirst();
+        void IRunnable.Run() => Loop(this);
+        private static void Loop(DedicatedThreadPoolTaskScheduler scheduler)
+        {
+            // this thread is now available for inlining
+            _currentThreadIsRunningTasks = true;
+            try
+            {
+                // Process all available items in the queue. 
+                while (true)
+                {
+                    Task item;
+                    var tasks = scheduler._tasks;
+                    lock (tasks)
+                    {
+                        // done processing
+                        if (0u >= (uint)tasks.Count)
+                        {
+                            scheduler.ReleaseWorker();
+                            break;
                         }
 
-                        // Execute the task we pulled out of the queue 
-                        TryExecuteTask(item);
+                        // Get the next item from the queue
+                        //item = tasks.First.Value;
+                        //tasks.RemoveFirst();
+                        item = tasks.RemoveFromFront();
                     }
+
+                    // Execute the task we pulled out of the queue 
+                    scheduler.TryExecuteTask(item);
                 }
-                // We're done processing items on the current thread 
-                finally { _currentThreadIsRunningTasks = false; }
-            });
+            }
+            // We're done processing items on the current thread 
+            finally { _currentThreadIsRunningTasks = false; }
         }
     }
 
@@ -344,19 +351,40 @@ namespace Helios.Concurrency
         private readonly ThreadPoolWorkQueue _workQueue;
         private readonly PoolWorker[] _workers;
 
-        /// <summary>
-        /// TBD
-        /// </summary>
+        /// <summary>TBD</summary>
         /// <exception cref="ArgumentNullException">
-        /// This exception is thrown if the given <paramref name="work"/> item is undefined.
+        /// This exception is thrown if the given <paramref name="runnable"/> item is undefined.
         /// </exception>
         /// <returns>TBD</returns>
-        public bool QueueUserWorkItem(Action work)
+        public bool QueueUserWorkItem(IRunnable runnable)
         {
-            if (work == null)
-                throw new ArgumentNullException(nameof(work), "Work item cannot be null.");
+            if (runnable == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.runnable);
 
-            return _workQueue.TryAdd(work);
+            return _workQueue.TryAdd(runnable);
+        }
+
+        /// <summary>TBD</summary>
+        /// <exception cref="ArgumentNullException">
+        /// This exception is thrown if the given <paramref name="callback"/> item is undefined.
+        /// </exception>
+        /// <returns>TBD</returns>
+        public bool QueueUserWorkItem(Action callback)
+        {
+            if (callback == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.callback);
+
+            return _workQueue.TryAdd(new ActionRunnable(callback));
+        }
+
+        /// <summary>TBD</summary>
+        /// <exception cref="ArgumentNullException">
+        /// This exception is thrown if the given <paramref name="callback"/> item is undefined.
+        /// </exception>
+        /// <returns>TBD</returns>
+        public bool QueueUserWorkItem(Action<object> callback, object state)
+        {
+            if (callback == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.callback);
+
+            return _workQueue.TryAdd(new ActionWithStateRunnable(callback, state));
         }
 
         /// <summary>
@@ -384,7 +412,7 @@ namespace Helios.Concurrency
             Task.WaitAll(_workers.Select(worker => worker.ThreadExit).ToArray(), timeout);
         }
 
-#region Pool worker implementation
+        #region Pool worker implementation
 
         private class PoolWorker
         {
@@ -425,11 +453,11 @@ namespace Helios.Concurrency
             {
                 try
                 {
-                    foreach (var action in _pool._workQueue.GetConsumingEnumerable())
+                    foreach (var workItem in _pool._workQueue.GetConsumingEnumerable())
                     {
                         try
                         {
-                            action();
+                            workItem.Run();
                         }
                         catch (Exception ex)
                         {
@@ -444,16 +472,33 @@ namespace Helios.Concurrency
             }
         }
 
-#endregion
+        #endregion
 
-#region WorkQueue implementation
+        #region WorkQueue implementation
 
-        private class ThreadPoolWorkQueue
+        private sealed class QueueWorkItemCallback
+        {
+            private readonly Action<object> _callback; // SOS's ThreadPool command depends on this name
+            private readonly object _state;
+
+            public QueueWorkItemCallback(Action<object> callback, object state)
+            {
+                _callback = callback;
+                _state = state;
+            }
+
+            public void Execute()
+            {
+                _callback.Invoke(_state);
+            }
+        }
+
+        private sealed class ThreadPoolWorkQueue
         {
             private static readonly int ProcessorCount = Environment.ProcessorCount;
             private const int CompletedState = 1;
 
-            private readonly ConcurrentQueue<Action> _queue = new ConcurrentQueue<Action>();
+            private readonly ConcurrentQueue<IRunnable> _queue = new ConcurrentQueue<IRunnable>();
             private readonly UnfairSemaphore _semaphore = new UnfairSemaphore();
             private int _outstandingRequests;
             private int _isAddingCompleted;
@@ -463,7 +508,7 @@ namespace Helios.Concurrency
                 get { return Volatile.Read(ref _isAddingCompleted) == CompletedState; }
             }
 
-            public bool TryAdd(Action work)
+            public bool TryAdd(IRunnable runnable)
             {
                 // If TryAdd returns true, it's guaranteed the work item will be executed.
                 // If it returns false, it's also guaranteed the work item won't be executed.
@@ -471,25 +516,24 @@ namespace Helios.Concurrency
                 if (IsAddingCompleted)
                     return false;
 
-                _queue.Enqueue(work);
+                _queue.Enqueue(runnable);
                 EnsureThreadRequested();
 
                 return true;
             }
 
-            public IEnumerable<Action> GetConsumingEnumerable()
+            public IEnumerable<IRunnable> GetConsumingEnumerable()
             {
                 while (true)
                 {
-                    Action work;
-                    if (_queue.TryDequeue(out work))
+                    if (_queue.TryDequeue(out var workitem))
                     {
-                        yield return work;
+                        yield return workitem;
                     }
                     else if (IsAddingCompleted)
                     {
-                        while (_queue.TryDequeue(out work))
-                            yield return work;
+                        while (_queue.TryDequeue(out workitem))
+                            yield return workitem;
 
                         break;
                     }
@@ -570,9 +614,9 @@ namespace Helios.Concurrency
             }
         }
 
-#endregion
+        #endregion
 
-#region UnfairSemaphore implementation
+        #region UnfairSemaphore implementation
 
         // This class has been translated from:
         // https://github.com/dotnet/coreclr/blob/97433b9d153843492008652ff6b7c3bf4d9ff31c/src/vm/win32threadpool.h#L124
@@ -799,7 +843,7 @@ namespace Helios.Concurrency
             }
         }
 
-#endregion
+        #endregion
     }
 }
 
