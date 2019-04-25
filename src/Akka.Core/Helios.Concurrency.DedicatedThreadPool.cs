@@ -476,23 +476,6 @@ namespace Helios.Concurrency
 
         #region WorkQueue implementation
 
-        private sealed class QueueWorkItemCallback
-        {
-            private readonly Action<object> _callback; // SOS's ThreadPool command depends on this name
-            private readonly object _state;
-
-            public QueueWorkItemCallback(Action<object> callback, object state)
-            {
-                _callback = callback;
-                _state = state;
-            }
-
-            public void Execute()
-            {
-                _callback.Invoke(_state);
-            }
-        }
-
         private sealed class ThreadPoolWorkQueue
         {
             private static readonly int ProcessorCount = Environment.ProcessorCount;

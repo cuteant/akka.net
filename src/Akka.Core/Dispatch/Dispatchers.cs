@@ -74,13 +74,21 @@ namespace Akka.Dispatch
     /// </summary>
     internal sealed class PartialTrustThreadPoolExecutorService : ThreadPoolExecutorService
     {
+#if NETCOREAPP
+        static readonly Action<IRunnable> Executor0 = run => run.Run();
+#endif
+
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="run">TBD</param>
         public override void Execute(IRunnable run)
         {
+#if NETCOREAPP
+            ThreadPool.QueueUserWorkItem(Executor0, run, false);
+#else
             ThreadPool.QueueUserWorkItem(Executor, run);
+#endif
         }
 
         /// <summary>
@@ -456,7 +464,7 @@ namespace Akka.Dispatch
             if (deadlineTime.Ticks > 0)
                 deadlineTimeTicks = deadlineTime.Ticks;
 
-            _instance = new Dispatcher(this, config.GetString("id"), 
+            _instance = new Dispatcher(this, config.GetString("id"),
                 config.GetInt("throughput"),
                 deadlineTimeTicks,
                 ConfigureExecutor(),

@@ -551,7 +551,21 @@ namespace Akka.Remote
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static EndpointException GetEndpointException_FailedToWriteMessageToTheTransport(Exception ex)
+        {
+            return new EndpointException("Failed to write message to the transport", ex);
+        }
+
         #endregion
+
+        // EndpointDisassociatedException
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static EndpointDisassociatedException GetEndpointDisassociatedException_Disassociated()
+        {
+            return new EndpointDisassociatedException("Disassociated");
+        }
 
         #region -- RemoteTransportException --
 

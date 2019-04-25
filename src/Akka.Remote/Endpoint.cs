@@ -1329,7 +1329,7 @@ namespace Akka.Remote
                 case Terminated t:
                     if (_reader == null || t.ActorRef.Equals(_reader))
                     {
-                        PublishAndThrow(new EndpointDisassociatedException("Disassociated"), LogLevel.DebugLevel);
+                        PublishAndThrow(ThrowHelper.GetEndpointDisassociatedException_Disassociated(), LogLevel.DebugLevel);
                     }
                     break;
 
@@ -1382,6 +1382,7 @@ namespace Akka.Remote
 
         private Deadline NewAckDeadline() => Deadline.Now + Settings.SysMsgAckTimeout;
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void PublishAndThrow(Exception reason, LogLevel level, bool needToThrow = true)
         {
             switch (reason)
@@ -1542,7 +1543,8 @@ namespace Akka.Remote
                 }
 #endif
 
-                var pdu = _codec.ConstructMessage(send.Recipient.LocalAddressToUse, send.Recipient,
+                var recipient = send.Recipient;
+                var pdu = _codec.ConstructMessage(recipient.LocalAddressToUse, recipient,
                     this.SerializeMessage(send.Message), send.SenderOption, send.Seq, _lastAck);
 
 #if DEBUG
@@ -1589,7 +1591,7 @@ namespace Akka.Remote
             }
             catch (Exception ex)
             {
-                PublishAndThrow(new EndpointException("Failed to write message to the transport", ex),
+                PublishAndThrow(ThrowHelper.GetEndpointException_FailedToWriteMessageToTheTransport(ex),
                     LogLevel.ErrorLevel);
             }
 
