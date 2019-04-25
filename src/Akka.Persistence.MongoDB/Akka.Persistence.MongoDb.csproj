@@ -3,7 +3,7 @@
   <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0;net471;net452</TargetFrameworks>
     <RootNamespace>Akka.Persistence.MongoDb</RootNamespace>
     <AssemblyName>Akka.Persistence.MongoDb</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -25,7 +25,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Akka.Persistence\Akka.Persistence.csproj" />
+    <ProjectReference Include="..\Akka.Persistence.Query\Akka.Persistence.Query.csproj" />
   </ItemGroup>
 
 </Project>
