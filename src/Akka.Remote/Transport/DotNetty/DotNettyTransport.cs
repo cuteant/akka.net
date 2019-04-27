@@ -407,12 +407,16 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 if (TransferBatchSize > 1)
                 {
-                    var handler = new TcpBatchClientHandler(this, Logging.GetLogger(System, typeof(TcpBatchClientHandler)), remoteAddress);
+                    var handler = !Settings.EnableMsgpackPooling ?
+                        new TcpBatchClientHandler(this, Logging.GetLogger(System, typeof(TcpBatchClientHandler)), remoteAddress) :
+                        (IChannelHandler)new TcpBatchClientHandlerWithPooling(this, Logging.GetLogger(System, typeof(TcpBatchClientHandlerWithPooling)), remoteAddress);
                     pipeline.AddLast("ClientHandler", handler);
                 }
                 else
                 {
-                    var handler = new TcpClientHandler(this, Logging.GetLogger(System, typeof(TcpClientHandler)), remoteAddress);
+                    var handler = !Settings.EnableMsgpackPooling ?
+                        new TcpClientHandler(this, Logging.GetLogger(System, typeof(TcpClientHandler)), remoteAddress) :
+                        (IChannelHandler)new TcpClientHandlerWithPooling(this, Logging.GetLogger(System, typeof(TcpClientHandlerWithPooling)), remoteAddress);
                     pipeline.AddLast("ClientHandler", handler);
                 }
             }
@@ -432,12 +436,16 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 if (TransferBatchSize > 1)
                 {
-                    var handler = new TcpBatchServerHandler(this, Logging.GetLogger(System, typeof(TcpBatchServerHandler)), AssociationListenerPromise.Task);
+                    var handler = !Settings.EnableMsgpackPooling ?
+                        new TcpBatchServerHandler(this, Logging.GetLogger(System, typeof(TcpBatchServerHandler)), AssociationListenerPromise.Task) :
+                        (IChannelHandler)new TcpBatchServerHandlerWithPooling(this, Logging.GetLogger(System, typeof(TcpBatchServerHandlerWithPooling)), AssociationListenerPromise.Task);
                     pipeline.AddLast("ServerHandler", handler);
                 }
                 else
                 {
-                    var handler = new TcpServerHandler(this, Logging.GetLogger(System, typeof(TcpServerHandler)), AssociationListenerPromise.Task);
+                    var handler = !Settings.EnableMsgpackPooling ?
+                        new TcpServerHandler(this, Logging.GetLogger(System, typeof(TcpServerHandler)), AssociationListenerPromise.Task) :
+                        (IChannelHandler)new TcpServerHandlerWithPooling(this, Logging.GetLogger(System, typeof(TcpServerHandlerWithPooling)), AssociationListenerPromise.Task);
                     pipeline.AddLast("ServerHandler", handler);
                 }
             }

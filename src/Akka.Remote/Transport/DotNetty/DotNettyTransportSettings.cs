@@ -103,6 +103,7 @@ namespace Akka.Remote.Transport.DotNetty
                 logTransport: config.HasPath("log-transport") && config.GetBoolean("log-transport"),
                 byteOrder: order,
                 enableBufferPooling: config.GetBoolean("enable-pooling", true),
+                enableMsgpackPooling: config.GetBoolean("enable-msgpack-pooling", false),
                 globalSettings: config.HasPath("global") ? DotNettyGlobalSettints.CreateDefault(config.GetConfig("global")) : null);
         }
 
@@ -204,13 +205,15 @@ namespace Akka.Remote.Transport.DotNetty
         /// setting to <c>false</c> to disable pooling and work-around this issue at the cost of some performance.</summary>
         public readonly bool EnableBufferPooling;
 
+        public readonly bool EnableMsgpackPooling;
+
         public readonly DotNettyGlobalSettints Global;
 
         public DotNettyTransportSettings(TransportMode transportMode, bool enableLibuv, bool enableSsl, TimeSpan connectTimeout, string hostname, string publicHostname,
             int port, int? publicPort, int serverSocketWorkerPoolSize, int clientSocketWorkerPoolSize, int maxFrameSize, int transferBatchSize, SslSettings ssl,
             bool dnsUseIpv6, bool tcpReuseAddr, bool tcpReusePort, bool tcpKeepAlive, bool tcpNoDelay, int tcpLinger, int backlog, bool enforceIpFamily,
             int? receiveBufferSize, int? sendBufferSize, int? writeBufferHighWaterMark, int? writeBufferLowWaterMark, bool backwardsCompatibilityModeEnabled,
-            bool logTransport, ByteOrder byteOrder, bool enableBufferPooling, DotNettyGlobalSettints globalSettings)
+            bool logTransport, ByteOrder byteOrder, bool enableBufferPooling, bool enableMsgpackPooling, DotNettyGlobalSettints globalSettings)
         {
             if (maxFrameSize < 32000) throw new ArgumentException("maximum-frame-size must be at least 32000 bytes", nameof(maxFrameSize));
 
@@ -243,6 +246,7 @@ namespace Akka.Remote.Transport.DotNetty
             LogTransport = logTransport;
             ByteOrder = byteOrder;
             EnableBufferPooling = enableBufferPooling;
+            EnableMsgpackPooling = enableMsgpackPooling;
             Global = globalSettings;
         }
     }

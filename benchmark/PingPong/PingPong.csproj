@@ -3,7 +3,14 @@
   <PropertyGroup>
     <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.2;net48</TargetFrameworks>
+  </PropertyGroup>
+
+  <PropertyGroup>
     <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <RetainVMGarbageCollection>true</RetainVMGarbageCollection>
+    <ThreadPoolMinThreads>100</ThreadPoolMinThreads>
+    <!--<ThreadPoolMaxThreads>25</ThreadPoolMaxThreads>-->
   </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">

@@ -323,9 +323,37 @@ namespace Akka.Remote.Transport.DotNetty
         }
     }
 
+    internal sealed class TcpServerHandlerWithPooling : TcpServerHandler<TcpAssociationHandleWithPoolingFactory>
+    {
+        public TcpServerHandlerWithPooling(DotNettyTransport transport, ILoggingAdapter log, Task<IAssociationEventListener> associationEventListener)
+            : base(transport, log, associationEventListener) { }
+
+        public override void ChannelRead(IChannelHandlerContext context, object message)
+        {
+            var buf = (IByteBuffer)message;
+            if (buf.ReadableBytes > 0)
+            {
+                // no need to copy the byte buffer contents; ByteString does that automatically
+                //var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
+                var bytes = buf.GetIoBuffer();
+
+                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(bytes, DefaultResolver)));
+            }
+
+            // decrease the reference count to 0 (releases buffer)
+            buf.Release(); //ReferenceCountUtil.SafeRelease(message);
+        }
+    }
+
     internal sealed class TcpBatchServerHandler : TcpServerHandler<TcpBatchAssociationHandleFactory>
     {
         public TcpBatchServerHandler(DotNettyTransport transport, ILoggingAdapter log, Task<IAssociationEventListener> associationEventListener)
+            : base(transport, log, associationEventListener) { }
+    }
+
+    internal sealed class TcpBatchServerHandlerWithPooling : TcpServerHandler<TcpBatchAssociationHandleWithPoolingFactory>
+    {
+        public TcpBatchServerHandlerWithPooling(DotNettyTransport transport, ILoggingAdapter log, Task<IAssociationEventListener> associationEventListener)
             : base(transport, log, associationEventListener) { }
     }
 
@@ -374,9 +402,31 @@ namespace Akka.Remote.Transport.DotNetty
         Task<AssociationHandle> StatusFuture { get; }
     }
 
-    internal sealed class TcpClientHandler : TcpClientHandler<TcpAssociationHandleFactory>
+    internal class TcpClientHandler : TcpClientHandler<TcpAssociationHandleFactory>
     {
         public TcpClientHandler(DotNettyTransport transport, ILoggingAdapter log, Address remoteAddress)
+            : base(transport, log, remoteAddress) { }
+
+        public override void ChannelRead(IChannelHandlerContext context, object message)
+        {
+            var buf = (IByteBuffer)message;
+            if (buf.ReadableBytes > 0)
+            {
+                // no need to copy the byte buffer contents; ByteString does that automatically
+                //var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
+                var bytes = buf.GetIoBuffer();
+
+                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(bytes, DefaultResolver)));
+            }
+
+            // decrease the reference count to 0 (releases buffer)
+            buf.Release(); //ReferenceCountUtil.SafeRelease(message);
+        }
+    }
+
+    internal class TcpClientHandlerWithPooling : TcpClientHandler<TcpAssociationHandleWithPoolingFactory>
+    {
+        public TcpClientHandlerWithPooling(DotNettyTransport transport, ILoggingAdapter log, Address remoteAddress)
             : base(transport, log, remoteAddress) { }
 
         public override void ChannelRead(IChannelHandlerContext context, object message)
@@ -399,6 +449,12 @@ namespace Akka.Remote.Transport.DotNetty
     internal sealed class TcpBatchClientHandler : TcpClientHandler<TcpBatchAssociationHandleFactory>
     {
         public TcpBatchClientHandler(DotNettyTransport transport, ILoggingAdapter log, Address remoteAddress)
+            : base(transport, log, remoteAddress) { }
+    }
+
+    internal sealed class TcpBatchClientHandlerWithPooling : TcpClientHandler<TcpBatchAssociationHandleWithPoolingFactory>
+    {
+        public TcpBatchClientHandlerWithPooling(DotNettyTransport transport, ILoggingAdapter log, Address remoteAddress)
             : base(transport, log, remoteAddress) { }
     }
 
@@ -430,19 +486,18 @@ namespace Akka.Remote.Transport.DotNetty
 
     #region == class TcpAssociationHandle ==
 
-    internal sealed class TcpBatchAssociationHandle : AssociationHandle
+    internal class TcpBatchAssociationHandle : AssociationHandle
     {
-        private static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
+        protected static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
 
-        private readonly IChannel _channel;
+        protected readonly IChannel _channel;
 
-        private readonly int _batchSize;
-        private readonly object _gate = new object();
-        private int _status = TransportStatus.Idle;
-        private readonly ConcurrentQueue<object> _deque = new ConcurrentQueue<object>();
+        protected readonly int _batchSize;
+        protected int _status = TransportStatus.Idle;
+        protected readonly ConcurrentQueue<object> _queue = new ConcurrentQueue<object>();
 
-        private int _channelStatus = ChannelStatus.Unknow;
-        private bool IsWritable
+        protected int _channelStatus = ChannelStatus.Unknow;
+        protected bool IsWritable
         {
             [MethodImpl(MethodImplOptions.AggressiveInlining)]
             get
@@ -479,10 +534,10 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (IsWritable)
             {
-                _deque.Enqueue(payload);
+                _queue.Enqueue(payload);
                 if (TransportStatus.Idle == Interlocked.CompareExchange(ref _status, TransportStatus.Busy, TransportStatus.Idle))
                 {
-                    Task.Run(ProcessMessagesAsync);
+                    Task.Factory.StartNew(s_processMessagesFunc, this, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
                 }
                 return true;
             }
@@ -495,48 +550,65 @@ namespace Akka.Remote.Transport.DotNetty
             _channel.CloseAsync();
         }
 
-        private async Task<bool> ProcessMessagesAsync()
+        static readonly Func<object, Task<bool>> s_processMessagesFunc = s => ProcessMessagesAsync(s);
+        private static async Task<bool> ProcessMessagesAsync(object state)
         {
-            var batch = new List<object>(_batchSize);
+            var associationHandle = (TcpBatchAssociationHandle)state;
+
+            var queue = associationHandle._queue;
+            var batchSize = associationHandle._batchSize;
+            var channel = associationHandle._channel;
+
+            var batch = new List<object>(batchSize);
             while (true)
             {
                 batch.Clear();
 
-                while (_deque.TryDequeue(out var msg))
+                while (queue.TryDequeue(out var msg))
                 {
                     batch.Add(msg);
-                    if (batch.Count >= _batchSize) { break; }
+                    if (batch.Count >= batchSize) { break; }
                 }
 
-                var payload = MessagePackSerializer.Serialize<object>(batch, s_defaultResolver);
-                if (_channel.Active) // _channel.Open && _channel.IsWritable
+                if (channel.Active) // _channel.Open && _channel.IsWritable
                 {
-                    await _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload));
+                    await channel.WriteAndFlushAsync(Serialize(batch));
 
-                    Interlocked.CompareExchange(ref _channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
+                    Interlocked.CompareExchange(ref associationHandle._channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
                 }
                 else
                 {
-                    Interlocked.Exchange(ref _channelStatus, ChannelStatus.Closed);
-                    Interlocked.Exchange(ref _status, TransportStatus.Idle);
+                    Interlocked.Exchange(ref associationHandle._channelStatus, ChannelStatus.Closed);
+                    Interlocked.Exchange(ref associationHandle._status, TransportStatus.Idle);
                     return false;
                 }
 
-                if (_deque.IsEmpty)
+                if (queue.IsEmpty)
                 {
-                    Interlocked.Exchange(ref _status, TransportStatus.Idle);
+                    Interlocked.Exchange(ref associationHandle._status, TransportStatus.Idle);
                     return true;
                 }
             }
         }
 
-        static class TransportStatus
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static IByteBuffer Serialize(object obj)
+        {
+            var formatter = s_defaultResolver.GetFormatterWithVerify<object>();
+
+            var idx = 0;
+            var writer = new MessagePackWriter(true);
+            formatter.Serialize(ref writer, ref idx, obj, s_defaultResolver);
+            return Unpooled.WrappedBuffer(writer.ToArray(idx));
+        }
+
+        protected static class TransportStatus
         {
             public const int Idle = 0;
             public const int Busy = 1;
         }
 
-        static class ChannelStatus
+        protected static class ChannelStatus
         {
             public const int Unknow = 0;
             public const int Open = 1;
@@ -544,11 +616,87 @@ namespace Akka.Remote.Transport.DotNetty
         }
     }
 
-    internal sealed class TcpAssociationHandle : AssociationHandle
+    internal sealed class TcpBatchAssociationHandleWithPooling : TcpBatchAssociationHandle
     {
-        private static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
+        public TcpBatchAssociationHandleWithPooling(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
+            : base(localAddress, remoteAddress, transport, channel)
+        {
+        }
 
-        private readonly IChannel _channel;
+        public override bool Write(object payload)
+        {
+            if (IsWritable)
+            {
+                _queue.Enqueue(payload);
+                if (TransportStatus.Idle == Interlocked.CompareExchange(ref _status, TransportStatus.Busy, TransportStatus.Idle))
+                {
+                    Task.Factory.StartNew(s_processMessagesFunc, this, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
+                }
+                return true;
+            }
+            return false;
+        }
+
+
+        static readonly Func<object, Task<bool>> s_processMessagesFunc = s => ProcessMessagesAsync(s);
+        private static async Task<bool> ProcessMessagesAsync(object state)
+        {
+            var associationHandle = (TcpBatchAssociationHandleWithPooling)state;
+
+            var queue = associationHandle._queue;
+            var batchSize = associationHandle._batchSize;
+            var channel = associationHandle._channel;
+
+            var batch = new List<object>(batchSize);
+            while (true)
+            {
+                batch.Clear();
+
+                while (queue.TryDequeue(out var msg))
+                {
+                    batch.Add(msg);
+                    if (batch.Count >= batchSize) { break; }
+                }
+
+                if (channel.Active) // _channel.Open && _channel.IsWritable
+                {
+                    await channel.WriteAndFlushAsync(Serialize(batch));
+
+                    Interlocked.CompareExchange(ref associationHandle._channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
+                }
+                else
+                {
+                    Interlocked.Exchange(ref associationHandle._channelStatus, ChannelStatus.Closed);
+                    Interlocked.Exchange(ref associationHandle._status, TransportStatus.Idle);
+                    return false;
+                }
+
+                if (queue.IsEmpty)
+                {
+                    Interlocked.Exchange(ref associationHandle._status, TransportStatus.Idle);
+                    return true;
+                }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static IByteBuffer Serialize(object obj)
+        {
+            var formatter = s_defaultResolver.GetFormatterWithVerify<object>();
+
+            var idx = 0;
+            var writer = new MessagePackWriter(false);
+            formatter.Serialize(ref writer, ref idx, obj, s_defaultResolver);
+            writer.DiscardBuffer(out var arrayPool, out var buffer);
+            return ArrayPooled.WrappedBuffer(arrayPool, buffer, 0, idx);
+        }
+    }
+
+    internal class TcpAssociationHandle : AssociationHandle
+    {
+        protected static readonly IFormatterResolver s_defaultResolver = MessagePack.Resolvers.TypelessContractlessStandardResolver.Instance;
+
+        protected readonly IChannel _channel;
 
         public TcpAssociationHandle(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
             : base(localAddress, remoteAddress)
@@ -560,16 +708,58 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (_channel.Active) // _channel.Open && _channel.IsWritable
             {
-                var payload = MessagePackSerializer.Serialize<object>(msg, s_defaultResolver);
-                _channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload));
+                //var payload = MessagePackSerializer.Serialize<object>(msg, s_defaultResolver);
+                //_channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload));
+                _channel.WriteAndFlushAsync(Serialize(msg));
                 return true;
             }
             return false;
         }
 
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static IByteBuffer Serialize(object obj)
+        {
+            var formatter = s_defaultResolver.GetFormatterWithVerify<object>();
+
+            var idx = 0;
+            var writer = new MessagePackWriter(true);
+            formatter.Serialize(ref writer, ref idx, obj, s_defaultResolver);
+            return Unpooled.WrappedBuffer(writer.ToArray(idx));
+        }
+
         public override void Disassociate()
         {
             _channel.CloseAsync();
+        }
+    }
+
+    internal sealed class TcpAssociationHandleWithPooling : TcpAssociationHandle
+    {
+        public TcpAssociationHandleWithPooling(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
+            : base(localAddress, remoteAddress, transport, channel)
+        {
+        }
+
+        public override bool Write(object msg)
+        {
+            if (_channel.Active) // _channel.Open && _channel.IsWritable
+            {
+                _channel.WriteAndFlushAsync(Serialize(msg));
+                return true;
+            }
+            return false;
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        private static IByteBuffer Serialize(object obj)
+        {
+            var formatter = s_defaultResolver.GetFormatterWithVerify<object>();
+
+            var idx = 0;
+            var writer = new MessagePackWriter(false);
+            formatter.Serialize(ref writer, ref idx, obj, s_defaultResolver);
+            writer.DiscardBuffer(out var arrayPool, out var buffer);
+            return ArrayPooled.WrappedBuffer(arrayPool, buffer, 0, idx);
         }
     }
 
@@ -590,11 +780,27 @@ namespace Akka.Remote.Transport.DotNetty
         }
     }
 
+    internal sealed class TcpAssociationHandleWithPoolingFactory : ITcpAssociationHandleFactory
+    {
+        public AssociationHandle Create(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
+        {
+            return new TcpAssociationHandleWithPooling(localAddress, remoteAddress, transport, channel);
+        }
+    }
+
     internal sealed class TcpBatchAssociationHandleFactory : ITcpAssociationHandleFactory
     {
         public AssociationHandle Create(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
         {
             return new TcpBatchAssociationHandle(localAddress, remoteAddress, transport, channel);
+        }
+    }
+
+    internal sealed class TcpBatchAssociationHandleWithPoolingFactory : ITcpAssociationHandleFactory
+    {
+        public AssociationHandle Create(Address localAddress, Address remoteAddress, DotNettyTransport transport, IChannel channel)
+        {
+            return new TcpBatchAssociationHandleWithPooling(localAddress, remoteAddress, transport, channel);
         }
     }
 

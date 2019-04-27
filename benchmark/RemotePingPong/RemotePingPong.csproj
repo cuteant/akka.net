@@ -1,9 +1,17 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
-<PropertyGroup>
-  <OutputType>Exe</OutputType>
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
     <TargetFrameworks>netcoreapp2.2;net48</TargetFrameworks>
-</PropertyGroup>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+    <ConcurrentGarbageCollection>true</ConcurrentGarbageCollection>
+    <RetainVMGarbageCollection>true</RetainVMGarbageCollection>
+    <ThreadPoolMinThreads>100</ThreadPoolMinThreads>
+    <!--<ThreadPoolMaxThreads>25</ThreadPoolMaxThreads>-->
+  </PropertyGroup>
 
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
@@ -13,9 +21,9 @@
     <DefineConstants>$(DefineConstants);THREADS</DefineConstants>
   </PropertyGroup>
 
-<PropertyGroup>
-  <ServerGarbageCollection>true</ServerGarbageCollection>
-</PropertyGroup>
+  <PropertyGroup>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+  </PropertyGroup>
 
   <ItemGroup Condition=" '$(TargetFramework)' == 'net48' ">
     <Reference Include="System.Management" />
@@ -25,8 +33,8 @@
     <Content Include="App.config" />
   </ItemGroup>
 
-<ItemGroup>
+  <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
-</ItemGroup>
-  
+  </ItemGroup>
+
 </Project>
