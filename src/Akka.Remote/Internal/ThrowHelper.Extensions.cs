@@ -489,23 +489,15 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowAkkaProtocolException_DecodePdu(object pdu, Exception ex)
+        internal static AkkaProtocolException GetAkkaProtocolException_DecodePdu(object pdu, Exception ex)
         {
-            throw GetException();
-            AkkaProtocolException GetException()
-            {
-                return new AkkaProtocolException($"Error while decoding incoming Akka PDU of type {pdu.GetType()}", ex);
-            }
+            return new AkkaProtocolException($"Error while decoding incoming Akka PDU of type {pdu.GetType()}", ex);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowAkkaProtocolException_Associate(Exception ex)
+        internal static AkkaProtocolException GetAkkaProtocolException_Associate(Exception ex)
         {
-            throw GetException();
-            AkkaProtocolException GetException()
-            {
-                return new AkkaProtocolException("Error writing ASSOCIATE to transport", ex);
-            }
+            return new AkkaProtocolException("Error writing ASSOCIATE to transport", ex);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -519,13 +511,9 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowAkkaProtocolException_HeartBeat(Exception ex)
+        internal static AkkaProtocolException GetAkkaProtocolException_HeartBeat(Exception ex)
         {
-            throw GetException();
-            AkkaProtocolException GetException()
-            {
-                return new AkkaProtocolException("Error writing HEARTBEAT to transport", ex);
-            }
+            return new AkkaProtocolException("Error writing HEARTBEAT to transport", ex);
         }
 
         #endregion

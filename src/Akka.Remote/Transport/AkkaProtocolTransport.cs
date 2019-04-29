@@ -1216,7 +1216,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                ThrowHelper.ThrowAkkaProtocolException_DecodePdu(pdu, ex); return null;
+                throw ThrowHelper.GetAkkaProtocolException_DecodePdu(pdu, ex);
             }
         }
 
@@ -1233,7 +1233,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                ThrowHelper.ThrowAkkaProtocolException_Associate(ex); return false;
+                throw ThrowHelper.GetAkkaProtocolException_Associate(ex);
             }
         }
 
@@ -1257,7 +1257,7 @@ namespace Akka.Remote.Transport
             }
             catch (Exception ex)
             {
-                ThrowHelper.ThrowAkkaProtocolException_HeartBeat(ex); return false;
+                throw ThrowHelper.GetAkkaProtocolException_HeartBeat(ex);
             }
         }
 

@@ -541,9 +541,15 @@ namespace Akka.Remote
             }
             catch (Exception ex)
             {
-                if (_log.IsWarningEnabled) _log.ErrorWhileResolvingAddress(actorPath, ex);
-                return new EmptyLocalActorRef(this, RootPath, _local.EventStream);
+                return CreateEmptyLocalActorRef(actorPath, ex);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private IActorRef CreateEmptyLocalActorRef(ActorPath actorPath, Exception ex)
+        {
+            if (_log.IsWarningEnabled) _log.ErrorWhileResolvingAddress(actorPath, ex);
+            return new EmptyLocalActorRef(this, RootPath, _local.EventStream);
         }
 
         #endregion

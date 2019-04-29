@@ -993,11 +993,17 @@ namespace Akka.Streams.Implementation
                 }
                 catch (Exception ex)
                 {
-                    if (_decider.Value(ex) == Directive.Stop)
-                        Failure(ex);
-                    else
-                        Pull(_stage.In);
+                    HandlePushFailed(ex);
                 }
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void HandlePushFailed(Exception ex)
+            {
+                if (_decider.Value(ex) == Directive.Stop)
+                    Failure(ex);
+                else
+                    Pull(_stage.In);
             }
 
             public override void OnUpstreamFinish()

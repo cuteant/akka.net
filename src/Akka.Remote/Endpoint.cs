@@ -568,19 +568,21 @@ namespace Akka.Remote
                 }
                 catch (Exception ex)
                 {
-                    void ThrowHopelessAssociation()
-                    {
-                        throw GetHopelessAssociation();
-                    }
-                    HopelessAssociation GetHopelessAssociation()
-                    {
-                        return new HopelessAssociation(_localAddress, _remoteAddress, Uid,
-                            new IllegalStateException($"Error encountered while processing system message acknowledgement buffer: {_resendBuffer} ack: {ack}", ex));
-                    }
-                    ThrowHopelessAssociation();
+                    ThrowHopelessAssociation(ack, ex);
                 }
 
                 ResendNacked();
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ThrowHopelessAssociation(Ack ack, Exception ex)
+        {
+            throw GetHopelessAssociation();
+            HopelessAssociation GetHopelessAssociation()
+            {
+                return new HopelessAssociation(_localAddress, _remoteAddress, Uid,
+                    new IllegalStateException($"Error encountered while processing system message acknowledgement buffer: {_resendBuffer} ack: {ack}", ex));
             }
         }
 
@@ -918,15 +920,18 @@ namespace Akka.Remote
             }
             catch (Exception ex)
             {
-                void ThrowHopelessAssociation()
-                {
-                    throw GetHopelessAssociation();
-                }
-                HopelessAssociation GetHopelessAssociation()
-                {
-                    return new HopelessAssociation(_localAddress, _remoteAddress, Uid, ex);
-                }
-                ThrowHopelessAssociation();
+                ThrowHopelessAssociation(ex);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ThrowHopelessAssociation(Exception ex)
+        {
+            throw GetHopelessAssociation();
+
+            HopelessAssociation GetHopelessAssociation()
+            {
+                return new HopelessAssociation(_localAddress, _remoteAddress, Uid, ex);
             }
         }
 

@@ -9,7 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
-using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
@@ -139,11 +139,17 @@ namespace Akka.Cluster
             }
             catch (Exception ex)
             {
-                _log.FailedToStartupCluster(ex);
-                Shutdown();
-                System.DeadLetters.Tell(ex); //don't re-throw the error. Just log it.
-                return System.DeadLetters;
+                return GetSysDeadLetters(ex);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private IActorRef GetSysDeadLetters(Exception ex)
+        {
+            _log.FailedToStartupCluster(ex);
+            Shutdown();
+            System.DeadLetters.Tell(ex); //don't re-throw the error. Just log it.
+            return System.DeadLetters;
         }
 
         /// <summary>

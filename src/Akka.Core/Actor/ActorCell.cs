@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using Akka.Actor.Internal;
 using Akka.Dispatch;
@@ -487,8 +488,14 @@ namespace Akka.Actor
             }
             catch (Exception e)
             {
-                _systemImpl.EventStream.Publish(new Error(e, _self.Parent.ToString(), ActorType, "Swallowing exception during message send"));
+                HandleSendMessageFailed(e);
             }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void HandleSendMessageFailed(Exception e)
+        {
+            _systemImpl.EventStream.Publish(new Error(e, _self.Parent.ToString(), ActorType, "Swallowing exception during message send"));
         }
 
         /// <summary>

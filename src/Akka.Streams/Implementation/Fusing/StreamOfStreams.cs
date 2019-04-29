@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 using Akka.Annotations;
 using Akka.Pattern;
 using Akka.Streams.Actors;
@@ -420,12 +421,18 @@ namespace Akka.Streams.Implementation.Fusing
                 }
                 catch (Exception ex)
                 {
-                    var directive = _decider.Value(ex);
-                    if (directive == Directive.Stop)
-                        Fail(ex);
-                    else if (!HasBeenPulled(_stage.In))
-                        Pull(_stage.In);
+                    HandlePushFailed(ex);
                 }
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private void HandlePushFailed(Exception ex)
+            {
+                var directive = _decider.Value(ex);
+                if (directive == Directive.Stop)
+                    Fail(ex);
+                else if (!HasBeenPulled(_stage.In))
+                    Pull(_stage.In);
             }
 
             public void OnPull()
