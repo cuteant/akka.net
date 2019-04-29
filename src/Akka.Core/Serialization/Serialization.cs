@@ -23,9 +23,9 @@ namespace Akka.Serialization
     /// <summary>Serialization information needed for serializing local actor refs.</summary>
     internal class Information
     {
-        public Address Address { get; set; }
+        public Address Address;
 
-        public ActorSystem System { get; set; }
+        public ActorSystem System;
     }
 
     /// <summary>TBD</summary>
@@ -434,7 +434,9 @@ namespace Akka.Serialization
                 originalSystem = actorRefWithCell.Underlying.System.AsInstanceOf<ExtendedActorSystem>();
             }
 
-            if (_currentTransportInformation == null)
+            var currentTransportInformation = TransportInformationCache;
+            var system = currentTransportInformation.System;
+            if (system == null)
             {
                 if (originalSystem == null)
                 {
@@ -450,8 +452,7 @@ namespace Akka.Serialization
             }
 
             //CurrentTransportInformation exists
-            var system = _currentTransportInformation.System;
-            var address = _currentTransportInformation.Address;
+            var address = currentTransportInformation.Address;
             if (originalSystem == null || originalSystem == system)
             {
                 var res = path.ToSerializationFormatWithAddress(address);
