@@ -53,17 +53,9 @@ namespace Akka.Util
         {
             if (TypeUtils.TryResolveType(qualifiedTypeName, out var result)) { return result; }
 
-            void ThrowTypeLoadException()
-            {
-                throw GetTypeLoadException();
-            }
-            TypeLoadException GetTypeLoadException()
-            {
-                return new TypeLoadException($"Unable to find a type named {qualifiedTypeName}"); ;
-            }
             if (throwOnError)
             {
-                ThrowTypeLoadException();
+                AkkaThrowHelper.ThrowTypeLoadException_UnableToFindATypeNamed(qualifiedTypeName);
             }
             return null;
         }

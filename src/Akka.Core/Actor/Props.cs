@@ -574,7 +574,7 @@ namespace Akka.Actor
             }
             catch (Exception e)
             {
-                throw new TypeLoadException($"Error while creating actor instance of type {type} with {arguments.Length} args: ({StringFormat.SafeJoin(",", arguments)})", e);
+                throw AkkaThrowHelper.GetTypeLoadException_ErrorWhileCreatingActorInstanceOfType(type, arguments, e);
             }
         }
 

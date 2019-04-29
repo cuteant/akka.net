@@ -67,7 +67,7 @@ namespace Akka.Cluster.Routing
         {
             if (routeesPaths == null || !routeesPaths.Any() || string.IsNullOrEmpty(routeesPaths.First()))
             {
-                throw new ArgumentException("RouteesPaths must be defined", nameof(routeesPaths));
+                ThrowHelper.ThrowArgumentException_RouteesPathsMustBeDefined();
             }
 
             RouteesPaths = routeesPaths;
@@ -76,7 +76,9 @@ namespace Akka.Cluster.Routing
             foreach (var path in routeesPaths)
             {
                 if (RelativeActorPath.Unapply(path) == null)
-                    throw new ArgumentException($"routeesPaths [{path}] is not a valid relative actor path.", nameof(routeesPaths));
+                {
+                    ThrowHelper.ThrowArgumentException_RouteesPathsIsNotAValidRelativeActorPath(path);
+                }
             }
         }
 
@@ -147,8 +149,7 @@ namespace Akka.Cluster.Routing
         {
             MaxInstancesPerNode = maxInstancesPerNode;
 
-            if (MaxInstancesPerNode <= 0)
-                throw new ArgumentOutOfRangeException(nameof(maxInstancesPerNode), "maxInstancesPerNode of cluster pool router must be > 0");
+            if (MaxInstancesPerNode <= 0) { ThrowHelper.ThrowArgumentOutOfRangeException_MaxInstancesPerNode(); }
         }
 
         /// <summary>
@@ -219,8 +220,8 @@ namespace Akka.Cluster.Routing
             AllowLocalRoutees = allowLocalRoutees;
             TotalInstances = totalInstances;
 
-            if (useRole == string.Empty) throw new ArgumentOutOfRangeException(nameof(useRole), "useRole must be either null or non-empty");
-            if (totalInstances <= 0) throw new ArgumentOutOfRangeException(nameof(totalInstances), "totalInstances of cluster router must be > 0");
+            if (useRole == string.Empty) ThrowHelper.ThrowArgumentOutOfRangeException_UseRole();
+            if (totalInstances <= 0) ThrowHelper.ThrowArgumentOutOfRangeException_TotalInstances();
         }
 
         /// <summary>
@@ -297,8 +298,8 @@ namespace Akka.Cluster.Routing
             local.RouterDispatcher,
             false)
         {
-            if (local.Resizer != null)
-                throw new ConfigurationException("Resizer can't be used together with cluster router.");
+            if (local.Resizer != null) { ThrowHelper.ThrowConfigurationException_ResizerCanotBeUsedTogetherWithClusterRouter(); }
+
             Settings = settings;
             Local = local;
         }
@@ -382,7 +383,7 @@ namespace Akka.Cluster.Routing
 
             if (otherClusterRouterPool != null && otherClusterRouterPool.Local is ClusterRouterPool)
             {
-                throw new ConfigurationException("ClusterRouterPool is not allowed to wrap a ClusterRouterPool");
+                ThrowHelper.ThrowConfigurationException_ClusterrouterpoolIsNotAllowedToWrap();
             }
 
             if (otherClusterRouterPool != null)
@@ -625,7 +626,7 @@ namespace Akka.Cluster.Routing
             var localFallback = routerConfig as ClusterRouterGroup;
             if (localFallback != null && (localFallback.Local is ClusterRouterGroup))
             {
-                throw new ConfigurationException("ClusterRouterGroup is not allowed to wrap a ClusterRouterGroup");
+                ThrowHelper.ThrowConfigurationException_ClusterroutergroupIsNotAllowedToWrap();
             }
 
             if (localFallback != null)
@@ -666,10 +667,10 @@ namespace Akka.Cluster.Routing
         {
             Settings = settings;
 
-            if (!(Cell.RouterConfig is Pool) && !(Cell.RouterConfig is Group))
+            var routerConfig = Cell.RouterConfig;
+            if (!(routerConfig is Pool) && !(routerConfig is Group))
             {
-                throw new ActorInitializationException(
-                    $"Cluster router actor can only be used with Pool or Group, not with {Cell.RouterConfig.GetType()}");
+                ThrowHelper.ThrowActorInitializationException_ClusterRouterActorCanOnlyBeUsedWithPoolOrGroup(routerConfig);
             }
 
             Cluster = Cluster.Get(Context.System);
@@ -862,14 +863,15 @@ namespace Akka.Cluster.Routing
         public ClusterRouterGroupActor(ClusterRouterGroupSettings settings) : base(settings)
         {
             Settings = settings;
-            if (Cell.RouterConfig is Group groupConfig)
+
+            var routerConfig = Cell.RouterConfig;
+            if (routerConfig is Group groupConfig)
             {
                 _group = groupConfig;
             }
             else
             {
-                throw new ActorInitializationException(
-                    $"ClusterRouterGroupActor can only be used with group, not {Cell.RouterConfig.GetType()}");
+                ThrowHelper.ThrowActorInitializationException_ClusterroutergroupactorCanOnlyBeUsedWithGroup(routerConfig);
             }
 
             UsedRouteePaths = Settings.AllowLocalRoutees
@@ -974,14 +976,14 @@ namespace Akka.Cluster.Routing
             _supervisorStrategy = supervisorStrategy;
             Settings = settings;
 
-            if (Cell.RouterConfig is Pool pool)
+            var routerConfig = Cell.RouterConfig;
+            if (routerConfig is Pool pool)
             {
                 Pool = pool;
             }
             else
             {
-                throw new ActorInitializationException(
-                    $"RouterPoolActor can only be used with Pool, not {Cell.RouterConfig.GetType()}");
+                ThrowHelper.ThrowActorInitializationException_RouterpoolactorCanOnlyBeUsedWithPool(routerConfig);
             }
         }
 

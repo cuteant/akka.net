@@ -5,6 +5,7 @@ using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Cluster.Serialization;
 using Akka.Configuration;
+using Akka.Routing;
 using Akka.Util;
 
 namespace Akka.Cluster
@@ -111,6 +112,26 @@ namespace Akka.Cluster
         #endregion
 
         #region -- ArgumentException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_RouteesPathsMustBeDefined()
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException("RouteesPaths must be defined", "routeesPaths");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_RouteesPathsIsNotAValidRelativeActorPath(string path)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"routeesPaths [{path}] is not a valid relative actor path.", "routeesPaths");
+            }
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_JoinSeedNodeShouldNotBeDone()
@@ -287,6 +308,40 @@ namespace Akka.Cluster
 
         #endregion
 
+        #region -- ArgumentOutOfRangeException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentOutOfRangeException_MaxInstancesPerNode()
+        {
+            throw GetException();
+            ArgumentOutOfRangeException GetException()
+            {
+                return new ArgumentOutOfRangeException("maxInstancesPerNode", "maxInstancesPerNode of cluster pool router must be > 0");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentOutOfRangeException_UseRole()
+        {
+            throw GetException();
+            ArgumentOutOfRangeException GetException()
+            {
+                return new ArgumentOutOfRangeException("useRole", "useRole must be either null or non-empty");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentOutOfRangeException_TotalInstances()
+        {
+            throw GetException();
+            ArgumentOutOfRangeException GetException()
+            {
+                return new ArgumentOutOfRangeException("totalInstances", "totalInstances of cluster router must be > 0");
+            }
+        }
+
+        #endregion
+
         #region -- InvalidOperationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -354,6 +409,42 @@ namespace Akka.Cluster
         #region -- ConfigurationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ConfigurationException GetConfigurationException_CouldnotCreateDowningProviderOfType(Type downingProviderType, Exception e)
+        {
+            return new ConfigurationException($"Couldn't create downing provider of type [{downingProviderType.FullName}]", e);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_ClusterrouterpoolIsNotAllowedToWrap()
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException("ClusterRouterPool is not allowed to wrap a ClusterRouterPool");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_ClusterroutergroupIsNotAllowedToWrap()
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException("ClusterRouterGroup is not allowed to wrap a ClusterRouterGroup");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_ResizerCanotBeUsedTogetherWithClusterRouter()
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException("Resizer can't be used together with cluster router.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowConfigurationException_AutoDowningDowningProviderSelected()
         {
             throw GetException();
@@ -380,6 +471,43 @@ namespace Akka.Cluster
             ConfigurationException GetException()
             {
                 return new ConfigurationException($"Cluster deployment can't be combined with [{deploy.Config}]");
+            }
+        }
+
+        #endregion
+
+        #region -- ActorInitializationException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowActorInitializationException_ClusterRouterActorCanOnlyBeUsedWithPoolOrGroup(RouterConfig routerConfig)
+        {
+            throw GetException();
+            ActorInitializationException GetException()
+            {
+                return new ActorInitializationException(
+                    $"Cluster router actor can only be used with Pool or Group, not with {routerConfig.GetType()}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowActorInitializationException_ClusterroutergroupactorCanOnlyBeUsedWithGroup(RouterConfig routerConfig)
+        {
+            throw GetException();
+            ActorInitializationException GetException()
+            {
+                return new ActorInitializationException(
+                    $"ClusterRouterGroupActor can only be used with group, not {routerConfig.GetType()}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowActorInitializationException_RouterpoolactorCanOnlyBeUsedWithPool(RouterConfig routerConfig)
+        {
+            throw GetException();
+            ActorInitializationException GetException()
+            {
+                return new ActorInitializationException(
+                    $"RouterPoolActor can only be used with Pool, not {routerConfig.GetType()}");
             }
         }
 

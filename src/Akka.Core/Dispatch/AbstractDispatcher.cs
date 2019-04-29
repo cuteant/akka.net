@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
@@ -15,7 +14,7 @@ using Akka.Configuration;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
 using Akka.Util;
-using Akka.Util.Internal;
+using CuteAnt.Reflection;
 using Helios.Concurrency;
 
 namespace Akka.Dispatch
@@ -301,10 +300,9 @@ namespace Akka.Dispatch
                 case "task-executor":
                     return new DefaultTaskSchedulerExecutorConfigurator(Config, Prerequisites);
                 default:
-                    Type executorConfiguratorType = TypeUtil.ResolveType(executor);
-                    if (executorConfiguratorType == null)
+                    if (!TypeUtils.TryResolveType(executor, out Type executorConfiguratorType))
                     {
-                        throw new ConfigurationException($"Could not resolve executor service configurator type {executor} for path {Config.GetString("id")}");
+                        AkkaThrowHelper.ThrowConfigurationException_CouldNotResolveExecutorServiceConfiguratorType(executor, Config);
                     }
                     var args = new object[] { Config, Prerequisites };
                     return (ExecutorServiceConfigurator)Activator.CreateInstance(executorConfiguratorType, args);

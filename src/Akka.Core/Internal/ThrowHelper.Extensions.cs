@@ -52,6 +52,18 @@ namespace Akka
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ArgumentException GetArgumentException_ExpectedConsistentHashingPool(RouterConfig routerConfig)
+        {
+            return new ArgumentException($"Expected ConsistentHashingPool, got {routerConfig}", nameof(routerConfig));
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ArgumentException GetArgumentException_ExpectedConsistentHashingGroup(RouterConfig routerConfig)
+        {
+            return new ArgumentException($"Expected ConsistentHashingGroup, got {routerConfig}", nameof(routerConfig));
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_TokenBucket_Capacity()
         {
             throw GetException();
@@ -107,7 +119,7 @@ namespace Akka
             throw GetException();
             ArgumentException GetException()
             {
-                return new ArgumentException($"Actor {actorType} implements an unrecognized subclass of {typeof(IActorStash)} - cannot instantiate", nameof(actorType)); 
+                return new ArgumentException($"Actor {actorType} implements an unrecognized subclass of {typeof(IActorStash)} - cannot instantiate", nameof(actorType));
             }
         }
 
@@ -419,6 +431,163 @@ namespace Akka
 
         #endregion
 
+        #region -- ConfigurationException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ConfigurationException GetConfigurationException_CouldNotResolveSupervisorstrategyconfigurator()
+        {
+            return new ConfigurationException("Could not resolve SupervisorStrategyConfigurator. typeName is null");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ConfigurationException GetConfigurationException_ProblemWhileCreating(ActorPath path, Props props, Exception ex)
+        {
+            return new ConfigurationException(
+                $"Configuration problem while creating [{path}] with dispatcher [{props.Dispatcher}] and mailbox [{props.Mailbox}]", ex);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ConfigurationException GetConfigurationException_ProblemWhileCreating1(ActorPath path, Props routerProps, Props routeeProps, Exception ex)
+        {
+            return new ConfigurationException(
+                $"Configuration problem while creating [{path}] with router dispatcher [{routerProps.Dispatcher}] and mailbox [{routerProps.Mailbox}] and routee dispatcher [{routeeProps.Dispatcher}] and mailbox [{routeeProps.Mailbox}].", ex);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ConfigurationException GetConfigurationException_DispatcherNotConfiguredForRouteesOfPath(Props p, ActorPath path)
+        {
+            return new ConfigurationException($"Dispatcher [{p.Dispatcher}] not configured for routees of path [{path}]");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ConfigurationException GetConfigurationException_DispatcherNotConfiguredForRouterOfPath(Props p, ActorPath path)
+        {
+            return new ConfigurationException($"Dispatcher [{p.RouterConfig.RouterDispatcher}] not configured for router of path [{path}]");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_CouldNotResolveSupervisorstrategyconfiguratorType(string typeName)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Could not resolve SupervisorStrategyConfigurator type {typeName}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_CouldNotResolveExecutorServiceConfiguratorType(string executor, Config config)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Could not resolve executor service configurator type {executor} for path {config.GetString("id")}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Dispatcher_None(string id)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Dispatcher {id} not configured.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Dispatcher_TypeIsNull(string id)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Could not resolve dispatcher for path {id}. type is null");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Dispatcher_InvalidType(string type, string id)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Could not resolve dispatcher type {type} for path {id}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Dispatcher_Id(Config cfg)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Missing dispatcher `id` property in config: {cfg.Root}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Mailboxes_None(string id)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Mailbox Type [{id}] not configured");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Mailboxes_TypeName(string id)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"The setting mailbox-type defined in [{id}] is empty");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Mailboxes_Type(string mailboxTypeName, string id)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Found mailbox-type [{mailboxTypeName}] in configuration for [{id}], but could not find that type in any loaded assemblies.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Mailboxes_Lookup(Type queueType)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Mailbox Mapping for [{queueType}] not configured");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_UnknownPhase(string phase, HashSet<string> knownPhases)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Unknown phase [{phase}], known phases [{string.Join(",", knownPhases)}]. " +
+                    "All phases (along with their optional dependencies) must be defined in configuration.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_DispatcherNotConfiguredForPath(Props props2, ActorPath path)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Dispatcher [{props2.Dispatcher}] not configured for path {path}");
+            }
+        }
+
+        #endregion
+
         #region -- InvalidOperationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -593,6 +762,27 @@ An (unbounded) deque-based mailbox can be configured as follows:
             {
                 return new TimeoutException(
                     $"Inbox {receiver.Path} received a status failure response message: {received.Cause.Message}", received.Cause);
+            }
+        }
+
+        #endregion
+
+        #region -- TypeLoadException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static TypeLoadException GetTypeLoadException_ErrorWhileCreatingActorInstanceOfType(Type type, object[] arguments, Exception e)
+        {
+            return new TypeLoadException(
+                $"Error while creating actor instance of type {type} with {arguments.Length} args: ({StringFormat.SafeJoin(",", arguments)})", e);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowTypeLoadException_UnableToFindATypeNamed(string qualifiedTypeName)
+        {
+            throw GetTypeLoadException();
+            TypeLoadException GetTypeLoadException()
+            {
+                return new TypeLoadException($"Unable to find a type named {qualifiedTypeName}");
             }
         }
 
@@ -792,113 +982,12 @@ An (unbounded) deque-based mailbox can be configured as follows:
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_Dispatcher_None(string id)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Dispatcher {id} not configured.");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_Dispatcher_TypeIsNull(string id)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Could not resolve dispatcher for path {id}. type is null");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_Dispatcher_InvalidType(string type, string id)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Could not resolve dispatcher type {type} for path {id}");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_Dispatcher_Id(Config cfg)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Missing dispatcher `id` property in config: {cfg.Root}");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_Mailboxes_None(string id)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Mailbox Type [{id}] not configured");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_Mailboxes_TypeName(string id)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"The setting mailbox-type defined in [{id}] is empty");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_Mailboxes_Type(string mailboxTypeName, string id)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Found mailbox-type [{mailboxTypeName}] in configuration for [{id}], but could not find that type in any loaded assemblies.");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_Mailboxes_Lookup(Type queueType)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Mailbox Mapping for [{queueType}] not configured");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowFormatException_ExpectedPositiveValue(double value)
         {
             throw GetException();
             FormatException GetException()
             {
                 return new FormatException($"Expected a positive value instead of {value}");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_UnknownPhase(string phase, HashSet<string> knownPhases)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Unknown phase [{phase}], known phases [{string.Join(",", knownPhases)}]. " +
-                    "All phases (along with their optional dependencies) must be defined in configuration.");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_DispatcherNotConfiguredForPath(Props props2, ActorPath path)
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Dispatcher [{props2.Dispatcher}] not configured for path {path}");
             }
         }
 

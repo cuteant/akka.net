@@ -670,7 +670,7 @@ namespace Akka.Streams.Implementation
                 }
             }
 
-            sealed class CreateStreamHandler: IHandle<Either<TSource, Exception>>
+            sealed class CreateStreamHandler : IHandle<Either<TSource, Exception>>
             {
                 private readonly Logic _logic;
                 private readonly bool _withPull;
@@ -1070,7 +1070,7 @@ namespace Akka.Streams.Implementation
                 }
             }
 
-            sealed class ErrorHandler: IHandle<Exception>
+            sealed class ErrorHandler : IHandle<Exception>
             {
                 private readonly Logic _logic;
                 private readonly ObservableSourceStage<T> _stage;
@@ -1128,7 +1128,7 @@ namespace Akka.Streams.Implementation
                         return FialStrategy;
                     case OverflowStrategy.Backpressure:
                         return BackpressureStrategy;
-                    default: throw new NotSupportedException($"Unknown option: {overflowStrategy}");
+                    default: throw ThrowHelper.GetNotSupportedException_UnknownOption(overflowStrategy);
                 }
             }
 

@@ -941,6 +941,12 @@ namespace Akka.Streams
         #region -- NotSupportedException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static NotSupportedException GetNotSupportedException_UnknownOption(OverflowStrategy overflowStrategy)
+        {
+            return new NotSupportedException($"Unknown option: {overflowStrategy}");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNotSupportedException()
         {
             throw GetException();

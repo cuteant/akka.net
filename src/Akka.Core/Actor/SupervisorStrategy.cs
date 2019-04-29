@@ -8,7 +8,6 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using System.Threading;
 using Akka.Actor.Internal;
 using Akka.Configuration;
@@ -1088,12 +1087,12 @@ namespace Akka.Actor
                 case "Akka.Actor.StoppingSupervisorStrategy":
                     return new StoppingSupervisorStrategy();
                 case null:
-                    throw new ConfigurationException("Could not resolve SupervisorStrategyConfigurator. typeName is null");
+                    throw AkkaThrowHelper.GetConfigurationException_CouldNotResolveSupervisorstrategyconfigurator();
                 default:
-                    Type configuratorType = TypeUtil.ResolveType(typeName);
-
-                    if (configuratorType == null)
-                        throw new ConfigurationException($"Could not resolve SupervisorStrategyConfigurator type {typeName}");
+                    if (!TypeUtils.TryResolveType(typeName, out Type configuratorType))
+                    {
+                        AkkaThrowHelper.ThrowConfigurationException_CouldNotResolveSupervisorstrategyconfiguratorType(typeName);
+                    }
 
                     return ActivatorUtils.FastCreateInstance<SupervisorStrategyConfigurator>(configuratorType);
             }

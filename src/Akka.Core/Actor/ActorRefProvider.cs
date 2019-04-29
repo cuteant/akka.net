@@ -513,18 +513,16 @@ namespace Akka.Actor
                     var dispatcher = _system.Dispatchers.Lookup(props2.Dispatcher);
                     var mailboxType = _system.Mailboxes.GetMailboxType(props2, dispatcher.Configurator.Config);
 
-                    if (async)
-                        return
-                            new RepointableActorRef(system, props2, dispatcher,
+                    return async
+                        ? new RepointableActorRef(system, props2, dispatcher,
                                 mailboxType, supervisor,
-                                path).Initialize(async);
-                    return new LocalActorRef(system, props2, dispatcher,
-                        mailboxType, supervisor, path);
+                                path).Initialize(async)
+                        : (IInternalActorRef)new LocalActorRef(system, props2, dispatcher,
+                                mailboxType, supervisor, path);
                 }
                 catch (Exception ex)
                 {
-                    throw new ConfigurationException(
-                        $"Configuration problem while creating [{path}] with dispatcher [{props.Dispatcher}] and mailbox [{props.Mailbox}]", ex);
+                    throw AkkaThrowHelper.GetConfigurationException_ProblemWhileCreating(path, props, ex);
                 }
             }
             else //routers!!!
@@ -534,11 +532,14 @@ namespace Akka.Actor
                 var d = fromProps.Where(x => x != null).Aggregate((deploy1, deploy2) => deploy2.WithFallback(deploy1));
                 var p = props.WithRouter(d.RouterConfig);
 
-
                 if (!system.Dispatchers.HasDispatcher(p.Dispatcher))
-                    throw new ConfigurationException($"Dispatcher [{p.Dispatcher}] not configured for routees of path [{path}]");
+                {
+                    throw AkkaThrowHelper.GetConfigurationException_DispatcherNotConfiguredForRouteesOfPath(p, path);
+                }
                 if (!system.Dispatchers.HasDispatcher(d.RouterConfig.RouterDispatcher))
-                    throw new ConfigurationException($"Dispatcher [{p.RouterConfig.RouterDispatcher}] not configured for router of path [{path}]");
+                {
+                    throw AkkaThrowHelper.GetConfigurationException_DispatcherNotConfiguredForRouterOfPath(p, path);
+                }
 
                 var routerProps = Props.Empty.WithRouter(p.Deploy.RouterConfig).WithDispatcher(p.RouterConfig.RouterDispatcher);
                 var routeeProps = props.WithRouter(NoRouter.Instance);
@@ -559,8 +560,7 @@ namespace Akka.Actor
                 }
                 catch (Exception ex)
                 {
-                    throw new ConfigurationException(
-                        $"Configuration problem while creating [{path}] with router dispatcher [{routerProps.Dispatcher}] and mailbox [{routerProps.Mailbox}] and routee dispatcher [{routeeProps.Dispatcher}] and mailbox [{routeeProps.Mailbox}].", ex);
+                    throw AkkaThrowHelper.GetConfigurationException_ProblemWhileCreating1(path, routerProps, routeeProps, ex);
                 }
             }
         }

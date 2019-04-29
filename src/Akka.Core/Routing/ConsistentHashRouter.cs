@@ -511,7 +511,7 @@ namespace Akka.Routing
                     return WithHashMapping(other._hashMapping).OverrideUnsetConfig(other);
 
                 default:
-                    throw new ArgumentException($"Expected ConsistentHashingPool, got {routerConfig}", nameof(routerConfig));
+                    throw AkkaThrowHelper.GetArgumentException_ExpectedConsistentHashingPool(routerConfig);
             }
         }
 
@@ -773,7 +773,7 @@ namespace Akka.Routing
                     return WithHashMapping(other._hashMapping);
 
                 default:
-                    throw new ArgumentException($"Expected ConsistentHashingGroup, got {routerConfig}", nameof(routerConfig));
+                    throw AkkaThrowHelper.GetArgumentException_ExpectedConsistentHashingGroup(routerConfig);
             }
         }
 

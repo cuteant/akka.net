@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Runtime.CompilerServices;
 using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
@@ -618,10 +619,10 @@ namespace Akka.Streams.Implementation
 
             public override void PostStop()
             {
-                if(!_completionSignalled)
+                if (!_completionSignalled)
                     _promise.TrySetException(new AbruptStageTerminationException(this));
             }
-            
+
             public override void PreStart() => Pull(_stage.In);
         }
 
@@ -1032,7 +1033,8 @@ namespace Akka.Streams.Implementation
             {
                 var sourceOut = new SubSource(this, firstElement);
 
-                try {
+                try
+                {
                     var matVal = Source.FromGraph(sourceOut.Source)
                         .RunWith(sink, Interpreter.SubFusingMaterializer);
                     _completion.TrySetResult(matVal);
@@ -1042,7 +1044,7 @@ namespace Akka.Streams.Implementation
                     _completion.TrySetUnwrappedException(ex);
                     FailStage(ex);
                 }
-                
+
             }
 
             #region SubSource
@@ -1172,15 +1174,20 @@ namespace Akka.Streams.Implementation
 
             public void Dispose(bool unregister)
             {
-                if (_disposed.CompareAndSet(false, true))
-                {
-                    if (unregister) _logic.Remove(_observer);
+                if (!_disposed.CompareAndSet(false, true)) { ThrowObjectDisposedException(); }
 
-                    _observer.OnCompleted();
-                }
-                else
+                if (unregister) { _logic.Remove(_observer); }
+
+                _observer.OnCompleted();
+            }
+
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private static void ThrowObjectDisposedException()
+            {
+                throw GetObjectDisposedException();
+                ObjectDisposedException GetObjectDisposedException()
                 {
-                    throw new ObjectDisposedException("ObservableSink subscription has been already disposed.");
+                    return new ObjectDisposedException("ObservableSink subscription has been already disposed.");
                 }
             }
         }

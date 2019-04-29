@@ -89,7 +89,7 @@ namespace Akka.Cluster
             }
             catch (Exception e)
             {
-                throw new ConfigurationException($"Couldn't create downing provider of type [{downingProviderType.FullName}]", e);
+                throw ThrowHelper.GetConfigurationException_CouldnotCreateDowningProviderOfType(downingProviderType, e);
             }
         }
     }

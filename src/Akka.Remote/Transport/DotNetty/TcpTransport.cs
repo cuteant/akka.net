@@ -830,11 +830,11 @@ namespace Akka.Remote.Transport.DotNetty
             }
             catch (AggregateException e) when (e.InnerException is ConnectTimeoutException cause)
             {
-                throw new InvalidAssociationException(cause.Message);
+                throw HandleConnectTimeoutException(cause);
             }
             catch (AggregateException e) when (e.InnerException is ChannelException cause)
             {
-                throw new InvalidAssociationException(cause.InnerException?.Message ?? cause.Message);
+                throw HandleChannelException(cause);
             }
             catch (ConnectException exc)
             {
@@ -842,15 +842,16 @@ namespace Akka.Remote.Transport.DotNetty
             }
             catch (ConnectTimeoutException exc)
             {
-                throw new InvalidAssociationException(exc.Message);
+                throw HandleConnectTimeoutException(exc);
             }
             catch (ChannelException exc)
             {
-                throw new InvalidAssociationException(exc.InnerException?.Message ?? exc.Message);
+                throw HandleChannelException(exc);
             }
         }
 
-        private static Exception HandleConnectException(Address remoteAddress, ConnectException cause, AggregateException e)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static InvalidAssociationException HandleConnectException(Address remoteAddress, ConnectException cause, AggregateException e)
         {
             var socketException = cause?.InnerException as SocketException;
 
@@ -860,6 +861,18 @@ namespace Akka.Remote.Transport.DotNetty
             }
 
             return new InvalidAssociationException("Failed to associate with " + remoteAddress, e ?? (Exception)cause);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static InvalidAssociationException HandleChannelException(ChannelException exc)
+        {
+            return new InvalidAssociationException(exc.InnerException?.Message ?? exc.Message);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static InvalidAssociationException HandleConnectTimeoutException(ConnectTimeoutException exc)
+        {
+            return new InvalidAssociationException(exc.Message);
         }
 
         private async Task<IPEndPoint> MapEndpointAsync(EndPoint socketAddress)
