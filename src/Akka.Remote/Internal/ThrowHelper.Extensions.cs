@@ -405,6 +405,17 @@ namespace Akka.Remote
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_ProblemWhileCreating(ActorPath path, Props props, Exception ex)
+        {
+            throw GetConfigurationException();
+            ConfigurationException GetConfigurationException()
+            {
+                return new ConfigurationException(
+                    $"Configuration problem while creating {path} with dispatcher [{props.Dispatcher}] and mailbox [{props.Mailbox}]", ex);
+            }
+        }
+
         #endregion
 
         #region -- ChannelException --
@@ -559,13 +570,15 @@ namespace Akka.Remote
 
         #endregion
 
-        // EndpointDisassociatedException
+        #region -- EndpointDisassociatedException -- 
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static EndpointDisassociatedException GetEndpointDisassociatedException_Disassociated()
         {
             return new EndpointDisassociatedException("Disassociated");
         }
+
+        #endregion
 
         #region -- RemoteTransportException --
 
@@ -648,6 +661,16 @@ namespace Akka.Remote
             {
                 return new RemoteTransportException($"There are more than one transports listening on local address {address}");
             }
+        }
+
+        #endregion
+
+        #region -- ActorInitializationException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ActorInitializationException GetActorInitializationException_RemoteDeploymentFailedFor(ActorPath path, Exception ex)
+        {
+            return new ActorInitializationException($"Remote deployment failed for [{path}]", ex);
         }
 
         #endregion

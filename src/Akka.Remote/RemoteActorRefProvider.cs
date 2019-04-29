@@ -359,16 +359,7 @@ namespace Akka.Remote
                     }
                     catch (Exception ex)
                     {
-                        ConfigurationException GetConfigurationException()
-                        {
-                            return new ConfigurationException(
-                                $"Configuration problem while creating {path} with dispatcher [{props.Dispatcher}] and mailbox [{props.Mailbox}]", ex);
-                        }
-                        void ThrowConfigurationException()
-                        {
-                            throw GetConfigurationException();
-                        }
-                        ThrowConfigurationException();
+                        ThrowHelper.ThrowConfigurationException_ProblemWhileCreating(path, props, ex);
                     }
                     var localAddress = Transport.LocalAddressForRemote(addr);
                     var rpath = (new RootActorPath(addr) / "remote" / localAddress.Protocol / localAddress.HostPort() /
@@ -379,15 +370,7 @@ namespace Akka.Remote
                 }
                 catch (Exception ex)
                 {
-                    ActorInitializationException GetActorInitializationException()
-                    {
-                        return new ActorInitializationException($"Remote deployment failed for [{path}]", ex);
-                    }
-                    IInternalActorRef ThrowActorInitializationException()
-                    {
-                        throw GetActorInitializationException();
-                    }
-                    return ThrowActorInitializationException();
+                    throw ThrowHelper.GetActorInitializationException_RemoteDeploymentFailedFor(path, ex);
                 }
             }
             else
@@ -420,7 +403,7 @@ namespace Akka.Remote
 
         #endregion
 
-        #region - RootGuardianAt --
+        #region -- RootGuardianAt --
 
         /// <summary>TBD</summary>
         /// <param name="address">TBD</param>

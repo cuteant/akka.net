@@ -496,13 +496,20 @@ namespace Akka.Actor
                 var propsDeploy = lookupDeploy ? Deployer.Lookup(path) : deploy;
                 if (propsDeploy != null)
                 {
-                    if (propsDeploy.Mailbox != Deploy.NoMailboxGiven)
-                        props2 = props2.WithMailbox(propsDeploy.Mailbox);
-                    if (propsDeploy.Dispatcher != Deploy.NoDispatcherGiven)
-                        props2 = props2.WithDispatcher(propsDeploy.Dispatcher);
+                    var mailbox = propsDeploy.Mailbox;
+                    if (!string.Equals(mailbox, Deploy.NoMailboxGiven, StringComparison.Ordinal))
+                    {
+                        props2 = props2.WithMailbox(mailbox);
+                    }
+                    var dispatcher = propsDeploy.Dispatcher;
+                    if (!string.Equals(dispatcher, Deploy.NoDispatcherGiven, StringComparison.Ordinal))
+                    {
+                        props2 = props2.WithDispatcher(dispatcher);
+                    }
                 }
 
-                if (!system.Dispatchers.HasDispatcher(props2.Dispatcher))
+                var dispatchers = system.Dispatchers;
+                if (!dispatchers.HasDispatcher(props2.Dispatcher))
                 {
                     AkkaThrowHelper.ThrowConfigurationException_DispatcherNotConfiguredForPath(props2, path);
                 }
@@ -510,7 +517,7 @@ namespace Akka.Actor
                 try
                 {
                     // for consistency we check configuration of dispatcher and mailbox locally
-                    var dispatcher = _system.Dispatchers.Lookup(props2.Dispatcher);
+                    var dispatcher = dispatchers.Lookup(props2.Dispatcher);
                     var mailboxType = _system.Mailboxes.GetMailboxType(props2, dispatcher.Configurator.Config);
 
                     return async
@@ -532,11 +539,12 @@ namespace Akka.Actor
                 var d = fromProps.Where(x => x != null).Aggregate((deploy1, deploy2) => deploy2.WithFallback(deploy1));
                 var p = props.WithRouter(d.RouterConfig);
 
-                if (!system.Dispatchers.HasDispatcher(p.Dispatcher))
+                var dispatchers = system.Dispatchers;
+                if (!dispatchers.HasDispatcher(p.Dispatcher))
                 {
                     throw AkkaThrowHelper.GetConfigurationException_DispatcherNotConfiguredForRouteesOfPath(p, path);
                 }
-                if (!system.Dispatchers.HasDispatcher(d.RouterConfig.RouterDispatcher))
+                if (!dispatchers.HasDispatcher(d.RouterConfig.RouterDispatcher))
                 {
                     throw AkkaThrowHelper.GetConfigurationException_DispatcherNotConfiguredForRouterOfPath(p, path);
                 }
@@ -546,12 +554,12 @@ namespace Akka.Actor
 
                 try
                 {
-                    var routerDispatcher = system.Dispatchers.Lookup(p.RouterConfig.RouterDispatcher);
+                    var routerDispatcher = dispatchers.Lookup(p.RouterConfig.RouterDispatcher);
                     var routerMailbox = system.Mailboxes.GetMailboxType(routerProps, routerDispatcher.Configurator.Config);
 
                     // routers use context.actorOf() to create the routees, which does not allow us to pass
                     // these through, but obtain them here for early verification
-                    var routeeDispatcher = system.Dispatchers.Lookup(p.Dispatcher);
+                    var routeeDispatcher = dispatchers.Lookup(p.Dispatcher);
 
                     var routedActorRef = new RoutedActorRef(system, routerProps, routerDispatcher, routerMailbox, routeeProps,
                         supervisor, path);
