@@ -17,7 +17,7 @@ namespace Akka.Remote.Tests.Serialization
     public class LruBoundedCacheSpec
     {
         private class TestCache : LruBoundedCache<string, string> {
-            public TestCache(int capacity, int evictAgeThreshold, string hashSeed = "") : base(capacity, evictAgeThreshold)
+            public TestCache(int capacity, int evictAgeThreshold, string hashSeed = "") : base(capacity, evictAgeThreshold, System.StringComparer.Ordinal)
             {
                 _hashSeed = hashSeed;
             }
