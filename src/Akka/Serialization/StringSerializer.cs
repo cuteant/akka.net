@@ -3,18 +3,14 @@
     using System;
     using System.Buffers;
     using System.Runtime.InteropServices;
-    using System.Text;
     using Akka.Actor;
     using CuteAnt;
     using CuteAnt.Buffers;
-    using CuteAnt.Text;
     using MessagePack;
     using MessagePack.Internal;
 
     public sealed class StringSerializer : Serializer
     {
-        private static readonly Encoding s_encodingUtf8 = StringHelper.UTF8NoBOM;
-        private static readonly Encoding s_decodingUtf8 = Encoding.UTF8;
         private static readonly ArrayPool<byte> s_bufferPool = BufferManager.Shared;
 
         /// <summary>Initializes a new instance of the <see cref="PrimitiveSerializers" /> class.</summary>
@@ -27,7 +23,7 @@
         /// <inheritdoc />
         public override object DeepCopy(object source) => source;
 
-        public override object FromBinary(byte[] bytes, Type type) => s_decodingUtf8.GetString(bytes);
+        public override object FromBinary(byte[] bytes, Type type) => EncodingUtils.ToString(bytes);
 
         public override byte[] ToBinary(object obj)
         {
