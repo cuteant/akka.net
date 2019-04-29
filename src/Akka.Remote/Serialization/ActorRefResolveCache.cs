@@ -5,9 +5,9 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System;
 using System.Threading;
 using Akka.Actor;
-using Akka.Util.Internal;
 
 namespace Akka.Remote.Serialization
 {
@@ -48,7 +48,8 @@ namespace Akka.Remote.Serialization
     {
         private readonly IRemoteActorRefProvider _provider;
 
-        public ActorRefResolveCache(IRemoteActorRefProvider provider, int capacity = 1024, int evictAgeThreshold = 600) : base(capacity, evictAgeThreshold)
+        public ActorRefResolveCache(IRemoteActorRefProvider provider, int capacity = 1024, int evictAgeThreshold = 600) 
+            : base(capacity, evictAgeThreshold, StringComparer.Ordinal)
         {
             _provider = provider;
         }

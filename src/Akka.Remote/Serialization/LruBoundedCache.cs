@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Linq;
 
 namespace Akka.Remote.Serialization
@@ -31,7 +32,7 @@ namespace Akka.Remote.Serialization
             var s1 = 601258L; // seed value 2, DON'T CHANGE
             unchecked
             {
-                for(var i = 0; i < chars.Length;i++)
+                for (var i = 0; i < chars.Length; i++)
                 {
                     var x = s0 ^ chars[i]; // Mix character into PRNG state
                     var y = s1;
@@ -118,7 +119,7 @@ namespace Akka.Remote.Serialization
     /// <typeparam name="TValue">The type of value used in the cache.</typeparam>
     internal abstract class LruBoundedCache<TKey, TValue> where TValue : class
     {
-        protected LruBoundedCache(int capacity, int evictAgeThreshold)
+        protected LruBoundedCache(int capacity, int evictAgeThreshold, IEqualityComparer<TKey> comparer)
         {
             if (capacity <= 0)
                 throw new ArgumentOutOfRangeException(nameof(capacity), "Capacity must be larger than zero.");
@@ -134,11 +135,15 @@ namespace Akka.Remote.Serialization
             _values = new TValue[Capacity];
             _hashes = new int[Capacity];
             _epochs = Enumerable.Repeat(_epoch - evictAgeThreshold, Capacity).ToArray();
+
+            _comparer = comparer ?? EqualityComparer<TKey>.Default;
         }
 
         public int Capacity { get; private set; }
 
         public int EvictAgeThreshold { get; private set; }
+
+        private readonly IEqualityComparer<TKey> _comparer;
 
         private readonly int _mask;
 
@@ -187,7 +192,7 @@ namespace Akka.Remote.Serialization
                     return null;
                 if (probeDistance > otherProbeDistance)
                     return null;
-                if (_hashes[position] == h && k.Equals(_keys[position]))
+                if (_hashes[position] == h && _comparer.Equals(k, _keys[position]))
                 {
                     return _values[position];
                 }
@@ -229,7 +234,7 @@ namespace Akka.Remote.Serialization
                         if (IsCacheable(value)) Move(position, k, h, value, _epoch, probeDistance);
                         return value;
                     }
-                    else if (_hashes[position] == h && k.Equals(_keys[position]))
+                    else if (_hashes[position] == h && _comparer.Equals(k, _keys[position]))
                     {
                         // Update usage
                         _epochs[position] = _epoch;

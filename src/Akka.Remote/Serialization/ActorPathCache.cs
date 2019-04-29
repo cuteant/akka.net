@@ -36,7 +36,8 @@ namespace Akka.Remote.Serialization
     /// </summary>
     internal sealed class ActorPathCache : LruBoundedCache<string, ActorPath>
     {
-        public ActorPathCache(int capacity = 1024, int evictAgeThreshold = 600) : base(capacity, evictAgeThreshold)
+        public ActorPathCache(int capacity = 1024, int evictAgeThreshold = 600) 
+            : base(capacity, evictAgeThreshold, StringComparer.Ordinal)
         {
         }
 
