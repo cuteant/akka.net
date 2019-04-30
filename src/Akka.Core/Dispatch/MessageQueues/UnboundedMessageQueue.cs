@@ -6,7 +6,7 @@
 //-----------------------------------------------------------------------
 
 using Akka.Actor;
-using TQueue = Akka.Util.ConcurrentQueueWrapper<Akka.Actor.Envelope>;
+using TQueue = System.Collections.Concurrent.ConcurrentQueue<Akka.Actor.Envelope>;
 
 namespace Akka.Dispatch.MessageQueues
 {
@@ -16,7 +16,7 @@ namespace Akka.Dispatch.MessageQueues
         private readonly TQueue _queue = new TQueue();
 
         /// <inheritdoc cref="IMessageQueue"/>
-        public bool HasMessages => _queue.NonEmpty;
+        public bool HasMessages => !_queue.IsEmpty;
 
         /// <inheritdoc cref="IMessageQueue"/>
         public int Count => _queue.Count;
