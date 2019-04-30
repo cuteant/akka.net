@@ -2129,7 +2129,7 @@ namespace Akka.Remote
             }
             catch (Exception ex)
             {
-                ThrowHelper.ThrowEndpointException_DecodeMessageAndAck(ex); return default;
+                throw ThrowHelper.GetEndpointException_DecodeMessageAndAck(ex);
             }
         }
 

@@ -129,16 +129,16 @@ namespace Akka.Remote.Transport
         }
 
         /// <summary>TBD</summary>
-        public IInternalActorRef Recipient { get; }
+        public readonly IInternalActorRef Recipient;
 
         /// <summary>TBD</summary>
-        public Address RecipientAddress { get; }
+        public readonly Address RecipientAddress;
 
         /// <summary>TBD</summary>
-        public SerializedMessage SerializedMessage { get; }
+        public readonly SerializedMessage SerializedMessage;
 
         /// <summary>TBD</summary>
-        public IActorRef SenderOptional { get; }
+        public readonly IActorRef SenderOptional;
 
         /// <summary>TBD</summary>
         public bool ReliableDeliveryEnabled => Seq != null;
@@ -193,13 +193,13 @@ namespace Akka.Remote.Transport
         /// <summary>Return an <see cref="IAkkaPdu"/> instance that represents a PDU contained in the raw <see cref="T:System.Byte{T}"/>.</summary>
         /// <param name="pdu">Encoded raw byte representation of an Akka PDU</param>
         /// <returns>Class representation of a PDU that can be used in a <see cref="PatternMatch"/>.</returns>
-        public abstract IAkkaPdu DecodePdu(in AkkaProtocolMessage pdu);
+        public abstract IAkkaPdu DecodePdu(AkkaProtocolMessage pdu);
 
         /// <summary>Takes an <see cref="IAkkaPdu"/> representation of an Akka PDU and returns its encoded
         /// form as a <see cref="T:System.Byte{T}"/>.</summary>
         /// <param name="pdu">TBD</param>
         /// <returns>TBD</returns>
-        public virtual object EncodePdu(in IAkkaPdu pdu)
+        public virtual object EncodePdu(IAkkaPdu pdu)
         {
             switch (pdu)
             {
@@ -278,7 +278,7 @@ namespace Akka.Remote.Transport
         /// or a control message.</li><li>The PDU is a control message with an invalid format.</li></ul>
         /// </exception>
         /// <returns>TBD</returns>
-        public override IAkkaPdu DecodePdu(in AkkaProtocolMessage pdu)
+        public override IAkkaPdu DecodePdu(AkkaProtocolMessage pdu)
         {
             //try
             //{
@@ -286,7 +286,7 @@ namespace Akka.Remote.Transport
 
             if (pdu.Payload != null) { return new Payload(pdu.Payload); }
 
-            ThrowHelper.ThrowPduCodecException_Decode(); return null;
+            throw ThrowHelper.GetPduCodecException_Decode();
             //}
             //catch (FormatterNotRegisteredException ex) // InvalidProtocolBufferException
             //{
@@ -460,7 +460,7 @@ namespace Akka.Remote.Transport
                     return new Heartbeat();
             }
 
-            ThrowHelper.ThrowPduCodecException_Decode(controlPdu); return null;
+            throw ThrowHelper.GetPduCodecException_Decode(controlPdu);
         }
 
         private static readonly AkkaProtocolMessage DISASSOCIATE = ConstructControlMessagePdu(CommandType.Disassociate);

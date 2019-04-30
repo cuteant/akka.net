@@ -130,7 +130,7 @@ namespace Akka.Serialization.Protocol
 
     /// <summary>Message format of Akka Protocol. Message contains either a payload or an instruction.</summary>
     [MessagePackObject]
-    public readonly struct AkkaProtocolMessage
+    public sealed class AkkaProtocolMessage
     {
         [Key(0)]
         public readonly object Payload;

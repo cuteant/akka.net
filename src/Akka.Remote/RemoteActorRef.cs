@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Dispatch.SysMsg;
@@ -112,6 +113,7 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         public override ActorPath Path => _path;
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         private void HandleException(Exception ex)
             => Remote.System.EventStream.Publish(new Error(ex, Path.ToString(), GetType(), "swallowing exception during message send"));
 

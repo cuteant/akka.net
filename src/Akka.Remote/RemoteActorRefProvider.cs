@@ -431,9 +431,10 @@ namespace Akka.Remote
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool TryParseCachedPath(string actorPath, out ActorPath path)
         {
-            if (_actorPathThreadLocalCache != null)
+            var actorPathThreadLocalCache = _actorPathThreadLocalCache;
+            if (actorPathThreadLocalCache != null)
             {
-                path = _actorPathThreadLocalCache.Cache.GetOrCompute(actorPath);
+                path = actorPathThreadLocalCache.Cache.GetOrCompute(actorPath);
                 return path != null;
             }
             else // cache not initialized yet
@@ -497,11 +498,12 @@ namespace Akka.Remote
         {
             // using thread local LRU cache, which will call InternalRresolveActorRef if the value is
             // not cached
-            if (_actorRefResolveThreadLocalCache == null)
+            var actorRefResolveThreadLocalCache = _actorRefResolveThreadLocalCache;
+            if (actorRefResolveThreadLocalCache == null)
             {
                 return InternalResolveActorRef(path); // cache not initialized yet
             }
-            return _actorRefResolveThreadLocalCache.Cache.GetOrCompute(path);
+            return actorRefResolveThreadLocalCache.Cache.GetOrCompute(path);
         }
 
         #endregion

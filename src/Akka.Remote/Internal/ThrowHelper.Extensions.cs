@@ -253,13 +253,9 @@ namespace Akka.Remote
         #region -- SerializationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowSerializationException_Serializer_MiscFrom(string manifest)
+        internal static SerializationException GetSerializationException_Serializer_MiscFrom(string manifest)
         {
-            throw GetException();
-            SerializationException GetException()
-            {
-                return new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(Akka.Remote.Serialization.MiscMessageSerializer)}]");
-            }
+            return new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(Akka.Remote.Serialization.MiscMessageSerializer)}]");
         }
 
         #endregion
@@ -435,13 +431,9 @@ namespace Akka.Remote
         #region -- PduCodecException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowPduCodecException_Decode()
+        internal static PduCodecException GetPduCodecException_Decode()
         {
-            throw GetException();
-            PduCodecException GetException()
-            {
-                return new PduCodecException("Error decoding Akka PDU: Neither message nor control message were contained");
-            }
+            return new PduCodecException("Error decoding Akka PDU: Neither message nor control message were contained");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -455,13 +447,9 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowPduCodecException_Decode(AkkaControlMessage controlPdu)
+        internal static PduCodecException GetPduCodecException_Decode(AkkaControlMessage controlPdu)
         {
-            throw GetException();
-            PduCodecException GetException()
-            {
-                return new PduCodecException($"Decoding of control PDU failed, invalid format, unexpected {controlPdu}");
-            }
+            return new PduCodecException($"Decoding of control PDU failed, invalid format, unexpected {controlPdu}");
         }
 
         #endregion
@@ -541,13 +529,9 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowEndpointException_DecodeMessageAndAck(Exception ex)
+        internal static EndpointException GetEndpointException_DecodeMessageAndAck(Exception ex)
         {
-            throw GetException();
-            EndpointException GetException()
-            {
-                return new EndpointException("Error while decoding incoming Akka PDU", ex);
-            }
+            return new EndpointException("Error while decoding incoming Akka PDU", ex);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

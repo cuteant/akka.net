@@ -97,7 +97,7 @@ namespace Akka.Remote.Serialization
                     return MessagePackSerializer.Deserialize<RemoteRouterConfig>(bytes, _defaultResolver);
 
                 default:
-                    ThrowHelper.ThrowSerializationException_Serializer_MiscFrom(manifest); return null;
+                    throw ThrowHelper.GetSerializationException_Serializer_MiscFrom(manifest);
             }
         }
 

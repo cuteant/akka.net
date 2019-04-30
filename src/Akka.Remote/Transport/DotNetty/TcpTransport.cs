@@ -57,11 +57,10 @@ namespace Akka.Remote.Transport.DotNetty
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
             var buf = (IByteBuffer)message;
-            if (buf.ReadableBytes > 0)
+            var unreadSpan = buf.UnreadSpan;
+            if (!unreadSpan.IsEmpty)
             {
-                // no need to copy the byte buffer contents; ByteString does that automatically
-                //var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
-                var pdus = (List<object>)MessagePackSerializer.Deserialize<object>(buf.UnreadSpan, DefaultResolver);
+                var pdus = (List<object>)MessagePackSerializer.Deserialize<object>(unreadSpan, DefaultResolver);
                 foreach (var raw in pdus)
                 {
                     NotifyListener(new InboundPayload(raw));
@@ -309,13 +308,10 @@ namespace Akka.Remote.Transport.DotNetty
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
             var buf = (IByteBuffer)message;
-            if (buf.ReadableBytes > 0)
+            var unreadSpan = buf.UnreadSpan;
+            if (!unreadSpan.IsEmpty)
             {
-                // no need to copy the byte buffer contents; ByteString does that automatically
-                //var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
-                var bytes = buf.GetIoBuffer();
-
-                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(bytes, DefaultResolver)));
+                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(unreadSpan, DefaultResolver)));
             }
 
             // decrease the reference count to 0 (releases buffer)
@@ -331,13 +327,10 @@ namespace Akka.Remote.Transport.DotNetty
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
             var buf = (IByteBuffer)message;
-            if (buf.ReadableBytes > 0)
+            var unreadSpan = buf.UnreadSpan;
+            if (!unreadSpan.IsEmpty)
             {
-                // no need to copy the byte buffer contents; ByteString does that automatically
-                //var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
-                var bytes = buf.GetIoBuffer();
-
-                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(bytes, DefaultResolver)));
+                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(unreadSpan, DefaultResolver)));
             }
 
             // decrease the reference count to 0 (releases buffer)
@@ -410,13 +403,10 @@ namespace Akka.Remote.Transport.DotNetty
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
             var buf = (IByteBuffer)message;
-            if (buf.ReadableBytes > 0)
+            var unreadSpan = buf.UnreadSpan;
+            if (!unreadSpan.IsEmpty)
             {
-                // no need to copy the byte buffer contents; ByteString does that automatically
-                //var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
-                var bytes = buf.GetIoBuffer();
-
-                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(bytes, DefaultResolver)));
+                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(unreadSpan, DefaultResolver)));
             }
 
             // decrease the reference count to 0 (releases buffer)
@@ -432,13 +422,10 @@ namespace Akka.Remote.Transport.DotNetty
         public override void ChannelRead(IChannelHandlerContext context, object message)
         {
             var buf = (IByteBuffer)message;
-            if (buf.ReadableBytes > 0)
+            var unreadSpan = buf.UnreadSpan;
+            if (!unreadSpan.IsEmpty)
             {
-                // no need to copy the byte buffer contents; ByteString does that automatically
-                //var bytes = CopyFrom(buf.Array, buf.ArrayOffset + buf.ReaderIndex, buf.ReadableBytes);
-                var bytes = buf.GetIoBuffer();
-
-                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(bytes, DefaultResolver)));
+                NotifyListener(new InboundPayload(MessagePackSerializer.Deserialize<object>(unreadSpan, DefaultResolver)));
             }
 
             // decrease the reference count to 0 (releases buffer)
@@ -509,17 +496,23 @@ namespace Akka.Remote.Transport.DotNetty
                     case ChannelStatus.Closed:
                         return false;
                     default:
-                        if (_channel.Active) // _channel.Open && _channel.IsWritable)
-                        {
-                            Interlocked.Exchange(ref _channelStatus, ChannelStatus.Open);
-                            return true;
-                        }
-                        else
-                        {
-                            Interlocked.Exchange(ref _channelStatus, ChannelStatus.Unknow);
-                            return false;
-                        }
+                        return CheckLastChannelStatus();
                 }
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private bool CheckLastChannelStatus()
+        {
+            if (_channel.Active) // _channel.Open && _channel.IsWritable)
+            {
+                Interlocked.Exchange(ref _channelStatus, ChannelStatus.Open);
+                return true;
+            }
+            else
+            {
+                Interlocked.Exchange(ref _channelStatus, ChannelStatus.Unknow);
+                return false;
             }
         }
 
@@ -574,7 +567,7 @@ namespace Akka.Remote.Transport.DotNetty
                 {
                     await channel.WriteAndFlushAsync(Serialize(batch));
 
-                    Interlocked.CompareExchange(ref associationHandle._channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
+                    //Interlocked.CompareExchange(ref associationHandle._channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
                 }
                 else
                 {
@@ -662,7 +655,7 @@ namespace Akka.Remote.Transport.DotNetty
                 {
                     await channel.WriteAndFlushAsync(Serialize(batch));
 
-                    Interlocked.CompareExchange(ref associationHandle._channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
+                    //Interlocked.CompareExchange(ref associationHandle._channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
                 }
                 else
                 {
@@ -708,8 +701,6 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (_channel.Active) // _channel.Open && _channel.IsWritable
             {
-                //var payload = MessagePackSerializer.Serialize<object>(msg, s_defaultResolver);
-                //_channel.WriteAndFlushAsync(Unpooled.WrappedBuffer(payload));
                 _channel.WriteAndFlushAsync(Serialize(msg));
                 return true;
             }
