@@ -138,11 +138,11 @@ namespace Akka.Remote.Tests.Transport
         public Property HeliosTransport_Should_Resolve_DNS(EndPoint inbound, EndPoint outbound, bool dnsIpv6, bool enforceIpFamily)
         {
             // TODO: Mono does not support IPV6 Uris correctly https://bugzilla.xamarin.com/show_bug.cgi?id=43649 (Aaronontheweb 8/22/2016)
-            //if (IsMono)
-            //{
-            //    enforceIpFamily = true;
-            //    dnsIpv6 = false;
-            //}
+            if (IsMono)
+            {
+                enforceIpFamily = true;
+                dnsIpv6 = false;
+            }
 
 
             if (IsAnyIp(inbound) || IsAnyIp(outbound)) return true.Label("Can't connect directly to an ANY address");

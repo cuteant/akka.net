@@ -109,13 +109,13 @@ namespace Akka.Pattern
         /// <param name="body">Implementation of the call that needs protected</param>
         /// <exception cref="OpenCircuitException">TBD</exception>
         /// <returns><see cref="Task"/> containing result of protected call</returns>
-        public override Task<T> Invoke<T>(IRunnableTask<T> body)
+        public override async Task<T> Invoke<T>(IRunnableTask<T> body)
         {
             if (!_lock.CompareAndSet(true, false))
             {
                 throw new OpenCircuitException();
             }
-            return CallThrough(body);
+            return await CallThrough(body);
         }
 
         /// <summary>
@@ -125,13 +125,13 @@ namespace Akka.Pattern
         /// <param name="body">Implementation of the call that needs protected</param>
         /// <exception cref="OpenCircuitException">TBD</exception>
         /// <returns><see cref="Task"/> containing result of protected call</returns>
-        public override Task Invoke(IRunnableTask body)
+        public override async Task Invoke(IRunnableTask body)
         {
             if (!_lock.CompareAndSet(true, false))
             {
                 throw new OpenCircuitException();
             }
-            return CallThrough(body);
+            await CallThrough(body);
         }
 
         /// <summary>

@@ -148,13 +148,6 @@ namespace Akka.Persistence
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void RejectedToPersistEventTypeWithSequenceNumberForPersistenceId(this ILoggingAdapter logger, Exception cause, object @event, long sequenceNr, string persistenceId)
-        {
-            logger.Warning("Rejected to persist event type [{0}] with sequence number [{1}] for persistenceId [{2}] due to [{3}].",
-                    @event.GetType(), sequenceNr, persistenceId, cause.Message);
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void InvalidURLProvidedForTarget(this ILoggingAdapter logger, PersistencePluginProxy.IPluginType pluginType, string targetAddress)
         {
             logger.Warning("Invalid URL provided for target {0} address: {1}", pluginType.Qualifier, targetAddress);

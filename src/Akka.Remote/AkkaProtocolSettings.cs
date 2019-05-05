@@ -10,25 +10,49 @@ using Akka.Configuration;
 
 namespace Akka.Remote
 {
-    /// <summary>TBD</summary>
+    /// <summary>
+    /// Setings for the AkkaProtocolTransport
+    /// </summary>
     public class AkkaProtocolSettings
     {
-        /// <summary>TBD</summary>
+        /// <summary>
+        /// The HOCON for the failure detector.
+        /// </summary>
         public Config TransportFailureDetectorConfig { get; }
 
-        /// <summary>TBD</summary>
+        /// <summary>
+        /// The failure detection implementation class FQN.
+        /// </summary>
         public string TransportFailureDetectorImplementationClass { get; }
 
-        /// <summary>TBD</summary>
+        /// <summary>
+        /// The heartbeat interval used to keep the protocol transport alive.
+        /// </summary>
         public TimeSpan TransportHeartBeatInterval { get; }
 
-        /// <summary>TBD</summary>
-        /// <param name="config">TBD</param>
+        /// <summary>
+        /// The heartbeat handshake timeout.
+        /// </summary>
+        public TimeSpan HandshakeTimeout { get; }
+
+        /// <summary>
+        /// Creates a new AkkaProtocolSettings instance.
+        /// </summary>
+        /// <param name="config">The HOCON configuration.</param>
         public AkkaProtocolSettings(Config config)
         {
             TransportFailureDetectorConfig = config.GetConfig("akka.remote.transport-failure-detector");
             TransportFailureDetectorImplementationClass = TransportFailureDetectorConfig.GetString("implementation-class");
             TransportHeartBeatInterval = TransportFailureDetectorConfig.GetTimeSpan("heartbeat-interval");
+
+            // backwards compatibility with the existing dot-netty.tcp.connection-timeout
+            var enabledTransports = config.GetStringList("akka.remote.enabled-transports");
+            if (enabledTransports.Contains("akka.remote.dot-netty.tcp"))
+                HandshakeTimeout = config.GetTimeSpan("akka.remote.dot-netty.tcp.connection-timeout");
+            else if (enabledTransports.Contains("akka.remote.dot-netty.ssl"))
+                HandshakeTimeout = config.GetTimeSpan("akka.remote.dot-netty.ssl.connection-timeout");
+            else
+                HandshakeTimeout = config.GetTimeSpan("akka.remote.handshake-timeout", TimeSpan.FromSeconds(20), allowInfinite: false);
         }
     }
 }

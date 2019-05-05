@@ -706,7 +706,7 @@ namespace Akka.Remote.Transport
     #region == class SetThrottle ==
 
     /// <summary>Applies a throttle to the underlying conneciton</summary>
-    internal sealed class SetThrottle
+    public sealed class SetThrottle
     {
         private readonly Address _address;
 
@@ -779,7 +779,7 @@ namespace Akka.Remote.Transport
     #region == class SetThrottleAck ==
 
     /// <summary>ACKs a throttle command</summary>
-    internal sealed class SetThrottleAck
+    public sealed class SetThrottleAck : ISingletonMessage
     {
         private SetThrottleAck() { }
 

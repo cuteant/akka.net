@@ -195,7 +195,7 @@ namespace Akka.Streams
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void RestartingGraphDueToFailure(this ILoggingAdapter logger, Exception ex)
         {
-            logger.Error(ex, "Restarting graph due to failure");
+            logger.Warning($"Restarting graph due to failure. Stacktrace: {ex.StackTrace}");
         }
     }
 }

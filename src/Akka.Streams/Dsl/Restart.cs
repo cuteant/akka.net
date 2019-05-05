@@ -499,7 +499,7 @@ namespace Akka.Streams.Dsl
                     }
                     else
                     {
-                        Log.RestartingGraphDueToFailure(ex);
+                        if (Log.IsWarningEnabled) { Log.RestartingGraphDueToFailure(ex); }
                         ScheduleRestartTimer();
                     }
                 }));

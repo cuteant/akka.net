@@ -61,12 +61,12 @@ namespace Akka.Remote
                 Type type;
                 switch (msg)
                 {
-                    case ActorSelectionMessage actor:
-                        type = actor.Message.GetType();
+                    case ActorSelectionMessage message:
+                        type = message.Message.GetType();
                         break;
 
-                    case RouterEnvelope router:
-                        type = router.Message.GetType();
+                    case RouterEnvelope envelope:
+                        type = envelope.Message.GetType();
                         break;
 
                     default:

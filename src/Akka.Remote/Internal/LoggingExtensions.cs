@@ -18,9 +18,9 @@ namespace Akka.Remote
     internal static class RemoteLoggingExtensions
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ExpectedMessageOfTypeAssociate(this ILoggingAdapter logger, IAkkaPdu pdu)
+        internal static void ExpectedMessageOfTypeAssociate(this ILoggingAdapter logger, object fsmEvent)
         {
-            logger.Debug("Expected message of type Associate; instead received {0}", pdu);
+            logger.Debug("Expected message of type Associate; instead received {0}", fsmEvent.GetType());
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -135,7 +135,7 @@ namespace Akka.Remote
         internal static void RemoteSystemWithAddressHasShutDown(this ILoggingAdapter logger, ShutDownAssociation shutdown, RemoteSettings settings)
         {
             logger.Debug("Remote system with address [{0}] has shut down. Address is now gated for {1}ms, all messages to this address will be delivered to dead letters.",
-                                  shutdown.RemoteAddress, settings.RetryGateClosedFor.TotalMilliseconds);
+                shutdown.RemoteAddress, settings.RetryGateClosedFor.TotalMilliseconds);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -194,6 +194,36 @@ namespace Akka.Remote
         internal static void DroppingDaemonMessageInUntrustedMode(this ILoggingAdapter logger)
         {
             logger.Debug("dropping daemon message in untrusted mode");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void AssociationBetweenLocalAndRemoteWasDisassociatedBecause(this ILoggingAdapter logger, AssociationHandle associationHandle, string reason)
+        {
+            logger.Debug("Association between local [{0}] and remote [{1}] was disassociated because {2}", associationHandle.LocalAddress, associationHandle.RemoteAddress, reason);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SendingDisassociateToBecauseFailureDetectorTriggeredInState(this ILoggingAdapter logger, AssociationHandle wrappedHandle, AssociationState stateName)
+        {
+            logger.Debug("Sending disassociate to [{0}] because failure detector triggered in state [{1}]", wrappedHandle, stateName);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SendingDisassociateToBecauseUnexpectedMessageOfTypeWasReceivedUnassociated(this ILoggingAdapter logger, AssociationHandle wrappedHandle, object fsmEvent)
+        {
+            logger.Debug("Sending disassociate to [{0}] because unexpected message of type [{1}] was received unassociated.", wrappedHandle, fsmEvent.GetType());
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SendingDisassociateToBecauseHandshakeTimedOutForOutboundAssociationAfter(this ILoggingAdapter logger, OutboundUnderlyingAssociated oua, AkkaProtocolSettings settings)
+        {
+            logger.Debug("Sending disassociate to [{0}] because handshake timed out for outbound association after [{1}] ms.", oua.WrappedHandle, settings.HandshakeTimeout.TotalMilliseconds);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SendingDisassociateToBecauseHandshakeTimedOutForInboundAssociationAfter(this ILoggingAdapter logger, InboundUnassociated iu, AkkaProtocolSettings settings)
+        {
+            logger.Debug("Sending disassociate to [{0}] because handshake timed out for inbound association after [{1}] ms.", iu.WrappedHandle, settings.HandshakeTimeout.TotalMilliseconds);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -379,7 +409,7 @@ namespace Akka.Remote
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void AssociationToWithUidIsIrrecoverablyFailed(this ILoggingAdapter logger, HopelessAssociation hopeless)
         {
-            logger.Error(hopeless.InnerException, "Association to [{0}] with UID [{1}] is irrecoverably failed. Quarantining address.",
+            logger.Error(hopeless.InnerException ?? hopeless, "Association to [{0}] with UID [{1}] is irrecoverably failed. Quarantining address.",
                 hopeless.RemoteAddress, hopeless.Uid);
         }
 

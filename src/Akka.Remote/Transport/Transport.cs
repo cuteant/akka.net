@@ -295,9 +295,9 @@ namespace Akka.Remote.Transport
     /// Incoming data is not processed until this registration takes place.</summary>
     public abstract class AssociationHandle
     {
-        /// <summary>TBD</summary>
-        /// <param name="localAddress">TBD</param>
-        /// <param name="remoteAddress">TBD</param>
+        /// <summary>Creates a handle to an association between two remote addresses.</summary>
+        /// <param name="localAddress">The local address to use.</param>
+        /// <param name="remoteAddress">The remote address to use.</param>
         protected AssociationHandle(Address localAddress, Address remoteAddress)
         {
             LocalAddress = localAddress;
@@ -337,14 +337,33 @@ namespace Akka.Remote.Transport
         public abstract bool Write(object payload);
 
         /// <summary>
-        /// Closes the underlying transport link, if needed. Some transports might not need an
-        /// explicit teardown (UDP) and some transports may not support it. Remote endpoint of the
-        /// channel or connection MAY be notified, but this is not guaranteed.
-        ///
-        /// The transport that provides the handle MUST guarantee that <see cref="Disassociate"/>
-        /// could be called arbitrarily many times.
+        /// Closes the underlying transport link, if needed. Some transports might not need an explicit teardown (UDP) and some
+        /// transports may not support it. Remote endpoint of the channel or connection MAY be notified, but this is not
+        /// guaranteed.
+        /// 
+        /// The transport that provides the handle MUST guarantee that <see cref="Disassociate()"/> could be called arbitrarily many times.
         /// </summary>
+        [Obsolete("Use the method that states reasons to make sure disassociation reasons are logged.")]
         public abstract void Disassociate();
+
+        /// <summary>
+        /// Closes the underlying transport link, if needed. Some transports might not need an explicit teardown (UDP) and some
+        /// transports may not support it. Remote endpoint of the channel or connection MAY be notified, but this is not
+        /// guaranteed.
+        /// 
+        /// The transport that provides the handle MUST guarantee that <see cref="Disassociate()"/> could be called arbitrarily many times.
+        /// </summary>
+        public void Disassociate(string reason, ILoggingAdapter log)
+        {
+            if (log.IsDebugEnabled)
+            {
+                log.AssociationBetweenLocalAndRemoteWasDisassociatedBecause(this, reason);
+            }
+
+#pragma warning disable 618
+            Disassociate();
+#pragma warning restore 618
+        }
 
         /// <inheritdoc/>
         public override bool Equals(object obj)

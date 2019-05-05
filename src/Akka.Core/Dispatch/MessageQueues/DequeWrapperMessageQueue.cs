@@ -72,11 +72,6 @@ namespace Akka.Dispatch.MessageQueues
         /// <returns><c>true</c> if a message was available, <c>false</c> otherwise.</returns>
         public bool TryDequeue(out Envelope envelope)
         {
-            //if (_prependBuffer.Count > 0)
-            //{
-            //    envelope = _prependBuffer.Pop();
-            //    return true;
-            //}
             if (_prependBuffer.TryPop(out envelope)) { return true; }
 
             return MessageQueue.TryDequeue(out envelope);

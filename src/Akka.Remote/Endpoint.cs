@@ -410,11 +410,30 @@ namespace Akka.Remote
 
             Reset(); // needs to be called at startup
             _writer = CreateWriter(); // need to create writer at startup
-            Uid = handleOrActive != null ? (int?)handleOrActive.HandshakeInfo.Uid : null;
-            UidConfirmed = Uid.HasValue;
+            var uid = handleOrActive != null ? (int?)handleOrActive.HandshakeInfo.Uid : null;
+            Uid = uid;
+            UidConfirmed = uid.HasValue && (uid != _refuseUid);
+
+            if (uid.HasValue && uid == _refuseUid)
+            {
+                ThrowHopelessAssociation();
+            }
+
             Receiving();
             _autoResendTimer = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(
                 _settings.SysResendTimeout, _settings.SysResendTimeout, Self, new AttemptSysMsgRedelivery(), Self);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void ThrowHopelessAssociation()
+        {
+            throw GetHopelessAssociation();
+            HopelessAssociation GetHopelessAssociation()
+            {
+                return new HopelessAssociation(_localAddress, _remoteAddress, Uid,
+                    new InvalidOperationException(
+                        $"The remote system [{_remoteAddress}] has a UID [{Uid}] that has been quarantined. Association aborted."));
+            }
         }
 
         #endregion
@@ -546,6 +565,7 @@ namespace Akka.Remote
             Receive<Terminated>(HandleTerminated);
             Receive<GotUid>(HandleGotUid);
             Receive<EndpointWriter.StopReading>(HandleEndpointWriterStopReading);
+            Receive<Ungate>(PatternMatch<Ungate>.EmptyAction); //ok, not gated
         }
 
         private void HandleEndpointWriterFlushAndStop(EndpointWriter.FlushAndStop flush)
@@ -733,6 +753,7 @@ namespace Akka.Remote
             Receive<TooLongIdle>(HandleTooLongIdle);
             Receive<EndpointWriter.FlushAndStop>(HandleEndpointWriterFlushAndStopIdle);
             Receive<EndpointWriter.StopReading>(HandleEndpointWriterStopReadingIdle);
+            Receive<Ungate>(PatternMatch<Ungate>.EmptyAction); //ok, not gated
         }
 
         private void HandleIsIdle(IsIdle idle)
@@ -1176,7 +1197,8 @@ namespace Akka.Remote
         {
             if (_handle == null)
             {
-                AssociateAsync().PipeTo(Self);
+                var self = Self;
+                AssociateAsync().PipeTo(self);
             }
             else
             {

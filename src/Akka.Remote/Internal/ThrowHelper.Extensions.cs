@@ -457,23 +457,15 @@ namespace Akka.Remote
         #region -- AkkaProtocolException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowAkkaProtocolException_InboundPayload(object msg)
+        internal static AkkaProtocolException GetAkkaProtocolException_InboundPayload(object fsmEvent)
         {
-            throw GetException();
-            AkkaProtocolException GetException()
-            {
-                return new AkkaProtocolException($"Unhandled message in state Open(InboundPayload) with type {msg.GetType()}");
-            }
+            return new AkkaProtocolException($"Unhandled message in state Open(InboundPayload) with type {fsmEvent.GetType()}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowAkkaProtocolException_DisassociateUnderlying(object msg)
+        internal static AkkaProtocolException GetAkkaProtocolException_DisassociateUnderlying(object fsmEvent)
         {
-            throw GetException();
-            AkkaProtocolException GetException()
-            {
-                return new AkkaProtocolException($"unhandled message in state Open(DisassociateUnderlying) with type {msg.GetType()}");
-            }
+            return new AkkaProtocolException($"Unhandled message in state Open(DisassociateUnderlying) with type {fsmEvent.GetType()}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -486,6 +478,14 @@ namespace Akka.Remote
         internal static AkkaProtocolException GetAkkaProtocolException_Associate(Exception ex)
         {
             return new AkkaProtocolException("Error writing ASSOCIATE to transport", ex);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static AkkaProtocolException GetAkkaProtocolException_TransportDisassociatedBeforeHandshakeFinished(FSMBase.Reason reason)
+        {
+            return reason is FSMBase.Failure
+                ? new AkkaProtocolException(reason.ToString())
+                : new AkkaProtocolException("Transport disassociated before handshake finished");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
