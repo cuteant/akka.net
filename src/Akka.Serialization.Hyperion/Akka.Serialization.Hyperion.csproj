@@ -21,7 +21,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="reference.conf" />
-    <PackageReference Include="CuteAnt.Extensions.Serialization.Hyperion" Version="$(CuteAntExtensionsSerializationHyperionPackageVersion)" />
+    <PackageReference Include="Hyperion.Unofficial" Version="$(HyperionUnofficialPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

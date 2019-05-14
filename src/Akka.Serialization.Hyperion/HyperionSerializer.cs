@@ -6,11 +6,11 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.IO;
 using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
-using CuteAnt.Extensions.Serialization;
 using CuteAnt.Reflection;
 using Hyperion;
 
@@ -26,8 +26,7 @@ namespace Akka.Serialization
         /// <summary>Settings used for an underlying Hyperion serializer implementation.</summary>
         public readonly HyperionSerializerSettings Settings;
 
-        private readonly HyperionMessageFormatter _serializer;
-        private readonly int _initialBufferSize;
+        private readonly Hyperion.Serializer _serializer;
 
         /// <summary>Initializes a new instance of the <see cref="HyperionSerializer"/> class.</summary>
         /// <param name="system">The actor system to associate with this serializer.</param>
@@ -59,9 +58,8 @@ namespace Akka.Serialization
 
             var provider = CreateKnownTypesProvider(system, settings.KnownTypesProvider);
 
-            _initialBufferSize = settings.InitialBufferSize;
             _serializer =
-                new HyperionMessageFormatter(new SerializerOptions(
+                new Hyperion.Serializer(new SerializerOptions(
                     preserveObjectReferences: settings.PreserveObjectReferences,
                     versionTolerance: settings.VersionTolerance,
                     surrogates: new[] { akkaSurrogate },
@@ -72,19 +70,30 @@ namespace Akka.Serialization
         /// <summary>Completely unique value to identify this implementation of Serializer, used to optimize network traffic.</summary>
         public sealed override int Identifier => -5; //104
 
-        /// <inheritdoc />
-        public sealed override object DeepCopy(object source) => _serializer.DeepCopyObject(source);
-
         /// <summary>Serializes the given object into a byte array</summary>
         /// <param name="obj">The object to serialize</param>
         /// <returns>A byte array containing the serialized object</returns>
-        public sealed override byte[] ToBinary(object obj) => _serializer.SerializeObject(obj, _initialBufferSize);
+        public sealed override byte[] ToBinary(object obj)
+        {
+            using (var ms = new MemoryStream())
+            {
+                _serializer.Serialize(obj, ms);
+                return ms.ToArray();
+            }
+        }
 
         /// <summary>Deserializes a byte array into an object of type <paramref name="type"/>.</summary>
         /// <param name="bytes">The array containing the serialized object</param>
         /// <param name="type">The type of object contained in the array</param>
         /// <returns>The object contained in the array</returns>
-        public sealed override object FromBinary(byte[] bytes, Type type) => _serializer.Deserialize(type, bytes);
+        public sealed override object FromBinary(byte[] bytes, Type type)
+        {
+            using (var ms = new MemoryStream(bytes))
+            {
+                var res = _serializer.Deserialize<object>(ms);
+                return res;
+            }
+        }
 
         private IKnownTypesProvider CreateKnownTypesProvider(ExtendedActorSystem system, Type type)
         {
