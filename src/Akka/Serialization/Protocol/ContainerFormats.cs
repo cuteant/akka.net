@@ -59,7 +59,7 @@ namespace Akka.Serialization.Protocol
         public readonly Payload MessageId;
 
         [SerializationConstructor]
-        public Identify(in Payload messageId) => MessageId = messageId;
+        public Identify(Payload messageId) => MessageId = messageId;
     }
 
     [MessagePackObject]
@@ -72,7 +72,7 @@ namespace Akka.Serialization.Protocol
         public readonly string Path;
 
         [SerializationConstructor]
-        public ActorIdentity(in Payload correlationId, string path)
+        public ActorIdentity(Payload correlationId, string path)
         {
             CorrelationId = correlationId;
             Path = path;
@@ -119,7 +119,7 @@ namespace Akka.Serialization.Protocol
     public readonly struct SelectionEnvelope
     {
         [SerializationConstructor]
-        public SelectionEnvelope(in Payload payload, List<Selection> pattern)
+        public SelectionEnvelope(Payload payload, List<Selection> pattern)
         {
             Payload = payload;
             Pattern = pattern;

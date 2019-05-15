@@ -63,7 +63,7 @@ namespace Akka.Serialization.Protocol
         public readonly ReadOnlyActorRefData Supervisor;
 
         [SerializationConstructor]
-        public DaemonMsgCreateData(in PropsData props, in DeployData deploy, string path, ReadOnlyActorRefData supervisor)
+        public DaemonMsgCreateData(PropsData props, DeployData deploy, string path, ReadOnlyActorRefData supervisor)
         {
             Props = props;
             Deploy = deploy;
@@ -86,7 +86,7 @@ namespace Akka.Serialization.Protocol
         public readonly Payload[] Args;
 
         [SerializationConstructor]
-        public PropsData(in DeployData deploy, string clazz, Payload[] args)
+        public PropsData(DeployData deploy, string clazz, Payload[] args)
         {
             Deploy = deploy;
             Clazz = clazz;
@@ -114,7 +114,7 @@ namespace Akka.Serialization.Protocol
         public readonly string Dispatcher;
 
         [SerializationConstructor]
-        public DeployData(string path, in Payload config, in Payload routerConfig, in Payload scope, string dispatcher)
+        public DeployData(string path, Payload config, Payload routerConfig, Payload scope, string dispatcher)
         {
             Path = path;
             Config = config;
@@ -177,7 +177,7 @@ namespace Akka.Serialization.Protocol
         public readonly string Cookie;
 
         [SerializationConstructor]
-        public AkkaHandshakeInfo(in AddressData origin, ulong uid, string cookie = null)
+        public AkkaHandshakeInfo(AddressData origin, ulong uid, string cookie = null)
         {
             Origin = origin;
             Uid = uid;
@@ -210,7 +210,7 @@ namespace Akka.Serialization.Protocol
         public readonly AddressData Node;
 
         [SerializationConstructor]
-        public RemoteScope(in AddressData node)
+        public RemoteScope(AddressData node)
         {
             Node = node;
         }
@@ -268,7 +268,7 @@ namespace Akka.Serialization.Protocol
         public readonly string RouterDispatcher;
 
         [SerializationConstructor]
-        public FromConfig(in Payload resizer, string routerDispatcher)
+        public FromConfig(Payload resizer, string routerDispatcher)
         {
             Resizer = resizer;
             RouterDispatcher = routerDispatcher;
@@ -291,7 +291,7 @@ namespace Akka.Serialization.Protocol
         public readonly Payload Resizer;
 
         [SerializationConstructor]
-        public GenericRoutingPool(uint nrOfInstances, string routerDispatcher, bool usePoolDispatcher, in Payload resizer)
+        public GenericRoutingPool(uint nrOfInstances, string routerDispatcher, bool usePoolDispatcher, Payload resizer)
         {
             NrOfInstances = nrOfInstances;
             RouterDispatcher = routerDispatcher;
@@ -310,7 +310,7 @@ namespace Akka.Serialization.Protocol
         public readonly TimeSpan Within;
 
         [SerializationConstructor]
-        public ScatterGatherPool(in GenericRoutingPool generic, TimeSpan within)
+        public ScatterGatherPool(GenericRoutingPool generic, TimeSpan within)
         {
             Generic = generic;
             Within = within;
@@ -330,7 +330,7 @@ namespace Akka.Serialization.Protocol
         public readonly TimeSpan Interval;
 
         [SerializationConstructor]
-        public TailChoppingPool(in GenericRoutingPool generic, TimeSpan within, TimeSpan interval)
+        public TailChoppingPool(GenericRoutingPool generic, TimeSpan within, TimeSpan interval)
         {
             Generic = generic;
             Within = within;
@@ -348,7 +348,7 @@ namespace Akka.Serialization.Protocol
         public readonly AddressData[] Nodes;
 
         [SerializationConstructor]
-        public RemoteRouterConfig(in Payload local, AddressData[] nodes)
+        public RemoteRouterConfig(Payload local, AddressData[] nodes)
         {
             Local = local;
             Nodes = nodes;

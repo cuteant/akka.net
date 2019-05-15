@@ -13,7 +13,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization.Protocol
         public readonly long Timestamp;
 
         [SerializationConstructor]
-        public Version(in AddressData address, long timestamp)
+        public Version(AddressData address, long timestamp)
         {
             Address = address;
             Timestamp = timestamp;
@@ -63,7 +63,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization.Protocol
         public readonly Dictionary<string, ValueHolder> Content;
 
         [SerializationConstructor]
-        public Bucket(in AddressData owner, long version, Dictionary<string, ValueHolder> content)
+        public Bucket(AddressData owner, long version, Dictionary<string, ValueHolder> content)
         {
             Owner = owner;
             Version = version;
@@ -93,7 +93,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization.Protocol
         public readonly Payload Payload;
 
         [SerializationConstructor]
-        public Send(string path, bool localAffinity, in Payload payload)
+        public Send(string path, bool localAffinity, Payload payload)
         {
             Path = path;
             LocalAffinity = localAffinity;
@@ -113,7 +113,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization.Protocol
         public readonly Payload Payload;
 
         [SerializationConstructor]
-        public SendToAll(string path, bool allButSelf, in Payload payload)
+        public SendToAll(string path, bool allButSelf, Payload payload)
         {
             Path = path;
             AllButSelf = allButSelf;
@@ -131,7 +131,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization.Protocol
         public readonly Payload Payload;
 
         [SerializationConstructor]
-        public Publish(string topic, in Payload payload)
+        public Publish(string topic, Payload payload)
         {
             Topic = topic;
             Payload = payload;
@@ -146,6 +146,6 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization.Protocol
         public readonly Payload Payload;
 
         [SerializationConstructor]
-        public SendToOneSubscriber(in Payload payload) => Payload = payload;
+        public SendToOneSubscriber(Payload payload) => Payload = payload;
     }
 }
