@@ -1,6 +1,7 @@
 ﻿using System.Collections.Generic;
 using System.Runtime.Serialization;
 using EventStore.ClientAPI;
+using SpanJson;
 
 namespace Akka.Extension.EventStore
 {
@@ -9,13 +10,11 @@ namespace Akka.Extension.EventStore
         [DataMember(Name = "clrType")]
         public string ClrEventType { get; set; }
 
-        [DataMember(Name = "meta")]
+        [JsonExtensionData]
         public Dictionary<string, object> Context { get; set; }
 
-        [DataMember(Name = "identifier")]
         public int Identifier { get; set; }
 
-        [DataMember(Name = "manifest")]
         public string Manifest { get; set; }
     }
 }

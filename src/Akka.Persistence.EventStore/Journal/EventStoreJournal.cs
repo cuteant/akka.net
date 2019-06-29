@@ -174,8 +174,8 @@ namespace Akka.Persistence.EventStore.Journal
                 {
                     [MetadataConstants.PersistenceId] = persistentMessage.PersistenceId,
                     //[MetadataConstants.OccurredOn] = DateTime.UtcNow, // EventStore已有[Created Date]
-                    [MetadataConstants.Manifest] = persistentMessage.Manifest,
-                    [MetadataConstants.SenderPath] = persistentMessage.Sender?.Path?.ToStringWithoutAddress() ?? string.Empty,
+                    [MetadataConstants.Manifest] = string.IsNullOrEmpty(persistentMessage.Manifest) ? null : persistentMessage.Manifest,
+                    [MetadataConstants.SenderPath] = persistentMessage.Sender?.Path?.ToStringWithoutAddress()/* ?? string.Empty*/,
                     [MetadataConstants.SequenceNr] = persistentMessage.SequenceNr,
                     [MetadataConstants.WriterGuid] = persistentMessage.WriterGuid,
                     [MetadataConstants.JournalType] = JournalTypes.WriteJournal
@@ -201,9 +201,9 @@ namespace Akka.Persistence.EventStore.Journal
                 return null;
             }
             var stream = eventDescriptor.GetValue<string>(MetadataConstants.PersistenceId);
-            var manifest = eventDescriptor.GetValue<string>(MetadataConstants.Manifest);
+            var manifest = eventDescriptor.GetValue<string>(MetadataConstants.Manifest, string.Empty);
             var sequenceNr = eventDescriptor.GetValue<long>(MetadataConstants.SequenceNr);
-            var senderPath = eventDescriptor.GetValue<string>(MetadataConstants.SenderPath);
+            var senderPath = eventDescriptor.GetValue<string>(MetadataConstants.SenderPath, string.Empty);
 
             var sender = actorSelection?.Invoke(senderPath);
 

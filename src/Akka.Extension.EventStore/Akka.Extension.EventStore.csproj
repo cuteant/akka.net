@@ -21,6 +21,7 @@
   <ItemGroup>
     <PackageReference Include="CuteAnt.JsonExtensions" Version="$(CuteAntJsonExtensionsPackageVersion)" />
     <PackageReference Include="EasyEventStore.Core" Version="$(EasyEventStoreCorePackageVersion)" />
+    <PackageReference Include="SpanJson.Unofficial" Version="$(SpanJsonUnofficialPackageVersion)" />
     <PackageReference Include="Utf8Json.Unofficial" Version="$(Utf8JsonUnofficialPackageVersion)" />
   </ItemGroup>
 
