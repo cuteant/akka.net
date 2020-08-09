@@ -101,7 +101,7 @@ namespace Akka.Remote.Transport.DotNetty
         private static void AfterSetupReadHandler(IHandleEventListener listener, CommonHandlers owner, IChannel channel, IPEndPoint remoteSocketAddress, object msg)
         {
             owner.RegisterListener(channel, listener, msg, remoteSocketAddress);
-            channel.Configuration.AutoRead = true; // turn reads back on
+            channel.Configuration.IsAutoRead = true; // turn reads back on
         }
     }
 
@@ -222,7 +222,7 @@ namespace Akka.Remote.Transport.DotNetty
                 // Block reads until a handler actor is registered no incoming connections will be
                 // accepted until this value is reset it's possible that the first incoming
                 // association might come in though
-                newServerChannel.Configuration.AutoRead = false;
+                newServerChannel.Configuration.IsAutoRead = false;
                 ConnectionGroup.TryAdd(newServerChannel);
                 Interlocked.Exchange(ref ServerChannel, newServerChannel);
 
@@ -261,11 +261,11 @@ namespace Akka.Remote.Transport.DotNetty
 
         private static readonly Action<Task<IAssociationEventListener>, IChannel> InvokeResumeAcceptingIncomingConnsAction = InvokeResumeAcceptingIncomingConns;
         private static void InvokeResumeAcceptingIncomingConns(Task<IAssociationEventListener> result, IChannel newServerChannel)
-            => newServerChannel.Configuration.AutoRead = true;
+            => newServerChannel.Configuration.IsAutoRead = true;
 
         public override async Task<AssociationHandle> Associate(Address remoteAddress)
         {
-            if (!ServerChannel.Open) { ThrowHelper.ThrowChannelException(); }
+            if (!ServerChannel.IsOpen) { ThrowHelper.ThrowChannelException(); }
 
             return await AssociateInternal(remoteAddress).ConfigureAwait(false);
         }
@@ -293,11 +293,9 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 // free all of the connection objects we were holding onto
                 ConnectionGroup.Clear();
-#pragma warning disable 4014 // shutting down the worker groups can take up to 10 seconds each. Let that happen asnychronously.
-                _clientWorkerGroup.ShutdownGracefullyAsync();
-                _serverBossGroup.ShutdownGracefullyAsync();
-                _serverWorkerGroup.ShutdownGracefullyAsync();
-#pragma warning restore 4014
+                _clientWorkerGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)).Ignore();
+                _serverBossGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)).Ignore();
+                _serverWorkerGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)).Ignore();
             }
         }
 
@@ -328,7 +326,7 @@ namespace Akka.Remote.Transport.DotNetty
                     ? new TcpSocketChannel(addressFamily)
                     : new TcpSocketChannel());
             }
-            client.Handler(new ActionChannelInitializer<ISocketChannel>(channel => SetClientPipeline(channel, remoteAddress)));
+            client.Handler(new ActionChannelInitializer<IChannel>(channel => SetClientPipeline(channel, remoteAddress)));
 
             if (Settings.ReceiveBufferSize.HasValue) { client.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value); }
             if (Settings.SendBufferSize.HasValue) { client.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value); }
@@ -495,7 +493,7 @@ namespace Akka.Remote.Transport.DotNetty
                   //.Option(ChannelOption.SoLinger, Settings.TcpLinger)
 
                   .Option(ChannelOption.Allocator, Settings.EnableBufferPooling ? (IByteBufferAllocator)PooledByteBufferAllocator.Default : UnpooledByteBufferAllocator.Default)
-                  .ChildHandler(new ActionChannelInitializer<ISocketChannel>(SetServerPipeline));
+                  .ChildHandler(new ActionChannelInitializer<IChannel>(channel => SetServerPipeline(channel)));
 
             if (Settings.ReceiveBufferSize.HasValue) { server.Option(ChannelOption.SoRcvbuf, Settings.ReceiveBufferSize.Value); }
             if (Settings.SendBufferSize.HasValue) { server.Option(ChannelOption.SoSndbuf, Settings.SendBufferSize.Value); }

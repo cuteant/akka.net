@@ -26,7 +26,7 @@ namespace Akka.Remote.Tests
     public class ActorsLeakSpec : AkkaSpec
     {
         public static readonly Config Confg = ConfigurationFactory.ParseString(@"
-            akka.actor.provider = ""Akka.Remote.RemoteActorRefProvider, Akka.Remote""
+            akka.actor.provider = remote
             akka.loglevel = DEBUG
             akka.remote.dot-netty.tcp.applied-adapters = [trttl]
             akka.remote.dot-netty.tcp.hostname = 127.0.0.1
@@ -45,13 +45,20 @@ namespace Akka.Remote.Tests
         {
             var empty = new List<IActorRef>();
             var list = empty;
-            if (@ref is ActorRefWithCell)
+            if (@ref is ActorRefWithCell wc)
             {
-                var cell = @ref.AsInstanceOf<ActorRefWithCell>().Underlying;
-                if (cell.ChildrenContainer is EmptyChildrenContainer ||
-                    cell.ChildrenContainer is TerminatedChildrenContainer ||
-                    cell.ChildrenContainer is TerminatingChildrenContainer) list = empty;
-                else list = cell.ChildrenContainer.Children.Cast<IActorRef>().ToList();
+                var cell = wc.Underlying;
+                switch (cell.ChildrenContainer)
+                {
+                    case TerminatingChildrenContainer _:
+                    case TerminatedChildrenContainer _:
+                    case EmptyChildrenContainer _:
+                        list = empty;
+                        break;
+                    case NormalChildrenContainer n:
+                        list = n.Children.Cast<IActorRef>().ToList();
+                        break;
+                }
             }
 
             return ImmutableList<IActorRef>.Empty.Add(@ref).AddRange(list.SelectMany(Recurse));
@@ -63,7 +70,7 @@ namespace Akka.Remote.Tests
             return Recurse(root);
         }
 
-        class StoppableActor : ReceiveActor
+        private class StoppableActor : ReceiveActor
         {
             public StoppableActor()
             {
@@ -76,7 +83,7 @@ namespace Akka.Remote.Tests
 
         private void AssertActors(ImmutableHashSet<IActorRef> expected, ImmutableHashSet<IActorRef> actual)
         {
-            Assert.True(expected.SetEquals(actual));
+            expected.Should().BeEquivalentTo(actual);
         }
 
         [Fact]
@@ -228,7 +235,7 @@ namespace Akka.Remote.Tests
             AwaitAssert(() =>
             {
                 AssertActors(initialActors, targets.SelectMany(CollectLiveActors).ToImmutableHashSet());
-            }, 5.Seconds());
+            }, 10.Seconds());
         }
     }
 }

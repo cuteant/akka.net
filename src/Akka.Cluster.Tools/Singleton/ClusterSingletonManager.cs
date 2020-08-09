@@ -623,7 +623,7 @@ namespace Akka.Cluster.Tools.Singleton
         protected override void PreStart()
         {
             // subscribe to cluster changes, re-subscribe when restart
-            _cluster.Subscribe(Self, ClusterEvent.InitialStateAsEvents, typeof(ClusterEvent.MemberRemoved));
+            _cluster.Subscribe(Self, ClusterEvent.InitialStateAsEvents, typeof(ClusterEvent.MemberRemoved), typeof(ClusterEvent.MemberDowned));
 
             SetTimer(CleanupTimer, Cleanup.Instance, TimeSpan.FromMinutes(1.0), repeat: true);
 
@@ -703,12 +703,14 @@ namespace Akka.Cluster.Tools.Singleton
             }
 
             handOverTo?.Tell(HandOverInProgress.Instance);
+            if (Log.IsInfoEnabled) { Log.SingletonManagerStoppingSingletonActor(singleton); }
             singleton.Tell(_terminationMessage);
             return GoTo(ClusterSingletonState.HandingOver).Using(new HandingOverData(singleton, handOverTo));
         }
 
         private State<ClusterSingletonState, IClusterSingletonData> GoToStopping(IActorRef singleton)
         {
+            if (Log.IsInfoEnabled) { Log.SingletonManagerStoppingSingletonActor(singleton); }
             singleton.Tell(_terminationMessage);
             return GoTo(ClusterSingletonState.Stopping).Using(new StoppingData(singleton));
         }
@@ -790,6 +792,10 @@ namespace Akka.Cluster.Tools.Singleton
                         return Stay().Using(new YoungerData(oldestChanged.Oldest));
                     }
 
+                case MemberDowned memberDowned when memberDowned.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress):
+                    if (Log.IsInfoEnabled) { Log.SelfDownedStoppingClusterSingletonManager(); }
+                    return Stop();
+
                 case MemberRemoved memberRemoved:
                     if (memberRemoved.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
                     {
@@ -843,6 +849,10 @@ namespace Akka.Cluster.Tools.Singleton
 
                         return Stay();
                     }
+
+                case MemberDowned memberDowned when memberDowned.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress):
+                    if (Log.IsInfoEnabled) { Log.SelfDownedStoppingClusterSingletonManager(); }
+                    return Stop();
 
                 case MemberRemoved memberRemoved:
                     if (memberRemoved.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
@@ -967,6 +977,7 @@ namespace Akka.Cluster.Tools.Singleton
                     return Stay();
 
                 case Terminated terminated when e.StateData is OldestData o && terminated.ActorRef.Equals(o.Singleton):
+                    if (Log.IsInfoEnabled) { Log.SingletonActorWasTerminated(o.Singleton); }
                     return Stay().Using(new OldestData(o.Singleton, true));
 
                 case SelfExiting _:
@@ -974,6 +985,18 @@ namespace Akka.Cluster.Tools.Singleton
                     // complete _memberExitingProgress when HandOverDone
                     Sender.Tell(Done.Instance); // reply to ask
                     return Stay();
+
+                case MemberDowned memberDowned when e.StateData is OldestData od && memberDowned.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress):
+                    if (od.SingletonTerminated)
+                    {
+                        if (Log.IsInfoEnabled) { Log.SelfDownedStoppingClusterSingletonManager(); }
+                        return Stop();
+                    }
+                    else
+                    {
+                        if (Log.IsInfoEnabled) { Log.SelfDownedStopping(); }
+                        return GoToStopping(od.Singleton);
+                    }
 
                 default:
                     return null;
@@ -992,7 +1015,12 @@ namespace Akka.Cluster.Tools.Singleton
                     }
                     else if (takeOverRetry.Count <= _maxTakeOverRetries)
                     {
-                        if (Log.IsInfoEnabled) Log.RetrySendingTakeOverFromMeTo(takeOverRetry.Count, wasOldestData);
+                        if (_maxTakeOverRetries - takeOverRetry.Count <= 3)
+                        {
+                            if (Log.IsInfoEnabled) { Log.RetrySendingTakeOverFromMeTo(takeOverRetry.Count, wasOldestData); }
+                        }
+                        else
+                            Log.Debug("Retry [{0}], sending TakeOverFromMe to [{1}]", takeOverRetry.Count, wasOldestData.NewOldest?.Address);
 
                         if (wasOldestData.NewOldest != null)
                             Peer(wasOldestData.NewOldest.Address).Tell(TakeOverFromMe.Instance);
@@ -1026,6 +1054,7 @@ namespace Akka.Cluster.Tools.Singleton
                     return null;
 
                 case Terminated t when e.StateData is WasOldestData oldestData && t.ActorRef.Equals(oldestData.Singleton):
+                    if (Log.IsInfoEnabled) { Log.SingletonActorWasTerminated(oldestData.Singleton); }
                     return Stay().Using(new WasOldestData(oldestData.Singleton, true, oldestData.NewOldest));
 
                 case SelfExiting _:
@@ -1033,6 +1062,18 @@ namespace Akka.Cluster.Tools.Singleton
                     // complete _memberExitingProgress when HandOverDone
                     Sender.Tell(Done.Instance); // reply to ask
                     return Stay();
+
+                case MemberDowned memberDowned when e.StateData is WasOldestData od && memberDowned.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress):
+                    if (od.SingletonTerminated)
+                    {
+                        if (Log.IsInfoEnabled) { Log.SelfDownedStoppingClusterSingletonManager(); }
+                        return Stop();
+                    }
+                    else
+                    {
+                        if (Log.IsInfoEnabled) { Log.SelfDownedStopping(); }
+                        return GoToStopping(od.Singleton);
+                    }
 
                 default:
                     return null;
@@ -1068,6 +1109,7 @@ namespace Akka.Cluster.Tools.Singleton
                 && e.StateData is StoppingData stoppingData
                 && terminated.ActorRef.Equals(stoppingData.Singleton))
             {
+                if (Log.IsInfoEnabled) { Log.SingletonActorWasTerminated(stoppingData.Singleton); }
                 return Stop();
             }
 
@@ -1076,14 +1118,20 @@ namespace Akka.Cluster.Tools.Singleton
 
         private State<ClusterSingletonState, IClusterSingletonData> HandleWhenEnd(Event<IClusterSingletonData> e)
         {
-            if (e.FsmEvent is MemberRemoved removed
-                && removed.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
+            switch (e.FsmEvent)
             {
-                if (Log.IsInfoEnabled) Log.SelfRemovedStoppingClusterSingletonManager();
-                return Stop();
-            }
+                case MemberRemoved removed when removed.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress):
+                    if (Log.IsInfoEnabled) Log.SelfRemovedStoppingClusterSingletonManager();
+                    return Stop();
 
-            return null;
+                case OldestChangedBuffer.OldestChanged _:
+                case HandOverToMe _:
+                    // not interested anymore - waiting for removal
+                    return Stay();
+
+                default:
+                    return null;
+            }
         }
 
         private State<ClusterSingletonState, IClusterSingletonData> HandleWhenUnhandled(Event<IClusterSingletonData> e)
@@ -1118,11 +1166,18 @@ namespace Akka.Cluster.Tools.Singleton
                     return Stay();
 
                 case TakeOverFromMe _:
-                    if (Log.IsInfoEnabled) Log.IgnoringTakeOverRequest(StateName, Sender);
+                    if (Log.IsDebugEnabled) { Log.IgnoringTakeOverRequest(StateName, Sender); }
                     return Stay();
 
                 case Cleanup _:
                     CleanupOverdueNotMemberAnyMore();
+                    return Stay();
+
+                case MemberDowned memberDowned:
+                    if (memberDowned.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress))
+                    {
+                        if (Log.IsInfoEnabled) { Log.SelfDownedWaitingForRemoval(); }
+                    }
                     return Stay();
 
                 default:

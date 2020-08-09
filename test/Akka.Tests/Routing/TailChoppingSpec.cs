@@ -125,7 +125,7 @@ namespace Akka.Tests.Routing
             routedActor.Tell(new Broadcast("stop"));
         }
 
-        [Fact(Skip =".NET Core环境下无法测试，.net471下报错")] // TODO4ME
+        [Fact(Skip = "Skip until fix from https://github.com/akkadotnet/akka.net/pull/3790 merged")]
         public void Tail_chopping_group_router_must_throw_exception_if_no_result_will_arrive_within_the_given_time()
         {
             var actor1 = Sys.ActorOf(Props.Create(() => new TailChopTestActor(1500.Milliseconds())), "Actor3");

@@ -7,7 +7,7 @@ using CuteAnt.Reflection;
 
 namespace Akka.Serialization
 {
-    #region -- SerializerWithManifest<TManifest, TSerializationManifest> --
+    #region -- SerializerWithManifest<TManifest> --
 
     /// <summary>TBD</summary>
     /// <typeparam name="TManifest"></typeparam>
@@ -83,12 +83,12 @@ namespace Akka.Serialization
             return new Payload(payload, Identifier, manifest, null);
         }
 
-        /// <inheritdoc />
-        public sealed override Payload ToPayloadWithAddress(Address address, object obj)
-        {
-            var payload = Serialization.SerializeWithTransport(system, address, this, obj, out var manifest);
-            return new Payload(payload, Identifier, manifest, null);
-        }
+        ///// <inheritdoc />
+        //public sealed override Payload ToPayloadWithAddress(Address address, object obj)
+        //{
+        //    var payload = Serialization.WithTransport(system, address, this, obj, out var manifest);
+        //    return new Payload(payload, Identifier, manifest, null);
+        //}
 
         /// <inheritdoc />
         public sealed override object FromPayload(in Payload payload)
@@ -129,11 +129,11 @@ namespace Akka.Serialization
             return new Payload(ToBinary(obj), Identifier, null, obj.GetType());
         }
 
-        /// <inheritdoc />
-        public sealed override Payload ToPayloadWithAddress(Address address, object obj)
-        {
-            return new Payload(Serialization.SerializeWithTransport(system, address, this, obj), Identifier, null, obj.GetType());
-        }
+        ///// <inheritdoc />
+        //public sealed override Payload ToPayloadWithAddress(Address address, object obj)
+        //{
+        //    return new Payload(Serialization.WithTransport(system, address, this, obj), Identifier, null, obj.GetType());
+        //}
 
         /// <inheritdoc />
         public sealed override object FromPayload(in Payload payload)

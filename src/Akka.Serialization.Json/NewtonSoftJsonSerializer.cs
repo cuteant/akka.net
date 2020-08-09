@@ -16,11 +16,11 @@ using Akka.Util;
 using CuteAnt.Collections;
 using CuteAnt.Pool;
 using CuteAnt.Reflection;
-using JsonExtensions;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
+using SpanJson.Serialization;
 
 namespace Akka.Serialization
 {
@@ -167,7 +167,7 @@ namespace Akka.Serialization
 
             converters.Add(new SurrogateConverter(this));
             converters.Add(new DiscriminatedUnionConverter());
-            converters.Add(JsonConvertX.DefaultCombGuidConverter);
+            converters.Add(CombGuidConverter.Instance);
 
             _initialBufferSize = settings.InitialBufferSize;
             _serializerSettings = new JsonSerializerSettings
@@ -212,7 +212,7 @@ namespace Akka.Serialization
                 : (JsonConverter)Activator.CreateInstance(converterType, actorSystem);
         }
 
-        internal class AkkaContractResolver : JsonContractResolver //DefaultContractResolver
+        internal class AkkaContractResolver : DefaultContractResolver
         {
             protected override JsonProperty CreateProperty(MemberInfo member, MemberSerialization memberSerialization)
             {
@@ -270,7 +270,7 @@ namespace Akka.Serialization
             //The deserialized object is a surrogate, unwrap it
             if (deserializedValue is ISurrogate surrogate)
             {
-                return surrogate.FromSurrogate(parent.system);
+                return surrogate.FromSurrogate(parent._system);
             }
             return deserializedValue;
         }
@@ -360,7 +360,7 @@ namespace Akka.Serialization
                         break;
 
                     case ISurrogated surrogated:
-                        var surrogate = surrogated.ToSurrogate(_parent.system);
+                        var surrogate = surrogated.ToSurrogate(_parent._system);
                         serializer.Serialize(writer, surrogate);
                         break;
 

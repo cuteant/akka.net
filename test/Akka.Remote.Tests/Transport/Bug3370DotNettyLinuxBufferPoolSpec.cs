@@ -53,8 +53,8 @@ namespace Akka.Remote.Tests.Transport
                 // verify that ServerChannel is active and open
                 var sc = t1.ServerChannel;
                 sc.Should().NotBeNull();
-                sc.Active.Should().BeTrue();
-                sc.Open.Should().BeTrue();
+                sc.IsActive.Should().BeTrue();
+                sc.IsOpen.Should().BeTrue();
                 sc.Allocator.Should().NotBeOfType<PooledByteBufferAllocator>(); // verify we are not using pooling
                 sc.Allocator.Should().BeOfType<UnpooledByteBufferAllocator>(); 
             }

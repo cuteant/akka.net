@@ -39,7 +39,7 @@ namespace Akka.Serialization
         /// <summary>
         /// The actor system to associate with this serializer.
         /// </summary>
-        protected readonly ExtendedActorSystem system;
+        protected readonly ExtendedActorSystem _system;
 
         private readonly FastLazy<int> _value;
 
@@ -49,7 +49,7 @@ namespace Akka.Serialization
         /// <param name="system">The actor system to associate with this serializer. </param>
         protected Serializer(ExtendedActorSystem system)
         {
-            this.system = system;
+            _system = system;
             _value = new FastLazy<int>(() => SerializerIdentifierHelper.GetSerializerIdentifierFromConfig(GetType(), system));
         }
 
@@ -85,16 +85,16 @@ namespace Akka.Serialization
         /// <returns>A byte array containing the serialized object</returns>
         public abstract byte[] ToBinary(object obj);
 
-        /// <summary>
-        /// Serializes the given object into a byte array and uses the given address to decorate serialized ActorRef's
-        /// </summary>
-        /// <param name="address">The address to use when serializing local ActorRef´s</param>
-        /// <param name="obj">The object to serialize</param>
-        /// <returns>TBD</returns>
-        public byte[] ToBinaryWithAddress(Address address, object obj)
-        {
-            return Serialization.SerializeWithTransport(system, address, this, obj);
-        }
+        ///// <summary>
+        ///// Serializes the given object into a byte array and uses the given address to decorate serialized ActorRef's
+        ///// </summary>
+        ///// <param name="address">The address to use when serializing local ActorRef´s</param>
+        ///// <param name="obj">The object to serialize</param>
+        ///// <returns>TBD</returns>
+        //public byte[] ToBinaryWithAddress(Address address, object obj)
+        //{
+        //    return Serialization.WithTransport(system, address, this, obj);
+        //}
 
         /// <summary>
         /// Deserializes a byte array into an object of type <paramref name="type"/>.
@@ -121,16 +121,16 @@ namespace Akka.Serialization
             return new Payload(ToBinary(obj), Identifier);
         }
 
-        /// <summary>
-        /// Serializes the given object into a <see cref="Payload"/> and uses the given address to decorate serialized ActorRef's
-        /// </summary>
-        /// <param name="address">The address to use when serializing local ActorRef´s</param>
-        /// <param name="obj">The object to serialize</param>
-        /// <returns>A <see cref="Payload"/> containing the serialized object</returns>
-        public virtual Payload ToPayloadWithAddress(Address address, object obj)
-        {
-            return new Payload(Serialization.SerializeWithTransport(system, address, this, obj), Identifier);
-        }
+        ///// <summary>
+        ///// Serializes the given object into a <see cref="Payload"/> and uses the given address to decorate serialized ActorRef's
+        ///// </summary>
+        ///// <param name="address">The address to use when serializing local ActorRef´s</param>
+        ///// <param name="obj">The object to serialize</param>
+        ///// <returns>A <see cref="Payload"/> containing the serialized object</returns>
+        //public virtual Payload ToPayloadWithAddress(Address address, object obj)
+        //{
+        //    return new Payload(Serialization.WithTransport(system, address, this, obj), Identifier);
+        //}
 
         /// <summary>
         /// Deserializes a <see cref="Payload"/> into an object.

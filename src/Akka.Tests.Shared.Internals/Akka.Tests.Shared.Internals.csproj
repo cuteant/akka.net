@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(Core20TestTfms)</TargetFrameworks>
@@ -20,4 +19,5 @@
     <ProjectReference Include="..\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

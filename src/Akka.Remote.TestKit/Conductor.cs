@@ -263,14 +263,14 @@ namespace Akka.Remote.TestKit
 
             // Duration of this Ask operation needs to be infinite
             var channel = context.Channel;
-            channel.Configuration.AutoRead = false;
+            channel.Configuration.IsAutoRead = false;
             _controller.Ask<IActorRef>(new Controller.CreateServerFSM(channel),
                 TimeSpan.FromMilliseconds(Int32.MaxValue)).ContinueWith(tr =>
                 {
                     var fsm = tr.Result;
                     _log.Debug("created server FSM {0}", fsm);
                     _clients.AddOrUpdate(channel, fsm, (connection, @ref) => fsm);
-                    channel.Configuration.AutoRead = true;
+                    channel.Configuration.IsAutoRead = true;
                 });
         }
 

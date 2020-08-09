@@ -323,7 +323,8 @@ namespace Akka.Streams
                 isFuzzingMode: config.GetBoolean("debug.fuzzing-mode"),
                 isAutoFusing: config.GetBoolean("auto-fusing", true),
                 maxFixedBufferSize: config.GetInt("max-fixed-buffer-size", 1000000000),
-                syncProcessingLimit: config.GetInt("sync-processing-limit", 1000));
+                syncProcessingLimit: config.GetInt("sync-processing-limit", 1000),
+                streamRefSettings: StreamRefSettings.Create(config.GetConfig("stream-ref") ?? Config.Empty));
         }
 
         private const int DefaultlMaxFixedbufferSize = 1000;
@@ -373,6 +374,11 @@ namespace Akka.Streams
         public readonly int SyncProcessingLimit;
 
         /// <summary>
+        /// INTERNAL API
+        /// </summary>
+        public readonly StreamRefSettings StreamRefSettings;
+
+        /// <summary>
         /// TBD
         /// </summary>
         /// <param name="initialInputBufferSize">TBD</param>
@@ -380,13 +386,14 @@ namespace Akka.Streams
         /// <param name="dispatcher">TBD</param>
         /// <param name="supervisionDecider">TBD</param>
         /// <param name="subscriptionTimeoutSettings">TBD</param>
+        /// <param name="streamRefSettings"></param>
         /// <param name="isDebugLogging">TBD</param>
         /// <param name="outputBurstLimit">TBD</param>
         /// <param name="isFuzzingMode">TBD</param>
         /// <param name="isAutoFusing">TBD</param>
         /// <param name="maxFixedBufferSize">TBD</param>
         /// <param name="syncProcessingLimit">TBD</param>
-        public ActorMaterializerSettings(int initialInputBufferSize, int maxInputBufferSize, string dispatcher, Decider supervisionDecider, StreamSubscriptionTimeoutSettings subscriptionTimeoutSettings, bool isDebugLogging, int outputBurstLimit, bool isFuzzingMode, bool isAutoFusing, int maxFixedBufferSize, int syncProcessingLimit = DefaultlMaxFixedbufferSize)
+        public ActorMaterializerSettings(int initialInputBufferSize, int maxInputBufferSize, string dispatcher, Decider supervisionDecider, StreamSubscriptionTimeoutSettings subscriptionTimeoutSettings, StreamRefSettings streamRefSettings, bool isDebugLogging, int outputBurstLimit, bool isFuzzingMode, bool isAutoFusing, int maxFixedBufferSize, int syncProcessingLimit = DefaultlMaxFixedbufferSize)
         {
             InitialInputBufferSize = initialInputBufferSize;
             MaxInputBufferSize = maxInputBufferSize;
@@ -399,7 +406,7 @@ namespace Akka.Streams
             IsAutoFusing = isAutoFusing;
             MaxFixedBufferSize = maxFixedBufferSize;
             SyncProcessingLimit = syncProcessingLimit;
-
+            StreamRefSettings = streamRefSettings;
         }
 
         /// <summary>
@@ -410,7 +417,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithInputBuffer(int initialSize, int maxSize)
         {
-            return new ActorMaterializerSettings(initialSize, maxSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
+            return new ActorMaterializerSettings(initialSize, maxSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, StreamRefSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
         }
 
         /// <summary>
@@ -420,7 +427,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithDispatcher(string dispatcher)
         {
-            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, StreamRefSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
         }
 
         /// <summary>
@@ -430,7 +437,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithSupervisionStrategy(Decider decider)
         {
-            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, decider, SubscriptionTimeoutSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, decider, SubscriptionTimeoutSettings, StreamRefSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
         }
 
         /// <summary>
@@ -440,7 +447,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithDebugLogging(bool isEnabled)
         {
-            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, isEnabled, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, StreamRefSettings, isEnabled, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
         }
 
         /// <summary>
@@ -450,7 +457,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithFuzzingMode(bool isFuzzingMode)
         {
-            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, IsDebugLogging, OutputBurstLimit, isFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, StreamRefSettings, IsDebugLogging, OutputBurstLimit, isFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
         }
 
         /// <summary>
@@ -460,7 +467,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithAutoFusing(bool isAutoFusing)
         {
-            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, isAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, StreamRefSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, isAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
         }
 
         /// <summary>
@@ -470,7 +477,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithMaxFixedBufferSize(int maxFixedBufferSize)
         {
-            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, maxFixedBufferSize, SyncProcessingLimit);
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, StreamRefSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, maxFixedBufferSize, SyncProcessingLimit);
         }
 
         /// <summary>
@@ -480,7 +487,7 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithSyncProcessingLimit(int limit)
         {
-            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, limit);
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, SubscriptionTimeoutSettings, StreamRefSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, limit);
         }
 
         /// <summary>
@@ -490,10 +497,18 @@ namespace Akka.Streams
         /// <returns>TBD</returns>
         public ActorMaterializerSettings WithSubscriptionTimeoutSettings(StreamSubscriptionTimeoutSettings settings)
         {
-            if (Equals(settings, SubscriptionTimeoutSettings))
-                return this;
+            if (Equals(settings, SubscriptionTimeoutSettings)) { return this; }
 
-            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, settings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher, SupervisionDecider, settings, StreamRefSettings, IsDebugLogging, OutputBurstLimit, IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
+        }
+
+        public ActorMaterializerSettings WithStreamRefSettings(StreamRefSettings settings)
+        {
+            if (settings is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.settings);
+            if (ReferenceEquals(settings, this.StreamRefSettings)) { return this; }
+            return new ActorMaterializerSettings(InitialInputBufferSize, MaxInputBufferSize, Dispatcher,
+                SupervisionDecider, SubscriptionTimeoutSettings, settings, IsDebugLogging, OutputBurstLimit,
+                IsFuzzingMode, IsAutoFusing, MaxFixedBufferSize, SyncProcessingLimit);
         }
     }
 

@@ -211,7 +211,7 @@ namespace Akka.Cluster.Tools.Client
 
             SendGetContacts();
 
-            _contactPathsPublished = ImmutableHashSet<ActorPath>.Empty;
+            _contactPathsPublished = _contactPaths;
             _subscribers = ImmutableList<IActorRef>.Empty;
 
             _heartbeatTask = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(
@@ -298,12 +298,13 @@ namespace Akka.Cluster.Tools.Client
 
                     if (receptionist != null)
                     {
-                        if (_log.IsInfoEnabled) _log.ConnectedTo(receptionist);
+                        if (_log.IsInfoEnabled) { _log.ConnectedTo(receptionist); }
                         ScheduleRefreshContactsTick(_settings.RefreshContactsInterval);
                         SendBuffered(receptionist);
                         Context.Become(Active(receptionist));
                         connectTimerCancelable?.Cancel();
                         _failureDetector.HeartBeat();
+                        Self.Tell(HeartbeatTick.Instance); // will register us as active client of the selected receptionist
                     }
                     else
                     {
@@ -326,8 +327,11 @@ namespace Akka.Cluster.Tools.Client
                     Buffer(new PublishSubscribe.Publish(publish.Topic, publish.Message));
                     return true;
                 case ReconnectTimeout _:
-                    if (_log.IsWarningEnabled) _log.ReceptionistReconnectNotSuccessful(_settings);
+                    if (_log.IsWarningEnabled) { _log.ReceptionistReconnectNotSuccessful(_settings); }
                     Context.Stop(Self);
+                    return true;
+                case ClusterReceptionist.ReceptionistShutdown _:
+                    // ok, haven't chosen a receptionist yet
                     return true;
                 default:
                     return ContactPointMessages(message);
@@ -352,11 +356,8 @@ namespace Akka.Cluster.Tools.Client
                     case HeartbeatTick _:
                         if (!_failureDetector.IsAvailable)
                         {
-                            if (_log.IsInfoEnabled) _log.LostContactWithReestablishingConnection(receptionist);
-                            SendGetContacts();
-                            ScheduleRefreshContactsTick(_settings.EstablishingGetContactsInterval);
-                            Context.Become(Establishing);
-                            _failureDetector.HeartBeat();
+                            if (_log.IsInfoEnabled) { _log.LostContactWithReestablishingConnection(receptionist); }
+                            Reestablish();
                         }
                         else
                         {
@@ -381,12 +382,27 @@ namespace Akka.Cluster.Tools.Client
                     case ActorIdentity _:
                         // ok, from previous establish, already handled
                         return true;
+                    case ClusterReceptionist.ReceptionistShutdown _:
+                        if (receptionist.Equals(Sender))
+                        {
+                            if (_log.IsInfoEnabled) { _log.Receptionist_is_shutting_down_reestablishing_connection(receptionist); }
+                            Reestablish();
+                        }
+                        return true;
 
                     default:
                         return ContactPointMessages(message);
                 }
             }
             return LocalReceive;
+        }
+
+        private void Reestablish()
+        {
+            SendGetContacts();
+            ScheduleRefreshContactsTick(_settings.EstablishingGetContactsInterval);
+            Context.Become(Establishing);
+            _failureDetector.HeartBeat();
         }
 
         private bool ContactPointMessages(object message)
@@ -433,12 +449,12 @@ namespace Akka.Cluster.Tools.Client
         {
             if (_settings.BufferSize == 0)
             {
-                if (_log.IsWarningEnabled) _log.ReceptionistNotAvailableAndBufferingIsDisabled(message);
+                if (_log.IsWarningEnabled) { _log.ReceptionistNotAvailableAndBufferingIsDisabled(message); }
             }
             else if (_buffer.Count == _settings.BufferSize)
             {
                 var m = _buffer.Dequeue();
-                if (_log.IsWarningEnabled) _log.ReceptionistNotAvailableBufferIsFull(m.Item1);
+                if (_log.IsWarningEnabled) { _log.ReceptionistNotAvailableBufferIsFull(m.Item1); }
                 _buffer.Enqueue(Tuple.Create(message, Sender));
             }
             else
@@ -453,7 +469,7 @@ namespace Akka.Cluster.Tools.Client
 
         private void SendBuffered(IActorRef receptionist)
         {
-            if (_log.IsDebugEnabled) _log.SendingBufferedMessagesToReceptionist();
+            if (_log.IsDebugEnabled) { _log.SendingBufferedMessagesToReceptionist(); }
             while (_buffer.Count != 0)
             {
                 var t = _buffer.Dequeue();

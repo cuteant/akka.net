@@ -158,8 +158,7 @@ namespace Akka.Actor
             }
             catch (Exception ex)
             {
-                throw new ActorNotFoundException("Exception occurred while resolving ActorSelection", ex);
-                //ThrowHelper.ThrowActorNotFoundException(ExceptionResource.ActorNotFound_ActorSel_Exc, ex);
+                throw AkkaThrowHelper.GetActorNotFoundException(AkkaExceptionResource.ActorNotFound_ActorSel_Exc, ex);
             }
         }
 

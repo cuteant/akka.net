@@ -49,7 +49,7 @@ namespace Akka.Persistence
 
     /// <summary>
     /// Unlike <see cref="StashingHandlerInvocation"/> this one does not force actor to stash commands.
-    /// Originates from <see cref="Eventsourced.PersistAsync{TEvent}(TEvent,Action{TEvent})"/> 
+    /// Originates from <see cref="Eventsourced.PersistAsync{TEvent}(TEvent,Action{TEvent})"/>
     /// or <see cref="Eventsourced.DeferAsync{TEvent}"/> method calls.
     /// </summary>
     [MessagePackObject]
@@ -223,7 +223,7 @@ namespace Akka.Persistence
         public bool IsRecoveryFinished => !IsRecovering;
 
         /// <summary>
-        /// Highest received sequence number so far or `0L` if this actor 
+        /// Highest received sequence number so far or `0L` if this actor
         /// hasn't replayed  or stored any persistent events yet.
         /// </summary>
         public long LastSequenceNr { get; private set; }
@@ -281,8 +281,8 @@ namespace Akka.Persistence
             SnapshotStore.Tell(new DeleteSnapshots(SnapshotterId, criteria));
         }
 
-        /// <summary> 
-        /// Recovery handler that receives persistent events during recovery. If a state snapshot has been captured and saved, 
+        /// <summary>
+        /// Recovery handler that receives persistent events during recovery. If a state snapshot has been captured and saved,
         /// this handler will receive a <see cref="SnapshotOffer"/> message followed by events that are younger than offer itself.
         /// 
         /// This handler must not have side-effects other than changing persistent actor state i.e. it
@@ -304,7 +304,7 @@ namespace Akka.Persistence
         /// <returns>TBD</returns>
         protected abstract bool ReceiveCommand(object message);
 
-        /// <summary> 
+        /// <summary>
         /// Asynchronously persists an <paramref name="event"/>. On successful persistence, the <paramref name="handler"/>
         /// is called with the persisted event. This method guarantees that no new commands will be received by a persistent actor
         /// between a call to <see cref="Persist{TEvent}(TEvent,System.Action{TEvent})"/> and execution of its handler. It also
@@ -316,7 +316,7 @@ namespace Akka.Persistence
         /// is considered a sender of the corresponding command. That means one can respond to sender from within an event handler.
         /// 
         /// 
-        /// Within an event handler, applications usually update persistent actor state using 
+        /// Within an event handler, applications usually update persistent actor state using
         /// persisted event data, notify listeners and reply to command senders.
         /// 
         ///
@@ -376,13 +376,13 @@ namespace Akka.Persistence
                 _eventBatch.AddToFront(new AtomicWrite(persistents.ToImmutable()));
         }
 
-        /// <summary> 
+        /// <summary>
         /// Asynchronously persists an <paramref name="event"/>. On successful persistence, the <paramref name="handler"/>
         /// is called with the persisted event. Unlike <see cref="Persist{TEvent}(TEvent,System.Action{TEvent})"/> method,
         /// this one will continue to receive incoming commands between calls and executing it's event <paramref name="handler"/>.
         /// 
         /// 
-        /// This version should be used in favor of <see cref="Persist{TEvent}(TEvent,System.Action{TEvent})"/> 
+        /// This version should be used in favor of <see cref="Persist{TEvent}(TEvent,System.Action{TEvent})"/>
         /// method when throughput is more important that commands execution precedence.
         /// 
         /// 
@@ -390,7 +390,7 @@ namespace Akka.Persistence
         /// is considered a sender of the corresponding command. That means, one can respond to sender from within an event handler.
         /// 
         /// 
-        /// Within an event handler, applications usually update persistent actor state using 
+        /// Within an event handler, applications usually update persistent actor state using
         /// persisted event data, notify listeners and reply to command senders.
         /// 
         /// 
@@ -446,7 +446,7 @@ namespace Akka.Persistence
         }
 
         /// <summary>
-        /// Defer the <paramref name="handler"/> execution until all pending handlers have been executed. 
+        /// Defer the <paramref name="handler"/> execution until all pending handlers have been executed.
         /// Allows to define logic within the actor, which will respect the invocation-order-guarantee
         /// in respect to <see cref="PersistAsync{TEvent}(TEvent,System.Action{TEvent})"/> calls.
         /// That is, if <see cref="PersistAsync{TEvent}(TEvent,System.Action{TEvent})"/> was invoked before
@@ -493,6 +493,29 @@ namespace Akka.Persistence
         public void DeleteMessages(long toSequenceNr)
         {
             Journal.Tell(new DeleteMessagesTo(PersistenceId, toSequenceNr, Self));
+        }
+
+        /// <summary>
+        /// An <see cref="Eventsourced"/> actor can request cleanup by deleting either a range of, or all persistent events.
+        /// For example, on successful snapshot completion, delete messages within a configurable <paramref name="snapshotAfter"/>
+        /// range that are less than or equal to the given <see cref="SnapshotMetadata.SequenceNr"/>
+        /// (provided the <see cref="SnapshotMetadata.SequenceNr"/> is &lt;= to <see cref="Eventsourced.LastSequenceNr"/>).
+        ///
+        /// Or delete all by using `long.MaxValue` as the `toSequenceNr`
+        /// {{{ m.copy(sequenceNr = long.MaxValue) }}}
+        /// </summary>
+        /// <param name="e"></param>
+        /// <param name="keepNrOfBatches"></param>
+        /// <param name="snapshotAfter"></param>
+        internal void InternalDeleteMessagesBeforeSnapshot(SaveSnapshotSuccess e, int keepNrOfBatches, int snapshotAfter)
+        {
+            // Delete old events but keep the latest around
+            // 1. It's not safe to delete all events immediately because snapshots are typically stored with
+            //    a weaker consistency level. A replay might "see" the deleted events before it sees the stored
+            //    snapshot, i.e. it could use an older snapshot and not replay the full sequence of events
+            // 2. If there is a production failure, it's useful to be able to inspect the events while debugging
+            var sequenceNr = e.Metadata.SequenceNr - keepNrOfBatches * snapshotAfter;
+            if (sequenceNr > 0) { DeleteMessages(sequenceNr); }
         }
 
         /// <summary>

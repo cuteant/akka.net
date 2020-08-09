@@ -13,7 +13,6 @@ using Akka.Actor;
 using Akka.Serialization.Protocol;
 using Akka.Util;
 using Akka.Util.Internal;
-using CuteAnt.Reflection;
 using MessagePack;
 
 namespace Akka.Serialization
@@ -71,9 +70,8 @@ namespace Akka.Serialization
 
             foreach (var info in serializationInfo)
             {
-                if (DefaultProperties.Contains(info.Name)) continue;
-                var preparedValue = system.Serialize(info.Value);
-                customFields.Add(info.Name, preparedValue);
+                if (DefaultProperties.Contains(info.Name)) { continue; }
+                customFields.Add(info.Name, system.SerializeMessage(info.Value));
             }
             if (customFields.Count > 0) { message.CustomFields = customFields; }
 

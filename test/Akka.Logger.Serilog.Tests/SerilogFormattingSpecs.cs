@@ -19,7 +19,7 @@ namespace Akka.Logger.Serilog.Tests
         public SerilogFormattingSpecs(ITestOutputHelper helper) : base(Config, output: helper)
         {
             _serilogLogger = new LoggerConfiguration()
-                .WriteTo.ColoredConsole()
+                .WriteTo.Console()
                 .MinimumLevel.Information()
                 .CreateLogger();
 

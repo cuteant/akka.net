@@ -204,6 +204,7 @@ namespace Akka.Cluster
         [Union(3, typeof(MemberLeft))]
         [Union(4, typeof(MemberExited))]
         [Union(5, typeof(MemberRemoved))]
+        [Union(6, typeof(MemberDowned))]
         [MessagePackObject]
         public abstract class MemberStatusChange : IMemberEvent
         {
@@ -329,6 +330,24 @@ namespace Akka.Cluster
             /// <param name="member">The node that changed state.</param>
             [SerializationConstructor]
             public MemberExited(Member member) : base(member, MemberStatus.Exiting) { }
+        }
+
+        /// <summary>
+        /// Member status changed to `MemberStatus.Down` and will be removed
+        /// when all members have seen the `Down` status.
+        /// </summary>
+        [MessagePackObject]
+        public sealed class MemberDowned : MemberStatusChange
+        {
+            /// <summary>
+            /// Initializes a new instance of the <see cref="MemberJoined"/> class.
+            /// </summary>
+            /// <param name="member">The node that changed state.</param>
+            [SerializationConstructor]
+            public MemberDowned(Member member)
+                : base(member, MemberStatus.Down)
+            {
+            }
         }
 
         /// <summary>
@@ -893,6 +912,9 @@ namespace Akka.Cluster
                         break;
                     case MemberStatus.Exiting:
                         yield return new MemberExited(member);
+                        break;
+                    case MemberStatus.Down:
+                        yield return new MemberDowned(member);
                         break;
                 }
             }

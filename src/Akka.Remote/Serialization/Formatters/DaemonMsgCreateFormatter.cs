@@ -57,7 +57,7 @@ namespace Akka.Remote.Serialization.Formatters
             return new PropsData(
                 DeployToProto(system, props.Deploy),
                 props.Type.TypeQualifiedName(),
-                props.Arguments.Select(_ => system.Serialize(_)).ToArray());
+                props.Arguments.Select(_ => system.SerializeMessage(_)).ToArray());
 
         }
 
@@ -87,9 +87,9 @@ namespace Akka.Remote.Serialization.Formatters
         {
             return new DeployData(
                 deploy.Path,
-                system.Serialize(deploy.Config),
-                deploy.RouterConfig != NoRouter.Instance ? system.Serialize(deploy.RouterConfig) : Payload.Null,
-                deploy.Scope != Deploy.NoScopeGiven ? system.Serialize(deploy.Scope) : Payload.Null,
+                system.SerializeMessage(deploy.Config),
+                deploy.RouterConfig != NoRouter.Instance ? system.SerializeMessage(deploy.RouterConfig) : Payload.Null,
+                deploy.Scope != Deploy.NoScopeGiven ? system.SerializeMessage(deploy.Scope) : Payload.Null,
                 deploy.Dispatcher != Deploy.NoDispatcherGiven ? deploy.Dispatcher : null
                 );
         }

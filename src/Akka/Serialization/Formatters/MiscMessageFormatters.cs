@@ -25,7 +25,7 @@ namespace Akka.Serialization.Formatters
                 (uint)pool.NrOfInstances,
                 pool.RouterDispatcher,
                 pool.UsePoolDispatcher,
-                system.Serialize(pool.Resizer)
+                system.SerializeMessage(pool.Resizer)
             );
         }
 
@@ -83,7 +83,7 @@ namespace Akka.Serialization.Formatters
         {
             if (value == null) { writer.WriteNil(ref idx); return; }
 
-            var protoIdentify = new Protocol.Identify(formatterResolver.Serialize(value.MessageId));
+            var protoIdentify = new Protocol.Identify(formatterResolver.SerializeMessage(value.MessageId));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.Identify>();
             formatter.Serialize(ref writer, ref idx, protoIdentify, DefaultResolver);
@@ -116,7 +116,7 @@ namespace Akka.Serialization.Formatters
             if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoIdentify = new Protocol.ActorIdentity(
-                formatterResolver.Serialize(value.MessageId),
+                formatterResolver.SerializeMessage(value.MessageId),
                 Akka.Serialization.Serialization.SerializedActorPath(value.Subject)
             );
 
@@ -191,7 +191,7 @@ namespace Akka.Serialization.Formatters
 
             var system = formatterResolver.GetActorSystem();
             var protoMessage = new Protocol.FromConfig(
-                system.Serialize(fromConfig.Resizer),
+                system.SerializeMessage(fromConfig.Resizer),
                 fromConfig.RouterDispatcher);
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.FromConfig>();

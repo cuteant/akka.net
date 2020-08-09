@@ -271,6 +271,18 @@ namespace Akka.Cluster.Tools.Client
             public static readonly CheckDeadlines Instance = new CheckDeadlines();
             private CheckDeadlines() { }
         }
+
+        /// <summary>
+        /// INTERNAL API.
+        ///
+        /// Used to signal that a <see cref="ClusterClientReceptionist"/> we've connected to
+        /// has terminated.
+        /// </summary>
+        internal sealed class ReceptionistShutdown : IClusterClientMessage, ISingletonMessage
+        {
+            public static readonly ReceptionistShutdown Instance = new ReceptionistShutdown();
+            private ReceptionistShutdown() { }
+        }
         #endregion
 
         /// <summary>
@@ -289,7 +301,7 @@ namespace Akka.Cluster.Tools.Client
 
         #region RingOrdering
         /// <summary>
-        /// TBD
+        /// INTERNAL API
         /// </summary>
         internal class RingOrdering : IComparer<Address>
         {
@@ -300,13 +312,13 @@ namespace Akka.Cluster.Tools.Client
             private RingOrdering() { }
 
             /// <summary>
-            /// TBD
+            /// Generates a hash for the node address.
             /// </summary>
-            /// <param name="node">TBD</param>
+            /// <param name="node">The node being added to the hash ring.</param>
             /// <exception cref="IllegalStateException">
             /// This exception is thrown when the specified <paramref name="node"/> has a host/port that is undefined.
             /// </exception>
-            /// <returns>TBD</returns>
+            /// <returns>A stable hashcode for the address.</returns>
             public static int HashFor(Address node)
             {
                 // cluster node identifier is the host and port of the address; protocol and system is assumed to be the same
@@ -324,13 +336,13 @@ namespace Akka.Cluster.Tools.Client
                 var ha = HashFor(x);
                 var hb = HashFor(y);
 
-                if (ha == hb) return 0;
-                return ha < hb || Member.AddressOrdering.Compare(x, y) < 0 ? -1 : 1;
+                if (ha == hb) return Member.AddressOrdering.Compare(x, y);
+                return ha.CompareTo(hb);
             }
         }
         #endregion
 
-        private ILoggingAdapter _log;
+        private readonly ILoggingAdapter _log;
         private readonly IActorRef _pubSubMediator;
         private readonly ClusterReceptionistSettings _settings;
         private readonly Cluster _cluster;
@@ -376,10 +388,6 @@ namespace Akka.Cluster.Tools.Client
                 Self);
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <exception cref="IllegalStateException">TBD</exception>
         protected override void PreStart()
         {
             base.PreStart();
@@ -390,14 +398,15 @@ namespace Akka.Cluster.Tools.Client
             _cluster.Subscribe(Self, typeof(ClusterEvent.IMemberEvent));
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
         protected override void PostStop()
         {
             base.PostStop();
             _cluster.Unsubscribe(Self);
             _checkDeadlinesTask.Cancel();
+            foreach (var c in _clientInteractions.Keys)
+            {
+                c.Tell(ClusterReceptionist.ReceptionistShutdown.Instance);
+            }
         }
 
         private bool IsMatchingRole(Member member)
@@ -467,7 +476,6 @@ namespace Akka.Cluster.Tools.Client
                         if (_log.IsDebugEnabled) { _log.ClientGetsContactPoints(Sender, contacts); }
 
                         Sender.Tell(contacts);
-                        UpdateClientInteractions(Sender);
                     }
                     return true;
 

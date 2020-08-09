@@ -72,16 +72,16 @@ namespace Akka.Serialization
             {
                 case Create create:
                     manifest = _.CreateManifest;
-                    return CreateToProto(system, create);
+                    return CreateToProto(_system, create);
                 case Recreate recreate:
                     manifest = _.RecreateManifest;
-                    return RecreateToProto(system, recreate);
+                    return RecreateToProto(_system, recreate);
                 case Suspend suspend:
                     manifest = _.SuspendManifest;
                     return EmptyBytes;
                 case Resume resume:
                     manifest = _.ResumeManifest;
-                    return ResumeToProto(system, resume);
+                    return ResumeToProto(_system, resume);
                 case Terminate terminate:
                     manifest = _.TerminateManifest;
                     return EmptyBytes;
@@ -96,7 +96,7 @@ namespace Akka.Serialization
                     return UnwatchToProto(unwatch);
                 case Failed failed:
                     manifest = _.FailedManifest;
-                    return FailedToProto(system, failed);
+                    return FailedToProto(_system, failed);
                 case DeathWatchNotification deathWatchNotification:
                     manifest = _.DeathWatchNotificationManifest;
                     return DeathWatchNotificationToProto(deathWatchNotification);
@@ -113,25 +113,25 @@ namespace Akka.Serialization
             switch (manifest)
             {
                 case _.CreateManifest:
-                    return CreateFromProto(system, bytes);
+                    return CreateFromProto(_system, bytes);
                 case _.RecreateManifest:
-                    return RecreateFromProto(system, bytes);
+                    return RecreateFromProto(_system, bytes);
                 case _.SuspendManifest:
                     return new Suspend();
                 case _.ResumeManifest:
-                    return ResumeFromProto(system, bytes);
+                    return ResumeFromProto(_system, bytes);
                 case _.TerminateManifest:
                     return new Terminate();
                 case _.SuperviseManifest:
-                    return SuperviseFromProto(system, bytes);
+                    return SuperviseFromProto(_system, bytes);
                 case _.WatchManifest:
-                    return WatchFromProto(system, bytes);
+                    return WatchFromProto(_system, bytes);
                 case _.UnwatchManifest:
-                    return UnwatchFromProto(system, bytes);
+                    return UnwatchFromProto(_system, bytes);
                 case _.FailedManifest:
-                    return FailedFromProto(system, bytes);
+                    return FailedFromProto(_system, bytes);
                 case _.DeathWatchNotificationManifest:
-                    return DeathWatchNotificationFromProto(system, bytes);
+                    return DeathWatchNotificationFromProto(_system, bytes);
             }
             throw GetArgumentException_Serializer_SystemMsg(manifest);
         }

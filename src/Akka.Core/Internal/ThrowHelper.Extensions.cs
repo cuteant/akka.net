@@ -21,7 +21,8 @@ namespace Akka
         internal static void ThrowException_IPAddress_Num()
         {
             throw GetException();
-            Exception GetException()
+
+            static Exception GetException()
             {
                 return new Exception("IPAddress.m_Numbers not found");
             }
@@ -31,7 +32,8 @@ namespace Akka
         internal static void ThrowException_IPAddress_OnlyIpV6()
         {
             throw GetException();
-            Exception GetException()
+
+            static Exception GetException()
             {
                 return new Exception("Only AddressFamily.InterNetworkV6 can be converted to IPv4");
             }
@@ -41,7 +43,8 @@ namespace Akka
         internal static void ThrowException_IPAddress_OnlyIpV4()
         {
             throw GetException();
-            Exception GetException()
+
+            static Exception GetException()
             {
                 return new Exception("Only AddressFamily.InterNetworkV4 can be converted to IPv6");
             }
@@ -67,7 +70,8 @@ namespace Akka
         internal static void ThrowArgumentException_TokenBucket_Capacity()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("Capacity must be non-negative", "capacity");
             }
@@ -77,7 +81,8 @@ namespace Akka
         internal static void ThrowArgumentException_TokenBucket_Time()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("Time between tokens must be larger than zero ticks.", "ticksBetweenTokens");
             }
@@ -87,7 +92,8 @@ namespace Akka
         internal static void ThrowArgumentException_TokenBucket_Offer()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("Cost must be non-negative", "cost");
             }
@@ -97,7 +103,8 @@ namespace Akka
         internal static void ThrowArgumentException_NotEnoughBitsToMakeAByte()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("Not enough bits to make a byte!", "arr");
             }
@@ -332,7 +339,8 @@ namespace Akka
         internal static void ThrowArgumentNullException_ProducerCannotBeNull()
         {
             throw GetException();
-            ArgumentNullException GetException()
+
+            static ArgumentNullException GetException()
             {
                 return new ArgumentNullException("producer", "Producer cannot be null");
             }
@@ -664,9 +672,43 @@ namespace Akka
         internal static void ThrowInvalidOperationException_Payload_Format()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Invalid Payload format");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowInvalidOperationException_CurrentTransportInformation_is_not_set()
+        {
+            throw GetException();
+
+            static InvalidOperationException GetException()
+            {
+                return new InvalidOperationException("CurrentTransportInformation is not set. Use Serialization.WithTransport<T>.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowInvalidOperationException_Too_early_access_of_SerializationInformation()
+        {
+            throw GetException();
+
+            static InvalidOperationException GetException()
+            {
+                return new InvalidOperationException("Too early access of SerializationInformation");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowInvalidOperationException_Trying_to_remove_FunctionRef_from_wrong_ActorCell(FunctionRef functionRef)
+        {
+            throw GetException();
+
+            InvalidOperationException GetException()
+            {
+                return new InvalidOperationException($"Trying to remove FunctionRef {functionRef.Path} from wrong ActorCell");
             }
         }
 
@@ -677,11 +719,7 @@ namespace Akka
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowNotSupportedException()
         {
-            throw GetException();
-            NotSupportedException GetException()
-            {
-                return new NotSupportedException();
-            }
+            throw GetNotSupportedException();
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -794,7 +832,8 @@ An (unbounded) deque-based mailbox can be configured as follows:
         internal static void ThrowRejectedExecutionException()
         {
             throw GetException();
-            RejectedExecutionException GetException()
+
+            static RejectedExecutionException GetException()
             {
                 return new RejectedExecutionException("ForkJoinExecutor is shutting down");
             }
@@ -844,11 +883,13 @@ An (unbounded) deque-based mailbox can be configured as follows:
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowActorNotFoundException(AkkaExceptionResource resource, Exception ex)
         {
-            throw GetException();
-            ActorNotFoundException GetException()
-            {
-                return new ActorNotFoundException(GetResourceString(resource), ex);
-            }
+            throw GetActorNotFoundException(resource, ex);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ActorNotFoundException GetActorNotFoundException(AkkaExceptionResource resource, Exception ex)
+        {
+            return new ActorNotFoundException(GetResourceString(resource), ex);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -975,7 +1016,8 @@ An (unbounded) deque-based mailbox can be configured as follows:
         internal static void ThrowSchedulerException()
         {
             throw GetException();
-            SchedulerException GetException()
+
+            static SchedulerException GetException()
             {
                 return new SchedulerException("cannot enqueue after timer shutdown");
             }

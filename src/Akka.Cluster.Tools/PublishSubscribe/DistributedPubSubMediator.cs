@@ -189,6 +189,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             Receive<ClusterEvent.MemberUp>(HandleMemberUp);
             Receive<ClusterEvent.MemberWeaklyUp>(HandleMemberWeaklyUp);
             Receive<ClusterEvent.MemberLeft>(HandleMemberLeft);
+            Receive<ClusterEvent.MemberDowned>(HandleMemberDowned);
             Receive<ClusterEvent.MemberRemoved>(HandleMemberRemoved);
             Receive<ClusterEvent.IMemberEvent>(PatternMatch<ClusterEvent.IMemberEvent>.EmptyAction);
             Receive<Count>(HandleCount);
@@ -320,7 +321,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                     child.Forward(unsubscribe);
                 else
                 {
-                    // no such topic here  
+                    // no such topic here
                 }
             });
         }
@@ -406,6 +407,15 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             {
                 _nodes.Remove(left.Member.Address);
                 _registry.Remove(left.Member.Address);
+            }
+        }
+
+        private void HandleMemberDowned(ClusterEvent.MemberDowned downed)
+        {
+            if (IsMatchingRole(downed.Member))
+            {
+                _nodes.Remove(downed.Member.Address);
+                _registry.Remove(downed.Member.Address);
             }
         }
 

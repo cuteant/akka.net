@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
@@ -26,4 +25,5 @@
     <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

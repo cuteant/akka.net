@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -15,4 +14,5 @@
     <ProjectReference Include="..\Akka.NodeTestRunner\Akka.NodeTestRunner.csproj" />
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

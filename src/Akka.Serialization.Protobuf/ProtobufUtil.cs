@@ -52,16 +52,16 @@ namespace Akka.Serialization
             return s_attachBytesMethodCaller(null, new[] { bytes });
         }
 
-        /// <summary>Serializes the given object into a <see cref="ByteString"/> and uses the given address to decorate serialized ActorRef's.</summary>
-        /// <param name="serializer">The serializer.</param>
-        /// <param name="address">The address to use when serializing local ActorRef´s</param>
-        /// <param name="obj">The object to serialize</param>
-        /// <returns>TBD</returns>
-        public static ByteString ToByteStringWithAddress(this Serializer serializer, Address address, object obj)
-        {
-            var bytes = serializer.ToBinaryWithAddress(address, obj);
-            return s_attachBytesMethodCaller(null, new[] { bytes });
-        }
+        ///// <summary>Serializes the given object into a <see cref="ByteString"/> and uses the given address to decorate serialized ActorRef's.</summary>
+        ///// <param name="serializer">The serializer.</param>
+        ///// <param name="address">The address to use when serializing local ActorRef´s</param>
+        ///// <param name="obj">The object to serialize</param>
+        ///// <returns>TBD</returns>
+        //public static ByteString ToByteStringWithAddress(this Serializer serializer, Address address, object obj)
+        //{
+        //    var bytes = serializer.ToBinaryWithAddress(address, obj);
+        //    return s_attachBytesMethodCaller(null, new[] { bytes });
+        //}
 
         /// <summary>Deserializes a <see cref="ByteString"/> into an object of type <paramref name="type"/>.</summary>
         /// <param name="serializer">The serializer.</param>

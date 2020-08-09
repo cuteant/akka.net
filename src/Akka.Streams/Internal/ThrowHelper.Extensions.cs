@@ -9,6 +9,7 @@ using Akka.Pattern;
 using Akka.Streams.Dsl;
 using Akka.Streams.Implementation;
 using Akka.Streams.Implementation.Fusing;
+using Akka.Streams.Serialization;
 using Akka.Streams.Stage;
 using Reactive.Streams;
 
@@ -49,6 +50,7 @@ namespace Akka.Streams
         n,
         timeout,
         count,
+        settings,
         step,
         maxBuffer,
         segmentSize,
@@ -650,6 +652,18 @@ namespace Akka.Streams
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ArgumentException GetArgumentException_Serializer_StreamRefMessages(object obj)
+        {
+            return new ArgumentException($"Can't serialize object of type [{(obj as Type) ?? obj.GetType()}] in [{nameof(StreamRefSerializer)}]");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ArgumentException GetArgumentException_Serializer_StreamRefMessages(string manifest)
+        {
+            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(StreamRefSerializer)}]");
+        }
+
         #endregion
 
         #region -- SignalThrewException --
@@ -755,14 +769,22 @@ namespace Akka.Streams
         {
             throw _NoDemandException;
         }
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IllegalStateException GetIllegalStateException_NoDemand()
         {
             return _NoDemandException;
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static IllegalStateException GetIllegalStateException_Key<TKey>(TKey key)
         {
             return new IllegalStateException($"Cannot open substream for key {key}: too many substreams open");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static IllegalStateException GetIllegalStateException_Stream_supervisor_must_be_a_local_actor(ActorMaterializer materializer)
+        {
+            return new IllegalStateException($"Stream supervisor must be a local actor, was [{materializer.Supervisor.GetType()}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -914,6 +936,16 @@ namespace Akka.Streams
                 return new IllegalStateException(
                     $"module inconsistent, found {problems.Count} problems:\n - {string.Join("\n - ", problems)}");
             }
+        }
+
+        #endregion
+
+        #region -- InvalidOperationException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static InvalidOperationException GetInvalidOperationException_Expected_to_receive_response_of_type<TOut2>(object reply)
+        {
+            return new InvalidOperationException($"Expected to receive response of type {nameof(TOut2)}, but got: {reply}");
         }
 
         #endregion

@@ -12,6 +12,7 @@ using Akka.Serialization;
 using Akka.TestKit;
 using MessagePack;
 using Xunit;
+using Xunit.Abstractions;
 
 namespace Akka.Persistence.Tests
 {
@@ -122,12 +123,12 @@ namespace Akka.Persistence.Tests
 
         #endregion
 
-        public AtLeastOnceDeliveryCrashSpec()
-            : base(PersistenceSpec.Configuration("AtLeastOnceDeliveryCrashSpec", serialization: "off"))
+        public AtLeastOnceDeliveryCrashSpec(ITestOutputHelper output)
+            : base(PersistenceSpec.Configuration("AtLeastOnceDeliveryCrashSpec", serialization: "off"), output)
         {
         }
 
-        [Fact]
+        [Fact(Skip = "Racy on AzureDevOps")]
         public void AtLeastOnceDelivery_should_not_send_when_actor_crashes()
         {
             var testProbe = CreateTestProbe();

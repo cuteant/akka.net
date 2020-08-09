@@ -532,7 +532,8 @@ namespace Akka.Actor
         private static void Kill()
         {
             throw GetActorKilledException();
-            ActorKilledException GetActorKilledException()
+
+            static ActorKilledException GetActorKilledException()
             {
                 return new ActorKilledException("Kill");
             }

@@ -137,12 +137,6 @@ namespace Akka.Streams
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void IllegalWatch(this ILoggingAdapter logger, IInternalActorRef watchee, IInternalActorRef watcher, StageActorRef self)
-        {
-            logger.Error("BUG: illegal Watch({0}, {1}) for {2}", watchee, watcher, self);
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ItIsNotAllowedToCallAbsorbTerminationFromOnDownstreamFinish(this ILoggingAdapter logger)
         {
             const string error = "It is not allowed to call AbsorbTermination() from OnDownstreamFinish.";

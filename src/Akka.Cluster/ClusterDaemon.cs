@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Dispatch;
 using Akka.Event;
-using Akka.Pattern;
 using Akka.Remote;
 using Akka.Util;
 using Akka.Util.Internal;
@@ -716,22 +715,28 @@ namespace Akka.Cluster
         }
 
         /// <summary>
-        /// TBD
+        /// INTERNAL API.
+        ///
+        /// Marker interface for publication events from Akka.Cluster.
         /// </summary>
-        //[Union(0, typeof(PublishChanges))]
-        //[Union(1, typeof(PublishEvent))]
-        internal interface IPublishMessage { }
+        /// <remarks>
+        /// <see cref="INoSerializationVerificationNeeded"/> is not explicitly used on the JVM,
+        /// but without it we run into serialization issues via https://github.com/akkadotnet/akka.net/issues/3724
+        /// </remarks>
+        private interface IPublishMessage : INoSerializationVerificationNeeded { }
 
         /// <summary>
-        /// TBD
+        /// INTERNAL API.
+        /// 
+        /// Used to publish Gossip and Membership changes inside Akka.Cluster.
         /// </summary>
         [MessagePackObject]
         internal sealed class PublishChanges : IPublishMessage
         {
             /// <summary>
-            /// TBD
+            /// Creates a new <see cref="PublishChanges"/> message with updated gossip.
             /// </summary>
-            /// <param name="newGossip">TBD</param>
+            /// <param name="newGossip">The gossip to publish internally.</param>
             [SerializationConstructor]
             public PublishChanges(Gossip newGossip)
             {
@@ -739,14 +744,16 @@ namespace Akka.Cluster
             }
 
             /// <summary>
-            /// TBD
+            /// The gossip being published.
             /// </summary>
             [Key(0)]
             public readonly Gossip NewGossip;
         }
 
         /// <summary>
-        /// TBD
+        /// INTERNAL API.
+        ///
+        /// Used to publish events out to the cluster.
         /// </summary>
         [MessagePackObject]
         internal sealed class PublishEvent : IPublishMessage
@@ -962,6 +969,7 @@ namespace Akka.Cluster
         protected readonly UniqueAddress SelfUniqueAddress;
         private const int NumberOfGossipsBeforeShutdownWhenLeaderExits = 5;
         private const int MaxGossipsBeforeShuttingDownMyself = 5;
+        private const int MaxTicksBeforeShuttingDownMyself = 4;
 
         private readonly VectorClock.Node _vclockNode;
 
@@ -972,16 +980,17 @@ namespace Akka.Cluster
 
         // note that self is not initially member,
         // and the SendGossip is not versioned for this 'Node' yet
-        Gossip _latestGossip = Gossip.Empty;
+        private Gossip _latestGossip = Gossip.Empty;
 
-        readonly bool _statsEnabled;
+        private readonly bool _statsEnabled;
         private GossipStats _gossipStats = new GossipStats();
         private ImmutableList<Address> _seedNodes;
         private IActorRef _seedNodeProcess;
         private int _seedNodeProcessCounter = 0; //for unique names
 
-        readonly IActorRef _publisher;
+        private readonly IActorRef _publisher;
         private int _leaderActionCounter = 0;
+        private int _selfDownCounter = 0;
 
         private bool _exitingTasksInProgress = false;
         private readonly TaskCompletionSource<Done> _selfExiting = new TaskCompletionSource<Done>();
@@ -1078,15 +1087,15 @@ namespace Akka.Cluster
             }
         }
 
-        ActorSelection ClusterCore(Address address)
+        private ActorSelection ClusterCore(Address address)
         {
             return Context.ActorSelection(new RootActorPath(address) / "system" / "cluster" / "core" / "daemon");
         }
 
-        readonly ICancelable _gossipTaskCancellable;
-        readonly ICancelable _failureDetectorReaperTaskCancellable;
-        readonly ICancelable _leaderActionsTaskCancellable;
-        readonly ICancelable _publishStatsTaskTaskCancellable;
+        private readonly ICancelable _gossipTaskCancellable;
+        private readonly ICancelable _failureDetectorReaperTaskCancellable;
+        private readonly ICancelable _leaderActionsTaskCancellable;
+        private readonly ICancelable _publishStatsTaskTaskCancellable;
 
         /// <inheritdoc cref="ActorBase.PreStart"/>
         protected override void PreStart()
@@ -1953,7 +1962,10 @@ namespace Akka.Cluster
                 // ExitingCompleted will be received via CoordinatedShutdown to continue
                 // the leaving process. Meanwhile the gossip state is not marked as seen.
                 _exitingTasksInProgress = true;
-                if (_cluster.IsInfoEnabled) _cluster.ExitingStartingCoordinatedShutdown();
+                if (_coordShutdown.ShutdownReason is null)
+                {
+                    if (_cluster.IsInfoEnabled) _cluster.ExitingStartingCoordinatedShutdown();
+                }
                 _selfExiting.TrySetResult(Done.Instance);
                 _coordShutdown.Run(CoordinatedShutdown.ClusterLeavingReason.Instance);
             }
@@ -2172,7 +2184,7 @@ namespace Akka.Cluster
                 var unreachable = _latestGossip.Overview.Reachability.AllUnreachableOrTerminated;
                 var downed = _latestGossip.Members.Where(m => m.Status == MemberStatus.Down)
                     .Select(m => m.UniqueAddress).ToList();
-                if (downed.All(node => unreachable.Contains(node) || _latestGossip.SeenByNode(node)))
+                if (_selfDownCounter >= MaxTicksBeforeShuttingDownMyself || downed.All(node => unreachable.Contains(node) || _latestGossip.SeenByNode(node)))
                 {
                     // the reason for not shutting down immediately is to give the gossip a chance to spread
                     // the downing information to other downed nodes, so that they can shutdown themselves
@@ -2181,6 +2193,10 @@ namespace Akka.Cluster
                     // if other downed know that this node has seen the version
                     SendGossipRandom(MaxGossipsBeforeShuttingDownMyself);
                     Shutdown();
+                }
+                else
+                {
+                    _selfDownCounter++;
                 }
             }
         }
@@ -2302,7 +2318,10 @@ namespace Akka.Cluster
                     // the leaving process. Meanwhile the gossip state is not marked as seen.
 
                     _exitingTasksInProgress = true;
-                    if (infoEnabled) _cluster.ExitingLeaderStartingCoordinatedShutdown();
+                    if (_coordShutdown.ShutdownReason is null)
+                    {
+                        if (infoEnabled) _cluster.ExitingLeaderStartingCoordinatedShutdown();
+                    }
                     _selfExiting.TrySetResult(Done.Instance);
                     _coordShutdown.Run(CoordinatedShutdown.ClusterLeavingReason.Instance);
                 }
@@ -2331,6 +2350,28 @@ namespace Akka.Cluster
                 }
 
                 Publish(_latestGossip);
+                GossipExitingMembersToOldest(changedMembers.Where(i => i.Status == MemberStatus.Exiting));
+            }
+        }
+
+        /// <summary>
+        /// Gossip the Exiting change to the two oldest nodes for quick dissemination to potential Singleton nodes
+        /// </summary>
+        /// <param name="exitingMembers"></param>
+        private void GossipExitingMembersToOldest(IEnumerable<Member> exitingMembers)
+        {
+            var targets = GossipTargetsForExitingMembers(_latestGossip, exitingMembers);
+            if (targets is object && targets.Any())
+            {
+                if (_log.IsDebugEnabled)
+                {
+                    _log.Cluster_Node_Gossip_exiting_members_to_the_two_oldest(SelfUniqueAddress, exitingMembers, targets);
+                }
+
+                foreach (var m in targets)
+                {
+                    GossipTo(m.UniqueAddress);
+                }
             }
         }
 
@@ -2483,6 +2524,37 @@ namespace Akka.Cluster
         }
 
         /// <summary>
+        /// The Exiting change is gossiped to the two oldest nodes for quick dissemination to potential Singleton nodes
+        /// </summary>
+        /// <param name="latestGossip"></param>
+        /// <param name="exitingMembers"></param>
+        /// <returns></returns>
+        public static IEnumerable<Member> GossipTargetsForExitingMembers(Gossip latestGossip, IEnumerable<Member> exitingMembers)
+        {
+            if (exitingMembers.Any())
+            {
+                var roles = exitingMembers.SelectMany(m => m.Roles);
+                var membersSortedByAge = latestGossip.Members.OrderBy(m => m, Member.AgeOrdering);
+                var targets = new HashSet<Member>();
+
+                var t = membersSortedByAge.Take(2).ToArray(); // 2 oldest of all nodes
+                targets.UnionWith(t);
+
+                foreach (var role in roles)
+                {
+                    t = membersSortedByAge.Where(i => i.HasRole(role)).Take(2).ToArray(); // 2 oldest with the role
+                    if (t.Length > 0)
+                    {
+                        targets.UnionWith(t);
+                    }
+                }
+
+                return targets;
+            }
+            return null;
+        }
+
+        /// <summary>
         /// Updates the local gossip with the latest received from over the network.
         /// </summary>
         /// <param name="newGossip">The new gossip to merge with our own.</param>
@@ -2543,7 +2615,7 @@ namespace Akka.Cluster
             _publisher.Tell(new ClusterEvent.CurrentInternalStats(_gossipStats, vclockStats));
         }
 
-        readonly ILoggingAdapter _log = Context.GetLogger();
+        private readonly ILoggingAdapter _log = Context.GetLogger();
     }
 
     /// <summary>
@@ -2681,13 +2753,13 @@ namespace Akka.Cluster
     /// </summary>
     internal sealed class FirstSeedNodeProcess : UntypedActor
     {
-        readonly ILoggingAdapter _log = Context.GetLogger();
+        private readonly ILoggingAdapter _log = Context.GetLogger();
 
         private ImmutableList<Address> _remainingSeeds;
-        readonly Address _selfAddress;
-        readonly Cluster _cluster;
-        readonly Deadline _timeout;
-        readonly ICancelable _retryTaskToken;
+        private readonly Address _selfAddress;
+        private readonly Cluster _cluster;
+        private readonly Deadline _timeout;
+        private readonly ICancelable _retryTaskToken;
 
         /// <summary>
         /// TBD

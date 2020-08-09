@@ -28,6 +28,17 @@ namespace Akka.Util
         public static string Base64Encode(this long value)
         {
             var sb = StringBuilderCache.Acquire();
+            return StringBuilderCache.GetStringAndRelease(Base64Encode(value, sb));
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="value">TBD</param>
+        /// <param name="sb"></param>
+        /// <returns>TBD</returns>
+        public static StringBuilder Base64Encode(this long value, StringBuilder sb)
+        {
             var next = value;
             do
             {
@@ -35,7 +46,7 @@ namespace Akka.Util
                 sb.Append(Base64Chars[index]);
                 next = next >> 6;
             } while (next != 0);
-            return StringBuilderCache.GetStringAndRelease(sb);
+            return sb;
         }
 
         /// <summary>

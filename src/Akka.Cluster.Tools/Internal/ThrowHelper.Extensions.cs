@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Cluster.Tools.Client;
 using Akka.Cluster.Tools.Client.Serialization;
@@ -276,9 +277,9 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ArgumentException GetArgumentException_Serializer_ClusterClientMessage(string manifest)
+        internal static SerializationException GetSerializationException_Serializer_ClusterClientMessage(string manifest)
         {
-            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(ClusterClientMessageSerializer)}");
+            return new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(ClusterClientMessageSerializer)}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -288,15 +289,15 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ArgumentException GetArgumentException_Serializer_DistributedPubSubMessage(string manifest)
+        internal static SerializationException GetSerializationException_Serializer_DistributedPubSubMessage(string manifest)
         {
-            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(DistributedPubSubMessageSerializer)}");
+            return new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in serializer {nameof(DistributedPubSubMessageSerializer)}");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ArgumentException GetArgumentException_Serializer_ClusterSingletonMessage(string manifest)
+        internal static SerializationException GetSerializationException_Serializer_ClusterSingletonMessage(string manifest)
         {
-            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterSingletonMessageSerializer)}]");
+            return new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterSingletonMessageSerializer)}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

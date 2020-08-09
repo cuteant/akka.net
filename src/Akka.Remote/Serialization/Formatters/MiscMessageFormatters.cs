@@ -62,7 +62,7 @@ namespace Akka.Remote.Serialization.Formatters
             if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new ProtocolRemoteRouterConfig(
-                formatterResolver.Serialize(value.Local),
+                formatterResolver.SerializeMessage(value.Local),
                 value.Nodes.Select(AddressMessageBuilder).ToArray()
             );
 

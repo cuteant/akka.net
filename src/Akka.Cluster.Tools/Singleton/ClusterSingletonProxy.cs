@@ -41,7 +41,7 @@ namespace Akka.Cluster.Tools.Singleton
         /// <summary>
         /// TBD
         /// </summary>
-        internal sealed class TryToIdentifySingleton : ISingletonMessage
+        internal sealed class TryToIdentifySingleton : INoSerializationVerificationNeeded
         {
             /// <summary>
             /// TBD

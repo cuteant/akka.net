@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
@@ -19,14 +18,13 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CuteAnt.JsonExtensions" Version="$(CuteAntJsonExtensionsPackageVersion)" />
     <PackageReference Include="EasyEventStore.Core" Version="$(EasyEventStoreCorePackageVersion)" />
     <PackageReference Include="SpanJson.Unofficial" Version="$(SpanJsonUnofficialPackageVersion)" />
-    <PackageReference Include="Utf8Json.Unofficial" Version="$(Utf8JsonUnofficialPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Akka.Core\Akka.Core.csproj" />
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

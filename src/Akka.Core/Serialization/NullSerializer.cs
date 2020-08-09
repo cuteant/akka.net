@@ -53,8 +53,8 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override Payload ToPayload(object obj) => Payload.Null;
 
-        /// <inheritdoc />
-        public override Payload ToPayloadWithAddress(Address address, object obj) => Payload.Null;
+        ///// <inheritdoc />
+        //public override Payload ToPayloadWithAddress(Address address, object obj) => Payload.Null;
 
         /// <inheritdoc />
         public override object FromPayload(in Payload payload) => null;

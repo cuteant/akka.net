@@ -3,9 +3,9 @@
   <PropertyGroup>
     <!-- Test related packages -->
     <DockerDotNetPackageVersion>3.125.2</DockerDotNetPackageVersion>
-    <FsCheckPackageVersion>2.13.0</FsCheckPackageVersion>
-    <FsCheckXunitPackageVersion>2.13.0</FsCheckXunitPackageVersion>
-    <Mongo2GoPackageVersion>2.2.8</Mongo2GoPackageVersion>
-    <TeamCityServiceMessagesPackageVersion>3.0.11</TeamCityServiceMessagesPackageVersion>
+    <FsCheckPackageVersion>2.14.3</FsCheckPackageVersion>
+    <FsCheckXunitPackageVersion>2.14.3</FsCheckXunitPackageVersion>
+    <Mongo2GoPackageVersion>2.2.12</Mongo2GoPackageVersion>
+    <TeamCityServiceMessagesPackageVersion>3.0.13</TeamCityServiceMessagesPackageVersion>
   </PropertyGroup>
 </Project>

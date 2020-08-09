@@ -34,9 +34,9 @@ namespace Akka.Serialization
             if (null == sel) { AkkaThrowHelper.ThrowArgumentException_Serializer_ActorSel(source); }
 
             var pattern = GetPattern(sel);
-            var payload = system.Serialize(sel.Message);
+            var payload = _system.SerializeMessage(sel.Message);
 
-            var message = system.Deserialize(payload);
+            var message = _system.Deserialize(payload);
             var elements = ParsePattern(pattern);
 
             return new ActorSelectionMessage(message, elements);
@@ -49,7 +49,7 @@ namespace Akka.Serialization
             if (null == sel) { AkkaThrowHelper.ThrowArgumentException_Serializer_ActorSel(obj); }
 
             var protoMessage = new Protocol.SelectionEnvelope(
-                system.Serialize(sel.Message),
+                _system.SerializeMessage(sel.Message),
                 GetPattern(sel));
 
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
@@ -60,7 +60,7 @@ namespace Akka.Serialization
         {
             var selectionEnvelope = MessagePackSerializer.Deserialize<Protocol.SelectionEnvelope>(bytes, s_defaultResolver);
 
-            var message = system.Deserialize(selectionEnvelope.Payload);
+            var message = _system.Deserialize(selectionEnvelope.Payload);
             var elements = ParsePattern(selectionEnvelope.Pattern);
             return new ActorSelectionMessage(message, elements);
         }

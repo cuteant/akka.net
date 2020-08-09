@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.rs.props" />
-  <Import Project="..\..\version.rs.props" />
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net45</TargetFrameworks>
@@ -16,4 +15,5 @@
     <PackageTags>reactive;stream</PackageTags>
   </PropertyGroup>
 
+  <Import Project="..\..\version.rs.props" />
 </Project>

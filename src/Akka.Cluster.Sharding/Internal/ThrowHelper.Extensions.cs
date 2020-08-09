@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Cluster.Sharding.Serialization;
 using Akka.Pattern;
@@ -198,9 +199,9 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ArgumentException GetArgumentException_Serializer_ClusterShardingMessage(string manifest)
+        internal static SerializationException GetSerializationException_Serializer_ClusterShardingMessage(string manifest)
         {
-            return new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterShardingMessageSerializer)}]");
+            return new SerializationException($"Unimplemented deserialization of message with manifest [{manifest}] in [{nameof(ClusterShardingMessageSerializer)}]");
         }
 
         #endregion

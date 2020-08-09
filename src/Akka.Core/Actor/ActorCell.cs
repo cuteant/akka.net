@@ -609,16 +609,15 @@ namespace Akka.Actor
             DeadLetter deadLetter;
             var unwrapped = (deadLetter = envelope.Message as DeadLetter) != null ? deadLetter.Message : envelope.Message;
 
-            if (!(unwrapped is INoSerializationVerificationNeeded))
+            if (unwrapped is INoSerializationVerificationNeeded)
             {
-                var serializer = _systemImpl.Serialization.FindSerializerFor(unwrapped);
-                var deserializedMsg = serializer.DeepCopy(unwrapped);
-                if (deadLetter != null)
-                    return new Envelope(new DeadLetter(deserializedMsg, deadLetter.Sender, deadLetter.Recipient), envelope.Sender);
-                return new Envelope(deserializedMsg, envelope.Sender);
+                return envelope;
             }
-
-            return envelope;
+            var serializer = _systemImpl.Serialization.FindSerializerFor(unwrapped);
+            var deserializedMsg = serializer.DeepCopy(unwrapped);
+            if (deadLetter != null)
+                return new Envelope(new DeadLetter(deserializedMsg, deadLetter.Sender, deadLetter.Recipient), envelope.Sender);
+            return new Envelope(deserializedMsg, envelope.Sender);
         }
     }
 }

@@ -6,7 +6,6 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Reflection;
 using Akka.Actor;
 using Akka.Persistence.Fsm;
 using Akka.Persistence.Serialization.Protocol;
@@ -37,13 +36,12 @@ namespace Akka.Persistence.Serialization
 
         private PersistentFSMSnapshot GetPersistentFSMSnapshot(object obj)
         {
-            var type = obj.GetType();
             var fsmSnapshot = obj as PersistentFSM.IPersistentFSMSnapshot;
 
             var timeout = fsmSnapshot.Timeout;
             return new PersistentFSMSnapshot(
                 fsmSnapshot.StateIdentifier,
-                system.Serialize(fsmSnapshot.Data),
+                _system.Serialization.SerializeMessageWithTransport(fsmSnapshot.Data),
                 timeout.HasValue ? (long)timeout.Value.TotalMilliseconds : 0L
             );
         }
@@ -77,7 +75,7 @@ namespace Akka.Persistence.Serialization
                 timeout = TimeSpan.FromMilliseconds(message.TimeoutMillis);
             }
 
-            object[] arguments = { message.StateIdentifier, system.Deserialize(message.Data), timeout };
+            object[] arguments = { message.StateIdentifier, _system.Deserialize(message.Data), timeout };
 
             var ctorInvoker = s_ctorInvokerCache.GetOrAdd(type, s_makeDelegateForCtorFunc);
 

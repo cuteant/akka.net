@@ -652,13 +652,12 @@ namespace Akka.Actor
                 // We must spawn a separate Task to not block current thread,
                 // since that would have blocked the shutdown of the ActorSystem.
                 var timeout = coord.Timeout(PhaseActorSystemTerminate);
-                return Task.Run(() =>
+                Task.Run(() =>
                 {
                     if (!system.WhenTerminated.Wait(timeout) && !coord.RunningClrHook)
                     {
                         Environment.Exit(0);
                     }
-                    return Done.Instance;
                 });
             }
 
@@ -698,16 +697,13 @@ namespace Akka.Actor
             var runByClrShutdownHook = conf.GetBoolean("run-by-clr-shutdown-hook");
             if (runByClrShutdownHook)
             {
-#if APPDOMAIN
                 // run all hooks during termination sequence
                 AppDomain.CurrentDomain.ProcessExit += (sender, args) =>
                 {
                     // have to block, because if this method exits the process exits.
                     coord.RunClrHooks().Wait(coord.TotalTimeout);
                 };
-#else
-                // TODO: what to do for NetCore?
-#endif
+
                 coord.AddClrShutdownHook(() =>
                 {
                     coord.RunningClrHook = true;

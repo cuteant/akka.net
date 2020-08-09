@@ -441,7 +441,8 @@ namespace Akka.Tools.MatchHandler
         public static void ThrowMatchException()
         {
             throw GetException();
-            MatchException GetException()
+
+            static MatchException GetException()
             {
                 return new MatchException("Provided value was not matched with any case");
             }

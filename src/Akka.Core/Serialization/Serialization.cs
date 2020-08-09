@@ -11,6 +11,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Actor;
+using Akka.Annotations;
 using Akka.Util;
 using Akka.Util.Internal;
 using Akka.Serialization.Protocol;
@@ -20,12 +21,56 @@ using CuteAnt.Reflection;
 
 namespace Akka.Serialization
 {
-    /// <summary>Serialization information needed for serializing local actor refs.</summary>
-    internal class Information
+    /// <summary>
+    /// INTERNAL API.
+    /// 
+    /// Serialization information needed for serializing local actor refs.
+    /// </summary>
+    [InternalApi]
+    public sealed class Information : IEquatable<Information>
     {
-        public Address Address;
+        public Information(Address address, ActorSystem system)
+        {
+            Address = address;
+            System = system;
+        }
 
-        public ActorSystem System;
+        public Address Address { get; }
+
+        public ActorSystem System { get; }
+
+        public bool Equals(Information other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Address.Equals(other.Address);
+        }
+
+        public override bool Equals(object obj)
+        {
+            if (obj is null) return false;
+            if (ReferenceEquals(this, obj)) return true;
+            if (obj.GetType() != this.GetType()) return false;
+            return Equals((Information)obj);
+        }
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (Address.GetHashCode() * 397);
+            }
+        }
+
+        public static bool operator ==(Information left, Information right)
+        {
+            return Equals(left, right);
+        }
+
+        public static bool operator !=(Information left, Information right)
+        {
+            return !Equals(left, right);
+        }
     }
 
     /// <summary>TBD</summary>
@@ -33,19 +78,24 @@ namespace Akka.Serialization
     {
         #region -- SerializeWithTransport --
 
+        /// <summary>
+        /// Needs to be INTERNAL so it can be accessed from tests. Should never be set directly.
+        /// </summary>
         [ThreadStatic]
-        private static Information _currentTransportInformation;
-        private static Information TransportInformationCache
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => _currentTransportInformation ?? EnsureTransportInformationCreated();
-        }
+        internal static Information CurrentTransportInformation;
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        private static Information EnsureTransportInformationCreated()
+        /// <summary>
+        ///  Retrieves the <see cref="Information"/> used for serializing and deserializing
+        /// <see cref="IActorRef"/> instances in all serializers.
+        /// </summary>
+        public static Information GetCurrentTransportInformation()
         {
-            _currentTransportInformation = new Information();
-            return _currentTransportInformation;
+            var currentTransportInformation = CurrentTransportInformation;
+            if (currentTransportInformation is null)
+            {
+                AkkaThrowHelper.ThrowInvalidOperationException_CurrentTransportInformation_is_not_set();
+            }
+            return currentTransportInformation;
         }
 
         /// <summary>TBD</summary>
@@ -55,16 +105,14 @@ namespace Akka.Serialization
         /// <param name="func">TBD</param>
         /// <param name="obj">TBD</param>
         /// <returns>TBD</returns>
-        public static T SerializeWithTransport<T>(ActorSystem system, Address address, Func<object, T> func, object obj)
+        [Obsolete("Obsolete. Use the WithTransport<T>(ExtendedActorSystem) method instead.")]
+        public static T WithTransport<T>(ActorSystem system, Address address, Func<object, T> func, object obj)
         {
-            var currentTransportInformation = TransportInformationCache;
-            currentTransportInformation.System = system;
-            currentTransportInformation.Address = address;
+            CurrentTransportInformation = new Information(address, system);
 
             var res = func(obj);
 
-            currentTransportInformation.System = null;
-            currentTransportInformation.Address = null;
+            CurrentTransportInformation = null;
             return res;
         }
 
@@ -74,16 +122,14 @@ namespace Akka.Serialization
         /// <param name="serializer"></param>
         /// <param name="obj"></param>
         /// <returns></returns>
-        public static byte[] SerializeWithTransport(ActorSystem system, Address address, Serializer serializer, object obj)
+        [Obsolete("Obsolete. Use the WithTransport<T>(ExtendedActorSystem) method instead.")]
+        public static byte[] WithTransport(ActorSystem system, Address address, Serializer serializer, object obj)
         {
-            var currentTransportInformation = TransportInformationCache;
-            currentTransportInformation.System = system;
-            currentTransportInformation.Address = address;
+            CurrentTransportInformation = new Information(address, system);
 
             var res = serializer.ToBinary(obj);
 
-            currentTransportInformation.System = null;
-            currentTransportInformation.Address = null;
+            CurrentTransportInformation = null;
             return res;
         }
 
@@ -94,16 +140,14 @@ namespace Akka.Serialization
         /// <param name="obj"></param>
         /// <param name="manifest"></param>
         /// <returns></returns>
-        public static byte[] SerializeWithTransport(ActorSystem system, Address address, SerializerWithStringManifest serializer, object obj, out string manifest)
+        [Obsolete("Obsolete. Use the WithTransport<T>(ExtendedActorSystem) method instead.")]
+        public static byte[] WithTransport(ActorSystem system, Address address, SerializerWithStringManifest serializer, object obj, out string manifest)
         {
-            var currentTransportInformation = TransportInformationCache;
-            currentTransportInformation.System = system;
-            currentTransportInformation.Address = address;
+            CurrentTransportInformation = new Information(address, system);
 
             var res = serializer.ToBinary(obj, out manifest);
 
-            currentTransportInformation.System = null;
-            currentTransportInformation.Address = null;
+            CurrentTransportInformation = null;
             return res;
         }
 
@@ -115,8 +159,11 @@ namespace Akka.Serialization
         private readonly Dictionary<int, Serializer> _serializersById = new Dictionary<int, Serializer>();
         private readonly Dictionary<string, Serializer> _serializersByName = new Dictionary<string, Serializer>(StringComparer.Ordinal);
 
-        /// <summary>TBD</summary>
-        /// <param name="system">TBD</param>
+        /// <summary>
+        /// Serialization module. Contains methods for serialization and deserialization as well as
+        /// locating a Serializer for a particular class as defined in the mapping in the configuration.
+        /// </summary>
+        /// <param name="system">The ActorSystem to which this serializer belongs.</param>
         public Serialization(ExtendedActorSystem system)
         {
             System = system;
@@ -179,6 +226,105 @@ namespace Akka.Serialization
             }
         }
 
+        private Information SerializationInfo => System.Provider.SerializationInformation;
+
+        /// <summary>
+        /// Performs the requested serialization function while also setting
+        /// the <see cref="CurrentTransportInformation"/> based on available data
+        /// from the <see cref="ActorSystem"/>. Useful when serializing <see cref="IActorRef"/>s.
+        /// </summary>
+        /// <typeparam name="T">The type of message being serialized.</typeparam>
+        /// <param name="system">The <see cref="ActorSystem"/> performing serialization.</param>
+        /// <param name="action">The serialization function.</param>
+        /// <returns>The serialization output.</returns>
+        public static T WithTransport<T>(ExtendedActorSystem system, Func<T> action)
+        {
+            var info = system.Provider.SerializationInformation;
+            if (CurrentTransportInformation == info)
+            {
+                // already set
+                return action();
+            }
+
+            var oldInfo = CurrentTransportInformation;
+            try
+            {
+                CurrentTransportInformation = info;
+                return action();
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
+        }
+
+        /// <summary>TBD</summary>
+        /// <param name="system"></param>
+        /// <param name="serializer"></param>
+        /// <param name="obj"></param>
+        /// <returns></returns>
+        public static byte[] WithTransport(ExtendedActorSystem system, Serializer serializer, object obj)
+        {
+            var info = system.Provider.SerializationInformation;
+            if (CurrentTransportInformation == info)
+            {
+                // already set
+                return serializer.ToBinary(obj);
+            }
+
+            var oldInfo = CurrentTransportInformation;
+            try
+            {
+                CurrentTransportInformation = info;
+                return serializer.ToBinary(obj);
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
+        }
+
+        ///// <summary>TBD</summary>
+        ///// <param name="system"></param>
+        ///// <param name="serializer"></param>
+        ///// <param name="obj"></param>
+        ///// <param name="manifest"></param>
+        ///// <returns></returns>
+        //public static byte[] WithTransport(ExtendedActorSystem system, SerializerWithStringManifest serializer, object obj, out string manifest)
+        //{
+        //    var info = system.Provider.SerializationInformation;
+        //    if (CurrentTransportInformation == info)
+        //    {
+        //        // already set
+        //        return serializer.ToBinary(obj, out manifest);
+        //    }
+
+        //    var oldInfo = CurrentTransportInformation;
+        //    try
+        //    {
+        //        CurrentTransportInformation = info;
+        //        return serializer.ToBinary(obj, out manifest);
+        //    }
+        //    finally
+        //    {
+        //        CurrentTransportInformation = oldInfo;
+        //    }
+        //}
+
+        //private T WithTransport<T>(Func<T> action)
+        //{
+        //    var oldInfo = CurrentTransportInformation;
+        //    try
+        //    {
+        //        if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+        //        return action();
+        //    }
+        //    finally
+        //    {
+        //        CurrentTransportInformation = oldInfo;
+        //    }
+        //}
+
         private Serializer GetSerializerByName(string name)
         {
             if (name == null) { return null; }
@@ -187,8 +333,10 @@ namespace Akka.Serialization
             return serializer;
         }
 
-        /// <summary>TBD</summary>
-        public ActorSystem System { get; }
+        /// <summary>
+        /// The ActorSystem to which <see cref="Serialization"/> is bound.
+        /// </summary>
+        public ExtendedActorSystem System { get; }
 
         /// <summary>Adds the serializer to the internal state of the serialization subsystem</summary>
         /// <param name="serializer">Serializer instance</param>
@@ -219,6 +367,142 @@ namespace Akka.Serialization
             _serializerMap[type] = serializer;
         }
 
+        ///// <summary>
+        ///// Serializes the given message into an array of bytes using whatever serializer is currently configured.
+        ///// </summary>
+        ///// <param name="o">The message being serialized.</param>
+        ///// <returns>A byte array containing the serialized message.</returns>
+        //[MethodImpl(InlineOptions.AggressiveOptimization)]
+        //public byte[] Serialize(object o)
+        //{
+        //    return FindSerializerFor(o).ToBinary(o);
+        //}
+
+        ///// <summary>
+        ///// Serializes the given message into an array of bytes using whatever serializer is currently configured.
+        ///// </summary>
+        ///// <param name="o">The message being serialized.</param>
+        ///// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
+        ///// <returns>A byte array containing the serialized message.</returns>
+        //[MethodImpl(InlineOptions.AggressiveOptimization)]
+        //public byte[] Serialize(object o, string defaultSerializerName)
+        //{
+        //    return FindSerializerFor(o, defaultSerializerName).ToBinary(o);
+        //}
+
+        /// <summary>
+        /// Serializes the given message into an array of bytes using whatever serializer is currently configured.
+        /// </summary>
+        /// <param name="o">The message being serialized.</param>
+        /// <returns>A byte array containing the serialized message.</returns>
+        public byte[] SerializeWithTransport(object o)
+        {
+            var oldInfo = CurrentTransportInformation;
+            try
+            {
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                return FindSerializerFor(o).ToBinary(o);
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
+        }
+
+        /// <summary>
+        /// Serializes the given message into an array of bytes using whatever serializer is currently configured.
+        /// </summary>
+        /// <param name="o">The message being serialized.</param>
+        /// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
+        /// <returns>A byte array containing the serialized message.</returns>
+        public byte[] SerializeWithTransport(object o, string defaultSerializerName)
+        {
+            var oldInfo = CurrentTransportInformation;
+            try
+            {
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                return FindSerializerFor(o, defaultSerializerName).ToBinary(o);
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
+        }
+
+        /// <summary>
+        /// Serializes the given message into an array of bytes using whatever serializer is currently configured.
+        /// </summary>
+        /// <param name="o">The message being serialized.</param>
+        public Payload SerializeMessageWithTransport(object o)
+        {
+            var oldInfo = CurrentTransportInformation;
+            try
+            {
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                return FindSerializerFor(o).ToPayload(o);
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
+        }
+
+        /// <summary>
+        /// Serializes the given message into an array of bytes using whatever serializer is currently configured.
+        /// </summary>
+        /// <param name="o">The message being serialized.</param>
+        /// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
+        public Payload SerializeMessageWithTransport(object o, string defaultSerializerName)
+        {
+            var oldInfo = CurrentTransportInformation;
+            try
+            {
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                return FindSerializerFor(o, defaultSerializerName).ToPayload(o);
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
+        }
+
+        /// <summary>
+        /// Serializes the given message into an array of bytes using whatever serializer is currently configured.
+        /// </summary>
+        /// <param name="o">The message being serialized.</param>
+        public ExternalPayload SerializeExternalMessageWithTransport(object o)
+        {
+            var oldInfo = CurrentTransportInformation;
+            try
+            {
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                return FindSerializerFor(o).ToExternalPayload(o);
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
+        }
+
+        /// <summary>
+        /// Serializes the given message into an array of bytes using whatever serializer is currently configured.
+        /// </summary>
+        /// <param name="o">The message being serialized.</param>
+        /// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
+        public ExternalPayload SerializeExternalMessageWithTransport(object o, string defaultSerializerName)
+        {
+            var oldInfo = CurrentTransportInformation;
+            try
+            {
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                return FindSerializerFor(o, defaultSerializerName).ToExternalPayload(o);
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
+        }
+
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
         /// optional type hint to the Serializer.</summary>
         /// <param name="bytes">TBD</param>
@@ -229,11 +513,20 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(byte[] bytes, int serializerId, Type type)
         {
-            if (!_serializersById.TryGetValue(serializerId, out var serializer))
+            var oldInfo = CurrentTransportInformation;
+            try
             {
-                ThrowSerializationException(serializerId, type);
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                if (!_serializersById.TryGetValue(serializerId, out var serializer))
+                {
+                    ThrowSerializationException(serializerId, type);
+                }
+                return serializer.FromBinary(bytes, type);
             }
-            return serializer.FromBinary(bytes, type);
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -245,11 +538,20 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(byte[] bytes, int serializerId)
         {
-            if (!_serializersById.TryGetValue(serializerId, out var serializer))
+            var oldInfo = CurrentTransportInformation;
+            try
             {
-                ThrowSerializationException(serializerId);
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                if (!_serializersById.TryGetValue(serializerId, out var serializer))
+                {
+                    ThrowSerializationException(serializerId);
+                }
+                return serializer.FromBinary(bytes, null);
             }
-            return serializer.FromBinary(bytes, null);
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -261,11 +563,20 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(in Payload payload)
         {
-            if (!_serializersById.TryGetValue(payload.SerializerId, out var serializer))
+            var oldInfo = CurrentTransportInformation;
+            try
             {
-                ThrowSerializationException(payload.SerializerId);
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                if (!_serializersById.TryGetValue(payload.SerializerId, out var serializer))
+                {
+                    ThrowSerializationException(payload.SerializerId);
+                }
+                return serializer.FromPayload(payload);
             }
-            return serializer.FromPayload(payload);
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -277,11 +588,20 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(in ExternalPayload payload)
         {
-            if (!_serializersById.TryGetValue(payload.Identifier, out var serializer))
+            var oldInfo = CurrentTransportInformation;
+            try
             {
-                ThrowSerializationException(payload.Identifier);
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
+                if (!_serializersById.TryGetValue(payload.Identifier, out var serializer))
+                {
+                    ThrowSerializationException(payload.Identifier);
+                }
+                return serializer.FromExternalPayload(payload);
             }
-            return serializer.FromExternalPayload(payload);
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
         }
 
         /// <summary>Deserializes the given array of bytes using the specified serializer id, using the
@@ -296,32 +616,42 @@ namespace Akka.Serialization
         /// <returns>The resulting object</returns>
         public object Deserialize(byte[] bytes, int serializerId, string manifest)
         {
-            if (!_serializersById.TryGetValue(serializerId, out var serializer))
-            {
-                ThrowSerializationException(serializerId, manifest);
-            }
-
-            if (serializer is SerializerWithStringManifest manifestSerializer)
-            {
-                return manifestSerializer.FromBinary(bytes, manifest);
-            }
-
-            if (string.IsNullOrEmpty(manifest))
-            {
-                return serializer.FromBinary(bytes, null);
-            }
-
-            Type type = null;
+            var oldInfo = CurrentTransportInformation;
             try
             {
-                type = TypeUtils.ResolveType(manifest);
-            }
-            catch (Exception ex)
-            {
-                ThrowSerializationException_D(manifest, serializerId, ex);
-            }
+                if (oldInfo is null) { CurrentTransportInformation = SerializationInfo; }
 
-            return serializer.FromBinary(bytes, type);
+                if (!_serializersById.TryGetValue(serializerId, out var serializer))
+                {
+                    ThrowSerializationException(serializerId, manifest);
+                }
+
+                if (serializer is SerializerWithStringManifest manifestSerializer)
+                {
+                    return manifestSerializer.FromBinary(bytes, manifest);
+                }
+
+                if (string.IsNullOrEmpty(manifest))
+                {
+                    return serializer.FromBinary(bytes, null);
+                }
+
+                Type type = null;
+                try
+                {
+                    type = TypeUtils.ResolveType(manifest);
+                }
+                catch (Exception ex)
+                {
+                    ThrowSerializationException_D(manifest, serializerId, ex);
+                }
+
+                return serializer.FromBinary(bytes, type);
+            }
+            finally
+            {
+                CurrentTransportInformation = oldInfo;
+            }
         }
 
         /// <summary>Returns the Serializer configured for the given object, returns the NullSerializer if it's null.</summary>
@@ -329,7 +659,7 @@ namespace Akka.Serialization
         /// <returns>The serializer configured for the given object type</returns>
         public Serializer FindSerializerFor(object obj)
         {
-            return obj == null ? _nullSerializer : FindSerializerForType(obj.GetType());
+            return obj is object ? FindSerializerForType(obj.GetType()) : _nullSerializer;
         }
 
         /// <summary>Returns the Serializer configured for the given object, returns the NullSerializer if it's null.</summary>
@@ -338,7 +668,7 @@ namespace Akka.Serialization
         /// <returns>The serializer configured for the given object type</returns>
         public Serializer FindSerializerFor(object obj, string defaultSerializerName)
         {
-            return obj == null ? _nullSerializer : FindSerializerForType(obj.GetType(), defaultSerializerName);
+            return obj is object ? FindSerializerForType(obj.GetType(), defaultSerializerName) : _nullSerializer;
         }
 
         /// <summary>Returns the configured Serializer for the given Class. The configured Serializer is used
@@ -400,18 +730,18 @@ namespace Akka.Serialization
                 }
             }
 
-            if (serializer == null)
+            if (serializer is null)
             {
                 serializer = serialization.GetSerializerByName(defaultSerializerName);
             }
 
             // do a final check for the "object" serializer
-            if (serializer == null)
+            if (serializer is null)
             {
                 serializerMap.TryGetValue(s_objectType, out serializer);
             }
 
-            if (serializer == null)
+            if (serializer is null)
             {
                 ThrowSerializationException(objectType.Name);
             }
@@ -420,12 +750,20 @@ namespace Akka.Serialization
             return serializer;
         }
 
-        /// <summary>TBD</summary>
-        /// <param name="actorRef">TBD</param>
-        /// <returns>TBD</returns>
+        /// <summary>
+        /// The serialized path of an actorRef, based on the current transport serialization information.
+        /// If there is no external address available for the requested address then the systems default
+        /// address will be used.
+        ///
+        /// If there is no external address available in the given <see cref="IActorRef"/> then the systems default
+        /// address will be used and that is retrieved from the ThreadLocal <see cref="Information"/>
+        /// that was set with <see cref="Serialization.WithTransport{T}(ExtendedActorSystem, Func{T})"/>
+        /// </summary>
+        /// <param name="actorRef">The <see cref="IActorRef"/> to be serialized.</param>
+        /// <returns>Absolute path to the serialized actor.</returns>
         public static string SerializedActorPath(IActorRef actorRef)
         {
-            if (Equals(actorRef, ActorRefs.NoSender)) { return String.Empty; }
+            if (Equals(actorRef, ActorRefs.NoSender)) { return string.Empty; }
 
             var path = actorRef.Path;
             ExtendedActorSystem originalSystem = null;
@@ -434,26 +772,30 @@ namespace Akka.Serialization
                 originalSystem = actorRefWithCell.Underlying.System.AsInstanceOf<ExtendedActorSystem>();
             }
 
-            var currentTransportInformation = TransportInformationCache;
-            var system = currentTransportInformation.System;
-            if (system == null)
+            if (CurrentTransportInformation is null)
             {
-                if (originalSystem == null)
+                if (originalSystem is null)
                 {
                     var res = path.ToSerializationFormat();
                     return res;
                 }
-                else
+
+                try
                 {
                     var defaultAddress = originalSystem.Provider.DefaultAddress;
                     var res = path.ToSerializationFormatWithAddress(defaultAddress);
                     return res;
                 }
+                catch
+                {
+                    return path.ToSerializationFormat();
+                }
             }
 
             //CurrentTransportInformation exists
-            var address = currentTransportInformation.Address;
-            if (originalSystem == null || originalSystem == system)
+            var system = CurrentTransportInformation.System;
+            var address = CurrentTransportInformation.Address;
+            if (originalSystem is null || originalSystem == system)
             {
                 var res = path.ToSerializationFormatWithAddress(address);
                 return res;

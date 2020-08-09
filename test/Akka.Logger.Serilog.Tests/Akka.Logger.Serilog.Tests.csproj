@@ -7,7 +7,7 @@
   </PropertyGroup>
  
   <ItemGroup>
-    <PackageReference Include="Serilog.Sinks.ColoredConsole" Version="$(SerilogSinksColoredConsolePackageVersion)" />
+    <PackageReference Include="Serilog.Sinks.Console" Version="$(SerilogSinksConsolePackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

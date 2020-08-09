@@ -32,7 +32,7 @@ namespace Akka.Serialization.Formatters
             if (value == null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.SelectionEnvelope(
-                formatterResolver.Serialize(value.Message),
+                formatterResolver.SerializeMessage(value.Message),
                 GetPattern(value));
 
             var formatter = formatterResolver.GetFormatterWithVerify<Protocol.SelectionEnvelope>();

@@ -200,17 +200,17 @@ namespace Akka.Streams.TestKit.Tests
 
             public bool ShakeIt()
             {
-                var oneMilli = TimeSpan.FromMilliseconds(1);
+                var oneMilli = TimeSpan.FromMilliseconds(10);
                 var marker = new object();
                 var u = Upstream.ReceiveWhile(oneMilli, filter: msg =>
                 {
-                    if (msg is TestPublisher.RequestMore)
+                    if (msg is TestPublisher.RequestMore more)
                     {
-                        var more = (TestPublisher.RequestMore)msg;
                         DebugLog($"Operation requests {more.NrOfElements}");
                         _pendingRequests += more.NrOfElements;
                         return marker;
                     }
+                    DebugLog($"Operation received {msg}");
                     return null;
                 });
                 var d = Downstream.ReceiveWhile(oneMilli, filter: msg => msg.Match()
@@ -223,6 +223,7 @@ namespace Akka.Streams.TestKit.Tests
                     })
                     .With<TestSubscriber.OnComplete>(complete =>
                     {
+                        DebugLog("Operation complete.");
                         _currentScript = _currentScript.Complete();
                     })
                     .With<TestSubscriber.OnError>(error =>
@@ -274,6 +275,7 @@ namespace Akka.Streams.TestKit.Tests
                                 DebugLog("Test environment completes");
                                 UpstreamSubscription.SendComplete();
                                 _completed = true;
+                                return; // don't execute again if completed
                             }
                         }
                     }

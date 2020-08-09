@@ -89,8 +89,8 @@ namespace Akka.Cluster.Tools.Tests.Singleton
                   remote {
                     log-remote-lifecycle-events = off
                     dot-netty.tcp
-                        {
-                            hostname = ""127.0.0.1""
+                    {
+                      hostname = ""127.0.0.1""
                       port = 0
                     }
                  }

@@ -1,5 +1,6 @@
 ﻿using System.Runtime.CompilerServices;
 using SerializedMessage = Akka.Serialization.Protocol.Payload;
+using ExternalSerializedMessage = Akka.Serialization.Protocol.ExternalPayload;
 #if DEBUG
 using System;
 using Akka.Util;
@@ -8,11 +9,11 @@ using Microsoft.Extensions.Logging;
 
 namespace Akka.Actor
 {
-    /// <summary>This class contains extension methods used for working with <see cref="ActorSystem"/>s.</summary>
-    public static class ActorSystemExtensions
+    /// <summary>This class contains extension methods used for working with <see cref="ExtendedActorSystem"/>s.</summary>
+    public static class ExtendedActorSystemExtensions
     {
 #if DEBUG
-        private static readonly ILogger s_logger = TraceLogger.GetLogger(typeof(ActorSystemExtensions));
+        private static readonly ILogger s_logger = TraceLogger.GetLogger(typeof(ExtendedActorSystemExtensions));
 #endif
 
         /// <summary>Deserializes the specified message.</summary>
@@ -20,7 +21,7 @@ namespace Akka.Actor
         /// <param name="messageProtocol">The message protocol.</param>
         /// <returns>System.Object.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static object Deserialize(this ActorSystem system, in SerializedMessage messageProtocol)
+        public static object Deserialize(this ExtendedActorSystem system, in SerializedMessage messageProtocol)
         {
 #if DEBUG
             try
@@ -37,21 +38,40 @@ namespace Akka.Actor
 #endif
         }
 
-        /// <summary>Serializes the specified message.</summary>
+        /// <summary>Deserializes the specified message.</summary>
         /// <param name="system">The system.</param>
-        /// <param name="message">The message.</param>
-        /// <returns>SerializedMessage.</returns>
+        /// <param name="messageProtocol">The message protocol.</param>
+        /// <returns>System.Object.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedMessage Serialize(this ActorSystem system, object message)
+        public static object Deserialize(this ExtendedActorSystem system, in ExternalSerializedMessage messageProtocol)
         {
-            if (null == message) { return SerializedMessage.Null; }
-
 #if DEBUG
             try
             {
 #endif
-                var serializer = system.Serialization.FindSerializerForType(message.GetType());
-                return serializer.ToPayload(message);
+                return system.Serialization.Deserialize(messageProtocol);
+#if DEBUG
+            }
+            catch (Exception exc)
+            {
+                s_logger.LogWarning(exc, $"Unimplemented deserialization of message with serializerId [{messageProtocol.Identifier}]");
+                throw;
+            }
+#endif
+        }
+
+        /// <summary>Serializes the specified message.</summary>
+        /// <param name="system">The system.</param>
+        /// <param name="message">The message.</param>
+        /// <returns>SerializedMessage.</returns>
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
+        public static byte[] Serialize(this ExtendedActorSystem system, object message)
+        {
+#if DEBUG
+            try
+            {
+#endif
+                return system.Serialization.FindSerializerFor(message).ToBinary(message);
 #if DEBUG
             }
             catch (Exception exc)
@@ -67,17 +87,14 @@ namespace Akka.Actor
         /// <param name="message">The message.</param>
         /// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
         /// <returns>SerializedMessage.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedMessage Serialize(this ActorSystem system, object message, string defaultSerializerName)
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
+        public static byte[] Serialize(this ExtendedActorSystem system, object message, string defaultSerializerName)
         {
-            if (null == message) { return SerializedMessage.Null; }
-
 #if DEBUG
             try
             {
 #endif
-                var serializer = system.Serialization.FindSerializerForType(message.GetType(), defaultSerializerName);
-                return serializer.ToPayload(message);
+                return system.Serialization.FindSerializerFor(message, defaultSerializerName).ToBinary(message);
 #if DEBUG
             }
             catch (Exception exc)
@@ -90,20 +107,15 @@ namespace Akka.Actor
 
         /// <summary>Serializes the specified message.</summary>
         /// <param name="system">The system.</param>
-        /// <param name="address">TBD</param>
         /// <param name="message">The message.</param>
-        /// <returns>SerializedMessage.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedMessage Serialize(this ActorSystem system, Address address, object message)
+        public static SerializedMessage SerializeMessage(this ExtendedActorSystem system, object message)
         {
-            if (null == message) { return SerializedMessage.Null; }
-
 #if DEBUG
             try
             {
 #endif
-                var serializer = system.Serialization.FindSerializerForType(message.GetType());
-                return serializer.ToPayloadWithAddress(address, message);
+                return system.Serialization.FindSerializerFor(message).ToPayload(message);
 #if DEBUG
             }
             catch (Exception exc)
@@ -116,21 +128,16 @@ namespace Akka.Actor
 
         /// <summary>Serializes the specified message.</summary>
         /// <param name="system">The system.</param>
-        /// <param name="address">TBD</param>
         /// <param name="message">The message.</param>
         /// <param name="defaultSerializerName">The config name of the serializer to use when no specific binding config is present.</param>
-        /// <returns>SerializedMessage.</returns>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static SerializedMessage Serialize(this ActorSystem system, Address address, object message, string defaultSerializerName)
+        public static SerializedMessage SerializeMessage(this ExtendedActorSystem system, object message, string defaultSerializerName)
         {
-            if (null == message) { return SerializedMessage.Null; }
-
 #if DEBUG
             try
             {
 #endif
-                var serializer = system.Serialization.FindSerializerForType(message.GetType(), defaultSerializerName);
-                return serializer.ToPayloadWithAddress(address, message);
+                return system.Serialization.FindSerializerFor(message, defaultSerializerName).ToPayload(message);
 #if DEBUG
             }
             catch (Exception exc)

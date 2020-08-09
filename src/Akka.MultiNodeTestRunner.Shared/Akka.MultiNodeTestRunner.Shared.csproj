@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
@@ -42,4 +41,5 @@
     </None>
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

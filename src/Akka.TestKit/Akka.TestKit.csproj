@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(Core20TestTfms)</TargetFrameworks>
@@ -36,6 +35,9 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>EventFilterFactory_Generated.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="EventFilter\EventFilterFactory_Generated.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -43,4 +45,5 @@
     </Compile>
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

@@ -78,12 +78,18 @@ namespace Akka.Cluster.Sharding
                 : EntityRecoveryStrategy.AllStrategy;
 
             var idleInterval = TimeSpan.FromTicks(Settings.PassivateIdleEntityAfter.Ticks / 2);
-            PassivateIdleTask = Settings.PassivateIdleEntityAfter > TimeSpan.Zero
+            PassivateIdleTask = Settings.PassivateIdleEntityAfter > TimeSpan.Zero && !Settings.RememberEntities
                 ? Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(idleInterval, idleInterval, Self, Shard.PassivateIdleTick.Instance, Self)
                 : null;
         }
 
         public override string PersistenceId { get; }
+
+        protected override void PostStop()
+        {
+            PassivateIdleTask?.Cancel();
+            base.PostStop();
+        }
 
         protected override bool ReceiveCommand(object message)
         {
@@ -91,20 +97,7 @@ namespace Akka.Cluster.Sharding
             {
                 case SaveSnapshotSuccess m:
                     if (Log.IsDebugEnabled) Log.PersistentShardSnapshotSavedSuccessfully();
-                    /*
-                    * delete old events but keep the latest around because
-                    *
-                    * it's not safe to delete all events immediately because snapshots are typically stored with a weaker consistency
-                    * level which means that a replay might "see" the deleted events before it sees the stored snapshot,
-                    * i.e. it will use an older snapshot and then not replay the full sequence of events
-                    *
-                    * for debugging if something goes wrong in production it's very useful to be able to inspect the events
-                    */
-                    var deleteToSequenceNr = m.Metadata.SequenceNr - Settings.TunningParameters.KeepNrOfBatches * Settings.TunningParameters.SnapshotAfter;
-                    if (deleteToSequenceNr > 0)
-                    {
-                        DeleteMessages(deleteToSequenceNr);
-                    }
+                    InternalDeleteMessagesBeforeSnapshot(m, Settings.TunningParameters.KeepNrOfBatches, Settings.TunningParameters.SnapshotAfter);
                     break;
                 case SaveSnapshotFailure m:
                     if (Log.IsWarningEnabled) Log.PersistentShardSnapshotFailure(m);
@@ -222,7 +215,7 @@ namespace Akka.Cluster.Sharding
                     {
                         ThrowHelper.ThrowInvalidOperationException_MessageBuffersContainsId(id);
                     }
-                    this.GetEntity(id).Tell(payload, sender);
+                    this.GetOrCreateEntity(id).Tell(payload, sender);
                 }
                 else
                 {
@@ -232,7 +225,10 @@ namespace Akka.Cluster.Sharding
                 }
             }
             else
+            {
+                this.TouchLastMessageTimestamp(id);
                 child.Tell(payload, sender);
+            }
         }
     }
 }

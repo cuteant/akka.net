@@ -7,10 +7,12 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Runtime.CompilerServices;
 using System.Threading;
 using Akka.Actor.Internal;
 using Akka.Util;
+using CuteAnt.Text;
 
 namespace Akka.Actor
 {
@@ -18,6 +20,7 @@ namespace Akka.Actor
     {
         private volatile IChildrenContainer _childrenContainerDoNotCallMeDirectly = EmptyChildrenContainer.Instance;
         private long _nextRandomNameDoNotCallMeDirectly = -1; // Interlocked.Increment automatically adds 1 to this value. Allows us to start from 0.
+        private ImmutableDictionary<string, FunctionRef> _functionRefsDoNotCallMeDirectly = ImmutableDictionary<string, FunctionRef>.Empty;
 
         /// <summary>
         /// The child container collection, used to house information about all child actors.
@@ -30,6 +33,53 @@ namespace Akka.Actor
         private IReadOnlyCollection<IActorRef> Children
         {
             get { return ChildrenContainer.Children; }
+        }
+
+        private ImmutableDictionary<string, FunctionRef> FunctionRefs => Volatile.Read(ref _functionRefsDoNotCallMeDirectly);
+        internal bool TryGetFunctionRef(string name, out FunctionRef functionRef) =>
+            FunctionRefs.TryGetValue(name, out functionRef);
+
+        internal bool TryGetFunctionRef(string name, int uid, out FunctionRef functionRef) =>
+            FunctionRefs.TryGetValue(name, out functionRef) && (uid == ActorCell.UndefinedUid || uid == functionRef.Path.Uid);
+
+        internal FunctionRef AddFunctionRef(Action<IActorRef, object> tell, string suffix = "")
+        {
+            return AddFunctionRef(new ActionHandler<IActorRef, object>(tell), suffix);
+        }
+
+        internal FunctionRef AddFunctionRef(IHandle<IActorRef, object> tell, string suffix = "")
+        {
+            var r = GetRandomActorName("$$");
+            var n = string.IsNullOrEmpty(suffix) ? r : r + "-" + suffix;
+            var childPath = new ChildActorPath(Self.Path, n, NewUid());
+            var functionRef = new FunctionRef(childPath, SystemImpl.Provider, SystemImpl.EventStream, tell);
+
+            return ImmutableInterlocked.GetOrAdd(ref _functionRefsDoNotCallMeDirectly, childPath.Name, functionRef);
+        }
+
+        internal bool RemoveFunctionRef(FunctionRef functionRef)
+        {
+            if (functionRef.Path.Parent != Self.Path)
+            {
+                AkkaThrowHelper.ThrowInvalidOperationException_Trying_to_remove_FunctionRef_from_wrong_ActorCell(functionRef);
+            }
+
+            var name = functionRef.Path.Name;
+            if (ImmutableInterlocked.TryRemove(ref _functionRefsDoNotCallMeDirectly, name, out var fref))
+            {
+                fref.Stop();
+                return true;
+            }
+            else return false;
+        }
+
+        protected void StopFunctionRefs()
+        {
+            var refs = Interlocked.Exchange(ref _functionRefsDoNotCallMeDirectly, ImmutableDictionary<string, FunctionRef>.Empty);
+            foreach (var pair in refs)
+            {
+                pair.Value.Stop();
+            }
         }
 
         /// <summary>
@@ -86,10 +136,11 @@ namespace Akka.Actor
             return MakeChild(props, name, isAsync, isSystemService);
         }
 
-        private string GetRandomActorName()
+        private string GetRandomActorName(string prefix = "$")
         {
             var id = Interlocked.Increment(ref _nextRandomNameDoNotCallMeDirectly);
-            return "$" + id.Base64Encode();
+            var sb = StringBuilderCache.Acquire().Append(prefix);
+            return id.Base64Encode(sb).ToString();
         }
 
         /// <summary>
@@ -98,8 +149,7 @@ namespace Akka.Actor
         /// <param name="child">The child.</param>
         public void Stop(IActorRef child)
         {
-            ChildRestartStats stats;
-            if (ChildrenContainer.TryGetByRef(child, out stats))
+            if (ChildrenContainer.TryGetByRef(child, out _))
             {
                 var repointableActorRef = child as RepointableActorRef;
                 if (repointableActorRef == null || repointableActorRef.IsStarted)
@@ -329,6 +379,11 @@ namespace Akka.Actor
                     child = stats.Child;
                     return true;
                 }
+                else if (TryGetFunctionRef(name, out var functionRef))
+                {
+                    child = functionRef;
+                    return true;
+                }
             }
             else
             {
@@ -342,6 +397,11 @@ namespace Akka.Actor
                         return true;
                     }
                 }
+                else if (TryGetFunctionRef(nameAndUid.Name, nameAndUid.Uid, out var functionRef))
+                {
+                    child = functionRef;
+                    return true;
+                }
             }
             child = ActorRefs.Nobody;
             return false;
@@ -354,8 +414,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         protected SuspendReason RemoveChildAndGetStateChange(IActorRef child)
         {
-            var terminating = ChildrenContainer as TerminatingChildrenContainer;
-            if (terminating != null)
+            if (ChildrenContainer is TerminatingChildrenContainer terminating)
             {
                 var n = RemoveChild(child);
                 if (!(n is TerminatingChildrenContainer))
@@ -394,18 +453,34 @@ namespace Akka.Actor
         {
             if (_systemImpl.Settings.SerializeAllCreators && !systemService && !(props.Deploy.Scope is LocalScope))
             {
-                var ser = _systemImpl.Serialization;
-                if (props.Arguments != null)
+                var oldInfo = Serialization.Serialization.CurrentTransportInformation;
+                try
                 {
-                    foreach (var argument in props.Arguments)
+                    if (oldInfo is null)
                     {
-                        if (argument != null && !(argument is INoSerializationVerificationNeeded))
+                        Serialization.Serialization.CurrentTransportInformation =
+                            SystemImpl.Provider.SerializationInformation;
+                    }
+
+                    var ser = _systemImpl.Serialization;
+                    var propsArguments = props.Arguments;
+                    if (propsArguments != null)
+                    {
+                        for (int idx = 0; idx < propsArguments.Length; idx++)
                         {
-                            var serializer = ser.FindSerializerFor(argument);
-                            var deserializedArgu = serializer.DeepCopy(argument);
-                            if (null == deserializedArgu) { AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name); }
+                            object argument = propsArguments[idx];
+                            if (argument != null && !(argument is INoSerializationVerificationNeeded))
+                            {
+                                var serializer = ser.FindSerializerFor(argument);
+                                var deserializedArgu = serializer.DeepCopy(argument);
+                                if (deserializedArgu is null) { AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name); }
+                            }
                         }
                     }
+                }
+                finally
+                {
+                    Serialization.Serialization.CurrentTransportInformation = oldInfo;
                 }
             }
 

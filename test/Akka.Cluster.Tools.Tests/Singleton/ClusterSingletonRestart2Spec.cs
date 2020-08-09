@@ -30,6 +30,7 @@ namespace Akka.Cluster.Tools.Tests.Singleton
               akka.actor.provider = ""cluster""
               akka.cluster.roles = [singleton]
               akka.cluster.auto-down-unreachable-after = 2s
+              akka.cluster.singleton.min-number-of-hand-over-retries = 5
               akka.remote {
                 dot-netty.tcp {
                   hostname = ""127.0.0.1""

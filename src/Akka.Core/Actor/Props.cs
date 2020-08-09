@@ -717,7 +717,8 @@ namespace Akka.Actor
         private static void ThrowArgumentNullException()
         {
             throw GetArgumentNullException();
-            ArgumentNullException GetArgumentNullException()
+
+            static ArgumentNullException GetArgumentNullException()
             {
                 return new ArgumentNullException("type", NullActorTypeExceptionText);
             }

@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
   <Import Project="..\..\..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Async.Sources\CuteAnt.Extensions.Async.Sources.projitems" Label="Shared" />
 
   <PropertyGroup>
@@ -41,4 +40,5 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

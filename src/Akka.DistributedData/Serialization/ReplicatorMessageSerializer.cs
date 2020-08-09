@@ -9,6 +9,8 @@ using System;
 using System.Buffers;
 using System.Collections.Generic;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.DistributedData.Internal;
 using Akka.Util;
@@ -220,10 +222,31 @@ namespace Akka.DistributedData.Serialization
         public override object FromBinary(byte[] bytes, Type type)
         {
             if (type == WriteAckType) return WriteAck.Instance;
-            using (var inputStream = new MemoryStream(bytes))
+            try
             {
-                return _serializer.Deserialize(inputStream);
+                using (var inputStream = new MemoryStream(bytes))
+                {
+                    return _serializer.Deserialize(inputStream);
+                }
             }
+            catch (TypeLoadException e)
+            {
+                throw GetSerializationException(e);
+            }
+            catch (NotSupportedException e)
+            {
+                throw GetSerializationException(e);
+            }
+            catch (ArgumentException e)
+            {
+                throw GetSerializationException(e);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static SerializationException GetSerializationException(Exception e)
+        {
+            return new SerializationException(e.Message, e);
         }
     }
 }

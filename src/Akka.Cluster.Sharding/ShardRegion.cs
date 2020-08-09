@@ -182,6 +182,12 @@ namespace Akka.Cluster.Sharding
         /// </summary>
         internal class HandOffStopper : ReceiveActor2
         {
+            private ILoggingAdapter _log;
+            /// <summary>
+            /// TBD
+            /// </summary>
+            public ILoggingAdapter Log { get { return _log ??= Context.GetLogger(); } }
+
             /// <summary>
             /// TBD
             /// </summary>
@@ -189,34 +195,52 @@ namespace Akka.Cluster.Sharding
             /// <param name="replyTo">TBD</param>
             /// <param name="entities">TBD</param>
             /// <param name="stopMessage">TBD</param>
+            /// <param name="handoffTimeout"></param>
             /// <returns>TBD</returns>
-            public static Props Props(ShardId shard, IActorRef replyTo, IEnumerable<IActorRef> entities, object stopMessage)
+            public static Props Props(ShardId shard, IActorRef replyTo, IEnumerable<IActorRef> entities, object stopMessage, TimeSpan handoffTimeout)
             {
-                return Actor.Props.Create(() => new HandOffStopper(shard, replyTo, entities, stopMessage)).WithDeploy(Deploy.Local);
+                return Actor.Props.Create(() => new HandOffStopper(shard, replyTo, entities, stopMessage, handoffTimeout)).WithDeploy(Deploy.Local);
             }
 
             private readonly HashSet<IActorRef> _remaining;
             private readonly ShardId _shard;
             private readonly IActorRef _replyTo;
+            private readonly object _stopMessage;
             /// <summary>
-            /// TBD
+            ///Sends stopMessage (e.g. `PoisonPill`) to the entities and when all of
+            /// them have terminated it replies with `ShardStopped`.
+            /// If the entities don't terminate after `handoffTimeout` it will try stopping them forcefully.
             /// </summary>
             /// <param name="shard">TBD</param>
             /// <param name="replyTo">TBD</param>
             /// <param name="entities">TBD</param>
             /// <param name="stopMessage">TBD</param>
-            public HandOffStopper(ShardId shard, IActorRef replyTo, IEnumerable<IActorRef> entities, object stopMessage)
+            /// <param name="handoffTimeout"></param>
+            public HandOffStopper(ShardId shard, IActorRef replyTo, IEnumerable<IActorRef> entities, object stopMessage, TimeSpan handoffTimeout)
             {
                 _shard = shard;
                 _replyTo = replyTo;
+                _stopMessage = stopMessage;
                 _remaining = new HashSet<IActorRef>(entities, ActorRefComparer.Instance);
 
+                Receive<ReceiveTimeout>(HandleReceiveTimeout);
                 Receive<Terminated>(HandleTerminated);
+
+                Context.SetReceiveTimeout(handoffTimeout);
 
                 foreach (var aref in _remaining)
                 {
                     Context.Watch(aref);
                     aref.Tell(stopMessage);
+                }
+            }
+
+            private void HandleReceiveTimeout(ReceiveTimeout t)
+            {
+                Log.Warning("HandOffStopMessage[{0}] is not handled by some of the entities of the [{1}] shard, stopping the remaining entities.", _stopMessage.GetType(), _shard);
+                foreach (var r in _remaining)
+                {
+                    Context.Stop(r);
                 }
             }
 
@@ -455,7 +479,7 @@ namespace Akka.Cluster.Sharding
         {
             Cluster.Subscribe(Self, typeof(ClusterEvent.IMemberEvent));
             var passivateIdleEntityAfter = Settings.PassivateIdleEntityAfter;
-            if (passivateIdleEntityAfter > TimeSpan.Zero)
+            if (passivateIdleEntityAfter > TimeSpan.Zero && !Settings.RememberEntities)
             {
                 var log = Log;
                 if (log.IsInfoEnabled) log.IdleEntitiesWillBePassivatedAfter(passivateIdleEntityAfter);
@@ -693,22 +717,25 @@ namespace Akka.Cluster.Sharding
             switch (command)
             {
                 case Retry _:
+                    SendGracefulShutdownToCoordinator();
+
                     if (ShardBuffers.Count != 0) _retryCount++;
 
                     if (_coordinator == null) Register();
                     else
                     {
-                        SendGracefulShutdownToCoordinator();
                         RequestShardBufferHomes();
-                        TryCompleteGracefulShutdown();
                     }
+                    TryCompleteGracefulShutdown();
                     break;
+
                 case GracefulShutdown _:
                     if (Log.IsDebugEnabled) Log.StartingGracefulShutdownOfRegionAndAllItsShards();
                     GracefulShutdownInProgress = true;
                     SendGracefulShutdownToCoordinator();
                     TryCompleteGracefulShutdown();
                     break;
+
                 default:
                     Unhandled(command);
                     break;
@@ -1000,7 +1027,6 @@ namespace Akka.Cluster.Sharding
         {
             switch (e)
             {
-
                 case ClusterEvent.MemberUp mu:
                     {
                         var m = mu.Member;
@@ -1008,6 +1034,7 @@ namespace Akka.Cluster.Sharding
                             ChangeMembers(MembersByAge.Remove(m).Add(m)); // replace
                     }
                     break;
+
                 case ClusterEvent.MemberRemoved mr:
                     {
                         var m = mr.Member;
@@ -1017,9 +1044,19 @@ namespace Akka.Cluster.Sharding
                             ChangeMembers(MembersByAge.Remove(m));
                     }
                     break;
+
+                case ClusterEvent.MemberDowned md:
+                    if (md.Member.UniqueAddress == Cluster.SelfUniqueAddress)
+                    {
+                        Context.Stop(Self);
+                    }
+                    if (Log.IsInfoEnabled) { Log.SelfDownedStoppingShardRegion(Self); }
+                    break;
+
                 case ClusterEvent.IMemberEvent _:
                     // these are expected, no need to warn about them
                     break;
+
                 default:
                     Unhandled(e);
                     break;

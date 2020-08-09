@@ -12,6 +12,8 @@ using System.Linq;
 using Akka.Configuration;
 using Akka.TestKit;
 using Akka.Util.Internal;
+using FluentAssertions;
+using FluentAssertions.Extensions;
 using Xunit.Abstractions;
 
 namespace Akka.Persistence.Tests
@@ -21,9 +23,6 @@ namespace Akka.Persistence.Tests
         public static Config Configuration(string test, string serialization = null,
             string extraConfig = null)
         {
-            var c = extraConfig == null
-                ? ConfigurationFactory.Empty
-                : ConfigurationFactory.ParseString(extraConfig);
             var configString = string.Format(@"
                 akka.actor.serialize-creators = {0}
                 akka.actor.serialize-messages = {0}
@@ -31,7 +30,9 @@ namespace Akka.Persistence.Tests
                 akka.persistence.snapshot-store.local.dir = ""target/snapshots-{1}/""
                 akka.test.single-expect-default = 10s", serialization ?? "on", test);
 
-            return c.WithFallback(ConfigurationFactory.ParseString(configString));
+            if (extraConfig == null)
+                return ConfigurationFactory.ParseString(configString);
+            return ConfigurationFactory.ParseString(extraConfig).WithFallback(ConfigurationFactory.ParseString(configString));
         }
 
         internal readonly Cleanup Clean;
@@ -73,6 +74,20 @@ namespace Akka.Persistence.Tests
             msg
                 //.Select(x => x.ToString())
                 .ShouldOnlyContainInOrder(ordered);
+        }
+
+        protected void ExpectAnyMsgInOrder(params IEnumerable<object>[] expected)
+        {
+            var msg = ExpectMsg<object[]>();
+            foreach (var e in expected)
+            {
+                if (e.SequenceEqual(msg))
+                    return;
+            }
+
+            false.Should()
+                .BeTrue(
+                    $"[{string.Join(",", msg)}] should match any expected value {string.Join(",", expected.Select(x => "[" + string.Join(",", x) + "]"))}");
         }
     }
 

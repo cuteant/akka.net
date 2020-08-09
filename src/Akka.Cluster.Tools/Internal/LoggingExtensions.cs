@@ -116,6 +116,19 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void IgnoringTakeOverRequest(this ILoggingAdapter logger,
+            ClusterSingletonState stateName, IActorRef sender)
+        {
+            logger.Debug("Ignoring TakeOver request in [{0}] from [{1}].", stateName, sender.Path.Address);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Receptionist_is_shutting_down_reestablishing_connection(this ILoggingAdapter logger, IActorRef receptionist)
+        {
+            logger.Info("Receptionist [{0}] is shutting down, reestablishing connection", receptionist);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void SingletonIdentifiedAt(this ILoggingAdapter logger, IActorRef subject)
         {
             logger.Info("Singleton identified at [{0}]", subject.Path);
@@ -150,13 +163,6 @@ namespace Akka.Cluster.Tools
             ClusterSingletonState from, ClusterSingletonState to, IClusterSingletonData data)
         {
             logger.Info("ClusterSingletonManager state change [{0} -> {1}] {2}", from, to, data.ToString());
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void IgnoringTakeOverRequest(this ILoggingAdapter logger,
-            ClusterSingletonState stateName, IActorRef sender)
-        {
-            logger.Info("Ignoring TakeOver request in [{0}] from [{1}].", stateName, sender.Path.Address);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -254,6 +260,36 @@ namespace Akka.Cluster.Tools
         internal static void SingletonManagerStartedSingletonActor(this ILoggingAdapter logger, IActorRef singleton)
         {
             logger.Info("Singleton manager started singleton actor [{0}] ", singleton.Path);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SingletonManagerStoppingSingletonActor(this ILoggingAdapter logger, IActorRef singleton)
+        {
+            logger.Info("Singleton manager stopping singleton actor [{0}]", singleton.Path);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SelfDownedStoppingClusterSingletonManager(this ILoggingAdapter logger)
+        {
+            logger.Info("Self downed, stopping ClusterSingletonManager");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SelfDownedStopping(this ILoggingAdapter logger)
+        {
+            logger.Info("Self downed, stopping");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SelfDownedWaitingForRemoval(this ILoggingAdapter logger)
+        {
+            logger.Info("Self downed, waiting for removal");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SingletonActorWasTerminated(this ILoggingAdapter logger, IActorRef singleton)
+        {
+            logger.Info("Singleton actor [{0}] was terminated", singleton.Path);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

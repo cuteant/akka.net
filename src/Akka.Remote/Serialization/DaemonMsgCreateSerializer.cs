@@ -43,8 +43,8 @@ namespace Akka.Remote.Serialization
             if (null == msg) { ThrowHelper.ThrowArgumentException_Serializer_DaemonMsg(obj); }
 
             return MessagePackSerializer.Serialize(
-                new DaemonMsgCreateData(PropsToProto(system, msg.Props),
-                    DeployToProto(system, msg.Deploy),
+                new DaemonMsgCreateData(PropsToProto(_system, msg.Props),
+                    DeployToProto(_system, msg.Deploy),
                     msg.Path,
                     SerializeActorRef(msg.Supervisor)),
                 s_defaultResolver);
@@ -56,10 +56,10 @@ namespace Akka.Remote.Serialization
             var proto = MessagePackSerializer.Deserialize<DaemonMsgCreateData>(bytes, s_defaultResolver);
 
             return new DaemonMsgCreate(
-                PropsFromProto(system, proto.Props),
-                DeployFromProto(system, proto.Deploy),
+                PropsFromProto(_system, proto.Props),
+                DeployFromProto(_system, proto.Deploy),
                 proto.Path,
-                DeserializeActorRef(system, proto.Supervisor));
+                DeserializeActorRef(_system, proto.Supervisor));
         }
 
         //
@@ -70,8 +70,7 @@ namespace Akka.Remote.Serialization
             return new PropsData(
                 DeployToProto(system, props.Deploy),
                 props.Type.TypeQualifiedName(),
-                props.Arguments.Select(_ => system.Serialize(_)).ToArray());
-
+                props.Arguments.Select(_ => system.SerializeMessage(_)).ToArray());
         }
 
         internal static Props PropsFromProto(ExtendedActorSystem system, in PropsData protoProps)
@@ -100,9 +99,9 @@ namespace Akka.Remote.Serialization
         {
             return new DeployData(
                 deploy.Path,
-                system.Serialize(deploy.Config),
-                deploy.RouterConfig != NoRouter.Instance ? system.Serialize(deploy.RouterConfig) : Payload.Null,
-                deploy.Scope != Deploy.NoScopeGiven ? system.Serialize(deploy.Scope) : Payload.Null,
+                system.SerializeMessage(deploy.Config),
+                deploy.RouterConfig != NoRouter.Instance ? system.SerializeMessage(deploy.RouterConfig) : Payload.Null,
+                deploy.Scope != Deploy.NoScopeGiven ? system.SerializeMessage(deploy.Scope) : Payload.Null,
                 deploy.Dispatcher != Deploy.NoDispatcherGiven ? deploy.Dispatcher : null
                 );
         }

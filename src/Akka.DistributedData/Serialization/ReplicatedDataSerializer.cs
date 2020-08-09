@@ -8,6 +8,8 @@
 using System;
 using System.Buffers;
 using System.IO;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Util;
 using CuteAnt.Buffers;
@@ -70,11 +72,32 @@ namespace Akka.DistributedData.Serialization
         /// <returns>The object contained in the array</returns>
         public override object FromBinary(byte[] bytes, Type type)
         {
-            using (var inputStream = new MemoryStream(bytes))
+            try
             {
-                var res = _serializer.Deserialize(inputStream);
-                return res;
+                using (var inputStream = new MemoryStream(bytes))
+                {
+                    var res = _serializer.Deserialize(inputStream);
+                    return res;
+                }
             }
+            catch (TypeLoadException e)
+            {
+                throw GetSerializationException(e);
+            }
+            catch (NotSupportedException e)
+            {
+                throw GetSerializationException(e);
+            }
+            catch (ArgumentException e)
+            {
+                throw GetSerializationException(e);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static SerializationException GetSerializationException(Exception e)
+        {
+            return new SerializationException(e.Message, e);
         }
     }
 }

@@ -137,6 +137,14 @@ namespace Akka.Remote
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static ArgumentException GetArgumentException_Serializer_D(object obj)
+        {
+            var type = obj as Type;
+            var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+            return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_Endpoint_Reg(EndpointManager.Pass pass, IActorRef endpoint)
         {
             throw GetException();
@@ -207,16 +215,28 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static ArgumentException GetArgumentException_Serializer_D(object obj)
+        internal static void ThrowArgumentException_Highest_SEQ_so_far_but_cumulative_ACK_is(Ack ack, SeqNo maxSeq)
         {
-            var type = obj as Type;
-            var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
-            return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException(nameof(ack), $"Highest SEQ so far was {maxSeq} but cumulative ACK is {ack.CumulativeAck}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Unexpected_local_address_in_RemoteActorRef(RemoteActorRef actorRef)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Unexpected local address in RemoteActorRef [{actorRef}]");
+            }
         }
 
         #endregion
 
-        #region -- ArgumentException --
+        #region -- ArgumentOutOfRangeException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentOutOfRangeException_MaxSampleSize(int maxSampleSize)

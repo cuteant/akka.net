@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.hocon.props" />
-  <Import Project="..\..\version.hocon.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDev40Tfms)</TargetFrameworks>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
     <RootNamespace>Hocon.Extensions.Configuration</RootNamespace>
     <AssemblyName>Hocon.Extensions.Configuration</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -43,4 +42,5 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Import Project="..\..\version.hocon.props" />
 </Project>

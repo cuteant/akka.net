@@ -367,7 +367,7 @@ namespace Akka.Remote.Transport.DotNetty
         private void InitInbound(IChannel channel, IPEndPoint socketAddress, object msg)
         {
             // disable automatic reads
-            channel.Configuration.AutoRead = false;
+            channel.Configuration.IsAutoRead = false;
 
             _associationEventListener.Then(AfterSetupAssociationEventListenerAction,
                 this, channel, socketAddress, msg, TaskContinuationOptions.OnlyOnRanToCompletion);
@@ -504,7 +504,7 @@ namespace Akka.Remote.Transport.DotNetty
         [MethodImpl(MethodImplOptions.NoInlining)]
         private bool CheckLastChannelStatus()
         {
-            if (_channel.Active) // _channel.Open && _channel.IsWritable)
+            if (_channel.IsActive) // _channel.Open && _channel.IsWritable)
             {
                 Interlocked.Exchange(ref _channelStatus, ChannelStatus.Open);
                 return true;
@@ -563,7 +563,7 @@ namespace Akka.Remote.Transport.DotNetty
                     if (batch.Count >= batchSize) { break; }
                 }
 
-                if (channel.Active) // _channel.Open && _channel.IsWritable
+                if (channel.IsActive) // _channel.Open && _channel.IsWritable
                 {
                     await channel.WriteAndFlushAsync(Serialize(batch));
 
@@ -651,7 +651,7 @@ namespace Akka.Remote.Transport.DotNetty
                     if (batch.Count >= batchSize) { break; }
                 }
 
-                if (channel.Active) // _channel.Open && _channel.IsWritable
+                if (channel.IsActive) // _channel.Open && _channel.IsWritable
                 {
                     await channel.WriteAndFlushAsync(Serialize(batch));
 
@@ -699,7 +699,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override bool Write(object msg)
         {
-            if (_channel.Active) // _channel.Open && _channel.IsWritable
+            if (_channel.IsActive) // _channel.Open && _channel.IsWritable
             {
                 _channel.WriteAndFlushAsync(Serialize(msg));
                 return true;
@@ -733,7 +733,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override bool Write(object msg)
         {
-            if (_channel.Active) // _channel.Open && _channel.IsWritable
+            if (_channel.IsActive) // _channel.Open && _channel.IsWritable
             {
                 _channel.WriteAndFlushAsync(Serialize(msg));
                 return true;

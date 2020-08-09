@@ -221,7 +221,8 @@ namespace Akka.Actor
         private void ThrowObjectDisposedException()
         {
             throw GetObjectDisposedException();
-            ObjectDisposedException GetObjectDisposedException()
+
+            static ObjectDisposedException GetObjectDisposedException()
             {
                 return new ObjectDisposedException(null, "The cancelable has been disposed");
             }

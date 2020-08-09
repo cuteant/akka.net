@@ -2,10 +2,11 @@
   <!-- Versioning properties -->
   <PropertyGroup>
     <AssemblyVersion>1.0.0.0</AssemblyVersion>
-    <VersionPrefix Condition=" '$(VersionPrefix)'=='' ">1.0.2</VersionPrefix>
-    <!--<VersionSuffix Condition=" '$(VersionSuffix)'=='' ">rtm</VersionSuffix>
-    <VersionDateSuffix Condition=" '$(VersionDateSuffix)'=='' ">190122-01</VersionDateSuffix>
-    <VersionSuffix Condition=" '$(VersionDateSuffix)'!='' ">$(VersionSuffix)-$(VersionDateSuffix)</VersionSuffix>-->
+    <VersionPrefix Condition=" '$(VersionPrefix)'=='' ">1.0.0</VersionPrefix>
+    <VersionPrefix Condition=" '$(VersionYearPrefix)'!='' ">1.0.$(VersionYearPrefix)</VersionPrefix>
+    <VersionPrefix Condition=" '$(VersionDatePrefix)'!='' ">$(VersionPrefix).$(VersionDatePrefix)</VersionPrefix>
+    <VersionSuffix Condition=" '$(VersionSuffix)'=='' and '$(VersionYearPrefix)'=='' ">rtm</VersionSuffix>
+    <VersionSuffix Condition=" '$(VersionDateSuffix)'!='' and '$(VersionYearPrefix)'=='' ">$(VersionSuffix)-$(VersionDateSuffix)</VersionSuffix>
   </PropertyGroup>
   <Choose>
     <When Condition=" '$(TargetFramework)' == 'net40' ">
@@ -76,6 +77,11 @@
     <When Condition=" '$(TargetFramework)' == 'netcoreapp3.0' ">
       <PropertyGroup>
         <FileVersion>1.0.2.6500</FileVersion>
+      </PropertyGroup>
+    </When>
+    <When Condition=" '$(TargetFramework)' == 'netcoreapp3.1' ">
+      <PropertyGroup>
+        <FileVersion>1.0.2.6600</FileVersion>
       </PropertyGroup>
     </When>
     <Otherwise>

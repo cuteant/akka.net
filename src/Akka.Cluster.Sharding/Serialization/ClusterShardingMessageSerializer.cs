@@ -54,6 +54,11 @@ namespace Akka.Cluster.Sharding.Serialization
 
         private const string GetShardStatsManifest = "DA";
         private const string ShardStatsManifest = "DB";
+        private const string GetShardRegionStatsManifest = "DC";
+        private const string ShardRegionStatsManifest = "DD";
+
+        private const string GetClusterShardingStatsManifest = "GS";
+        private const string ClusterShardingStatsManifest = "CS";
 
         private static readonly Dictionary<Type, string> ManifestMap;
 
@@ -61,32 +66,36 @@ namespace Akka.Cluster.Sharding.Serialization
         {
             ManifestMap = new Dictionary<Type, string>
             {
-                { typeof(Shard.ShardState), EntityStateManifest},
-                { typeof(Shard.EntityStarted), EntityStartedManifest},
-                { typeof(Shard.EntityStopped), EntityStoppedManifest},
-                { typeof(PersistentShardCoordinator.State), CoordinatorStateManifest},
-                { typeof(PersistentShardCoordinator.ShardRegionRegistered), ShardRegionRegisteredManifest},
-                { typeof(PersistentShardCoordinator.ShardRegionProxyRegistered), ShardRegionProxyRegisteredManifest},
-                { typeof(PersistentShardCoordinator.ShardRegionTerminated), ShardRegionTerminatedManifest},
-                { typeof(PersistentShardCoordinator.ShardRegionProxyTerminated), ShardRegionProxyTerminatedManifest},
-                { typeof(PersistentShardCoordinator.ShardHomeAllocated), ShardHomeAllocatedManifest},
-                { typeof(PersistentShardCoordinator.ShardHomeDeallocated), ShardHomeDeallocatedManifest},
-                { typeof(PersistentShardCoordinator.Register), RegisterManifest},
-                { typeof(PersistentShardCoordinator.RegisterProxy), RegisterProxyManifest},
-                { typeof(PersistentShardCoordinator.RegisterAck), RegisterAckManifest},
-                { typeof(PersistentShardCoordinator.GetShardHome), GetShardHomeManifest},
-                { typeof(PersistentShardCoordinator.ShardHome), ShardHomeManifest},
-                { typeof(PersistentShardCoordinator.HostShard), HostShardManifest},
-                { typeof(PersistentShardCoordinator.ShardStarted), ShardStartedManifest},
-                { typeof(PersistentShardCoordinator.BeginHandOff), BeginHandOffManifest},
-                { typeof(PersistentShardCoordinator.BeginHandOffAck), BeginHandOffAckManifest},
-                { typeof(PersistentShardCoordinator.HandOff), HandOffManifest},
-                { typeof(PersistentShardCoordinator.ShardStopped), ShardStoppedManifest},
-                { typeof(PersistentShardCoordinator.GracefulShutdownRequest), GracefulShutdownReqManifest},
-                { typeof(ShardRegion.StartEntity), StartEntityManifest},
-                { typeof(ShardRegion.StartEntityAck), StartEntityAckManifest},
-                { typeof(Shard.GetShardStats), GetShardStatsManifest},
-                { typeof(Shard.ShardStats), ShardStatsManifest},
+                { typeof(Shard.ShardState), EntityStateManifest },
+                { typeof(Shard.EntityStarted), EntityStartedManifest },
+                { typeof(Shard.EntityStopped), EntityStoppedManifest },
+                { typeof(PersistentShardCoordinator.State), CoordinatorStateManifest },
+                { typeof(PersistentShardCoordinator.ShardRegionRegistered), ShardRegionRegisteredManifest },
+                { typeof(PersistentShardCoordinator.ShardRegionProxyRegistered), ShardRegionProxyRegisteredManifest },
+                { typeof(PersistentShardCoordinator.ShardRegionTerminated), ShardRegionTerminatedManifest },
+                { typeof(PersistentShardCoordinator.ShardRegionProxyTerminated), ShardRegionProxyTerminatedManifest },
+                { typeof(PersistentShardCoordinator.ShardHomeAllocated), ShardHomeAllocatedManifest },
+                { typeof(PersistentShardCoordinator.ShardHomeDeallocated), ShardHomeDeallocatedManifest },
+                { typeof(PersistentShardCoordinator.Register), RegisterManifest },
+                { typeof(PersistentShardCoordinator.RegisterProxy), RegisterProxyManifest },
+                { typeof(PersistentShardCoordinator.RegisterAck), RegisterAckManifest },
+                { typeof(PersistentShardCoordinator.GetShardHome), GetShardHomeManifest },
+                { typeof(PersistentShardCoordinator.ShardHome), ShardHomeManifest },
+                { typeof(PersistentShardCoordinator.HostShard), HostShardManifest },
+                { typeof(PersistentShardCoordinator.ShardStarted), ShardStartedManifest },
+                { typeof(PersistentShardCoordinator.BeginHandOff), BeginHandOffManifest },
+                { typeof(PersistentShardCoordinator.BeginHandOffAck), BeginHandOffAckManifest },
+                { typeof(PersistentShardCoordinator.HandOff), HandOffManifest },
+                { typeof(PersistentShardCoordinator.ShardStopped), ShardStoppedManifest },
+                { typeof(PersistentShardCoordinator.GracefulShutdownRequest), GracefulShutdownReqManifest },
+                { typeof(ShardRegion.StartEntity), StartEntityManifest },
+                { typeof(ShardRegion.StartEntityAck), StartEntityAckManifest },
+                { typeof(Shard.GetShardStats), GetShardStatsManifest },
+                { typeof(Shard.ShardStats), ShardStatsManifest },
+                { typeof(GetShardRegionStats), GetShardRegionStatsManifest },
+                { typeof(ShardRegionStats), ShardRegionStatsManifest },
+                { typeof(GetClusterShardingStats), GetClusterShardingStatsManifest },
+                { typeof(ClusterShardingStats), ClusterShardingStatsManifest },
             };
         }
 
@@ -183,6 +192,18 @@ namespace Akka.Cluster.Sharding.Serialization
                 case Shard.ShardStats o:
                     manifest = ShardStatsManifest;
                     return MessagePackSerializer.Serialize(ShardStatsToProto(o), s_defaultResolver);
+                case GetShardRegionStats _:
+                    manifest = GetShardRegionStatsManifest;
+                    return EmptyArray<byte>.Instance;
+                case ShardRegionStats o:
+                    manifest = ShardRegionStatsManifest;
+                    return MessagePackSerializer.Serialize(ShardRegionStatsToProto(o), s_defaultResolver);
+                case GetClusterShardingStats o:
+                    manifest = GetClusterShardingStatsManifest;
+                    return MessagePackSerializer.Serialize(GetClusterShardingStatsToProto(o), s_defaultResolver);
+                case ClusterShardingStats o:
+                    manifest = ClusterShardingStatsManifest;
+                    return MessagePackSerializer.Serialize(ClusterShardingStatsToProto(o), s_defaultResolver);
                 default:
                     throw ThrowHelper.GetArgumentException_Serializer_ClusterShardingMessage(obj);
             }
@@ -253,20 +274,29 @@ namespace Akka.Cluster.Sharding.Serialization
                 case ShardStatsManifest:
                     return ShardStatsFromBinary(bytes);
 
+                case GetShardRegionStatsManifest:
+                    return GetShardRegionStats.Instance;
+                case ShardRegionStatsManifest:
+                    return ShardRegionStatsFromBinary(bytes);
+                case GetClusterShardingStatsManifest:
+                    return GetClusterShardingStatsFromBinary(bytes);
+                case ClusterShardingStatsManifest:
+                    return ClusterShardingStatsFromBinary(bytes);
+
                 case StartEntityManifest:
                     return StartEntityFromBinary(bytes);
                 case StartEntityAckManifest:
                     return StartEntityAckFromBinary(bytes);
 
                 default:
-                    throw ThrowHelper.GetArgumentException_Serializer_ClusterShardingMessage(manifest);
+                    throw ThrowHelper.GetSerializationException_Serializer_ClusterShardingMessage(manifest);
             }
         }
 
         /// <inheritdoc />
         protected override string GetManifest(Type type)
         {
-            if (null == type) { return null; }
+            if (type is null) { return null; }
             var manifestMap = ManifestMap;
             if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             foreach (var item in manifestMap)
@@ -307,6 +337,10 @@ namespace Akka.Cluster.Sharding.Serialization
                 case ShardRegion.StartEntityAck _: return StartEntityAckManifest;
                 case Shard.GetShardStats _: return GetShardStatsManifest;
                 case Shard.ShardStats _: return ShardStatsManifest;
+                case GetShardRegionStats _: return GetShardRegionStatsManifest;
+                case ShardRegionStats _: return ShardRegionStatsManifest;
+                case GetClusterShardingStats _: return GetClusterShardingStatsManifest;
+                case ClusterShardingStats _: return ClusterShardingStatsManifest;
                 default:
                     throw ThrowHelper.GetArgumentException_Serializer_ClusterShardingMessage(o);
             }
@@ -479,9 +513,72 @@ namespace Akka.Cluster.Sharding.Serialization
             return MessagePackSerializer.Deserialize<Protocol.ShardIdMessage>(bytes, s_defaultResolver).Shard;
         }
 
+        // ShardRegionStats
+        private static Protocol.ShardRegionStats ShardRegionStatsToProto(ShardRegionStats s)
+        {
+            return new Protocol.ShardRegionStats(s.Stats);
+        }
+
+        private static ShardRegionStats ShardRegionStatsFromBinary(byte[] bytes)
+        {
+            var p = MessagePackSerializer.Deserialize<Protocol.ShardRegionStats>(bytes, s_defaultResolver);
+            return new ShardRegionStats(p.Stats);
+        }
+
+        // GetClusterShardingStats
+        private static Protocol.GetClusterShardingStats GetClusterShardingStatsToProto(GetClusterShardingStats stats)
+        {
+            return new Protocol.GetClusterShardingStats(stats.Timeout);
+        }
+
+        private static GetClusterShardingStats GetClusterShardingStatsFromBinary(byte[] bytes)
+        {
+            var p = MessagePackSerializer.Deserialize<Protocol.GetClusterShardingStats>(bytes, s_defaultResolver);
+            return new GetClusterShardingStats(p.Timeout);
+        }
+
+        // ClusterShardingStats
+        private static Protocol.ClusterShardingStats ClusterShardingStatsToProto(ClusterShardingStats stats)
+        {
+            var regions = new List<Protocol.ShardRegionWithAddress>(stats.Regions.Count);
+            foreach (var s in stats.Regions)
+            {
+                regions.Add(new Protocol.ShardRegionWithAddress(AddressToProto(s.Key), ShardRegionStatsToProto(s.Value)));
+            }
+
+            var p = new Protocol.ClusterShardingStats();
+
+            return p;
+        }
+
+        private static ClusterShardingStats ClusterShardingStatsFromBinary(byte[] bytes)
+        {
+            var p = MessagePackSerializer.Deserialize<Protocol.ClusterShardingStats>(bytes, s_defaultResolver);
+            var dict = new Dictionary<Address, ShardRegionStats>();
+            foreach (var s in p.Regions)
+            {
+                dict[AddressFrom(s.NodeAddress)] = new ShardRegionStats(s.Stats.Stats.ToImmutableDictionary());
+            }
+            return new ClusterShardingStats(dict.ToImmutableDictionary());
+        }
+
+        private static Akka.Serialization.Protocol.AddressData AddressToProto(Address address)
+        {
+            return new Akka.Serialization.Protocol.AddressData(address.System, address.Host, (uint)(address.Port ?? 0), address.Protocol);
+        }
+
+        private static Address AddressFrom(Akka.Serialization.Protocol.AddressData addressProto)
+        {
+            return new Address(
+                addressProto.Protocol,
+                addressProto.System,
+                addressProto.Hostname,
+                addressProto.Port == 0 ? null : (int?)addressProto.Port);
+        }
+
         private IActorRef ResolveActorRef(string path)
         {
-            return system.Provider.ResolveActorRef(path);
+            return _system.Provider.ResolveActorRef(path);
         }
     }
 }

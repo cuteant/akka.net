@@ -284,7 +284,7 @@ namespace Akka.Cluster.Serialization
         private byte[] ClusterRouterPoolToByteArray(ClusterRouterPool clusterRouterPool)
         {
             var message = new Protocol.ClusterRouterPool(
-                system.Serialize(clusterRouterPool.Local),
+                _system.SerializeMessage(clusterRouterPool.Local),
                 ClusterRouterPoolSettingsToProto(clusterRouterPool.Settings)
             );
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
@@ -294,7 +294,7 @@ namespace Akka.Cluster.Serialization
         {
             var clusterRouterPool = MessagePackSerializer.Deserialize<Protocol.ClusterRouterPool>(bytes, s_defaultResolver);
             return new ClusterRouterPool(
-                (Akka.Routing.Pool)system.Deserialize(clusterRouterPool.Pool),
+                (Akka.Routing.Pool)_system.Deserialize(clusterRouterPool.Pool),
                 ClusterRouterPoolSettingsFrom(clusterRouterPool.Settings));
         }
 

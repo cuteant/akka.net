@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.hocon.props" />
-  <Import Project="..\..\version.hocon.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDev40Tfms)</TargetFrameworks>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
     <RootNamespace>Hocon</RootNamespace>
     <AssemblyName>Hocon.Configuration</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -28,4 +27,5 @@
     <PackageReference Include="System.Configuration.ConfigurationManager" Version="$(SystemConfigurationConfigurationManagerPackageVersion)" />
   </ItemGroup>
 
+  <Import Project="..\..\version.hocon.props" />
 </Project>

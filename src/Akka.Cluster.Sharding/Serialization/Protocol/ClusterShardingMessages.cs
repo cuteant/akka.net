@@ -1,4 +1,7 @@
-﻿using MessagePack;
+﻿using System;
+using System.Collections.Generic;
+using System.Collections.Immutable;
+using MessagePack;
 
 namespace Akka.Cluster.Sharding.Serialization.Protocol
 {
@@ -139,6 +142,16 @@ namespace Akka.Cluster.Sharding.Serialization.Protocol
     }
 
     [MessagePackObject]
+    public readonly struct ShardRegionStats
+    {
+        [Key(0)]
+        public readonly IImmutableDictionary<string, int> Stats;
+
+        [SerializationConstructor]
+        public ShardRegionStats(IImmutableDictionary<string, int> stats) => Stats = stats;
+    }
+
+    [MessagePackObject]
     public readonly struct StartEntity
     {
         [Key(0)]
@@ -161,6 +174,43 @@ namespace Akka.Cluster.Sharding.Serialization.Protocol
         {
             EntityId = entityId;
             ShardId = shardId;
+        }
+    }
+
+    [MessagePackObject]
+    public readonly struct GetClusterShardingStats
+    {
+        [Key(0)]
+        public readonly TimeSpan Timeout;
+
+        [SerializationConstructor]
+        public GetClusterShardingStats(TimeSpan timeout) => Timeout = timeout;
+    }
+
+    [MessagePackObject]
+    public readonly struct ClusterShardingStats
+    {
+        [Key(0)]
+        public readonly List<ShardRegionWithAddress> Regions;
+
+        [SerializationConstructor]
+        public ClusterShardingStats(List<ShardRegionWithAddress> regions) => Regions = regions;
+    }
+
+    [MessagePackObject]
+    public readonly struct ShardRegionWithAddress
+    {
+        [Key(0)]
+        public readonly Akka.Serialization.Protocol.AddressData NodeAddress;
+
+        [Key(1)]
+        public readonly ShardRegionStats Stats;
+
+        [SerializationConstructor]
+        public ShardRegionWithAddress(Akka.Serialization.Protocol.AddressData nodeAddress, ShardRegionStats stats)
+        {
+            NodeAddress = nodeAddress;
+            Stats = stats;
         }
     }
 }

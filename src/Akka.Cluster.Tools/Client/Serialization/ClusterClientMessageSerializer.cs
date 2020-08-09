@@ -17,7 +17,10 @@ using MessagePack;
 namespace Akka.Cluster.Tools.Client.Serialization
 {
     /// <summary>
-    /// TBD
+    /// INTERNAL API.
+    ///
+    /// Serializer used to translate all of the <see cref="ClusterClient"/> and <see cref="ClusterClientReceptionist"/>
+    /// messages that can be passed back-and-forth between client and receptionist.
     /// </summary>
     public class ClusterClientMessageSerializer : SerializerWithStringManifest
     {
@@ -27,6 +30,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
         private const string GetContactsManifest = "B";
         private const string HeartbeatManifest = "C";
         private const string HeartbeatRspManifest = "D";
+        private const string ReceptionistShutdownManifest = "E";
 
         private static readonly Dictionary<Type, string> ManifestMap;
 
@@ -38,6 +42,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 { typeof(ClusterReceptionist.GetContacts), GetContactsManifest},
                 { typeof(ClusterReceptionist.Heartbeat), HeartbeatManifest},
                 { typeof(ClusterReceptionist.HeartbeatRsp), HeartbeatRspManifest},
+                { typeof(ClusterReceptionist.ReceptionistShutdown), ReceptionistShutdownManifest},
             };
         }
 
@@ -70,6 +75,9 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case ClusterReceptionist.HeartbeatRsp _:
                     manifest = HeartbeatRspManifest;
                     return EmptyBytes;
+                case ClusterReceptionist.ReceptionistShutdown _:
+                    manifest = ReceptionistShutdownManifest;
+                    return EmptyBytes;
                 default:
                     throw ThrowHelper.GetArgumentException_Manifest_ClusterClientMessage(obj);
             }
@@ -89,7 +97,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
                 case HeartbeatRspManifest:
                     return ClusterReceptionist.HeartbeatRsp.Instance;
                 default:
-                    throw ThrowHelper.GetArgumentException_Serializer_ClusterClientMessage(manifest);
+                    throw ThrowHelper.GetSerializationException_Serializer_ClusterClientMessage(manifest);
             }
         }
 
@@ -114,18 +122,20 @@ namespace Akka.Cluster.Tools.Client.Serialization
                     return HeartbeatManifest;
                 case ClusterReceptionist.HeartbeatRsp _:
                     return HeartbeatRspManifest;
+                case ClusterReceptionist.ReceptionistShutdown _:
+                    return ReceptionistShutdownManifest;
                 default:
                     throw ThrowHelper.GetArgumentException_Manifest_ClusterClientMessage(o);
             }
         }
 
-        private byte[] ContactsToProto(ClusterReceptionist.Contacts message)
+        private static byte[] ContactsToProto(ClusterReceptionist.Contacts message)
         {
             var protoMessage = new Protocol.Contacts(message.ContactPoints.ToArray());
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
-        private ClusterReceptionist.Contacts ContactsFromBinary(byte[] binary)
+        private static ClusterReceptionist.Contacts ContactsFromBinary(byte[] binary)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.Contacts>(binary, s_defaultResolver);
             return new ClusterReceptionist.Contacts(proto.ContactPoints.ToImmutableList());

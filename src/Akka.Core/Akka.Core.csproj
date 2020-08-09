@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(CoreDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(Core31DevTfms)</TargetFrameworks>
     <RootNamespace>Akka</RootNamespace>
     <AssemblyName>Akka.Core</AssemblyName>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -31,7 +30,15 @@
     <PackageReference Include="CuteAnt.Core" Version="$(CuteAntCorePackageVersion)" />
     <PackageReference Include="MessagePack.Span.Abstractions" Version="$(MessagePackSpanAbstractionsPackageVersion)" />
     <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
     <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="$(SystemRuntimeCompilerServicesUnsafePackageVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netcoreapp2.1' ">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="$(SystemRuntimeCompilerServicesUnsafe2PackageVersion)" />
+  </ItemGroup>
+  <ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' or '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="$(SystemRuntimeCompilerServicesUnsafe2PackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>
@@ -83,6 +90,21 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>PartialHandlerArgumentsCapture.cs</LastGenOutput>
     </None>
+    <None Update="Util\MatchHandler\ActionMatchBuilder.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ActionMatchBuilder.cs</LastGenOutput>
+    </None>
+    <None Update="Util\MatchHandler\FuncMatchBuilder.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FuncMatchBuilder.cs</LastGenOutput>
+    </None>
+    <None Update="Util\TaskAsyncHelper.Extensions.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>TaskAsyncHelper.Extensions.cs</LastGenOutput>
+    </None>
+  </ItemGroup>
+
+  <ItemGroup>
     <Compile Update="Actor\CoordinatedShutdownExtensions.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -158,18 +180,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>TaskAsyncHelper.Extensions.tt</DependentUpon>
     </Compile>
-    <None Update="Util\MatchHandler\ActionMatchBuilder.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ActionMatchBuilder.cs</LastGenOutput>
-    </None>
-    <None Update="Util\MatchHandler\FuncMatchBuilder.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>FuncMatchBuilder.cs</LastGenOutput>
-    </None>
-    <None Update="Util\TaskAsyncHelper.Extensions.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>TaskAsyncHelper.Extensions.cs</LastGenOutput>
-    </None>
   </ItemGroup>
 
   <ItemGroup>
@@ -183,4 +193,5 @@
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

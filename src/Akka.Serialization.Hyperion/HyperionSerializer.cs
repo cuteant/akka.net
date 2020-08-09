@@ -8,6 +8,8 @@
 using System;
 using System.IO;
 using System.Linq;
+using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
@@ -88,11 +90,32 @@ namespace Akka.Serialization
         /// <returns>The object contained in the array</returns>
         public sealed override object FromBinary(byte[] bytes, Type type)
         {
-            using (var ms = new MemoryStream(bytes))
+            try
             {
-                var res = _serializer.Deserialize<object>(ms);
-                return res;
+                using (var ms = new MemoryStream(bytes))
+                {
+                    var res = _serializer.Deserialize<object>(ms);
+                    return res;
+                }
             }
+            catch (TypeLoadException e)
+            {
+                throw GetSerializationException(e);
+            }
+            catch (NotSupportedException e)
+            {
+                throw GetSerializationException(e);
+            }
+            catch (ArgumentException e)
+            {
+                throw GetSerializationException(e);
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static SerializationException GetSerializationException(Exception e)
+        {
+            return new SerializationException(e.Message, e);
         }
 
         private IKnownTypesProvider CreateKnownTypesProvider(ExtendedActorSystem system, Type type)

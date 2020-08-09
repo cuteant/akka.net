@@ -165,6 +165,28 @@ namespace Akka.Remote
         /// <inheritdoc/>
         public Address DefaultAddress => Transport.DefaultAddress;
 
+        private Information _serializationInformationCache;
+
+        public Information SerializationInformation
+        {
+            [MethodImpl(DotNetty.InlineMethod.AggressiveOptimization)]
+            get => _serializationInformationCache ?? EnsureSerializationInformationCached();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private Information EnsureSerializationInformationCached()
+        {
+            var transport = Transport;
+            if (transport is null || transport.DefaultAddress is null)
+            {
+                return _local.SerializationInformation; // address not know yet, access before complete init and binding
+            }
+
+            var info = new Information(transport.DefaultAddress, transport.System);
+            _serializationInformationCache = info;
+            return info;
+        }
+
         /// <inheritdoc/>
         public Settings Settings => _local.Settings;
 
@@ -496,7 +518,7 @@ namespace Akka.Remote
         /// <returns>A local <see cref="IActorRef"/> if it exists, <see cref="ActorRefs.Nobody"/> otherwise.</returns>
         public IActorRef ResolveActorRef(string path)
         {
-            // using thread local LRU cache, which will call InternalRresolveActorRef if the value is
+            // using thread local LRU cache, which will call InternalResolveActorRef if the value is
             // not cached
             var actorRefResolveThreadLocalCache = _actorRefResolveThreadLocalCache;
             if (actorRefResolveThreadLocalCache == null)

@@ -23,7 +23,7 @@ namespace Akka.Extension.EventStore
 
             if (null == eventMeta) { eventMeta = CreateEventMetadata(); }
 
-            var payload = _serialization.ToExternalPayload(message);
+            var payload = _serialization.SerializeExternalMessageWithTransport(message);
             var msgType = payload.MessageType;
             eventMeta.ClrEventType = RuntimeTypeNameFormatter.Format(msgType);
             eventMeta.Identifier = payload.Identifier;

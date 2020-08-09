@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -77,6 +78,14 @@ namespace Akka.Cluster
         internal static void ClusterNodeReceivedGossip(this ILoggingAdapter logger, Cluster cluster, GossipEnvelope ge, ClusterCoreDaemon.ReceiveGossipType receivedType)
         {
             logger.Debug("Cluster Node [{0}] - Received gossip from [{1}] which was {2}.", cluster.SelfAddress, ge.From, receivedType);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Cluster_Node_Gossip_exiting_members_to_the_two_oldest(this ILoggingAdapter logger, UniqueAddress selfUniqueAddress, IEnumerable<Member> exitingMembers, IEnumerable<Member> targets)
+        {
+            logger.Debug(
+              "Cluster Node [{0}] - Gossip exiting members [{1}] to the two oldest (per role) [{2}] (singleton optimization).",
+              selfUniqueAddress, string.Join(", ", exitingMembers), string.Join(", ", targets));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

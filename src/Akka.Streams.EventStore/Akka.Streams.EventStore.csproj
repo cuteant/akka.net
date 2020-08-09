@@ -1,9 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(Net471DevTfms)</TargetFrameworks>
     <RootNamespace>Akka.Streams.EventStore</RootNamespace>
     <AssemblyName>Akka.Streams.EventStore</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -27,4 +26,5 @@
     <ProjectReference Include="..\Akka.Streams\Akka.Streams.csproj" />
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

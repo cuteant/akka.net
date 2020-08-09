@@ -5,6 +5,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System;
 using Akka.Event;
 using MessagePack;
 
@@ -23,7 +24,7 @@ namespace Akka.Actor
     /// Instead, if you need to forward Terminated to another actor you should send the information in your own message.
     /// </summary>
     [MessagePackObject]
-    public sealed class Terminated : IAutoReceivedMessage, IPossiblyHarmful, IDeadLetterSuppression, INoSerializationVerificationNeeded
+    public sealed class Terminated : IAutoReceivedMessage, IPossiblyHarmful, IDeadLetterSuppression, INoSerializationVerificationNeeded, IEquatable<Terminated>
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Terminated" /> class.
@@ -65,6 +66,26 @@ namespace Akka.Actor
         public override string ToString()
         {
             return $"<Terminated>: {ActorRef} - ExistenceConfirmed={ExistenceConfirmed}";
+        }
+
+        public bool Equals(Terminated other)
+        {
+            if (other is null) return false;
+            if (ReferenceEquals(this, other)) return true;
+            return Equals(ActorRef, other.ActorRef) && AddressTerminated == other.AddressTerminated && ExistenceConfirmed == other.ExistenceConfirmed;
+        }
+
+        public override bool Equals(object obj) => obj is Terminated terminated && Equals(terminated);
+
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hashCode = (ActorRef != null ? ActorRef.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ AddressTerminated.GetHashCode();
+                hashCode = (hashCode * 397) ^ ExistenceConfirmed.GetHashCode();
+                return hashCode;
+            }
         }
     }
 
@@ -227,7 +248,7 @@ namespace Akka.Actor
     /// <see cref="AddressTerminatedTopic"/> when a remote node is detected to be unreachable and / or decided
     /// to be removed.
     /// 
-    /// The watcher <see cref="DeathWatch"/> subscribes to the <see cref="AddressTerminatedTopic"/> and translates this
+    /// The watcher <see cref="T:DeathWatch"/> subscribes to the <see cref="AddressTerminatedTopic"/> and translates this
     /// event to <see cref="Terminated"/>, which is sent to itself.
     /// </summary>
     [MessagePackObject]

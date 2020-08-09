@@ -84,7 +84,7 @@ namespace Akka.Cluster.Tools.Singleton.Serialization
                 case TakeOverFromMeManifest:
                     return TakeOverFromMe.Instance;
                 default:
-                    throw ThrowHelper.GetArgumentException_Serializer_ClusterSingletonMessage(manifest);
+                    throw ThrowHelper.GetSerializationException_Serializer_ClusterSingletonMessage(manifest);
             }
         }
 

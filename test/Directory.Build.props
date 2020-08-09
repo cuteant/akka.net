@@ -4,6 +4,7 @@
 
   <PropertyGroup>
     <IsPackable>false</IsPackable>
+    <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
   </PropertyGroup>
 
   <!-- To make CodeLens and Test Explorer happy, we're generating full symbols -->

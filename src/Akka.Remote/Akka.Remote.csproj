@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
@@ -20,8 +19,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="DotNetty.Handlers.Unofficial" Version="$(DotNettyHandlersUnofficialPackageVersion)" />
-    <PackageReference Include="DotNetty.Transport.Libuv.Unofficial" Version="$(DotNettyTransportLibuvUnofficialPackageVersion)" />
+    <PackageReference Include="SpanNetty.Handlers" Version="$(SpanNettyHandlersPackageVersion)" />
     <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
   </ItemGroup>
 
@@ -45,4 +43,5 @@
     </EmbeddedResource>
   </ItemGroup>
 
+  <Import Project="..\..\version.props" />
 </Project>

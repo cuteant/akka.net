@@ -75,11 +75,11 @@ namespace Akka.Persistence.Serialization
             switch (manifest)
             {
                 case PersistentManifest:
-                    return GetPersistentRepresentation(system, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
+                    return GetPersistentRepresentation(_system, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
                 case AtomicWriteManifest:
-                    return GetAtomicWrite(system, bytes);
+                    return GetAtomicWrite(_system, bytes);
                 case ALODSnapshotManifest:
-                    return GetAtLeastOnceDeliverySnapshot(system, bytes);
+                    return GetAtLeastOnceDeliverySnapshot(_system, bytes);
                 case StateChangeEventManifest:
                     return GetStateChangeEvent(bytes);
                 default:
@@ -122,7 +122,7 @@ namespace Akka.Persistence.Serialization
             if (persistent.WriterGuid != null) message.WriterGuid = persistent.WriterGuid;
             if (persistent.Sender != null) message.Sender = Akka.Serialization.Serialization.SerializedActorPath(persistent.Sender);
 
-            message.Payload = system.Serialize(persistent.Payload);
+            message.Payload = _system.Serialization.SerializeMessageWithTransport(persistent.Payload);
             message.SequenceNr = persistent.SequenceNr;
             message.Deleted = persistent.IsDeleted;
 
@@ -144,7 +144,7 @@ namespace Akka.Persistence.Serialization
         private Protocol.AtLeastOnceDeliverySnapshot GetAtLeastOnceDeliverySnapshot(AtLeastOnceDeliverySnapshot snapshot)
         {
             var unconfirmedDeliveries = snapshot.UnconfirmedDeliveries?
-                .Select(_ => new Protocol.UnconfirmedDelivery(_.DeliveryId, _.Destination.ToString(), system.Serialize(_.Message))).ToArray();
+                .Select(_ => new Protocol.UnconfirmedDelivery(_.DeliveryId, _.Destination.ToString(), _system.Serialization.SerializeMessageWithTransport(_.Message))).ToArray();
             return new Protocol.AtLeastOnceDeliverySnapshot(
                 snapshot.CurrentDeliveryId,
                 unconfirmedDeliveries

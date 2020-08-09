@@ -423,6 +423,12 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void SelfDownedStoppingShardRegion(this ILoggingAdapter logger, IActorRef self)
+        {
+            logger.Info("Self downed, stopping ShardRegion [{0}]", self.Path);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void HandOffShardReceivedDuringExistingHandOff(this ILoggingAdapter logger, IShard shard)
         {
             logger.Warning("HandOff shard [{0}] received during existing handOff", shard.ShardId);

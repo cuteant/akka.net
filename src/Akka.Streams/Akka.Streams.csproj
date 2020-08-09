@@ -1,6 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
   <Import Project="..\..\nuget.props" />
-  <Import Project="..\..\version.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
@@ -22,19 +21,18 @@
   <ItemGroup>
     <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
   </ItemGroup>
+
   <ItemGroup>
     <EmbeddedResource Include="reference.conf" />
     <ProjectReference Include="..\Akka\Akka.csproj" />
     <ProjectReference Include="..\Reactive.Streams\Reactive.Streams.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <Service Include="{508349b6-6b84-4df5-91f0-309beebad82d}" />
   </ItemGroup>
+
   <ItemGroup>
-    <None Update="CodeGen\Dsl\GraphApply.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>GraphApply.cs</LastGenOutput>
-    </None>
     <Compile Update="CodeGen\Dsl\GraphApply.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
@@ -50,33 +48,49 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Strings.resx</DependentUpon>
     </Compile>
-    <None Update="CodeGen\Dsl\UnzipWith.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>UnzipWith.cs</LastGenOutput>
-    </None>
     <Compile Update="CodeGen\Dsl\UnzipWith.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>UnzipWith.tt</DependentUpon>
     </Compile>
-    <None Update="CodeGen\Dsl\ZipWith.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>ZipWith.cs</LastGenOutput>
-    </None>
     <Compile Update="CodeGen\Dsl\ZipWith.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>ZipWith.tt</DependentUpon>
     </Compile>
-    <None Update="CodeGen\FanInShape.tt">
-      <Generator>TextTemplatingFileGenerator</Generator>
-      <LastGenOutput>FanInShape.cs</LastGenOutput>
-    </None>
     <Compile Update="CodeGen\FanInShape.cs">
       <DesignTime>True</DesignTime>
       <AutoGen>True</AutoGen>
       <DependentUpon>FanInShape.tt</DependentUpon>
     </Compile>
+    <Compile Update="CodeGen\FanOutShape.cs">
+      <DesignTime>True</DesignTime>
+      <AutoGen>True</AutoGen>
+      <DependentUpon>FanOutShape.tt</DependentUpon>
+    </Compile>
+  </ItemGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Update="Internal\Strings.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
+    </EmbeddedResource>
+    <None Update="CodeGen\Dsl\GraphApply.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>GraphApply.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\Dsl\UnzipWith.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>UnzipWith.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\Dsl\ZipWith.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>ZipWith.cs</LastGenOutput>
+    </None>
+    <None Update="CodeGen\FanInShape.tt">
+      <Generator>TextTemplatingFileGenerator</Generator>
+      <LastGenOutput>FanInShape.cs</LastGenOutput>
+    </None>
     <None Update="CodeGen\FanOutShape.tt">
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>FanOutShape.cs</LastGenOutput>
@@ -85,16 +99,7 @@
       <Generator>TextTemplatingFileGenerator</Generator>
       <LastGenOutput>IMaterializerExtensions.cs</LastGenOutput>
     </None>
-    <Compile Update="CodeGen\FanOutShape.cs">
-      <DesignTime>True</DesignTime>
-      <AutoGen>True</AutoGen>
-      <DependentUpon>FanOutShape.tt</DependentUpon>
-    </Compile>
   </ItemGroup>
-  <ItemGroup>
-    <EmbeddedResource Update="Internal\Strings.resx">
-      <Generator>ResXFileCodeGenerator</Generator>
-      <LastGenOutput>Strings.Designer.cs</LastGenOutput>
-    </EmbeddedResource>
-  </ItemGroup>
+
+  <Import Project="..\..\version.props" />
 </Project>

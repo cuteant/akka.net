@@ -7,6 +7,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
+using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Remote.Transport;
@@ -289,6 +290,12 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void RemovingReceiveBuffersFor(this ILoggingAdapter logger, Address localAddress, Address remoteAddress)
+        {
+            logger.Info("Removing receive buffers for [{0}]->[{1}]", localAddress, remoteAddress);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ShutdownFinishedButFlushingMightNotHaveBeenSuccessful(this ILoggingAdapter logger)
         {
             logger.Warning("Shutdown finished, but flushing might not have been successful and some messages might have been dropped. " +
@@ -395,9 +402,12 @@ namespace Akka.Remote
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void TransientAssociationErrorAassociationRemainsLive(this ILoggingAdapter logger, Exception ex)
+        internal static void TransientAssociationErrorAassociationRemainsLive(this ILoggingAdapter logger, Exception ex, EndpointManager.Send send)
         {
-            logger.Error(ex, "Transient association error (association remains live)");
+            logger.Error(
+              ex,
+              "Serializer not defined for message type [{0}]. Transient association error (association remains live)",
+              send.Message.GetType());
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

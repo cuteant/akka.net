@@ -25,21 +25,21 @@ namespace Akka.Persistence.Serialization
             var snapShot = source as Snapshot;
             if (null == snapShot) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(source); }
 
-            var payload = system.Serialize(snapShot.Data);
-            return new Snapshot(system.Deserialize(payload));
+            var payload = _system.Serialization.SerializeMessageWithTransport(snapShot.Data);
+            return new Snapshot(_system.Deserialize(payload));
         }
 
         public override byte[] ToBinary(object obj)
         {
             var snapShot = obj as Snapshot;
             if (null == snapShot) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(obj); }
-            return MessagePackSerializer.Serialize(system.Serialize(snapShot.Data), s_defaultResolver);
+            return MessagePackSerializer.Serialize(_system.Serialization.SerializeMessageWithTransport(snapShot.Data), s_defaultResolver);
         }
 
         public override object FromBinary(byte[] bytes, Type type)
         {
             var payload = MessagePackSerializer.Deserialize<Payload>(bytes, s_defaultResolver);
-            return new Snapshot(system.Deserialize(payload));
+            return new Snapshot(_system.Deserialize(payload));
             //if (type == typeof(Snapshot)) return GetSnapshot(bytes);
             //return ThrowHelper.ThrowArgumentException_SnapshotSerializer(type);
         }

@@ -92,7 +92,7 @@ namespace Akka.Persistence
     }
 
     /// <summary>
-    /// TBD
+    /// Represents a single atomic write to an Akka.Persistence journal.
     /// </summary>
     [MessagePackObject]
     public sealed class AtomicWrite : IPersistentEnvelope, IMessage
