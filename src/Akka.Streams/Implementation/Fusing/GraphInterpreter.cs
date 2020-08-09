@@ -546,6 +546,7 @@ namespace Akka.Streams.Implementation.Fusing
         public void AttachDownstreamBoundary(int connection, DownstreamBoundaryStageLogic logic)
             => AttachDownstreamBoundary(Connections[connection], logic);
 
+#pragma warning disable CS0162 // Disabled since the flag can be set while debugging
         /// <summary>
         /// Dynamic handler changes are communicated from a GraphStageLogic by this method.
         /// </summary>
@@ -567,6 +568,7 @@ namespace Akka.Streams.Implementation.Fusing
             //if (IsDebug) Console.WriteLine($"{Name} SETHANDLER {OutOwnerName(connection)} (out) {handler}");
             connection.OutHandler = handler;
         }
+#pragma warning restore CS0162
 
         /// <summary>
         /// Returns true if there are pending unprocessed events in the event queue.
@@ -648,6 +650,7 @@ namespace Akka.Streams.Implementation.Fusing
         private string ShutdownCounters() => string.Join(",",
             _shutdownCounter.Select(x => x >= KeepGoingFlag ? $"{x & KeepGoingMask}(KeepGoing)" : x.ToString()));
 
+#pragma warning disable CS0162 // Disabled since the flag can be set while debugging
         /// <summary>
         /// Executes pending events until the given limit is met. If there were remaining events, <see cref="IsSuspended"/> will return true.
         /// </summary>
@@ -761,6 +764,7 @@ namespace Akka.Streams.Implementation.Fusing
             // TODO: deadlock detection
             return eventsRemaining;
         }
+#pragma warning restore CS0162
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void ReportStageError(Exception e)
@@ -788,6 +792,7 @@ namespace Akka.Streams.Implementation.Fusing
         }
 
 
+#pragma warning disable CS0162 // Disabled since the flag can be set while debugging
         /// <summary>
         /// TBD
         /// </summary>
@@ -876,6 +881,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
             }
         }
+#pragma warning restore CS0162
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void ProcessPush(Connection connection)
@@ -1023,6 +1029,7 @@ namespace Akka.Streams.Implementation.Fusing
                 Enqueue(connection);
         }
 
+#pragma warning disable CS0162 // Disabled since the flag can be set while debugging
         /// <summary>
         /// TBD
         /// </summary>
@@ -1101,6 +1108,7 @@ namespace Akka.Streams.Implementation.Fusing
             if ((currentState & InClosed) == 0)
                 CompleteConnection(connection.InOwnerId);
         }
+#pragma warning restore CS0162
 
         /// <summary>
         /// Debug utility to dump the "waits-on" relationships in DOT format to the console for analysis of deadlocks.

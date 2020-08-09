@@ -49,13 +49,13 @@ namespace Akka.Configuration.Hocon
         {
             get
             {
-                if (Values.Count == 0)
+                if (0u >= (uint)Values.Count)
                     return true;
 
                 var first = Values[0] as HoconObject;
                 if (first != null)
                 {
-                    if (first.Items.Count == 0)
+                    if (0u >= (uint)first.Items.Count)
                         return true;
                 }
                 return false;
@@ -344,9 +344,9 @@ namespace Akka.Configuration.Hocon
         public IList<HoconValue> GetArray()
         {
             IEnumerable<HoconValue> x = from arr in Values
-                where arr.IsArray()
-                from e in arr.GetArray()
-                select e;
+                                        where arr.IsArray()
+                                        from e in arr.GetArray()
+                                        select e;
 
             return x.ToList();
         }
@@ -375,24 +375,24 @@ namespace Akka.Configuration.Hocon
             string res = GetString();
 
             var match = TimeSpanRegex.Match(res);
-            if (match.Success) 
+            if (match.Success)
             {
                 var u = match.Groups["unit"].Value;
                 var v = ParsePositiveValue(match.Groups["value"].Value);
 
-                switch (u) 
+                switch (u)
                 {
                     case "nanoseconds":
                     case "nanosecond":
                     case "nanos":
                     case "nano":
                     case "ns":
-                        return TimeSpan.FromTicks((long) Math.Round(TimeSpan.TicksPerMillisecond * v / 1000000.0));
+                        return TimeSpan.FromTicks((long)Math.Round(TimeSpan.TicksPerMillisecond * v / 1000000.0));
                     case "microseconds":
                     case "microsecond":
                     case "micros":
                     case "micro":
-                        return TimeSpan.FromTicks((long) Math.Round(TimeSpan.TicksPerMillisecond * v / 1000.0));
+                        return TimeSpan.FromTicks((long)Math.Round(TimeSpan.TicksPerMillisecond * v / 1000.0));
                     case "milliseconds":
                     case "millisecond":
                     case "millis":
@@ -429,7 +429,7 @@ namespace Akka.Configuration.Hocon
         private static double ParsePositiveValue(string v)
         {
             var value = double.Parse(v, NumberFormatInfo.InvariantInfo);
-            if(value < 0)
+            if (value < 0)
                 AkkaThrowHelper.ThrowFormatException_ExpectedPositiveValue(value);
             return value;
         }

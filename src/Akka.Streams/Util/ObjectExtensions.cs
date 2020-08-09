@@ -20,6 +20,6 @@ namespace Akka.Streams.Util
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="obj">TBD</param>
         /// <returns>TBD</returns>
-        public static bool IsDefaultForType<T>(this T obj) => EqualityComparer<T>.Default.Equals(obj, default(T));
+        public static bool IsDefaultForType<T>(this T obj) => EqualityComparer<T>.Default.Equals(obj, default);
     }
 }

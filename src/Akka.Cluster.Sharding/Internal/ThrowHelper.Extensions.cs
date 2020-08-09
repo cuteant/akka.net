@@ -93,6 +93,16 @@ namespace Akka.Cluster.Sharding
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_shuttingDownRegions_must_be_a_subset_of_regions()
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"'shuttingDownRegions' must be a subset of 'regions'.", "shuttingDownRegions");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_ShardTypeMustBeStartedFirst(string typeName)
         {
             throw GetException();

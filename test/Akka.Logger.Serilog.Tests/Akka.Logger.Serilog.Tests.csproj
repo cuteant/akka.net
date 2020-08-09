@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
  
   <PropertyGroup>
-    <TargetFrameworks>$(Core20TestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.Logger.Serilog.Tests</RootNamespace>
     <AssemblyName>Akka.Logger.Serilog.Tests</AssemblyName>
   </PropertyGroup>

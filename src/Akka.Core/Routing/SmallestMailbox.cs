@@ -35,7 +35,7 @@ namespace Akka.Routing
         /// <summary>
         /// Initializes a new instance of the <see cref="SmallestMailboxRoutingLogic"/> class.
         /// </summary>
-        public SmallestMailboxRoutingLogic() {}
+        public SmallestMailboxRoutingLogic() { }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SmallestMailboxRoutingLogic"/> class.
@@ -114,9 +114,9 @@ namespace Akka.Routing
         /// Initializes a new instance of the <see cref="SmallestMailboxPool"/> class.
         /// </summary>
         /// <param name="config">The configuration used to configure the pool.</param>
-        public SmallestMailboxPool(Config config) 
+        public SmallestMailboxPool(Config config)
             : this(
-                  nrOfInstances: config.GetInt("nr-of-instances"),
+                  nrOfInstances: config.GetInt("nr-of-instances", 0),
                   resizer: Resizer.FromConfig(config),
                   supervisorStrategy: Pool.DefaultSupervisorStrategy,
                   routerDispatcher: Dispatchers.DefaultDispatcherId,
@@ -131,7 +131,7 @@ namespace Akka.Routing
         /// </note>
         /// </summary>
         /// <param name="nrOfInstances">The initial number of routees in the pool.</param>
-        public SmallestMailboxPool(int nrOfInstances) 
+        public SmallestMailboxPool(int nrOfInstances)
             : this(nrOfInstances, null, Pool.DefaultSupervisorStrategy, Dispatchers.DefaultDispatcherId) { }
 
         /// <summary>

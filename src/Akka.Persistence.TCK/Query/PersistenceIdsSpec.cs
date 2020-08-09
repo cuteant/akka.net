@@ -23,8 +23,8 @@ namespace Akka.Persistence.TCK.Query
 
         protected IReadJournal ReadJournal { get; set; }
 
-        protected PersistenceIdsSpec(Config config = null, string actorSystemName = null, ITestOutputHelper output = null) 
-            : base(config, actorSystemName, output)
+        protected PersistenceIdsSpec(Config config = null, string actorSystemName = null, ITestOutputHelper output = null)
+            : base(config ?? Config.Empty, actorSystemName, output)
         {
             Materializer = Sys.Materializer();
         }

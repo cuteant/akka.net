@@ -53,7 +53,7 @@ namespace Akka.Serialization.Formatters
                     case SelectChildPattern childPattern:
                         pattern.Add(BuildPattern(childPattern.PatternStr, Protocol.Selection.PatternType.ChildPattern));
                         break;
-                    case SelectParent parent:
+                    case SelectParent _:
                         pattern.Add(BuildPattern(null, Protocol.Selection.PatternType.Parent));
                         break;
                 }

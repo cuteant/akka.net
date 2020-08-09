@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.Persistence.Wings.Query</RootNamespace>
     <AssemblyName>Akka.Persistence.Wings.Query</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

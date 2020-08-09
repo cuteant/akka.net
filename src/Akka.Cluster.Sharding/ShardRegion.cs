@@ -206,6 +206,7 @@ namespace Akka.Cluster.Sharding
             private readonly ShardId _shard;
             private readonly IActorRef _replyTo;
             private readonly object _stopMessage;
+            private readonly TimeSpan _handoffTimeout;
             /// <summary>
             ///Sends stopMessage (e.g. `PoisonPill`) to the entities and when all of
             /// them have terminated it replies with `ShardStopped`.
@@ -221,6 +222,7 @@ namespace Akka.Cluster.Sharding
                 _shard = shard;
                 _replyTo = replyTo;
                 _stopMessage = stopMessage;
+                _handoffTimeout = handoffTimeout;
                 _remaining = new HashSet<IActorRef>(entities, ActorRefComparer.Instance);
 
                 Receive<ReceiveTimeout>(HandleReceiveTimeout);
@@ -237,7 +239,8 @@ namespace Akka.Cluster.Sharding
 
             private void HandleReceiveTimeout(ReceiveTimeout t)
             {
-                Log.Warning("HandOffStopMessage[{0}] is not handled by some of the entities of the [{1}] shard, stopping the remaining entities.", _stopMessage.GetType(), _shard);
+                Log.Warning("HandOffStopMessage[{0}] is not handled by some of the entities of the [{1}] shard after [{2}], " +
+                    "stopping the remaining [{3}] entities.", _stopMessage.GetType(), _shard, _handoffTimeout, _remaining.Count);
                 foreach (var r in _remaining)
                 {
                     Context.Stop(r);
@@ -247,7 +250,7 @@ namespace Akka.Cluster.Sharding
             private void HandleTerminated(Terminated t)
             {
                 _remaining.Remove(t.ActorRef);
-                if (_remaining.Count == 0)
+                if (0u >= (uint)_remaining.Count)
                 {
                     _replyTo.Tell(new PersistentShardCoordinator.ShardStopped(_shard));
                     Context.Stop(Self);
@@ -479,11 +482,7 @@ namespace Akka.Cluster.Sharding
         {
             Cluster.Subscribe(Self, typeof(ClusterEvent.IMemberEvent));
             var passivateIdleEntityAfter = Settings.PassivateIdleEntityAfter;
-            if (passivateIdleEntityAfter > TimeSpan.Zero && !Settings.RememberEntities)
-            {
-                var log = Log;
-                if (log.IsInfoEnabled) log.IdleEntitiesWillBePassivatedAfter(passivateIdleEntityAfter);
-            }
+            LogPassivateIdleEntities();
         }
 
         /// <inheritdoc cref="ActorBase.PostStop"/>
@@ -493,6 +492,19 @@ namespace Akka.Cluster.Sharding
             Cluster.Unsubscribe(Self);
             _gracefulShutdownProgress.TrySetResult(Done.Instance);
             _retryTask.Cancel();
+        }
+
+        private void LogPassivateIdleEntities()
+        {
+            if (Settings.ShouldPassivateIdleEntities)
+            {
+                if (Log.IsInfoEnabled) { Log.IdleEntitiesWillBePassivatedAfter(TypeName, Settings.PassivateIdleEntityAfter); }
+            }
+
+            if (Settings.RememberEntities)
+            {
+                if (Log.IsDebugEnabled) { Log.Debug("Idle entities will not be passivated because 'rememberEntities' is enabled."); }
+            }
         }
 
         /// <summary>
@@ -551,7 +563,7 @@ namespace Akka.Cluster.Sharding
                 case StartEntity _:
                     DeliverStartEntity(message, Sender);
                     return true;
-                case var _ when ExtractEntityId(message) != null:
+                case var _ when ExtractEntityId(message).HasValue:
                     DeliverMessage(message, Sender);
                     return true;
                 default:
@@ -635,7 +647,7 @@ namespace Akka.Cluster.Sharding
                             BufferMessage(shardId, message, sender);
                         else
                         {
-                            if (ShardBuffers.TryGetValue(shardId, out var buffer))
+                            if (ShardBuffers.TryGetValue(shardId, out _))
                             {
                                 // Since now messages to a shard is buffered then those messages must be in right order
                                 BufferMessage(shardId, message, sender);
@@ -774,8 +786,8 @@ namespace Akka.Cluster.Sharding
                 .ContinueWith(AskCurrentShardStateContinuationFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
         }
 
-        private static readonly Func<Task<Tuple<ShardId, Shard.CurrentShardState>[]>, CurrentShardRegionState> AskCurrentShardStateContinuationFunc = AskCurrentShardStateContinuation;
-        private static CurrentShardRegionState AskCurrentShardStateContinuation(Task<Tuple<ShardId, Shard.CurrentShardState>[]> shardStates)
+        private static readonly Func<Task<(ShardId, Shard.CurrentShardState)[]>, CurrentShardRegionState> AskCurrentShardStateContinuationFunc = AskCurrentShardStateContinuation;
+        private static CurrentShardRegionState AskCurrentShardStateContinuation(Task<(ShardId, Shard.CurrentShardState)[]> shardStates)
         {
             if (shardStates.IsCanceled)
                 return new CurrentShardRegionState(ImmutableHashSet<ShardState>.Empty);
@@ -792,8 +804,8 @@ namespace Akka.Cluster.Sharding
                 .ContinueWith(AskShardStatsContinuationFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
         }
 
-        private static readonly Func<Task<Tuple<ShardId, Shard.ShardStats>[]>, ShardRegionStats> AskShardStatsContinuationFunc = AskShardStatsContinuation;
-        private static ShardRegionStats AskShardStatsContinuation(Task<Tuple<ShardId, Shard.ShardStats>[]> shardStats)
+        private static readonly Func<Task<(ShardId, Shard.ShardStats)[]>, ShardRegionStats> AskShardStatsContinuationFunc = AskShardStatsContinuation;
+        private static ShardRegionStats AskShardStatsContinuation(Task<(ShardId, Shard.ShardStats)[]> shardStats)
         {
             if (shardStats.IsCanceled)
                 return new ShardRegionStats(ImmutableDictionary<string, int>.Empty);
@@ -804,17 +816,11 @@ namespace Akka.Cluster.Sharding
             return new ShardRegionStats(shardStats.Result.ToImmutableDictionary(x => x.Item1, x => x.Item2.EntityCount));
         }
 
-        private Task<Tuple<ShardId, T>[]> AskAllShardsAsync<T>(object message)
+        private Task<(ShardId, T)[]> AskAllShardsAsync<T>(object message)
         {
             var timeout = TimeSpan.FromSeconds(3);
-            var tasks = Shards.Select(entity => entity.Value.Ask<T>(message, timeout).Then(Helper<T>.AfterAskShardFunc, entity.Key, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion));
+            var tasks = Shards.Select(entity => entity.Value.Ask<T>(message, timeout).ContinueWith(t => (entity.Key, t.Result), TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion));
             return Task.WhenAll(tasks);
-        }
-
-        sealed class Helper<T>
-        {
-            public static readonly Func<T, ShardId, Tuple<ShardId, T>> AfterAskShardFunc = AfterAskShard;
-            private static Tuple<ShardId, T> AfterAskShard(T result, ShardId shardId) => Tuple.Create(shardId, result);
         }
 
         private List<ActorSelection> GracefulShutdownCoordinatorSelections

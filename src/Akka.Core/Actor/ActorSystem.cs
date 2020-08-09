@@ -109,7 +109,7 @@ namespace Akka.Actor
         /// <returns>A newly created actor system with the given name.</returns>
         public static ActorSystem Create(string name)
         {
-            return CreateAndStartSystem(name, ConfigurationFactory.Load());
+            return CreateAndStartSystem(name, ConfigurationFactory.Default());
         }
 
         private static ActorSystem CreateAndStartSystem(string name, Config withFallback)
@@ -231,13 +231,6 @@ namespace Akka.Actor
 
         private bool _isDisposed; //Automatically initialized to false;
 
-        //Destructor:
-        //~ActorSystem() 
-        //{
-        //    // Finalizer calls Dispose(false)
-        //    Dispose(false);
-        //}
-
         /// <inheritdoc/>
         public void Dispose()
         {
@@ -261,7 +254,7 @@ namespace Akka.Actor
                     if (disposing)
                     {
                         if (Log.IsDebugEnabled) Log.DisposingSystem();
-                        Terminate();
+                        Terminate().Wait(); // System needs to be disposed before method returns
                     }
                     //Clean up unmanaged resources
                 }

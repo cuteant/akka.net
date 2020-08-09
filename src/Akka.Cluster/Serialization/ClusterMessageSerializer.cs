@@ -23,7 +23,7 @@ namespace Akka.Cluster.Serialization
     {
         #region manifests
 
-        static class _
+        static class Manifests
         {
             internal const string HeartbeatManifest = "HB";
             internal const string HeartbeatRspManifest = "HBR";
@@ -45,19 +45,19 @@ namespace Akka.Cluster.Serialization
         {
             ManifestMap = new Dictionary<Type, string>
             {
-                [typeof(ClusterHeartbeatSender.Heartbeat)] = _.HeartbeatManifest,
-                [typeof(ClusterHeartbeatSender.HeartbeatRsp)] = _.HeartbeatRspManifest,
-                [typeof(GossipEnvelope)] = _.GossipEnvelopeManifest,
-                [typeof(GossipStatus)] = _.GossipStatusManifest,
-                [typeof(InternalClusterAction.Join)] = _.JoinManifest,
-                [typeof(InternalClusterAction.Welcome)] = _.WelcomeManifest,
-                [typeof(ClusterUserAction.Leave)] = _.LeaveManifest,
-                [typeof(ClusterUserAction.Down)] = _.DownManifest,
-                [typeof(InternalClusterAction.InitJoin)] = _.InitJoinManifest,
-                [typeof(InternalClusterAction.InitJoinAck)] = _.InitJoinAckManifest,
-                [typeof(InternalClusterAction.InitJoinNack)] = _.InitJoinNackManifest,
-                [typeof(InternalClusterAction.ExitingConfirmed)] = _.ExitingConfirmedManifest,
-                [typeof(ClusterRouterPool)] = _.ClusterRouterPoolManifest
+                [typeof(ClusterHeartbeatSender.Heartbeat)] = Manifests.HeartbeatManifest,
+                [typeof(ClusterHeartbeatSender.HeartbeatRsp)] = Manifests.HeartbeatRspManifest,
+                [typeof(GossipEnvelope)] = Manifests.GossipEnvelopeManifest,
+                [typeof(GossipStatus)] = Manifests.GossipStatusManifest,
+                [typeof(InternalClusterAction.Join)] = Manifests.JoinManifest,
+                [typeof(InternalClusterAction.Welcome)] = Manifests.WelcomeManifest,
+                [typeof(ClusterUserAction.Leave)] = Manifests.LeaveManifest,
+                [typeof(ClusterUserAction.Down)] = Manifests.DownManifest,
+                [typeof(InternalClusterAction.InitJoin)] = Manifests.InitJoinManifest,
+                [typeof(InternalClusterAction.InitJoinAck)] = Manifests.InitJoinAckManifest,
+                [typeof(InternalClusterAction.InitJoinNack)] = Manifests.InitJoinNackManifest,
+                [typeof(InternalClusterAction.ExitingConfirmed)] = Manifests.ExitingConfirmedManifest,
+                [typeof(ClusterRouterPool)] = Manifests.ClusterRouterPoolManifest
             };
         }
 
@@ -73,43 +73,43 @@ namespace Akka.Cluster.Serialization
             switch (obj)
             {
                 case ClusterHeartbeatSender.Heartbeat heartbeat:
-                    manifest = _.HeartbeatManifest;
+                    manifest = Manifests.HeartbeatManifest;
                     return MessagePackSerializer.Serialize(AddressToProto(heartbeat.From), s_defaultResolver);
                 case ClusterHeartbeatSender.HeartbeatRsp heartbeatRsp:
-                    manifest = _.HeartbeatRspManifest;
+                    manifest = Manifests.HeartbeatRspManifest;
                     return MessagePackSerializer.Serialize(UniqueAddressToProto(heartbeatRsp.From), s_defaultResolver);
                 case GossipEnvelope gossipEnvelope:
-                    manifest = _.GossipEnvelopeManifest;
+                    manifest = Manifests.GossipEnvelopeManifest;
                     return GossipEnvelopeToProto(gossipEnvelope);
                 case GossipStatus gossipStatus:
-                    manifest = _.GossipStatusManifest;
+                    manifest = Manifests.GossipStatusManifest;
                     return GossipStatusToProto(gossipStatus);
                 case InternalClusterAction.Join @join:
-                    manifest = _.JoinManifest;
+                    manifest = Manifests.JoinManifest;
                     return JoinToByteArray(@join);
                 case InternalClusterAction.Welcome welcome:
-                    manifest = _.WelcomeManifest;
+                    manifest = Manifests.WelcomeManifest;
                     return WelcomeMessageBuilder(welcome);
                 case ClusterUserAction.Leave leave:
-                    manifest = _.LeaveManifest;
+                    manifest = Manifests.LeaveManifest;
                     return MessagePackSerializer.Serialize(AddressToProto(leave.Address), s_defaultResolver);
                 case ClusterUserAction.Down down:
-                    manifest = _.DownManifest;
+                    manifest = Manifests.DownManifest;
                     return MessagePackSerializer.Serialize(AddressToProto(down.Address), s_defaultResolver);
                 case InternalClusterAction.InitJoin _:
-                    manifest = _.InitJoinManifest;
+                    manifest = Manifests.InitJoinManifest;
                     return CuteAnt.EmptyArray<byte>.Instance; // new Google.Protobuf.WellKnownTypes.Empty().ToByteArray();
                 case InternalClusterAction.InitJoinAck initJoinAck:
-                    manifest = _.InitJoinAckManifest;
+                    manifest = Manifests.InitJoinAckManifest;
                     return MessagePackSerializer.Serialize(AddressToProto(initJoinAck.Address), s_defaultResolver);
                 case InternalClusterAction.InitJoinNack initJoinNack:
-                    manifest = _.InitJoinNackManifest;
+                    manifest = Manifests.InitJoinNackManifest;
                     return MessagePackSerializer.Serialize(AddressToProto(initJoinNack.Address), s_defaultResolver);
                 case InternalClusterAction.ExitingConfirmed exitingConfirmed:
-                    manifest = _.ExitingConfirmedManifest;
+                    manifest = Manifests.ExitingConfirmedManifest;
                     return MessagePackSerializer.Serialize(UniqueAddressToProto(exitingConfirmed.Address), s_defaultResolver);
                 case ClusterRouterPool pool:
-                    manifest = _.ClusterRouterPoolManifest;
+                    manifest = Manifests.ClusterRouterPoolManifest;
                     return ClusterRouterPoolToByteArray(pool);
                 default:
                     throw ThrowHelper.GetArgumentException_Serializer_ClusterMessage(obj);
@@ -121,31 +121,31 @@ namespace Akka.Cluster.Serialization
         {
             switch (manifest)
             {
-                case _.HeartbeatManifest:
+                case Manifests.HeartbeatManifest:
                     return new ClusterHeartbeatSender.Heartbeat(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
-                case _.HeartbeatRspManifest:
+                case Manifests.HeartbeatRspManifest:
                     return new ClusterHeartbeatSender.HeartbeatRsp(UniqueAddressFrom(MessagePackSerializer.Deserialize<Protocol.UniqueAddress>(bytes, s_defaultResolver)));
-                case _.GossipEnvelopeManifest:
+                case Manifests.GossipEnvelopeManifest:
                     return GossipEnvelopeFrom(bytes);
-                case _.GossipStatusManifest:
+                case Manifests.GossipStatusManifest:
                     return GossipStatusFrom(bytes);
-                case _.JoinManifest:
+                case Manifests.JoinManifest:
                     return JoinFrom(bytes);
-                case _.WelcomeManifest:
+                case Manifests.WelcomeManifest:
                     return WelcomeFrom(bytes);
-                case _.LeaveManifest:
+                case Manifests.LeaveManifest:
                     return new ClusterUserAction.Leave(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
-                case _.DownManifest:
+                case Manifests.DownManifest:
                     return new ClusterUserAction.Down(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
-                case _.InitJoinManifest:
+                case Manifests.InitJoinManifest:
                     return InternalClusterAction.InitJoin.Instance;
-                case _.InitJoinAckManifest:
+                case Manifests.InitJoinAckManifest:
                     return new InternalClusterAction.InitJoinAck(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
-                case _.InitJoinNackManifest:
+                case Manifests.InitJoinNackManifest:
                     return new InternalClusterAction.InitJoinNack(AddressFrom(MessagePackSerializer.Deserialize<AddressData>(bytes, s_defaultResolver)));
-                case _.ExitingConfirmedManifest:
+                case Manifests.ExitingConfirmedManifest:
                     return new InternalClusterAction.ExitingConfirmed(UniqueAddressFrom(MessagePackSerializer.Deserialize<Protocol.UniqueAddress>(bytes, s_defaultResolver)));
-                case _.ClusterRouterPoolManifest:
+                case Manifests.ClusterRouterPoolManifest:
                     return ClusterRouterPoolFrom(bytes);
             }
 
@@ -170,32 +170,32 @@ namespace Akka.Cluster.Serialization
         {
             switch (obj)
             {
-                case ClusterHeartbeatSender.Heartbeat heartbeat:
-                    return _.HeartbeatManifest;
-                case ClusterHeartbeatSender.HeartbeatRsp heartbeatRsp:
-                    return _.HeartbeatRspManifest;
-                case GossipEnvelope gossipEnvelope:
-                    return _.GossipEnvelopeManifest;
-                case GossipStatus gossipStatus:
-                    return _.GossipStatusManifest;
-                case InternalClusterAction.Join @join:
-                    return _.JoinManifest;
-                case InternalClusterAction.Welcome welcome:
-                    return _.WelcomeManifest;
-                case ClusterUserAction.Leave leave:
-                    return _.LeaveManifest;
-                case ClusterUserAction.Down down:
-                    return _.DownManifest;
+                case ClusterHeartbeatSender.Heartbeat _:
+                    return Manifests.HeartbeatManifest;
+                case ClusterHeartbeatSender.HeartbeatRsp _:
+                    return Manifests.HeartbeatRspManifest;
+                case GossipEnvelope _:
+                    return Manifests.GossipEnvelopeManifest;
+                case GossipStatus _:
+                    return Manifests.GossipStatusManifest;
+                case InternalClusterAction.Join _:
+                    return Manifests.JoinManifest;
+                case InternalClusterAction.Welcome _:
+                    return Manifests.WelcomeManifest;
+                case ClusterUserAction.Leave _:
+                    return Manifests.LeaveManifest;
+                case ClusterUserAction.Down _:
+                    return Manifests.DownManifest;
                 case InternalClusterAction.InitJoin _:
-                    return _.InitJoinManifest;
-                case InternalClusterAction.InitJoinAck initJoinAck:
-                    return _.InitJoinAckManifest;
-                case InternalClusterAction.InitJoinNack initJoinNack:
-                    return _.InitJoinNackManifest;
-                case InternalClusterAction.ExitingConfirmed exitingConfirmed:
-                    return _.ExitingConfirmedManifest;
-                case ClusterRouterPool pool:
-                    return _.ClusterRouterPoolManifest;
+                    return Manifests.InitJoinManifest;
+                case InternalClusterAction.InitJoinAck _:
+                    return Manifests.InitJoinAckManifest;
+                case InternalClusterAction.InitJoinNack _:
+                    return Manifests.InitJoinNackManifest;
+                case InternalClusterAction.ExitingConfirmed _:
+                    return Manifests.ExitingConfirmedManifest;
+                case ClusterRouterPool _:
+                    return Manifests.ClusterRouterPoolManifest;
                 default:
                     throw ThrowHelper.GetArgumentException_Serializer_ClusterMessage(obj);
             }
@@ -213,7 +213,7 @@ namespace Akka.Cluster.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static InternalClusterAction.Join JoinFrom(byte[] bytes)
+        private static InternalClusterAction.Join JoinFrom(in ReadOnlySpan<byte> bytes)
         {
             var join = MessagePackSerializer.Deserialize<Protocol.Join>(bytes, s_defaultResolver);
             return new InternalClusterAction.Join(UniqueAddressFrom(join.Node), join.Roles.ToImmutableHashSet(StringComparer.Ordinal));
@@ -228,7 +228,7 @@ namespace Akka.Cluster.Serialization
             return MessagePackSerializer.Serialize(welcomeProto, s_defaultResolver);
         }
 
-        private static InternalClusterAction.Welcome WelcomeFrom(byte[] bytes)
+        private static InternalClusterAction.Welcome WelcomeFrom(in ReadOnlySpan<byte> bytes)
         {
             var welcomeProto = MessagePackSerializer.Deserialize<Protocol.Welcome>(bytes, s_defaultResolver);
             return new InternalClusterAction.Welcome(UniqueAddressFrom(welcomeProto.From), GossipFrom(welcomeProto.Gossip));
@@ -248,7 +248,7 @@ namespace Akka.Cluster.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static GossipEnvelope GossipEnvelopeFrom(byte[] bytes)
+        private static GossipEnvelope GossipEnvelopeFrom(in ReadOnlySpan<byte> bytes)
         {
             var gossipEnvelopeProto = MessagePackSerializer.Deserialize<Protocol.GossipEnvelope>(bytes, s_defaultResolver);
 
@@ -271,7 +271,7 @@ namespace Akka.Cluster.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static GossipStatus GossipStatusFrom(byte[] bytes)
+        private static GossipStatus GossipStatusFrom(in ReadOnlySpan<byte> bytes)
         {
             var gossipStatusProto = MessagePackSerializer.Deserialize<Protocol.GossipStatus>(bytes, s_defaultResolver);
             return new GossipStatus(UniqueAddressFrom(gossipStatusProto.From), VectorClockFrom(gossipStatusProto.Version, gossipStatusProto.AllHashes));
@@ -290,7 +290,7 @@ namespace Akka.Cluster.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private ClusterRouterPool ClusterRouterPoolFrom(byte[] bytes)
+        private ClusterRouterPool ClusterRouterPoolFrom(in ReadOnlySpan<byte> bytes)
         {
             var clusterRouterPool = MessagePackSerializer.Deserialize<Protocol.ClusterRouterPool>(bytes, s_defaultResolver);
             return new ClusterRouterPool(

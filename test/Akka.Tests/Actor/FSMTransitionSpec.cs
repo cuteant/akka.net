@@ -21,11 +21,11 @@ namespace Akka.Tests.Actor
         public void FSMTransitionNotifier_must_not_trigger_onTransition_for_stay()
         {
             var fsm = Sys.ActorOf(Props.Create(() => new SendAnyTransitionFSM(TestActor)));
-            ExpectMsg(new Tuple<int, int>(0, 0)); // caused by initialize(), OK.
+            ExpectMsg((0, 0)); // caused by initialize(), OK.
             fsm.Tell("stay"); // no transition event
             ExpectNoMsg(500.Milliseconds());
             fsm.Tell("goto"); // goto(current state)
-            ExpectMsg(new Tuple<int, int>(0, 0));
+            ExpectMsg((0, 0));
         }
 
         [Fact]
@@ -68,7 +68,7 @@ namespace Akka.Tests.Actor
             Within(1.Seconds(), () =>
             {
                 fsm.Tell("tick");
-                ExpectMsg(new Tuple<int, int>(0, 1));
+                ExpectMsg((0, 1));
             });
         }
 
@@ -83,10 +83,10 @@ namespace Akka.Tests.Actor
                 fsm.Tell(new SubscribeTransitionCallBack(forward));
                 ExpectMsg(new CurrentState<int>(fsm, 0));
                 fsm.Tell("tick");
-                ExpectMsg(new Tuple<int, int>(0, 1));
+                ExpectMsg((0, 1));
                 ExpectMsg(new Transition<int>(fsm, 0, 1));
                 fsm.Tell("tick");
-                ExpectMsg(new Tuple<int, int>(1, 1));
+                ExpectMsg((1, 1));
                 ExpectMsg(new Transition<int>(fsm, 1, 1));
             });
         }
@@ -112,7 +112,7 @@ namespace Akka.Tests.Actor
             var fsmref = Sys.ActorOf<LeakyFSM>();
 
             fsmref.Tell("switch");
-            ExpectMsg(Tuple.Create(0, 1));
+            ExpectMsg((0, 1));
             fsmref.Tell("test");
             ExpectMsg("ok");
         }
@@ -137,7 +137,7 @@ namespace Akka.Tests.Actor
 
                 OnTransition((state1, state2) =>
                 {
-                    Target.Tell(Tuple.Create(state1, state2));
+                    Target.Tell((state1, state2));
                 });
 
                 Initialize();
@@ -212,10 +212,10 @@ namespace Akka.Tests.Actor
                 OnTransition((state1, state2) =>
                 {
                     if (state1 == 0 && state2 == 1)
-                        target.Tell(Tuple.Create(StateData, NextStateData));
+                        target.Tell((StateData, NextStateData));
 
                     if (state1 == 1 && state2 == 1)
-                        target.Tell(Tuple.Create(StateData, NextStateData));
+                        target.Tell((StateData, NextStateData));
                 });
             }
 
@@ -240,7 +240,7 @@ namespace Akka.Tests.Actor
 
                 OnTransition((state1, state2) =>
                 {
-                    NextStateData.Tell(Tuple.Create(state1, state2));
+                    NextStateData.Tell((state1, state2));
                 });
 
                 When(1, @event =>

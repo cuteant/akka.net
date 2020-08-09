@@ -8,6 +8,7 @@ using Akka.Cluster.Tools.Client;
 using Akka.Cluster.Tools.PublishSubscribe;
 using Akka.Cluster.Tools.Singleton;
 using Akka.Event;
+using Akka.Util.Internal;
 
 namespace Akka.Cluster.Tools
 {
@@ -178,6 +179,12 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void PreviousOldestRemoved(this ILoggingAdapter logger, DelayedMemberRemoved delayed, BecomingOldestData becoming)
+        {
+            logger.Info("Member removed [{0}], previous oldest [{1}]", delayed.Member.Address, becoming.PreviousOldest);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void RetrySendingTakeOverFromMeTo(this ILoggingAdapter logger, int count, WasOldestData wasOldestData)
         {
             logger.Info("Retry [{0}], sending TakeOverFromMe to [{1}]", count, wasOldestData.NewOldest?.Address);
@@ -196,9 +203,9 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void RetrySendingHandOverToMeTo(this ILoggingAdapter logger, int count, BecomingOldestData becomingOldest)
+        internal static void RetrySendingHandOverToMeTo(this ILoggingAdapter logger, int count, UniqueAddress oldest)
         {
-            logger.Info("Retry [{0}], sending HandOverToMe to [{1}]", count, becomingOldest.PreviousOldest?.Address);
+            logger.Info("Retry [{0}], sending HandOverToMe to [{1}]", count, oldest?.Address);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -214,16 +221,23 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void PreviousOldestRemoved(this ILoggingAdapter logger, BecomingOldestData becoming)
+        internal static void IgnoringHandOverDoneInBecomingOldest(this ILoggingAdapter logger, IActorRef sender, UniqueAddress oldest)
         {
-            logger.Info("Previous oldest [{0}] removed", becoming.PreviousOldest);
+            logger.Info("Ignoring HandOverDone in BecomingOldest from [{0}]. Expected previous oldest [{1}]",
+                sender.Path.Address, oldest.Address);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void IgnoringHandOverDoneInBecomingOldest(this ILoggingAdapter logger, IActorRef sender, BecomingOldestData b)
+        internal static void IgnoringHandOverToMeinYoungerfrom(this ILoggingAdapter logger, IActorRef sender)
         {
-            logger.Info("Ignoring HandOverDone in BecomingOldest from [{0}]. Expected previous oldest [{1}]",
-                sender.Path.Address, b.PreviousOldest.Address);
+            logger.Info("Ignoring HandOverDone in BecomingOldest from [{0}].", sender.Path.Address);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void IgnoringHandOverToMeinYoungerfrom(this ILoggingAdapter logger, IActorRef sender, MemberStatus selfStatus)
+        {
+            logger.Info("Ignoring HandOverToMe in Younger from [{0}] because self is [{1}].",
+                sender.Path.Address, selfStatus);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -233,21 +247,15 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void PreviousOldestRemoved(this ILoggingAdapter logger, DelayedMemberRemoved removed)
-        {
-            logger.Info("Previous oldest removed [{0}]", removed.Member.Address);
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void YoungerObservedOldestChanged(this ILoggingAdapter logger, YoungerData youngerData, OldestChangedBuffer.OldestChanged oldestChanged)
         {
-            logger.Info("Younger observed OldestChanged: [{0} -> {1}]", youngerData.Oldest?.Address, oldestChanged.Oldest?.Address);
+            logger.Info("Younger observed OldestChanged: [{0} -> {1}]", youngerData.Oldest.Head()?.Address, oldestChanged.Oldest?.Address);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void YoungerObservedOldestChanged(this ILoggingAdapter logger, YoungerData youngerData)
         {
-            logger.Info("Younger observed OldestChanged: [{0} -> myself]", youngerData.Oldest?.Address);
+            logger.Info("Younger observed OldestChanged: [{0} -> myself]", youngerData.Oldest.Head()?.Address);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

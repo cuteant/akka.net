@@ -15,6 +15,7 @@ using Akka.Cluster.Tools.PublishSubscribe.Internal;
 using Akka.Serialization;
 using MessagePack;
 using AddressData = Akka.Serialization.Protocol.AddressData;
+using Status = Akka.Cluster.Tools.PublishSubscribe.Internal.Status;
 
 namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
 {
@@ -62,10 +63,10 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         {
             switch (obj)
             {
-                case Internal.Status status:
+                case Status status:
                     manifest = StatusManifest;
                     return StatusToProto(status);
-                case Internal.Delta delta:
+                case Delta delta:
                     manifest = DeltaManifest;
                     return DeltaToProto(delta);
                 case Send send:
@@ -120,9 +121,9 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
         {
             switch (o)
             {
-                case Internal.Status _:
+                case Status _:
                     return StatusManifest;
-                case Internal.Delta _:
+                case Delta _:
                     return DeltaManifest;
                 case Send _:
                     return SendManifest;
@@ -145,7 +146,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        private static Internal.Status StatusFrom(byte[] bytes)
+        private static Internal.Status StatusFrom(in ReadOnlySpan<byte> bytes)
         {
             var statusProto = MessagePackSerializer.Deserialize<Protocol.Status>(bytes, s_defaultResolver);
             var versions = new Dictionary<Address, long>(AddressComparer.Instance);
@@ -180,7 +181,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             return MessagePackSerializer.Serialize(new Protocol.Delta(protoBuckets), s_defaultResolver);
         }
 
-        private Delta DeltaFrom(byte[] bytes)
+        private Delta DeltaFrom(in ReadOnlySpan<byte> bytes)
         {
             var deltaProto = MessagePackSerializer.Deserialize<Protocol.Delta>(bytes, s_defaultResolver);
             var buckets = new List<Bucket>();
@@ -211,7 +212,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
-        private Send SendFrom(byte[] bytes)
+        private Send SendFrom(in ReadOnlySpan<byte> bytes)
         {
             var sendProto = MessagePackSerializer.Deserialize<Protocol.Send>(bytes, s_defaultResolver);
             return new Send(sendProto.Path, _system.Deserialize(sendProto.Payload), sendProto.LocalAffinity);
@@ -227,7 +228,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
-        private SendToAll SendToAllFrom(byte[] bytes)
+        private SendToAll SendToAllFrom(in ReadOnlySpan<byte> bytes)
         {
             var sendToAllProto = MessagePackSerializer.Deserialize<Protocol.SendToAll>(bytes, s_defaultResolver);
             return new SendToAll(sendToAllProto.Path, _system.Deserialize(sendToAllProto.Payload), sendToAllProto.AllButSelf);
@@ -242,7 +243,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
-        private Publish PublishFrom(byte[] bytes)
+        private Publish PublishFrom(in ReadOnlySpan<byte> bytes)
         {
             var publishProto = MessagePackSerializer.Deserialize<Protocol.Publish>(bytes, s_defaultResolver);
             return new Publish(publishProto.Topic, _system.Deserialize(publishProto.Payload));
@@ -254,7 +255,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Serialization
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
-        private SendToOneSubscriber SendToOneSubscriberFrom(byte[] bytes)
+        private SendToOneSubscriber SendToOneSubscriberFrom(in ReadOnlySpan<byte> bytes)
         {
             var sendToOneSubscriberProto = MessagePackSerializer.Deserialize<Protocol.SendToOneSubscriber>(bytes, s_defaultResolver);
             return new SendToOneSubscriber(_system.Deserialize(sendToOneSubscriberProto.Payload));

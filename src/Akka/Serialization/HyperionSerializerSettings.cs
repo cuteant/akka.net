@@ -34,9 +34,12 @@ namespace Akka.Serialization
         /// <returns></returns>
         public static HyperionSerializerSettings Create(Config config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config), "HyperionSerializerSettings require a config, default path: `akka.serializers.hyperion`");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<HyperionSerializerSettings>("akka.serializers.hyperion");
+            }
 
-            var typeName = config.GetString("known-types-provider");
+            var typeName = config.GetString("known-types-provider", null);
             var type = !string.IsNullOrEmpty(typeName) ? TypeUtils.ResolveType(typeName) : null; // Type.GetType(typeName, true)
 
             return new HyperionSerializerSettings(

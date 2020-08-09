@@ -415,23 +415,15 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_ClusterrouterpoolIsNotAllowedToWrap()
+        internal static ConfigurationException GetConfigurationException_ClusterrouterpoolIsNotAllowedToWrap()
         {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException("ClusterRouterPool is not allowed to wrap a ClusterRouterPool");
-            }
+            return new ConfigurationException("ClusterRouterPool is not allowed to wrap a ClusterRouterPool");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_ClusterroutergroupIsNotAllowedToWrap()
+        internal static ConfigurationException GetConfigurationException_ClusterroutergroupIsNotAllowedToWrap()
         {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException("ClusterRouterGroup is not allowed to wrap a ClusterRouterGroup");
-            }
+            return new ConfigurationException("ClusterRouterGroup is not allowed to wrap a ClusterRouterGroup");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

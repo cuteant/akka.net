@@ -202,8 +202,8 @@ namespace Akka.DI.TestKit
             : base(new XunitAssertions(), config, actorSystemName, testActorName)
         {
             _pid = "p-" + Counter.IncrementAndGet();
-// ReSharper disable once DoNotCallOverridableMethodsInConstructor
-            var resolver = ConfigureDependencyResolver(Sys);
+            // ReSharper disable once DoNotCallOverridableMethodsInConstructor
+            _ = ConfigureDependencyResolver(Sys);
         }
 
         /// <summary>

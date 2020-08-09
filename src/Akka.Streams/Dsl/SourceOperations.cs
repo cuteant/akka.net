@@ -14,7 +14,7 @@ using Akka.Event;
 using Akka.IO;
 using Akka.Streams.Dsl.Internal;
 using Akka.Streams.Stage;
-using Akka.Streams.Util;
+using Akka.Util;
 
 namespace Akka.Streams.Dsl
 {
@@ -1161,9 +1161,9 @@ namespace Akka.Streams.Dsl
         /// <param name="flow">TBD</param>
         /// <param name="n">TBD</param>
         /// <returns>TBD</returns>
-        public static Source<Tuple<IImmutableList<TOut>, Source<TOut, NotUsed>>, TMat> PrefixAndTail<TOut, TMat>(this Source<TOut, TMat> flow, int n)
+        public static Source<(IImmutableList<TOut>, Source<TOut, NotUsed>), TMat> PrefixAndTail<TOut, TMat>(this Source<TOut, TMat> flow, int n)
         {
-            return (Source<Tuple<IImmutableList<TOut>, Source<TOut, NotUsed>>, TMat>)InternalFlowOperations.PrefixAndTail(flow, n);
+            return (Source<(IImmutableList<TOut>, Source<TOut, NotUsed>), TMat>)InternalFlowOperations.PrefixAndTail(flow, n);
         }
 
         /// <summary>
@@ -1416,9 +1416,9 @@ namespace Akka.Streams.Dsl
         /// <para/>
         /// Cancels when downstream cancels
         /// </summary>
-        public static Source<Tuple<TOut1, long>, TMat> ZipWithIndex<TOut1, TMat>(this Source<TOut1, TMat> flow)
+        public static Source<(TOut1, long), TMat> ZipWithIndex<TOut1, TMat>(this Source<TOut1, TMat> flow)
         {
-            return (Source<Tuple<TOut1, long>, TMat>)InternalFlowOperations.ZipWithIndex(flow);
+            return (Source<(TOut1, long), TMat>)InternalFlowOperations.ZipWithIndex(flow);
         }
 
         /// <summary>
@@ -1788,9 +1788,9 @@ namespace Akka.Streams.Dsl
         /// <param name="flow">TBD</param>
         /// <param name="other">TBD</param>
         /// <returns>TBD</returns>
-        public static Source<Tuple<T1, T2>, TMat> Zip<T1, T2, TMat>(this Source<T1, TMat> flow, IGraph<SourceShape<T2>, TMat> other)
+        public static Source<(T1, T2), TMat> Zip<T1, T2, TMat>(this Source<T1, TMat> flow, IGraph<SourceShape<T2>, TMat> other)
         {
-            return (Source<Tuple<T1, T2>, TMat>)InternalFlowOperations.Zip(flow, other);
+            return (Source<(T1, T2), TMat>)InternalFlowOperations.Zip(flow, other);
         }
 
         /// <summary>
@@ -2152,7 +2152,7 @@ namespace Akka.Streams.Dsl
         /// <returns></returns>
         public static SourceWithContext<TCtx, TOut, TMat> AsSourceWithContext<TCtx, TOut, TMat>(
             this Source<TOut, TMat> flow, Func<TOut, TCtx> fn) =>
-            new SourceWithContext<TCtx, TOut, TMat>(flow.Select(x => Tuple.Create(x, fn(x))));
+            new SourceWithContext<TCtx, TOut, TMat>(flow.Select(x => (x, fn(x))));
 
         /// <summary>
         /// The operator fails with an <see cref="WatchedActorTerminatedException"/> if the target actor is terminated.

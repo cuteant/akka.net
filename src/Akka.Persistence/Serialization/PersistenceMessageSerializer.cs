@@ -100,13 +100,13 @@ namespace Akka.Persistence.Serialization
         {
             switch (o)
             {
-                case IPersistentRepresentation repr:
+                case IPersistentRepresentation _:
                     return PersistentManifest;
-                case AtomicWrite aw:
+                case AtomicWrite _:
                     return AtomicWriteManifest;
-                case AtLeastOnceDeliverySnapshot snap:
+                case AtLeastOnceDeliverySnapshot _:
                     return ALODSnapshotManifest;
-                case PersistentFSM.StateChangeEvent stateEvent:
+                case PersistentFSM.StateChangeEvent _:
                     return StateChangeEventManifest;
                 default:
                     throw ThrowHelper.GetArgumentException_Serializer_D(o);
@@ -178,7 +178,7 @@ namespace Akka.Persistence.Serialization
                 message.WriterGuid);
         }
 
-        private static AtomicWrite GetAtomicWrite(ExtendedActorSystem system, byte[] bytes)
+        private static AtomicWrite GetAtomicWrite(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.AtomicWrite>(bytes, s_defaultResolver);
             var payloads = new List<IPersistentRepresentation>();
@@ -189,7 +189,7 @@ namespace Akka.Persistence.Serialization
             return new AtomicWrite(payloads.ToImmutableList());
         }
 
-        private static AtLeastOnceDeliverySnapshot GetAtLeastOnceDeliverySnapshot(ExtendedActorSystem system, byte[] bytes)
+        private static AtLeastOnceDeliverySnapshot GetAtLeastOnceDeliverySnapshot(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.AtLeastOnceDeliverySnapshot>(bytes, s_defaultResolver);
 
@@ -205,7 +205,7 @@ namespace Akka.Persistence.Serialization
             return new AtLeastOnceDeliverySnapshot(message.CurrentDeliveryId, unconfirmedDeliveries.ToArray());
         }
 
-        private static PersistentFSM.StateChangeEvent GetStateChangeEvent(byte[] bytes)
+        private static PersistentFSM.StateChangeEvent GetStateChangeEvent(in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<PersistentStateChangeEvent>(bytes, s_defaultResolver);
             TimeSpan? timeout = null;

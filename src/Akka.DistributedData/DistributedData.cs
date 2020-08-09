@@ -57,6 +57,11 @@ namespace Akka.DistributedData
         {
             system.Settings.InjectTopLevelFallback(DefaultConfig());
             var config = system.Settings.Config.GetConfig("akka.cluster.distributed-data");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<DistributedData>("akka.cluster.distributed-data");
+            }
+
             _settings = ReplicatorSettings.Create(config);
             _system = system;
             if (IsTerminated)
@@ -67,7 +72,7 @@ namespace Akka.DistributedData
             }
             else
             {
-                var name = config.GetString("name");
+                var name = config.GetString("name", null);
                 Replicator = system.ActorOf(Akka.DistributedData.Replicator.Props(_settings), name);
             }
         }

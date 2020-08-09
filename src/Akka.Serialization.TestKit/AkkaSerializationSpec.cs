@@ -66,7 +66,7 @@ akka.actor {
             var message = new[] {typeof(NullReferenceException), typeof(ArgumentException)};
             var serializer = Sys.Serialization.FindSerializerFor(message);
             var bytes = serializer.ToBinary(message);
-            var res = (Type[])serializer.FromBinary(bytes, typeof(Type[]));
+            _ = (Type[])serializer.FromBinary(bytes, typeof(Type[]));
         }
 
         [Fact]
@@ -329,7 +329,12 @@ akka.actor {
         [Fact]
         public void CanSerializeConfig()
         {
-            var message = ConfigurationFactory.Default();
+            var message = ConfigurationFactory.ParseString(@"
+my-settings{
+    a: 1
+    b: 2
+    c: 3
+}");
             var serializer = Sys.Serialization.FindSerializerFor(message);
             var serialized = serializer.ToBinary(message);
             var deserialized = (Config)serializer.FromBinary(serialized, typeof(Config));

@@ -101,6 +101,7 @@ namespace Akka.Tests.Routing
                 router = consistent-hashing-group
                 routees.paths = [""/user/A"",""/user/B"",""/user/C"", ]
               }
+            }
         ")
         {
             _router1 = Sys.ActorOf(Props.Create<Echo>().WithRouter(FromConfig.Instance), "router1");

@@ -74,11 +74,16 @@ namespace Akka.Dispatch
         /// <returns>TBD</returns>
         public override MessageDispatcher Dispatcher()
         {
-            return new CurrentSynchronizationContextDispatcher(this, Config.GetString("id"),
-                Config.GetInt("throughput"),
-                Config.GetTimeSpan("throughput-deadline-time").Ticks,
+            if (Config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<MessageDispatcher>();
+            }
+
+            return new CurrentSynchronizationContextDispatcher(this, Config.GetString("id", null),
+                Config.GetInt("throughput", 0),
+                Config.GetTimeSpan("throughput-deadline-time", null).Ticks,
                 _executorServiceConfigurator,
-                Config.GetTimeSpan("shutdown-timeout"));
+                Config.GetTimeSpan("shutdown-timeout", null));
         }
     }
 
@@ -96,7 +101,7 @@ namespace Akka.Dispatch
         /// <param name="throughputDeadlineTime">TBD</param>
         /// <param name="executorServiceFactory">TBD</param>
         /// <param name="shutdownTimeout">TBD</param>
-        public CurrentSynchronizationContextDispatcher(MessageDispatcherConfigurator configurator, string id, int throughput, long? throughputDeadlineTime, ExecutorServiceFactory executorServiceFactory, TimeSpan shutdownTimeout) 
+        public CurrentSynchronizationContextDispatcher(MessageDispatcherConfigurator configurator, string id, int throughput, long? throughputDeadlineTime, ExecutorServiceFactory executorServiceFactory, TimeSpan shutdownTimeout)
             : base(configurator, id, throughput, throughputDeadlineTime, executorServiceFactory, shutdownTimeout)
         {
             /*
@@ -110,7 +115,7 @@ namespace Akka.Dispatch
         {
             public void Run()
             {
-                
+
             }
         }
 

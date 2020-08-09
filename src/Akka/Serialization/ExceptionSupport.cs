@@ -78,7 +78,7 @@ namespace Akka.Serialization
             return message;
         }
 
-        public static Exception DeserializeException(ExtendedActorSystem system, byte[] bytes)
+        public static Exception DeserializeException(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.ExceptionData>(bytes, DefaultResolver);
             return ExceptionFromProto(system, proto);

@@ -34,7 +34,10 @@ namespace Akka.Serialization
         /// <returns></returns>
         public static MsgPackSerializerSettings Create(Config config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config), "MsgPackSerializerSettings require a config, default path: `akka.serializers.msgpack`");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<MsgPackSerializerSettings>("akka.serializers.msgpack");
+            }
 
             return new MsgPackSerializerSettings(
                 initialBufferSize: (int)config.GetByteSize("initial-buffer-size", c_initialBufferSize));

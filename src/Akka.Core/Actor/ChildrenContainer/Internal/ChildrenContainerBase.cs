@@ -10,7 +10,6 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
-using Akka.Util.Internal.Collections;
 
 namespace Akka.Actor.Internal
 {

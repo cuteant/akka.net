@@ -46,12 +46,12 @@ namespace Akka.Persistence.Snapshot
         public LocalSnapshotStore()
         {
             var config = Context.System.Settings.Config.GetConfig("akka.persistence.snapshot-store.local");
-            _maxLoadAttempts = config.GetInt("max-load-attempts");
+            _maxLoadAttempts = config.GetInt("max-load-attempts", 0);
 
-            _streamDispatcher = Context.System.Dispatchers.Lookup(config.GetString("stream-dispatcher"));
-            _dir = new DirectoryInfo(config.GetString("dir"));
+            _streamDispatcher = Context.System.Dispatchers.Lookup(config.GetString("stream-dispatcher", null));
+            _dir = new DirectoryInfo(config.GetString("dir", null));
 
-            _defaultSerializer = config.GetString("serializer");
+            _defaultSerializer = config.GetString("serializer", null);
 
             _serialization = Context.System.Serialization;
             _wrapperSerializer = _serialization.FindSerializerForType(WrapperType, _defaultSerializer);

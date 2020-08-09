@@ -15,6 +15,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Util;
+using CuteAnt;
 using DotNetty.Buffers;
 
 namespace Akka.Remote.Transport.DotNetty
@@ -30,7 +31,12 @@ namespace Akka.Remote.Transport.DotNetty
     {
         public static DotNettyTransportSettings Create(ActorSystem system)
         {
-            return Create(system.Settings.Config.GetConfig("akka.remote.dot-netty.tcp"));
+            var config = system.Settings.Config.GetConfig("akka.remote.dot-netty.tcp");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<DotNettyTransportSettings>("akka.remote.dot-netty.tcp");
+            }
+            return Create(config);
         }
 
         /// <summary>
@@ -56,10 +62,13 @@ namespace Akka.Remote.Transport.DotNetty
 
         public static DotNettyTransportSettings Create(Config config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config), "DotNetty HOCON config was not found (default path: `akka.remote.dot-netty`)");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<DotNettyTransportSettings>();
+            }
 
             var transportMode = config.GetString("transport-protocol", "tcp").ToLowerInvariant();
-            var host = config.GetString("hostname");
+            var host = config.GetString("hostname", null);
             if (string.IsNullOrEmpty(host)) host = IPAddress.Any.ToString();
             var publicHost = config.GetString("public-hostname", null);
             var publicPort = config.GetInt("public-port", 0);
@@ -73,6 +82,8 @@ namespace Akka.Remote.Transport.DotNetty
                 default: throw new ArgumentException($"Unknown byte-order option [{byteOrderString}]. Supported options are: big-endian, little-endian.");
             }
 
+            var batchWriterSettings = new BatchWriterSettings(config.GetConfig("batching"));
+
             return new DotNettyTransportSettings(
                 transportMode: transportMode == "tcp" ? TransportMode.Tcp : TransportMode.Udp,
                 enableLibuv: config.GetBoolean("enable-libuv", true),
@@ -84,8 +95,7 @@ namespace Akka.Remote.Transport.DotNetty
                 publicPort: publicPort > 0 ? publicPort : (int?)null,
                 serverSocketWorkerPoolSize: ComputeWorkerPoolSize(config.GetConfig("server-socket-worker-pool")),
                 clientSocketWorkerPoolSize: ComputeWorkerPoolSize(config.GetConfig("client-socket-worker-pool")),
-                maxFrameSize: ToNullableInt(config.GetByteSize("maximum-frame-size")) ?? 10485760, // 128000
-                transferBatchSize: config.GetInt("transfer-batch-size", 1),
+                maxFrameSize: ToNullableInt(config.GetByteSize("maximum-frame-size", null)) ?? 10485760, // 128000
                 ssl: config.HasPath("ssl") ? SslSettings.Create(config.GetConfig("ssl")) : SslSettings.Empty,
                 dnsUseIpv6: config.GetBoolean("dns-use-ipv6", false),
                 tcpReuseAddr: ResolveTcpReuseAddrOption(config.GetString("tcp-reuse-addr", "on")), // "off-for-windows"
@@ -95,15 +105,16 @@ namespace Akka.Remote.Transport.DotNetty
                 tcpLinger: config.GetInt("tcp-linger", 0),
                 backlog: config.GetInt("backlog", 4096),
                 enforceIpFamily: RuntimeDetector.IsMono || config.GetBoolean("enforce-ip-family", false),
-                receiveBufferSize: ToNullableInt(config.GetByteSize("receive-buffer-size") ?? 0L), // 256000
-                sendBufferSize: ToNullableInt(config.GetByteSize("send-buffer-size") ?? 0L), // 256000
-                writeBufferHighWaterMark: ToNullableInt(config.GetByteSize("write-buffer-high-water-mark")),
-                writeBufferLowWaterMark: ToNullableInt(config.GetByteSize("write-buffer-low-water-mark")),
+                receiveBufferSize: ToNullableInt(config.GetByteSize("receive-buffer-size", null) ?? 0L), // 256000
+                sendBufferSize: ToNullableInt(config.GetByteSize("send-buffer-size", null) ?? 0L), // 256000
+                writeBufferHighWaterMark: ToNullableInt(config.GetByteSize("write-buffer-high-water-mark", null)),
+                writeBufferLowWaterMark: ToNullableInt(config.GetByteSize("write-buffer-low-water-mark", null)),
                 backwardsCompatibilityModeEnabled: config.GetBoolean("enable-backwards-compatibility", false),
-                logTransport: config.HasPath("log-transport") && config.GetBoolean("log-transport"),
+                logTransport: config.HasPath("log-transport") && config.GetBoolean("log-transport", false),
                 byteOrder: order,
                 enableBufferPooling: config.GetBoolean("enable-pooling", true),
                 enableMsgpackPooling: config.GetBoolean("enable-msgpack-pooling", false),
+                batchWriterSettings: batchWriterSettings,
                 globalSettings: config.HasPath("global") ? DotNettyGlobalSettints.CreateDefault(config.GetConfig("global")) : null);
         }
 
@@ -111,12 +122,15 @@ namespace Akka.Remote.Transport.DotNetty
 
         private static int ComputeWorkerPoolSize(Config config)
         {
-            if (config == null) return ThreadPoolConfig.ScaledPoolSize(2, 1.0, 2);
+            if (config.IsNullOrEmpty())
+            {
+                return ThreadPoolConfig.ScaledPoolSize(2, 1.0, 2);
+            }
 
             return ThreadPoolConfig.ScaledPoolSize(
-                floor: config.GetInt("pool-size-min"),
-                scalar: config.GetDouble("pool-size-factor"),
-                ceiling: config.GetInt("pool-size-max"));
+                floor: config.GetInt("pool-size-min", 0),
+                scalar: config.GetDouble("pool-size-factor", 0),
+                ceiling: config.GetInt("pool-size-max", 0));
         }
 
         /// <summary>Transport mode used by underlying socket channel. Currently only TCP is supported.</summary>
@@ -153,7 +167,6 @@ namespace Akka.Remote.Transport.DotNetty
         public readonly int ServerSocketWorkerPoolSize;
         public readonly int ClientSocketWorkerPoolSize;
         public readonly int MaxFrameSize;
-        public readonly int TransferBatchSize;
         public readonly SslSettings Ssl;
 
         /// <summary>If set to true, we will use IPv6 addresses upon DNS resolution for host names. Otherwise
@@ -207,13 +220,19 @@ namespace Akka.Remote.Transport.DotNetty
 
         public readonly bool EnableMsgpackPooling;
 
+        /// <summary>
+        /// Used for performance-tuning the DotNetty channels to maximize I/O performance.
+        /// </summary>
+        public readonly BatchWriterSettings BatchWriterSettings;
+
         public readonly DotNettyGlobalSettints Global;
 
-        public DotNettyTransportSettings(TransportMode transportMode, bool enableLibuv, bool enableSsl, TimeSpan connectTimeout, string hostname, string publicHostname,
-            int port, int? publicPort, int serverSocketWorkerPoolSize, int clientSocketWorkerPoolSize, int maxFrameSize, int transferBatchSize, SslSettings ssl,
-            bool dnsUseIpv6, bool tcpReuseAddr, bool tcpReusePort, bool tcpKeepAlive, bool tcpNoDelay, int tcpLinger, int backlog, bool enforceIpFamily,
-            int? receiveBufferSize, int? sendBufferSize, int? writeBufferHighWaterMark, int? writeBufferLowWaterMark, bool backwardsCompatibilityModeEnabled,
-            bool logTransport, ByteOrder byteOrder, bool enableBufferPooling, bool enableMsgpackPooling, DotNettyGlobalSettints globalSettings)
+        public DotNettyTransportSettings(TransportMode transportMode, bool enableLibuv, bool enableSsl, TimeSpan connectTimeout, string hostname,
+            string publicHostname, int port, int? publicPort, int serverSocketWorkerPoolSize, int clientSocketWorkerPoolSize, int maxFrameSize,
+            SslSettings ssl, bool dnsUseIpv6, bool tcpReuseAddr, bool tcpReusePort, bool tcpKeepAlive, bool tcpNoDelay, int tcpLinger, int backlog,
+            bool enforceIpFamily, int? receiveBufferSize, int? sendBufferSize, int? writeBufferHighWaterMark, int? writeBufferLowWaterMark,
+            bool backwardsCompatibilityModeEnabled, bool logTransport, ByteOrder byteOrder, bool enableBufferPooling, bool enableMsgpackPooling,
+            DotNettyGlobalSettints globalSettings, BatchWriterSettings batchWriterSettings)
         {
             if (maxFrameSize < 32000) throw new ArgumentException("maximum-frame-size must be at least 32000 bytes", nameof(maxFrameSize));
 
@@ -228,7 +247,6 @@ namespace Akka.Remote.Transport.DotNetty
             ServerSocketWorkerPoolSize = serverSocketWorkerPoolSize;
             ClientSocketWorkerPoolSize = clientSocketWorkerPoolSize;
             MaxFrameSize = maxFrameSize;
-            TransferBatchSize = transferBatchSize;
             Ssl = ssl;
             DnsUseIpv6 = dnsUseIpv6;
             TcpReuseAddr = tcpReuseAddr;
@@ -247,6 +265,7 @@ namespace Akka.Remote.Transport.DotNetty
             ByteOrder = byteOrder;
             EnableBufferPooling = enableBufferPooling;
             EnableMsgpackPooling = enableMsgpackPooling;
+            BatchWriterSettings = batchWriterSettings;
             Global = globalSettings;
         }
     }
@@ -273,24 +292,25 @@ namespace Akka.Remote.Transport.DotNetty
 
         public static SslSettings Create(Config config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config), "DotNetty SSL HOCON config was not found (default path: `akka.remote.dot-netty.Ssl`)");
+            if (config.IsNullOrEmpty())
+                throw new ConfigurationException($"Failed to create {typeof(DotNettyTransportSettings)}: DotNetty SSL HOCON config was not found (default path: `akka.remote.dot-netty.Ssl`)");
 
             if (config.GetBoolean("certificate.use-thumprint-over-file", false))
             {
-                return new SslSettings(config.GetString("certificate.thumbprint"),
-                    config.GetString("certificate.store-name"),
-                    ParseStoreLocationName(config.GetString("certificate.store-location")),
+                return new SslSettings(config.GetString("certificate.thumbprint", null),
+                    config.GetString("certificate.store-name", null),
+                    ParseStoreLocationName(config.GetString("certificate.store-location", null)),
                         config.GetBoolean("suppress-validation", false));
 
             }
             else
             {
-                var flagsRaw = config.GetStringList("certificate.flags");
+                var flagsRaw = config.GetStringList("certificate.flags", EmptyArray<string>.Instance);
                 var flags = flagsRaw.Aggregate(X509KeyStorageFlags.DefaultKeySet, (flag, str) => flag | ParseKeyStorageFlag(str));
 
                 return new SslSettings(
-                    certificatePath: config.GetString("certificate.path"),
-                    certificatePassword: config.GetString("certificate.password"),
+                    certificatePath: config.GetString("certificate.path", null),
+                    certificatePassword: config.GetString("certificate.password", null),
                     flags: flags,
                     suppressValidation: config.GetBoolean("suppress-validation", false));
             }
@@ -493,7 +513,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         public static DotNettyGlobalSettints CreateDefault(Config config)
         {
-            if (config == null) { return null; }
+            if (config.IsNullOrEmpty()) { return null; }
 
             var useDirectBuffer = config.GetBoolean("buffer-prefer-direct", true);
             var checkAccessible = config.GetBoolean("buffer-check-accessible", true);
@@ -516,6 +536,87 @@ namespace Akka.Remote.Transport.DotNetty
             Default = settings;
             return settings;
         }
+    }
+
+    #endregion
+
+    #region -- BatchWriterSettings --
+
+    /// <summary>
+    /// INTERNAL API.
+    ///
+    /// Configuration object for <see cref="BatchWriterHandler"/>
+    /// </summary>
+    public class BatchWriterSettings
+    {
+        public const int DefaultMaxPendingWrites = 30;
+        public const long DefaultMaxPendingBytes = 16 * 1024L;
+        public static readonly TimeSpan DefaultFlushInterval = TimeSpan.FromMilliseconds(40);
+
+        public BatchWriterSettings(Config hocon)
+        {
+            EnableBatching = hocon.GetBoolean("enabled", true);
+            MaxPendingWrites = hocon.GetInt("max-pending-writes", DefaultMaxPendingWrites);
+            MaxPendingBytes = hocon.GetByteSize("max-pending-bytes", null) ?? DefaultMaxPendingBytes;
+            FlushInterval = hocon.GetTimeSpan("flush-interval", DefaultFlushInterval, false);
+        }
+
+        public BatchWriterSettings(TimeSpan? maxDuration = null, bool enableBatching = true,
+            int maxPendingWrites = DefaultMaxPendingWrites, long maxPendingBytes = DefaultMaxPendingBytes)
+        {
+            EnableBatching = enableBatching;
+            MaxPendingWrites = maxPendingWrites;
+            FlushInterval = maxDuration ?? DefaultFlushInterval;
+            MaxPendingBytes = maxPendingBytes;
+        }
+
+        public BatchWriterSettings(int transferBatchSize)
+        {
+            TransferBatchSize = transferBatchSize;
+
+            EnableBatching = true;
+            MaxPendingWrites = 0;
+            FlushInterval = DefaultFlushInterval;
+            MaxPendingBytes = DefaultMaxPendingBytes;
+        }
+
+        /// <summary>
+        /// Toggle for turning this feature on or off.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to <c>true</c>.
+        /// </remarks>
+        public readonly bool EnableBatching;
+
+        /// <summary>
+        /// The batch size for the endpoint writer. The default value is 1.
+        /// The endpoint writer will send up to this number of messages in a batch.
+        /// </summary>
+        public readonly int TransferBatchSize;
+
+        /// <summary>
+        /// The maximum amount of buffered writes that can be buffered before flushing I/O.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to 30.
+        /// </remarks>
+        public readonly int MaxPendingWrites;
+
+        /// <summary>
+        /// In the event of low-traffic channels, the maximum amount of time we'll wait before flushing writes.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to 40 milliseconds.
+        /// </remarks>
+        public readonly TimeSpan FlushInterval;
+
+        /// <summary>
+        /// The maximum number of outstanding bytes that can be written prior to a flush.
+        /// </summary>
+        /// <remarks>
+        /// Defaults to 16kb.
+        /// </remarks>
+        public readonly long MaxPendingBytes;
     }
 
     #endregion

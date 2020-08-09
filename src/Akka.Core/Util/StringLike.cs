@@ -9,7 +9,7 @@ using System.Text.RegularExpressions;
 
 namespace Akka.Util
 {
-    using System.Text;
+    using CuteAnt.Text;
 
     /// <summary>
     /// TBD
@@ -27,7 +27,7 @@ namespace Akka.Util
         /// <returns>TBD</returns>
         public static bool Like(this string text, string pattern, bool caseSensitive = false)
         {
-            var sb = new StringBuilder("^");
+            var sb = StringBuilderCache.Acquire().Append("^");
             for (int index = 0; index < pattern.Length; index++)
             {
                 var c = pattern[index];
@@ -60,7 +60,7 @@ namespace Akka.Util
                 }
             }
 
-            pattern = sb.Append('$').ToString();
+            pattern = StringBuilderCache.GetStringAndRelease(sb.Append('$'));
             return new Regex(pattern, caseSensitive ? RegexOptions.None : RegexOptions.IgnoreCase).IsMatch(text);
         }
 

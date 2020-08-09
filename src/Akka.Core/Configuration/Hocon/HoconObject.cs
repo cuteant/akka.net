@@ -8,10 +8,10 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Runtime.Serialization;
-//using Newtonsoft.Json;
 using System.Text.RegularExpressions;
+using CuteAnt.Text;
+//using Newtonsoft.Json;
 
 namespace Akka.Configuration.Hocon
 {
@@ -157,15 +157,15 @@ namespace Akka.Configuration.Hocon
         /// <returns>A HOCON string representation of this element.</returns>
         public string ToString(int indent)
         {
-            var i = new string(' ', indent*2);
-            var sb = new StringBuilder();
+            var i = new string(' ', indent * 2);
+            var sb = StringBuilderCache.Acquire();
             foreach (var kvp in Items)
             {
-                if (kvp.Value.AdoptedFromFallback) continue;
+                if (kvp.Value.AdoptedFromFallback) { continue; }
                 string key = QuoteIfNeeded(kvp.Key);
                 sb.AppendFormat("{0}{1} : {2}\r\n", i, key, kvp.Value.ToString(indent));
             }
-            return sb.ToString();
+            return StringBuilderCache.GetStringAndRelease(sb);
         }
 
         private string QuoteIfNeeded(string text)

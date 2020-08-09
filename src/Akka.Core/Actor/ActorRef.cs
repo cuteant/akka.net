@@ -64,41 +64,29 @@ namespace Akka.Actor
     }
 
     /// <summary>
-    /// TBD
+    /// INTERNAL API.
+    /// 
+    /// ActorRef implementation used for one-off tasks.
     /// </summary>
     public class FutureActorRef : MinimalActorRef
     {
         private readonly TaskCompletionSource<object> _result;
-        private readonly bool _tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable;
         private readonly Action _unregister;
         private readonly ActorPath _path;
 
         /// <summary>
-        /// TBD
+        /// INTERNAL API
         /// </summary>
         /// <param name="result">TBD</param>
         /// <param name="unregister">TBD</param>
         /// <param name="path">TBD</param>
         public FutureActorRef(TaskCompletionSource<object> result, Action unregister, ActorPath path)
-            : this(result, unregister, path, false)
-        {
-        }
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <param name="result">TBD</param>
-        /// <param name="unregister">TBD</param>
-        /// <param name="path">TBD</param>
-        /// <param name="tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable">TBD</param>
-        public FutureActorRef(TaskCompletionSource<object> result, Action unregister, ActorPath path, bool tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable)
         {
             if (ActorCell.Current != null)
             {
                 _actorAwaitingResultSender = ActorCell.Current.Sender;
             }
             _result = result;
-            _tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable = tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable;
             _unregister = unregister;
             _path = path;
             _result.Task.LinkOutcome(InvokeUnRegisterAction, this);
@@ -146,10 +134,7 @@ namespace Akka.Actor
             {
                 if (Interlocked.Exchange(ref status, COMPLETED) == INITIATED)
                 {
-                    if (_tcsWasCreatedWithRunContinuationsAsynchronouslyAvailable)
-                        _result.TrySetResult(message);
-                    else
-                        Task.Run(() => _result.TrySetResult(message));
+                    _result.TrySetResult(message);
                 }
             }
         }
@@ -186,7 +171,7 @@ namespace Akka.Actor
     /// If you receive a reference to an actor, that actor is guaranteed to have existed at some point
     /// in the past. However, an actor can always be terminated in the future.
     /// 
-    /// If you want to be notified about an actor terminating, call <see cref="ICanWatch.Watch"/>
+    /// If you want to be notified about an actor terminating, call <see cref="ICanWatch.Watch(IActorRef)">IActorContext.Watch</see>
     /// on this actor and you'll receive a <see cref="Terminated"/> message when the actor dies or if it
     /// is already dead.
     /// </summary>

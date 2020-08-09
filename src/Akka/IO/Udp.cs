@@ -502,8 +502,8 @@ namespace Akka.IO
         public UdpExt(ExtendedActorSystem system, UdpSettings settings)
         {
             var bufferPoolConfig = system.Settings.Config.GetConfig(settings.BufferPoolConfigPath);
-            if (bufferPoolConfig == null)
-                throw new ArgumentNullException(nameof(settings), $"Couldn't find a HOCON config for `{settings.BufferPoolConfigPath}`");
+            if (bufferPoolConfig.IsNullOrEmpty())
+                throw new ConfigurationException($"Cannot retrieve UDP buffer pool configuration: {settings.BufferPoolConfigPath} configuration node not found");
 
             Setting = settings;
             BufferPool = CreateBufferPool(system, bufferPoolConfig);
@@ -533,7 +533,10 @@ namespace Akka.IO
 
         private IBufferPool CreateBufferPool(ExtendedActorSystem system, Config config)
         {
-            var type = TypeUtils.ResolveType(config.GetString("class"));//, true);
+            if (config.IsNullOrEmpty())
+                throw ConfigurationException.NullOrEmptyConfig<IBufferPool>();
+
+            var type = TypeUtils.ResolveType(config.GetString("class", null));//, true);
 
             if (!typeof(IBufferPool).IsAssignableFrom(type))
                 throw new ArgumentException($"Buffer pool of type {type} doesn't implement {nameof(IBufferPool)} interface");

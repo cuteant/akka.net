@@ -489,7 +489,27 @@ namespace Akka
             throw GetException();
             ConfigurationException GetException()
             {
-                return new ConfigurationException($"Could not resolve executor service configurator type {executor} for path {config.GetString("id")}");
+                return new ConfigurationException($"Could not resolve executor service configurator type {executor} for path {config.GetString("id", "unknown")}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Invalid_phase_configuration()
+        {
+            throw GetException();
+            static ConfigurationException GetException()
+            {
+                return new ConfigurationException("Invalid phase configuration.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Akka_Coordinated_Shutdown_Config_Cannot_Be_Empty()
+        {
+            throw GetException();
+            static ConfigurationException GetException()
+            {
+                return new ConfigurationException("akka.coordinated-shutdown config cannot be empty");
             }
         }
 
@@ -591,6 +611,16 @@ namespace Akka
             ConfigurationException GetException()
             {
                 return new ConfigurationException($"Dispatcher [{props2.Dispatcher}] not configured for path {path}");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowConfigurationException_Cannot_retrieve_mailbox_type_from_config(string path)
+        {
+            throw GetException();
+            ConfigurationException GetException()
+            {
+                return new ConfigurationException($"Cannot retrieve mailbox type from config: {path} configuration node not found");
             }
         }
 

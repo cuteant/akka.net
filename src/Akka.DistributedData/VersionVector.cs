@@ -96,7 +96,7 @@ namespace Akka.DistributedData
         }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj is VersionVector versionVector && Equals(versionVector);
+        public override bool Equals(object obj) => obj is VersionVector vector && Equals(vector);
 
         /// <summary>
         /// Returns true if this VersionVector has the same history
@@ -309,7 +309,13 @@ namespace Akka.DistributedData
 
         public override string ToString() => $"VersionVector({Node}->{Version})";
 
-        public override int GetHashCode() => Node.GetHashCode() ^ Version.GetHashCode();
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                return (int)(Node.GetHashCode() ^ Version);
+            }
+        }
     }
 
     public sealed class MultiVersionVector : VersionVector
@@ -380,6 +386,18 @@ namespace Akka.DistributedData
             $"VersionVector({string.Join(";", Versions.Select(kv => $"({kv.Key}->{kv.Value})"))})";
 
         /// <inheritdoc/>
-        public override int GetHashCode() => Versions.GetHashCode();
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var seed = 17;
+                foreach (var v in Versions)
+                {
+                    seed *= (int)(v.Key.GetHashCode() ^ v.Value);
+                }
+
+                return seed;
+            }
+        }
     }
 }

@@ -23,7 +23,7 @@ namespace Akka.Util.Internal
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="self">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static T AsInstanceOf<T>(this object self)
         {
             return (T)self;
@@ -36,7 +36,7 @@ namespace Akka.Util.Internal
         /// <param name="self">TBD</param>
         /// <param name="count">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static IEnumerable<T> Drop<T>(this IEnumerable<T> self, int count)
         {
             return self.Skip(count);
@@ -48,7 +48,7 @@ namespace Akka.Util.Internal
         /// <typeparam name="T">TBD</typeparam>
         /// <param name="self">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static T Head<T>(this IEnumerable<T> self)
         {
             return self.FirstOrDefault();
@@ -91,7 +91,7 @@ namespace Akka.Util.Internal
         /// <param name="self">TBD</param>
         /// <param name="separator">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static string Join(this IEnumerable<string> self, string separator)
         {
             return string.Join(separator, self);
@@ -102,7 +102,7 @@ namespace Akka.Util.Internal
         /// </summary>
         /// <param name="self">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static string BetweenDoubleQuotes(this string self)
         {
             return @"""" + self + @"""";
@@ -152,7 +152,7 @@ namespace Akka.Util.Internal
         /// <param name="key">TBD</param>
         /// <param name="value">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static IDictionary<TKey, TValue> AddAndReturn<TKey, TValue>(this IDictionary<TKey, TValue> hash, TKey key, TValue value)
         {
             hash.AddOrSet(key, value);
@@ -165,7 +165,7 @@ namespace Akka.Util.Internal
         /// <param name="this">TBD</param>
         /// <param name="other">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static TimeSpan Max(this TimeSpan @this, TimeSpan other)
         {
             return @this > other ? @this : other;
@@ -177,7 +177,7 @@ namespace Akka.Util.Internal
         /// <param name="this">TBD</param>
         /// <param name="other">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static TimeSpan Min(this TimeSpan @this, TimeSpan other)
         {
             return @this < other ? @this : other;
@@ -190,7 +190,7 @@ namespace Akka.Util.Internal
         /// <param name="enumerable">TBD</param>
         /// <param name="item">TBD</param>
         /// <returns>TBD</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static IEnumerable<T> Concat<T>(this IEnumerable<T> enumerable, T item)
         {
             var itemInArray = new[] { item };

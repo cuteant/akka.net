@@ -21,11 +21,21 @@ namespace Akka.DistributedData
     public delegate long Clock<in T>(long currentTimestamp, T value);
 
     /// <summary>
-    /// TBD
+    /// INTERNAL API
+    /// 
+    /// Marker interface for serialization
+    /// </summary>
+    internal interface ILWWRegisterKey
+    {
+        Type RegisterType { get; }
+    }
+
+    /// <summary>
+    /// Key types for <see cref="LWWRegister{T}"/>
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
     [Serializable]
-    public sealed class LWWRegisterKey<T> : Key<LWWRegister<T>>
+    public sealed class LWWRegisterKey<T> : Key<LWWRegister<T>>, ILWWRegisterKey
     {
         /// <summary>
         /// TBD
@@ -34,6 +44,18 @@ namespace Akka.DistributedData
         public LWWRegisterKey(string id) : base(id)
         {
         }
+
+        public Type RegisterType { get; } = typeof(T);
+    }
+
+    /// <summary>
+    /// INTERNAL API
+    /// 
+    /// Marker interface for serialization
+    /// </summary>
+    internal interface ILWWRegister
+    {
+        Type RegisterType { get; }
     }
 
     /// <summary>
@@ -59,7 +81,7 @@ namespace Akka.DistributedData
     /// This class is immutable, i.e. "modifying" methods return a new instance.
     /// </summary>
     /// <typeparam name="T">TBD</typeparam>
-    public sealed partial class LWWRegister<T> : IReplicatedData<LWWRegister<T>>, IReplicatedDataSerialization, IEquatable<LWWRegister<T>>
+    public sealed partial class LWWRegister<T> : IReplicatedData<LWWRegister<T>>, IReplicatedDataSerialization, IEquatable<LWWRegister<T>>, ILWWRegister
     {
         /// <summary>
         /// Default clock is using max between DateTime.UtcNow.Ticks and current timestamp + 1.
@@ -191,5 +213,7 @@ namespace Akka.DistributedData
 
         /// <inheritdoc/>
         public override string ToString() => $"LWWRegister(value={Value}, timestamp={Timestamp}, updatedBy={UpdatedBy})";
+
+        public Type RegisterType { get; } = typeof(T);
     }
 }

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.Persistence.EventStore.Tests</RootNamespace>
     <AssemblyName>Akka.Persistence.EventStore.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

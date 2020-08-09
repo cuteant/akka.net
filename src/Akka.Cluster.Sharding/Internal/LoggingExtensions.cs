@@ -15,6 +15,12 @@ namespace Akka.Cluster.Sharding
     internal static class ClusterShardingLoggingExtensions
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void StashingWhileWaitingForDdatashardInitialState(this ILoggingAdapter logger)
+        {
+            logger.Debug("Stashing while waiting for DDataShard initial state");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void TheCoordinatorShardsStateWasSuccessfullyUpdatedWith(this ILoggingAdapter logger, string newShard)
         {
             logger.Debug("The coordinator shards state was successfully updated with {0}", newShard);
@@ -411,9 +417,9 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void IdleEntitiesWillBePassivatedAfter(this ILoggingAdapter logger, TimeSpan passivateIdleEntityAfter)
+        internal static void IdleEntitiesWillBePassivatedAfter(this ILoggingAdapter logger, string typeName, TimeSpan passivateIdleEntityAfter)
         {
-            logger.Info($"Idle entities will be passivated after [{passivateIdleEntityAfter}]");
+            logger.Info($"{typeName}: Idle entities will be passivated after [{passivateIdleEntityAfter}]");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

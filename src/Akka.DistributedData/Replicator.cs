@@ -18,6 +18,7 @@ using System.Security.Cryptography;
 using Akka.DistributedData.Durable;
 using Akka.Event;
 using CuteAnt;
+using Gossip = Akka.DistributedData.Internal.Gossip;
 using Status = Akka.DistributedData.Internal.Status;
 
 namespace Akka.DistributedData
@@ -288,6 +289,8 @@ namespace Akka.DistributedData
         /// </summary>
         private ImmutableHashSet<Address> _nodes = ImmutableHashSet<Address>.Empty;
 
+        private ImmutableHashSet<Address> AllNodes => _nodes.Union(_weaklyUpNodes);
+
         /// <summary>
         /// Cluster weaklyUp nodes, doesn't contain selfAddress
         /// </summary>
@@ -297,8 +300,11 @@ namespace Akka.DistributedData
         private ImmutableDictionary<UniqueAddress, long> _pruningPerformed = ImmutableDictionary<UniqueAddress, long>.Empty;
         private ImmutableHashSet<UniqueAddress> _tombstonedNodes = ImmutableHashSet<UniqueAddress>.Empty;
 
-        private Address _leader = null;
-        private bool IsLeader => _leader != null && _leader == _selfAddress;
+        /// <summary>
+        /// All nodes sorted with the leader first
+        /// </summary>
+        private ImmutableSortedSet<Member> _leader = ImmutableSortedSet<Member>.Empty.WithComparer(Member.LeaderStatusOrdering);
+        private bool IsLeader => !_leader.IsEmpty && _leader.First().Address == _selfAddress;
 
         /// <summary>
         /// For pruning timeouts are based on clock that is only increased when all nodes are reachable.
@@ -310,7 +316,7 @@ namespace Akka.DistributedData
         /// <summary>
         /// The actual data.
         /// </summary>
-        private ImmutableDictionary<string, Tuple<DataEnvelope, byte[]>> _dataEntries = ImmutableDictionary<string, Tuple<DataEnvelope, byte[]>>.Empty;
+        private ImmutableDictionary<string, (DataEnvelope envelope, byte[] digest)> _dataEntries = ImmutableDictionary<string, (DataEnvelope, byte[])>.Empty;
 
         /// <summary>
         /// Keys that have changed, Changed event published to subscribers on FlushChanges
@@ -405,11 +411,9 @@ namespace Akka.DistributedData
         {
             if (_hasDurableKeys) _durableStore.Tell(LoadAll.Instance);
 
-            var leaderChangedClass = _settings.Role != null
-                ? typeof(ClusterEvent.RoleLeaderChanged)
-                : typeof(ClusterEvent.LeaderChanged);
+            // not using LeaderChanged/RoleLeaderChanged because here we need one node independent of data center
             _cluster.Subscribe(Self, ClusterEvent.SubscriptionInitialStateMode.InitialStateAsEvents,
-                typeof(ClusterEvent.IMemberEvent), typeof(ClusterEvent.IReachabilityEvent), leaderChangedClass);
+                typeof(ClusterEvent.IMemberEvent), typeof(ClusterEvent.IReachabilityEvent));
         }
 
         protected override void PostStop()
@@ -508,11 +512,9 @@ namespace Akka.DistributedData
             Receive<ClusterEvent.MemberWeaklyUp>(ReceiveMemberWeaklyUp);
             Receive<ClusterEvent.MemberUp>(ReceiveMemberUp);
             Receive<ClusterEvent.MemberRemoved>(ReceiveMemberRemoved);
-            Receive<ClusterEvent.IMemberEvent>(PatternMatch<ClusterEvent.IMemberEvent>.EmptyAction);
+            Receive<ClusterEvent.IMemberEvent>(m => ReceiveOtherMemberEvent(m.Member));
             Receive<ClusterEvent.UnreachableMember>(ReceiveUnreachable);
             Receive<ClusterEvent.ReachableMember>(ReceiveReachable);
-            Receive<ClusterEvent.LeaderChanged>(HandleLeaderChanged);
-            Receive<ClusterEvent.RoleLeaderChanged>(HandleRoleLeaderChanged);
             Receive<GetKeyIds>(ReceiveGetKeyIds);
             Receive<Delete>(ReceiveDelete);
             Receive<RemovedNodePruningTick>(ReceiveRemovedNodePruningTick);
@@ -524,7 +526,7 @@ namespace Akka.DistributedData
             if (_log.IsDebugEnabled) _log.Debug("ignoring message [{0}] when loading durable data", typeof(T));
         }
 
-        private void Ignore<T>(T msg) { }
+        private static void Ignore<T>(T msg) { }
 
         private void ReceiveGet(Get g)
         {
@@ -621,7 +623,7 @@ namespace Akka.DistributedData
 
                 // note that it's important to do deltaPropagationSelector.update before setData,
                 // so that the latest delta version is used
-                DataEnvelope newEnvelope = SetData(key.Id, envelope);
+                var newEnvelope = SetData(key.Id, envelope);
 
                 var durable = IsDurable(key.Id);
                 if (IsLocalUpdate(consistency))
@@ -640,7 +642,7 @@ namespace Akka.DistributedData
                 {
                     DataEnvelope writeEnvelope;
                     Delta writeDelta;
-                    if (delta == null || delta == DeltaPropagation.NoDeltaPlaceholder)
+                    if (delta == null || Equals(delta, DeltaPropagation.NoDeltaPlaceholder))
                     {
                         writeEnvelope = newEnvelope;
                         writeDelta = null;
@@ -722,7 +724,10 @@ namespace Akka.DistributedData
             var envelope = GetData(key);
             if (envelope != null)
             {
-                if (ReferenceEquals(envelope, writeEnvelope)) return writeEnvelope;
+                if (envelope.Equals(writeEnvelope))
+                {
+                    return envelope;
+                }
                 if (envelope.Data is DeletedData) return DeletedEnvelope; // already deleted
 
                 try
@@ -741,7 +746,9 @@ namespace Akka.DistributedData
             {
                 // no existing data for the key
                 if (writeEnvelope.Data is IReplicatedDelta withDelta)
+                {
                     writeEnvelope = writeEnvelope.WithData(withDelta.Zero.MergeDelta(withDelta));
+                }
 
                 return SetData(key, writeEnvelope.AddSeen(_selfAddress));
             }
@@ -756,7 +763,7 @@ namespace Akka.DistributedData
         private void ReceiveGetKeyIds(GetKeyIds ids)
         {
             var keys = _dataEntries
-                .Where(kvp => !(kvp.Value.Item1.Data is DeletedData))
+                .Where(kvp => !(kvp.Value.envelope.Data is DeletedData))
                 .Select(x => x.Key)
                 .ToImmutableHashSet(StringComparer.Ordinal);
             Sender.Tell(new GetKeysIdsResult(keys));
@@ -829,7 +836,7 @@ namespace Akka.DistributedData
             else if (newEnvelope.Data is DeletedData) digest = DeletedDigest;
             else digest = LazyDigest;
 
-            _dataEntries = _dataEntries.SetItem(key, Tuple.Create(newEnvelope, digest));
+            _dataEntries = _dataEntries.SetItem(key, (newEnvelope, digest));
             if (newEnvelope.Data is DeletedData)
             {
                 _deltaPropagationSelector.Delete(key);
@@ -840,18 +847,20 @@ namespace Akka.DistributedData
 
         private byte[] GetDigest(string key)
         {
-            var contained = _dataEntries.TryGetValue(key, out Tuple<DataEnvelope, byte[]> value);
+            var contained = _dataEntries.TryGetValue(key, out var value);
             if (contained)
             {
-                if (Equals(value.Item2, LazyDigest))
+                if (value.digest == LazyDigest)
                 {
-                    var digest = Digest(value.Item1);
-                    _dataEntries = _dataEntries.SetItem(key, Tuple.Create(value.Item1, digest));
+                    var digest = Digest(value.envelope);
+                    _dataEntries = _dataEntries.SetItem(key, (value.envelope, digest));
                     return digest;
                 }
-                else return value.Item2;
+
+                return value.digest;
             }
-            else return NotFoundDigest;
+
+            return NotFoundDigest;
         }
 
         private byte[] Digest(DataEnvelope envelope)
@@ -865,24 +874,19 @@ namespace Akka.DistributedData
 
         private DataEnvelope GetData(string key)
         {
-            return !_dataEntries.TryGetValue(key, out var value) ? null : value.Item1;
+            return !_dataEntries.TryGetValue(key, out var value) ? null : value.envelope;
         }
 
         private long GetDeltaSequenceNr(string key, UniqueAddress from)
         {
-            return _dataEntries.TryGetValue(key, out var tuple) ? tuple.Item1.DeltaVersions.VersionAt(@from) : 0L;
+            return _dataEntries.TryGetValue(key, out var tuple) ? tuple.envelope.DeltaVersions.VersionAt(@from) : 0L;
         }
 
         private bool IsNodeRemoved(UniqueAddress node, IEnumerable<string> keys)
         {
             if (_removedNodes.ContainsKey(node)) return true;
 
-            return keys.Any(key =>
-            {
-                return _dataEntries.TryGetValue(key, out var tuple)
-                    ? tuple.Item1.Pruning.ContainsKey(node)
-                    : false;
-            });
+            return keys.Any(key => _dataEntries.TryGetValue(key, out var tuple) && tuple.envelope.Pruning.ContainsKey(node));
         }
 
         private void Notify(string keyId, HashSet<IActorRef> subs)
@@ -906,7 +910,9 @@ namespace Akka.DistributedData
                 foreach (var key in _changed)
                 {
                     if (_subscribers.TryGetValue(key, out var subs))
+                    {
                         Notify(key, subs);
+                    }
                 }
             }
 
@@ -940,7 +946,10 @@ namespace Akka.DistributedData
                 var deltaPropagation = entry.Value;
 
                 // TODO split it to several DeltaPropagation if too many entries
-                if (!deltaPropagation.Deltas.IsEmpty) Replica(node).Tell(deltaPropagation);
+                if (!deltaPropagation.Deltas.IsEmpty)
+                {
+                    Replica(node).Tell(deltaPropagation);
+                }
             }
 
             if (_deltaPropagationSelector.PropagationCount % _deltaPropagationSelector.GossipInternalDivisor == 0)
@@ -1009,7 +1018,7 @@ namespace Akka.DistributedData
 
         private void ReceiveGossipTick(GossipTick gossipTick)
         {
-            var node = SelectRandomNode(_nodes.Union(_weaklyUpNodes));
+            var node = SelectRandomNode(AllNodes);
             if (node != null)
             {
                 GossipTo(node);
@@ -1021,7 +1030,8 @@ namespace Akka.DistributedData
             var to = Replica(address);
             if (_dataEntries.Count <= _settings.MaxDeltaElements)
             {
-                var status = new Internal.Status(_dataEntries.Select(x => new KeyValuePair<string, byte[]>(x.Key, GetDigest(x.Key))).ToImmutableDictionary(StringComparer.Ordinal), chunk: 0, totalChunks: 1);
+                var status = new Internal.Status(_dataEntries
+                    .ToImmutableDictionary(x => x.Key, y => GetDigest(y.Key)), chunk: 0, totalChunks: 1);
                 to.Tell(status);
             }
             else
@@ -1039,9 +1049,8 @@ namespace Akka.DistributedData
                         _statusTotChunks = totChunks;
                     }
                     var chunk = (int)(_statusCount % totChunks);
-                    var entries = _dataEntries.Where(x => Math.Abs(MurmurHash.StringHash(x.Key)) % totChunks == chunk)
-                        .Select(x => new KeyValuePair<string, byte[]>(x.Key, GetDigest(x.Key)))
-                        .ToImmutableDictionary(StringComparer.Ordinal);
+                    var entries = _dataEntries.Where(x => Math.Abs(MurmurHash.StringHash(x.Key) % totChunks) == chunk)
+                        .ToImmutableDictionary(x => x.Key, y => GetDigest(y.Key), StringComparer.Ordinal);
                     var status = new Internal.Status(entries, chunk, totChunks);
                     to.Tell(status);
                 }
@@ -1064,9 +1073,7 @@ namespace Akka.DistributedData
         private bool IsOtherDifferent(string key, byte[] otherDigest)
         {
             var d = GetDigest(key);
-            var isFound = !Equals(d, NotFoundDigest);
-            var isEqualToOther = Equals(d, otherDigest);
-            return isFound && !isEqualToOther;
+            return d != NotFoundDigest && d != otherDigest;
         }
 
         private void ReceiveStatus(Internal.Status s)
@@ -1092,7 +1099,7 @@ namespace Akka.DistributedData
             var otherKeys = otherDigests.Keys.ToImmutableHashSet(StringComparer.Ordinal);
             var myKeys = (totChunks == 1
                     ? _dataEntries.Keys
-                    : _dataEntries.Keys.Where(x => Math.Abs(MurmurHash.StringHash(x)) % totChunks == chunk))
+                    : _dataEntries.Keys.Where(x => Math.Abs(MurmurHash.StringHash(x) % totChunks) == chunk))
                 .ToImmutableHashSet(StringComparer.Ordinal);
 
             var otherMissingKeys = myKeys.Except(otherKeys);
@@ -1106,7 +1113,7 @@ namespace Akka.DistributedData
             {
                 if (_log.IsDebugEnabled) { _log.SendingGossipTo(Sender, keys); }
 
-                var g = new Gossip(keys.Select(k => new KeyValuePair<string, DataEnvelope>(k, GetData(k))).ToImmutableDictionary(StringComparer.Ordinal), !otherDifferentKeys.IsEmpty);
+                var g = new Gossip(keys.ToImmutableDictionary(x => x, _ => GetData(_), StringComparer.Ordinal), !otherDifferentKeys.IsEmpty);
                 Sender.Tell(g);
             }
 
@@ -1116,7 +1123,7 @@ namespace Akka.DistributedData
                 var log = Context.System.Log;
                 if (log.IsDebugEnabled) { log.SendingGossipStatusTo(Sender, myMissingKeys); }
 
-                var status = new Internal.Status(myMissingKeys.Select(x => new KeyValuePair<string, byte[]>(x, NotFoundDigest)).ToImmutableDictionary(StringComparer.Ordinal), chunk, totChunks);
+                var status = new Internal.Status(myMissingKeys.ToImmutableDictionary(x => x, _ => NotFoundDigest, StringComparer.Ordinal), chunk, totChunks);
                 Sender.Tell(status);
             }
         }
@@ -1236,10 +1243,14 @@ namespace Akka.DistributedData
         private void ReceiveMemberUp(ClusterEvent.MemberUp up)
         {
             var m = up.Member;
-            if (MatchingRole(m) && m.Address != _selfAddress)
+            if (MatchingRole(m))
             {
-                _nodes = _nodes.Add(m.Address);
-                _weaklyUpNodes = _weaklyUpNodes.Remove(m.Address);
+                _leader = _leader.Add(m);
+                if (m.Address != _selfAddress)
+                {
+                    _nodes = _nodes.Add(m.Address);
+                    _weaklyUpNodes = _weaklyUpNodes.Remove(m.Address);
+                }
             }
         }
 
@@ -1249,9 +1260,13 @@ namespace Akka.DistributedData
             if (m.Address == _selfAddress) { Context.Stop(Self); }
             else if (MatchingRole(m))
             {
+                if (_log.IsDebugEnabled) _log.AddingRemovedNodeFromMemberRemoved(m);
+
+                // filter, it's possible that the ordering is changed since it based on MemberStatus
+                _leader = _leader.Where(x => x.Address != m.Address).ToImmutableSortedSet(Member.LeaderStatusOrdering);
+
                 _nodes = _nodes.Remove(m.Address);
                 _weaklyUpNodes = _weaklyUpNodes.Remove(m.Address);
-                if (_log.IsDebugEnabled) _log.AddingRemovedNodeFromMemberRemoved(m);
                 _removedNodes = _removedNodes.SetItem(m.UniqueAddress, _allReachableClockTime);
                 _unreachable = _unreachable.Remove(m.Address);
                 _deltaPropagationSelector.CleanupRemovedNode(m.Address);
@@ -1270,19 +1285,15 @@ namespace Akka.DistributedData
             if (MatchingRole(m)) _unreachable = _unreachable.Remove(m.Address);
         }
 
-        private void HandleLeaderChanged(ClusterEvent.LeaderChanged changed)
+        private void ReceiveOtherMemberEvent(Member m)
         {
-            ReceiveLeaderChanged(changed.Leader, null);
-        }
-
-        private void HandleRoleLeaderChanged(ClusterEvent.RoleLeaderChanged changed)
-        {
-            ReceiveLeaderChanged(changed.Leader, changed.Role);
-        }
-
-        private void ReceiveLeaderChanged(Address leader, string role)
-        {
-            if (role == _settings.Role) _leader = leader;
+            if (MatchingRole(m))
+            {
+                // replace, it's possible that the ordering is changed since it based on MemberStatus
+                _leader = _leader.Where(x => x.UniqueAddress != m.UniqueAddress)
+                    .ToImmutableSortedSet(Member.LeaderStatusOrdering);
+                _leader = _leader.Add(m);
+            }
         }
 
         private void ReceiveClockTick(ClockTick clockTick)
@@ -1311,11 +1322,11 @@ namespace Akka.DistributedData
 
         private void CollectRemovedNodes()
         {
-            var knownNodes = _nodes.Union(_weaklyUpNodes).Union(_removedNodes.Keys.Select(x => x.Address));
+            var knownNodes = AllNodes.Union(_removedNodes.Keys.Select(x => x.Address));
             var newRemovedNodes = new HashSet<UniqueAddress>(UniqueAddressComparer.Instance);
             foreach (var pair in _dataEntries)
             {
-                if (pair.Value.Item1.Data is IRemovedNodePruning removedNodePruning)
+                if (pair.Value.envelope.Data is IRemovedNodePruning removedNodePruning)
                 {
                     newRemovedNodes.UnionWith(removedNodePruning.ModifiedByNodes.Where(n => !(n == _selfUniqueAddress || knownNodes.Contains(n.Address))));
                 }
@@ -1346,7 +1357,7 @@ namespace Akka.DistributedData
                 foreach (var entry in _dataEntries)
                 {
                     var key = entry.Key;
-                    var envelope = entry.Value.Item1;
+                    var envelope = entry.Value.envelope;
 
                     foreach (var removed in removedSet)
                     {
@@ -1379,7 +1390,6 @@ namespace Akka.DistributedData
         private void PerformRemovedNodePruning()
         {
             // perform pruning when all seen Init
-            var allNodes = _nodes.Union(_weaklyUpNodes);
             var prunningPerformed = new PruningPerformed(DateTime.UtcNow + _settings.PruningMarkerTimeToLive);
             var durablePrunningPerformed = new PruningPerformed(DateTime.UtcNow + _settings.DurablePruningMarkerTimeToLive);
 
@@ -1387,20 +1397,19 @@ namespace Akka.DistributedData
             foreach (var entry in _dataEntries)
             {
                 var key = entry.Key;
-                var envelope = entry.Value.Item1;
+                var envelope = entry.Value.envelope;
                 if (envelope.Data is IRemovedNodePruning data)
                 {
                     foreach (var entry2 in envelope.Pruning)
                     {
-                        if (entry2.Value is PruningInitialized init && init.Owner == _selfUniqueAddress && (allNodes.IsEmpty || allNodes.IsSubsetOf(init.Seen)))
+                        if (entry2.Value is PruningInitialized init && init.Owner == _selfUniqueAddress && (AllNodes.IsEmpty || AllNodes.IsSubsetOf(init.Seen)))
                         {
                             var removed = entry2.Key;
                             var isDurable = IsDurable(key);
                             var newEnvelope = envelope.Prune(removed, isDurable ? durablePrunningPerformed : prunningPerformed);
                             if (debugEnabled) _log.PerformPruningOfFromTo(key, removed, _selfUniqueAddress);
                             SetData(key, newEnvelope);
-
-                            if (!ReferenceEquals(newEnvelope.Data, data) && isDurable)
+                            if (!newEnvelope.Data.Equals(data) && isDurable)
                             {
                                 _durableStore.Tell(new Store(key, new DurableDataEnvelope(newEnvelope), null));
                             }
@@ -1416,7 +1425,7 @@ namespace Akka.DistributedData
             foreach (var entry in _dataEntries)
             {
                 var key = entry.Key;
-                var envelope = entry.Value.Item1;
+                var envelope = entry.Value.envelope;
                 if (envelope.Data is IRemovedNodePruning)
                 {
                     var toRemove = envelope.Pruning
@@ -1461,27 +1470,33 @@ namespace Akka.DistributedData
             protected override int MaxDeltaSize => _replicator._maxDeltaSize;
 
             // TODO optimize, by maintaining a sorted instance variable instead
-            protected override ImmutableArray<Address> AllNodes =>
-                _replicator._nodes.Union(_replicator._weaklyUpNodes).Except(_replicator._unreachable).OrderBy(x => x).ToImmutableArray();
+            protected override ImmutableArray<Address> AllNodes
+            {
+                get
+                {
+                    var allNodes = _replicator.AllNodes.Except(_replicator._unreachable).OrderBy(x => x).ToImmutableArray();
+                    return allNodes;
+                }
+            }
 
-            protected override DeltaPropagation CreateDeltaPropagation(ImmutableDictionary<string, Tuple<IReplicatedData, long, long>> deltas)
+            protected override DeltaPropagation CreateDeltaPropagation(ImmutableDictionary<string, (IReplicatedData data, long from, long to)> deltas)
             {
                 // Important to include the pruning state in the deltas. For example if the delta is based
                 // on an entry that has been pruned but that has not yet been performed on the target node.
                 var newDeltas = deltas
-                    .Where(x => !Equals(x.Value.Item1, DeltaPropagation.NoDeltaPlaceholder))
+                    .Where(x => !Equals(x.Value.data, DeltaPropagation.NoDeltaPlaceholder))
                     .Select(x =>
                     {
                         var key = x.Key;
-                        var t = x.Value;
+                        var (data, from, to) = x.Value;
                         var envelope = _replicator.GetData(key);
                         return envelope != null
                             ? new KeyValuePair<string, Delta>(key,
-                                new Delta(envelope.WithData(t.Item1), t.Item2, t.Item3))
+                                new Delta(envelope.WithData(data), from, to))
                             : new KeyValuePair<string, Delta>(key,
-                                new Delta(new DataEnvelope(t.Item1), t.Item2, t.Item3));
+                                new Delta(new DataEnvelope(data), from, to));
                     })
-                    .ToImmutableDictionary(StringComparer.Ordinal);
+                    .ToImmutableDictionary();
 
                 return new DeltaPropagation(_replicator._selfUniqueAddress, shouldReply: false, deltas: newDeltas);
             }

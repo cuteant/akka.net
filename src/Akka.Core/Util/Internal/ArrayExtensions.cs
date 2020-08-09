@@ -25,7 +25,7 @@ namespace Akka.Util.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsNullOrEmpty(this Array obj)
         {
-            return (obj == null || 0u >= (uint)obj.Length) ? true : false;
+            return obj is null || 0u >= (uint)obj.Length;
         }
 
         /// <summary>
@@ -36,7 +36,7 @@ namespace Akka.Util.Internal
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool NonEmpty(this Array obj)
         {
-            return (obj != null && 0u < (uint)obj.Length) ? true : false;
+            return obj is object && 0u < (uint)obj.Length;
         }
 
         /// <summary>

@@ -9,7 +9,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <Content Include="App.config" />
     <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
   </ItemGroup>
 

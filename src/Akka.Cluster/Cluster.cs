@@ -606,7 +606,7 @@ namespace Akka.Cluster
             /// <param name="arg1">The argument that fills in the template placeholder.</param>
             internal void LogInfo(string template, object arg1)
             {
-                if (_settings.LogInfo) { _log.Info($"Cluster Node [{_selfAddress}] - " + template, arg1); }
+                if (_settings.LogInfo) { _log.Info("Cluster Node [{1}] - " + template, arg1, _selfAddress); }
             }
 
             /// <summary>
@@ -617,7 +617,7 @@ namespace Akka.Cluster
             /// <param name="arg2">The second argument that fills in the corresponding template placeholder.</param>
             internal void LogInfo(string template, object arg1, object arg2)
             {
-                if (_settings.LogInfo) { _log.Info($"Cluster Node [{_selfAddress}] - " + template, arg1, arg2); }
+                if (_settings.LogInfo) { _log.Info("Cluster Node [{2}] - " + template, arg1, arg2, _selfAddress); }
             }
         }
 

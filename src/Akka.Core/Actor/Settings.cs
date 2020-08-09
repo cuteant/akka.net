@@ -31,8 +31,7 @@ namespace Akka.Actor
             Config = _userConfig.SafeWithFallback(_fallbackConfig);
 
             //if we get a new config definition loaded after all ActorRefProviders have been started, such as Akka.Persistence...
-            if(System != null && System.Dispatchers != null)
-                System.Dispatchers.ReloadPrerequisites(new DefaultDispatcherPrerequisites(System.EventStream, System.Scheduler, this, System.Mailboxes));
+            System?.Dispatchers?.ReloadPrerequisites(new DefaultDispatcherPrerequisites(System.EventStream, System.Scheduler, this, System.Mailboxes));
             if (System is Internal.ISupportSerializationConfigReload rs)
                 rs.ReloadSerialization();
         }
@@ -62,60 +61,62 @@ namespace Akka.Actor
             RebuildConfig();
 
             System = system;
-            
-            ConfigVersion = Config.GetString("akka.version");
-            ProviderClass = GetProviderClass(Config.GetString("akka.actor.provider"));
+
+            ConfigVersion = Config.GetString("akka.version", null);
+            ProviderClass = GetProviderClass(Config.GetString("akka.actor.provider", null));
             var providerType = TypeUtil.ResolveType(ProviderClass);
             if (providerType == null)
                 throw new ConfigurationException($"'akka.actor.provider' is not a valid type name : '{ProviderClass}'");
             if (!typeof(IActorRefProvider).IsAssignableFrom(providerType))
                 throw new ConfigurationException($"'akka.actor.provider' is not a valid actor ref provider: '{ProviderClass}'");
-            
-            SupervisorStrategyClass = Config.GetString("akka.actor.guardian-supervisor-strategy");
 
-            AskTimeout = Config.GetTimeSpan("akka.actor.ask-timeout", allowInfinite: true);
-            CreationTimeout = Config.GetTimeSpan("akka.actor.creation-timeout");
-            UnstartedPushTimeout = Config.GetTimeSpan("akka.actor.unstarted-push-timeout");
+            SupervisorStrategyClass = Config.GetString("akka.actor.guardian-supervisor-strategy", null);
 
-            SerializeAllMessages = Config.GetBoolean("akka.actor.serialize-messages");
-            SerializeAllCreators = Config.GetBoolean("akka.actor.serialize-creators");
+            AskTimeout = Config.GetTimeSpan("akka.actor.ask-timeout", null, allowInfinite: true);
+            CreationTimeout = Config.GetTimeSpan("akka.actor.creation-timeout", null);
+            UnstartedPushTimeout = Config.GetTimeSpan("akka.actor.unstarted-push-timeout", null);
 
-            LogLevel = Config.GetString("akka.loglevel");
-            StdoutLogLevel = Config.GetString("akka.stdout-loglevel");
-            Loggers = Config.GetStringList("akka.loggers");
-            LoggersDispatcher = Config.GetString("akka.loggers-dispatcher");
-            LoggerStartTimeout = Config.GetTimeSpan("akka.logger-startup-timeout");
+            SerializeAllMessages = Config.GetBoolean("akka.actor.serialize-messages", false);
+            SerializeAllCreators = Config.GetBoolean("akka.actor.serialize-creators", false);
+
+            LogLevel = Config.GetString("akka.loglevel", null);
+            StdoutLogLevel = Config.GetString("akka.stdout-loglevel", null);
+            Loggers = Config.GetStringList("akka.loggers", new string[] { });
+            LoggersDispatcher = Config.GetString("akka.loggers-dispatcher", null);
+            LoggerStartTimeout = Config.GetTimeSpan("akka.logger-startup-timeout", null);
 
             //handled
-            LogConfigOnStart = Config.GetBoolean("akka.log-config-on-start");
+            LogConfigOnStart = Config.GetBoolean("akka.log-config-on-start", false);
             LogDeadLetters = 0;
-            switch (Config.GetString("akka.log-dead-letters"))
+            switch (Config.GetString("akka.log-dead-letters", null))
             {
                 case "on":
                 case "true":
+                case "yes":
                     LogDeadLetters = int.MaxValue;
                     break;
                 case "off":
                 case "false":
+                case "no":
                     LogDeadLetters = 0;
                     break;
                 default:
-                    LogDeadLetters = Config.GetInt("akka.log-dead-letters");
+                    LogDeadLetters = Config.GetInt("akka.log-dead-letters", 0);
                     break;
             }
-            LogDeadLettersDuringShutdown = Config.GetBoolean("akka.log-dead-letters-during-shutdown");
-            AddLoggingReceive = Config.GetBoolean("akka.actor.debug.receive");
-            DebugAutoReceive = Config.GetBoolean("akka.actor.debug.autoreceive");
-            DebugLifecycle = Config.GetBoolean("akka.actor.debug.lifecycle");
-            FsmDebugEvent = Config.GetBoolean("akka.actor.debug.fsm");
-            DebugEventStream = Config.GetBoolean("akka.actor.debug.event-stream");
-            DebugUnhandledMessage = Config.GetBoolean("akka.actor.debug.unhandled");
-            DebugRouterMisconfiguration = Config.GetBoolean("akka.actor.debug.router-misconfiguration");
-            Home = Config.GetString("akka.home") ?? "";
-            DefaultVirtualNodesFactor = Config.GetInt("akka.actor.deployment.default.virtual-nodes-factor");
+            LogDeadLettersDuringShutdown = Config.GetBoolean("akka.log-dead-letters-during-shutdown", false);
+            AddLoggingReceive = Config.GetBoolean("akka.actor.debug.receive", false);
+            DebugAutoReceive = Config.GetBoolean("akka.actor.debug.autoreceive", false);
+            DebugLifecycle = Config.GetBoolean("akka.actor.debug.lifecycle", false);
+            FsmDebugEvent = Config.GetBoolean("akka.actor.debug.fsm", false);
+            DebugEventStream = Config.GetBoolean("akka.actor.debug.event-stream", false);
+            DebugUnhandledMessage = Config.GetBoolean("akka.actor.debug.unhandled", false);
+            DebugRouterMisconfiguration = Config.GetBoolean("akka.actor.debug.router-misconfiguration", false);
+            Home = Config.GetString("akka.home", "");
+            DefaultVirtualNodesFactor = Config.GetInt("akka.actor.deployment.default.virtual-nodes-factor", 0);
 
-            SchedulerClass = Config.GetString("akka.scheduler.implementation");
-            SchedulerShutdownTimeout = Config.GetTimeSpan("akka.scheduler.shutdown-timeout");
+            SchedulerClass = Config.GetString("akka.scheduler.implementation", null);
+            SchedulerShutdownTimeout = Config.GetTimeSpan("akka.scheduler.shutdown-timeout", null);
             //TODO: dunno.. we don't have FiniteStateMachines, don't know what the rest is
             /*              
                 final val SchedulerClass: String = getString("akka.scheduler.implementation")

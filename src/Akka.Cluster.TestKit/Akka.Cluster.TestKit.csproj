@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.Cluster.TestKit</RootNamespace>
     <AssemblyName>Akka.Cluster.TestKit</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

@@ -3,7 +3,7 @@
   <Import Project="..\..\..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Async.Sources\CuteAnt.Extensions.Async.Sources.projitems" Label="Shared" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.Cluster</RootNamespace>
     <AssemblyName>Akka.Cluster</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

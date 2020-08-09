@@ -461,13 +461,13 @@ namespace Akka.Cluster.Sharding
                 .LinkOutcome(Helper<TCoordinator>.AfterAskAllShardRegionStatsFunc, coordinator, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
         }
 
-        private static readonly Func<ShardRegionStats, IActorRef, Tuple<IActorRef, ShardRegionStats>> AfterAskShardRegionStatsFunc = AfterAskShardRegionStats;
-        private static Tuple<IActorRef, ShardRegionStats> AfterAskShardRegionStats(ShardRegionStats result, IActorRef regionActor) => Tuple.Create(regionActor, result);
+        private static readonly Func<ShardRegionStats, IActorRef, (IActorRef, ShardRegionStats)> AfterAskShardRegionStatsFunc = AfterAskShardRegionStats;
+        private static (IActorRef, ShardRegionStats) AfterAskShardRegionStats(ShardRegionStats result, IActorRef regionActor) => (regionActor, result);
 
         sealed class Helper<TCoordinator> where TCoordinator : IShardCoordinator
         {
-            public static readonly Func<Task<Tuple<IActorRef, ShardRegionStats>[]>, TCoordinator, ClusterShardingStats> AfterAskAllShardRegionStatsFunc = AfterAskAllShardRegionStats;
-            private static ClusterShardingStats AfterAskAllShardRegionStats(Task<Tuple<IActorRef, ShardRegionStats>[]> allRegionStats, TCoordinator coordinator)
+            public static readonly Func<Task<(IActorRef, ShardRegionStats)[]>, TCoordinator, ClusterShardingStats> AfterAskAllShardRegionStatsFunc = AfterAskAllShardRegionStats;
+            private static ClusterShardingStats AfterAskAllShardRegionStats(Task<(IActorRef, ShardRegionStats)[]> allRegionStats, TCoordinator coordinator)
             {
                 if (allRegionStats.IsCanceled)
                     return new ClusterShardingStats(ImmutableDictionary<Address, ShardRegionStats>.Empty);
@@ -506,7 +506,7 @@ namespace Akka.Cluster.Sharding
                         if (isDebugEnabled) coordinatorLog.RebalanceShardFrom(shard, rebalanceFromRegion);
 
                         var regions = coordinator.CurrentState.Regions.Keys.Union(coordinator.CurrentState.RegionProxies);
-                        coordinator.Context.ActorOf(RebalanceWorker.Props(shard, rebalanceFromRegion, coordinator.Settings.TunningParameters.HandOffTimeout, regions)
+                        coordinator.Context.ActorOf(RebalanceWorker.Props(shard, rebalanceFromRegion, coordinator.Settings.TunningParameters.HandOffTimeout, regions, coordinator.GracefullShutdownInProgress)
                             .WithDispatcher(coordinator.Context.Props.Dispatcher));
                     }
                     else

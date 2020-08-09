@@ -41,8 +41,8 @@ namespace Akka.Tools.MatchHandler
             //See the end of this file for a description of what kind of code we generate
             var inputParameter = Expression.Parameter(_inputItemType, "input");
             var parametersAndArguments = DecorateHandlerAndPredicateExpressions(arguments, inputParameter);
-            var parameters = parametersAndArguments.Item1;
-            var argumentValues = parametersAndArguments.Item2;
+            var parameters = parametersAndArguments.parameters;
+            var argumentValues = parametersAndArguments.argumentValues;
 
             //Create the return label and the context object
             var returnTarget = Expression.Label(typeof(bool), "return");
@@ -144,7 +144,7 @@ namespace Akka.Tools.MatchHandler
             return new MatchExpressionBuilderResult(lambdaExpression, argumentValues);
         }
 
-        private static Tuple<ParameterExpression[], object[]> DecorateHandlerAndPredicateExpressions(IReadOnlyList<Argument> arguments, ParameterExpression inputParameter)
+        private static (ParameterExpression[] parameters, object[] argumentValues) DecorateHandlerAndPredicateExpressions(IReadOnlyList<Argument> arguments, ParameterExpression inputParameter)
         {
             //Warning: This is using the same algorithm as CreateArgumentValuesArray.
             //         Any updates in this should be made in CreateArgumentValuesArray as well.
@@ -204,7 +204,7 @@ namespace Akka.Tools.MatchHandler
                         argument.PredicateAndHandler.PredicateExpression = expression;
                 }
             }
-            return Tuple.Create(parameters, argumentValues);
+            return (parameters, argumentValues);
         }
 
         /// <summary>

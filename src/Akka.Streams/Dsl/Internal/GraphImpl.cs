@@ -7,7 +7,7 @@
 
 using Akka.Annotations;
 using Akka.Streams.Implementation;
-using Akka.Streams.Util;
+using Akka.Util;
 
 namespace Akka.Streams.Dsl.Internal
 {

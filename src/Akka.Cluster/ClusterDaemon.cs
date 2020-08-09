@@ -987,6 +987,7 @@ namespace Akka.Cluster
         private ImmutableList<Address> _seedNodes;
         private IActorRef _seedNodeProcess;
         private int _seedNodeProcessCounter = 0; //for unique names
+        private Deadline _joinSeedNodesDeadline;
 
         private readonly IActorRef _publisher;
         private int _leaderActionCounter = 0;
@@ -1215,6 +1216,7 @@ namespace Akka.Cluster
                     break;
 
                 case InternalClusterAction.JoinSeedNodes js:
+                    ResetJoinSeedNodesDeadline();
                     JoinSeedNodes(js.SeedNodes);
                     break;
 
@@ -1222,12 +1224,12 @@ namespace Akka.Cluster
                     _publisher.Forward(isub);
                     break;
 
+                case InternalClusterAction.ITick _:
+                    if (_joinSeedNodesDeadline != null && _joinSeedNodesDeadline.IsOverdue) JoinSeedNodesWasUnsuccessful();
+                    break;
+
                 default:
-                    if (ReceiveExitingCompleted(message)) { }
-                    else
-                    {
-                        Unhandled(message);
-                    }
+                    if (!ReceiveExitingCompleted(message)) { Unhandled(message); }
                     break;
             }
         }
@@ -1251,6 +1253,7 @@ namespace Akka.Cluster
                     break;
 
                 case InternalClusterAction.JoinSeedNodes js:
+                    ResetJoinSeedNodesDeadline();
                     BecomeUninitialized();
                     JoinSeedNodes(js.SeedNodes);
                     break;
@@ -1260,7 +1263,11 @@ namespace Akka.Cluster
                     break;
 
                 case InternalClusterAction.ITick _:
-                    if (deadline != null && deadline.IsOverdue)
+                    if (_joinSeedNodesDeadline != null && _joinSeedNodesDeadline.IsOverdue)
+                    {
+                        JoinSeedNodesWasUnsuccessful();
+                    }
+                    else if (deadline != null && deadline.IsOverdue)
                     {
                         // join attempt failed, retry
                         BecomeUninitialized();
@@ -1270,13 +1277,24 @@ namespace Akka.Cluster
                     break;
 
                 default:
-                    if (ReceiveExitingCompleted(message)) { }
-                    else
-                    {
-                        Unhandled(message);
-                    }
+                    if (!ReceiveExitingCompleted(message)) { Unhandled(message); }
                     break;
             }
+        }
+
+        private void ResetJoinSeedNodesDeadline()
+        {
+            _joinSeedNodesDeadline = _cluster.Settings.ShutdownAfterUnsuccessfulJoinSeedNodes != null
+                ? Deadline.Now + _cluster.Settings.ShutdownAfterUnsuccessfulJoinSeedNodes
+                : null;
+        }
+
+        private void JoinSeedNodesWasUnsuccessful()
+        {
+            _log.JoiningOfSeedNodesWasUnsuccessful(_cluster, _seedNodes);
+
+            _joinSeedNodesDeadline = null;
+            _coordShutdown.Run(CoordinatedShutdown.ClusterJoinUnsuccessfulReason.Instance);
         }
 
         private void BecomeUninitialized()

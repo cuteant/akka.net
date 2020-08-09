@@ -5,7 +5,9 @@ using Akka.Annotations;
 using Akka.Pattern;
 using Akka.Streams.Actors;
 using Akka.Streams.Dsl;
+using Akka.Streams.Serialization;
 using Akka.Streams.Stage;
+using Akka.Util;
 
 namespace Akka.Streams.Implementation.StreamRef
 {
@@ -13,7 +15,7 @@ namespace Akka.Streams.Implementation.StreamRef
     /// Abstract class defined serialization purposes of <see cref="SourceRefImpl{T}"/>.
     /// </summary>
     [InternalApi]
-    internal abstract class SourceRefImpl
+    internal abstract class SourceRefImpl : ISurrogated
     {
         public static SourceRefImpl Create(Type eventType, IActorRef initialPartnerRef)
         {
@@ -28,6 +30,7 @@ namespace Akka.Streams.Implementation.StreamRef
 
         public IActorRef InitialPartnerRef { get; }
         public abstract Type EventType { get; }
+        public abstract ISurrogate ToSurrogate(ActorSystem system);
     }
 
     /// <summary>
@@ -40,6 +43,8 @@ namespace Akka.Streams.Implementation.StreamRef
         public override Type EventType => typeof(T);
         public Source<T, NotUsed> Source =>
             Dsl.Source.FromGraph(new SourceRefStageImpl<T>(InitialPartnerRef)).MapMaterializedValue(_ => NotUsed.Instance);
+
+        public override ISurrogate ToSurrogate(ActorSystem system) => SerializationTools.ToSurrogate(this);
     }
 
     /// <summary>
@@ -187,14 +192,14 @@ namespace Akka.Streams.Implementation.StreamRef
                 }
             }
 
-            private void InitialReceive(Tuple<IActorRef, object> args)
+            private void InitialReceive((IActorRef, object) args)
             {
                 var sender = args.Item1;
                 var message = args.Item2;
 
                 switch (message)
                 {
-                    case OnSubscribeHandshake handshake:
+                    case OnSubscribeHandshake _:
                         CancelTimer(SubscriptionTimeoutKey);
                         ObserveAndValidateSender(sender, "Illegal sender in OnSubscribeHandshake");
                         Log.Debug("[{0}] Received handshake {1} from {2}", StageActorName, message, sender);

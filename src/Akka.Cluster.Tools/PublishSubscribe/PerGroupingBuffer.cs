@@ -29,7 +29,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <param name="action">TBD</param>
         public void BufferOr(string grouping, object message, IActorRef originalSender, Action action)
         {
-            if (_buffers.TryGetValue(grouping, out var messages))
+            if (_buffers.TryGetValue(grouping, out _))
             {
                 _buffers[grouping].Add(new KeyValuePair<object, IActorRef>(message, originalSender));
                 _totalBufferSize += 1;

@@ -31,13 +31,16 @@ namespace Akka.TestKit
         /// </exception>
         public TestKitSettings(Config config)
         {
-            _defaultTimeout = config.GetTimeSpan("akka.test.default-timeout", allowInfinite:false);
-            _singleExpectDefault = config.GetTimeSpan("akka.test.single-expect-default", allowInfinite: false);
-            _testEventFilterLeeway = config.GetTimeSpan("akka.test.filter-leeway", allowInfinite: false);
-            _timefactor = config.GetDouble("akka.test.timefactor");
-            _logTestKitCalls = config.GetBoolean("akka.test.testkit.debug");
+            if (config.IsNullOrEmpty())
+                throw ConfigurationException.NullOrEmptyConfig<TestKitSettings>();
 
-            if(_timefactor <= 0)
+            _defaultTimeout = config.GetTimeSpan("akka.test.default-timeout", null, allowInfinite: false);
+            _singleExpectDefault = config.GetTimeSpan("akka.test.single-expect-default", null, allowInfinite: false);
+            _testEventFilterLeeway = config.GetTimeSpan("akka.test.filter-leeway", null, allowInfinite: false);
+            _timefactor = config.GetDouble("akka.test.timefactor", 0);
+            _logTestKitCalls = config.GetBoolean("akka.test.testkit.debug", false);
+
+            if (_timefactor <= 0)
                 throw new ConfigurationException($@"Expected a positive value for ""akka.test.timefactor"" but found {_timefactor}");
         }
 

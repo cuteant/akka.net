@@ -39,7 +39,7 @@ namespace Akka.Event
         {
             switch (message)
             {
-                case InitializeLogger m:
+                case InitializeLogger _:
                     Sender.Tell(new LoggerInitialized());
                     break;
                 case Error m:
@@ -51,7 +51,7 @@ namespace Akka.Event
                 case DeadLetter m:
                     Trace.TraceWarning(string.Format("Deadletter - unable to send message {0} from {1} to {2}", m.Message, m.Sender, m.Sender), typeof(DeadLetter).ToString());
                     break;
-                case UnhandledMessage m:
+                case UnhandledMessage _:
                     Trace.TraceWarning("Unhandled message!");
                     break;
                 default:

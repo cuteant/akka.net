@@ -186,7 +186,7 @@ namespace Akka.Cluster.Tools.Client
         private ImmutableList<IActorRef> _subscribers;
         private readonly ICancelable _heartbeatTask;
         private ICancelable _refreshContactsCancelable;
-        private readonly Queue<Tuple<object, IActorRef>> _buffer;
+        private readonly Queue<(object, IActorRef)> _buffer;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterClient" /> class.
@@ -225,7 +225,7 @@ namespace Akka.Cluster.Tools.Client
             ScheduleRefreshContactsTick(settings.EstablishingGetContactsInterval);
             Self.Tell(RefreshContactsTick.Instance);
 
-            _buffer = new Queue<Tuple<object, IActorRef>>();
+            _buffer = new Queue<(object, IActorRef)>();
         }
 
         private void ScheduleRefreshContactsTick(TimeSpan interval)
@@ -455,7 +455,7 @@ namespace Akka.Cluster.Tools.Client
             {
                 var m = _buffer.Dequeue();
                 if (_log.IsWarningEnabled) { _log.ReceptionistNotAvailableBufferIsFull(m.Item1); }
-                _buffer.Enqueue(Tuple.Create(message, Sender));
+                _buffer.Enqueue((message, Sender));
             }
             else
             {
@@ -463,7 +463,7 @@ namespace Akka.Cluster.Tools.Client
                 {
                     _log.ReceptionistNotAvailableBufferingMessageType(message);
                 }
-                _buffer.Enqueue(Tuple.Create(message, Sender));
+                _buffer.Enqueue((message, Sender));
             }
         }
 

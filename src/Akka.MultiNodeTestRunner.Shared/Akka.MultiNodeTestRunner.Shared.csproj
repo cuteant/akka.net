@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.MultiNodeTestRunner.Shared</RootNamespace>
     <AssemblyName>Akka.MultiNodeTestRunner.Shared</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

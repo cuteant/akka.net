@@ -45,8 +45,8 @@ namespace Akka.Persistence
             if (PersistenceId == null) ThrowHelper.ThrowArgumentNullException_Eventsourced(Self);
 
             // Fail fast on missing plugins.
-            var j = Journal;
-            var s = SnapshotStore;
+            _ = Journal;
+            _ = SnapshotStore;
             RequestRecoveryPermit();
             base.AroundPreStart();
         }

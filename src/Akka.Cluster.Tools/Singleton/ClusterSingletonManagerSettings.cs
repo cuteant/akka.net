@@ -28,7 +28,10 @@ namespace Akka.Cluster.Tools.Singleton
             system.Settings.InjectTopLevelFallback(ClusterSingletonManager.DefaultConfig());
 
             var config = system.Settings.Config.GetConfig("akka.cluster.singleton");
-            if (config == null) ThrowHelper.ThrowConfigurationException_CannotInitializeClusterSingletonManagerSettings();
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<ClusterSingletonManagerSettings>("akka.cluster.singleton");
+            }
 
             return Create(config).WithRemovalMargin(Cluster.Get(system).DowningProvider.DownRemovalMargin);
         }
@@ -40,6 +43,11 @@ namespace Akka.Cluster.Tools.Singleton
         /// <returns>The requested settings.</returns>
         public static ClusterSingletonManagerSettings Create(Config config)
         {
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<ClusterSingletonManagerSettings>();
+            }
+
             return new ClusterSingletonManagerSettings(
                 singletonName: config.GetString("singleton-name"),
                 role: RoleOption(config.GetString("role")),

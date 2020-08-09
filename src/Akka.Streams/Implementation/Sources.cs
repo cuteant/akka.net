@@ -552,13 +552,13 @@ namespace Akka.Streams.Implementation
     {
         #region Logic
 
-        private sealed class Logic : OutGraphStageLogic, IHandle<Either<Option<TOut>, Exception>>, IHandle<Tuple<Action, Task>>
+        private sealed class Logic : OutGraphStageLogic, IHandle<Either<Option<TOut>, Exception>>, IHandle<(Action, Task)>
         {
             private readonly UnfoldResourceSourceAsync<TOut, TSource> _source;
             private readonly Lazy<Decider> _decider;
             private TaskCompletionSource<TSource> _resource;
             private IHandle<Either<Option<TOut>, Exception>> _createdCallback;
-            private IHandle<Tuple<Action, Task>> _closeCallback;
+            private IHandle<(Action, Task)> _closeCallback;
             private bool _open;
 
             public Logic(UnfoldResourceSourceAsync<TOut, TSource> source, Attributes inheritedAttributes) : base(source.Shape)
@@ -616,7 +616,7 @@ namespace Akka.Streams.Implementation
 
                 _createdCallback = GetAsyncCallback<Either<Option<TOut>, Exception>>(this);
 
-                _closeCallback = GetAsyncCallback<Tuple<Action, Task>>(this);
+                _closeCallback = GetAsyncCallback<(Action, Task)>(this);
             }
 
             void IHandle<Either<Option<TOut>, Exception>>.Handle(Either<Option<TOut>, Exception> either) // CreatedHandler
@@ -633,7 +633,7 @@ namespace Akka.Streams.Implementation
                     ErrorHandler(either.ToRight().Value);
             }
 
-            void IHandle<Tuple<Action, Task>>.Handle(Tuple<Action, Task> t) // CloseHandler
+            void IHandle<(Action, Task)>.Handle((Action, Task) t) // CloseHandler
             {
                 if (t.Item2.IsSuccessfully())
                 {
@@ -731,7 +731,7 @@ namespace Akka.Streams.Implementation
                 {
                     try
                     {
-                        _source._close(source).ContinueWith(t => _closeCallback.Handle(Tuple.Create(action, t)));
+                        _source._close(source).ContinueWith(t => _closeCallback.Handle((action, t)));
                     }
                     catch (Exception ex)
                     {

@@ -1,21 +1,29 @@
-﻿//-----------------------------------------------------------------------
-// <copyright file="UnquotedString.cs" company="Hocon Project">
-//     Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
-//     Copyright (C) 2013-2018 .NET Foundation <https://github.com/akkadotnet/hocon>
+﻿// -----------------------------------------------------------------------
+// <copyright file="UnquotedString.cs" company="Akka.NET Project">
+//      Copyright (C) 2013 - 2020 .NET Foundation <https://github.com/akkadotnet/hocon>
 // </copyright>
-//-----------------------------------------------------------------------
+// -----------------------------------------------------------------------
 
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
 
 namespace Hocon.Tests
 {
     public class UnquotedString
     {
+        /*
+         * FACT:
+         * As long as simple values are separated only by non-newline whitespace, 
+         * the whitespace between them is preserved and the values, along with the whitespace, 
+         * are concatenated into a string.
+         */
+        [Fact]
+        public void ShouldPreserveWhitespacesInTheMiddle()
+        {
+            var hocon = $"a = literal{Whitespace.Whitespaces}value";
+            var config = HoconParser.Parse(hocon);
+
+            Assert.Equal($"literal{Whitespace.Whitespaces}value", config.GetString("a"));
+        }
         /*
          * From: String value concatenation.
          */
@@ -28,7 +36,7 @@ namespace Hocon.Tests
         public void ShouldRemoveAllLeadingWhitespace()
         {
             var hocon = $"a = {Whitespace.Whitespaces}literal value";
-            var config = Parser.Parse(hocon);
+            var config = HoconParser.Parse(hocon);
 
             Assert.Equal("literal value", config.GetString("a"));
         }
@@ -37,24 +45,9 @@ namespace Hocon.Tests
         public void ShouldRemoveAllTrailingWhitespace()
         {
             var hocon = $"a = literal value{Whitespace.Whitespaces}";
-            var config = Parser.Parse(hocon);
+            var config = HoconParser.Parse(hocon);
 
             Assert.Equal("literal value", config.GetString("a"));
-        }
-
-        /*
-         * FACT:
-         * As long as simple values are separated only by non-newline whitespace, 
-         * the whitespace between them is preserved and the values, along with the whitespace, 
-         * are concatenated into a string.
-         */
-        [Fact]
-        public void ShouldPreserveWhitespacesInTheMiddle()
-        {
-            var hocon = $"a = literal{Whitespace.Whitespaces}value";
-            var config = Parser.Parse(hocon);
-
-            Assert.Equal($"literal{Whitespace.Whitespaces}value", config.GetString("a"));
         }
     }
 }

@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 
 namespace Akka.IO
@@ -61,21 +62,27 @@ namespace Akka.IO
 
         protected override bool Receive(object message)
         {
-            var b = message as Udp.Bind;
-            if (b != null)
+            if (message is Udp.Bind b)
             {
                 var commander = Sender;
                 Context.ActorOf(Props.Create(() => new UdpListener(_udp, commander, b)));
                 return true;
             }
-            var s = message as Udp.SimpleSender;
-            if (s != null)
+            if (message is Udp.SimpleSender s)
             {
                 var commander = Sender;
                 Context.ActorOf(Props.Create(() => new UdpSender(_udp, commander, s.Options)));
                 return true;
             }
-            throw new ArgumentException("The supplied message type is invalid. Only Bind and SimpleSender messages are supported.");
+            throw GetArgumentException(message);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static ArgumentException GetArgumentException(object message)
+        {
+            return new ArgumentException($"The supplied message of type {message.GetType().Name} is invalid. Only Connect and Bind messages are supported. " +
+                                        $"If you are going to manage your connection state, you need to communicate with Tcp.Connected sender actor. " +
+                                        $"See more here: https://getakka.net/articles/networking/io.html");
         }
     }
 }

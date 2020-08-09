@@ -14,6 +14,7 @@ using Akka.Dispatch;
 using Akka.Event;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt;
 
 namespace Akka.Routing
 {
@@ -118,7 +119,7 @@ namespace Akka.Routing
 
         private readonly AtomicReference<Tuple<Routee[], ConsistentHash<ConsistentRoutee>>> _consistentHashRef =
             new AtomicReference<Tuple<Routee[], ConsistentHash<ConsistentRoutee>>>(
-                Tuple.Create<Routee[], ConsistentHash<ConsistentRoutee>>(null, null));
+                (Tuple.Create<Routee[], ConsistentHash<ConsistentRoutee>>(null, null)));
 
         private readonly Address _selfAddress;
         private readonly int _vnodes;
@@ -336,6 +337,7 @@ namespace Akka.Routing
             false)
         { }
 
+        // TODO: do we need to check for null or empty config here?
         /// <summary>
         /// Initializes a new instance of the <see cref="ConsistentHashingPool"/> class.
         /// 
@@ -346,13 +348,13 @@ namespace Akka.Routing
         /// <param name="config">The configuration used to configure the pool.</param>
         public ConsistentHashingPool(Config config)
             : this(
-                  nrOfInstances: config.GetInt("nr-of-instances"),
+                  nrOfInstances: config.GetInt("nr-of-instances", 0),
                   resizer: Resizer.FromConfig(config),
                   supervisorStrategy: Pool.DefaultSupervisorStrategy,
                   routerDispatcher: Dispatchers.DefaultDispatcherId,
                   usePoolDispatcher: config.HasPath("pool-dispatcher"))
         {
-            VirtualNodesFactor = config.GetInt("virtual-nodes-factor");
+            VirtualNodesFactor = config.GetInt("virtual-nodes-factor", 0);
         }
 
         /// <summary>
@@ -606,6 +608,7 @@ namespace Akka.Routing
     {
         private readonly ConsistentHashMapping _hashMapping;
 
+        // TODO: do we need to check for null or empty config here?
         /// <summary>
         /// Initializes a new instance of the <see cref="ConsistentHashingGroup"/> class.
         /// </summary>
@@ -618,7 +621,7 @@ namespace Akka.Routing
         /// </note>
         /// </param>
         public ConsistentHashingGroup(Config config)
-            : this(config.GetStringList("routees.paths"))
+            : this(config.GetStringList("routees.paths", EmptyArray<string>.Instance))
         {
             VirtualNodesFactor = config.GetInt("virtual-nodes-factor", 0);
         }

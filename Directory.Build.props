@@ -23,7 +23,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <ExamplesTargetFramework>netcoreapp3.1</ExamplesTargetFramework>
     <SignAssembly>True</SignAssembly>
     <AssemblyOriginatorKeyFile>$(SourceRoot)/build/StrongKey.snk</AssemblyOriginatorKeyFile>
   </PropertyGroup>
@@ -31,16 +30,22 @@
   <PropertyGroup>
     <CoreBenchmarkTfms>netcoreapp3.1</CoreBenchmarkTfms>
     <StandardBenchmarkTfms Condition=" '$(OS)' == 'Windows_NT' ">$(CoreBenchmarkTfms);net48</StandardBenchmarkTfms>
+
     <DeveloperBuildTestTfms>netcoreapp3.1;netcoreapp2.1</DeveloperBuildTestTfms>
-    <StandardTestTfms>$(DeveloperBuildTestTfms)</StandardTestTfms>
-    <StandardTestTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardTestTfms);net471;net452</StandardTestTfms>
-    <Core20TestTfms>$(StandardTestTfms)</Core20TestTfms>
+    <ClusterTestTfms>$(DeveloperBuildTestTfms)</ClusterTestTfms>
+    <ClusterTestTfms Condition=" '$(OS)' == 'Windows_NT' ">$(ClusterTestTfms);net471</ClusterTestTfms>
+    <StandardTestTfms>$(ClusterTestTfms)</StandardTestTfms>
+    <StandardTestTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardTestTfms);net452</StandardTestTfms>
+
     <DeveloperBuildTfms>netstandard2.1;netstandard2.0</DeveloperBuildTfms>
-    <StandardDevTfms>$(DeveloperBuildTfms)</StandardDevTfms>
-    <Net471DevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardDevTfms);net471</Net471DevTfms>
-    <StandardDevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardDevTfms);net471;net451</StandardDevTfms>
-    <Core21DevTfms>$(StandardDevTfms);netcoreapp2.1</Core21DevTfms>
-    <Core31DevTfms>$(Core21DevTfms);netcoreapp3.1</Core31DevTfms>
+    <ClusterDevTfms>$(DeveloperBuildTfms)</ClusterDevTfms>
+    <ClusterDevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(ClusterDevTfms);net471</ClusterDevTfms>
+    <ClusterCore31DevTfms>$(ClusterDevTfms);netcoreapp3.1</ClusterCore31DevTfms>
+    <ClusterCore21DevTfms>$(ClusterCore31DevTfms);netcoreapp2.1</ClusterCore21DevTfms>
+    <StandardDevTfms>$(ClusterDevTfms)</StandardDevTfms>
+    <StandardDevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardDevTfms);net451</StandardDevTfms>
+    <StandardCore31DevTfms>$(StandardDevTfms);netcoreapp3.1</StandardCore31DevTfms>
+    <StandardCore21DevTfms>$(StandardCore31DevTfms);netcoreapp2.1</StandardCore21DevTfms>
   </PropertyGroup>
 
   <!-- Common compile parameters -->

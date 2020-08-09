@@ -25,7 +25,7 @@ namespace Akka.Actor
 
         private object _currentMessage;
         private Select? _currentSelect;
-        private Tuple<TimeSpan, ICancelable> _currentDeadline;
+        private (TimeSpan, ICancelable)? _currentDeadline;
 
         private readonly int _size;
         private readonly ILoggingAdapter _log = Context.GetLogger();
@@ -48,7 +48,7 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         /// <param name="query">TBD</param>
-        public void EnqueueQuery(IQuery query)
+        private void EnqueueQuery(IQuery query)
         {
             var q = query.WithClient(Sender);
             _clients.Enqueue(q);
@@ -59,7 +59,7 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         /// <param name="message">TBD</param>
-        public void EnqueueMessage(object message)
+        private void EnqueueMessage(object message)
         {
             if (_messages.Count < _size)
             {
@@ -81,7 +81,7 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="query">TBD</param>
         /// <returns>TBD</returns>
-        public bool ClientPredicate(IQuery query)
+        private bool ClientPredicate(IQuery query)
         {
             if(query is Select select)
                 return select.Predicate(_currentMessage);
@@ -95,7 +95,7 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="message">TBD</param>
         /// <returns>TBD</returns>
-        public bool MessagePredicate(object message)
+        private bool MessagePredicate(object message)
         {
             if (_currentSelect.HasValue)
                 return _currentSelect.Value.Predicate(message);
@@ -188,11 +188,11 @@ namespace Akka.Actor
                     break;
             }
 
-            if (_clients.Count == 0)
+            if (0u >= (uint)_clients.Count)
             {
                 if (_currentDeadline != null)
                 {
-                    _currentDeadline.Item2.Cancel();
+                    _currentDeadline.Value.Item2.Cancel();
                     _currentDeadline = null;
                 }
             }
@@ -203,7 +203,7 @@ namespace Akka.Actor
                 {
                     if (_currentDeadline != null)
                     {
-                        _currentDeadline.Item2.Cancel();
+                        _currentDeadline.Value.Item2.Cancel();
                         _currentDeadline = null;
                     }
 
@@ -212,7 +212,7 @@ namespace Akka.Actor
                     if (delay > TimeSpan.Zero)
                     {
                         var cancelable = Context.System.Scheduler.ScheduleTellOnceCancelable(delay, Self, new Kick(), Self);
-                        _currentDeadline = Tuple.Create(next.Deadline, cancelable);
+                        _currentDeadline = (next.Deadline, cancelable);
                     }
                     else
                     {

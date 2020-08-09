@@ -65,7 +65,7 @@ namespace Akka.Persistence.Serialization
         private static readonly CachedReadConcurrentDictionary<Type, CtorInvoker<object>> s_ctorInvokerCache =
             new CachedReadConcurrentDictionary<Type, CtorInvoker<object>>(DictionaryCacheConstants.SIZE_SMALL);
 
-        private object GetPersistentFSMSnapshot(Type type, byte[] bytes)
+        private object GetPersistentFSMSnapshot(Type type, in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<PersistentFSMSnapshot>(bytes, s_defaultResolver);
 

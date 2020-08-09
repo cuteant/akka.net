@@ -1741,7 +1741,7 @@ namespace Akka.Streams.Stage
                 var actorMaterializer = ActorMaterializerHelper.Downcast(Interpreter.Materializer);
                 _stageActor = new StageActor(
                     actorMaterializer,
-                    r => GetAsyncCallback<Tuple<IActorRef, object>>(r),
+                    r => GetAsyncCallback<(IActorRef, object)>(r),
                     receive,
                     StageActorName);
             }
@@ -2481,23 +2481,23 @@ namespace Akka.Streams.Stage
 
     public static class StageActorRef
     {
-        public delegate void Receive(Tuple<IActorRef, object> args);
+        public delegate void Receive((IActorRef, object) args);
     }
 
     /// <summary>
     /// Minimal actor to work with other actors and watch them in a synchronous ways.
     /// </summary>
-    public sealed class StageActor : IHandle<Tuple<IActorRef, object>>, IHandle<IActorRef, object>
+    public sealed class StageActor : IHandle<(IActorRef, object)>, IHandle<IActorRef, object>
     {
         private readonly ActorMaterializer _materializer;
-        private readonly IHandle<Tuple<IActorRef, object>> _callback;
+        private readonly IHandle<(IActorRef, object)> _callback;
         private readonly ActorCell _cell;
         private readonly FunctionRef _functionRef;
         private StageActorRef.Receive _behavior;
 
         public StageActor(
             ActorMaterializer materializer,
-            Func<IHandle<Tuple<IActorRef, object>>, IHandle<Tuple<IActorRef, object>>> getAsyncCallback,
+            Func<IHandle<(IActorRef, object)>, IHandle<(IActorRef, object)>> getAsyncCallback,
             StageActorRef.Receive initialReceive,
             string name = null)
         {
@@ -2524,7 +2524,7 @@ namespace Akka.Streams.Stage
                     _materializer.Logger.Warning("{0} message sent to StageActor({1}) will be ignored, since it is not a real Actor. " +
                                                 "Use a custom message type to communicate with it instead.", message, _functionRef.Path);
                     break;
-                default: _callback.Handle(Tuple.Create(sender, message)); break;
+                default: _callback.Handle((sender, message)); break;
             }
         }
 
@@ -2560,7 +2560,7 @@ namespace Akka.Streams.Stage
         /// <param name="actorRef"></param>
         public void Unwatch(IActorRef actorRef) => _functionRef.Unwatch(actorRef);
 
-        void IHandle<Tuple<IActorRef, object>>.Handle(Tuple<IActorRef, object> pack)
+        void IHandle<(IActorRef, object)>.Handle((IActorRef, object) pack)
         {
             if (pack.Item2 is Terminated terminated)
             {

@@ -135,7 +135,7 @@ namespace Akka.Cluster.Tools.Client.Serialization
             return MessagePackSerializer.Serialize(protoMessage, s_defaultResolver);
         }
 
-        private static ClusterReceptionist.Contacts ContactsFromBinary(byte[] binary)
+        private static ClusterReceptionist.Contacts ContactsFromBinary(in ReadOnlySpan<byte> binary)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.Contacts>(binary, s_defaultResolver);
             return new ClusterReceptionist.Contacts(proto.ContactPoints.ToImmutableList());

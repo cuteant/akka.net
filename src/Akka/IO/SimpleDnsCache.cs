@@ -90,6 +90,7 @@ namespace Akka.IO
             private readonly SortedSet<ExpiryEntry> _queue;
             private readonly Dictionary<string, CacheEntry> _cache;
             private readonly Func<long> _clock;
+            private readonly object _queueCleanupLock = new object();
 
             public Cache(SortedSet<ExpiryEntry> queue, Dictionary<string, CacheEntry> cache, Func<long> clock)
             {
@@ -121,15 +122,18 @@ namespace Akka.IO
 
             public Cache Cleanup()
             {
-                var now = _clock();
-                while (_queue.Count > 0 && !_queue.First().IsValid(now))
+                lock (_queueCleanupLock)
                 {
-                    var minEntry = _queue.First();
-                    var name = minEntry.Name;
-                    _queue.Remove(minEntry);
+                    var now = _clock();
+                    while (_queue.Count > 0 && !_queue.First().IsValid(now))
+                    {
+                        var minEntry = _queue.First();
+                        var name = minEntry.Name;
+                        _queue.Remove(minEntry);
 
-                    if (_cache.TryGetValue(name, out var cacheEntry) && !cacheEntry.IsValid(now))
-                        _cache.Remove(name);
+                        if (_cache.TryGetValue(name, out var cacheEntry) && !cacheEntry.IsValid(now))
+                            _cache.Remove(name);
+                    }
                 }
                 return new Cache(new SortedSet<ExpiryEntry>(), new Dictionary<string, CacheEntry>(_cache, StringComparer.Ordinal), _clock);
             }

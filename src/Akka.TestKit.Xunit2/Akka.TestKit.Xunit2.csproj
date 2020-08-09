@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(Core20TestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.TestKit.Xunit2</RootNamespace>
     <AssemblyName>Akka.TestKit.Xunit2</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

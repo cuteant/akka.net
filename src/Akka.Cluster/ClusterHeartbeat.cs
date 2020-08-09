@@ -56,6 +56,9 @@ namespace Akka.Cluster
         private ClusterHeartbeatSenderState _state;
         private readonly ICancelable _heartbeatTask;
 
+        // used for logging warning if actual tick interval is unexpected (e.g. due to starvation)
+        private DateTime _tickTimestamp;
+
         private PatternMatchBuilder _activePatterns;
 
         /// <summary>
@@ -64,6 +67,8 @@ namespace Akka.Cluster
         public ClusterHeartbeatSender()
         {
             _cluster = Cluster.Get(Context.System);
+            var tickInitialDelay = _cluster.Settings.PeriodicTasksInitialDelay.Max(_cluster.Settings.HeartbeatInterval);
+            _tickTimestamp = DateTime.UtcNow + tickInitialDelay;
 
             // the failureDetector is only updated by this actor, but read from other places
             _failureDetector = _cluster.FailureDetector;
@@ -81,7 +86,7 @@ namespace Akka.Cluster
 
             // start periodic heartbeat to other nodes in cluster
             _heartbeatTask = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(
-                _cluster.Settings.PeriodicTasksInitialDelay.Max(_cluster.Settings.HeartbeatInterval),
+                tickInitialDelay,
                 _cluster.Settings.HeartbeatInterval,
                 Self,
                 new HeartbeatTick(),
@@ -122,7 +127,10 @@ namespace Akka.Cluster
         private void Initializing()
         {
             Receive<ClusterEvent.CurrentClusterState>(HandleCurrentClusterState);
-            Receive<HeartbeatTick>(PatternMatch<HeartbeatTick>.EmptyAction); //do nothing
+            Receive<HeartbeatTick>(tick =>
+            {
+                _tickTimestamp = DateTime.UtcNow; // start checks when active
+            }); //do nothing
         }
 
         private void HandleCurrentClusterState(ClusterEvent.CurrentClusterState state)
@@ -211,6 +219,20 @@ namespace Akka.Cluster
                 }
                 HeartbeatReceiver(to.Address).Tell(_selfHeartbeat);
             }
+
+            CheckTickInterval();
+        }
+
+        private void CheckTickInterval()
+        {
+            var now = DateTime.UtcNow;
+            var doubleHeartbeatInterval = _cluster.Settings.HeartbeatInterval + _cluster.Settings.HeartbeatInterval;
+            if (now - _tickTimestamp >= doubleHeartbeatInterval)
+            {
+                _log.ClusterNodeScheduledSendingOfHeartbeatWasDelayed(_cluster, _tickTimestamp);
+            }
+
+            _tickTimestamp = DateTime.UtcNow;
         }
 
         private void DoHeartbeatRsp(HeartbeatRsp rsp)
@@ -590,11 +612,11 @@ namespace Akka.Cluster
                 // The reason for not limiting it to strictly monitoredByNrOfMembers is that the leader must
                 // be able to continue its duties (e.g. removal of downed nodes) when many nodes are shutdown
                 // at the same time and nobody in the remaining cluster is monitoring some of the shutdown nodes.
-                Tuple<int, ImmutableSortedSet<UniqueAddress>> take(int n, IEnumerator<UniqueAddress> iter, ImmutableSortedSet<UniqueAddress> acc)
+                (int, ImmutableSortedSet<UniqueAddress>) take(int n, IEnumerator<UniqueAddress> iter, ImmutableSortedSet<UniqueAddress> acc)
                 {
                     if (iter.MoveNext() == false || n == 0)
                     {
-                        return Tuple.Create(n, acc);
+                        return (n, acc);
                     }
                     else
                     {

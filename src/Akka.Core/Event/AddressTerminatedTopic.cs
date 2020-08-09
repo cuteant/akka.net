@@ -6,8 +6,8 @@
 //-----------------------------------------------------------------------
 
 using System.Collections.Generic;
+using System.Linq;
 using Akka.Actor;
-using Akka.Util;
 
 namespace Akka.Event
 {
@@ -35,7 +35,7 @@ namespace Akka.Event
     /// </summary>
     internal sealed class AddressTerminatedTopic : IExtension
     {
-        private readonly AtomicReference<HashSet<IActorRef>> _subscribers = new AtomicReference<HashSet<IActorRef>>(new HashSet<IActorRef>(ActorRefComparer.Instance));
+        private readonly HashSet<IActorRef> _subscribers = new HashSet<IActorRef>(ActorRefComparer.Instance);
 
         /// <summary>
         /// Retrieves the extension from the specified actor system.
@@ -53,12 +53,9 @@ namespace Akka.Event
         /// <param name="subscriber">The actor that is registering for notifications.</param>
         public void Subscribe(IActorRef subscriber)
         {
-            while (true)
+            lock (_subscribers)
             {
-                var current = _subscribers;
-                if (!_subscribers.CompareAndSet(current, new HashSet<IActorRef>(current.Value, ActorRefComparer.Instance) {subscriber}))
-                    continue;
-                break;
+                _subscribers.Add(subscriber);
             }
         }
 
@@ -68,14 +65,9 @@ namespace Akka.Event
         /// <param name="subscriber">The actor that is unregistering for notifications.</param>
         public void Unsubscribe(IActorRef subscriber)
         {
-            while (true)
+            lock (_subscribers)
             {
-                var current = _subscribers;
-                var newSet = new HashSet<IActorRef>(_subscribers.Value, ActorRefComparer.Instance);
-                newSet.Remove(subscriber);
-                if (!_subscribers.CompareAndSet(current, newSet))
-                    continue;
-                break;
+                _subscribers.Remove(subscriber);
             }
         }
 
@@ -85,7 +77,13 @@ namespace Akka.Event
         /// <param name="msg">The message that is sent to all subscribers.</param>
         public void Publish(AddressTerminated msg)
         {
-            foreach (var subscriber in _subscribers.Value)
+            List<IActorRef> subscribers;
+            lock (_subscribers)
+            {
+                subscribers = _subscribers.ToList();
+            }
+
+            foreach (var subscriber in subscribers)
             {
                 subscriber.Tell(msg, ActorRefs.NoSender);
             }

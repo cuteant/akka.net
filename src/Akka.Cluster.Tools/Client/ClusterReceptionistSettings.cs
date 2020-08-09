@@ -27,9 +27,9 @@ namespace Akka.Cluster.Tools.Client
             system.Settings.InjectTopLevelFallback(ClusterClientReceptionist.DefaultConfig());
 
             var config = system.Settings.Config.GetConfig("akka.cluster.client.receptionist");
-            if (config == null)
+            if (config.IsNullOrEmpty())
             {
-                ThrowHelper.ThrowArgumentException_ActorSystemDoesnotHave_AkkaClusterClientReceptionist_Config(system);
+                throw ConfigurationException.NullOrEmptyConfig<ClusterReceptionistSettings>("akka.cluster.client.receptionist");
             }
 
             return Create(config);
@@ -42,7 +42,12 @@ namespace Akka.Cluster.Tools.Client
         /// <returns>TBD</returns>
         public static ClusterReceptionistSettings Create(Config config)
         {
-            var role = config.GetString("role");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<ClusterReceptionistSettings>();
+            }
+
+            var role = config.GetString("role", null);
             if (string.IsNullOrEmpty(role)) role = null;
 
             return new ClusterReceptionistSettings(

@@ -15,15 +15,15 @@ namespace Akka.DistributedData
     internal static class DistributedDataLoggingExtensions
     {
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void RemainingDoneWhen(this ILoggingAdapter logger, int count, int done)
+        internal static void WriteAcksRemainingDoneWhen(this ILoggingAdapter logger, int count, int done)
         {
-            logger.Debug("remaining: {0}, done when: {1}", count, done);
+            logger.Debug("write acks remaining: {0}, done when: {1}", count, done);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void RemainingDoneWhenCurrentState(this ILoggingAdapter logger, int count, int done, DataEnvelope result)
+        internal static void ReadAcksRemainingDoneWhenCurrentState(this ILoggingAdapter logger, int count, int done, DataEnvelope result)
         {
-            logger.Debug("remaining: {0}, done when: {1}, current state: {2}", count, done, result);
+            logger.Debug("read acks remaining: {0}, done when: {1}, current state: {2}", count, done, result);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

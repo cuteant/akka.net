@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 
 namespace Akka.Persistence
@@ -58,12 +59,12 @@ namespace Akka.Persistence
         }
 
         private readonly Receive _recoveryBehaviorFunc;
-        bool RecoveryBehavior(object message)
+        private bool RecoveryBehavior(object message)
         {
             //Receive receiveRecover = ReceiveRecover;
             switch (message)
             {
-                case IPersistentRepresentation pp when (IsRecovering):
+                case IPersistentRepresentation pp when IsRecovering:
                     return ReceiveRecover(pp.Payload);
                 case SnapshotOffer snapshotOffer:
                     return ReceiveRecover(snapshotOffer);
@@ -122,12 +123,10 @@ namespace Akka.Persistence
                             }
                             ReturnRecoveryPermit();
                             break;
-                        case RecoveryTick tick when (tick.Snapshot):
+                        case RecoveryTick tick when tick.Snapshot:
                             try
                             {
-                                OnRecoveryFailure(
-                                    new RecoveryTimedOutException(
-                                        $"Recovery timed out, didn't get snapshot within {timeout.TotalSeconds}s."));
+                                OnRecoveryFailure(GetRecoveryTimedOutException(timeout));
                             }
                             finally
                             {
@@ -148,6 +147,13 @@ namespace Akka.Persistence
             }
 
             return new EventsourcedState("recovery started - replay max: " + maxReplays, s_trueIsRecoveryRunning, LocalStateReceive);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static RecoveryTimedOutException GetRecoveryTimedOutException(TimeSpan timeout)
+        {
+            return new RecoveryTimedOutException(
+                $"Recovery timed out, didn't get snapshot within {timeout.TotalSeconds}s.");
         }
 
         /// <summary>
@@ -229,9 +235,7 @@ namespace Akka.Persistence
                                 timeoutCancelable.Cancel();
                                 try
                                 {
-                                    OnRecoveryFailure(
-                                        new RecoveryTimedOutException(
-                                            $"Recovery timed out, didn't get event within {timeout.TotalSeconds}s, highest sequence number seen {LastSequenceNr}."));
+                                    OnRecoveryFailure(GetRecoveryTimedOutException(timeout, LastSequenceNr));
                                 }
                                 finally
                                 {
@@ -257,6 +261,13 @@ namespace Akka.Persistence
             }
 
             return new EventsourcedState("replay started", () => recoveryRunning, LocalStateReceive);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static RecoveryTimedOutException GetRecoveryTimedOutException(TimeSpan timeout, long lastSequenceNr)
+        {
+            return new RecoveryTimedOutException(
+                $"Recovery timed out, didn't get event within {timeout.TotalSeconds}s, highest sequence number seen {lastSequenceNr}.");
         }
 
         private void ReturnRecoveryPermit() =>

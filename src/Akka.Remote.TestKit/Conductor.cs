@@ -282,7 +282,7 @@ namespace Akka.Remote.TestKit
             {
                 fsm.Tell(new Controller.ClientDisconnected(new RoleName(null)));
                 IActorRef removedActor;
-                _clients.TryRemove(channel, out removedActor);
+                _clients.TryRemove(channel, out _);
             }
         }
 

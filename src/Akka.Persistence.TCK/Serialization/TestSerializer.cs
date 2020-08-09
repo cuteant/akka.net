@@ -97,7 +97,7 @@ namespace Akka.Persistence.TCK.Serialization
         {
             switch (o)
             {
-                case TestPayload tp:
+                case TestPayload _:
                     return "A";
                 default:
                     return null;

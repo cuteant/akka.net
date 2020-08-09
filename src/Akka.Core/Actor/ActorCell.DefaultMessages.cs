@@ -84,10 +84,8 @@ namespace Akka.Actor
             }
             finally
             {
-                if (influenceReceiveTimeout)
-                {
-                    CheckReceiveTimeout(); // Reschedule receive timeout
-                }
+                // Schedule or reschedule receive timeout
+                CheckReceiveTimeout(influenceReceiveTimeout);
             }
         }
 
@@ -163,9 +161,6 @@ namespace Akka.Actor
 
                 case Identify identify:
                     HandleIdentity(identify);
-                    break;
-
-                default:
                     break;
             }
         }
@@ -402,7 +397,6 @@ namespace Akka.Actor
 
         private void Supervise(IActorRef child, bool async)
         {
-            //TODO: complete this
             if (!IsTerminating)
             {
                 var childRestartStats = InitChild((IInternalActorRef)child);

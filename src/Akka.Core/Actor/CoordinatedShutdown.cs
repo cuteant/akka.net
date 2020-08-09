@@ -35,6 +35,8 @@ namespace Akka.Actor
         public override CoordinatedShutdown CreateExtension(ExtendedActorSystem system)
         {
             var conf = system.Settings.Config.GetConfig("akka.coordinated-shutdown");
+            if (conf.IsNullOrEmpty()) { AkkaThrowHelper.ThrowConfigurationException_Akka_Coordinated_Shutdown_Config_Cannot_Be_Empty(); }
+
             var phases = CoordinatedShutdown.PhasesFromConfig(conf);
             var coord = new CoordinatedShutdown(system, phases);
             CoordinatedShutdown.InitPhaseActorSystemTerminate(system, conf, coord);
@@ -207,6 +209,15 @@ namespace Akka.Actor
         }
 
         /// <summary>
+        /// The shutdown was initiated by a failure to join a seed node.
+        /// </summary>
+        public class ClusterJoinUnsuccessfulReason : Reason
+        {
+            public static readonly Reason Instance = new ClusterJoinUnsuccessfulReason();
+            private ClusterJoinUnsuccessfulReason() { }
+        }
+
+        /// <summary>
         /// The <see cref="ActorSystem"/>
         /// </summary>
         public ExtendedActorSystem System { get; }
@@ -229,7 +240,7 @@ namespace Akka.Actor
         internal readonly List<string> OrderedPhases;
 
         private readonly ConcurrentBag<Func<Task<Done>>> _clrShutdownTasks = new ConcurrentBag<Func<Task<Done>>>();
-        private readonly ConcurrentDictionary<string, ImmutableList<Tuple<string, IRunnableTask<Done>>>> _tasks = new ConcurrentDictionary<string, ImmutableList<Tuple<string, IRunnableTask<Done>>>>(StringComparer.Ordinal);
+        private readonly ConcurrentDictionary<string, ImmutableList<(string, IRunnableTask<Done>)>> _tasks = new ConcurrentDictionary<string, ImmutableList<(string, IRunnableTask<Done>)>>(StringComparer.Ordinal);
         private readonly AtomicReference<Reason> _runStarted = new AtomicReference<Reason>(null);
         private readonly AtomicBoolean _clrHooksStarted = new AtomicBoolean(false);
         private readonly TaskCompletionSource<Done> _runPromise = new TaskCompletionSource<Done>();
@@ -278,12 +289,12 @@ namespace Akka.Actor
 
             if (!_tasks.TryGetValue(phase, out var current))
             {
-                if (!_tasks.TryAdd(phase, ImmutableList<Tuple<string, IRunnableTask<Done>>>.Empty.Add(Tuple.Create(taskName, task))))
+                if (!_tasks.TryAdd(phase, ImmutableList<(string, IRunnableTask<Done>)>.Empty.Add((taskName, task))))
                     AddTask(phase, taskName, task); // CAS failed, retry
             }
             else
             {
-                if (!_tasks.TryUpdate(phase, current.Add(Tuple.Create(taskName, task)), current))
+                if (!_tasks.TryUpdate(phase, current.Add((taskName, task)), current))
                     AddTask(phase, taskName, task); // CAS failed, retry
             }
         }
@@ -354,21 +365,6 @@ namespace Akka.Actor
         /// has not been started.
         /// </summary>
         public Reason ShutdownReason => _runStarted.Value;
-
-        /// <summary>
-        /// Run tasks of all phases including and after the given phase.
-        /// </summary>
-        /// <param name="fromPhase">Optional. The phase to start the run from.</param>
-        /// <returns>A task that is completed when all such tasks have been completed, or
-        /// there is failure when <see cref="Phase.Recover"/> is disabled.</returns>
-        /// <remarks>
-        /// It is safe to call this method multiple times. It will only run the shutdown sequence once.
-        /// </remarks>
-        [Obsolete("Use the method with 'reason' parameter instead")]
-        public Task<Done> Run(string fromPhase = null)
-        {
-            return Run(UnknownReason.Instance, fromPhase);
-        }
 
         /// <summary>
         /// Run tasks of all phases including and after the given phase.
@@ -497,7 +493,7 @@ namespace Akka.Actor
         private static Done AfterRunPhaseTasks(Task<Done[]> tr)
         {
             // forces downstream error propagation if recover is disabled
-            var force = tr.Result;
+            _ = tr.Result;
             return Done.Instance;
         }
 
@@ -531,7 +527,7 @@ namespace Akka.Actor
         {
             // force any exceptions to be rethrown so next phase stops
             // and so failure gets propagated back to caller
-            var r = tr.Result;
+            _ = tr.Result;
             return Loop(owner, remaining);
         }
 
@@ -558,6 +554,7 @@ namespace Akka.Actor
             get { return _tasks.Keys.Aggregate(TimeSpan.Zero, (span, s) => span.Add(Timeout(s))); }
         }
 
+        // TODO: do we need to check for null or empty config here?
         /// <summary>
         /// INTERNAL API
         /// </summary>
@@ -565,7 +562,9 @@ namespace Akka.Actor
         /// <returns>A map of all of the phases of the shutdown.</returns>
         internal static Dictionary<string, Phase> PhasesFromConfig(Config config)
         {
-            var defaultPhaseTimeout = config.GetString("default-phase-timeout");
+            if (config.IsNullOrEmpty()) { AkkaThrowHelper.ThrowConfigurationException_Invalid_phase_configuration(); }
+
+            var defaultPhaseTimeout = config.GetString("default-phase-timeout", null);
             var phasesConf = config.GetConfig("phases");
             var defaultPhaseConfig = ConfigurationFactory.ParseString($"timeout = {defaultPhaseTimeout}" + @"
                 recover = true
@@ -576,8 +575,8 @@ namespace Akka.Actor
              {
                  var c = phasesConf.GetConfig(v.Key).WithFallback(defaultPhaseConfig);
                  var dependsOn = c.GetStringList("depends-on").ToImmutableHashSet(StringComparer.Ordinal);
-                 var timeout = c.GetTimeSpan("timeout", allowInfinite: false);
-                 var recover = c.GetBoolean("recover");
+                 var timeout = c.GetTimeSpan("timeout", null, allowInfinite: false);
+                 var recover = c.GetBoolean("recover", false);
                  return new Phase(dependsOn, timeout, recover);
              }, StringComparer.Ordinal);
         }
@@ -621,6 +620,7 @@ namespace Akka.Actor
             return result;
         }
 
+        // TODO: do we need to check for null or empty config here?
         /// <summary>
         /// INTERNAL API
         ///
@@ -632,8 +632,8 @@ namespace Akka.Actor
         /// <param name="coord">The <see cref="CoordinatedShutdown"/> plugin instance.</param>
         internal static void InitPhaseActorSystemTerminate(ActorSystem system, Config conf, CoordinatedShutdown coord)
         {
-            var terminateActorSystem = conf.GetBoolean("terminate-actor-system");
-            var exitClr = conf.GetBoolean("exit-clr");
+            var terminateActorSystem = conf.GetBoolean("terminate-actor-system", false);
+            var exitClr = conf.GetBoolean("exit-clr", false);
             if (terminateActorSystem || exitClr)
             {
                 coord.AddTask(PhaseActorSystemTerminate, "terminate-system",
@@ -686,6 +686,7 @@ namespace Akka.Actor
             return Done.Instance;
         }
 
+        // TODO: do we need to check for null or empty config here?
         /// <summary>
         /// Initializes the CLR hook
         /// </summary>
@@ -694,15 +695,13 @@ namespace Akka.Actor
         /// <param name="coord">The <see cref="CoordinatedShutdown"/> plugin instance.</param>
         internal static void InitClrHook(ActorSystem system, Config conf, CoordinatedShutdown coord)
         {
-            var runByClrShutdownHook = conf.GetBoolean("run-by-clr-shutdown-hook");
+            var runByClrShutdownHook = conf.GetBoolean("run-by-clr-shutdown-hook", false);
             if (runByClrShutdownHook)
             {
+                var exitTask = TerminateOnClrExit(coord);
                 // run all hooks during termination sequence
-                AppDomain.CurrentDomain.ProcessExit += (sender, args) =>
-                {
-                    // have to block, because if this method exits the process exits.
-                    coord.RunClrHooks().Wait(coord.TotalTimeout);
-                };
+                AppDomain.CurrentDomain.ProcessExit += exitTask;
+                system.WhenTerminated.ContinueWith(tr => { AppDomain.CurrentDomain.ProcessExit -= exitTask; });
 
                 coord.AddClrShutdownHook(() =>
                 {
@@ -726,6 +725,15 @@ namespace Akka.Actor
                     });
                 });
             }
+        }
+
+        private static EventHandler TerminateOnClrExit(CoordinatedShutdown coord)
+        {
+            return (sender, args) =>
+            {
+                // have to block, because if this method exits the process exits.
+                coord.RunClrHooks().Wait(coord.TotalTimeout);
+            };
         }
     }
 }

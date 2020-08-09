@@ -13,6 +13,7 @@ using System.Reflection;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Util;
+using CuteAnt;
 using CuteAnt.Collections;
 using CuteAnt.Pool;
 using CuteAnt.Reflection;
@@ -56,8 +57,10 @@ namespace Akka.Serialization
         /// <exception cref="ArgumentException">Raised when types defined in `converters` list didn't inherit <see cref="JsonConverter"/>.</exception>
         public static NewtonSoftJsonSerializerSettings Create(Config config)
         {
-            if (config == null)
-                throw new ArgumentNullException(nameof(config), $"{nameof(NewtonSoftJsonSerializerSettings)} config was not provided");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<NewtonSoftJsonSerializerSettings>();
+            }
 
             return new NewtonSoftJsonSerializerSettings(
                 initialBufferSize: (int)config.GetByteSize("initial-buffer-size", c_initialBufferSize),
@@ -68,7 +71,7 @@ namespace Akka.Serialization
 
         private static IEnumerable<Type> GetConverterTypes(Config config)
         {
-            var converterNames = config.GetStringList("converters");
+            var converterNames = config.GetStringList("converters", EmptyArray<string>.Instance);
 
             if (converterNames != null)
                 foreach (var converterName in converterNames)

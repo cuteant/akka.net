@@ -12,7 +12,6 @@ using System.Net;
 using System.Net.Security;
 using System.Net.Sockets;
 using System.Runtime.InteropServices;
-using System.Runtime.Serialization;
 using System.Security.Cryptography.X509Certificates;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,106 +31,6 @@ using DotNetty.Transport.Libuv;
 
 namespace Akka.Remote.Transport.DotNetty
 {
-    #region == class CommonHandlers ==
-
-    internal abstract class CommonHandlers : ChannelHandlerAdapter
-    {
-        protected readonly DotNettyTransport Transport;
-        protected readonly ILoggingAdapter Log;
-
-        protected CommonHandlers(DotNettyTransport transport, ILoggingAdapter log)
-        {
-            Transport = transport;
-            Log = log;
-        }
-
-        public override void ChannelActive(IChannelHandlerContext context)
-        {
-            base.ChannelActive(context);
-
-            var channel = context.Channel;
-            if (!Transport.ConnectionGroup.TryAdd(channel))
-            {
-                if (Log.IsWarningEnabled) Log.UnableToAddChannelToConnectionGroup(channel);
-            }
-        }
-
-        public override void ChannelInactive(IChannelHandlerContext context)
-        {
-            base.ChannelInactive(context);
-
-            var channel = context.Channel;
-            if (!Transport.ConnectionGroup.TryRemove(channel))
-            {
-                if (Log.IsWarningEnabled) Log.UnableToRemoveChannelFromConnectionGroup(channel);
-            }
-        }
-
-        public override void ExceptionCaught(IChannelHandlerContext context, Exception exception)
-        {
-            base.ExceptionCaught(context, exception);
-
-            var channel = context.Channel;
-            Log.Error(exception, "Error caught channel [{0}->{1}](Id={2})", channel.LocalAddress, channel.RemoteAddress, channel.Id);
-        }
-
-        protected abstract AssociationHandle CreateHandle(IChannel channel, Address localAddress, Address remoteAddress);
-
-        protected abstract void RegisterListener(IChannel channel, IHandleEventListener listener, object msg, IPEndPoint remoteAddress);
-
-        protected void Init(IChannel channel, IPEndPoint remoteSocketAddress, Address remoteAddress, object msg, out AssociationHandle op)
-        {
-            var localAddress = DotNettyTransport.MapSocketToAddress((IPEndPoint)channel.LocalAddress, Transport.SchemeIdentifier, Transport.System.Name, Transport.Settings.Hostname);
-
-            if (localAddress != null)
-            {
-                var handle = CreateHandle(channel, localAddress, remoteAddress);
-                handle.ReadHandlerSource.Task.Then(AfterSetupReadHandlerAction, this, channel, remoteSocketAddress, msg,
-                    TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled | TaskContinuationOptions.NotOnFaulted);
-                op = handle;
-            }
-            else
-            {
-                op = null;
-                channel.CloseAsync();
-            }
-        }
-
-        private static readonly Action<IHandleEventListener, CommonHandlers, IChannel, IPEndPoint, object> AfterSetupReadHandlerAction = AfterSetupReadHandler;
-        private static void AfterSetupReadHandler(IHandleEventListener listener, CommonHandlers owner, IChannel channel, IPEndPoint remoteSocketAddress, object msg)
-        {
-            owner.RegisterListener(channel, listener, msg, remoteSocketAddress);
-            channel.Configuration.IsAutoRead = true; // turn reads back on
-        }
-    }
-
-    #endregion
-
-    #region == class DotNettyTransportException ==
-
-    internal sealed class DotNettyTransportException : RemoteTransportException
-    {
-        /// <summary>Initializes a new instance of the <see cref="DotNettyTransportException"/> class.</summary>
-        /// <param name="message">The message that describes the error.</param>
-        /// <param name="cause">The exception that is the cause of the current exception.</param>
-        public DotNettyTransportException(string message, Exception cause = null)
-            : base(message, cause) { }
-
-#if SERIALIZATION
-        /// <summary>Initializes a new instance of the <see cref="DotNettyTransportException"/> class.</summary>
-        /// <param name="info">The <see cref="SerializationInfo"/> that holds the serialized object data about the
-        /// exception being thrown.</param>
-        /// <param name="context">The <see cref="StreamingContext"/> that contains contextual information about the source
-        /// or destination.</param>
-        private DotNettyTransportException(SerializationInfo info, StreamingContext context)
-            : base(info, context) { }
-#endif
-    }
-
-    #endregion
-
-    #region == class DotNettyTransport ==
-
     [Akka.Annotations.InternalApi]
     public abstract class DotNettyTransport : Transport // public for Akka.Tests.FsCheck
     {
@@ -183,7 +82,6 @@ namespace Akka.Remote.Transport.DotNetty
         public DotNettyTransportSettings Settings { get; }
         public sealed override string SchemeIdentifier { get; protected set; }
         public override long MaximumPayloadBytes => Settings.MaxFrameSize;
-        public override int TransferBatchSize => Settings.TransferBatchSize;
         private TransportMode InternalTransport => Settings.TransportMode;
 
         public sealed override bool IsResponsibleFor(Address remote) => true;
@@ -203,7 +101,7 @@ namespace Akka.Remote.Transport.DotNetty
             return await ServerFactory().BindAsync(listenAddress).ConfigureAwait(false);
         }
 
-        public override async Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> Listen()
+        public override async Task<(Address, TaskCompletionSource<IAssociationEventListener>)> Listen()
         {
             EndPoint listenAddress;
             if (IPAddress.TryParse(Settings.Hostname, out IPAddress ip))
@@ -242,7 +140,7 @@ namespace Akka.Remote.Transport.DotNetty
                     TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
 #pragma warning restore 4014
 
-                return Tuple.Create(addr, AssociationListenerPromise);
+                return (addr, AssociationListenerPromise);
             }
             catch (Exception ex)
             {
@@ -372,17 +270,20 @@ namespace Akka.Remote.Transport.DotNetty
                 else
                 {
                     pipeline.AddLast("FrameDecoder", new LengthFieldBasedFrameDecoder(Settings.ByteOrder, (int)MaximumPayloadBytes, 0, 4, 0, 4, true));
-                    //if (Settings.BackwardsCompatibilityModeEnabled)
-                    //{
-                    //    pipeline.AddLast("FrameEncoder", new HeliosBackwardsCompatabilityLengthFramePrepender(4, false));
-                    //}
-                    //else
-                    //{
                     pipeline.AddLast("FrameEncoder", new LengthFieldPrepender(Settings.ByteOrder, 4, 0, false));
-                    //}
                 }
             }
+
+            var batchWriterSettings = Settings.BatchWriterSettings;
+            if (batchWriterSettings.EnableBatching &&
+                batchWriterSettings.TransferBatchSize <= 1 &&
+                batchWriterSettings.MaxPendingWrites > 1)
+            {
+                pipeline.AddLast("BatchWriter", new BatchWriterHandler(Settings.BatchWriterSettings));
+            }
         }
+
+        private static readonly RemoteCertificateValidationCallback s_userCertificateValidationCallback = (sender, cert, chain, errors) => true;
 
         private void SetClientPipeline(IChannel channel, Address remoteAddress)
         {
@@ -392,7 +293,7 @@ namespace Akka.Remote.Transport.DotNetty
                 var host = certificate.GetNameInfo(X509NameType.DnsName, false);
 
                 var tlsHandler = Settings.Ssl.SuppressValidation
-                    ? new TlsHandler(new ClientTlsSettings(host) { ServerCertificateValidation = (cert, chain, errors) => true })
+                    ? new TlsHandler(stream => new SslStream(stream, true, s_userCertificateValidationCallback), new ClientTlsSettings(host))
                     : TlsHandler.Client(host, certificate);
 
                 channel.Pipeline.AddFirst("TlsHandler", tlsHandler);
@@ -403,20 +304,30 @@ namespace Akka.Remote.Transport.DotNetty
 
             if (InternalTransport == TransportMode.Tcp)
             {
-                if (TransferBatchSize > 1)
+                IChannelHandler handler;
+                var batchWriterSettings = Settings.BatchWriterSettings;
+                if (batchWriterSettings.EnableBatching && (batchWriterSettings.TransferBatchSize > 1 || batchWriterSettings.MaxPendingWrites > 1))
                 {
-                    var handler = !Settings.EnableMsgpackPooling ?
-                        new TcpBatchClientHandler(this, Logging.GetLogger(System, typeof(TcpBatchClientHandler)), remoteAddress) :
-                        (IChannelHandler)new TcpBatchClientHandlerWithPooling(this, Logging.GetLogger(System, typeof(TcpBatchClientHandlerWithPooling)), remoteAddress);
-                    pipeline.AddLast("ClientHandler", handler);
+                    if (batchWriterSettings.TransferBatchSize > 1)
+                    {
+                        handler = !Settings.EnableMsgpackPooling ?
+                           new TcpClientBatchMessagesHandler(this, Logging.GetLogger(System, typeof(TcpClientBatchMessagesHandler)), remoteAddress) :
+                           (IChannelHandler)new PoolingTcpClientBatchMessagesHandler(this, Logging.GetLogger(System, typeof(PoolingTcpClientBatchMessagesHandler)), remoteAddress);
+                    }
+                    else
+                    {
+                        handler = !Settings.EnableMsgpackPooling ?
+                           new TcpClientBatchWriterHandler(this, Logging.GetLogger(System, typeof(TcpClientBatchWriterHandler)), remoteAddress) :
+                           (IChannelHandler)new PoolingTcpClientBatchWriterHandler(this, Logging.GetLogger(System, typeof(PoolingTcpClientBatchWriterHandler)), remoteAddress);
+                    }
                 }
                 else
                 {
-                    var handler = !Settings.EnableMsgpackPooling ?
-                        new TcpClientHandler(this, Logging.GetLogger(System, typeof(TcpClientHandler)), remoteAddress) :
-                        (IChannelHandler)new TcpClientHandlerWithPooling(this, Logging.GetLogger(System, typeof(TcpClientHandlerWithPooling)), remoteAddress);
-                    pipeline.AddLast("ClientHandler", handler);
+                    handler = !Settings.EnableMsgpackPooling ?
+                       new TcpClientHandler(this, Logging.GetLogger(System, typeof(TcpClientHandler)), remoteAddress) :
+                       (IChannelHandler)new PoolingTcpClientHandler(this, Logging.GetLogger(System, typeof(PoolingTcpClientHandler)), remoteAddress);
                 }
+                pipeline.AddLast("ClientHandler", handler);
             }
         }
 
@@ -432,20 +343,30 @@ namespace Akka.Remote.Transport.DotNetty
 
             if (Settings.TransportMode == TransportMode.Tcp)
             {
-                if (TransferBatchSize > 1)
+                IChannelHandler handler;
+                var batchWriterSettings = Settings.BatchWriterSettings;
+                if (batchWriterSettings.EnableBatching && (batchWriterSettings.TransferBatchSize > 1 || batchWriterSettings.MaxPendingWrites > 1))
                 {
-                    var handler = !Settings.EnableMsgpackPooling ?
-                        new TcpBatchServerHandler(this, Logging.GetLogger(System, typeof(TcpBatchServerHandler)), AssociationListenerPromise.Task) :
-                        (IChannelHandler)new TcpBatchServerHandlerWithPooling(this, Logging.GetLogger(System, typeof(TcpBatchServerHandlerWithPooling)), AssociationListenerPromise.Task);
-                    pipeline.AddLast("ServerHandler", handler);
+                    if (batchWriterSettings.TransferBatchSize > 1)
+                    {
+                        handler = !Settings.EnableMsgpackPooling ?
+                           new TcpServerBatchMessagesHandler(this, Logging.GetLogger(System, typeof(TcpServerBatchMessagesHandler)), AssociationListenerPromise.Task) :
+                           (IChannelHandler)new PoolingTcpServerBatchMessagesHandler(this, Logging.GetLogger(System, typeof(PoolingTcpServerBatchMessagesHandler)), AssociationListenerPromise.Task);
+                    }
+                    else
+                    {
+                        handler = !Settings.EnableMsgpackPooling ?
+                           new TcpServerBatchWriterHandler(this, Logging.GetLogger(System, typeof(TcpServerBatchWriterHandler)), AssociationListenerPromise.Task) :
+                           (IChannelHandler)new PoolingTcpServerBatchWriterHandler(this, Logging.GetLogger(System, typeof(PoolingTcpServerBatchWriterHandler)), AssociationListenerPromise.Task);
+                    }
                 }
                 else
                 {
-                    var handler = !Settings.EnableMsgpackPooling ?
-                        new TcpServerHandler(this, Logging.GetLogger(System, typeof(TcpServerHandler)), AssociationListenerPromise.Task) :
-                        (IChannelHandler)new TcpServerHandlerWithPooling(this, Logging.GetLogger(System, typeof(TcpServerHandlerWithPooling)), AssociationListenerPromise.Task);
-                    pipeline.AddLast("ServerHandler", handler);
+                    handler = !Settings.EnableMsgpackPooling ?
+                       new TcpServerHandler(this, Logging.GetLogger(System, typeof(TcpServerHandler)), AssociationListenerPromise.Task) :
+                       (IChannelHandler)new PoolingTcpServerHandler(this, Logging.GetLogger(System, typeof(PoolingTcpServerHandler)), AssociationListenerPromise.Task);
                 }
+                pipeline.AddLast("ServerHandler", handler);
             }
         }
 
@@ -572,28 +493,4 @@ namespace Akka.Remote.Transport.DotNetty
 
         #endregion
     }
-
-    #endregion
-
-    #region == class HeliosBackwardsCompatabilityLengthFramePrepender ==
-
-    //internal sealed class HeliosBackwardsCompatabilityLengthFramePrepender : LengthFieldPrepender
-    //{
-    //    private readonly List<object> _temporaryOutput = new List<object>(2);
-
-    //    public HeliosBackwardsCompatabilityLengthFramePrepender(int lengthFieldLength, bool lengthFieldIncludesLengthFieldLength)
-    //        : base(ByteOrder.LittleEndian, lengthFieldLength, 0, lengthFieldIncludesLengthFieldLength) { }
-
-    //    protected override void Encode(IChannelHandlerContext context, IByteBuffer message, List<object> output)
-    //    {
-    //        base.Encode(context, message, output);
-    //        var lengthFrame = (IByteBuffer)_temporaryOutput[0];
-    //        var combined = lengthFrame.WriteBytes(message);
-    //        ReferenceCountUtil.SafeRelease(message, 1); // ready to release it - bytes have been copied
-    //        output.Add(combined.Retain());
-    //        _temporaryOutput.Clear();
-    //    }
-    //}
-
-    #endregion
 }

@@ -227,25 +227,23 @@ namespace Akka.Remote.Transport
 
         /// <summary>TBD</summary>
         /// <returns>TBD</returns>
-        public override Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> Listen()
+        public override Task<(Address, TaskCompletionSource<IAssociationEventListener>)> Listen()
         {
             var upstreamListenerPromise = new TaskCompletionSource<IAssociationEventListener>();
             return WrappedTransport.Listen().Then(AfterListenFunc, this, upstreamListenerPromise, TaskContinuationOptions.ExecuteSynchronously);
         }
 
         private static readonly
-            Func<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>, AbstractTransportAdapter, TaskCompletionSource<IAssociationEventListener>, Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>>>
+            Func<(Address, TaskCompletionSource<IAssociationEventListener>), AbstractTransportAdapter, TaskCompletionSource<IAssociationEventListener>, Task<(Address, TaskCompletionSource<IAssociationEventListener>)>>
             AfterListenFunc = AfterListen;
-        private static async Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> AfterListen(
-            Tuple<Address, TaskCompletionSource<IAssociationEventListener>> result,
+        private static async Task<(Address, TaskCompletionSource<IAssociationEventListener>)> AfterListen(
+            (Address, TaskCompletionSource<IAssociationEventListener>) result,
             AbstractTransportAdapter owner, TaskCompletionSource<IAssociationEventListener> upstreamListenerPromise)
         {
             var listenAddress = result.Item1;
             var listenerPromise = result.Item2;
             listenerPromise.TrySetResult(await owner.InterceptListen(listenAddress, upstreamListenerPromise.Task).ConfigureAwait(false));
-            return
-                new Tuple<Address, TaskCompletionSource<IAssociationEventListener>>(
-                    owner.SchemeAugmenter.AugmentScheme(listenAddress), upstreamListenerPromise);
+            return (owner.SchemeAugmenter.AugmentScheme(listenAddress), upstreamListenerPromise);
         }
 
         /// <summary>TBD</summary>

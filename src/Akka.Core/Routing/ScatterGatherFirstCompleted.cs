@@ -14,6 +14,7 @@ using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Util;
 using Akka.Util.Internal;
+using CuteAnt;
 
 namespace Akka.Routing
 {
@@ -125,9 +126,9 @@ namespace Akka.Routing
         /// </param>
         public ScatterGatherFirstCompletedPool(Config config)
             : this(
-                  nrOfInstances: config.GetInt("nr-of-instances"),
+                  nrOfInstances: config.GetInt("nr-of-instances", 0),
                   resizer: Resizer.FromConfig(config),
-                  within: config.GetTimeSpan("within"),
+                  within: config.GetTimeSpan("within", null),
                   supervisorStrategy: Pool.DefaultSupervisorStrategy,
                   routerDispatcher: Dispatchers.DefaultDispatcherId,
                   usePoolDispatcher: config.HasPath("pool-dispatcher"))
@@ -366,8 +367,8 @@ namespace Akka.Routing
         /// </param>
         public ScatterGatherFirstCompletedGroup(Config config)
             : this(
-                  config.GetStringList("routees.paths"),
-                  config.GetTimeSpan("within"),
+                  config.GetStringList("routees.paths", EmptyArray<string>.Instance),
+                  config.GetTimeSpan("within", null),
                   Dispatchers.DefaultDispatcherId)
         {
         }

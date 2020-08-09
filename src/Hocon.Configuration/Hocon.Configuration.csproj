@@ -1,31 +1,34 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\nuget.hocon.props" />
+	<Import Project="..\..\nuget.hocon.props" />
 
-  <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
-    <RootNamespace>Hocon</RootNamespace>
-    <AssemblyName>Hocon.Configuration</AssemblyName>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+		<RootNamespace>Hocon</RootNamespace>
+		<AssemblyName>Hocon.Configuration</AssemblyName>
+		<AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <PackageId>Hocon.Configuration.Unofficial</PackageId>
-    <Title>Hocon (Unofficial)</Title>
-    <Description>HOCON is a complete and total rewrite of the HOCON parsing engine.</Description>
-    <PackageTags>Hocon</PackageTags>
-  </PropertyGroup>
+	<PropertyGroup>
+		<PackageId>Hocon.Configuration.Unofficial</PackageId>
+		<Title>Hocon (Unofficial)</Title>
+		<Description>HOCON is a complete and total rewrite of the HOCON parsing engine.</Description>
+		<PackageTags>Hocon</PackageTags>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Hocon\Hocon.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Hocon\Hocon.csproj" />
+	</ItemGroup>
 
-  <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
-    <Reference Include="System.Configuration" />
-  </ItemGroup>
+	<ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
+		<Reference Include="System.Configuration" />
+	</ItemGroup>
 
-  <ItemGroup Condition=" '$(ImportLibs)' == 'netcore' ">
-    <PackageReference Include="System.Configuration.ConfigurationManager" Version="$(SystemConfigurationConfigurationManagerPackageVersion)" />
-  </ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.0' ">
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="$(SystemConfigurationConfigurationManager2PackageVersion)" />
+	</ItemGroup>
+	<ItemGroup Condition=" '$(TargetFramework)' == 'netstandard2.1' ">
+		<PackageReference Include="System.Configuration.ConfigurationManager" Version="$(SystemConfigurationConfigurationManagerPackageVersion)" />
+	</ItemGroup>
 
-  <Import Project="..\..\version.hocon.props" />
+	<Import Project="..\..\version.hocon.props" />
 </Project>

@@ -11,6 +11,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
+using Akka.Util;
 
 namespace Akka.Actor
 {
@@ -38,7 +39,7 @@ namespace Akka.Actor
         private void InvokeWatch(IInternalActorRef a)
         {
             a.SendSystemMessage(new Watch(a, _self)); // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS
-            _state = _state.AddWatching(a, null);
+            _state = _state.AddWatching(a, Option<object>.None);
         }
 
         /// <summary>
@@ -76,7 +77,7 @@ namespace Akka.Actor
                 a.SendSystemMessage(new Unwatch(a, _self));
                 MaintainAddressTerminatedSubscription(_unwatchAction, subject); // a
             }
-            _state = _state.RemoveTerminated(a);
+            (_state, _) = _state.RemoveTerminated(a);
             return a;
         }
 
@@ -94,8 +95,9 @@ namespace Akka.Actor
         {
             if (!_state.ContainsTerminated(t.ActorRef)) { return; }
 
-            _state = _state.RemoveTerminated(t.ActorRef); // here we know that it is the SAME ref which was put in
-            ReceiveMessage(t);
+            Option<object> customTerminatedMessage;
+            (_state, customTerminatedMessage) = _state.RemoveTerminated(t.ActorRef); // here we know that it is the SAME ref which was put in
+            ReceiveMessage(customTerminatedMessage.GetOrElse(t));
         }
 
         /// <summary>
@@ -107,14 +109,14 @@ namespace Akka.Actor
         /// <param name="addressTerminated">TBD</param>
         protected void WatchedActorTerminated(IActorRef actor, bool existenceConfirmed, bool addressTerminated)
         {
-            // The custom termination message that was requested
-            if (TryGetWatching(actor, out var message))
+            if (TryGetWatching(actor, out var message)) // message is custom termination message that was requested
             {
                 MaintainAddressTerminatedSubscription(_unwatchAction, actor);
                 if (!IsTerminating)
                 {
-                    Self.Tell(message ?? new Terminated(actor, existenceConfirmed, addressTerminated), actor);
-                    TerminatedQueuedFor(actor);
+                    // Unwatch could be called somewhere there inbetween here and the actual delivery of the custom message
+                    Self.Tell(new Terminated(actor, existenceConfirmed, addressTerminated), actor);
+                    TerminatedQueuedFor(actor, message);
                 }
             }
             if (ChildrenContainer.Contains(actor))
@@ -126,12 +128,13 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        /// <param name="subject">TBD</param>
-        public void TerminatedQueuedFor(IActorRef subject) => _state = _state.AddTerminated(subject);
+        /// <param name="subject">Tracked subject</param>
+        /// <param name="customMessage">Terminated custom message</param>
+        public void TerminatedQueuedFor(IActorRef subject, Option<object> customMessage) => _state = _state.AddTerminated(subject, customMessage);
 
         private bool WatchingContains(IActorRef subject) => _state.ContainsWatching(subject);
 
-        private bool TryGetWatching(IActorRef subject, out object message) => _state.TryGetWatching(subject, out message);
+        private bool TryGetWatching(IActorRef subject, out Option<object> message) => _state.TryGetWatching(subject, out message);
 
         /// <summary>
         /// TBD
@@ -142,7 +145,7 @@ namespace Akka.Actor
                 .GetWatchedBy()
                 .ToList();
 
-            if (watchedBy.Count == 0) return;
+            if (0u >= (uint)watchedBy.Count) return;
             try
             {
                 // Don't need to send to parent parent since it receives a DWN by default
@@ -165,7 +168,10 @@ namespace Akka.Actor
             }
             finally
             {
-                _state = _state.ClearWatching();
+                MaintainAddressTerminatedSubscription(() =>
+                {
+                    _state = _state.ClearWatchedBy();
+                });
             }
         }
 
@@ -187,7 +193,7 @@ namespace Akka.Actor
                 .GetWatching()
                 .ToList();
 
-            if (watching.Count <= 0) return;
+            if (0u >= (uint)watching.Count) return;
 
             MaintainAddressTerminatedSubscription(_unwatchWatchedActorsAciton, arg1: watching, change: null);
         }

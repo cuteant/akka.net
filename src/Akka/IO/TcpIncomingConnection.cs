@@ -5,10 +5,11 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+using System;
 using System.Collections.Generic;
 using System.Net.Sockets;
 using Akka.Actor;
-using System;
+using Akka.Util;
 
 namespace Akka.IO
 {
@@ -28,12 +29,12 @@ namespace Akka.IO
         /// <param name="bindHandler">TBD</param>
         /// <param name="options">TBD</param>
         /// <param name="readThrottling">TBD</param>
-        public TcpIncomingConnection(TcpExt tcp, 
-                                     Socket socket, 
+        public TcpIncomingConnection(TcpExt tcp,
+                                     Socket socket,
                                      IActorRef bindHandler,
-                                     IEnumerable<Inet.SocketOption> options, 
+                                     IEnumerable<Inet.SocketOption> options,
                                      bool readThrottling)
-            : base(tcp, socket, readThrottling)
+            : base(tcp, socket, readThrottling, Option<int>.None)
         {
             _bindHandler = bindHandler;
             _options = options;

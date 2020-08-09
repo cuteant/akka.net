@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Util;
+using Akka.MultiNodeTestRunner.Shared.Reporting;
 
 namespace Akka.MultiNodeTestRunner.Shared.Sinks
 {
@@ -223,12 +224,12 @@ namespace Akka.MultiNodeTestRunner.Shared.Sinks
             MessageSinkActorRef.Tell(new BeginNewSpec(className, methodName, nodes));
         }
 
-        public void EndTest(string className, string methodName)
+        public void EndTest(string className, string methodName, SpecLog log)
         {
             //end the current spec
-            MessageSinkActorRef.Tell(new EndSpec(className, methodName));
+            MessageSinkActorRef.Tell(new EndSpec(className, methodName, log));
         }
-        
+
         public void Success(int nodeIndex, string nodeRole, string message)
         {
             MessageSinkActorRef.Tell(new NodeCompletedSpecWithSuccess(nodeIndex, nodeRole, message ?? NoMessage));

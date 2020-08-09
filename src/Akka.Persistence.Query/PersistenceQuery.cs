@@ -48,7 +48,7 @@ namespace Akka.Persistence.Query
                 throw new ArgumentException("HOCON config is missing persistence read journal plugin config path: " + configPath);
 
             var pluginConfig = _system.Settings.Config.GetConfig(configPath);
-            var pluginTypeName = pluginConfig.GetString("class");
+            var pluginTypeName = pluginConfig.GetString("class", null);
             var pluginType = TypeUtils.ResolveType(pluginTypeName); //, true);
 
             return CreateType(pluginType, new object[] { _system, pluginConfig });

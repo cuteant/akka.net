@@ -354,7 +354,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.ShardStats(shardStats.ShardId, shardStats.EntityCount);
         }
 
-        private static Shard.ShardStats ShardStatsFromBinary(byte[] bytes)
+        private static Shard.ShardStats ShardStatsFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.ShardStats>(bytes, s_defaultResolver);
             return new Shard.ShardStats(message.Shard, message.EntityCount);
@@ -368,7 +368,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.StartEntity(startEntity.EntityId);
         }
 
-        private static ShardRegion.StartEntity StartEntityFromBinary(byte[] bytes)
+        private static ShardRegion.StartEntity StartEntityFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.StartEntity>(bytes, s_defaultResolver);
             return new ShardRegion.StartEntity(message.EntityId);
@@ -382,7 +382,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.StartEntityAck(startEntityAck.EntityId, startEntityAck.ShardId);
         }
 
-        private static ShardRegion.StartEntityAck StartEntityAckFromBinary(byte[] bytes)
+        private static ShardRegion.StartEntityAck StartEntityAckFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.StartEntityAck>(bytes, s_defaultResolver);
             return new ShardRegion.StartEntityAck(message.EntityId, message.ShardId);
@@ -396,7 +396,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.EntityStarted(entityStarted.EntityId);
         }
 
-        private static Shard.EntityStarted EntityStartedFromBinary(byte[] bytes)
+        private static Shard.EntityStarted EntityStartedFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.EntityStarted>(bytes, s_defaultResolver);
             return new Shard.EntityStarted(message.EntityId);
@@ -410,7 +410,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.EntityStopped(entityStopped.EntityId);
         }
 
-        private static Shard.EntityStopped EntityStoppedFromBinary(byte[] bytes)
+        private static Shard.EntityStopped EntityStoppedFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var message = MessagePackSerializer.Deserialize<Protocol.EntityStopped>(bytes, s_defaultResolver);
             return new Shard.EntityStopped(message.EntityId);
@@ -428,7 +428,7 @@ namespace Akka.Cluster.Sharding.Serialization
                 state.UnallocatedShards.ToArray());
         }
 
-        private PersistentShardCoordinator.State CoordinatorStateFromBinary(byte[] bytes)
+        private PersistentShardCoordinator.State CoordinatorStateFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var state = MessagePackSerializer.Deserialize<Protocol.CoordinatorState>(bytes, s_defaultResolver);
             var shards = ImmutableDictionary.CreateRange(StringComparer.Ordinal, state.Shards.Select(entry => new KeyValuePair<string, IActorRef>(entry.ShardId, ResolveActorRef(entry.RegionRef))));
@@ -452,7 +452,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.ShardHomeAllocated(shardHomeAllocated.Shard, Akka.Serialization.Serialization.SerializedActorPath(shardHomeAllocated.Region));
         }
 
-        private PersistentShardCoordinator.ShardHomeAllocated ShardHomeAllocatedFromBinary(byte[] bytes)
+        private PersistentShardCoordinator.ShardHomeAllocated ShardHomeAllocatedFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var msg = MessagePackSerializer.Deserialize<Protocol.ShardHomeAllocated>(bytes, s_defaultResolver);
             return new PersistentShardCoordinator.ShardHomeAllocated(msg.Shard, ResolveActorRef(msg.Region));
@@ -466,7 +466,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.ShardHome(shardHome.Shard, Akka.Serialization.Serialization.SerializedActorPath(shardHome.Ref));
         }
 
-        private PersistentShardCoordinator.ShardHome ShardHomeFromBinary(byte[] bytes)
+        private PersistentShardCoordinator.ShardHome ShardHomeFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var msg = MessagePackSerializer.Deserialize<Protocol.ShardHome>(bytes, s_defaultResolver);
             return new PersistentShardCoordinator.ShardHome(msg.Shard, ResolveActorRef(msg.Region));
@@ -480,7 +480,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new ActorRefMessage(Akka.Serialization.Serialization.SerializedActorPath(actorRef));
         }
 
-        private IActorRef ActorRefMessageFromBinary(byte[] binary)
+        private IActorRef ActorRefMessageFromBinary(in ReadOnlySpan<byte> binary)
         {
             return ResolveActorRef(MessagePackSerializer.Deserialize<ActorRefMessage>(binary, s_defaultResolver).Path);
         }
@@ -494,7 +494,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.EntityState(entityState.Entries.ToArray());
         }
 
-        private static Shard.ShardState EntityStateFromBinary(byte[] bytes)
+        private static Shard.ShardState EntityStateFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var msg = MessagePackSerializer.Deserialize<Protocol.EntityState>(bytes, s_defaultResolver);
             return new Shard.ShardState(msg.Entities.ToImmutableHashSet(StringComparer.Ordinal));
@@ -508,7 +508,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.ShardIdMessage(shard);
         }
 
-        private static string ShardIdMessageFromBinary(byte[] bytes)
+        private static string ShardIdMessageFromBinary(in ReadOnlySpan<byte> bytes)
         {
             return MessagePackSerializer.Deserialize<Protocol.ShardIdMessage>(bytes, s_defaultResolver).Shard;
         }
@@ -519,7 +519,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.ShardRegionStats(s.Stats);
         }
 
-        private static ShardRegionStats ShardRegionStatsFromBinary(byte[] bytes)
+        private static ShardRegionStats ShardRegionStatsFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var p = MessagePackSerializer.Deserialize<Protocol.ShardRegionStats>(bytes, s_defaultResolver);
             return new ShardRegionStats(p.Stats);
@@ -531,7 +531,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return new Protocol.GetClusterShardingStats(stats.Timeout);
         }
 
-        private static GetClusterShardingStats GetClusterShardingStatsFromBinary(byte[] bytes)
+        private static GetClusterShardingStats GetClusterShardingStatsFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var p = MessagePackSerializer.Deserialize<Protocol.GetClusterShardingStats>(bytes, s_defaultResolver);
             return new GetClusterShardingStats(p.Timeout);
@@ -551,7 +551,7 @@ namespace Akka.Cluster.Sharding.Serialization
             return p;
         }
 
-        private static ClusterShardingStats ClusterShardingStatsFromBinary(byte[] bytes)
+        private static ClusterShardingStats ClusterShardingStatsFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var p = MessagePackSerializer.Deserialize<Protocol.ClusterShardingStats>(bytes, s_defaultResolver);
             var dict = new Dictionary<Address, ShardRegionStats>();

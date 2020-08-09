@@ -754,7 +754,7 @@ namespace Akka.Streams.Implementation
         {
             var message = PrimaryInputs.DequeueInputElement();
 
-            if (message is Tuple<T, T> tuple)
+            if (message is ValueTuple<T, T> tuple)
             {
                 var outputBunch = OutputBunch;
                 outputBunch.Enqueue(0, tuple.Item1);

@@ -269,10 +269,10 @@ namespace Akka.Remote.Transport
         /// <summary>TBD</summary>
         private readonly Transport WrappedTransport;
 
-        private Dictionary<Address, Tuple<ThrottleMode, ThrottleTransportAdapter.Direction>> _throttlingModes
-            = new Dictionary<Address, Tuple<ThrottleMode, ThrottleTransportAdapter.Direction>>(AddressComparer.Instance);
+        private Dictionary<Address, (ThrottleMode, ThrottleTransportAdapter.Direction)> _throttlingModes
+            = new Dictionary<Address, (ThrottleMode, ThrottleTransportAdapter.Direction)>(AddressComparer.Instance);
 
-        private List<Tuple<Address, ThrottlerHandle>> _handleTable = new List<Tuple<Address, ThrottlerHandle>>();
+        private List<(Address, ThrottlerHandle)> _handleTable = new List<(Address, ThrottlerHandle)>();
 
         /// <summary>TBD</summary>
         /// <param name="wrappedTransport">TBD</param>
@@ -306,13 +306,13 @@ namespace Akka.Remote.Transport
                     wrappedHandle1.OutboundThrottleMode.Value = GetOutboundMode(naked1);
                     wrappedHandle1.ReadHandlerSource.Task.ContinueWith(tr => new ListenerAndMode(tr.Result, inMode), TaskContinuationOptions.ExecuteSynchronously)
                         .PipeTo(wrappedHandle1.ThrottlerActor);
-                    _handleTable.Add(Tuple.Create(naked1, wrappedHandle1));
+                    _handleTable.Add((naked1, wrappedHandle1));
                     ar.StatusPromise.SetResult(wrappedHandle1);
                     break;
 
                 case SetThrottle st:
                     var naked2 = NakedAddress(st.Address);
-                    _throttlingModes[naked2] = new Tuple<ThrottleMode, ThrottleTransportAdapter.Direction>(st.Mode, st.Direction);
+                    _throttlingModes[naked2] = (st.Mode, st.Direction);
                     var ok = Task.FromResult(SetThrottleAck.Instance);
                     var modes = new List<Task<SetThrottleAck>>() { ok };
                     foreach (var handle in _handleTable)
@@ -387,7 +387,7 @@ namespace Akka.Remote.Transport
 
                 case Checkin chkin:
                     var naked5 = NakedAddress(chkin.Origin);
-                    _handleTable.Add(new Tuple<Address, ThrottlerHandle>(naked5, chkin.ThrottlerHandle));
+                    _handleTable.Add((naked5, chkin.ThrottlerHandle));
                     SetMode(naked5, chkin.ThrottlerHandle);
                     break;
 
@@ -534,7 +534,7 @@ namespace Akka.Remote.Transport
         /// <param name="nanoTimeOfSend">TBD</param>
         /// <param name="tokens">TBD</param>
         /// <returns>TBD</returns>
-        public abstract Tuple<ThrottleMode, bool> TryConsumeTokens(long nanoTimeOfSend, int tokens);
+        public abstract (ThrottleMode, bool) TryConsumeTokens(long nanoTimeOfSend, int tokens);
 
         /// <summary>TBD</summary>
         /// <param name="currentNanoTime">TBD</param>
@@ -556,8 +556,8 @@ namespace Akka.Remote.Transport
         public static readonly Blackhole Instance = new Blackhole();
 
         /// <inheritdoc/>
-        public override Tuple<ThrottleMode, bool> TryConsumeTokens(long nanoTimeOfSend, int tokens)
-            => Tuple.Create<ThrottleMode, bool>(this, false);
+        public override (ThrottleMode, bool) TryConsumeTokens(long nanoTimeOfSend, int tokens)
+            => (this, false);
 
         /// <inheritdoc/>
         public override TimeSpan TimeToAvailable(long currentNanoTime, int tokens) => TimeSpan.Zero;
@@ -576,8 +576,8 @@ namespace Akka.Remote.Transport
         public static readonly Unthrottled Instance = new Unthrottled();
 
         /// <inheritdoc/>
-        public override Tuple<ThrottleMode, bool> TryConsumeTokens(long nanoTimeOfSend, int tokens)
-            => Tuple.Create<ThrottleMode, bool>(this, true);
+        public override (ThrottleMode, bool) TryConsumeTokens(long nanoTimeOfSend, int tokens)
+            => (this, true);
 
         /// <inheritdoc/>
         public override TimeSpan TimeToAvailable(long currentNanoTime, int tokens) => TimeSpan.Zero;
@@ -619,16 +619,16 @@ namespace Akka.Remote.Transport
         }
 
         /// <inheritdoc/>
-        public override Tuple<ThrottleMode, bool> TryConsumeTokens(long nanoTimeOfSend, int tokens)
+        public override (ThrottleMode, bool) TryConsumeTokens(long nanoTimeOfSend, int tokens)
         {
             if (IsAvailable(nanoTimeOfSend, tokens))
             {
-                return Tuple.Create<ThrottleMode, bool>(Copy(
+                return (Copy(
                     nanoTimeOfLastSend: nanoTimeOfSend,
                     availableTokens: Math.Min(_availableTokens - tokens + TokensGenerated(nanoTimeOfSend), _capacity))
                     , true);
             }
-            return Tuple.Create<ThrottleMode, bool>(this, false);
+            return (this, false);
         }
 
         /// <inheritdoc/>

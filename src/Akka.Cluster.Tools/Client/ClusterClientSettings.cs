@@ -31,7 +31,10 @@ namespace Akka.Cluster.Tools.Client
             system.Settings.InjectTopLevelFallback(ClusterClientReceptionist.DefaultConfig());
 
             var config = system.Settings.Config.GetConfig("akka.cluster.client");
-            if (config == null) { ThrowHelper.ThrowArgumentException_ActorSystemDoesnotHave_AkkaClusterClient_Config(system); }
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<ClusterClientSettings>("akka.cluster.client");//($"Failed to create {nameof(ClusterClientSettings)}: Actor system [{system.Name}] doesn't have `akka.cluster.client` config set up");
+            }
 
             return Create(config);
         }
@@ -43,11 +46,20 @@ namespace Akka.Cluster.Tools.Client
         /// <returns>TBD</returns>
         public static ClusterClientSettings Create(Config config)
         {
-            var initialContacts = config.GetStringList("initial-contacts").Select(ActorPath.Parse).ToImmutableSortedSet();
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<ClusterClientSettings>();
+            }
 
-            TimeSpan? reconnectTimeout = string.Equals(config.GetString("reconnect-timeout"), "off", StringComparison.Ordinal)
-                ? null
-                : (TimeSpan?)config.GetTimeSpan("reconnect-timeout");
+            var initialContacts = config.GetStringList("initial-contacts", Array.Empty<string>()).Select(ActorPath.Parse).ToImmutableSortedSet();
+
+            var useReconnect = config.GetString("reconnect-timeout", "").ToLowerInvariant();
+            TimeSpan? reconnectTimeout =
+                string.Equals(useReconnect, "off") ||
+                string.Equals(useReconnect, "false") ||
+                string.Equals(useReconnect, "no") ?
+                    null :
+                    (TimeSpan?)config.GetTimeSpan("reconnect-timeout");
 
             return new ClusterClientSettings(initialContacts,
                 config.GetTimeSpan("establishing-get-contacts-interval"),

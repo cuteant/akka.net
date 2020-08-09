@@ -590,25 +590,6 @@ namespace Akka.IO
         public static explicit operator ByteString(byte[] bytes) => ByteString.CopyFrom(bytes);
         public static explicit operator byte[] (ByteString byteString) => byteString.ToArray();
         public static ByteString operator +(ByteString x, ByteString y) => x.Concat(y);
-
-        #region Obsoleted
-
-        [Obsolete("Use ByteString.CopyFrom instead if you want to copy byte array or ByteString.FromBytes otherwise.")]
-        public static ByteString Create(byte[] array) => CopyFrom(array);
-
-        [Obsolete("Use ToString() method instead.")]
-        public string DecodeString() => ToString();
-
-        [Obsolete("Use ToString(Encoding) method instead.")]
-        public string DecodeString(Encoding encoding) => ToString(encoding);
-
-        [Obsolete("Use Slice(0, n) method instead.")]
-        public ByteString Take(int n) => Slice(0, n);
-
-        [Obsolete("Use Slice(n) method instead.")]
-        public ByteString Drop(int n) => Slice(n);
-
-        #endregion
     }
 
     public enum ByteOrder

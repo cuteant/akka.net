@@ -50,7 +50,7 @@ namespace Akka.Remote.Tests.MultiNode
             {
                 Receive<string>(_ => Context.System.Terminate(), s => "shutdown".Equals(s));
                 Receive<string>(
-                    _ => Sender.Tell(new Tuple<int, IActorRef>(AddressUidExtension.Uid(Context.System), Self)),
+                    _ => Sender.Tell((AddressUidExtension.Uid(Context.System), Self)),
                     s => "identify".Equals(s));
             }
         }
@@ -59,7 +59,7 @@ namespace Akka.Remote.Tests.MultiNode
     public class RemoteRestartedQuarantinedSpec : MultiNodeSpec
     {
         private readonly RemoteRestartedQuarantinedMultiNetSpec _config;
-        private readonly Func<RoleName, string, Tuple<int, IActorRef>> _identifyWithUid;
+        private readonly Func<RoleName, string, (int, IActorRef)> _identifyWithUid;
 
         public RemoteRestartedQuarantinedSpec()
             : this(new RemoteRestartedQuarantinedMultiNetSpec())
@@ -74,7 +74,7 @@ namespace Akka.Remote.Tests.MultiNode
             _identifyWithUid = (role, actorName) =>
             {
                 Sys.ActorSelection(Node(role) / "user" / actorName).Tell("identify");
-                return ExpectMsg<Tuple<int, IActorRef>>();
+                return ExpectMsg<(int, IActorRef)>();
             };
         }
 

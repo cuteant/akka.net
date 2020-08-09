@@ -46,7 +46,7 @@ namespace Akka.Serialization
         public override byte[] ToBinary(object obj)
         {
             var sel = obj as ActorSelectionMessage;
-            if (null == sel) { AkkaThrowHelper.ThrowArgumentException_Serializer_ActorSel(obj); }
+            if (sel is null) { AkkaThrowHelper.ThrowArgumentException_Serializer_ActorSel(obj); }
 
             var protoMessage = new Protocol.SelectionEnvelope(
                 _system.SerializeMessage(sel.Message),
@@ -79,7 +79,7 @@ namespace Akka.Serialization
                     case SelectChildPattern childPattern:
                         pattern.Add(BuildPattern(childPattern.PatternStr, Protocol.Selection.PatternType.ChildPattern));
                         break;
-                    case SelectParent parent:
+                    case SelectParent _:
                         pattern.Add(BuildPattern(null, Protocol.Selection.PatternType.Parent));
                         break;
                 }

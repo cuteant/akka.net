@@ -32,11 +32,8 @@ namespace Akka.Remote.Transport
         public virtual long MaximumPayloadBytes { get; protected set; }
 
         /// <summary>TBD</summary>
-        public virtual int TransferBatchSize { get; protected set; }
-
-        /// <summary>TBD</summary>
         /// <returns>TBD</returns>
-        public abstract Task<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>> Listen();
+        public abstract Task<(Address, TaskCompletionSource<IAssociationEventListener>)> Listen();
 
         /// <summary>TBD</summary>
         /// <param name="remote">TBD</param>
@@ -343,7 +340,7 @@ namespace Akka.Remote.Transport
         /// 
         /// The transport that provides the handle MUST guarantee that <see cref="Disassociate()"/> could be called arbitrarily many times.
         /// </summary>
-        [Obsolete("Use the method that states reasons to make sure disassociation reasons are logged.")]
+        //[Obsolete("Use the method that states reasons to make sure disassociation reasons are logged.")]
         public abstract void Disassociate();
 
         /// <summary>

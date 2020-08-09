@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.Persistence.TCK</RootNamespace>
     <AssemblyName>Akka.Persistence.TCK</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.Cluster.Tools.Tests</RootNamespace>
     <AssemblyName>Akka.Cluster.Tools.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

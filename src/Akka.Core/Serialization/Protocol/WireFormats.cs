@@ -12,25 +12,25 @@ namespace Akka.Serialization
         public static bool IsEmtpy(in this Payload payload)
         {
             var message = payload.Message;
-            return (null == message || 0u >= (uint)message.Length) ? true : false;
+            return message is null || 0u >= (uint)message.Length;
         }
 
         public static bool NonEmtpy(in this Payload payload)
         {
             var message = payload.Message;
-            return (message != null && 0u < (uint)message.Length) ? true : false;
+            return message is object && 0u < (uint)message.Length;
         }
 
         public static bool IsEmtpy(in this ExternalPayload payload)
         {
             var message = payload.Message;
-            return (null == message || 0u >= (uint)message.Length) ? true : false;
+            return message is null || 0u >= (uint)message.Length;
         }
 
         public static bool NonEmtpy(in this ExternalPayload payload)
         {
             var message = payload.Message;
-            return (message != null && 0u < (uint)message.Length) ? true : false;
+            return message is object && 0u < (uint)message.Length;
         }
     }
 }

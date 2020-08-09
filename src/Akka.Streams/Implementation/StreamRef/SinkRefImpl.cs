@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Annotations;
@@ -128,7 +125,7 @@ namespace Akka.Streams.Implementation.StreamRef
                 _promise.SetResult(new SourceRefImpl<TIn>(Self));
             }
 
-            private void InitialReceive(Tuple<IActorRef, object> args)
+            private void InitialReceive((IActorRef, object) args)
             {
                 var sender = args.Item1;
                 var message = args.Item2;

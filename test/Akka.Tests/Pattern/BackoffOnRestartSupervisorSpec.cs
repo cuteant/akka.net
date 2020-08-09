@@ -40,6 +40,7 @@ namespace Akka.Tests.Pattern
             }
         }
 
+#pragma warning disable CS0162 // Disabled because without the return, the compiler complains about ambigious reference between Receive<T>(Action<T>,Predicate<T>) and Receive<T>(Predicate<T>,Action<T>)
         public class TestActor : ReceiveActor
         {
             private readonly IActorRef _probe;
@@ -64,7 +65,7 @@ namespace Akka.Tests.Pattern
                     return;
                 });
 
-                Receive<Tuple<string, string>>(str => str.Item1.Equals("TO_PARENT"), msg =>
+                Receive<(string, string)>(str => str.Item1.Equals("TO_PARENT"), msg =>
                 {
                     Context.Parent.Tell(msg.Item2);
                 });
@@ -77,6 +78,7 @@ namespace Akka.Tests.Pattern
                 return Akka.Actor.Props.Create(() => new TestActor(probe));
             }
         }
+#pragma warning restore CS0162
 
         public class TestParentActor : ReceiveActor
         {
@@ -100,6 +102,7 @@ namespace Akka.Tests.Pattern
         {
             private readonly TestLatch _latch;
 
+#pragma warning disable CS0162 // Disabled because without the return, the compiler complains about ambigious reference between Receive<T>(Action<T>,Predicate<T>) and Receive<T>(Predicate<T>,Action<T>)
             public SlowlyFailingActor(TestLatch latch)
             {
                 _latch = latch;
@@ -116,6 +119,7 @@ namespace Akka.Tests.Pattern
                     Sender.Tell("PONG");
                 });
             }
+#pragma warning restore CS0162
 
             protected override void PostStop()
             {
@@ -211,7 +215,7 @@ namespace Akka.Tests.Pattern
             probe.ExpectMsg("STARTED");
             var child = probe.LastSender;
 
-            child.Tell(Tuple.Create("TO_PARENT", "TEST_MESSAGE"));
+            child.Tell(("TO_PARENT", "TEST_MESSAGE"));
             probe.ExpectMsg("TEST_MESSAGE");
         }
 

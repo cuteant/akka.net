@@ -127,9 +127,9 @@ namespace Akka.Persistence.Fsm
                     handlersExecutedCounter++;
                     if (handlersExecutedCounter == eventsToPersist.Count)
                     {
-                        base.ApplyState(nextState.Using(nextData));
+                        base.ApplyState(nextState.Copy(stateData: nextData));
                         CurrentStateTimeout = nextState.Timeout;
-                        nextState.AfterTransitionDo?.Invoke(nextState.StateData);
+                        nextState.AfterTransitionDo?.Invoke(StateData);
                         if (doSnapshot)
                         {
                             if (Log.IsInfoEnabled) Log.SavingSnapshotSequenceNumber(SnapshotSequenceNr);
@@ -416,6 +416,9 @@ namespace Akka.Persistence.Fsm
             /// </summary>
             /// <param name="nextStateData">TBD</param>
             /// <returns>TBD</returns>
+            [Obsolete("Internal API easily to be confused with regular FSM's using. " +
+                "Use regular events (`Applying`). " +
+                "Internally, `copy` can be used instead.")]
             public State<TS, TD, TE> Using(TD nextStateData)
             {
                 return Copy(stateData: nextStateData);
@@ -487,13 +490,16 @@ namespace Akka.Persistence.Fsm
 
         public SnapshotAfterExtension(Config config)
         {
-            if (string.Equals(config.GetString(Key), "off", StringComparison.OrdinalIgnoreCase))
+            var useSnapshot = config.GetString(Key, "");
+            if (string.Equals(useSnapshot, "off", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(useSnapshot, "false", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(useSnapshot, "no", StringComparison.OrdinalIgnoreCase))
             {
                 SnapshotAfterValue = null;
             }
             else
             {
-                SnapshotAfterValue = config.GetInt(Key);
+                SnapshotAfterValue = config.GetInt(Key, 0);
             }
         }
 

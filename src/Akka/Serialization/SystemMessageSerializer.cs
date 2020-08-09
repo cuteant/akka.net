@@ -20,7 +20,7 @@ namespace Akka.Serialization
     {
         #region manifests
 
-        static class _
+        static class Manifests
         {
             internal const string CreateManifest = "C";
             internal const string RecreateManifest = "RC";
@@ -40,16 +40,16 @@ namespace Akka.Serialization
         {
             ManifestMap = new Dictionary<Type, string>()
             {
-                { typeof(Create), _.CreateManifest },
-                { typeof(Recreate), _.RecreateManifest },
-                { typeof(Suspend), _.SuspendManifest },
-                { typeof(Resume), _.ResumeManifest },
-                { typeof(Terminate), _.TerminateManifest },
-                { typeof(Supervise), _.SuperviseManifest },
-                { typeof(Watch), _.WatchManifest },
-                { typeof(Unwatch), _.UnwatchManifest },
-                { typeof(Failed), _.FailedManifest },
-                { typeof(DeathWatchNotification), _.DeathWatchNotificationManifest },
+                { typeof(Create), Manifests.CreateManifest },
+                { typeof(Recreate), Manifests.RecreateManifest },
+                { typeof(Suspend), Manifests.SuspendManifest },
+                { typeof(Resume), Manifests.ResumeManifest },
+                { typeof(Terminate), Manifests.TerminateManifest },
+                { typeof(Supervise), Manifests.SuperviseManifest },
+                { typeof(Watch), Manifests.WatchManifest },
+                { typeof(Unwatch), Manifests.UnwatchManifest },
+                { typeof(Failed), Manifests.FailedManifest },
+                { typeof(DeathWatchNotification), Manifests.DeathWatchNotificationManifest },
             };
         }
 
@@ -71,36 +71,36 @@ namespace Akka.Serialization
             switch (obj)
             {
                 case Create create:
-                    manifest = _.CreateManifest;
+                    manifest = Manifests.CreateManifest;
                     return CreateToProto(_system, create);
                 case Recreate recreate:
-                    manifest = _.RecreateManifest;
+                    manifest = Manifests.RecreateManifest;
                     return RecreateToProto(_system, recreate);
-                case Suspend suspend:
-                    manifest = _.SuspendManifest;
+                case Suspend _:
+                    manifest = Manifests.SuspendManifest;
                     return EmptyBytes;
                 case Resume resume:
-                    manifest = _.ResumeManifest;
+                    manifest = Manifests.ResumeManifest;
                     return ResumeToProto(_system, resume);
-                case Terminate terminate:
-                    manifest = _.TerminateManifest;
+                case Terminate _:
+                    manifest = Manifests.TerminateManifest;
                     return EmptyBytes;
                 case Supervise supervise:
-                    manifest = _.SuperviseManifest;
+                    manifest = Manifests.SuperviseManifest;
                     return SuperviseToProto(supervise);
                 case Watch watch:
-                    manifest = _.WatchManifest;
+                    manifest = Manifests.WatchManifest;
                     return WatchToProto(watch);
                 case Unwatch unwatch:
-                    manifest = _.UnwatchManifest;
+                    manifest = Manifests.UnwatchManifest;
                     return UnwatchToProto(unwatch);
                 case Failed failed:
-                    manifest = _.FailedManifest;
+                    manifest = Manifests.FailedManifest;
                     return FailedToProto(_system, failed);
                 case DeathWatchNotification deathWatchNotification:
-                    manifest = _.DeathWatchNotificationManifest;
+                    manifest = Manifests.DeathWatchNotificationManifest;
                     return DeathWatchNotificationToProto(deathWatchNotification);
-                case NoMessage noMessage:
+                case NoMessage _:
                     throw AkkaThrowHelper.GetArgumentException_Serializer_SystemMsg_NoMessage();
                 default:
                     throw AkkaThrowHelper.GetArgumentException_Serializer_S(obj);
@@ -112,25 +112,25 @@ namespace Akka.Serialization
         {
             switch (manifest)
             {
-                case _.CreateManifest:
+                case Manifests.CreateManifest:
                     return CreateFromProto(_system, bytes);
-                case _.RecreateManifest:
+                case Manifests.RecreateManifest:
                     return RecreateFromProto(_system, bytes);
-                case _.SuspendManifest:
+                case Manifests.SuspendManifest:
                     return new Suspend();
-                case _.ResumeManifest:
+                case Manifests.ResumeManifest:
                     return ResumeFromProto(_system, bytes);
-                case _.TerminateManifest:
+                case Manifests.TerminateManifest:
                     return new Terminate();
-                case _.SuperviseManifest:
+                case Manifests.SuperviseManifest:
                     return SuperviseFromProto(_system, bytes);
-                case _.WatchManifest:
+                case Manifests.WatchManifest:
                     return WatchFromProto(_system, bytes);
-                case _.UnwatchManifest:
+                case Manifests.UnwatchManifest:
                     return UnwatchFromProto(_system, bytes);
-                case _.FailedManifest:
+                case Manifests.FailedManifest:
                     return FailedFromProto(_system, bytes);
-                case _.DeathWatchNotificationManifest:
+                case Manifests.DeathWatchNotificationManifest:
                     return DeathWatchNotificationFromProto(_system, bytes);
             }
             throw GetArgumentException_Serializer_SystemMsg(manifest);
@@ -149,27 +149,27 @@ namespace Akka.Serialization
         {
             switch (o)
             {
-                case Create create:
-                    return _.CreateManifest;
-                case Recreate recreate:
-                    return _.RecreateManifest;
-                case Suspend suspend:
-                    return _.SuspendManifest;
-                case Resume resume:
-                    return _.ResumeManifest;
-                case Terminate terminate:
-                    return _.TerminateManifest;
-                case Supervise supervise:
-                    return _.SuperviseManifest;
-                case Watch watch:
-                    return _.WatchManifest;
-                case Unwatch unwatch:
-                    return _.UnwatchManifest;
-                case Failed failed:
-                    return _.FailedManifest;
-                case DeathWatchNotification deathWatchNotification:
-                    return _.DeathWatchNotificationManifest;
-                case NoMessage noMessage:
+                case Create _:
+                    return Manifests.CreateManifest;
+                case Recreate _:
+                    return Manifests.RecreateManifest;
+                case Suspend _:
+                    return Manifests.SuspendManifest;
+                case Resume _:
+                    return Manifests.ResumeManifest;
+                case Terminate _:
+                    return Manifests.TerminateManifest;
+                case Supervise _:
+                    return Manifests.SuperviseManifest;
+                case Watch _:
+                    return Manifests.WatchManifest;
+                case Unwatch _:
+                    return Manifests.UnwatchManifest;
+                case Failed _:
+                    return Manifests.FailedManifest;
+                case DeathWatchNotification _:
+                    return Manifests.DeathWatchNotificationManifest;
+                case NoMessage _:
                     throw AkkaThrowHelper.GetArgumentException_Serializer_SystemMsg_NoMessage();
                 default:
                     throw AkkaThrowHelper.GetArgumentException_Serializer_D(o);
@@ -185,7 +185,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        internal static Create CreateFromProto(ExtendedActorSystem system, byte[] bytes)
+        internal static Create CreateFromProto(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.CreateData>(bytes, s_defaultResolver);
             var payload = (ActorInitializationException)ExceptionSupport.ExceptionFromProto(system, proto.Cause);
@@ -201,7 +201,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        internal static Recreate RecreateFromProto(ExtendedActorSystem system, byte[] bytes)
+        internal static Recreate RecreateFromProto(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.RecreateData>(bytes, s_defaultResolver);
             var payload = ExceptionSupport.ExceptionFromProto(system, proto.Cause);
@@ -217,7 +217,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        internal static Resume ResumeFromProto(ExtendedActorSystem system, byte[] bytes)
+        internal static Resume ResumeFromProto(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.ResumeData>(bytes, s_defaultResolver);
             var payload = ExceptionSupport.ExceptionFromProto(system, proto.Cause);
@@ -236,7 +236,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        internal static Supervise SuperviseFromProto(ExtendedActorSystem system, byte[] bytes)
+        internal static Supervise SuperviseFromProto(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.SuperviseData>(bytes, s_defaultResolver);
             return new Supervise(ResolveActorRef(system, proto.Child.Path), proto.Async);
@@ -254,7 +254,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        internal static Watch WatchFromProto(ExtendedActorSystem system, byte[] bytes)
+        internal static Watch WatchFromProto(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.WatchData>(bytes, s_defaultResolver);
             return new Watch(
@@ -274,7 +274,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        internal static Unwatch UnwatchFromProto(ExtendedActorSystem system, byte[] bytes)
+        internal static Unwatch UnwatchFromProto(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.WatchData>(bytes, s_defaultResolver);
             return new Unwatch(
@@ -295,7 +295,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        internal static Failed FailedFromProto(ExtendedActorSystem system, byte[] bytes)
+        internal static Failed FailedFromProto(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.FailedData>(bytes, s_defaultResolver);
 
@@ -318,7 +318,7 @@ namespace Akka.Serialization
             return MessagePackSerializer.Serialize(message, s_defaultResolver);
         }
 
-        internal static DeathWatchNotification DeathWatchNotificationFromProto(ExtendedActorSystem system, byte[] bytes)
+        internal static DeathWatchNotification DeathWatchNotificationFromProto(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.DeathWatchNotificationData>(bytes, s_defaultResolver);
 

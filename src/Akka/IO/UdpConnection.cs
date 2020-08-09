@@ -185,7 +185,7 @@ namespace Akka.IO
             try
             {
                 var send = _pendingSend.Item1;
-                var sender = _pendingSend.Item2;
+                _ = _pendingSend.Item2;
                 var data = send.Payload;
 
                 var bytesWritten = _socket.Send(data.Buffers);

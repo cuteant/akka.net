@@ -13,6 +13,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Util;
+using CuteAnt;
 
 namespace Akka.Routing
 {
@@ -79,7 +80,7 @@ namespace Akka.Routing
         /// <param name="config">The configuration used to configure the pool.</param>
         public RoundRobinPool(Config config)
             : this(
-                  nrOfInstances: config.GetInt("nr-of-instances"),
+                  nrOfInstances: config.GetInt("nr-of-instances", 0),
                   resizer: Resizer.FromConfig(config),
                   supervisorStrategy: Pool.DefaultSupervisorStrategy,
                   routerDispatcher: Dispatchers.DefaultDispatcherId,
@@ -306,7 +307,7 @@ namespace Akka.Routing
         /// </param>
         public RoundRobinGroup(Config config)
             : this(
-                  config.GetStringList("routees.paths"),
+                  config.GetStringList("routees.paths", EmptyArray<string>.Instance),
                   Dispatchers.DefaultDispatcherId)
         {
         }

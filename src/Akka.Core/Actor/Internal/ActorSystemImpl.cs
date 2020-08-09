@@ -18,6 +18,7 @@ using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
 using Akka.Util;
+using CuteAnt;
 using CuteAnt.Reflection;
 
 namespace Akka.Actor.Internal
@@ -28,9 +29,9 @@ namespace Akka.Actor.Internal
     }
 
     /// <summary>
-    /// TBD
-    /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
+    /// INTERNAL API
     /// </summary>
+    /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
     public class ActorSystemImpl : ExtendedActorSystem, ISupportSerializationConfigReload
     {
         private IActorRef _logDeadLetterListener;
@@ -53,7 +54,7 @@ namespace Akka.Actor.Internal
         /// </summary>
         /// <param name="name">The name given to the actor system.</param>
         public ActorSystemImpl(string name)
-            : this(name, ConfigurationFactory.Load())
+            : this(name, ConfigurationFactory.Default())
         {
         }
 
@@ -70,10 +71,16 @@ namespace Akka.Actor.Internal
         public ActorSystemImpl(string name, Config config)
         {
             if (!Regex.Match(name, "^[a-zA-Z0-9][a-zA-Z0-9-]*$").Success)
+            {
                 throw new ArgumentException(
                     $"Invalid ActorSystem name [{name}], must contain only word characters (i.e. [a-zA-Z0-9] plus non-leading '-')", nameof(name));
-            if (config == null)
-                throw new ArgumentNullException(nameof(config), "Configuration must not be null.");
+            }
+
+            // Not checking for empty Config here, default values will be substituted in Settings class constructor (called in ConfigureSettings)
+            if (config.IsNullOrEmpty())
+            {
+                throw new ArgumentNullException(nameof(config), $"Cannot create {typeof(ActorSystemImpl)}: Configuration must not be null.");
+            }
 
             _name = name;
             ConfigureSettings(config);
@@ -193,6 +200,9 @@ namespace Akka.Actor.Internal
         {
             try
             {
+                // Force TermInfoDriver to initialize in order to protect us from the issue seen in #2432
+                typeof(Console).GetProperty("BackgroundColor").GetValue(null); // HACK: Only needed for MONO
+
                 RegisterOnTermination(StopScheduler);
                 _provider.Init(this);
                 LoadExtensions();
@@ -230,7 +240,7 @@ namespace Akka.Actor.Internal
         private void WarnIfJsonIsDefaultSerializer()
         {
             const string configPath = "akka.suppress-json-serializer-warning";
-            var showSerializerWarning = Settings.Config.HasPath(configPath) && !Settings.Config.GetBoolean(configPath);
+            var showSerializerWarning = Settings.Config.HasPath(configPath) && !Settings.Config.GetBoolean(configPath, false);
 
             //if (showSerializerWarning &&
             //    Serialization.FindSerializerForType(typeof(object)) is NewtonSoftJsonSerializer)
@@ -275,7 +285,7 @@ namespace Akka.Actor.Internal
         private void LoadExtensions()
         {
             var extensions = new List<IExtensionId>();
-            foreach (var extensionFqn in _settings.Config.GetStringList("akka.extensions"))
+            foreach (var extensionFqn in _settings.Config.GetStringList("akka.extensions", EmptyArray<string>.Instance))
             {
                 var extensionType = TypeUtil.ResolveType(extensionFqn);
                 if (extensionType == null || !typeof(IExtensionId).IsAssignableFrom(extensionType) || extensionType.IsAbstract || !extensionType.IsClass)
@@ -518,6 +528,10 @@ namespace Akka.Actor.Internal
         public override Task Terminate()
         {
             if (Log.IsDebugEnabled) Log.SystemShutdownInitiated();
+            if (!Settings.LogDeadLettersDuringShutdown && _logDeadLetterListener != null)
+            {
+                Stop(_logDeadLetterListener);
+            }
             _provider.Guardian.Stop();
             return WhenTerminated;
         }
@@ -545,12 +559,17 @@ namespace Akka.Actor.Internal
             else
                 ((IInternalActorRef)actor).Stop();
         }
+
+        public override string ToString()
+        {
+            return LookupRoot.Path.Root.Address.ToString();
+        }
     }
 
     /// <summary>
     /// This class represents a callback used to run a task when the actor system is terminating.
     /// </summary>
-    sealed class TerminationCallbacks
+    internal sealed class TerminationCallbacks
     {
         private Task _terminationTask;
         private readonly AtomicReference<Task> _atomicRef;

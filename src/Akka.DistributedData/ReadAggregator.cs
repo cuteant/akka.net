@@ -90,7 +90,7 @@ namespace Akka.DistributedData
 
                     Remaining = Remaining.Remove(Sender.Path.Address);
                     var done = DoneWhenRemainingSize;
-                    if (Log.IsDebugEnabled) Log.RemainingDoneWhenCurrentState(Remaining.Count, done, _result);
+                    if (Log.IsDebugEnabled) Log.ReadAcksRemainingDoneWhenCurrentState(Remaining.Count, done, _result);
                     if (Remaining.Count == done) Reply(true);
                     return true;
 

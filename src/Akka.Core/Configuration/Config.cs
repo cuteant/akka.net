@@ -148,7 +148,21 @@ namespace Akka.Configuration
         public virtual long? GetByteSize(string path)
         {
             HoconValue value = GetNode(path);
-            if (value == null) return null;
+            if (value == null) { return null; }
+            return value.GetByteSize();
+        }
+
+        /// <summary>
+        /// Retrieves a long value, optionally suffixed with a 'b', from the specified path in the configuration.
+        /// </summary>
+        /// <param name="path">The path that contains the value to retrieve.</param>
+        /// <param name="def">Default return value if none provided.</param>
+        /// <exception cref="InvalidOperationException">This exception is thrown if the current node is undefined.</exception>
+        /// <returns>The long value defined in the specified path.</returns>
+        public virtual long? GetByteSize(string path, long? def = null)
+        {
+            HoconValue value = GetNode(path);
+            if (value == null) { return def; }
             return value.GetByteSize();
         }
 
@@ -342,6 +356,20 @@ namespace Akka.Configuration
         {
             HoconValue value = GetNode(path);
             if (value == null) return new List<string>();
+            return value.GetStringList();
+        }
+
+        /// <summary>
+        /// Retrieves a list of string values from the specified path in the configuration.
+        /// </summary>
+        /// <param name="path">The path that contains the values to retrieve.</param>
+        /// <param name="defaultPaths">Default paths that will be returned to the user.</param>
+        /// <exception cref="InvalidOperationException">This exception is thrown if the current node is undefined.</exception>
+        /// <returns>The list of string values defined in the specified path.</returns>
+        public virtual IList<string> GetStringList(string path, string[] defaultPaths)
+        {
+            HoconValue value = GetNode(path);
+            if (value == null) return defaultPaths;
             return value.GetStringList();
         }
 

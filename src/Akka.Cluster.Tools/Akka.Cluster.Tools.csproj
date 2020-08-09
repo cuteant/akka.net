@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.Cluster.Tools</RootNamespace>
     <AssemblyName>Akka.Cluster.Tools</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

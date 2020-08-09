@@ -180,7 +180,7 @@ namespace Akka.Actor
             //create a new tempcontainer path
             ActorPath path = provider.TempPath();
 
-            var future = new FutureActorRef(result, () => { }, path, TaskEx.IsRunContinuationsAsynchronouslyAvailable);
+            var future = new FutureActorRef(result, () => { }, path);
             //The future actor needs to be registered in the temp container
             provider.RegisterTempActor(future, path);
             var message = messageFactory(future);
@@ -489,7 +489,7 @@ namespace Akka.Actor
             }
         }
 
-        /// <inheritdoc cref="InternalActorRefBase.TellInternal"/>
+        /// <inheritdoc cref="ActorRefBase.TellInternal">InternalActorRefBase.TellInternal</inheritdoc>
         protected override void TellInternal(object message, IActorRef sender)
         {
             switch (State)

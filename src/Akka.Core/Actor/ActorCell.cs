@@ -19,23 +19,25 @@ using Assert = System.Diagnostics.Debug;
 namespace Akka.Actor
 {
     /// <summary>
-    /// TBD
+    /// INTERNAL API.
+    ///
+    /// The hosting infrastructure for actors.
     /// </summary>
     public partial class ActorCell : IUntypedActorContext, ICell
     {
         /// <summary>NOTE! Only constructor and ClearActorFields is allowed to update this</summary>
         private IInternalActorRef _self;
+
         /// <summary>
-        /// TBD
+        /// Constant placeholder value for actors without a defined unique identifier.
         /// </summary>
         public const int UndefinedUid = 0;
+
         private Props _props;
-        private static readonly Props terminatedProps = new TerminatedProps();
 
         private const int DefaultState = 0;
         private const int SuspendedState = 1;
         private const int SuspendedWaitForChildrenState = 2;
-        // todo: might need a special state for AsyncAwait
 
         private ActorBase _actor;
         private bool _actorHasBeenCleared;
@@ -166,7 +168,7 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
-        internal static Props TerminatedProps { get { return terminatedProps; } }
+        internal static Props TerminatedProps { get; } = new TerminatedProps();
 
         /// <summary>
         /// TBD
@@ -514,7 +516,7 @@ namespace Akka.Actor
         protected void ClearActorCell()
         {
             UnstashAll();
-            _props = terminatedProps;
+            _props = TerminatedProps;
         }
 
         /// <summary>
@@ -566,10 +568,7 @@ namespace Akka.Actor
         /// <param name="actor">TBD</param>
         protected void SetActorFields(ActorBase actor)
         {
-            if (actor != null)
-            {
-                actor.Unclear();
-            }
+            actor?.Unclear();
         }
         /// <summary>
         /// TBD

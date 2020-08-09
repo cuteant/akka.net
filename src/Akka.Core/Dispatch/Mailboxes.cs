@@ -16,7 +16,6 @@ using Akka.Util;
 using Akka.Dispatch.MessageQueues;
 using Akka.Event;
 using CuteAnt.Reflection;
-using ConfigurationException = Akka.Configuration.ConfigurationException;
 
 namespace Akka.Dispatch
 {
@@ -55,6 +54,11 @@ namespace Akka.Dispatch
             _system = system;
             _deadLetterMailbox = new DeadLetterMailbox(system.DeadLetters);
             var mailboxConfig = system.Settings.Config.GetConfig("akka.actor.mailbox");
+            if (mailboxConfig.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<Mailboxes>("akka.actor.mailbox");
+            }
+
             var requirements = mailboxConfig.GetConfig("requirements").AsEnumerable().ToList();
             _mailboxBindings = new Dictionary<Type, string>();
             foreach (var kvp in requirements)
@@ -167,7 +171,7 @@ namespace Akka.Dispatch
                     if (!Settings.Config.HasPath(id)) AkkaThrowHelper.ThrowConfigurationException_Mailboxes_None(id);
                     var conf = Config(id);
 
-                    var mailboxTypeName = conf.GetString("mailbox-type");
+                    var mailboxTypeName = conf.GetString("mailbox-type", null);
                     if (string.IsNullOrEmpty(mailboxTypeName)) { AkkaThrowHelper.ThrowConfigurationException_Mailboxes_TypeName(id); }
                     var type = TypeUtil.ResolveType(mailboxTypeName);
                     if (type == null) AkkaThrowHelper.ThrowConfigurationException_Mailboxes_Type(mailboxTypeName, id);
@@ -243,7 +247,7 @@ namespace Akka.Dispatch
 
         private Type GetMailboxRequirement(Config config)
         {
-            var mailboxRequirement = config.GetString("mailbox-requirement");
+            var mailboxRequirement = config.GetString("mailbox-requirement", null);
             return mailboxRequirement == null || mailboxRequirement.Equals(NoMailboxRequirement) ? typeof(IMessageQueue) : TypeUtils.ResolveType(mailboxRequirement);//, true);
         }
 
@@ -260,7 +264,7 @@ namespace Akka.Dispatch
         {
             if (dispatcherConfig == null)
                 dispatcherConfig = ConfigurationFactory.Empty;
-            var id = dispatcherConfig.GetString("id");
+            var id = dispatcherConfig.GetString("id", null);
             var deploy = props.Deploy;
             var actorType = props.Type;
             var actorRequirement = new Lazy<Type>(() => GetRequiredType(actorType));
@@ -269,7 +273,7 @@ namespace Akka.Dispatch
             var hasMailboxRequirement = mailboxRequirement != typeof(IMessageQueue);
 
             var hasMailboxType = dispatcherConfig.HasPath("mailbox-type") &&
-                                 dispatcherConfig.GetString("mailbox-type") != Deploy.NoMailboxGiven;
+                                 dispatcherConfig.GetString("mailbox-type", null) != Deploy.NoMailboxGiven;
 
             if (!hasMailboxType && !_mailboxSizeWarningIssued && dispatcherConfig.HasPath("mailbox-size"))
             {
@@ -290,14 +294,14 @@ namespace Akka.Dispatch
             if (!deploy.Mailbox.Equals(Deploy.NoMailboxGiven))
                 return VerifyRequirements(Lookup(deploy.Mailbox));
             if (!deploy.Dispatcher.Equals(Deploy.NoDispatcherGiven) && hasMailboxType)
-                return VerifyRequirements(Lookup(dispatcherConfig.GetString("id")));
+                return VerifyRequirements(Lookup(dispatcherConfig.GetString("id", null)));
             if (actorRequirement.Value != null)
             {
                 try
                 {
                     return VerifyRequirements(LookupByQueueType(actorRequirement.Value));
                 }
-                catch (Exception e)
+                catch (Exception)
                 {
                     if (hasMailboxRequirement)
                         return VerifyRequirements(LookupByQueueType(mailboxRequirement));
@@ -323,7 +327,12 @@ namespace Akka.Dispatch
             }
 
             var config = _system.Settings.Config.GetConfig(path);
-            var type = config.GetString("mailbox-type");
+            if (config.IsNullOrEmpty())
+            {
+                AkkaThrowHelper.ThrowConfigurationException_Cannot_retrieve_mailbox_type_from_config(path);
+            }
+
+            var type = config.GetString("mailbox-type", null);
 
             var mailboxType = TypeUtil.ResolveType(type);
             return mailboxType;

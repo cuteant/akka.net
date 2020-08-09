@@ -10,6 +10,7 @@ using Akka.Cluster.Tools.Singleton;
 using Akka.Cluster.Tools.Singleton.Serialization;
 using Akka.Configuration;
 using Akka.Pattern;
+using Akka.Util.Internal;
 
 namespace Akka.Cluster.Tools
 {
@@ -151,16 +152,6 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_ActorSystemSettingsHasNoConfigurationForPubSubDefined()
-        {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException("Actor system settings has no configuration for akka.cluster.pub-sub defined");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_ConsistentHashingRoutingLogicCannotBeUsedByThePubSubMediator()
         {
             throw GetException();
@@ -207,26 +198,6 @@ namespace Akka.Cluster.Tools
             ArgumentException GetException()
             {
                 return new ArgumentException("Initial contacts for cluster client cannot be empty");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_ActorSystemDoesnotHave_AkkaClusterClientReceptionist_Config(ActorSystem system)
-        {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Actor system [{system.Name}] doesn't have `akka.cluster.client.receptionist` config set up");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowArgumentException_ActorSystemDoesnotHave_AkkaClusterClient_Config(ActorSystem system)
-        {
-            throw GetException();
-            ArgumentException GetException()
-            {
-                return new ArgumentException($"Actor system [{system.Name}] doesn't have `akka.cluster.client` config set up");
             }
         }
 
@@ -347,27 +318,6 @@ namespace Akka.Cluster.Tools
         #region -- ConfigurationException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_CannotCreateClusterSingletonProxySettings()
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException($"Cannot create {typeof(ClusterSingletonProxySettings)}: akka.cluster.singleton-proxy configuration node not found");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_CannotInitializeClusterSingletonManagerSettings()
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException(
-                    $"Cannot initialize {typeof(ClusterSingletonManagerSettings)}: akka.cluster.singleton configuration node was not provided");
-            }
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowConfigurationException_MinNumberOfHandOverRetriesMustBe_1()
         {
             throw GetException();
@@ -387,7 +337,7 @@ namespace Akka.Cluster.Tools
             throw GetException();
             ClusterSingletonManagerIsStuckException GetException()
             {
-                return new ClusterSingletonManagerIsStuckException($"Becoming singleton oldest was stuck because previous oldest [{becomingOldest.PreviousOldest}] is unresponsive");
+                return new ClusterSingletonManagerIsStuckException($"Becoming singleton oldest was stuck because previous oldest [{becomingOldest.PreviousOldest.Head()}] is unresponsive");
             }
         }
 

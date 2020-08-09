@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.DistributedData</RootNamespace>
     <AssemblyName>Akka.DistributedData</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
@@ -25,7 +25,7 @@
 
   <ItemGroup>
     <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
-    <PackageReference Include="Hyperion.Unofficial" Version="$(HyperionUnofficialPackageVersion)" />
+    <PackageReference Include="MessagePack.LZ4.Unofficial" Version="$(MessagePackLZ4UnofficialPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

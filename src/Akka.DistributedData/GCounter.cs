@@ -46,8 +46,6 @@ namespace Akka.DistributedData
         FastMerge<GCounter>,
         IRemovedNodePruning<GCounter>,
         IEquatable<GCounter>,
-        IComparable<GCounter>,
-        IComparable,
         IReplicatedDataSerialization,
         IDeltaReplicatedData<GCounter, GCounter>,
         IReplicatedDelta
@@ -188,26 +186,16 @@ namespace Akka.DistributedData
         public override int GetHashCode() => State.GetHashCode();
 
         /// <inheritdoc/>
-        public int CompareTo(object obj) => obj is GCounter counter ? CompareTo(counter) : -1;
-
-        /// <inheritdoc/>
         public bool Equals(GCounter other)
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
-            return Equals(Value, other.Value);
+            return State.SequenceEqual(other.State);
         }
 
         /// <inheritdoc/>
         public override bool Equals(object obj) => obj is GCounter counter && Equals(counter);
-
-        /// <inheritdoc/>
-        public int CompareTo(GCounter other)
-        {
-            if (other is null) return 1;
-            return Value.CompareTo(other.Value);
-        }
 
         /// <inheritdoc/>
         public override string ToString() => $"GCounter({Value})";

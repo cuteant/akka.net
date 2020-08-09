@@ -9,8 +9,6 @@ using System;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch.MessageQueues;
-using Akka.Event;
-using Helios.Concurrency;
 
 namespace Akka.Dispatch
 {
@@ -34,8 +32,9 @@ namespace Akka.Dispatch
         public PinnedDispatcherConfigurator(Config config, IDispatcherPrerequisites prerequisites)
             : base(config, prerequisites)
         {
-            
-            _executorServiceConfigurator = new ForkJoinExecutorServiceFactory(ForkJoinExecutorServiceFactory.SingleThreadDefault.WithFallback("id=" + config.GetString("id")), Prerequisites);
+            _executorServiceConfigurator =
+                new ForkJoinExecutorServiceFactory(
+                    ForkJoinExecutorServiceFactory.SingleThreadDefault.WithFallback("id=" + config.GetString("id", null)), Prerequisites);
             // We don't bother trying to support any other type of executor here. PinnedDispatcher doesn't support them
         }
 
@@ -45,11 +44,16 @@ namespace Akka.Dispatch
         /// <returns>TBD</returns>
         public override MessageDispatcher Dispatcher()
         {
-            return new PinnedDispatcher(this, Config.GetString("id"),
-                Config.GetInt("throughput"),
-                Config.GetTimeSpan("throughput-deadline-time").Ticks,
+            if (Config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<MessageDispatcher>();
+            }
+
+            return new PinnedDispatcher(this, Config.GetString("id", null),
+                Config.GetInt("throughput", 0),
+                Config.GetTimeSpan("throughput-deadline-time", null).Ticks,
                 _executorServiceConfigurator,
-                Config.GetTimeSpan("shutdown-timeout"));
+                Config.GetTimeSpan("shutdown-timeout", null));
         }
     }
 
@@ -70,9 +74,9 @@ namespace Akka.Dispatch
         /// <param name="throughputDeadlineTime">TBD</param>
         /// <param name="executorServiceFactory">TBD</param>
         /// <param name="shutdownTimeout">TBD</param>
-        public PinnedDispatcher(MessageDispatcherConfigurator configurator, 
-            string id, int throughput, long? throughputDeadlineTime, 
-            ExecutorServiceFactory executorServiceFactory, 
+        public PinnedDispatcher(MessageDispatcherConfigurator configurator,
+            string id, int throughput, long? throughputDeadlineTime,
+            ExecutorServiceFactory executorServiceFactory,
             TimeSpan shutdownTimeout) : base(configurator, id, throughput, throughputDeadlineTime, executorServiceFactory, shutdownTimeout)
         {
         }
@@ -89,7 +93,7 @@ namespace Akka.Dispatch
         internal override void Register(ActorCell actor)
         {
             var current = _owner;
-            if(current != null && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(_owner);
+            if (current != null && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(_owner);
             _owner = actor;
             base.Register(actor);
         }

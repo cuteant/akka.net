@@ -26,8 +26,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         public static DistributedPubSubSettings Create(ActorSystem system)
         {
             system.Settings.InjectTopLevelFallback(DistributedPubSub.DefaultConfig());
+
             var config = system.Settings.Config.GetConfig("akka.cluster.pub-sub");
-            if (config == null) ThrowHelper.ThrowArgumentException_ActorSystemSettingsHasNoConfigurationForPubSubDefined();
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<DistributedPubSubSettings>("akka.cluster.pub-sub");
+            }
 
             return Create(config);
         }
@@ -40,6 +44,11 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <returns>TBD</returns>
         public static DistributedPubSubSettings Create(Config config)
         {
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<DistributedPubSubSettings>();
+            }
+
             RoutingLogic routingLogic = null;
             var routingLogicName = config.GetString("routing-logic");
             switch (routingLogicName)
@@ -61,8 +70,12 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                     break;
             }
 
+            // TODO: This will fail if DistributedPubSub.DefaultConfig() is not inside the fallback chain.
+            // TODO: "gossip-interval" key depends on Config.GetTimeSpan() to return a TimeSpan.Zero default.
+            // TODO: "removed-time-to-live" key depends on Config.GetTimeSpan() to return a TimeSpan.Zero default.
+            // TODO: "max-delta-elements" key depends on Config.GetInt() to return a 0 default.
             return new DistributedPubSubSettings(
-                config.GetString("role"),
+                config.GetString("role", null),
                 routingLogic,
                 config.GetTimeSpan("gossip-interval"),
                 config.GetTimeSpan("removed-time-to-live"),

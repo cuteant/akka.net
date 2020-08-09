@@ -163,8 +163,7 @@ namespace Akka.Cluster.Tests.MultiNode.Routing
             var zero = Roles.Select(c => GetAddress(c)).ToDictionary(c => c, c => 0);
             var replays = ReceiveWhile(5.Seconds(), msg =>
             {
-                var routee = msg as ClusterRoundRobinSpecConfig.Reply;
-                if (routee != null && routee.RouteeType.GetType() == routeeType.GetType())
+                if (msg is ClusterRoundRobinSpecConfig.Reply routee && routee.RouteeType.GetType() == routeeType.GetType())
                     return FullAddress(routee.ActorRef);
                 return null;
             }, expectedReplies).Aggregate(zero, (replyMap, address) =>

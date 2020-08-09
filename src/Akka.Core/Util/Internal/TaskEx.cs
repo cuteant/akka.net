@@ -39,7 +39,7 @@ namespace Akka.Util.Internal
         /// should be used only together with <see cref="NonBlockingTrySetResult{T}"/> and
         /// <see cref="NonBlockingTrySetException{T}"/>.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static TaskCompletionSource<T> NonBlockingTaskCompletionSource<T>()
         {
 #if NET451
@@ -54,7 +54,7 @@ namespace Akka.Util.Internal
         /// fashion. For safety reasons, this method should be called only on tasks created via
         /// <see cref="NonBlockingTaskCompletionSource{T}"/> method.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static void NonBlockingTrySetResult<T>(this TaskCompletionSource<T> taskCompletionSource, T value)
         {
 #if NET451
@@ -69,7 +69,7 @@ namespace Akka.Util.Internal
         /// in asynchronous, non-blocking fashion. For safety reasons, this method should be called only
         /// on tasks created via <see cref="NonBlockingTaskCompletionSource{T}"/> method.
         /// </summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static void NonBlockingTrySetException<T>(this TaskCompletionSource<T> taskCompletionSource, Exception exception)
         {
 #if NET451
@@ -104,9 +104,13 @@ namespace Akka.Util.Internal
         [MethodImpl(MethodImplOptions.NoInlining)]
         public static Task<T> FromException<T>(Exception ex)
         {
+#if NET451
             var tcs = new TaskCompletionSource<T>();
             tcs.TrySetUnwrappedException<T>(ex);
             return tcs.Task;
+#else
+            return Task.FromException<T>(ex);
+#endif
         }
     }
 }

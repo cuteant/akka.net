@@ -11,33 +11,13 @@ using System.Text;
 
 namespace Akka.Util.Internal
 {
-    /// <summary>
-    /// <remarks>Note! Part of internal API. Breaking changes may occur without notice. Use at own risk.</remarks>
-    /// </summary>
-    public static class StringBuilderExtensions
+    internal static class StringBuilderExtensions
     {
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <typeparam name="T">TBD</typeparam>
-        /// <param name="sb">TBD</param>
-        /// <param name="separator">TBD</param>
-        /// <param name="values">TBD</param>
-        /// <returns>TBD</returns>
         public static StringBuilder AppendJoin<T>(this StringBuilder sb, string separator, IEnumerable<T> values)
         {
             return AppendJoin(sb, separator, values, null);
         }
 
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <typeparam name="T">TBD</typeparam>
-        /// <param name="sb">TBD</param>
-        /// <param name="separator">TBD</param>
-        /// <param name="values">TBD</param>
-        /// <param name="valueAppender">TBD</param>
-        /// <returns>TBD</returns>
         public static StringBuilder AppendJoin<T>(this StringBuilder sb, string separator, IEnumerable<T> values, Action<StringBuilder, T, int> valueAppender)
         {
             if (values == null) return sb;
@@ -53,7 +33,7 @@ namespace Akka.Util.Internal
                 // ReSharper disable CompareNonConstrainedGenericWithNull
                 var current = enumerator.Current;
                 if (current != null)
-                    // ReSharper restore CompareNonConstrainedGenericWithNull
+                // ReSharper restore CompareNonConstrainedGenericWithNull
                 {
                     valueAppender(sb, current, index);
                 }
@@ -65,7 +45,7 @@ namespace Akka.Util.Internal
                     // ReSharper disable CompareNonConstrainedGenericWithNull
                     current = enumerator.Current;
                     if (current != null)
-                        // ReSharper restore CompareNonConstrainedGenericWithNull
+                    // ReSharper restore CompareNonConstrainedGenericWithNull
                     {
                         valueAppender(sb, current, index);
                     }
@@ -73,6 +53,7 @@ namespace Akka.Util.Internal
             }
             return sb;
         }
+
         private static void DefaultAppendValue<T>(StringBuilder sb, T value, int index)
         {
             var s = value.ToString();

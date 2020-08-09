@@ -376,6 +376,24 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ClusterNodeScheduledSendingOfHeartbeatWasDelayed(this ILoggingAdapter logger, Cluster cluster, DateTime tickTimestamp)
+        {
+            logger.Warning(
+                "Cluster Node [{0}] - Scheduled sending of heartbeat was delayed. " +
+                "Previous heartbeat was sent [{1}] ms ago, expected interval is [{2}] ms. This may cause failure detection " +
+                "to mark members as unreachable. The reason can be thread starvation, e.g. by running blocking tasks on the " +
+                "default dispatcher, CPU overload, or GC.",
+                cluster.SelfAddress, (DateTime.UtcNow - tickTimestamp).TotalMilliseconds, cluster.Settings.HeartbeatInterval.TotalMilliseconds);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void JoiningOfSeedNodesWasUnsuccessful(this ILoggingAdapter logger, Cluster cluster, ImmutableList<Address> seedNodes)
+        {
+            logger.Warning("Joining of seed-nodes [{0}] was unsuccessful after configured shutdown-after-unsuccessful-join-seed-nodes [{1}]. Running CoordinatedShutdown.",
+                string.Join(", ", seedNodes), cluster.Settings.ShutdownAfterUnsuccessfulJoinSeedNodes);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void CallbackFailedWith(this ILoggingAdapter logger, Exception ex, Type to)
         {
             logger.Error(ex, "[{0}] callback failed with [{1}]", to.Name, ex.Message);

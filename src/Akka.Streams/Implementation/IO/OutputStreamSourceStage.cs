@@ -117,13 +117,13 @@ namespace Akka.Streams.Implementation.IO
         private sealed class Logic :
             OutGraphStageLogic,
             IStageWithCallback,
-            IHandle<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>>,
+            IHandle<(IAdapterToStageMessage, TaskCompletionSource<NotUsed>)>,
             IHandle<Either<ByteString, Exception>>
         {
             private readonly OutputStreamSourceStage _stage;
             private readonly AtomicReference<IDownstreamStatus> _downstreamStatus;
             private readonly string _dispatcherId;
-            private readonly IHandle<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>> _upstreamCallback;
+            private readonly IHandle<(IAdapterToStageMessage, TaskCompletionSource<NotUsed>)> _upstreamCallback;
             private readonly OnPullRunnable _pullTask;
             private readonly CancellationTokenSource _cancellation = new CancellationTokenSource();
             private BlockingCollection<ByteString> _dataQueue;
@@ -139,7 +139,7 @@ namespace Akka.Streams.Implementation.IO
                 _dispatcherId = dispatcherId;
 
                 var downstreamCallback = GetAsyncCallback<Either<ByteString, Exception>>(this);
-                _upstreamCallback = GetAsyncCallback<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>>(this);
+                _upstreamCallback = GetAsyncCallback<(IAdapterToStageMessage, TaskCompletionSource<NotUsed>)>(this);
                 _pullTask = new OnPullRunnable(downstreamCallback, dataQueue, _cancellation.Token);
                 SetHandler(_stage._out, this);
             }
@@ -214,12 +214,12 @@ namespace Akka.Streams.Implementation.IO
             public Task WakeUp(IAdapterToStageMessage msg)
             {
                 var p = new TaskCompletionSource<NotUsed>();
-                _upstreamCallback.Handle(Tuple.Create(msg, p));
+                _upstreamCallback.Handle((msg, p));
                 return p.Task;
             }
 
             // OnAsyncMessage
-            void IHandle<Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>>>.Handle(Tuple<IAdapterToStageMessage, TaskCompletionSource<NotUsed>> @event)
+            void IHandle<(IAdapterToStageMessage, TaskCompletionSource<NotUsed>)>.Handle((IAdapterToStageMessage, TaskCompletionSource<NotUsed>) @event)
             {
                 switch (@event.Item1)
                 {

@@ -32,7 +32,8 @@ namespace Akka.Persistence.TestKit.Performance
 
         private TimeSpan ExpectDuration = TimeSpan.FromSeconds(10);
 
-        protected JournalPerfSpec(Config config, string actorSystem, ITestOutputHelper output) : base(config, actorSystem, output)
+        protected JournalPerfSpec(Config config, string actorSystem, ITestOutputHelper output)
+            : base(config ?? Config.Empty, actorSystem, output)
         {
             testProbe = CreateTestProbe();
         }

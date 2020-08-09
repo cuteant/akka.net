@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------
 // <copyright file="ClusterClientSpec.cs" company="Akka.NET Project">
-//     Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
-//     Copyright (C) 2013-2018 .NET Foundation <https://github.com/akkadotnet/akka.net>
+//     Copyright (C) 2009-2019 Lightbend Inc. <http://www.lightbend.com>
+//     Copyright (C) 2013-2019 .NET Foundation <https://github.com/akkadotnet/akka.net>
 // </copyright>
 //-----------------------------------------------------------------------
 
@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Cluster.TestKit;
 using Akka.Cluster.Tools.Client;
@@ -466,6 +467,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Client
                             {
                                 var probe = CreateTestProbe();
                                 l.Tell(ClusterClientSpecConfig.TestReceptionistListener.GetLatestClusterClients.Instance, probe.Ref);
+
                                 // "ask-client" might still be around, filter
                                 probe.ExpectMsg<ClusterClientSpecConfig.TestReceptionistListener.LatestClusterClients>()
                                     .ClusterClients.Should()
@@ -518,7 +520,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Client
                 }, _config.Client);
 
                 EnterBarrier("after-7");
-            });
+            }); 
         }
 
         public void ClusterClient_must_reestablish_connection_to_another_receptionist_when_server_is_shutdown()
@@ -559,6 +561,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Client
                     });
                     Sys.Stop(c);
                 }, _config.Client);
+
                 EnterBarrier("verified-3");
                 ReceiveWhile(2.Seconds(), msg =>
                 {
@@ -608,10 +611,10 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Client
                     }
 
                     // shutdown all but the one that the client is connected to
-                    _remainingServerRoleNames.Where(r => !r.Equals(receptionistRoleName)).ForEach(r =>
-                    {
-                        TestConductor.Exit(r, 0).Wait();
-                    });
+                    var exitTasks = _remainingServerRoleNames.Where(r => !r.Equals(receptionistRoleName)).Select(r => TestConductor.Exit(r, 0));
+
+                    // ReSharper disable once CoVariantArrayConversion
+                    Task.WaitAll(exitTasks.ToArray());
                     _remainingServerRoleNames = ImmutableHashSet.Create(receptionistRoleName);
 
                     // network partition between client and server
@@ -654,14 +657,11 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Client
                     reply.Msg.Should().Be("bonjour4-ack");
                     reply.Node.Should().Be(remainingContacts.First().Address);
 
-                    // TODO: bug, cannot compare with a logsource
-                    // TODO: need to implement https://github.com/akkadotnet/akka.net/issues/3867 for this to work
-                    //var logSource = $"{Sys.AsInstanceOf<ExtendedActorSystem>().Provider.DefaultAddress}/user/client4";
-                    var logSource = c.ToString();
+                    var logSource = $"{Sys.AsInstanceOf<ExtendedActorSystem>().Provider.DefaultAddress}/user/client4";
 
-                    EventFilter.Info(start: "Connected to", source: logSource).ExpectOne(() =>
+                    EventFilter.Info(start: "Connected to", source:logSource).ExpectOne(() =>
                     {
-                        EventFilter.Info(start: "Lost contact", source: logSource).ExpectOne(() =>
+                        EventFilter.Info(start: "Lost contact", source:logSource).ExpectOne(() =>
                         {
                             // shutdown server
                             TestConductor.Shutdown(_remainingServerRoleNames.First()).Wait();

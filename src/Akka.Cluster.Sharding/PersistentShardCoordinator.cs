@@ -800,7 +800,7 @@ namespace Akka.Cluster.Sharding
         }
 
         /// <summary>
-        /// Result of <see cref="T:PersistentShardCoordinator.AllocateShard"/> is piped to self with this message.
+        /// Result of <see cref="IShardAllocationStrategy.AllocateShard(IActorRef, ShardId, IImmutableDictionary{IActorRef, IImmutableList{ShardId}})"/> is piped to self with this message.
         /// </summary>
         [MessagePackObject]
         public sealed class AllocateShardResult
@@ -840,7 +840,7 @@ namespace Akka.Cluster.Sharding
         }
 
         /// <summary>
-        /// Result of `rebalance` is piped to self with this message.
+        /// Result of <see cref="IShardAllocationStrategy.Rebalance(IImmutableDictionary{IActorRef, IImmutableList{ShardId}}, IImmutableSet{ShardId})"/> is piped to self with this message.
         /// </summary>
         [MessagePackObject]
         public sealed class RebalanceResult
@@ -1308,7 +1308,7 @@ namespace Akka.Cluster.Sharding
         /// </summary>
         /// <param name="message">TBD</param>
         /// <returns>TBD</returns>
-        protected override bool ReceiveRecover(Object message)
+        protected override bool ReceiveRecover(object message)
         {
             switch (message)
             {

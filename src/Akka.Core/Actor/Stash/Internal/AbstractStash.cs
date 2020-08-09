@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Dispatch;
 using Akka.Dispatch.MessageQueues;
+using Akka.Util;
 using CuteAnt.Collections;
 
 namespace Akka.Actor.Internal
@@ -172,7 +173,7 @@ namespace Akka.Actor.Internal
             Mailbox.EnqueueFirst(msg);
             if (msg.Message is Terminated terminatedMessage)
             {
-                _actorCell.TerminatedQueuedFor(terminatedMessage.ActorRef);
+                _actorCell.TerminatedQueuedFor(terminatedMessage.ActorRef, Option<object>.None);
             }
         }
     }

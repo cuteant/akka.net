@@ -12,6 +12,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Util;
+using CuteAnt;
 
 namespace Akka.Routing
 {
@@ -54,13 +55,14 @@ namespace Akka.Routing
             Dispatchers.DefaultDispatcherId,
             false) { }
 
+        // TODO: do we need to check for null or empty config here?
         /// <summary>
         /// Initializes a new instance of the <see cref="BroadcastPool"/> class.
         /// </summary>
         /// <param name="config">The configuration used to configure the pool.</param>
         public BroadcastPool(Config config)
             : this(
-                  nrOfInstances: config.GetInt("nr-of-instances"),
+                  nrOfInstances: config.GetInt("nr-of-instances", 0),
                   resizer: Resizer.FromConfig(config),
                   supervisorStrategy: Pool.DefaultSupervisorStrategy,
                   routerDispatcher: Dispatchers.DefaultDispatcherId,
@@ -239,6 +241,7 @@ namespace Akka.Routing
     /// </summary>
     public sealed class BroadcastGroup : Group
     {
+        // TODO: do we need to check for null or empty config here?
         /// <summary>
         /// Initializes a new instance of the <see cref="BroadcastGroup"/> class.
         /// <note>
@@ -248,7 +251,7 @@ namespace Akka.Routing
         /// <param name="config">The configuration to use to lookup paths used by the group router.</param>
         public BroadcastGroup(Config config)
             : this(
-                  config.GetStringList("routees.paths"),
+                  config.GetStringList("routees.paths", EmptyArray<string>.Instance),
                   Dispatchers.DefaultDispatcherId)
         {
         }

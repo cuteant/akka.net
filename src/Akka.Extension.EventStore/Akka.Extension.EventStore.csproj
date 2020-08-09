@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.Extension.EventStore</RootNamespace>
     <AssemblyName>Akka.Extension.EventStore</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

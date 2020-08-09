@@ -37,12 +37,11 @@ namespace Akka.DistributedData
             if (other is PruningPerformed) return other;
 
             var that = (PruningInitialized)other;
-            if (this.Owner == that.Owner)
-                return new PruningInitialized(this.Owner, this.Seen.Union(that.Seen));
-            else if (Member.AddressOrdering.Compare(this.Owner.Address, that.Owner.Address) > 0)
-                return other;
-            else
-                return this;
+            if (Owner == that.Owner)
+            {
+                return new PruningInitialized(Owner, Seen.Union(that.Seen));
+            }
+            return Member.AddressOrdering.Compare(Owner.Address, that.Owner.Address) > 0 ? other : this;
         }
 
         public bool Equals(PruningInitialized other)
@@ -58,7 +57,21 @@ namespace Akka.DistributedData
         {
             unchecked
             {
-                return ((Owner != null ? Owner.GetHashCode() : 0) * 397) ^ (Seen != null ? Seen.GetHashCode() : 0);
+                var seed = 17;
+                if (Seen != null)
+                {
+                    foreach (var s in Seen)
+                    {
+                        seed *= s.GetHashCode();
+                    }
+                }
+
+                if (Owner != null)
+                {
+                    seed = seed *= Owner.GetHashCode() ^ 397;
+                }
+
+                return seed;
             }
         }
     }
@@ -79,7 +92,7 @@ namespace Akka.DistributedData
         {
             if (other is PruningPerformed that)
             {
-                return this.ObsoleteTime >= that.ObsoleteTime ? this : that;
+                return ObsoleteTime >= that.ObsoleteTime ? this : that;
             }
             else return this;
         }

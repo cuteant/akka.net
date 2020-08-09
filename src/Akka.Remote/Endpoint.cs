@@ -1968,8 +1968,8 @@ namespace Akka.Remote
 
         private void Reading()
         {
-            Receive<Disassociated>(HandleDisassociated);
             Receive<InboundPayload>(HandleInboundPayload);
+            Receive<Disassociated>(HandleDisassociated);
             Receive<EndpointWriter.StopReading>(HandleStopReading);
         }
 
@@ -2015,9 +2015,9 @@ namespace Akka.Remote
                     {
                         LogTransientSerializationError(ackAndMessage.MessageOption, e);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
-                        throw e;
+                        throw;
                     }
                 }
             }
@@ -2079,34 +2079,33 @@ namespace Akka.Remote
 
         private void SaveState()
         {
-            var key = new EndpointManager.Link(LocalAddress, RemoteAddress);
-            _receiveBuffers.TryGetValue(key, out var previousValue);
-            UpdateSavedState(key, previousValue);
-        }
-
-        private EndpointManager.ResendState Merge(EndpointManager.ResendState current, EndpointManager.ResendState oldState)
-        {
-            if (current.Uid == oldState.Uid)
+            EndpointManager.ResendState Merge(EndpointManager.ResendState current,
+                EndpointManager.ResendState oldState)
             {
-                return new EndpointManager.ResendState(_uid, oldState.Buffer.MergeFrom(current.Buffer));
+                if (current.Uid == oldState.Uid) return new EndpointManager.ResendState(_uid, oldState.Buffer.MergeFrom(current.Buffer));
+                return current;
             }
 
-            return current;
-        }
-
-        private void UpdateSavedState(EndpointManager.Link key, EndpointManager.ResendState expectedState)
-        {
-            if (expectedState is null)
+            void UpdateSavedState(EndpointManager.Link key, EndpointManager.ResendState expectedState)
             {
-                if (!_receiveBuffers.TryAdd(key, new EndpointManager.ResendState(_uid, _ackedReceiveBuffer)))
+                if (expectedState == null)
                 {
-                    UpdateSavedState(key, _receiveBuffers[key]);
+                    if (!_receiveBuffers.TryAdd(key, new EndpointManager.ResendState(_uid, _ackedReceiveBuffer)))
+                    {
+                        _receiveBuffers.TryGetValue(key, out var prevValue);
+                        UpdateSavedState(key, prevValue);
+                    }
+                }
+                else if (!_receiveBuffers.TryUpdate(key,
+                    Merge(new EndpointManager.ResendState(_uid, _ackedReceiveBuffer), expectedState), expectedState))
+                {
+                    _receiveBuffers.TryGetValue(key, out var prevValue);
+                    UpdateSavedState(key, prevValue);
                 }
             }
-            else if (!_receiveBuffers.TryUpdate(key, expectedState, Merge(new EndpointManager.ResendState(_uid, _ackedReceiveBuffer), expectedState)))
-            {
-                UpdateSavedState(key, _receiveBuffers[key]);
-            }
+
+            var k = new EndpointManager.Link(LocalAddress, RemoteAddress);
+            UpdateSavedState(k, !_receiveBuffers.TryGetValue(k, out var previousValue) ? null : previousValue);
         }
 
         private void HandleDisassociated(Disassociated disassociated)

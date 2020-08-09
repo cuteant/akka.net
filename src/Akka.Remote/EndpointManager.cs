@@ -201,7 +201,7 @@ namespace Akka.Remote
             /// <summary>TBD</summary>
             /// <param name="addressesPromise">TBD</param>
             /// <param name="results">TBD</param>
-            public ListensResult(TaskCompletionSource<IList<ProtocolTransportAddressPair>> addressesPromise, List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>> results)
+            public ListensResult(TaskCompletionSource<IList<ProtocolTransportAddressPair>> addressesPromise, List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)> results)
             {
                 Results = results;
                 AddressesPromise = addressesPromise;
@@ -211,7 +211,7 @@ namespace Akka.Remote
             public readonly TaskCompletionSource<IList<ProtocolTransportAddressPair>> AddressesPromise;
 
             /// <summary>TBD</summary>
-            public readonly IList<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>> Results;
+            public readonly IList<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)> Results;
         }
 
         /// <summary>TBD</summary>
@@ -591,8 +591,8 @@ namespace Akka.Remote
                    .PipeTo(Self);
         }
 
-        private static readonly Func<Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>>, Listen, INoSerializationVerificationNeeded> InvokeHandleListenFunc = InvokeHandleListen;
-        private static INoSerializationVerificationNeeded InvokeHandleListen(Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>> listens, Listen listen)
+        private static readonly Func<Task<List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>>, Listen, INoSerializationVerificationNeeded> InvokeHandleListenFunc = InvokeHandleListen;
+        private static INoSerializationVerificationNeeded InvokeHandleListen(Task<List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>> listens, Listen listen)
         {
             if (listens.IsSuccessfully())
             {
@@ -773,14 +773,14 @@ namespace Akka.Remote
             var readPolicy = _endpoints.ReadOnlyEndpointFor(remoteAddr);
             if (readPolicy != null)
             {
-                var readPolicyActor = readPolicy.Item1;
+                var readPolicyActor = readPolicy.Value.Item1;
                 if (readPolicyActor != null)
                 {
                     if (quarantineUid == null)
                     {
                         context.Stop(readPolicyActor);
                     }
-                    else if (readPolicy.Item2 == quarantineUid)
+                    else if (readPolicy.Value.Item2 == quarantineUid)
                     {
                         context.Stop(readPolicyActor);
                     }
@@ -851,7 +851,7 @@ namespace Akka.Remote
                         Context.System.DeadLetters.Tell(send);
                     }
                     break;
-                case Quarantined quarantined:
+                case Quarantined _:
                     // timeOfRelease is only used for garbage collection reasons, therefore it is
                     // ignored here. We still have the Quarantined tombstone and we know what UID
                     // we don't want to accept, so use it.
@@ -1019,7 +1019,7 @@ namespace Akka.Remote
             var readonlyEndpoint = _endpoints.ReadOnlyEndpointFor(remoteAddr);
             if (readonlyEndpoint != null)
             {
-                var endpoint = readonlyEndpoint.Item1;
+                var endpoint = readonlyEndpoint.Value.Item1;
                 if (_pendingReadHandoffs.TryGetValue(endpoint, out var protocolHandle))
                 {
                     protocolHandle.Disassociate("the existing readOnly association was replaced by a new incoming one", _log);
@@ -1096,9 +1096,9 @@ namespace Akka.Remote
 
         #region * Listens *
 
-        private Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>> _listens;
+        private Task<List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>> _listens;
 
-        private Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>> Listens
+        private Task<List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>> Listens
         {
             get
             {
@@ -1145,7 +1145,7 @@ namespace Akka.Remote
                         catch (Exception ex)
                         {
                             var ei = System.Runtime.ExceptionServices.ExceptionDispatchInfo.Capture(ex);
-                            var task = new Task<List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>>(InvokeOnListenFailFunc, ei);
+                            var task = new Task<List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>>(InvokeOnListenFailFunc, ei);
                             task.RunSynchronously();
                             _listens = task;
                             return _listens;
@@ -1172,18 +1172,18 @@ namespace Akka.Remote
             }
         }
 
-        private static readonly Func<object, List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>>> InvokeOnListenFailFunc = InvokeOnListenFail;
-        private static List<Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>> InvokeOnListenFail(object state)
+        private static readonly Func<object, List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>> InvokeOnListenFailFunc = InvokeOnListenFail;
+        private static List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)> InvokeOnListenFail(object state)
         {
             ((System.Runtime.ExceptionServices.ExceptionDispatchInfo)state).Throw();
             return null;
         }
 
-        private static readonly Func<Tuple<Address, TaskCompletionSource<IAssociationEventListener>>, AkkaProtocolTransport, Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>>> AfterListenFunc = AfterListen;
-        private static Tuple<ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>> AfterListen(
-            Tuple<Address, TaskCompletionSource<IAssociationEventListener>> result, AkkaProtocolTransport transport)
+        private static readonly Func<(Address, TaskCompletionSource<IAssociationEventListener>), AkkaProtocolTransport, (ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)> AfterListenFunc = AfterListen;
+        private static (ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>) AfterListen(
+            (Address, TaskCompletionSource<IAssociationEventListener>) result, AkkaProtocolTransport transport)
         {
-            return Tuple.Create(new ProtocolTransportAddressPair(transport, result.Item1), result.Item2);
+            return (new ProtocolTransportAddressPair(transport, result.Item1), result.Item2);
         }
 
         #endregion

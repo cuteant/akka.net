@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using Akka.Actor;
 using Akka.Configuration;
@@ -24,7 +25,11 @@ namespace Akka.DistributedData
         public static ReplicatorSettings Create(ActorSystem system)
         {
             var config = system.Settings.Config.GetConfig("akka.cluster.distributed-data");
-            if (null == config) { ThrowHelper.ThrowConfigurationException_DistributedDataConfigNotProvided(); }
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<ReplicatorSettings>("akka.cluster.distributed-data");
+            }
+
             return Create(config);
         }
 
@@ -37,15 +42,18 @@ namespace Akka.DistributedData
         /// <returns>TBD</returns>
         public static ReplicatorSettings Create(Config config)
         {
-            if (config == null) ThrowHelper.ThrowArgumentNullException_DistributedDataConfigNotProvided();
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<ReplicatorSettings>();
+            }
 
-            var dispatcher = config.GetString("use-dispatcher");
+            var dispatcher = config.GetString("use-dispatcher", null);
             if (string.IsNullOrEmpty(dispatcher)) dispatcher = Dispatchers.DefaultDispatcherId;
 
             var durableConfig = config.GetConfig("durable");
             var durableKeys = durableConfig.GetStringList("keys");
-            Props durableStoreProps = Props.Empty;
-            var durableStoreTypeName = durableConfig.GetString("store-actor-class");
+            var durableStoreProps = Props.Empty;
+            var durableStoreTypeName = durableConfig.GetString("store-actor-class", null);
             var isDurableStoreConfigured = !string.IsNullOrEmpty(durableStoreTypeName);
             if (durableKeys.Count != 0)
             {
@@ -67,7 +75,7 @@ namespace Akka.DistributedData
                 maxPruningDissemination: config.GetTimeSpan("max-pruning-dissemination"),
                 durableKeys: durableKeys.ToImmutableHashSet(StringComparer.Ordinal),
                 durableStoreProps: durableStoreProps,
-                pruningMarkerTimeToLive: config.GetTimeSpan("pruning-marker-time-to-live"),
+                pruningMarkerTimeToLive: config.GetTimeSpan("pruning-marker-time-to-live", null),
                 durablePruningMarkerTimeToLive: durableConfig.GetTimeSpan("pruning-marker-time-to-live"),
                 maxDeltaSize: config.GetInt("delta-crdt.max-delta-size"));
         }
@@ -125,7 +133,7 @@ namespace Akka.DistributedData
         public IImmutableSet<string> DurableKeys { get; }
 
         /// <summary>
-        /// 
+        /// How long the tombstones of a removed node are kept on their CRDTs.
         /// </summary>
         public TimeSpan PruningMarkerTimeToLive { get; }
 

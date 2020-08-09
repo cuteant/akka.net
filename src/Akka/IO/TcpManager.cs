@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Event;
 
@@ -63,7 +64,7 @@ namespace Akka.IO
             _tcp = tcp;
             Context.System.EventStream.Subscribe(Self, typeof(DeadLetter));
         }
-        
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -72,31 +73,35 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         protected override bool Receive(object message)
         {
-            var c = message as Connect;
-            if (c != null)
+            switch (message)
             {
-                var commander = Sender;
-                Context.ActorOf(Props.Create(() => new TcpOutgoingConnection(_tcp, commander, c)));
-                return true;
+                case Connect c:
+                    Context.ActorOf(Props.Create(() => new TcpOutgoingConnection(_tcp, Sender, c)));
+                    return true;
+
+                case Bind b:
+                    Context.ActorOf(Props.Create(() => new TcpListener(_tcp, Sender, b)));
+                    return true;
+
+                case DeadLetter dl:
+                    var completed = dl.Message as SocketCompleted;
+                    if (completed != null)
+                    {
+                        //TODO: release resources?
+                    }
+                    return true;
+
+                default:
+                    throw GetArgumentException(message);
             }
-            var b = message as Bind;
-            if (b != null)
-            {
-                var commander = Sender;
-                Context.ActorOf(Props.Create(() => new TcpListener(_tcp, commander, b)));
-                return true;
-            }
-            var dl = message as DeadLetter;
-            if (dl != null)
-            {
-                var completed = dl.Message as SocketCompleted;
-                if (completed != null)
-                {
-                    //TODO: release resources?
-                }
-                return true;
-            }
-            throw new ArgumentException("The supplied message type is invalid. Only Connect and Bind messages are supported.", nameof(message));
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static ArgumentException GetArgumentException(object message)
+        {
+            return new ArgumentException($"The supplied message of type {message.GetType().Name} is invalid. Only Connect and Bind messages are supported. " +
+                                        $"If you are going to manage your connection state, you need to communicate with Tcp.Connected sender actor. " +
+                                        $"See more here: https://getakka.net/articles/networking/io.html", nameof(message));
         }
     }
 }

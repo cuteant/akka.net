@@ -44,7 +44,7 @@ namespace Akka.Remote.Tests.Serialization
                 substitution-concat-config = Hello ${akka.string-config}
             }";
 
-        public MiscMessageSerializerSpec() : base(ConfigurationFactory.ParseString("").WithFallback(RemoteConfigFactory.Default()))
+        public MiscMessageSerializerSpec() : base(RemoteConfigFactory.Default())
         {
         }
 

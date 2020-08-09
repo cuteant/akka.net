@@ -141,44 +141,44 @@ namespace Akka.Streams.Serialization
             }
         }
 
-        private SinkRefImpl DeserializeSinkRef(byte[] bytes)
+        private SinkRefImpl DeserializeSinkRef(in ReadOnlySpan<byte> bytes)
         {
             var sinkRef = MessagePackSerializer.Deserialize<Protocol.SinkRef>(bytes, s_defaultResolver);
             return SinkRefImpl.Create(sinkRef.EventType, _system.Provider.ResolveActorRef(sinkRef.TargetRef.Path));
         }
 
-        private SourceRefImpl DeserializeSourceRef(byte[] bytes)
+        private SourceRefImpl DeserializeSourceRef(in ReadOnlySpan<byte> bytes)
         {
             var sourceRef = MessagePackSerializer.Deserialize<Protocol.SourceRef>(bytes, s_defaultResolver);
             return SourceRefImpl.Create(sourceRef.EventType, _system.Provider.ResolveActorRef(sourceRef.OriginRef.Path));
         }
 
-        private static RemoteStreamCompleted DeserializeRemoteSinkCompleted(byte[] bytes)
+        private static RemoteStreamCompleted DeserializeRemoteSinkCompleted(in ReadOnlySpan<byte> bytes)
         {
             var completed = MessagePackSerializer.Deserialize<Protocol.RemoteStreamCompleted>(bytes, s_defaultResolver);
             return new RemoteStreamCompleted(completed.SeqNr);
         }
 
-        private static RemoteStreamFailure DeserializeRemoteSinkFailure(byte[] bytes)
+        private static RemoteStreamFailure DeserializeRemoteSinkFailure(in ReadOnlySpan<byte> bytes)
         {
             var failure = MessagePackSerializer.Deserialize<Protocol.RemoteStreamFailure>(bytes, s_defaultResolver);
             return new RemoteStreamFailure(failure.Cause);
         }
 
-        private OnSubscribeHandshake DeserializeOnSubscribeHandshake(byte[] bytes)
+        private OnSubscribeHandshake DeserializeOnSubscribeHandshake(in ReadOnlySpan<byte> bytes)
         {
             var handshake = MessagePackSerializer.Deserialize<Protocol.OnSubscribeHandshake>(bytes, s_defaultResolver);
             var targetRef = _system.Provider.ResolveActorRef(handshake.TargetRef.Path);
             return new OnSubscribeHandshake(targetRef);
         }
 
-        private static CumulativeDemand DeserializeCumulativeDemand(byte[] bytes)
+        private static CumulativeDemand DeserializeCumulativeDemand(in ReadOnlySpan<byte> bytes)
         {
             var demand = MessagePackSerializer.Deserialize<Protocol.CumulativeDemand>(bytes, s_defaultResolver);
             return new CumulativeDemand(demand.SeqNr);
         }
 
-        private SequencedOnNext DeserializeSequenceOnNext(byte[] bytes)
+        private SequencedOnNext DeserializeSequenceOnNext(in ReadOnlySpan<byte> bytes)
         {
             var onNext = MessagePackSerializer.Deserialize<Protocol.SequencedOnNext>(bytes, s_defaultResolver);
             var payload = _serialization.Deserialize(onNext.Payload);

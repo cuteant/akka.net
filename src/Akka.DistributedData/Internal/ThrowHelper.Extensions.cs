@@ -387,15 +387,15 @@ namespace Akka.DistributedData
 
         #region -- ConfigurationException --
 
-        [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ThrowConfigurationException_DistributedDataConfigNotProvided()
-        {
-            throw GetException();
-            ConfigurationException GetException()
-            {
-                return new ConfigurationException("HOCON config section `akka.cluster.distributed-data` was not found");
-            }
-        }
+        //[MethodImpl(MethodImplOptions.NoInlining)]
+        //internal static void ThrowConfigurationException_DistributedDataConfigNotProvided()
+        //{
+        //    throw GetException();
+        //    ConfigurationException GetException()
+        //    {
+        //        return new ConfigurationException("HOCON config section `akka.cluster.distributed-data` was not found");
+        //    }
+        //}
 
         #endregion
 

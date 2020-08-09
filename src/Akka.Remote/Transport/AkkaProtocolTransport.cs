@@ -810,7 +810,7 @@ namespace Akka.Remote.Transport
                 case DisassociateUnderlying _:
                     return Stop();
 
-                case HandshakeTimer t when fsmEvent.StateData is OutboundUnassociated ou2:
+                case HandshakeTimer _ when fsmEvent.StateData is OutboundUnassociated ou2:
                     var (timeoutExc, timeout) = GetHandshakeTimeoutError(_settings);
                     ou2.StatusCompletionSource.SetException(timeoutExc);
                     return Stop(timeout);
@@ -879,7 +879,7 @@ namespace Akka.Remote.Transport
                         }
                     }
 
-                case HeartbeatTimer t when evtStateData is OutboundUnderlyingAssociated oua:
+                case HeartbeatTimer _ when evtStateData is OutboundUnderlyingAssociated oua:
                     return HandleTimers(oua.WrappedHandle);
 
                 // Events for inbound associations
@@ -917,12 +917,12 @@ namespace Akka.Remote.Transport
                         }
                     }
 
-                case HandshakeTimer t when evtStateData is OutboundUnderlyingAssociated oua:
+                case HandshakeTimer _ when evtStateData is OutboundUnderlyingAssociated oua:
                     if (_log.IsDebugEnabled) _log.SendingDisassociateToBecauseHandshakeTimedOutForOutboundAssociationAfter(oua, _settings);
                     SendDisassociate(oua.WrappedHandle, DisassociateInfo.Unknown);
                     return Stop(new Failure(GetTimeoutReasonForOutboundAssociation()));
 
-                case HandshakeTimer t when evtStateData is InboundUnassociated iu:
+                case HandshakeTimer _ when evtStateData is InboundUnassociated iu:
                     if (_log.IsDebugEnabled) _log.SendingDisassociateToBecauseHandshakeTimedOutForInboundAssociationAfter(iu, _settings);
                     SendDisassociate(iu.WrappedHandle, DisassociateInfo.Unknown);
                     return Stop(new Failure(GetTimeoutReasonForInboundAssociation()));
@@ -952,7 +952,7 @@ namespace Akka.Remote.Transport
                         {
                             case Disassociate d:
                                 return Stop(new Failure(d.Reason));
-                            case Heartbeat h:
+                            case Heartbeat _:
                                 _failureDetector.HeartBeat();
                                 return Stay();
                             case Payload p:
@@ -977,10 +977,10 @@ namespace Akka.Remote.Transport
                                 return Stay();
                         }
                     }
-                case HeartbeatTimer ht when evtStateData is AssociatedWaitHandler awh:
+                case HeartbeatTimer _ when evtStateData is AssociatedWaitHandler awh:
                     return HandleTimers(awh.WrappedHandle);
 
-                case HeartbeatTimer ht when evtStateData is ListenerReady lr:
+                case HeartbeatTimer _ when evtStateData is ListenerReady lr:
                     return HandleTimers(lr.WrappedHandle);
 
                 case DisassociateUnderlying dl:
@@ -1124,9 +1124,9 @@ namespace Akka.Remote.Transport
         {
             switch (reason)
             {
-                case Normal n:
+                case Normal _:
                     return "the ProtocolStateActor was stopped normally";
-                case Shutdown s:
+                case Shutdown _:
                     return "the ProtocolStateActor was shutdown";
                 case Failure f:
                     return $"the ProtocolStateActor failed: {f.Cause}";
@@ -1151,7 +1151,7 @@ namespace Akka.Remote.Transport
                     case TimeoutReason timeout:
                         return new AkkaProtocolException(timeout.ErrorMessage);
 
-                    case ForbiddenUidReason forbidden:
+                    case ForbiddenUidReason _:
                         return new AkkaProtocolException("The remote system has a UID that has been quarantined. Association aborted.");
 
                     case DisassociateInfo info:

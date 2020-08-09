@@ -522,7 +522,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                 foreach (var kv in bucket.Content)
                 {
                     var key = kv.Key;
-                    var value = kv.Value;
+                    _ = kv.Value;
                     if (key.StartsWith(topicPrefix, StringComparison.Ordinal))
                     {
                         var topic = key.Substring(topicPrefix.Length + 1);

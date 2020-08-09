@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Actor;
 
@@ -16,6 +17,16 @@ namespace Akka.Configuration
     /// </summary>
     public class ConfigurationException : AkkaException
     {
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        public static ConfigurationException NullOrEmptyConfig<T>(string path = null)
+        {
+            if (!string.IsNullOrWhiteSpace(path))
+            {
+                return new ConfigurationException($"Failed to instantiate {typeof(T).Name}: Configuration does not contain `{path}` node");
+            }
+            return new ConfigurationException($"Failed to instantiate {typeof(T).Name}: Configuration is null or empty.");
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="ConfigurationException"/> class.
         /// </summary>
@@ -29,7 +40,7 @@ namespace Akka.Configuration
         /// </summary>
         /// <param name="message">The message that describes the error.</param>
         /// <param name="exception">The exception that is the cause of the current exception.</param>
-        public ConfigurationException(string message, Exception exception): base(message, exception)
+        public ConfigurationException(string message, Exception exception) : base(message, exception)
         {
         }
 

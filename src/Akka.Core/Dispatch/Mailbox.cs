@@ -674,7 +674,12 @@ namespace Akka.Dispatch
         /// </exception>
         public BoundedMailbox(Settings settings, Config config) : base(settings, config)
         {
-            Capacity = config.GetInt("mailbox-capacity");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<BoundedMailbox>();
+            }
+
+            Capacity = config.GetInt("mailbox-capacity", 0);
             PushTimeout = config.GetTimeSpan("mailbox-push-timeout-time", TimeSpan.FromSeconds(-1));
 
             if (Capacity < 0) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_BoundedMailbox_Capacity, AkkaExceptionArgument.config);
@@ -806,7 +811,12 @@ namespace Akka.Dispatch
         /// </exception>
         public BoundedDequeBasedMailbox(Settings settings, Config config) : base(settings, config)
         {
-            Capacity = config.GetInt("mailbox-capacity");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<BoundedDequeBasedMailbox>();
+            }
+
+            Capacity = config.GetInt("mailbox-capacity", 0);
             PushTimeout = config.GetTimeSpan("mailbox-push-timeout-time", TimeSpan.FromSeconds(-1));
 
             if (Capacity < 0) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_BoundedMailbox_Capacity, AkkaExceptionArgument.config);

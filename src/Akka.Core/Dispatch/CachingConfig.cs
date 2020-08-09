@@ -407,8 +407,9 @@ namespace Akka.Dispatch
         /// TBD
         /// </summary>
         /// <param name="path">TBD</param>
+        /// <param name="strings"></param>
         /// <returns>TBD</returns>
-        public override IList<string> GetStringList(string path)
+        public override IList<string> GetStringList(string path, string[] strings)
         {
             return _config.GetStringList(path);
         }

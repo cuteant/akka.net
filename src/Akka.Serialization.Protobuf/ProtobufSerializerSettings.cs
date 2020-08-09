@@ -34,7 +34,11 @@ namespace Akka.Serialization
         /// <returns></returns>
         public static ProtobufSerializerSettings Create(Config config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config), "MsgPackSerializerSettings require a config, default path: `akka.serializers.msgpack`");
+            if (config.IsNullOrEmpty())
+            {
+                throw ConfigurationException.NullOrEmptyConfig<ProtobufSerializerSettings>("akka.serializers.protobuf");
+            }
+            if (config == null) throw new ArgumentNullException(nameof(config), "MsgPackSerializerSettings require a config, default path: `akka.serializers.protobuf`");
 
             return new ProtobufSerializerSettings(
                 initialBufferSize: (int)config.GetByteSize("initial-buffer-size", c_initialBufferSize));
