@@ -18,7 +18,8 @@ using Akka.Configuration;
 using Akka.Event;
 using Akka.Remote;
 using Akka.Util;
-using Akka.Util.Internal;
+using DotNetty.Common.Utilities;
+using AtomicBoolean = Akka.Util.AtomicBoolean;
 
 namespace Akka.Cluster
 {
@@ -109,8 +110,8 @@ namespace Akka.Cluster
 
             LogInfo("Starting up...");
 
-            FailureDetector = new DefaultFailureDetectorRegistry<Address>(() => FailureDetectorLoader.Load(Settings.FailureDetectorImplementationClass, Settings.FailureDetectorConfig,
-                system));
+            FailureDetector = new DefaultFailureDetectorRegistry<Address>(() =>
+                FailureDetectorLoader.Load(Settings.FailureDetectorImplementationClass, Settings.FailureDetectorConfig, system));
 
             Scheduler = CreateScheduler(system);
 

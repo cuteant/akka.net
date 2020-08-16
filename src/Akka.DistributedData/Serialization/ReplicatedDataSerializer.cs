@@ -52,11 +52,13 @@ namespace Akka.DistributedData.Serialization
         private const string ORMapUpdateManifest = "Hu";
         private const string ORMapDeltaGroupManifest = "Hg";
         private const string LWWMapManifest = "I";
+        private const string LWWMapDeltaGroupManifest = "Ig";
         private const string LWWMapKeyManifest = "i";
         private const string PNCounterMapManifest = "J";
         private const string PNCounterMapDeltaOperationManifest = "Jo";
         private const string PNCounterMapKeyManifest = "j";
         private const string ORMultiMapManifest = "K";
+        private const string ORMultiMapDeltaOperationManifest = "Ko";
         private const string ORMultiMapKeyManifest = "k";
         private const string VersionVectorManifest = "L";
 
@@ -90,9 +92,11 @@ namespace Akka.DistributedData.Serialization
                 { typeof(ORDictionary.IRemoveKeyDeltaOp), ORMapRemoveKeyManifest },
                 { typeof(ORDictionary.IUpdateDeltaOp), ORMapUpdateManifest },
                 { typeof(ILWWDictionary), LWWMapManifest },
+                { typeof(ILWWDictionaryDeltaOperation), LWWMapDeltaGroupManifest },
                 { typeof(IPNCounterDictionary), PNCounterMapManifest },
                 { typeof(IPNCounterDictionaryDeltaOperation), PNCounterMapDeltaOperationManifest },
                 { typeof(IORMultiValueDictionary), ORMultiMapManifest },
+                { typeof(IORMultiValueDictionaryDeltaOperation), ORMultiMapDeltaOperationManifest },
                 { typeof(DeletedData), DeletedDataManifest },
                 { typeof(VersionVector), VersionVectorManifest },
 
@@ -172,6 +176,9 @@ namespace Akka.DistributedData.Serialization
                 case ILWWDictionary l:
                     manifest = LWWMapManifest;
                     return LZ4MessagePackSerializer.Serialize(ToProto(l), s_defaultResolver);
+                case ILWWDictionaryDeltaOperation ld:
+                    manifest = LWWMapDeltaGroupManifest;
+                    return MessagePackSerializer.Serialize(ToProto(ld.Underlying), s_defaultResolver);
                 case IPNCounterDictionary pn:
                     manifest = PNCounterMapManifest;
                     return LZ4MessagePackSerializer.Serialize(ToProto(pn), s_defaultResolver);
@@ -181,6 +188,9 @@ namespace Akka.DistributedData.Serialization
                 case IORMultiValueDictionary m:
                     manifest = ORMultiMapManifest;
                     return LZ4MessagePackSerializer.Serialize(ToProto(m), s_defaultResolver);
+                case IORMultiValueDictionaryDeltaOperation md:
+                    manifest = ORMultiMapDeltaOperationManifest;
+                    return MessagePackSerializer.Serialize(ToProto(md), s_defaultResolver);
                 case DeletedData _:
                     manifest = DeletedDataManifest;
                     return _emptyArray;
@@ -226,9 +236,11 @@ namespace Akka.DistributedData.Serialization
                 case ORMapUpdateManifest: return ORDictionaryUpdateFromBinary(bytes);
                 case ORMapDeltaGroupManifest: return ORDictionaryDeltaGroupFromBinary(bytes);
                 case LWWMapManifest: return LWWDictionaryFromLZ4Binary(bytes);
+                case LWWMapDeltaGroupManifest: return LWWDictionaryDeltaGroupFromBinary(bytes);
                 case PNCounterMapManifest: return PNCounterDictionaryFromLZ4Binary(bytes);
                 case PNCounterMapDeltaOperationManifest: return PNCounterDeltaFromBinary(bytes);
                 case ORMultiMapManifest: return ORMultiDictionaryFromLZ4Binary(bytes);
+                case ORMultiMapDeltaOperationManifest: return ORMultiDictionaryDeltaFromBinary(bytes);
                 case DeletedDataManifest: return DeletedData.Instance;
                 case VersionVectorManifest: return /*_ser.*/VersionVectorFromBinary(bytes);
 
@@ -283,9 +295,11 @@ namespace Akka.DistributedData.Serialization
                 case ORDictionary.IRemoveKeyDeltaOp _: return ORMapRemoveKeyManifest;
                 case ORDictionary.IUpdateDeltaOp _: return ORMapUpdateManifest;
                 case ILWWDictionary _: return LWWMapManifest;
+                case ILWWDictionaryDeltaOperation _: return LWWMapDeltaGroupManifest;
                 case IPNCounterDictionary _: return PNCounterMapManifest;
                 case IPNCounterDictionaryDeltaOperation _: return PNCounterMapDeltaOperationManifest;
                 case IORMultiValueDictionary _: return ORMultiMapManifest;
+                case IORMultiValueDictionaryDeltaOperation _: return ORMultiMapDeltaOperationManifest;
                 case DeletedData _: return DeletedDataManifest;
                 case VersionVector _: return VersionVectorManifest;
 
@@ -1130,7 +1144,7 @@ namespace Akka.DistributedData.Serialization
         {
             var deltaOps = new List<ORDictionary<TKey, TValue>.IDeltaOperation>();
 
-            (object key, TValue value) MapEntryFromProto(Protocol.ORMapDeltaGroup.MapEntry entry)
+            (object key, object value) MapEntryFromProto(Protocol.ORMapDeltaGroup.MapEntry entry)
             {
                 object k = null;
                 switch (deltaGroup.KeyTypeInfo.Type)
@@ -1149,7 +1163,7 @@ namespace Akka.DistributedData.Serialization
                         break;
                 }
 
-                return (k, (TValue)_ser.OtherMessageFromProto(entry.Value));
+                return (k, _ser.OtherMessageFromProto(entry.Value));
             }
 
             foreach (var entry in deltaGroup.Entries)
@@ -1165,7 +1179,7 @@ namespace Akka.DistributedData.Serialization
                             }
                             var (key, value) = MapEntryFromProto(entry.EntryData[0]);
 
-                            deltaOps.Add(new ORDictionary<TKey, TValue>.PutDeltaOperation(new ORSet<TKey>.AddDeltaOperation((ORSet<TKey>)underlying), (TKey)key, value));
+                            deltaOps.Add(new ORDictionary<TKey, TValue>.PutDeltaOperation(new ORSet<TKey>.AddDeltaOperation((ORSet<TKey>)underlying), (TKey)key, (TValue)value));
                         }
                         break;
                     case Protocol.ORMapDeltaOp.ORMapRemove:
@@ -1394,6 +1408,25 @@ namespace Akka.DistributedData.Serialization
             return LWWDictFromProto(proto);
         }
 
+        private object LWWDictionaryDeltaGroupFromBinary(in ReadOnlySpan<byte> bytes)
+        {
+            var proto = MessagePackSerializer.Deserialize<Protocol.ORMapDeltaGroup>(bytes, s_defaultResolver);
+            var orDictOp = ORDictionaryDeltaGroupFromProto(proto);
+
+            var orSetType = orDictOp.ValueType.GenericTypeArguments[0];
+            var maker = LWWDictionaryDeltaMaker.MakeGenericMethod(orDictOp.KeyType, orSetType);
+            return (ILWWDictionaryDeltaOperation)maker.Invoke(this, new object[] { orDictOp });
+        }
+
+        private static readonly MethodInfo LWWDictionaryDeltaMaker =
+            typeof(ReplicatedDataSerializer).GetMethod(nameof(LWWDictionaryDeltaFromProto), BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private ILWWDictionaryDeltaOperation LWWDictionaryDeltaFromProto<TKey, TValue>(ORDictionary.IDeltaOperation op)
+        {
+            var casted = (ORDictionary<TKey, LWWRegister<TValue>>.IDeltaOperation)op;
+            return new LWWDictionary<TKey, TValue>.LWWDictionaryDelta(casted);
+        }
+
         #endregion
 
         #region PNCounterDictionary
@@ -1529,6 +1562,11 @@ namespace Akka.DistributedData.Serialization
         private static readonly MethodInfo MultiMapProtoMaker =
             typeof(ReplicatedDataSerializer).GetMethod(nameof(MultiMapToProto), BindingFlags.Instance | BindingFlags.NonPublic);
 
+        private Protocol.ORMultiMapDelta ToProto(IORMultiValueDictionaryDeltaOperation op)
+        {
+            return new Protocol.ORMultiMapDelta(ToProto(op.Underlying), op.WithValueDeltas);
+        }
+
 
         private Protocol.ORMultiMap MultiMapToProto<TKey, TValue>(IORMultiValueDictionary multi)
         {
@@ -1628,6 +1666,25 @@ namespace Akka.DistributedData.Serialization
             }
         }
 
+        private object ORMultiDictionaryDeltaFromBinary(in ReadOnlySpan<byte> bytes)
+        {
+            var proto = MessagePackSerializer.Deserialize<Protocol.ORMultiMapDelta>(bytes, s_defaultResolver);
+            var orDictOp = ORDictionaryDeltaGroupFromProto(proto.Delta);
+
+            var orSetType = orDictOp.ValueType.GenericTypeArguments[0];
+            var maker = ORMultiDictionaryDeltaMaker.MakeGenericMethod(orDictOp.KeyType, orSetType);
+            return (IORMultiValueDictionaryDeltaOperation)maker.Invoke(this, new object[] { orDictOp, proto.WithValueDeltas });
+        }
+
+        private static readonly MethodInfo ORMultiDictionaryDeltaMaker =
+            typeof(ReplicatedDataSerializer).GetMethod(nameof(ORMultiDictionaryDeltaFromProto), BindingFlags.Instance | BindingFlags.NonPublic);
+
+        private IORMultiValueDictionaryDeltaOperation ORMultiDictionaryDeltaFromProto<TKey, TValue>(ORDictionary.IDeltaOperation op, bool withValueDeltas)
+        {
+            var casted = (ORDictionary<TKey, ORSet<TValue>>.IDeltaOperation)op;
+            return new ORMultiValueDictionary<TKey, TValue>.ORMultiValueDictionaryDelta(casted, withValueDeltas);
+        }
+
         #endregion
 
         #region Keys
@@ -1637,34 +1694,34 @@ namespace Akka.DistributedData.Serialization
             switch (key)
             {
                 case IORSetKey orkey:
-                    manifest = "ORSetKeyManifest";
+                    manifest = ORSetKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.ORSetKey, GetTypeDescriptor(orkey.SetType));
                 case IGSetKey gSetKey:
-                    manifest = "GSetKeyManifest";
+                    manifest = GSetKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.GSetKey, GetTypeDescriptor(gSetKey.SetType));
                 case GCounterKey _:
-                    manifest = "GCounterKeyManifest";
+                    manifest = GCounterKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.GCounterKey);
                 case PNCounterKey _:
-                    manifest = "PNCounterKeyManifest";
+                    manifest = PNCounterKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.PNCounterKey);
                 case FlagKey _:
-                    manifest = "FlagKeyManifest";
+                    manifest = FlagKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.FlagKey);
                 case ILWWRegisterKey registerKey:
-                    manifest = "LWWRegisterKeyManifest";
+                    manifest = LWWRegisterKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.LWWRegisterKey, GetTypeDescriptor(registerKey.RegisterType));
                 case IORDictionaryKey dictionaryKey:
-                    manifest = "ORMapKeyManifest";
+                    manifest = ORMapKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.ORMapKey, GetTypeDescriptor(dictionaryKey.KeyType), GetTypeDescriptor(dictionaryKey.ValueType));
                 case ILWWDictionaryKey lwwDictKey:
-                    manifest = "LWWMapKeyManifest";
+                    manifest = LWWMapKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.LWWMapKey, GetTypeDescriptor(lwwDictKey.KeyType), GetTypeDescriptor(lwwDictKey.ValueType));
                 case IPNCounterDictionaryKey pnDictKey:
-                    manifest = "PNCounterMapKeyManifest";
+                    manifest = PNCounterMapKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.PNCounterMapKey, GetTypeDescriptor(pnDictKey.KeyType));
                 case IORMultiValueDictionaryKey orMultiKey:
-                    manifest = "ORMultiMapKeyManifest";
+                    manifest = ORMultiMapKeyManifest;
                     return new Protocol.Key(key.Id, Protocol.KeyType.ORMultiMapKey, GetTypeDescriptor(orMultiKey.KeyType), GetTypeDescriptor(orMultiKey.ValueType));
                 default:
                     throw GetUnrecognizedKeyTypeException(key);

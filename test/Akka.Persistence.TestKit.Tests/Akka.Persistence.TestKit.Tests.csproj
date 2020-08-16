@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\xunitSettings.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Persistence.TestKit.Tests</RootNamespace>
+    <AssemblyName>Akka.Persistence.TestKit.Tests</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="TeamCity.ServiceMessages" Version="$(TeamCityServiceMessagesPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Persistence.TestKit\Akka.Persistence.TestKit.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence.TestKit.Xunit2\Akka.Persistence.TestKit.Xunit2.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+  </ItemGroup>
+
+</Project>

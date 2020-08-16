@@ -263,6 +263,26 @@ namespace Akka.Streams
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Timeout_must_be_finite()
+        {
+            throw GetArgumentException();
+            static ArgumentException GetArgumentException()
+            {
+                return new ArgumentException("Timeout must be finite.", "timeout");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Capacity_must_be_greater_than_zero()
+        {
+            throw GetArgumentException();
+            static ArgumentException GetArgumentException()
+            {
+                return new ArgumentException("Capacity must be greater than zero", "capacity");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_Downcast(IMaterializer materializer)
         {
             throw GetArgumentException();
@@ -416,7 +436,8 @@ namespace Akka.Streams
         internal static void ThrowArgumentException_UnexpectedModule()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("unexpected module structure");
             }
@@ -646,7 +667,8 @@ namespace Akka.Streams
         internal static void ThrowArgumentException_KeepAliveConcat_Ctor()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("The buffer keep alive failover size must be greater than 0.", "keepAliveFailoverSize");
             }
@@ -938,6 +960,16 @@ namespace Akka.Streams
             }
         }
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowIllegalStateException_Mandatory_attribute_not_found<TAttr>() where TAttr : class, Attributes.IMandatoryAttribute
+        {
+            throw GetException();
+            static IllegalStateException GetException()
+            {
+                return new IllegalStateException($"Mandatory attribute [{typeof(TAttr)}] not found.");
+            }
+        }
+
         #endregion
 
         #region -- InvalidOperationException --
@@ -956,7 +988,8 @@ namespace Akka.Streams
         internal static void ThrowBufferOverflowException_Queue()
         {
             throw GetException();
-            BufferOverflowException GetException()
+
+            static BufferOverflowException GetException()
             {
                 return new BufferOverflowException("Queue is full");
             }
@@ -982,7 +1015,8 @@ namespace Akka.Streams
         internal static void ThrowNotSupportedException()
         {
             throw GetException();
-            NotSupportedException GetException()
+
+            static NotSupportedException GetException()
             {
                 return new NotSupportedException();
             }
@@ -1060,7 +1094,8 @@ namespace Akka.Streams
         internal static void ThrowIndexOutOfRangeException_Framing()
         {
             throw GetArgumentException();
-            IndexOutOfRangeException GetArgumentException()
+
+            static IndexOutOfRangeException GetArgumentException()
             {
                 return new IndexOutOfRangeException("LittleEndianDecoder reached end of byte string");
             }
@@ -1088,7 +1123,8 @@ namespace Akka.Streams
         internal static void ThrowOutputTruncationException()
         {
             throw GetException();
-            OutputTruncationException GetException()
+
+            static OutputTruncationException GetException()
             {
                 return new OutputTruncationException();
             }
@@ -1102,7 +1138,8 @@ namespace Akka.Streams
         internal static void ThrowOverflowException()
         {
             throw GetException();
-            OverflowException GetException()
+
+            static OverflowException GetException()
             {
                 return new OverflowException("Maximum throttle throughput exceeded.");
             }
@@ -1116,7 +1153,8 @@ namespace Akka.Streams
         internal static void ThrowIOException_Timeout()
         {
             throw GetException();
-            IOException GetException()
+
+            static IOException GetException()
             {
                 return new IOException("Timeout on waiting for new data");
             }
@@ -1136,7 +1174,8 @@ namespace Akka.Streams
         internal static void ThrowIOException_OSIsClosed()
         {
             throw GetException();
-            IOException GetException()
+
+            static IOException GetException()
             {
                 return new IOException("OutputStream is closed");
             }

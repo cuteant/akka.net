@@ -3,7 +3,6 @@
     /// <summary>The convention for this enum is using the resource name as the enum name</summary>
     internal enum AkkaExceptionResource
     {
-        Argument_ActorRefCompareTo,
         Argument_PropsCreate,
         Argument_BoundedMessageQueue,
         Argument_BoundedMailbox_Capacity,

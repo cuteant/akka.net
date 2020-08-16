@@ -50,34 +50,38 @@ namespace Akka.Actor
             {
                 _systemImpl.EventStream.Publish(new Error(null, _self.Path.ToString(), GetType(), "Changing Recreate into Create after " + cause));
                 FaultCreate();
-                return;
             }
-            if (IsNormal)
+            else if (IsNormal)
             {
                 var failedActor = _actor;
 
-                if (System.Settings.DebugLifecycle)
-                    Publish(new Debug(_self.Path.ToString(), failedActor.GetType(), "Restarting"));
-
-                var optionalMessage = CurrentMessage;
-
-                try
+                if (failedActor is object)
                 {
-                    // if the actor fails in preRestart, we can do nothing but log it: it’s best-effort
+                    if (System.Settings.DebugLifecycle)
+                    {
+                        Publish(new Debug(_self.Path.ToString(), failedActor.GetType(), "Restarting"));
+                    }
 
-                    failedActor.AroundPreRestart(cause, optionalMessage);
+                    var optionalMessage = CurrentMessage;
 
-                    // run actor pre-incarnation plugin pipeline
-                    var pipeline = _systemImpl.ActorPipelineResolver.ResolvePipeline(failedActor.GetType());
-                    pipeline.BeforeActorIncarnated(failedActor, this);
-                }
-                catch (Exception e)
-                {
-                    HandleNonFatalOrInterruptedException(_publishOnFaultRecreateAction, cause, e, optionalMessage, failedActor);
-                }
-                finally
-                {
-                    ClearActor(_actor);
+                    try
+                    {
+                        // if the actor fails in preRestart, we can do nothing but log it: it’s best-effort
+
+                        failedActor.AroundPreRestart(cause, optionalMessage);
+
+                        // run actor pre-incarnation plugin pipeline
+                        var pipeline = _systemImpl.ActorPipelineResolver.ResolvePipeline(failedActor.GetType());
+                        pipeline.BeforeActorIncarnated(failedActor, this);
+                    }
+                    catch (Exception e)
+                    {
+                        HandleNonFatalOrInterruptedException(_publishOnFaultRecreateAction, cause, e, optionalMessage, failedActor);
+                    }
+                    finally
+                    {
+                        ClearActor(_actor);
+                    }
                 }
 
                 global::System.Diagnostics.Debug.Assert(Mailbox.IsSuspended(), "Mailbox must be suspended during restart, status=" + Mailbox.CurrentStatus());
@@ -247,6 +251,7 @@ namespace Akka.Actor
                     SuspendChildren(childrenNotToSuspend?.ToList());
 
                     //Tell supervisor
+                    // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
                     Parent.SendSystemMessage(new Failed(_self, cause, _self.Path.Uid));
                 }
                 catch (Exception e)

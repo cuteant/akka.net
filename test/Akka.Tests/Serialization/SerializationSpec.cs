@@ -587,9 +587,6 @@ namespace Akka.Tests.Serialization
             Assert.Equal(decider.DefaultDirective, sdecider.DefaultDirective);
         }
 
-
-        //TODO: find out why this fails on build server
-
         [Fact]
         public void Can_serialize_FutureActorRef()
         {

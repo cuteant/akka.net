@@ -102,6 +102,12 @@ namespace Akka.Actor
         protected ActorBase()
         {
             if (ActorCell.Current == null) AkkaThrowHelper.ThrowActorInitializationException(AkkaExceptionResource.ActorInitialization_Actor_Ctor);
+
+            if (this is IWithTimers withTimers)
+            {
+                withTimers.Timers = new Scheduler.TimerScheduler(Context);
+            }
+
             Context.Become(Receive);
         }
 
@@ -152,6 +158,38 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         protected internal virtual bool AroundReceive(Receive receive, object message)
         {
+            if (message is Scheduler.TimerScheduler.ITimerMsg tm)
+            {
+                if (this is IWithTimers withTimers && withTimers.Timers is Scheduler.TimerScheduler timers)
+                {
+                    switch (timers.InterceptTimerMsg(Context.System.Log, tm))
+                    {
+                        case IAutoReceivedMessage m:
+                            ((ActorCell)Context).AutoReceiveMessage(new Envelope(m, Self));
+                            return true;
+
+                        case null:
+                            // discard
+                            return true;
+
+                        case object m:
+                            if (this is IActorStash)
+                            {
+                                var actorCell = (ActorCell)Context;
+                                // this is important for stash interaction, as stash will look directly at currentMessage #24557
+                                actorCell.CurrentMessage = m;
+                            }
+                            message = m;
+                            break;
+                    }
+                }
+                else
+                {
+                    // discard
+                    return true;
+                }
+            }
+
             var wasHandled = receive(message);
             if (!wasHandled)
             {

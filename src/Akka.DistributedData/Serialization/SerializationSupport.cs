@@ -128,7 +128,7 @@ namespace Akka.DistributedData.Serialization
         public VersionVector VersionVectorFromProto(in Protocol.VersionVector versionVector)
         {
             var entries = versionVector.Entries;
-            if (0u >= (uint)entries.Count)
+            if (entries is null || 0u >= (uint)entries.Count)
             {
                 return VersionVector.Empty;
             }

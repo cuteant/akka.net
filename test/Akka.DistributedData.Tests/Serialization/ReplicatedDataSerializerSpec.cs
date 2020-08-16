@@ -232,6 +232,16 @@ namespace Akka.DistributedData.Tests.Serialization
             CheckSameContent(m1.Merge(m2), m2.Merge(m1));
         }
 
+        [Fact()]
+        public void ReplicatedDataSerializer_should_serialize_ORMultiDictionary_delta()
+        {
+            CheckSerialization(ORMultiValueDictionary<string, string>.Empty.AddItem(_address1, "a", "A").Delta);
+            CheckSerialization(ORMultiValueDictionary<string, string>.EmptyWithValueDeltas
+                .AddItem(_address1, "a", "A1")
+                .SetItems(_address2, "b", ImmutableHashSet.CreateRange(new[] { "B1", "B2", "B3" }))
+                .AddItem(_address2, "a", "A2").Delta);
+        }
+
         [Fact]
         public void ReplicatedDataSerializer_should_serialize_DeletedData()
         {

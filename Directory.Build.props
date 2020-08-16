@@ -15,17 +15,15 @@
   <Import Project="$(SourceRoot)/build/Dependencies.System.props" />
   <Import Project="$(SourceRoot)/build/Dependencies.System2.props" />
   <Import Project="$(SourceRoot)/build/Dependencies.Testing.props" />
-  <Import Project="Dependencies.Akka.props" />
+
+  <Import Project="$(SourceRoot)/build/Dependencies.Akka.props" />
 
   <!-- Ensure changes to this file cause project rebuilds. -->
   <PropertyGroup>
     <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
   </PropertyGroup>
 
-  <PropertyGroup>
-    <SignAssembly>True</SignAssembly>
-    <AssemblyOriginatorKeyFile>$(SourceRoot)/build/StrongKey.snk</AssemblyOriginatorKeyFile>
-  </PropertyGroup>
+  <Import Project="$(SourceRoot)/build/Akka.Dev.props" />
 
   <PropertyGroup>
     <CoreBenchmarkTfms>netcoreapp3.1</CoreBenchmarkTfms>
@@ -37,14 +35,17 @@
     <StandardTestTfms>$(ClusterTestTfms)</StandardTestTfms>
     <StandardTestTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardTestTfms);net452</StandardTestTfms>
 
-    <DeveloperBuildTfms>netstandard2.1;netstandard2.0</DeveloperBuildTfms>
+    <DeveloperBuildTfms>netstandard2.0</DeveloperBuildTfms>
     <ClusterDevTfms>$(DeveloperBuildTfms)</ClusterDevTfms>
     <ClusterDevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(ClusterDevTfms);net471</ClusterDevTfms>
-    <ClusterCore31DevTfms>$(ClusterDevTfms);netcoreapp3.1</ClusterCore31DevTfms>
+    <Cluster21DevTfms>$(ClusterDevTfms);netstandard2.1</Cluster21DevTfms>
+    <ClusterCore31DevTfms>$(Cluster21DevTfms);netcoreapp3.1</ClusterCore31DevTfms>
     <ClusterCore21DevTfms>$(ClusterCore31DevTfms);netcoreapp2.1</ClusterCore21DevTfms>
+
     <StandardDevTfms>$(ClusterDevTfms)</StandardDevTfms>
     <StandardDevTfms Condition=" '$(OS)' == 'Windows_NT' ">$(StandardDevTfms);net451</StandardDevTfms>
-    <StandardCore31DevTfms>$(StandardDevTfms);netcoreapp3.1</StandardCore31DevTfms>
+    <Standard21DevTfms>$(StandardDevTfms);netstandard2.1</Standard21DevTfms>
+    <StandardCore31DevTfms>$(Standard21DevTfms);netcoreapp3.1</StandardCore31DevTfms>
     <StandardCore21DevTfms>$(StandardCore31DevTfms);netcoreapp2.1</StandardCore21DevTfms>
   </PropertyGroup>
 
@@ -56,7 +57,7 @@
     <Prefer32Bit>false</Prefer32Bit>
     <TieredCompilation>true</TieredCompilation>
     <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
-    <DefineConstants>$(DefineConstants);NET_3_5_GREATER;SIGNED</DefineConstants>
+    <DefineConstants>$(DefineConstants);NET_3_5_GREATER</DefineConstants>
     <NoWarn>$(NoWarn);CS1591</NoWarn>
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>

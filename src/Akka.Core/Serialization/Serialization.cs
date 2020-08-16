@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
@@ -182,6 +183,8 @@ namespace Akka.Serialization
         private readonly Dictionary<int, Serializer> _serializersById = new Dictionary<int, Serializer>();
         private readonly Dictionary<string, Serializer> _serializersByName = new Dictionary<string, Serializer>(StringComparer.Ordinal);
 
+        private readonly ImmutableHashSet<SerializerDetails> _serializerDetails;
+
         /// <summary>
         /// Serialization module. Contains methods for serialization and deserialization as well as
         /// locating a Serializer for a particular class as defined in the mapping in the configuration.
@@ -206,6 +209,9 @@ namespace Akka.Serialization
             var serializerBindingConfig = config.GetConfig("akka.actor.serialization-bindings").AsEnumerable().ToList();
             var serializerSettingsConfig = config.GetConfig("akka.actor.serialization-settings");
 
+            _serializerDetails = system.Settings.Setup.Get<SerializationSetup>()
+                .Select(x => x.CreateSerializers(system)).GetOrElse(ImmutableHashSet<SerializerDetails>.Empty);
+
             var systemLog = system.Log;
             var warnEnabled = systemLog.IsWarningEnabled;
             foreach (var kvp in serializersConfig)
@@ -225,6 +231,18 @@ namespace Akka.Serialization
                     : (Serializer)Activator.CreateInstance(serializerType, system);
 
                 AddSerializer(kvp.Key, serializer);
+            }
+
+            // Add any serializers that are registered via the SerializationSetup
+            foreach (var details in _serializerDetails)
+            {
+                AddSerializer(details.Alias, details.Serializer);
+
+                // populate the serialization map
+                foreach (var t in details.UseFor)
+                {
+                    AddSerializationMap(t, details.Serializer);
+                }
             }
 
             foreach (var kvp in serializerBindingConfig)
@@ -682,7 +700,11 @@ namespace Akka.Serialization
         /// <returns>The serializer configured for the given object type</returns>
         public Serializer FindSerializerFor(object obj)
         {
-            return obj is object ? FindSerializerForType(obj.GetType()) : _nullSerializer;
+            if (obj is object)
+            {
+                return FindSerializerForTypeImpl(obj.GetType(), null);
+            }
+            return _nullSerializer;
         }
 
         /// <summary>Returns the Serializer configured for the given object, returns the NullSerializer if it's null.</summary>
@@ -691,7 +713,11 @@ namespace Akka.Serialization
         /// <returns>The serializer configured for the given object type</returns>
         public Serializer FindSerializerFor(object obj, string defaultSerializerName)
         {
-            return obj is object ? FindSerializerForType(obj.GetType(), defaultSerializerName) : _nullSerializer;
+            if (obj is object)
+            {
+                return FindSerializerForTypeImpl(obj.GetType(), defaultSerializerName);
+            }
+            return _nullSerializer;
         }
 
         /// <summary>Returns the configured Serializer for the given Class. The configured Serializer is used
@@ -704,12 +730,9 @@ namespace Akka.Serialization
         /// <returns>The serializer configured for the given object type</returns>
         public Serializer FindSerializerForType(Type objectType)
         {
-            if (_serializerMap.TryGetValue(objectType, out var fullMatchSerializer))
-            {
-                return fullMatchSerializer;
-            }
+            if (objectType is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.objectType); }
 
-            return InternalFindSerializerForType(this, objectType, null);
+            return FindSerializerForTypeImpl(objectType, null);
         }
 
         /// <summary>Returns the configured Serializer for the given Class. The configured Serializer is used
@@ -722,6 +745,14 @@ namespace Akka.Serialization
         /// could not be found.</exception>
         /// <returns>The serializer configured for the given object type</returns>
         public Serializer FindSerializerForType(Type objectType, string defaultSerializerName)
+        {
+            if (objectType is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.objectType); }
+
+            return FindSerializerForTypeImpl(objectType, defaultSerializerName);
+        }
+
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
+        private Serializer FindSerializerForTypeImpl(Type objectType, string defaultSerializerName)
         {
             if (_serializerMap.TryGetValue(objectType, out var fullMatchSerializer))
             {

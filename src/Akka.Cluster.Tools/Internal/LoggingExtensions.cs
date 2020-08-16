@@ -265,6 +265,12 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Trying_to_acquire_lease_before_starting_singleton(this ILoggingAdapter logger)
+        {
+            logger.Info("Trying to acquire lease before starting singleton");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void SingletonManagerStartedSingletonActor(this ILoggingAdapter logger, IActorRef singleton)
         {
             logger.Info("Singleton manager started singleton actor [{0}] ", singleton.Path);
@@ -283,6 +289,12 @@ namespace Akka.Cluster.Tools
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Lease_released(this ILoggingAdapter logger)
+        {
+            logger.Info("Lease released");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void SelfDownedStopping(this ILoggingAdapter logger)
         {
             logger.Info("Self downed, stopping");
@@ -298,6 +310,30 @@ namespace Akka.Cluster.Tools
         internal static void SingletonActorWasTerminated(this ILoggingAdapter logger, IActorRef singleton)
         {
             logger.Info("Singleton actor [{0}] was terminated", singleton.Path);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Acquire_lease_result(this ILoggingAdapter logger, AcquireLeaseResult alr)
+        {
+            logger.Info("Acquire lease result {0}", alr.HoldingLease);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Singleton_actor_terminated_Trying_to_acquire_lease_again_before_re_creating(this ILoggingAdapter logger)
+        {
+            logger.Info("Singleton actor terminated. Trying to acquire lease again before re-creating.");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Releasing_lease_as_leaving_Oldest(this ILoggingAdapter logger)
+        {
+            logger.Info("Releasing lease as leaving Oldest");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Releasing_lease_as_leaving_AcquiringLease_going_to(this ILoggingAdapter logger, ClusterSingletonState to)
+        {
+            logger.Info("Releasing lease as leaving AcquiringLease going to [{0}]", to);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -322,6 +358,31 @@ namespace Akka.Cluster.Tools
         internal static void ReceptionistReconnectNotSuccessful(this ILoggingAdapter logger, ClusterClientSettings settings)
         {
             logger.Warning("Receptionist reconnect not successful within {0} stopping cluster client", settings.ReconnectTimeout);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Lease_has_been_lost_Terminating_singleton_and_trying_to_re_acquire_lease(this ILoggingAdapter logger, LeaseLost ll)
+        {
+            logger.Warning(ll.Reason, "Lease has been lost. Terminating singleton and trying to re-acquire lease");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Failed_to_get_lease_will_be_retried(this ILoggingAdapter logger, AcquireLeaseFailure alf)
+        {
+            logger.Error(alf.Failure, "Failed to get lease (will be retried)");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Failed_to_release_lease_Singleton(this ILoggingAdapter logger, ReleaseLeaseFailure rlf)
+        {
+            if (rlf is object)
+            {
+                logger.Error(rlf.Failure, "Failed to release lease. Singleton may not be able to run on another node until lease timeout occurs");
+            }
+            else
+            {
+                logger.Error("Failed to release lease. Singleton may not be able to run on another node until lease timeout occurs");
+            }
         }
     }
 }

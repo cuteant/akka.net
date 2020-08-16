@@ -103,7 +103,7 @@ namespace Akka.Serialization
             {
 #endif
                 var system = formatterResolver.GetActorSystem();
-                var serializer = system.Serialization.FindSerializerForType(message.GetType());
+                var serializer = system.Serialization.FindSerializerFor(message);
                 return serializer.ToBinary(message);
 #if DEBUG
             }
@@ -127,7 +127,7 @@ namespace Akka.Serialization
             {
 #endif
                 var system = formatterResolver.GetActorSystem();
-                var serializer = system.Serialization.FindSerializerForType(message.GetType(), defaultSerializerName);
+                var serializer = system.Serialization.FindSerializerFor(message, defaultSerializerName);
                 return serializer.ToBinary(message);
 #if DEBUG
             }
@@ -150,7 +150,7 @@ namespace Akka.Serialization
             {
 #endif
                 var system = formatterResolver.GetActorSystem();
-                var serializer = system.Serialization.FindSerializerForType(message.GetType());
+                var serializer = system.Serialization.FindSerializerFor(message);
                 return serializer.ToPayload(message);
 #if DEBUG
             }
@@ -174,7 +174,7 @@ namespace Akka.Serialization
             {
 #endif
                 var system = formatterResolver.GetActorSystem();
-                var serializer = system.Serialization.FindSerializerForType(message.GetType(), defaultSerializerName);
+                var serializer = system.Serialization.FindSerializerFor(message, defaultSerializerName);
                 return serializer.ToPayload(message);
 #if DEBUG
             }

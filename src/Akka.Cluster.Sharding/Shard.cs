@@ -9,6 +9,7 @@ using System;
 using System.Collections.Immutable;
 using System.Linq;
 using Akka.Actor;
+using Akka.Coordination;
 using Akka.Event;
 using MessagePack;
 
@@ -43,9 +44,18 @@ namespace Akka.Cluster.Sharding
         void EntityTerminated(IActorRef tref);
         void DeliverTo(string id, object message, object payload, IActorRef sender);
         ICancelable PassivateIdleTask { get; }
+
+        ITimerScheduler Timers { get; }
+        Lease Lease { get; }
+        TimeSpan LeaseRetryInterval { get; }
+        /// <summary>
+        /// Override to execute logic once the lease has been acquired
+        /// Will be called on the actor thread
+        /// </summary>
+        void OnLeaseAcquired();
     }
 
-    internal sealed class Shard : ActorBase, IShard
+    internal sealed class Shard : ActorBase, IShard, IWithTimers
     {
         #region internal classes
 
@@ -371,6 +381,38 @@ namespace Akka.Cluster.Sharding
             private PassivateIdleTick() { }
         }
 
+        [Serializable]
+        public sealed class LeaseAcquireResult : IDeadLetterSuppression, INoSerializationVerificationNeeded
+        {
+            public readonly bool Acquired;
+
+            public readonly Exception Reason;
+
+            public LeaseAcquireResult(bool acquired, Exception reason)
+            {
+                Acquired = acquired;
+                Reason = reason;
+            }
+        }
+
+        [Serializable]
+        public sealed class LeaseLost : IDeadLetterSuppression, INoSerializationVerificationNeeded
+        {
+            public readonly Exception Reason;
+
+            public LeaseLost(Exception reason)
+            {
+                Reason = reason;
+            }
+        }
+
+        [Serializable]
+        public sealed class LeaseRetry : IDeadLetterSuppression, INoSerializationVerificationNeeded
+        {
+            public static readonly LeaseRetry Instance = new LeaseRetry();
+            private LeaseRetry() { }
+        }
+
         #endregion
 
         IActorContext IShard.Context => Context;
@@ -396,6 +438,10 @@ namespace Akka.Cluster.Sharding
         public ICancelable PassivateIdleTask { get; }
 
         private EntityRecoveryStrategy RememberedEntitiesRecoveryStrategy { get; }
+
+        public Lease Lease { get; }
+        public TimeSpan LeaseRetryInterval { get; } = TimeSpan.FromSeconds(5); // won't be used
+        public ITimerScheduler Timers { get; set; }
 
         public Shard(
             string typeName,
@@ -425,13 +471,36 @@ namespace Akka.Cluster.Sharding
                 ? Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(idleInterval, idleInterval, Self, PassivateIdleTick.Instance, Self)
                 : null;
 
-            this.Initialized();
+            if (settings.LeaseSettings != null)
+            {
+                Lease = LeaseProvider.Get(Context.System).GetLease(
+                    $"{Context.System.Name}-shard-{typeName}-{shardId}",
+                    settings.LeaseSettings.LeaseImplementation,
+                    Cluster.Get(Context.System).SelfAddress.HostPort());
+
+                LeaseRetryInterval = settings.LeaseSettings.LeaseRetryInterval;
+            }
+        }
+
+        protected override void PreStart()
+        {
+            this.AcquireLeaseIfNeeded();
         }
 
         protected override void PostStop()
         {
+            this.ReleaseLeaseIfNeeded();
             PassivateIdleTask?.Cancel();
             base.PostStop();
+        }
+
+        public void OnLeaseAcquired()
+        {
+#if DEBUG
+            if (Log.IsDebugEnabled) { Log.Debug("Shard initialized"); }
+#endif
+            Context.Parent.Tell(new ShardInitialized(ShardId));
+            Context.UnbecomeStacked();
         }
 
         protected override bool Receive(object message) => this.HandleCommand(message);
@@ -444,12 +513,124 @@ namespace Akka.Cluster.Sharding
     {
         #region common shard methods
 
+        private const string LeaseRetryTimer = "lease-retry";
+
         /// <summary>
-        /// TBD
+        /// Will call onLeaseAcquired when completed, also when lease isn't used
         /// </summary>
-        public static void Initialized<TShard>(this TShard shard) where TShard : IShard
+        /// <typeparam name="TShard"></typeparam>
+        /// <param name="shard"></param>
+        public static void AcquireLeaseIfNeeded<TShard>(this TShard shard) where TShard : IShard
         {
-            shard.Context.Parent.Tell(new ShardInitialized(shard.ShardId));
+            if (shard.Lease != null)
+            {
+                shard.TryGetLease(shard.Lease);
+                shard.Context.Become(shard.AwaitingLease());
+            }
+            else
+                shard.OnLeaseAcquired();
+        }
+
+        public static void ReleaseLeaseIfNeeded<TShard>(this TShard shard) where TShard : IShard
+        {
+            if (shard.Lease != null)
+            {
+                shard.Lease.Release().ContinueWith(r =>
+                {
+                    if (r.IsFaulted || r.IsCanceled)
+                    {
+                        shard.Log.Error(r.Exception,
+                            "Failed to release lease of shard type [{0}] id [{1}]. Shard may not be able to run on another node until lease timeout occurs.", shard.TypeName, shard.ShardId);
+                    }
+                    else if (r.Result)
+                    {
+                        shard.Log.Info("Lease of shard type [{0}] id [{1}] released.", shard.TypeName, shard.ShardId);
+                    }
+                    else
+                    {
+                        shard.Log.Error(
+                            "Failed to release lease of shard type [{0}] id [{1}]. Shard may not be able to run on another node until lease timeout occurs.", shard.TypeName, shard.ShardId);
+                    }
+                });
+            }
+        }
+
+        public static void TryGetLease<TShard>(this TShard shard, Lease lease) where TShard : IShard
+        {
+            shard.Log.Info("Acquiring lease {0}", lease.Settings);
+
+            var self = shard.Self;
+            lease.Acquire(reason =>
+            {
+                self.Tell(new Shard.LeaseLost(reason));
+            }).ContinueWith(r =>
+            {
+                if (r.IsFaulted || r.IsCanceled)
+                    return new Shard.LeaseAcquireResult(false, r.Exception);
+                return new Shard.LeaseAcquireResult(r.Result, null);
+            }).PipeTo(shard.Self);
+        }
+
+        public static void HandleLeaseLost<TShard>(this TShard shard, Shard.LeaseLost message) where TShard : IShard
+        {
+            // The shard region will re-create this when it receives a message for this shard
+            shard.Log.Error(message.Reason, "Shard type [{0}] id [{1}] lease lost.", shard.TypeName, shard.ShardId);
+            // Stop entities ASAP rather than send termination message
+            shard.Context.Stop(shard.Self);
+        }
+
+        /// <summary>
+        /// Don't send back ShardInitialized so that messages are buffered in the ShardRegion
+        /// while awaiting the lease
+        /// </summary>
+        /// <typeparam name="TShard"></typeparam>
+        /// <param name="shard"></param>
+        /// <returns></returns>
+        public static Actor.Receive AwaitingLease<TShard>(this TShard shard) where TShard : IShard
+        {
+            bool AwaitingLease(object message)
+            {
+                switch (message)
+                {
+                    case Shard.LeaseAcquireResult lar when lar.Acquired:
+#if DEBUG
+                        if (shard.Log.IsDebugEnabled) { shard.Log.Debug("Acquired lease"); }
+#endif
+                        shard.OnLeaseAcquired();
+                        return true;
+
+                    case Shard.LeaseAcquireResult lar when !lar.Acquired && lar.Reason == null:
+                        shard.Log.Error(
+                              "Failed to get lease for shard type [{0}] id [{1}]. Retry in {2}",
+                              shard.TypeName,
+                              shard.ShardId,
+                              shard.LeaseRetryInterval);
+                        shard.Timers.StartSingleTimer(LeaseRetryTimer, Shard.LeaseRetry.Instance, shard.LeaseRetryInterval);
+                        return true;
+
+                    case Shard.LeaseAcquireResult lar when !lar.Acquired && lar.Reason != null:
+                        shard.Log.Error(
+                              lar.Reason,
+                              "Failed to get lease for shard type [{0}] id [{1}]. Retry in {2}",
+                              shard.TypeName,
+                              shard.ShardId,
+                              shard.LeaseRetryInterval);
+                        shard.Timers.StartSingleTimer(LeaseRetryTimer, Shard.LeaseRetry.Instance, shard.LeaseRetryInterval);
+                        return true;
+
+                    case Shard.LeaseRetry _:
+                        shard.TryGetLease(shard.Lease);
+                        return true;
+
+                    case Shard.LeaseLost ll:
+                        shard.HandleLeaseLost(ll);
+                        return true;
+                }
+
+                return false;
+            }
+
+            return AwaitingLease;
         }
 
         public static void BaseProcessChange<TShard, T>(this TShard shard, T evt, Action<T> handler)
@@ -492,6 +673,11 @@ namespace Akka.Cluster.Sharding
                 case Shard.PassivateIdleTick _:
                     shard.PassivateIdleEntities();
                     return true;
+
+                case Shard.LeaseLost ll:
+                    shard.HandleLeaseLost(ll);
+                    return true;
+
                 case var _ when shard.ExtractEntityId(message).HasValue:
                     shard.DeliverMessage(message, shard.Context.Sender);
                     return true;
@@ -613,11 +799,13 @@ namespace Akka.Cluster.Sharding
                     {
                         entityHandOffTimeout = TimeSpan.FromSeconds(1);
                     }
+#if DEBUG
                     if (shardLog.IsDebugEnabled)
                     {
                         shardLog.Debug("Starting HandOffStopper for shard [{0}] to terminate [{1}] entities.",
                             shard.ShardId, shard.IdByRef.Keys.Count());
                     }
+#endif
                     shard.HandOffStopper = shard.Context.Watch(shard.Context.ActorOf(
                         ShardRegion.HandOffStopper.Props(shard.ShardId, replyTo, shard.IdByRef.Keys, shard.HandOffStopMessage, entityHandOffTimeout)));
 

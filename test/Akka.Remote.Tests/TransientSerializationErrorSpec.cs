@@ -71,7 +71,31 @@ namespace Akka.Remote.Tests
 
             protected override string GetManifest(Type type)
             {
-                throw new NotImplementedException();
+                if (type == typeof(ManifestNotSerializable))
+                {
+                    throw new SerializationException();
+                }
+                if (type == typeof(ManifestIllegal))
+                {
+                    throw new ArgumentException();
+                }
+                if (type == typeof(ToBinaryNotSerializable))
+                {
+                    return "TBNS";
+                }
+                if (type == typeof(ToBinaryIllegal))
+                {
+                    return "TI";
+                }
+                if (type == typeof(NotDeserializable))
+                {
+                    return "ND";
+                }
+                if (type == typeof(IllegalOnDeserialize))
+                {
+                    return "IOD";
+                }
+                throw new InvalidOperationException();
             }
 
             public override string Manifest(object o)
@@ -102,20 +126,37 @@ namespace Akka.Remote.Tests
                         throw new SerializationException();
                     case "IOD":
                         throw new ArgumentException();
+                    case "":
+                        throw new ArgumentException();
                 }
                 throw new InvalidOperationException();
             }
 
             public override byte[] ToBinary(object obj, out string manifest)
             {
-                manifest = string.Empty;
                 switch (obj)
                 {
                     case ToBinaryNotSerializable _:
+                        manifest = "TBNS";
                         throw new SerializationException();
                     case ToBinaryIllegal _:
+                        manifest = "TI";
                         throw new ArgumentException();
+
+                    case ManifestNotSerializable _:
+                        manifest = string.Empty;
+                        return new byte[0];
+                    case ManifestIllegal _:
+                        manifest = string.Empty;
+                        return new byte[0];
+                    case NotDeserializable _:
+                        manifest = "ND";
+                        return new byte[0];
+                    case IllegalOnDeserialize _:
+                        manifest = "IOD";
+                        return new byte[0];
                     default:
+                        manifest = string.Empty;
                         return new byte[0];
                 }
             }

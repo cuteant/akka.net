@@ -30,7 +30,7 @@ namespace Akka.Cluster.Tools.Singleton
         #region Internal messages
 
         /// <summary>
-        /// TBD
+        /// Request to deliver one more event.
         /// </summary>
         public sealed class GetNext : ISingletonMessage
         {
@@ -48,7 +48,7 @@ namespace Akka.Cluster.Tools.Singleton
         public sealed class InitialOldestState
         {
             /// <summary>
-            /// TBD
+            /// The first event, corresponding to CurrentClusterState.
             /// </summary>
             [Key(0)]
             public List<UniqueAddress> Oldest { get; }
@@ -238,13 +238,13 @@ namespace Akka.Cluster.Tools.Singleton
                     Remove(removed.Member);
                     break;
 
-                case ClusterEvent.MemberExited exited when (!exited.Member.UniqueAddress.Equals(_cluster.SelfUniqueAddress)):
+                case ClusterEvent.MemberExited exited when exited.Member.UniqueAddress != _cluster.SelfUniqueAddress:
                     Remove(exited.Member);
                     break;
 
                 case SelfExiting _:
                     Remove(_cluster.ReadView.Self);
-                    Sender.Tell(Done.Instance);
+                    Sender.Tell(Done.Instance); // reply to ask
                     break;
 
                 case GetNext _:

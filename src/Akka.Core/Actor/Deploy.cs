@@ -202,7 +202,7 @@ namespace Akka.Actor
                    string.Equals(_path, other._path, StringComparison.Ordinal) &&
                    _routerConfig.Equals(other._routerConfig) &&
                    ((_config.IsNullOrEmpty() && other._config.IsNullOrEmpty()) ||
-                    string.Equals(_config.ToString(), other._config.ToString(), StringComparison.Ordinal)) &&
+                    string.Equals(_config.Root.ToString(), other._config.Root.ToString(), StringComparison.Ordinal)) &&
                    (_scope == null && other._scope == null || (_scope != null && _scope.Equals(other._scope)));
         }
 

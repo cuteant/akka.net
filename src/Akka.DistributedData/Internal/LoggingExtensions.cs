@@ -142,12 +142,6 @@ namespace Akka.DistributedData
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void ReplicatorPointsToDeadLetters(this ILoggingAdapter logger)
-        {
-            logger.Warning("Replicator points to dead letters: Make sure the cluster node is not terminated and has the proper role!");
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void CouldnotMergeDueTo(this ILoggingAdapter logger, string key, ArgumentException e)
         {
             logger.Warning("Couldn't merge [{0}] due to: {1}", key, e.Message);

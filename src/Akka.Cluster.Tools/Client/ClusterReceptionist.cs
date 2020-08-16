@@ -278,7 +278,7 @@ namespace Akka.Cluster.Tools.Client
         /// Used to signal that a <see cref="ClusterClientReceptionist"/> we've connected to
         /// has terminated.
         /// </summary>
-        internal sealed class ReceptionistShutdown : IClusterClientMessage, ISingletonMessage
+        internal sealed class ReceptionistShutdown : IClusterClientMessage //, ISingletonMessage
         {
             public static readonly ReceptionistShutdown Instance = new ReceptionistShutdown();
             private ReceptionistShutdown() { }

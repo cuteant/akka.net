@@ -63,13 +63,13 @@ namespace Akka.Cluster
         /// <summary>
         /// Marker interface for cluster domain events
         /// </summary>
-        public interface IClusterDomainEvent { }
+        public interface IClusterDomainEvent : IDeadLetterSuppression { }
 
         /// <summary>
         /// A snapshot of the current state of the <see cref="Cluster"/>
         /// </summary>
         [MessagePackObject]
-        public sealed class CurrentClusterState
+        public sealed class CurrentClusterState: INoSerializationVerificationNeeded
         {
             /// <summary>
             /// Creates a new instance of the current cluster state.

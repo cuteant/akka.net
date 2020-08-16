@@ -148,13 +148,15 @@ namespace Akka.Remote.Transport.DotNetty
         protected int _channelStatus = ChannelStatus.Unknow;
         protected bool IsWritable
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
+            [MethodImpl(InlineOptions.AggressiveOptimization)]
             get
             {
                 switch (Volatile.Read(ref _channelStatus))
                 {
                     case ChannelStatus.Open:
                         return true;
+                    case ChannelStatus.Closing:
+                        return false;
                     case ChannelStatus.Closed:
                         return false;
                     default:
@@ -190,7 +192,7 @@ namespace Akka.Remote.Transport.DotNetty
             if (IsWritable)
             {
                 _queue.Enqueue(payload);
-                if (TransportStatus.Idle == Interlocked.CompareExchange(ref _status, TransportStatus.Busy, TransportStatus.Idle))
+                if (TransportStatus.Idle >= (uint)Interlocked.CompareExchange(ref _status, TransportStatus.Busy, TransportStatus.Idle))
                 {
                     Task.Factory.StartNew(s_processMessagesFunc, this, CancellationToken.None, TaskCreationOptions.DenyChildAttach, TaskScheduler.Default);
                 }
@@ -201,7 +203,12 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override void Disassociate()
         {
-            Interlocked.Exchange(ref _channelStatus, ChannelStatus.Closed);
+            Interlocked.Exchange(ref _channelStatus, ChannelStatus.Closing);
+            var spinner = new SpinWait();
+            while ((uint)Volatile.Read(ref _channelStatus) < ChannelStatus.Closed)
+            {
+                spinner.SpinOnce();
+            }
             _channel.CloseAsync();
         }
 
@@ -214,34 +221,44 @@ namespace Akka.Remote.Transport.DotNetty
             var batchSize = associationHandle._batchSize;
             var channel = associationHandle._channel;
 
-            var batch = new List<object>(batchSize);
-            while (true)
+            try
             {
-                batch.Clear();
-
-                while (queue.TryDequeue(out var msg))
+                var batch = new List<object>(batchSize);
+                while (true)
                 {
-                    batch.Add(msg);
-                    if (batch.Count >= batchSize) { break; }
-                }
+                    batch.Clear();
 
-                if (channel.IsActive)
-                {
-                    await channel.WriteAndFlushAsync(Serialize(batch));
+                    while (queue.TryDequeue(out var msg))
+                    {
+                        batch.Add(msg);
+                        if ((uint)batch.Count >= (uint)batchSize) { break; }
+                    }
 
-                    //Interlocked.CompareExchange(ref associationHandle._channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
+                    if (channel.IsActive)
+                    {
+                        await channel.WriteAndFlushAsync(Serialize(batch));
+
+                        //Interlocked.CompareExchange(ref associationHandle._channelStatus, ChannelStatus.Open, ChannelStatus.Unknow);
+                    }
+                    else
+                    {
+                        Interlocked.Exchange(ref associationHandle._channelStatus, ChannelStatus.Closed);
+                        Interlocked.Exchange(ref associationHandle._status, TransportStatus.Idle);
+                        return false;
+                    }
+
+                    if (queue.IsEmpty)
+                    {
+                        Interlocked.Exchange(ref associationHandle._status, TransportStatus.Idle);
+                        return true;
+                    }
                 }
-                else
+            }
+            finally
+            {
+                if (ChannelStatus.Closing == Volatile.Read(ref associationHandle._channelStatus))
                 {
                     Interlocked.Exchange(ref associationHandle._channelStatus, ChannelStatus.Closed);
-                    Interlocked.Exchange(ref associationHandle._status, TransportStatus.Idle);
-                    return false;
-                }
-
-                if (queue.IsEmpty)
-                {
-                    Interlocked.Exchange(ref associationHandle._status, TransportStatus.Idle);
-                    return true;
                 }
             }
         }
@@ -267,7 +284,8 @@ namespace Akka.Remote.Transport.DotNetty
         {
             public const int Unknow = 0;
             public const int Open = 1;
-            public const int Closed = 2;
+            public const int Closing = 2;
+            public const int Closed = 3;
         }
     }
 

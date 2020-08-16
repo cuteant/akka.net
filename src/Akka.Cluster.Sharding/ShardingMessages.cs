@@ -6,10 +6,10 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
+using System.Collections.Immutable;
 using System.Linq;
 using Akka.Actor;
-using System.Collections.Immutable;
+using Akka.Event;
 using MessagePack;
 
 namespace Akka.Cluster.Sharding
@@ -22,6 +22,18 @@ namespace Akka.Cluster.Sharding
     /// TBD
     /// </summary>
     public interface IShardRegionQuery { }
+
+    /// <summary>
+    /// Used as a special termination message for <see cref="ShardCoordinator"/> singleton actor
+    /// </summary>
+    internal sealed class Terminate : IDeadLetterSuppression, ISingletonMessage
+    {
+        public static readonly Terminate Instance = new Terminate();
+
+        private Terminate()
+        {
+        }
+    }
 
     /// <summary>
     /// If the state of the entries are persistent you may stop entries that are not used to
@@ -79,7 +91,7 @@ namespace Akka.Cluster.Sharding
     /// Shard could be terminated during initialization.
     /// </summary>
     [MessagePackObject]
-    public sealed class ShardInitialized
+    public sealed class ShardInitialized : IEquatable<ShardInitialized>
     {
         /// <summary>
         /// TBD
@@ -96,6 +108,20 @@ namespace Akka.Cluster.Sharding
         {
             ShardId = shardId;
         }
+
+        public bool Equals(ShardInitialized other)
+        {
+            if (ReferenceEquals(other, null)) return false;
+            if (ReferenceEquals(this, other)) return true;
+
+            return Equals(ShardId, other.ShardId);
+        }
+
+        public override bool Equals(object obj) => obj is ShardInitialized si && Equals(si);
+
+        public override int GetHashCode() => ShardId.GetHashCode();
+
+        public override string ToString() => $"ShardInitialized({ShardId})";
     }
 
     /// <summary>

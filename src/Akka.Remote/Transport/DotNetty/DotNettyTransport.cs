@@ -28,12 +28,18 @@ using DotNetty.Transport.Bootstrapping;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Channels.Sockets;
 using DotNetty.Transport.Libuv;
+using RejectedExecutionException = DotNetty.Common.Concurrency.RejectedExecutionException;
 
 namespace Akka.Remote.Transport.DotNetty
 {
     [Akka.Annotations.InternalApi]
     public abstract class DotNettyTransport : Transport // public for Akka.Tests.FsCheck
     {
+        static DotNettyTransport()
+        {
+            Environment.SetEnvironmentVariable("io.netty.transport.outboundBufferEntrySizeOverhead", "0");
+        }
+
         internal readonly ConcurrentSet<IChannel> ConnectionGroup;
 
         protected readonly TaskCompletionSource<IAssociationEventListener> AssociationListenerPromise;
@@ -183,7 +189,14 @@ namespace Akka.Remote.Transport.DotNetty
                 await all.ConfigureAwait(false);
 
                 var server = ServerChannel?.CloseAsync() ?? TaskUtil.Completed;
-                await server.ConfigureAwait(false);
+                try
+                {
+                    await server.ConfigureAwait(false);
+                }
+                catch (RejectedExecutionException)
+                {
+                    // TODO 需调试 DotNettyLibuvTransportShutdownSpec::DotNettyTcpTransport_should_cleanly_terminate_active_endpoints_upon_inbound_shutdown
+                }
 
                 return all.IsCompleted && server.IsCompleted;
             }
@@ -191,9 +204,9 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 // free all of the connection objects we were holding onto
                 ConnectionGroup.Clear();
-                _clientWorkerGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)).Ignore();
-                _serverBossGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)).Ignore();
-                _serverWorkerGroup.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)).Ignore();
+                _clientWorkerGroup.ShutdownGracefullyAsync(/*TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)*/).Ignore();
+                _serverBossGroup.ShutdownGracefullyAsync(/*TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)*/).Ignore();
+                _serverWorkerGroup.ShutdownGracefullyAsync(/*TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)*/).Ignore();
             }
         }
 

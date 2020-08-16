@@ -291,7 +291,8 @@ namespace Akka.Persistence
         internal static void ThrowNullReferenceException()
         {
             throw GetException();
-            NullReferenceException GetException()
+
+            static NullReferenceException GetException()
             {
                 return new NullReferenceException("Default journal plugin is not configured");
             }
@@ -305,7 +306,8 @@ namespace Akka.Persistence
         internal static void ThrowNotSupportedException_Deliver()
         {
             throw GetException();
-            NotSupportedException GetException()
+
+            static NotSupportedException GetException()
             {
                 return new NotSupportedException(
                     "Delivering to wildcard actor selections is not supported by AtLeastOnceDelivery. " +
@@ -318,7 +320,8 @@ namespace Akka.Persistence
         internal static void ThrowNotSupportedException_AsyncTaskRun()
         {
             throw GetException();
-            NotSupportedException GetException()
+
+            static NotSupportedException GetException()
             {
                 return new NotSupportedException("RunTask calls cannot be nested");
             }

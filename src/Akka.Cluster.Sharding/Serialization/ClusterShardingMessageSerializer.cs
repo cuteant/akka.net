@@ -62,6 +62,8 @@ namespace Akka.Cluster.Sharding.Serialization
 
         private static readonly Dictionary<Type, string> ManifestMap;
 
+        private static readonly IFormatterResolver s_defaultResolver;
+
         static ClusterShardingMessageSerializer()
         {
             ManifestMap = new Dictionary<Type, string>
@@ -97,11 +99,10 @@ namespace Akka.Cluster.Sharding.Serialization
                 { typeof(GetClusterShardingStats), GetClusterShardingStatsManifest },
                 { typeof(ClusterShardingStats), ClusterShardingStatsManifest },
             };
+            s_defaultResolver = MessagePackStandardResolver.Default;
         }
 
         #endregion
-
-        private static readonly IFormatterResolver s_defaultResolver = MessagePackSerializer.DefaultResolver;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="ClusterShardingMessageSerializer"/> class.
@@ -546,9 +547,7 @@ namespace Akka.Cluster.Sharding.Serialization
                 regions.Add(new Protocol.ShardRegionWithAddress(AddressToProto(s.Key), ShardRegionStatsToProto(s.Value)));
             }
 
-            var p = new Protocol.ClusterShardingStats();
-
-            return p;
+            return new Protocol.ClusterShardingStats(regions);
         }
 
         private static ClusterShardingStats ClusterShardingStatsFromBinary(in ReadOnlySpan<byte> bytes)
@@ -557,7 +556,7 @@ namespace Akka.Cluster.Sharding.Serialization
             var dict = new Dictionary<Address, ShardRegionStats>();
             foreach (var s in p.Regions)
             {
-                dict[AddressFrom(s.NodeAddress)] = new ShardRegionStats(s.Stats.Stats.ToImmutableDictionary());
+                dict[AddressFrom(s.NodeAddress)] = new ShardRegionStats(s.Stats.Stats);
             }
             return new ClusterShardingStats(dict.ToImmutableDictionary());
         }

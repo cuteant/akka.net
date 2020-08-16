@@ -163,6 +163,12 @@ namespace Akka.Cluster
                     default:
                         break;
                 }
+
+                // once captured, optional verbose logging of event
+                if (_cluster.Settings.LogInfoVerbose && !(clusterDomainEvent is ClusterEvent.SeenChanged))
+                {
+                    _cluster.LogClusterEventName(clusterDomainEvent);
+                }
             }
 
             private void HandleCurrentClusterState(ClusterEvent.CurrentClusterState state)

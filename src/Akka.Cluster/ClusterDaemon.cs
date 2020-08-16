@@ -978,6 +978,8 @@ namespace Akka.Cluster
             return $"{node.Address}-{node.Uid}";
         }
 
+        private bool _isCurrentlyLeader;
+
         // note that self is not initially member,
         // and the SendGossip is not versioned for this 'Node' yet
         private Gossip _latestGossip = Gossip.Empty;
@@ -2125,6 +2127,11 @@ namespace Akka.Cluster
             if (_latestGossip.IsLeader(SelfUniqueAddress, SelfUniqueAddress))
             {
                 // only run the leader actions if we are the LEADER
+                if (!_isCurrentlyLeader)
+                {
+                    if (_cluster.IsInfoEnabled) { _cluster.Is_the_new_leader_among_reachable_nodes(); }
+                    _isCurrentlyLeader = true;
+                }
                 const int firstNotice = 20;
                 const int periodicNotice = 60;
                 if (_latestGossip.Convergence(SelfUniqueAddress, _exitingConfirmed))
@@ -2151,6 +2158,11 @@ namespace Akka.Cluster
                         if (_cluster.IsInfoEnabled) _cluster.LeaderCanCurrentlyNotPerformItsDuties(_latestGossip);
                     }
                 }
+            }
+            else if (_isCurrentlyLeader)
+            {
+                if (_cluster.IsInfoEnabled) { _cluster.Is_no_longer_leader(); }
+                _isCurrentlyLeader = false;
             }
 
             CleanupExitingConfirmed();

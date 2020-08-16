@@ -89,6 +89,24 @@ namespace Akka.Cluster
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Is_no_longer_leader(this Cluster cluster)
+        {
+            cluster.LogInfo("is no longer leader");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Is_the_new_leader_among_reachable_nodes(this Cluster cluster)
+        {
+            cluster.LogInfo("is the new leader among reachable nodes (more leaders may exist)");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void LogClusterEventName(this Cluster cluster, ClusterEvent.IClusterDomainEvent clusterDomainEvent)
+        {
+            cluster.LogInfo("event {0}", clusterDomainEvent.GetType().Name);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ANetworkPartitionHasBeenDetected(this ILoggingAdapter logger, ISplitBrainStrategy strategy, ImmutableArray<Member> nodesToDown)
         {
             logger.Info("A network partition has been detected. {0} decided to down following nodes: [{1}]", strategy, string.Join(", ", nodesToDown));

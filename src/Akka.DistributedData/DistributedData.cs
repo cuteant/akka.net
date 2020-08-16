@@ -13,6 +13,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Configuration;
+using Akka.Event;
 
 namespace Akka.DistributedData
 {
@@ -66,8 +67,20 @@ namespace Akka.DistributedData
             _system = system;
             if (IsTerminated)
             {
-                var systemLog = system.Log;
-                if (systemLog.IsWarningEnabled) { systemLog.ReplicatorPointsToDeadLetters(); }
+                var log = Logging.GetLogger(_system, GetType());
+                var cluster = Cluster.Cluster.Get(_system);
+                if (cluster.IsTerminated)
+                {
+                    log.Warning("Replicator points to dead letters, because Cluster is terminated.");
+                }
+                else
+                {
+                    log.Warning(
+                        "Replicator points to dead letters. Make sure the cluster node is not terminated and has the proper role. " +
+                        "Node has roles [{0}], Distributed Data is configured for role [{1}]",
+                        string.Join(",", cluster.SelfRoles),
+                        _settings.Role);
+                }
                 Replicator = system.DeadLetters;
             }
             else

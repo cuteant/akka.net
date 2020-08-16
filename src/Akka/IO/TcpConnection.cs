@@ -683,7 +683,7 @@ namespace Akka.IO
 
         protected SocketAsyncEventArgs CreateSocketEventArgs(IActorRef onCompleteNotificationsReceiver)
         {
-            SocketCompleted ResolveMessage(SocketAsyncEventArgs e)
+            static SocketCompleted ResolveMessage(SocketAsyncEventArgs e)
             {
                 switch (e.LastOperation)
                 {

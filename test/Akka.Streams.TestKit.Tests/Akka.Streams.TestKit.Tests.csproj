@@ -1,7 +1,8 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\xunitSettings.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.Streams.TestKit.Tests</RootNamespace>
     <AssemblyName>Akka.Streams.TestKit.Tests</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

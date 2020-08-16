@@ -27,11 +27,13 @@ namespace Akka.Streams.Serialization
 
         private const string SequencedOnNextManifest = "A";
         private const string CumulativeDemandManifest = "B";
+
+        private const string OnSubscribeHandshakeManifest = "G";
+
         private const string RemoteSinkFailureManifest = "C";
         private const string RemoteSinkCompletedManifest = "D";
         private const string SourceRefManifest = "E";
         private const string SinkRefManifest = "F";
-        private const string OnSubscribeHandshakeManifest = "G";
 
         private static readonly Dictionary<Type, string> ManifestMap;
 
@@ -41,11 +43,11 @@ namespace Akka.Streams.Serialization
             {
                 { typeof(SequencedOnNext), SequencedOnNextManifest },
                 { typeof(CumulativeDemand), CumulativeDemandManifest },
-                { typeof(OnSubscribeHandshake), RemoteSinkFailureManifest },
-                { typeof(RemoteStreamFailure), RemoteSinkCompletedManifest },
-                { typeof(RemoteStreamCompleted), SourceRefManifest },
-                { typeof(SourceRefImpl), SinkRefManifest },
-                { typeof(SinkRefImpl), OnSubscribeHandshakeManifest },
+                { typeof(OnSubscribeHandshake), OnSubscribeHandshakeManifest },
+                { typeof(RemoteStreamFailure), RemoteSinkFailureManifest },
+                { typeof(RemoteStreamCompleted), RemoteSinkCompletedManifest },
+                { typeof(SourceRefImpl), SourceRefManifest },
+                { typeof(SinkRefImpl), SinkRefManifest },
             };
         }
 
@@ -74,23 +76,23 @@ namespace Akka.Streams.Serialization
                     return MessagePackSerializer.Serialize(SerializeCumulativeDemand(demand), s_defaultResolver);
 
                 case OnSubscribeHandshake handshake:
-                    manifest = RemoteSinkFailureManifest;
+                    manifest = OnSubscribeHandshakeManifest;
                     return MessagePackSerializer.Serialize(SerializeOnSubscribeHandshake(handshake), s_defaultResolver);
 
                 case RemoteStreamFailure failure:
-                    manifest = RemoteSinkCompletedManifest;
+                    manifest = RemoteSinkFailureManifest;
                     return MessagePackSerializer.Serialize(SerializeRemoteStreamFailure(failure), s_defaultResolver);
 
                 case RemoteStreamCompleted completed:
-                    manifest = SourceRefManifest;
+                    manifest = RemoteSinkCompletedManifest;
                     return MessagePackSerializer.Serialize(SerializeRemoteStreamCompleted(completed), s_defaultResolver);
 
                 case SourceRefImpl sourceRef:
-                    manifest = SinkRefManifest;
+                    manifest = SourceRefManifest;
                     return MessagePackSerializer.Serialize(SerializeSourceRef(sourceRef), s_defaultResolver);
 
                 case SinkRefImpl sinkRef:
-                    manifest = OnSubscribeHandshakeManifest;
+                    manifest = SinkRefManifest;
                     return MessagePackSerializer.Serialize(SerializeSinkRef(sinkRef), s_defaultResolver);
                 default: throw ThrowHelper.GetArgumentException_Serializer_StreamRefMessages(o);
             }

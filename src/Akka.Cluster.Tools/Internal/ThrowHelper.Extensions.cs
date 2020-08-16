@@ -105,7 +105,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_RemovalMarginMustBePositive()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("ClusterSingletonManagerSettings.RemovalMargin must be positive", "removalMargin");
             }
@@ -115,7 +116,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_HandOverRetryIntervalMustBePositive()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("ClusterSingletonManagerSettings.HandOverRetryInterval must be positive", "handOverRetryInterval");
             }
@@ -125,7 +127,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_SingletonIdentificationIntervalMustBePositive()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("singletonIdentificationInterval must be positive", "singletonIdentificationInterval");
             }
@@ -135,7 +138,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_BufferSizeMustBePositive()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("bufferSize must be positive", "bufferSize");
             }
@@ -145,7 +149,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_ConsistentHashingRoutingLogicCannotBeUsedByThePubsubMediator()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("ConsistentHashingRoutingLogic cannot be used by the pub-sub mediator");
             }
@@ -155,7 +160,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_ConsistentHashingRoutingLogicCannotBeUsedByThePubSubMediator()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("Consistent hashing routing logic cannot be used by the pub-sub mediator");
             }
@@ -165,7 +171,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_TopicMustBeDefined()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("topic must be defined");
             }
@@ -175,7 +182,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_InitialContactsMustBeDefined()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("InitialContacts must be defined");
             }
@@ -185,7 +193,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_BufferSizeMustBe0_10000()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("BufferSize must be >= 0 and <= 10000");
             }
@@ -195,7 +204,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowArgumentException_InitialContactsForClusterClientCannotBeEmpty()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("Initial contacts for cluster client cannot be empty");
             }
@@ -291,13 +301,25 @@ namespace Akka.Cluster.Tools
 
         #endregion
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ActorInitializationException_Cluster_node_must_not_be_terminated()
+        {
+            throw GetException();
+
+            static ActorInitializationException GetException()
+            {
+                return new ActorInitializationException("Cluster node must not be terminated");
+            }
+        }
+
         #region -- IllegalStateException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowIllegalStateException_ClusterNodeMustNotBeTerminated()
         {
             throw GetException();
-            IllegalStateException GetException()
+
+            static IllegalStateException GetException()
             {
                 return new IllegalStateException("Cluster node must not be terminated");
             }
@@ -321,7 +343,8 @@ namespace Akka.Cluster.Tools
         internal static void ThrowConfigurationException_MinNumberOfHandOverRetriesMustBe_1()
         {
             throw GetException();
-            ConfigurationException GetException()
+
+            static ConfigurationException GetException()
             {
                 return new ConfigurationException("min-number-of-hand-over-retries must be >= 1");
             }

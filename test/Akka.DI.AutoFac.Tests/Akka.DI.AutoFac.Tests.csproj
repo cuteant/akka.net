@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
  
   <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.DI.AutoFac.Tests</RootNamespace>
     <AssemblyName>Akka.DI.AutoFac.Tests</AssemblyName>
   </PropertyGroup>

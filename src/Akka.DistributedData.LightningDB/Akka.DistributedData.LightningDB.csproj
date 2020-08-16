@@ -1,0 +1,31 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
+    <RootNamespace>Akka.DistributedData.LightningDB</RootNamespace>
+    <AssemblyName>Akka.DistributedData.LightningDB</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);SERIALIZATION;CLONABLE</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.DistributedData.LightningDB.Unofficial</PackageId>
+    <Title>Akka.DistributedData.LightningDB (Unofficial)</Title>
+    <Description>Replicated data using CRDT structures</Description>
+    <PackageTags>$(AkkaPackageTags);network;cluster;crdt;replication;lightningdb;lmdb</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="reference.conf" />
+    <ProjectReference Include="..\Akka.DistributedData\Akka.DistributedData.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="LightningDB" Version="0.12.0" />
+  </ItemGroup>
+
+  <Import Project="..\..\version.props" />
+</Project>

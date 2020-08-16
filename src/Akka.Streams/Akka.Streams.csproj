@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.Streams</RootNamespace>
     <AssemblyName>Akka.Streams</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

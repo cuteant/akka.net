@@ -7,10 +7,10 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Runtime.CompilerServices;
-using System.Runtime.Serialization;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Remote.Transport;
+using Akka.Util;
 using DotNetty.Transport.Channels;
 using DotNetty.Transport.Libuv.Native;
 
@@ -407,7 +407,7 @@ namespace Akka.Remote
             logger.Error(
               ex,
               "Serializer not defined for message type [{0}]. Transient association error (association remains live)",
-              send.Message.GetType());
+              send.Message.GetType().TypeQualifiedName());
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

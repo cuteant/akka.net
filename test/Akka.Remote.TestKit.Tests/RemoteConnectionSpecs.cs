@@ -6,17 +6,15 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-using System.Text;
 using System.Threading;
-using FluentAssertions;
 using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.TestKit;
-using Akka.Util.Internal;
+using DotNetty.Common.Utilities;
 using DotNetty.Transport.Channels;
+using FluentAssertions;
 using Xunit;
 
 namespace Akka.Remote.TestKit.Tests

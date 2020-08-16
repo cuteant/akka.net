@@ -26,7 +26,8 @@ namespace Akka.Actor
         /// </summary>
         protected readonly Config Default;
         private readonly Settings _settings;
-        private readonly AtomicReference<WildcardTree<Deploy>> _deployments = new AtomicReference<WildcardTree<Deploy>>(new WildcardTree<Deploy>());
+        private readonly AtomicReference<WildcardIndex<Deploy>> _deployments =
+            new AtomicReference<WildcardIndex<Deploy>>(new WildcardIndex<Deploy>());
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Deployer"/> class.
@@ -77,17 +78,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public Deploy Lookup(IEnumerable<string> path)
         {
-            return Lookup(path.GetEnumerator());
-        }
-
-        /// <summary>
-        /// TBD
-        /// </summary>
-        /// <param name="path">TBD</param>
-        /// <returns>TBD</returns>
-        public Deploy Lookup(IEnumerator<string> path)
-        {
-            return _deployments.Value.Find(path).Data;
+            return _deployments.Value.Find(path);
         }
 
         /// <summary>
@@ -101,26 +92,22 @@ namespace Akka.Actor
         /// </exception>
         public void SetDeploy(Deploy deploy)
         {
-            void LocalAdd(IList<string> path, Deploy d)
+            void add(IList<string> path, Deploy d)
             {
-                bool set;
-                do
+                var w = _deployments.Value;
+                foreach (var t in path)
                 {
-                    var w = _deployments.Value;
-                    foreach (var t in path)
+                    if (string.IsNullOrEmpty(t)) { AkkaThrowHelper.ThrowIllegalActorNameException(d); }
+                    if (!ActorPath.IsValidPathElement(t))
                     {
-                        var curPath = t;
-                        if (string.IsNullOrEmpty(curPath)) AkkaThrowHelper.ThrowIllegalActorNameException(d);
-                        if (!ActorPath.IsValidPathElement(t))
-                        {
-                            AkkaThrowHelper.ThrowIllegalActorNameException(t, d);
-                        }
+                        AkkaThrowHelper.ThrowIllegalActorNameException(t, d);
                     }
-                    set = _deployments.CompareAndSet(w, w.Insert(path.GetEnumerator(), d));
-                } while (!set);
+                }
+                if (!_deployments.CompareAndSet(w, w.Insert(path, d))) add(path, d);
             }
+
             var elements = deploy.Path.Split('/').Drop(1).ToList();
-            LocalAdd(elements, deploy);
+            add(elements, deploy);
         }
 
         /// <summary>

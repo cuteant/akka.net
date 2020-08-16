@@ -177,9 +177,6 @@
   <data name="ArgumentNull_WatchWithMsg" xml:space="preserve">
     <value>message must not be null</value>
   </data>
-  <data name="Argument_ActorRefCompareTo" xml:space="preserve">
-    <value>Object must be of type IActorRef.</value>
-  </data>
   <data name="Argument_BackoffOptions_Max" xml:space="preserve">
     <value>MaxBackoff must be greater than MinBackoff</value>
   </data>

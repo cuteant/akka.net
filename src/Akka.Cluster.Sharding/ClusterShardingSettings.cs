@@ -9,6 +9,8 @@ using System;
 using Akka.Actor;
 using Akka.Cluster.Tools.Singleton;
 using Akka.Configuration;
+using Akka.Coordination;
+using Akka.Util;
 
 namespace Akka.Cluster.Sharding
 {
@@ -204,6 +206,11 @@ namespace Akka.Cluster.Sharding
         public readonly ClusterSingletonManagerSettings CoordinatorSingletonSettings;
 
         /// <summary>
+        /// TBD
+        /// </summary>
+        public readonly LeaseUsageSettings LeaseSettings;
+
+        /// <summary>
         /// Create settings from the default configuration `akka.cluster.sharding`.
         /// </summary>
         /// <param name="system">TBD</param>
@@ -265,6 +272,13 @@ namespace Akka.Cluster.Sharding
                     ? TimeSpan.Zero
                     : config.GetTimeSpan("passivate-idle-entity-after");
 
+            LeaseUsageSettings lease = null;
+            var leaseConfigPath = config.GetString("use-lease");
+            if (!string.IsNullOrEmpty(leaseConfigPath))
+            {
+                lease = new LeaseUsageSettings(leaseConfigPath, config.GetTimeSpan("lease-retry-interval"));
+            }
+
             return new ClusterShardingSettings(
                 role: role,
                 rememberEntities: config.GetBoolean("remember-entities"),
@@ -273,7 +287,8 @@ namespace Akka.Cluster.Sharding
                 passivateIdleEntityAfter: passivateIdleAfter,
                 stateStoreMode: (StateStoreMode)Enum.Parse(typeof(StateStoreMode), config.GetString("state-store-mode"), ignoreCase: true),
                 tunningParameters: tuningParameters,
-                coordinatorSingletonSettings: coordinatorSingletonSettings);
+                coordinatorSingletonSettings: coordinatorSingletonSettings,
+                leaseSettings: lease);
         }
 
         /// <summary>
@@ -296,6 +311,32 @@ namespace Akka.Cluster.Sharding
             StateStoreMode stateStoreMode,
             TunningParameters tunningParameters,
             ClusterSingletonManagerSettings coordinatorSingletonSettings)
+            : this(role, rememberEntities, journalPluginId, snapshotPluginId, passivateIdleEntityAfter, stateStoreMode, tunningParameters, coordinatorSingletonSettings, null)
+        {
+        }
+
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="role">TBD</param>
+        /// <param name="rememberEntities">TBD</param>
+        /// <param name="journalPluginId">TBD</param>
+        /// <param name="snapshotPluginId">TBD</param>
+        /// <param name="passivateIdleEntityAfter">TBD</param>
+        /// <param name="stateStoreMode">TBD</param>
+        /// <param name="tunningParameters">TBD</param>
+        /// <param name="coordinatorSingletonSettings">TBD</param>
+        /// <param name="leaseSettings">TBD</param>
+        public ClusterShardingSettings(
+            string role,
+            bool rememberEntities,
+            string journalPluginId,
+            string snapshotPluginId,
+            TimeSpan passivateIdleEntityAfter,
+            StateStoreMode stateStoreMode,
+            TunningParameters tunningParameters,
+            ClusterSingletonManagerSettings coordinatorSingletonSettings,
+            LeaseUsageSettings leaseSettings)
         {
             Role = role;
             RememberEntities = rememberEntities;
@@ -305,6 +346,7 @@ namespace Akka.Cluster.Sharding
             StateStoreMode = stateStoreMode;
             TunningParameters = tunningParameters;
             CoordinatorSingletonSettings = coordinatorSingletonSettings;
+            LeaseSettings = leaseSettings;
         }
 
         /// <summary>
@@ -329,15 +371,7 @@ namespace Akka.Cluster.Sharding
         /// <returns>TBD</returns>
         public ClusterShardingSettings WithRole(string role)
         {
-            return new ClusterShardingSettings(
-                role: role,
-                rememberEntities: RememberEntities,
-                journalPluginId: JournalPluginId,
-                snapshotPluginId: SnapshotPluginId,
-                passivateIdleEntityAfter: PassivateIdleEntityAfter,
-                stateStoreMode: StateStoreMode,
-                tunningParameters: TunningParameters,
-                coordinatorSingletonSettings: CoordinatorSingletonSettings);
+            return Copy(role: role);
         }
 
         /// <summary>
@@ -395,6 +429,11 @@ namespace Akka.Cluster.Sharding
             return Copy(passivateIdleAfter: duration);
         }
 
+        public ClusterShardingSettings WithLeaseSettings(LeaseUsageSettings leaseSettings)
+        {
+            return Copy(leaseSettings: leaseSettings);
+        }
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -411,24 +450,26 @@ namespace Akka.Cluster.Sharding
         }
 
         private ClusterShardingSettings Copy(
-            string role = null,
+            Option<string> role = default,
             bool? rememberEntities = null,
             string journalPluginId = null,
             string snapshotPluginId = null,
             TimeSpan? passivateIdleAfter = null,
             StateStoreMode? stateStoreMode = null,
             TunningParameters tunningParameters = null,
-            ClusterSingletonManagerSettings coordinatorSingletonSettings = null)
+            ClusterSingletonManagerSettings coordinatorSingletonSettings = null,
+            Option<LeaseUsageSettings> leaseSettings = default)
         {
             return new ClusterShardingSettings(
-                role: role ?? Role,
+                role: role.HasValue ? role.Value : Role,
                 rememberEntities: rememberEntities ?? RememberEntities,
                 journalPluginId: journalPluginId ?? JournalPluginId,
                 snapshotPluginId: snapshotPluginId ?? SnapshotPluginId,
                 passivateIdleEntityAfter: passivateIdleAfter ?? PassivateIdleEntityAfter,
                 stateStoreMode: stateStoreMode ?? StateStoreMode,
                 tunningParameters: tunningParameters ?? TunningParameters,
-                coordinatorSingletonSettings: coordinatorSingletonSettings ?? CoordinatorSingletonSettings);
+                coordinatorSingletonSettings: coordinatorSingletonSettings ?? CoordinatorSingletonSettings,
+                leaseSettings: leaseSettings.HasValue ? leaseSettings.Value : LeaseSettings);
         }
     }
 }

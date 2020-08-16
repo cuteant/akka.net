@@ -99,7 +99,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_ORDictionaryRemoveDeltaOpMustContainORSetRemoveDeltaOpInside()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("ORDictionary.RemoveDeltaOp must contain ORSet.RemoveDeltaOp inside");
             }
@@ -109,7 +110,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_ORDictionarySetItemsMayNotBeUsedToReplaceAnExistingORSet()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("ORDictionary.SetItems may not be used to replace an existing ORSet", "value");
             }
@@ -119,7 +121,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_GroupDeltaShouldNotBeNested()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("GroupDelta should not be nested");
             }
@@ -129,7 +132,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_ClusterNodeMustNotBeTerminated()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("Cluster node must not be terminated");
             }
@@ -139,7 +143,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_TryingToMergeTwoORMultiValueDictionaries()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException($"Trying to merge two ORMultiValueDictionaries of different map sub-types");
             }
@@ -149,7 +154,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_CapacityMustBe2_32()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("Capacity must be power of 2 and less than or equal 32", "capacity");
             }
@@ -159,7 +165,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_CapacityMustBeLessThanOrEqual32()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("Capacity must be less than or equal 32", "capacity");
             }
@@ -169,7 +176,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_WrongKeyUsedMustBeContainedKey()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("Wrong key used, must be contained key");
             }
@@ -179,7 +187,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_WriteToRequiresCount()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("WriteTo requires count > 2, Use WriteLocal for count=1");
             }
@@ -189,9 +198,20 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_StoreActorClassMustBeSetWhenDataDurableKeysHaveBeenConfigured()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException($"`akka.cluster.distributed-data.durable.store-actor-class` must be set when `akka.cluster.distributed-data.durable.keys` have been configured.");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_StoreActorClassIsSetToAnInvalidClass(string durableStoreTypeName)
+        {
+            throw GetArgumentException();
+            ArgumentException GetArgumentException()
+            {
+                return new ArgumentException($"`akka.cluster.distributed-data.durable.store-actor-class` is set to an invalid class {durableStoreTypeName}.");
             }
         }
 
@@ -199,7 +219,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_ReadAggregatorDoesNotSupportReadLocal()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("ReadAggregator does not support ReadLocal");
             }
@@ -209,7 +230,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_InvalidConsistencyLevel()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("Invalid consistency level");
             }
@@ -219,7 +241,8 @@ namespace Akka.DistributedData
         internal static void ThrowArgumentException_WriteAggregatorDoesNotSupportWriteLocal()
         {
             throw GetArgumentException();
-            ArgumentException GetArgumentException()
+
+            static ArgumentException GetArgumentException()
             {
                 return new ArgumentException("WriteAggregator does not support WriteLocal");
             }
@@ -287,13 +310,25 @@ namespace Akka.DistributedData
 
         #endregion
 
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentOutOfRangeException_Timeouts_must_fit_in_a_32_bit_unsigned_int()
+        {
+            throw GetException();
+
+            static ArgumentOutOfRangeException GetException()
+            {
+                return new ArgumentOutOfRangeException("Timeouts must fit in a 32-bit unsigned int");
+            }
+        }
+
         #region -- ArgumentNullException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentNullException_DistributedDataConfigNotProvided()
         {
             throw GetException();
-            ArgumentNullException GetException()
+
+            static ArgumentNullException GetException()
             {
                 return new ArgumentNullException("config", "DistributedData HOCON config not provided.");
             }
@@ -307,7 +342,8 @@ namespace Akka.DistributedData
         internal static void ThrowNotSupportedException()
         {
             throw GetException();
-            NotSupportedException GetException()
+
+            static NotSupportedException GetException()
             {
                 return new NotSupportedException();
             }
@@ -357,7 +393,8 @@ namespace Akka.DistributedData
         internal static void ThrowNotSupportedException_CannotSubtractDotsFromProvidedVersionVector()
         {
             throw GetException();
-            NotSupportedException GetException()
+
+            static NotSupportedException GetException()
             {
                 return new NotSupportedException("Cannot subtract dots from provided version vector");
             }
@@ -367,7 +404,8 @@ namespace Akka.DistributedData
         internal static void ThrowNotSupportedException_MultiVersionVectorDoesnotSupportMerge()
         {
             throw GetException();
-            NotSupportedException GetException()
+
+            static NotSupportedException GetException()
             {
                 return new NotSupportedException("MultiVersionVector doesn't support merge with provided version vector");
             }
@@ -377,7 +415,8 @@ namespace Akka.DistributedData
         internal static void ThrowNotSupportedException_SingleVersionVectorDoesnotSupportMerge()
         {
             throw GetException();
-            NotSupportedException GetException()
+
+            static NotSupportedException GetException()
             {
                 return new NotSupportedException("SingleVersionVector doesn't support merge with provided version vector");
             }
@@ -430,7 +469,8 @@ namespace Akka.DistributedData
         internal static void ThrowIllegalStateException_CannotNestDeltaGroup()
         {
             throw GetException();
-            IllegalStateException GetException()
+
+            static IllegalStateException GetException()
             {
                 return new IllegalStateException("Cannot nest DeltaGroup");
             }

@@ -9,14 +9,13 @@ using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Runtime.ExceptionServices;
-using System.Runtime.Serialization;
 using Akka.Actor;
 using MessagePack;
 
 namespace Akka.DistributedData
 {
-    [Serializable]
-    public class GetKeyIds
+    //[Serializable]
+    public class GetKeyIds : ISingletonMessage
     {
         public static readonly GetKeyIds Instance = new GetKeyIds();
 
@@ -29,11 +28,13 @@ namespace Akka.DistributedData
         public override int GetHashCode() => nameof(GetKeyIds).GetHashCode();
     }
 
-    [Serializable]
+    [MessagePackObject]
     public sealed class GetKeysIdsResult : IEquatable<GetKeysIdsResult>
     {
+        [Key(0)]
         public IImmutableSet<string> Keys { get; }
 
+        [SerializationConstructor]
         public GetKeysIdsResult(IImmutableSet<string> keys)
         {
             Keys = keys;
@@ -984,6 +985,11 @@ namespace Akka.DistributedData
         public override bool Equals(object obj)
         {
             return obj is FlushChanges;
+        }
+
+        public override int GetHashCode()
+        {
+            return 0;
         }
     }
 

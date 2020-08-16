@@ -51,7 +51,6 @@ namespace Akka.Actor
         /// </exception>>
         public void Invoke(in Envelope envelope)
         {
-
             var message = envelope.Message;
             var influenceReceiveTimeout = !(message is INotInfluenceReceiveTimeout);
 
@@ -60,6 +59,7 @@ namespace Akka.Actor
                 // Akka JVM doesn't have these lines
                 CurrentMessage = envelope.Message;
                 _currentEnvelopeId++;
+                if (_currentEnvelopeId == int.MaxValue) _currentEnvelopeId = 0;
 
                 Sender = MatchSender(envelope);
 
@@ -125,7 +125,7 @@ namespace Akka.Actor
         /// <exception cref="ActorKilledException">
         /// This exception is thrown if a <see cref="Akka.Actor.Kill"/> message is included in the given <paramref name="envelope"/>.
         /// </exception>
-        protected virtual void AutoReceiveMessage(in Envelope envelope)
+        protected internal virtual void AutoReceiveMessage(in Envelope envelope)
         {
             var message = envelope.Message;
 
@@ -201,7 +201,7 @@ namespace Akka.Actor
             }
         }
 
-        /// <summary>   
+        /// <summary>
         ///     Receives the selection.
         /// </summary>
         /// <param name="m">The m.</param>
@@ -246,71 +246,56 @@ namespace Akka.Actor
             } while (messages.NonEmpty);
         }
 
-        private void SysMsgInvokeAll(in EarliestFirstSystemMessageList messages, int currentState)
+        private void SysMsgInvokeAll(EarliestFirstSystemMessageList messages, int currentState)
         {
-
-            var nextState = currentState;
-            var todo = messages;
             while (true)
             {
-                var m = todo.Head;
-                todo = messages.Tail;
-                m.Unlink();
+                var rest = messages.Tail;
+                var message = messages.Head;
+                message.Unlink();
+
                 try
                 {
-                    // TODO: replace with direct cast
-                    if (ShouldStash(m, nextState))
+                    switch (message)
                     {
-                        Stash(m);
-                    }
-                    switch (m)
-                    {
-                        case ActorTaskSchedulerMessage actorTaskSchedulerMessage:
-                            HandleActorTaskSchedulerMessage(actorTaskSchedulerMessage);
+                        case SystemMessage sm when ShouldStash(sm, currentState):
+                            Stash(message);
                             break;
-
-                        case Failed failed:
-                            HandleFailed(failed);
+                        case ActorTaskSchedulerMessage atsm:
+                            HandleActorTaskSchedulerMessage(atsm);
                             break;
-
-                        case DeathWatchNotification msg:
-                            WatchedActorTerminated(msg.Actor, msg.ExistenceConfirmed, msg.AddressTerminated);
+                        case Failed f:
+                            HandleFailed(f);
                             break;
-
-                        case Create create:
-                            Create(create.Failure);
+                        case DeathWatchNotification n:
+                            WatchedActorTerminated(n.Actor, n.ExistenceConfirmed, n.AddressTerminated);
                             break;
-
-                        case Watch watch:
-                            AddWatcher(watch.Watchee, watch.Watcher);
+                        case Create c:
+                            Create(c.Failure);
                             break;
-
-                        case Unwatch unwatch:
-                            RemWatcher(unwatch.Watchee, unwatch.Watcher);
+                        case Watch w:
+                            AddWatcher(w.Watchee, w.Watcher);
                             break;
-
-                        case Recreate recreate:
-                            FaultRecreate(recreate.Cause);
+                        case Unwatch uw:
+                            RemWatcher(uw.Watchee, uw.Watcher);
                             break;
-
+                        case Recreate r:
+                            FaultRecreate(r.Cause);
+                            break;
                         case Suspend _:
                             FaultSuspend();
                             break;
-
-                        case Resume resume:
-                            FaultResume(resume.CausedByFailure);
+                        case Resume r:
+                            FaultResume(r.CausedByFailure);
                             break;
-
                         case Terminate _:
                             Terminate();
                             break;
-
-                        case Supervise supervise:
-                            Supervise(supervise.Child, supervise.Async);
+                        case Supervise s:
+                            Supervise(s.Child, s.Async);
                             break;
-
                         default:
-                            AkkaThrowHelper.ThrowNotSupportedException_ActorCell_SysMsgInvokeAll(m);
+                            AkkaThrowHelper.ThrowNotSupportedException_ActorCell_SysMsgInvokeAll(message);
                             break;
                     }
                 }
@@ -319,18 +304,24 @@ namespace Akka.Actor
                     HandleInvokeFailure(cause);
                 }
 
-                nextState = CalculateState();
+                var nextState = CalculateState();
                 // As each state accepts a strict subset of another state, it is enough to unstash if we "walk up" the state
                 // chain
-                todo = nextState < currentState ? todo + UnstashAll() : todo;
+                var todo = nextState < currentState ? rest + UnstashAll() : rest;
+
                 if (IsTerminated)
                 {
                     SendAllToDeadLetters(todo);
-                    return;
+                    break;
                 }
-                if (todo.IsEmpty) return; // keep running until the stash is empty
-            }
+                else if (todo.IsEmpty)
+                {
+                    break;
+                }
 
+                currentState = nextState;
+                messages = todo;
+            }
         }
 
         /// <summary>

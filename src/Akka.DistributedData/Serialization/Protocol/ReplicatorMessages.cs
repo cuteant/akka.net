@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using MessagePack;
 using OtherMessage = Akka.Serialization.Protocol.Payload;
 
@@ -15,14 +16,29 @@ namespace Akka.DistributedData.Serialization.Protocol
         public readonly uint Timeout;
         [Key(3)]
         public readonly OtherMessage Request;
+        [Key(4)]
+        public readonly int ConsistencyMinCap;
+        [Key(5)]
+        public readonly bool HasConsistencyAdditional;
+        [Key(6)]
+        public readonly int ConsistencyAdditional;
+
+        public Get(OtherMessage key, int consistency, uint timeout, OtherMessage request, int consistencyMinCap)
+            : this(key, consistency, timeout, request, consistencyMinCap, false, 0)
+        {
+        }
 
         [SerializationConstructor]
-        public Get(OtherMessage key, int consistency, uint timeout, OtherMessage request)
+        public Get(OtherMessage key, int consistency, uint timeout, OtherMessage request,
+            int consistencyMinCap, bool hasConsistencyAdditional, int consistencyAdditional)
         {
             Key = key;
             Consistency = consistency;
             Timeout = timeout;
             Request = request;
+            ConsistencyMinCap = consistencyMinCap;
+            HasConsistencyAdditional = hasConsistencyAdditional;
+            ConsistencyAdditional = consistencyAdditional;
         }
     }
 
@@ -135,13 +151,6 @@ namespace Akka.DistributedData.Serialization.Protocol
         [Key(2)]
         public readonly UniqueAddress FromNode;
 
-        public Write(string key, DataEnvelope envelope)
-        {
-            Key = key;
-            Envelope = envelope;
-            FromNode = null;
-        }
-
         [SerializationConstructor]
         public Write(string key, DataEnvelope envelope, UniqueAddress fromNode)
         {
@@ -166,12 +175,6 @@ namespace Akka.DistributedData.Serialization.Protocol
         public readonly string Key;
         [Key(1)]
         public readonly UniqueAddress FromNode;
-
-        public Read(string key)
-        {
-            Key = key;
-            FromNode = null;
-        }
 
         [SerializationConstructor]
         public Read(string key, UniqueAddress fromNode)
@@ -224,7 +227,7 @@ namespace Akka.DistributedData.Serialization.Protocol
     public readonly struct Status
     {
         [MessagePackObject]
-        public readonly struct Entry
+        public readonly struct Entry : IEquatable<Entry>
         {
             [Key(0)]
             public readonly string Key;
@@ -237,6 +240,24 @@ namespace Akka.DistributedData.Serialization.Protocol
                 Key = key;
                 Digest = digest;
             }
+
+            public bool Equals(Entry other)
+            {
+                if (!string.Equals(Key, other.Key)) { return false; }
+                if (ReferenceEquals(Digest, other.Digest)) { return true; }
+                if (Digest is null || other.Digest is null) { return false; }
+                return Digest.AsSpan().SequenceEqual(other.Digest);
+            }
+
+            public override bool Equals(object obj)
+            {
+                return obj is Entry other && Equals(other);
+            }
+
+            public override int GetHashCode()
+            {
+                return (Key?.GetHashCode() ?? 0) ^ (Digest?.GetHashCode() ?? 0);
+            }
         }
 
         [Key(0)]
@@ -245,19 +266,25 @@ namespace Akka.DistributedData.Serialization.Protocol
         public readonly uint TotChunks;
         [Key(2)]
         public readonly List<Entry> Entries;
-        //[Key(3)]
-        //public readonly long ToSystemUid;
-        //[Key(4)]
-        //public readonly long FromSystemUid;
+        [Key(3)]
+        public readonly bool HasToSystemUid;
+        [Key(4)]
+        public readonly bool HasFromSystemUid;
+        [Key(5)]
+        public readonly long ToSystemUid;
+        [Key(6)]
+        public readonly long FromSystemUid;
 
         [SerializationConstructor]
-        public Status(uint chunk, uint totChunks, List<Entry> entries/*, long toSystemUid, long fromSystemUid*/)
+        public Status(uint chunk, uint totChunks, List<Entry> entries, bool hasToSystemUid, bool hasFromSystemUid, long toSystemUid, long fromSystemUid)
         {
             Chunk = chunk;
             TotChunks = totChunks;
             Entries = entries;
-            //ToSystemUid = toSystemUid;
-            //FromSystemUid = fromSystemUid;
+            HasToSystemUid = hasToSystemUid;
+            HasFromSystemUid = hasFromSystemUid;
+            ToSystemUid = toSystemUid;
+            FromSystemUid = fromSystemUid;
         }
     }
 
@@ -284,18 +311,24 @@ namespace Akka.DistributedData.Serialization.Protocol
         public readonly bool SendBack;
         [Key(1)]
         public readonly List<Entry> Entries;
-        //[Key(2)]
-        //public readonly long ToSystemUid;
-        //[Key(3)]
-        //public readonly long FromSystemUid;
+        [Key(2)]
+        public readonly bool HasToSystemUid;
+        [Key(3)]
+        public readonly bool HasFromSystemUid;
+        [Key(4)]
+        public readonly long ToSystemUid;
+        [Key(5)]
+        public readonly long FromSystemUid;
 
         [SerializationConstructor]
-        public Gossip(bool sendBack, List<Entry> entries/*, long toSystemUid, long fromSystemUid*/)
+        public Gossip(bool sendBack, List<Entry> entries, bool hasToSystemUid, bool hasFromSystemUid, long toSystemUid, long fromSystemUid)
         {
             SendBack = sendBack;
             Entries = entries;
-            //ToSystemUid = toSystemUid;
-            //FromSystemUid = fromSystemUid;
+            HasToSystemUid = hasToSystemUid;
+            HasFromSystemUid = hasFromSystemUid;
+            ToSystemUid = toSystemUid;
+            FromSystemUid = fromSystemUid;
         }
     }
 

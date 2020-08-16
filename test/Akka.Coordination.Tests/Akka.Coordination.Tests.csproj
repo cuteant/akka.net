@@ -1,0 +1,15 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+ 
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Coordination.Tests</RootNamespace>
+    <AssemblyName>Akka.Coordination.Tests</AssemblyName>
+  </PropertyGroup>
+ 
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka\Akka.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Coordination\Akka.Coordination.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+  </ItemGroup>
+
+</Project>

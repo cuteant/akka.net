@@ -39,11 +39,11 @@ namespace Akka.Util
             get
             {
                 Interlocked.MemoryBarrier();
-                return _value==_trueValue;
+                return _falseValue < (uint)_value;
             }
             set
             {
-                Interlocked.Exchange(ref _value, value ? _trueValue : _falseValue);    
+                Interlocked.Exchange(ref _value, value ? _trueValue : _falseValue);
             }
         }
 
@@ -68,7 +68,7 @@ namespace Akka.Util
         /// <returns>The old value</returns>
         public bool GetAndSet(bool newValue)
         {
-            return Interlocked.Exchange(ref _value, newValue ? _trueValue : _falseValue) == _trueValue;
+            return _falseValue < (uint)Interlocked.Exchange(ref _value, newValue ? _trueValue : _falseValue);
         }
 
         #region Conversion operators

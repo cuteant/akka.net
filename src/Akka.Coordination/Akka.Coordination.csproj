@@ -1,0 +1,30 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Coordination</RootNamespace>
+    <AssemblyName>Akka.Coordination</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <DefineConstants>$(DefineConstants);CLONEABLE;CONFIGURATION;SERIALIZATION;UNSAFE_THREADING;APPDOMAIN</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Akka.Coordination.Unofficial</PackageId>
+    <Title>Akka.Coordination (Unofficial)</Title>
+    <Description>Distributed coordination support for Akka.NET</Description>
+    <PackageTags>$(AkkaPackageTags)</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <EmbeddedResource Include="reference.conf" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Akka.Core\Akka.Core.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\version.props" />
+</Project>

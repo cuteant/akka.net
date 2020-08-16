@@ -29,7 +29,8 @@ namespace Akka.DI.Core
         internal static void ThrowArgumentNullException_RequiresSystem()
         {
             throw GetArgumentNullException();
-            ArgumentNullException GetArgumentNullException()
+
+            static ArgumentNullException GetArgumentNullException()
             {
                 return new ArgumentNullException("system", "ActorSystem requires a valid system");
             }
@@ -39,7 +40,8 @@ namespace Akka.DI.Core
         internal static void ThrowArgumentNullException_RequiresDR()
         {
             throw GetArgumentNullException();
-            ArgumentNullException GetArgumentNullException()
+
+            static ArgumentNullException GetArgumentNullException()
             {
                 return new ArgumentNullException("dependencyResolver", "ActorSystem requires dependencyResolver to be provided");
             }
@@ -49,7 +51,8 @@ namespace Akka.DI.Core
         internal static void ThrowArgumentNullException_DIExt()
         {
             throw GetArgumentNullException();
-            ArgumentNullException GetArgumentNullException()
+
+            static ArgumentNullException GetArgumentNullException()
             {
                 return new ArgumentNullException("dependencyResolver", $"DIExt requires dependencyResolver to be provided");
             }
@@ -59,7 +62,8 @@ namespace Akka.DI.Core
         internal static void ThrowArgumentNullException_DIActorSystemAdapter()
         {
             throw GetArgumentNullException();
-            ArgumentNullException GetArgumentNullException()
+
+            static ArgumentNullException GetArgumentNullException()
             {
                 return new ArgumentNullException("system", $"DIActorSystemAdapter requires system to be provided");
             }
@@ -69,7 +73,8 @@ namespace Akka.DI.Core
         internal static void ThrowArgumentNullException_DIActorProducer_Type()
         {
             throw GetArgumentNullException();
-            ArgumentNullException GetArgumentNullException()
+
+            static ArgumentNullException GetArgumentNullException()
             {
                 return new ArgumentNullException("actorType", $"DIActorProducer requires actorType to be provided");
             }
@@ -79,7 +84,8 @@ namespace Akka.DI.Core
         internal static void ThrowArgumentNullException_DIActorProducer_DR()
         {
             throw GetArgumentNullException();
-            ArgumentNullException GetArgumentNullException()
+
+            static ArgumentNullException GetArgumentNullException()
             {
                 return new ArgumentNullException("dependencyResolver", $"DIActorProducer requires dependencyResolver to be provided");
             }
@@ -89,7 +95,8 @@ namespace Akka.DI.Core
         internal static void ThrowArgumentNullException_Context()
         {
             throw GetArgumentNullException();
-            ArgumentNullException GetArgumentNullException()
+
+            static ArgumentNullException GetArgumentNullException()
             {
                 return new ArgumentNullException("context", $"DIActorContextAdapter requires context to be provided");
             }
@@ -99,7 +106,8 @@ namespace Akka.DI.Core
         internal static void ThrowInvalidOperationException_TheDependencyResolverHasNotBeenConfiguredYet()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("The Dependency Resolver has not been configured yet");
             }

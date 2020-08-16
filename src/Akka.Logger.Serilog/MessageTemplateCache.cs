@@ -19,13 +19,13 @@ namespace Akka.Logger.Serilog
 
         public MessageTemplateCache(MessageTemplateParser innerParser)
         {
-            if (null == innerParser) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.innerParser); }
+            if (innerParser is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.innerParser); }
             _innerParser = innerParser;
         }
 
         public MessageTemplate Parse(string messageTemplate)
         {
-            if (null == messageTemplate) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.messageTemplate); }
+            if (messageTemplate is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.messageTemplate); }
 
             if (_templates.TryGetValue(messageTemplate, out var result)) { return result; }
 
@@ -35,9 +35,10 @@ namespace Akka.Logger.Serilog
             // conditions when the library is used incorrectly. Correct use (templates, rather than
             // direct message strings) should barely, if ever, overflow this cache.
 
-            if (_templates.Count <= MaxCacheItems)
+            if ((uint)_templates.Count <= (uint)MaxCacheItems)
+            {
                 _templates[messageTemplate] = result;
-
+            }
             return result;
         }
     }

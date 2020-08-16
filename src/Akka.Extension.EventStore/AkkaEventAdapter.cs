@@ -63,7 +63,8 @@ namespace Akka.Extension.EventStore
         private static void ThrowArgumentNullException_EventMeta()
         {
             throw GetException();
-            ArgumentNullException GetException()
+
+            static ArgumentNullException GetException()
             {
                 return new ArgumentNullException("eventMeta");
             }
@@ -73,7 +74,8 @@ namespace Akka.Extension.EventStore
         private static void ThrowArgumentNullException_EventData()
         {
             throw GetException();
-            ArgumentNullException GetException()
+
+            static ArgumentNullException GetException()
             {
                 return new ArgumentNullException("eventData");
             }

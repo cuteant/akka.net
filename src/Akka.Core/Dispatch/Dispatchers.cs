@@ -44,7 +44,6 @@ namespace Akka.Dispatch
         }
     }
 
-#if UNSAFE_THREADING
     /// <summary>
     /// INTERNAL API
     /// </summary>
@@ -67,7 +66,6 @@ namespace Akka.Dispatch
         {
         }
     }
-#endif
 
     /// <summary>
     /// INTERNAL API

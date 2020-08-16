@@ -1441,9 +1441,10 @@ namespace Akka.Remote
         /// <param name="msg">The C# object we intend to serialize.</param>
         /// <returns>The Akka.NET envelope containing the serialized message and addressing information.</returns>
         /// <remarks>Differs from JVM implementation due to Scala implicits.</remarks>
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         private SerializedMessage SerializeMessage(object msg)
         {
-            if (_handle == null)
+            if (_handle is null)
             {
                 ThrowHelper.ThrowEndpointException_SerializeMessage();
             }

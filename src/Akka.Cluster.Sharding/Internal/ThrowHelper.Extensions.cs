@@ -96,7 +96,8 @@ namespace Akka.Cluster.Sharding
         internal static void ThrowArgumentException_shuttingDownRegions_must_be_a_subset_of_regions()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException($"'shuttingDownRegions' must be a subset of 'regions'.", "shuttingDownRegions");
             }
@@ -222,7 +223,8 @@ namespace Akka.Cluster.Sharding
         internal static void ThrowArgumentNullException_StartRrequiresTypeNameToBeProvided()
         {
             throw GetException();
-            ArgumentNullException GetException()
+
+            static ArgumentNullException GetException()
             {
                 return new ArgumentNullException("typeName", "ClusterSharding start requires type name to be provided");
             }
@@ -242,7 +244,8 @@ namespace Akka.Cluster.Sharding
         internal static void ThrowArgumentNullException_ClusterShardingStartProxyRequiresTypeNameToBeProvided()
         {
             throw GetException();
-            ArgumentNullException GetException()
+
+            static ArgumentNullException GetException()
             {
                 return new ArgumentNullException("typeName", "ClusterSharding start proxy requires type name to be provided");
             }
@@ -252,7 +255,8 @@ namespace Akka.Cluster.Sharding
         internal static void ThrowArgumentNullException_RequiresTunningParametersToBeProvided()
         {
             throw GetException();
-            ArgumentNullException GetException()
+
+            static ArgumentNullException GetException()
             {
                 return new ArgumentNullException("tunningParameters", $"ClusterShardingSettings requires tunningParameters to be provided");
             }
@@ -262,7 +266,8 @@ namespace Akka.Cluster.Sharding
         internal static void ThrowArgumentNullException_RequiresCoordinatorSingletonSettingsToBeProvided()
         {
             throw GetException();
-            ArgumentNullException GetException()
+
+            static ArgumentNullException GetException()
             {
                 return new ArgumentNullException("coordinatorSingletonSettings", $"ClusterShardingSettings requires coordinatorSingletonSettings to be provided");
             }
@@ -300,7 +305,8 @@ namespace Akka.Cluster.Sharding
         internal static void ThrowIllegalStateException_ShardMustNotBeAllocatedToAProxyOnlyShardRegion()
         {
             throw GetException();
-            IllegalStateException GetException()
+
+            static IllegalStateException GetException()
             {
                 return new IllegalStateException("Shard must not be allocated to a proxy only ShardRegion");
             }

@@ -1279,7 +1279,7 @@ namespace Akka.Cluster.Sharding
             if (string.IsNullOrEmpty(settings.Role))
                 MinMembers = Cluster.Settings.MinNrOfMembers;
             else
-                MinMembers = Cluster.Settings.MinNrOfMembersOfRole.GetValueOrDefault(settings.Role, Cluster.Settings.MinNrOfMembers);
+                MinMembers = Cluster.Settings.MinNrOfMembersOfRole.GetValueOrDefault(settings.Role, 1);
 
             JournalPluginId = Settings.JournalPluginId;
             SnapshotPluginId = Settings.SnapshotPluginId;
@@ -1388,13 +1388,22 @@ namespace Akka.Cluster.Sharding
 
         private bool WaitingForStateInitialized(object message)
         {
-            if (message is StateInitialized)
+            switch (message)
             {
-                this.StateInitialized();
-                Context.Become(msg => this.Active(msg) || HandleSnapshotResult(msg));
-                return true;
+                case Terminate _:
+#if DEBUG
+                    if (Log.IsDebugEnabled) { Log.Debug("Received termination message before state was initialized"); }
+#endif
+                    Context.Stop(Self);
+                    return true;
+
+                case StateInitialized _:
+                    this.StateInitialized();
+                    Context.Become(msg => this.Active(msg) || HandleSnapshotResult(msg));
+                    return true;
             }
-            else if (this.ReceiveTerminated(message)) return true;
+
+            if (this.ReceiveTerminated(message)) return true;
             else return HandleSnapshotResult(message);
         }
 
@@ -1404,7 +1413,9 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case SaveSnapshotSuccess m:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.PersistentSnapshotSavedSuccessfully();
+#endif
                     InternalDeleteMessagesBeforeSnapshot(m, Settings.TunningParameters.KeepNrOfBatches, Settings.TunningParameters.SnapshotAfter);
                     break;
 
@@ -1412,14 +1423,18 @@ namespace Akka.Cluster.Sharding
                     if (Log.IsWarningEnabled) Log.PersistentSnapshotFailure(m);
                     break;
                 case DeleteMessagesSuccess m:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.PersistentMessagesToDeletedSuccessfully(m);
+#endif
                     DeleteSnapshots(new SnapshotSelectionCriteria(m.ToSequenceNr - 1));
                     break;
                 case DeleteMessagesFailure m:
                     if (Log.IsWarningEnabled) Log.PersistentMessagesToDeletionFailure(m);
                     break;
                 case DeleteSnapshotsSuccess m:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.PersistentSnapshotsMatchingDeletedSuccessfully(m);
+#endif
                     break;
                 case DeleteSnapshotsFailure m:
                     if (Log.IsWarningEnabled) Log.PersistentSnapshotsMatchingDeletionFailure(m);

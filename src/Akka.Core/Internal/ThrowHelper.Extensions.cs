@@ -111,6 +111,17 @@ namespace Akka
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Config_can_not_have_itself_as_fallback()
+        {
+            throw GetException();
+
+            static ArgumentException GetException()
+            {
+                return new ArgumentException("Config can not have itself as fallback", "fallback");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_LogLevel(string logLevel)
         {
             throw GetException();
@@ -308,6 +319,16 @@ namespace Akka
             ArgumentException GetException()
             {
                 return new ArgumentException($"Cannot serialize object of type [{obj?.GetType().TypeQualifiedName()}]");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_Object_must_be_of_type_IActorRef(object obj)
+        {
+            throw GetException();
+            ArgumentException GetException()
+            {
+                return new ArgumentException($"Object must be of type IActorRef, found {obj.GetType()} instead.", nameof(obj));
             }
         }
 
@@ -627,6 +648,17 @@ namespace Akka
         #endregion
 
         #region -- InvalidOperationException --
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowInvalidOperationException_Current_node_should_not_be_null()
+        {
+            throw GetException();
+
+            static InvalidOperationException GetException()
+            {
+                return new InvalidOperationException("Current node should not be null");
+            }
+        }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowInvalidOperationException_ConsistentHash_IsEmpty(byte[] key)

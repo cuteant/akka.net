@@ -5,18 +5,18 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using Akka.Actor;
-using Akka.Cluster;
-using Akka.DistributedData.Internal;
-using Akka.Serialization;
-using Akka.Util;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Security.Cryptography;
+using Akka.Actor;
+using Akka.Cluster;
 using Akka.DistributedData.Durable;
+using Akka.DistributedData.Internal;
 using Akka.Event;
+using Akka.Serialization;
+using Akka.Util;
 using CuteAnt;
 using Gossip = Akka.DistributedData.Internal.Gossip;
 using Status = Akka.DistributedData.Internal.Status;
@@ -266,7 +266,9 @@ namespace Akka.DistributedData
 
         private static readonly byte[] DeletedDigest = EmptyArray<byte>.Instance;
         private static readonly byte[] LazyDigest = new byte[] { 0 };
+        private static ReadOnlySpan<byte> LazyDigestSpan => new byte[] { 0 };
         private static readonly byte[] NotFoundDigest = new byte[] { 255 };
+        private static ReadOnlySpan<byte> NotFoundDigestSpan => new byte[] { 255 };
 
         private static readonly DataEnvelope DeletedEnvelope = new DataEnvelope(DeletedData.Instance);
 
@@ -470,9 +472,9 @@ namespace Akka.DistributedData
             _count += load.Data.Count;
             foreach (var entry in load.Data)
             {
-                var envelope = entry.Value.Data;
+                var envelope = entry.Value.DataEnvelope;
                 var newEnvelope = Write(entry.Key, envelope);
-                if (!ReferenceEquals(newEnvelope.Data, envelope.Data))
+                if (!ReferenceEquals(newEnvelope, envelope))
                 {
                     _durableStore.Tell(new Store(entry.Key, new DurableDataEnvelope(newEnvelope), null));
                 }
@@ -690,7 +692,7 @@ namespace Akka.DistributedData
                     return true;
                 case WriteAll _:
                 case WriteMajority _:
-                    return _nodes.Count == 0;
+                    return 0u >= (uint)_nodes.Count;
                 default:
                     return false;
             }
@@ -721,36 +723,31 @@ namespace Akka.DistributedData
 
         private DataEnvelope Write(string key, DataEnvelope writeEnvelope)
         {
-            var envelope = GetData(key);
-            if (envelope != null)
+            switch (GetData(key))
             {
-                if (envelope.Equals(writeEnvelope))
-                {
+                case DataEnvelope envelope when envelope.Equals(writeEnvelope):
                     return envelope;
-                }
-                if (envelope.Data is DeletedData) return DeletedEnvelope; // already deleted
+                case DataEnvelope envelope when envelope.Data is DeletedData:
+                    // already deleted
+                    return DeletedEnvelope;
+                case DataEnvelope envelope:
+                    try
+                    {
+                        // DataEnvelope will mergeDelta when needed
+                        var merged = envelope.Merge(writeEnvelope).AddSeen(_selfAddress);
+                        return SetData(key, merged);
+                    }
+                    catch (ArgumentException e)
+                    {
+                        _log.CouldnotMergeDueTo(key, e);
+                        return null;
+                    }
+                default:
+                    // no existing data for the key
+                    if (writeEnvelope.Data is IReplicatedDelta withDelta)
+                        writeEnvelope = writeEnvelope.WithData(withDelta.Zero.MergeDelta(withDelta));
 
-                try
-                {
-                    // DataEnvelope will mergeDelta when needed
-                    var merged = envelope.Merge(writeEnvelope).AddSeen(_selfAddress);
-                    return SetData(key, merged);
-                }
-                catch (ArgumentException e)
-                {
-                    if (_log.IsWarningEnabled) _log.CouldnotMergeDueTo(key, e);
-                    return null;
-                }
-            }
-            else
-            {
-                // no existing data for the key
-                if (writeEnvelope.Data is IReplicatedDelta withDelta)
-                {
-                    writeEnvelope = writeEnvelope.WithData(withDelta.Zero.MergeDelta(withDelta));
-                }
-
-                return SetData(key, writeEnvelope.AddSeen(_selfAddress));
+                    return SetData(key, writeEnvelope.AddSeen(_selfAddress));
             }
         }
 
@@ -828,7 +825,7 @@ namespace Akka.DistributedData
             {
                 var oldDigest = GetDigest(key);
                 var dig = Digest(newEnvelope);
-                if (!Equals(dig, oldDigest))
+                if (!dig.AsSpan().SequenceEqual(oldDigest))
                     _changed = _changed.Add(key);
 
                 digest = dig;
@@ -850,7 +847,7 @@ namespace Akka.DistributedData
             var contained = _dataEntries.TryGetValue(key, out var value);
             if (contained)
             {
-                if (value.digest == LazyDigest)
+                if (LazyDigestSpan.SequenceEqual(value.digest))
                 {
                     var digest = Digest(value.envelope);
                     _dataEntries = _dataEntries.SetItem(key, (value.envelope, digest));
@@ -1070,10 +1067,10 @@ namespace Akka.DistributedData
 
         private ActorSelection Replica(Address address) => Context.ActorSelection(Self.Path.ToStringWithAddress(address));
 
-        private bool IsOtherDifferent(string key, byte[] otherDigest)
+        private bool IsOtherDifferent(string key, ReadOnlySpan<byte> otherDigest)
         {
-            var d = GetDigest(key);
-            return d != NotFoundDigest && d != otherDigest;
+            var d = new ReadOnlySpan<byte>(GetDigest(key));
+            return !NotFoundDigestSpan.SequenceEqual(d) && !d.SequenceEqual(otherDigest);
         }
 
         private void ReceiveStatus(Internal.Status s)
@@ -1088,8 +1085,7 @@ namespace Akka.DistributedData
             }
 
             // if no data was send we do nothing
-            if (otherDigests.Count == 0)
-                return;
+            if (0u >= (uint)otherDigests.Count) { return; }
 
             var otherDifferentKeys = otherDigests
                 .Where(x => IsOtherDifferent(x.Key, x.Value))
@@ -1109,7 +1105,7 @@ namespace Akka.DistributedData
                 .Take(_settings.MaxDeltaElements)
                 .ToArray();
 
-            if (keys.Length != 0)
+            if ((uint)keys.Length > 0U)
             {
                 if (_log.IsDebugEnabled) { _log.SendingGossipTo(Sender, keys); }
 

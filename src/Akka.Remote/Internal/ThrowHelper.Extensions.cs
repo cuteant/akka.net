@@ -106,7 +106,8 @@ namespace Akka.Remote
         internal static void ThrowException_IPAddress_Num()
         {
             throw GetException();
-            Exception GetException()
+
+            static Exception GetException()
             {
                 return new Exception("IPAddress.m_Numbers not found");
             }
@@ -116,7 +117,8 @@ namespace Akka.Remote
         internal static void ThrowException_IPAddress_OnlyIpV6()
         {
             throw GetException();
-            Exception GetException()
+
+            static Exception GetException()
             {
                 return new Exception("Only AddressFamily.InterNetworkV6 can be converted to IPv4");
             }
@@ -126,7 +128,8 @@ namespace Akka.Remote
         internal static void ThrowException_IPAddress_OnlyIpV4()
         {
             throw GetException();
-            Exception GetException()
+
+            static Exception GetException()
             {
                 return new Exception("Only AddressFamily.InterNetworkV4 can be converted to IPv6");
             }
@@ -286,7 +289,8 @@ namespace Akka.Remote
         internal static void ThrowNotSupportedException()
         {
             throw GetException();
-            NotSupportedException GetException()
+
+            static NotSupportedException GetException()
             {
                 return new NotSupportedException();
             }
@@ -337,7 +341,8 @@ namespace Akka.Remote
         internal static void ThrowInvalidMessageException()
         {
             throw GetException();
-            InvalidMessageException GetException()
+
+            static InvalidMessageException GetException()
             {
                 return new InvalidMessageException("Message is null.");
             }
@@ -351,7 +356,8 @@ namespace Akka.Remote
         internal static void ThrowResendUnfulfillableException()
         {
             throw GetException();
-            ResendUnfulfillableException GetException()
+
+            static ResendUnfulfillableException GetException()
             {
                 return new ResendUnfulfillableException();
             }
@@ -375,7 +381,8 @@ namespace Akka.Remote
         internal static void ThrowConfigurationException()
         {
             throw GetException();
-            ConfigurationException GetException()
+
+            static ConfigurationException GetException()
             {
                 return new ConfigurationException(@"No transports enabled under ""akka.remote.enabled-transports""");
             }
@@ -440,7 +447,8 @@ namespace Akka.Remote
         internal static void ThrowChannelException()
         {
             throw GetException();
-            ChannelException GetException()
+
+            static ChannelException GetException()
             {
                 return new ChannelException("Transport is not open");
             }
@@ -532,7 +540,8 @@ namespace Akka.Remote
         internal static void ThrowEndpointException_SerializeMessage()
         {
             throw GetException();
-            EndpointException GetException()
+
+            static EndpointException GetException()
             {
                 return new EndpointException("Internal error: No handle was present during serialization of outbound message.");
             }
@@ -542,7 +551,8 @@ namespace Akka.Remote
         internal static void ThrowEndpointException_WriteSend()
         {
             throw GetException();
-            EndpointException GetException()
+
+            static EndpointException GetException()
             {
                 return new EndpointException("Internal error: Endpoint is in state Writing, but no association handle is present.");
             }
@@ -619,7 +629,8 @@ namespace Akka.Remote
         internal static void ThrowRemoteTransportException_EndpointManager()
         {
             throw GetException();
-            RemoteTransportException GetException()
+
+            static RemoteTransportException GetException()
             {
                 return new RemoteTransportException("Attempted to send remote message but Remoting is not running.");
             }
@@ -639,7 +650,8 @@ namespace Akka.Remote
         internal static void ThrowRemoteTransportException_EndpointManager_Cmd()
         {
             throw GetException();
-            RemoteTransportException GetException()
+
+            static RemoteTransportException GetException()
             {
                 return new RemoteTransportException("Attempted to send management command but Remoting is not running.");
             }

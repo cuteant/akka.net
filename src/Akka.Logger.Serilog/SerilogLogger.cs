@@ -10,6 +10,7 @@ using Akka.Actor;
 using Akka.Dispatch;
 using Akka.Event;
 using Serilog;
+using Serilog.Core;
 using Serilog.Core.Enrichers;
 
 namespace Akka.Logger.Serilog
@@ -20,7 +21,7 @@ namespace Akka.Logger.Serilog
     /// recognized: <see cref="Debug"/>, <see cref="Info"/>,
     /// <see cref="Warning"/> and <see cref="Error"/>.
     /// </summary>
-    public class SerilogLogger : ReceiveActor2, IRequiresMessageQueue<ILoggerMessageQueueSemantics>
+    public class SerilogLogger : ReceiveActor, IRequiresMessageQueue<ILoggerMessageQueueSemantics>
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
@@ -37,11 +38,12 @@ namespace Akka.Logger.Serilog
         }
 
         private static ILogger GetLogger(LogEvent logEvent) {
-            var logger = Log.Logger.ForContext("SourceContext", Context.Sender.Path);
-            logger = logger
-                .ForContext("Timestamp", logEvent.Timestamp)
-                .ForContext("LogSource", logEvent.LogSource)
-                .ForContext("Thread", logEvent.Thread.ManagedThreadId.ToString().PadLeft(4, '0'));
+			var logger = Log.Logger
+				.ForContext(Constants.SourceContextPropertyName, logEvent.LogClass.FullName)
+				.ForContext("ActorPath", Context.Sender.Path)
+				.ForContext("Timestamp", logEvent.Timestamp)
+				.ForContext("LogSource", logEvent.LogSource)
+				.ForContext("Thread", logEvent.Thread.ManagedThreadId.ToString().PadLeft( 4, '0' ));
 
             var logMessage = logEvent.Message as LogMessage;
             if (logMessage != null)
@@ -58,17 +60,17 @@ namespace Akka.Logger.Serilog
         }
 
         private static void Handle(Warning logEvent) {
-              GetLogger(logEvent).Warning(GetFormat(logEvent.Message), GetArgs(logEvent.Message));
+              GetLogger(logEvent).Warning(logEvent.Cause, GetFormat(logEvent.Message), GetArgs(logEvent.Message));
         }
 
         private static void Handle(Info logEvent)
         {
-              GetLogger(logEvent).Information(GetFormat(logEvent.Message), GetArgs(logEvent.Message));
+              GetLogger(logEvent).Information(logEvent.Cause, GetFormat(logEvent.Message), GetArgs(logEvent.Message));
         }
 
         private static void Handle(Debug logEvent)
         {
-              GetLogger(logEvent).Debug(GetFormat(logEvent.Message), GetArgs(logEvent.Message));
+              GetLogger(logEvent).Debug(logEvent.Cause, GetFormat(logEvent.Message), GetArgs(logEvent.Message));
         }
 
         /// <summary>

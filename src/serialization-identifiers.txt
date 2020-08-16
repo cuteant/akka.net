@@ -20,6 +20,8 @@ primitive                 = "Akka.Serialization.PrimitiveSerializers, Akka.Core"
 
 akka-system-msg           = "Akka.Serialization.SystemMessageSerializer, Akka"                                                         = 22
 
+akka-stream-ref           = "Akka.Streams.Serialization.StreamRefSerializer, Akka.Streams"                                             = 30
+
 --------------------------------------------------------------------------------------------------------------
 msgpack                   = "Akka.Serialization.MsgPackSerializer, Akka"                                                               = 101
 lz4-msgpack               = "Akka.Serialization.LZ4MsgPackSerializer, Akka.Serialization.MessagePackLZ4"                               = 102

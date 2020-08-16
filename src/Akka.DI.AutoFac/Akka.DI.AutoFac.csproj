@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
     <RootNamespace>Akka.DI.AutoFac</RootNamespace>
     <AssemblyName>Akka.DI.AutoFac</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

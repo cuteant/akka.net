@@ -103,7 +103,8 @@ namespace Akka.Cluster
         internal static void ThrowException_NoYoungestWhenNoMembers()
         {
             throw GetException();
-            Exception GetException()
+
+            static Exception GetException()
             {
                 return new Exception("No youngest when no members");
             }
@@ -117,7 +118,8 @@ namespace Akka.Cluster
         internal static void ThrowArgumentException_RouteesPathsMustBeDefined()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("RouteesPaths must be defined", "routeesPaths");
             }
@@ -137,7 +139,8 @@ namespace Akka.Cluster
         internal static void ThrowArgumentException_JoinSeedNodeShouldNotBeDone()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("Join seed node should not be done");
             }
@@ -207,7 +210,8 @@ namespace Akka.Cluster
         internal static void ThrowArgumentException_AtLeastOneIClusterDomainEventClassIsRequired()
         {
             throw GetException();
-            ArgumentException GetException()
+
+            static ArgumentException GetException()
             {
                 return new ArgumentException("At least one `IClusterDomainEvent` class is required", "to");
             }
@@ -314,7 +318,8 @@ namespace Akka.Cluster
         internal static void ThrowArgumentOutOfRangeException_MaxInstancesPerNode()
         {
             throw GetException();
-            ArgumentOutOfRangeException GetException()
+
+            static ArgumentOutOfRangeException GetException()
             {
                 return new ArgumentOutOfRangeException("maxInstancesPerNode", "maxInstancesPerNode of cluster pool router must be > 0");
             }
@@ -324,7 +329,8 @@ namespace Akka.Cluster
         internal static void ThrowArgumentOutOfRangeException_UseRole()
         {
             throw GetException();
-            ArgumentOutOfRangeException GetException()
+
+            static ArgumentOutOfRangeException GetException()
             {
                 return new ArgumentOutOfRangeException("useRole", "useRole must be either null or non-empty");
             }
@@ -334,7 +340,8 @@ namespace Akka.Cluster
         internal static void ThrowArgumentOutOfRangeException_TotalInstances()
         {
             throw GetException();
-            ArgumentOutOfRangeException GetException()
+
+            static ArgumentOutOfRangeException GetException()
             {
                 return new ArgumentOutOfRangeException("totalInstances", "totalInstances of cluster router must be > 0");
             }
@@ -348,7 +355,8 @@ namespace Akka.Cluster
         internal static void ThrowInvalidOperationException_SequenceWasEmpty()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Sequence was empty");
             }
@@ -358,7 +366,8 @@ namespace Akka.Cluster
         internal static void ThrowInvalidOperationException_MustBeLeaderToDownNode()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Must be leader to down node");
             }
@@ -368,7 +377,8 @@ namespace Akka.Cluster
         internal static void ThrowInvalidOperationException_JoinCanOnlyBeDoneFromAnEmptyState()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Join can only be done from an empty state");
             }
@@ -378,7 +388,8 @@ namespace Akka.Cluster
         internal static void ThrowInvalidOperationException_WelcomeCanOnlyBeDoneFromAnEmptyState()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Welcome can only be done from an empty state");
             }
@@ -430,7 +441,8 @@ namespace Akka.Cluster
         internal static void ThrowConfigurationException_ResizerCanotBeUsedTogetherWithClusterRouter()
         {
             throw GetException();
-            ConfigurationException GetException()
+
+            static ConfigurationException GetException()
             {
                 return new ConfigurationException("Resizer can't be used together with cluster router.");
             }
@@ -440,7 +452,8 @@ namespace Akka.Cluster
         internal static void ThrowConfigurationException_AutoDowningDowningProviderSelected()
         {
             throw GetException();
-            ConfigurationException GetException()
+
+            static ConfigurationException GetException()
             {
                 return new ConfigurationException("AutoDowning downing provider selected but 'akka.cluster.auto-down-unreachable-after' not set");
             }

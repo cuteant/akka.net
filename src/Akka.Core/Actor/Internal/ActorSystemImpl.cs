@@ -8,11 +8,11 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
+using Akka.Actor.Setup;
 using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
@@ -54,7 +54,7 @@ namespace Akka.Actor.Internal
         /// </summary>
         /// <param name="name">The name given to the actor system.</param>
         public ActorSystemImpl(string name)
-            : this(name, ConfigurationFactory.Default())
+            : this(name, ConfigurationFactory.Default(), ActorSystemSetup.Empty)
         {
         }
 
@@ -63,12 +63,13 @@ namespace Akka.Actor.Internal
         /// </summary>
         /// <param name="name">The name given to the actor system.</param>
         /// <param name="config">The configuration used to configure the actor system.</param>
+        /// <param name="setup">The <see cref="ActorSystemSetup"/> used to help programmatically bootstrap the actor system.</param>
         /// <exception cref="ArgumentException">
         /// This exception is thrown if the given <paramref name="name"/> is an invalid name for an actor system.
         ///  Note that the name must contain only word characters (i.e. [a-zA-Z0-9] plus non-leading '-').
         /// </exception>
         /// <exception cref="ArgumentNullException">This exception is thrown if the given <paramref name="config"/> is undefined.</exception>
-        public ActorSystemImpl(string name, Config config)
+        public ActorSystemImpl(string name, Config config, ActorSystemSetup setup)
         {
             if (!Regex.Match(name, "^[a-zA-Z0-9][a-zA-Z0-9-]*$").Success)
             {
@@ -77,13 +78,13 @@ namespace Akka.Actor.Internal
             }
 
             // Not checking for empty Config here, default values will be substituted in Settings class constructor (called in ConfigureSettings)
-            if (config.IsNullOrEmpty())
+            if (config is null)
             {
                 throw new ArgumentNullException(nameof(config), $"Cannot create {typeof(ActorSystemImpl)}: Configuration must not be null.");
             }
 
             _name = name;
-            ConfigureSettings(config);
+            ConfigureSettings(config, setup);
             ConfigureEventStream();
             ConfigureLoggers();
             ConfigureScheduler();
@@ -403,9 +404,9 @@ namespace Akka.Actor.Internal
             return _extensions.ContainsKey(typeof(T));
         }
 
-        private void ConfigureSettings(Config config)
+        private void ConfigureSettings(Config config, ActorSystemSetup setup)
         {
-            _settings = new Settings(this, config);
+            _settings = new Settings(this, config, setup);
         }
 
         private void ConfigureEventStream()
@@ -527,13 +528,25 @@ namespace Akka.Actor.Internal
         /// </returns>
         public override Task Terminate()
         {
+            if (Settings.CoordinatedShutdownRunByActorSystemTerminate)
+            {
+                CoordinatedShutdown.Get(this).Run(CoordinatedShutdown.ActorSystemTerminateReason.Instance);
+            }
+            else
+            {
+                FinalTerminate();
+            }
+            return WhenTerminated;
+        }
+
+        internal override void FinalTerminate()
+        {
             if (Log.IsDebugEnabled) Log.SystemShutdownInitiated();
             if (!Settings.LogDeadLettersDuringShutdown && _logDeadLetterListener != null)
             {
                 Stop(_logDeadLetterListener);
             }
             _provider.Guardian.Stop();
-            return WhenTerminated;
         }
 
         /// <summary>

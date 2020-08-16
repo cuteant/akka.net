@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Akka.Persistence.Snapshot;
 using Akka.Serialization;
@@ -23,35 +24,14 @@ namespace Akka.Persistence.MongoDb.Snapshot
 
         private Lazy<IMongoCollection<SnapshotEntry>> _snapshotCollection;
 
-        private readonly Func<object, SerializationResult> _serialize;
-        private readonly Func<Type, object, string, int?, object> _deserialize;
+
+        private readonly Akka.Serialization.Serialization _serialization;
 
         public MongoDbSnapshotStore()
         {
             _settings = MongoDbPersistence.Get(Context.System).SnapshotStoreSettings;
 
-            var serialization = Context.System.Serialization;
-            switch (_settings.StoredAs)
-            {
-                case StoredAsType.Binary:
-                    _serialize = o =>
-                    {
-                        var serializer = serialization.FindSerializerFor(o);
-                        return new SerializationResult(serializer.ToBinary(o), serializer);
-                    };
-                    _deserialize = (type, serialized, manifest, serializerId) =>
-                    {
-                        if (serializerId.HasValue)
-                            return serialization.Deserialize((byte[]) serialized, serializerId.Value, manifest);
-                        var deserializer = serialization.FindSerializerForType(type);
-                        return deserializer.FromBinary((byte[]) serialized, type);
-                    };
-                    break;
-                default:
-                    _serialize = o => new SerializationResult(o, null);
-                    _deserialize = (type, serialized, manifest, serializerId) => serialized;
-                    break;
-            }
+            _serialization = Context.System.Serialization;
         }
 
         protected override void PreStart()
@@ -68,10 +48,12 @@ namespace Akka.Persistence.MongoDb.Snapshot
                 var collection = snapshot.GetCollection<SnapshotEntry>(_settings.Collection);
                 if (_settings.AutoInitialize)
                 {
-                    collection.Indexes.CreateOneAsync(new CreateIndexModel<SnapshotEntry>(
-                        Builders<SnapshotEntry>.IndexKeys
+                    var modelWithAscendingPersistenceIdAndDescendingSequenceNr = new CreateIndexModel<SnapshotEntry>(Builders<SnapshotEntry>.IndexKeys
                         .Ascending(entry => entry.PersistenceId)
-                        .Descending(entry => entry.SequenceNr)))
+                        .Descending(entry => entry.SequenceNr));
+
+                    collection.Indexes
+                        .CreateOneAsync(modelWithAscendingPersistenceIdAndDescendingSequenceNr, cancellationToken: CancellationToken.None)
                         .Wait();
                 }
 
@@ -148,41 +130,94 @@ namespace Akka.Persistence.MongoDb.Snapshot
 
         private SnapshotEntry ToSnapshotEntry(SnapshotMetadata metadata, object snapshot)
         {
-            var serializationResult = _serialize(snapshot);
-            var serializer = serializationResult.Serializer;
-            var hasSerializer = serializer != null;
+            if (_settings.LegacySerialization)
+            {
+                var manifest = snapshot.GetType().TypeQualifiedName();
 
-            var manifest = "";
-            if (hasSerializer && serializer is SerializerWithStringManifest)
-                manifest = ((SerializerWithStringManifest)serializer).Manifest(snapshot);
-            else if (hasSerializer && serializer.IncludeManifest)
-                manifest = snapshot.GetType().TypeQualifiedName();
-            else
-                manifest = snapshot.GetType().TypeQualifiedName();
+                return new SnapshotEntry
+                {
+                    Id = metadata.PersistenceId + "_" + metadata.SequenceNr,
+                    PersistenceId = metadata.PersistenceId,
+                    SequenceNr = metadata.SequenceNr,
+                    Snapshot = snapshot,
+                    Timestamp = metadata.Timestamp.Ticks,
+                    Manifest = manifest,
+                    SerializerId = null
+                };
+            }
+
+            var snapshotRep = new Akka.Persistence.Serialization.Snapshot(snapshot);
+            var serializer = _serialization.FindSerializerFor(snapshotRep);
+            var binary = serializer.ToBinary(snapshotRep);
+            var binaryManifest = Akka.Serialization.Serialization.ManifestFor(serializer, snapshotRep);
 
             return new SnapshotEntry
             {
                 Id = metadata.PersistenceId + "_" + metadata.SequenceNr,
                 PersistenceId = metadata.PersistenceId,
                 SequenceNr = metadata.SequenceNr,
-                Snapshot = serializationResult.Payload,
+                Snapshot = binary,
                 Timestamp = metadata.Timestamp.Ticks,
-                Manifest = manifest,
+                Manifest = binaryManifest,
                 SerializerId = serializer?.Identifier
             };
         }
 
         private SelectedSnapshot ToSelectedSnapshot(SnapshotEntry entry)
         {
+            if (_settings.LegacySerialization)
+            {
+                return new SelectedSnapshot(
+                    new SnapshotMetadata(
+                        entry.PersistenceId,
+                        entry.SequenceNr,
+                        new DateTime(entry.Timestamp)),
+                        entry.Snapshot);
+            }
+
+            var legacy = entry.SerializerId.HasValue || !string.IsNullOrEmpty(entry.Manifest);
+
+            if (!legacy)
+            {
+                var ser = _serialization.FindSerializerForType(typeof(Serialization.Snapshot));
+                var snapshot = ser.FromBinary<Serialization.Snapshot>((byte[])entry.Snapshot);
+                return new SelectedSnapshot(new SnapshotMetadata(entry.PersistenceId, entry.SequenceNr), snapshot.Data);
+            }
+
+            int? serializerId = null;
             Type type = null;
 
-            if (!string.IsNullOrEmpty(entry.Manifest))
-                type = Type.GetType(entry.Manifest, throwOnError: true);
+            // legacy serialization
+            if (!entry.SerializerId.HasValue && !string.IsNullOrEmpty(entry.Manifest))
+                type = Type.GetType(entry.Manifest, true);
+            else
+                serializerId = entry.SerializerId;
 
-            var snapshot = _deserialize(type, entry.Snapshot, entry.Manifest, entry.SerializerId);
+            if (entry.Snapshot is byte[] bytes)
+            {
+                object deserialized;
 
+                if (serializerId.HasValue)
+                {
+                    deserialized = _serialization.Deserialize(bytes, serializerId.Value, entry.Manifest);
+                }
+                else
+                {
+                    var deserializer = _serialization.FindSerializerForType(type);
+                    deserialized = deserializer.FromBinary(bytes, type);
+                }
+
+                if (deserialized is Serialization.Snapshot snap)
+                    return new SelectedSnapshot(
+                        new SnapshotMetadata(entry.PersistenceId, entry.SequenceNr, new DateTime(entry.Timestamp)), snap.Data);
+
+                return new SelectedSnapshot(
+                    new SnapshotMetadata(entry.PersistenceId, entry.SequenceNr, new DateTime(entry.Timestamp)), deserialized);
+            }
+
+            // backwards compat - loaded an old snapshot using BSON serialization. No need to deserialize via Akka.NET
             return new SelectedSnapshot(
-                new SnapshotMetadata(entry.PersistenceId, entry.SequenceNr, new DateTime(entry.Timestamp)), snapshot);
+                new SnapshotMetadata(entry.PersistenceId, entry.SequenceNr, new DateTime(entry.Timestamp)), entry.Snapshot);
         }
     }
 }

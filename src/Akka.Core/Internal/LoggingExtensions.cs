@@ -101,6 +101,12 @@ namespace Akka
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Resetting_DeadLetterListener_counter_after_reaching(this ILoggingAdapter logger)
+        {
+            logger.Info("Resetting DeadLetterListener counter after reaching Int.MaxValue.");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void StartingCoordinatedShutdownFromCLRTerminationHook(this ILoggingAdapter logger)
         {
             logger.Info("Starting coordinated shutdown from CLR termination hook.");

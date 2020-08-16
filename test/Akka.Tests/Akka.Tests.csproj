@@ -1,5 +1,6 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  
+  <Import Project="..\..\xunitSettings.props" />
+
   <PropertyGroup>
     <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
     <DefineConstants>$(DefineConstants);SERIALIZATION;UNSAFE_THREADING</DefineConstants>

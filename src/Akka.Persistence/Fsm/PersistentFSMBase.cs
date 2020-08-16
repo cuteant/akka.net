@@ -190,7 +190,7 @@ namespace Akka.Persistence.Fsm
                 oldTimer.Cancel();
             }
 
-            var timer = new FSMBase.Timer(name, msg, repeat, _timerGen.Next(), Self, Context);
+            var timer = new FSMBase.Timer(name, msg, repeat, _timerGen.Next(), this, Context);
             timer.Schedule(Self, timeout);
             _timers[name] = timer;
         }
@@ -428,7 +428,7 @@ namespace Akka.Persistence.Fsm
                     return true;
 
                 case FSMBase.Timer t:
-                    if (_timers.TryGetValue(t.Name, out FSMBase.Timer timer) && timer.Generation == t.Generation)
+                    if (ReferenceEquals(t.Owner, this) && _timers.TryGetValue(t.Name, out var timer) && timer.Generation == t.Generation)
                     {
                         if (_timeoutFuture != null)
                         {

@@ -12,4 +12,8 @@
     <ProjectReference Include="..\..\src\Akka.Persistence.TCK\Akka.Persistence.TCK.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Mongo2Go" Version="$(Mongo2GoPackageVersion)" />
+  </ItemGroup>
+
 </Project>

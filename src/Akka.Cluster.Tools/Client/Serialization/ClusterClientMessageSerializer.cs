@@ -96,6 +96,8 @@ namespace Akka.Cluster.Tools.Client.Serialization
                     return ClusterReceptionist.Heartbeat.Instance;
                 case HeartbeatRspManifest:
                     return ClusterReceptionist.HeartbeatRsp.Instance;
+                case ReceptionistShutdownManifest:
+                    return ClusterReceptionist.ReceptionistShutdown.Instance;
                 default:
                     throw ThrowHelper.GetSerializationException_Serializer_ClusterClientMessage(manifest);
             }

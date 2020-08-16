@@ -556,6 +556,7 @@ namespace Akka.Remote.Transport.DotNetty
         public BatchWriterSettings(Config hocon)
         {
             EnableBatching = hocon.GetBoolean("enabled", true);
+            TransferBatchSize = hocon.GetInt("transfer-batch-size", 1);
             MaxPendingWrites = hocon.GetInt("max-pending-writes", DefaultMaxPendingWrites);
             MaxPendingBytes = hocon.GetByteSize("max-pending-bytes", null) ?? DefaultMaxPendingBytes;
             FlushInterval = hocon.GetTimeSpan("flush-interval", DefaultFlushInterval, false);

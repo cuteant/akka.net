@@ -367,7 +367,23 @@ namespace Akka.DistributedData.Serialization
                 }
             }
 
-            return new Protocol.Gossip(gossip.SendBack, entries);
+            bool hasToSystemUid = false;
+            long toSystemUid = 0L;
+            if (gossip.ToSystemUid.HasValue)
+            {
+                hasToSystemUid = true;
+                toSystemUid = gossip.ToSystemUid.Value;
+            }
+
+            bool hasFromSystemUid = false;
+            long fromSystemUid = 0L;
+            if (gossip.FromSystemUid.HasValue)
+            {
+                hasFromSystemUid = true;
+                fromSystemUid = gossip.FromSystemUid.Value;
+            }
+
+            return new Protocol.Gossip(gossip.SendBack, entries, hasToSystemUid, hasFromSystemUid, toSystemUid, fromSystemUid);
         }
         private Gossip GossipFromLZ4Binary(in ReadOnlySpan<byte> bytes)
         {
@@ -383,7 +399,11 @@ namespace Akka.DistributedData.Serialization
                 }
             }
 
-            return new Gossip(builder.ToImmutable(), proto.SendBack);
+            return new Gossip(
+                builder.ToImmutable(),
+                proto.SendBack,
+                proto.HasToSystemUid ? (long?)proto.ToSystemUid : null,
+                proto.HasFromSystemUid ? (long?)proto.FromSystemUid : null);
         }
 
 
@@ -453,15 +473,15 @@ namespace Akka.DistributedData.Serialization
 
         private Protocol.DurableDataEnvelope DurableDataEnvelopeToProto(Durable.DurableDataEnvelope msg)
         {
-            var data = OtherMessageToProto(msg.Data.Data);
-            var pruning = msg.Data.Pruning;
+            var data = OtherMessageToProto(msg.Data);
+            var pruning = msg.DataEnvelope.Pruning;
 
             List<Protocol.DataEnvelope.PruningEntry> pruningEntries = null;
             if (pruning is object)
             {
                 pruningEntries = new List<Protocol.DataEnvelope.PruningEntry>(pruning.Count);
                 // only keep the PruningPerformed entries
-                foreach (var p in msg.Data.Pruning)
+                foreach (var p in pruning)
                 {
                     if (p.Value is PruningPerformed)
                     {
@@ -579,20 +599,31 @@ namespace Akka.DistributedData.Serialization
 
         private Protocol.Get GetToProto(Get msg)
         {
-            var consistencyValue = 1;
+            var timeoutInMilis = msg.Consistency.Timeout.TotalMilliseconds;
+            if (timeoutInMilis > 0XFFFFFFFFL)
+            {
+                ThrowHelper.ThrowArgumentOutOfRangeException_Timeouts_must_fit_in_a_32_bit_unsigned_int();
+            }
+
+            int consistencyValue = 1;
+            int consistencyMinCap = 0;
             switch (msg.Consistency)
             {
                 case ReadLocal _: consistencyValue = 1; break;
                 case ReadFrom r: consistencyValue = r.N; break;
-                case ReadMajority _: consistencyValue = 0; break;
+                case ReadMajority rm:
+                    consistencyValue = 0;
+                    consistencyMinCap = rm.MinCapacity;
+                    break;
                 case ReadAll _: consistencyValue = -1; break;
             }
 
             return new Protocol.Get(
                  OtherMessageToProto(msg.Key),
                  consistencyValue,
-                 (uint)(msg.Consistency.Timeout.Ticks / TimeSpan.TicksPerMillisecond),
-                 OtherMessageToProto(msg.Request)
+                 (uint)timeoutInMilis,
+                 OtherMessageToProto(msg.Request),
+                 consistencyMinCap
             );
         }
         private Get GetFromBinary(in ReadOnlySpan<byte> bytes)
@@ -604,7 +635,7 @@ namespace Akka.DistributedData.Serialization
             IReadConsistency consistency;
             switch (proto.Consistency)
             {
-                case 0: consistency = new ReadMajority(timeout); break;
+                case 0: consistency = new ReadMajority(timeout, proto.ConsistencyMinCap); break;
                 case -1: consistency = new ReadAll(timeout); break;
                 case 1: consistency = ReadLocal.Instance; break;
                 default: consistency = new ReadFrom(proto.Consistency, timeout); break;
@@ -625,7 +656,24 @@ namespace Akka.DistributedData.Serialization
                     entries.Add(new Protocol.Status.Entry(entry.Key, entry.Value));
                 }
             }
-            return new Protocol.Status((uint)status.Chunk, (uint)status.TotalChunks, entries);
+
+            bool hasToSystemUid = false;
+            long toSystemUid = 0L;
+            if (status.ToSystemUid.HasValue)
+            {
+                hasToSystemUid = true;
+                toSystemUid = status.ToSystemUid.Value;
+            }
+
+            bool hasFromSystemUid = false;
+            long fromSystemUid = 0L;
+            if (status.FromSystemUid.HasValue)
+            {
+                hasFromSystemUid = true;
+                fromSystemUid = status.FromSystemUid.Value;
+            }
+            return new Protocol.Status((uint)status.Chunk, (uint)status.TotalChunks, entries,
+                hasToSystemUid, hasFromSystemUid, toSystemUid, fromSystemUid);
         }
         private Status StatusFromBinary(in ReadOnlySpan<byte> bytes)
         {
@@ -642,7 +690,12 @@ namespace Akka.DistributedData.Serialization
                 }
             }
 
-            return new Status(builder.ToImmutable(), (int)proto.Chunk, (int)proto.TotChunks);
+            return new Status(
+                builder.ToImmutable(),
+                (int)proto.Chunk,
+                (int)proto.TotChunks,
+                proto.HasToSystemUid ? (long?)proto.ToSystemUid : null,
+                proto.HasFromSystemUid ? (long?)proto.FromSystemUid : null);
         }
 
 
@@ -759,23 +812,27 @@ namespace Akka.DistributedData.Serialization
 
         private Protocol.Write WriteToProto(Write write)
         {
-            return new Protocol.Write(write.Key, DataEnvelopeToProto(write.Envelope));
+            return new Protocol.Write(write.Key, DataEnvelopeToProto(write.Envelope),
+                write.FromNode is object ? SerializationSupport.UniqueAddressToProto(write.FromNode) : null);
         }
         private Write WriteFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.Write>(bytes, s_defaultResolver);
-            return new Write(proto.Key, DataEnvelopeFromProto(proto.Envelope));
+            var fromNode = proto.FromNode != null ? _ser.UniqueAddressFromProto(proto.FromNode) : null;
+            return new Write(proto.Key, DataEnvelopeFromProto(proto.Envelope), fromNode);
         }
 
 
         private Protocol.Read ReadToProto(Read read)
         {
-            return new Protocol.Read(read.Key);
+            return new Protocol.Read(read.Key,
+                read.FromNode is object ? SerializationSupport.UniqueAddressToProto(read.FromNode) : null);
         }
         private Read ReadFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.Read>(bytes, s_defaultResolver);
-            return new Read(proto.Key);
+            var fromNode = proto.FromNode != null ? _ser.UniqueAddressFromProto(proto.FromNode) : null;
+            return new Read(proto.Key, fromNode);
         }
     }
 }

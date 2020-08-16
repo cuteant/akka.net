@@ -1191,7 +1191,8 @@ namespace Akka.Streams.Implementation
             private static void ThrowObjectDisposedException()
             {
                 throw GetObjectDisposedException();
-                ObjectDisposedException GetObjectDisposedException()
+
+                static ObjectDisposedException GetObjectDisposedException()
                 {
                     return new ObjectDisposedException("ObservableSink subscription has been already disposed.");
                 }

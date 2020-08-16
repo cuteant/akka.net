@@ -10,12 +10,6 @@ using Akka.Configuration;
 
 namespace Akka.Persistence.MongoDb
 {
-    public enum StoredAsType
-    {
-        Object,
-        Binary
-    }
-
     /// <summary>
     /// Settings for the MongoDB persistence implementation, parsed from HOCON configuration.
     /// </summary>
@@ -37,20 +31,16 @@ namespace Akka.Persistence.MongoDb
         public string Collection { get; private set; }
 
         /// <summary>
-        /// Specifies data type for payload column.
+        /// When true, enables BSON serialization (which breaks features like Akka.Cluster.Sharding, AtLeastOnceDelivery, and so on.)
         /// </summary>
-        public StoredAsType StoredAs { get; private set; }
+        public bool LegacySerialization { get; }
 
         protected MongoDbSettings(Config config)
         {
             ConnectionString = config.GetString("connection-string");
             Collection = config.GetString("collection");
             AutoInitialize = config.GetBoolean("auto-initialize");
-
-            StoredAs = StoredAsType.Object;
-
-            if (Enum.TryParse(config.GetString("stored-as"), true, out StoredAsType storedAs))
-                StoredAs = storedAs;
+            LegacySerialization = config.GetBoolean("legacy-serialization");
         }
     }
 

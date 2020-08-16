@@ -221,9 +221,7 @@ namespace Akka.Cluster
             }
         }
 
-        /// <summary>Compares members by their upNumber to determine which is oldest / youngest.
-        /// public for Akka.Tests.FsCheck.</summary>
-        [Akka.Annotations.InternalApi, System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
+        /// <summary>Compares members by their upNumber to determine which is oldest / youngest.</summary>
         public static readonly IComparer<Member> AgeOrdering = AgeComparer.Instance;
 
         /// <summary>
@@ -542,7 +540,7 @@ namespace Akka.Cluster
             if (uniqueAddress == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.uniqueAddress);
 
             var result = addresComparer.Compare(Address, uniqueAddress.Address);
-            return result == 0 ? Uid.CompareTo(uniqueAddress.Uid) : result;
+            return 0u >= (uint)result ? Uid.CompareTo(uniqueAddress.Uid) : result;
         }
 
         /// <inheritdoc cref="object.ToString"/>

@@ -474,7 +474,7 @@ namespace Akka.Cluster.Sharding.Tests
 
                 Sys.ActorOf(ClusterSingletonManager.Props(
                     singletonProps,
-                    PoisonPill.Instance,
+                    Terminate.Instance,
                     ClusterSingletonManagerSettings.Create(Sys)),
                     typeName + "Coordinator");
             }

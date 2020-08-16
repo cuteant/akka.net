@@ -2,6 +2,7 @@
 // Licensed under the Apache License, Version 2.0. See License.txt in the project root for license information.
 
 using System;
+using System.Collections.Generic;
 using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
@@ -248,12 +249,6 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void RebalanceShardDone(this ILoggingAdapter logger, string shard, bool ok)
-        {
-            logger.Debug("Rebalance shard [{0}] done [{1}]", shard, ok);
-        }
-
-        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void GracefulShutdownOfRegion(this ILoggingAdapter logger, PersistentShardCoordinator.GracefulShutdownRequest request, IImmutableList<string> shards)
         {
             logger.Debug("Graceful shutdown of region [{0}] with shards [{1}]", request.ShardRegion, string.Join(", ", shards));
@@ -410,6 +405,15 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Starting_rebalance_for_shards<TCoordinator>(this ILoggingAdapter logger, TCoordinator coordinator, IImmutableSet<string> shards)
+            where TCoordinator : IShardCoordinator
+        {
+            logger.Info("Starting rebalance for shards [{0}]. Current shards rebalancing: [{1}]",
+                string.Join(",", shards),
+                string.Join(",", coordinator.RebalanceInProgress.Keys));
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ShardRegionForTypeName(this ILoggingAdapter logger, string typeName, int total, int bufferSize)
         {
             const string logMsg = "ShardRegion for [{0}] is using [{1}] of it's buffer capacity";
@@ -429,6 +433,12 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void Lease_Acquired_Getting_state_from_DData(this ILoggingAdapter logger)
+        {
+            logger.Info("Lease Acquired. Getting state from DData");
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void SelfDownedStoppingShardRegion(this ILoggingAdapter logger, IActorRef self)
         {
             logger.Info("Self downed, stopping ShardRegion [{0}]", self.Path);
@@ -443,7 +453,7 @@ namespace Akka.Cluster.Sharding
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ShardRegionForTyp1eNameTheCoordinatorMightNotBeAvailable(this ILoggingAdapter logger, string typeName, int total, int bufferSize)
         {
-            const string logMsg = "ShardRegion for [{0}] is using [{1}] of it's buffer capacity";
+            const string logMsg = "ShardRegion for [{0}] is using [{1} %] of its buffer capacity.";
             logger.Warning(logMsg + " The coordinator might not be available. You might want to check cluster membership status.", typeName, 100 * total / bufferSize);
         }
 
@@ -460,18 +470,24 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void NoCoordinatorFoundToRegister(this ILoggingAdapter logger, int totalBufferSize)
+        internal static void NoCoordinatorFoundToRegister(this ILoggingAdapter logger, Cluster cluster, int totalBufferSize)
         {
-            logger.Warning("No coordinator found to register. Probably, no seed-nodes configured and manual cluster join not performed? Total [{0}] buffered messages.", totalBufferSize);
+            var partOfCluster = cluster.SelfMember.Status != MemberStatus.Removed;
+            var possibleReason = partOfCluster ?
+                "Has Cluster Sharding been started on every node and nodes been configured with the correct role(s)?" :
+                "Probably, no seed-nodes configured and manual cluster join not performed?";
+
+            logger.Warning("No coordinator found to register. {0} Total [{1}] buffered messages.",
+                possibleReason, totalBufferSize);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void TryingToRregisterToCoordinatorAtButNoAcknowledgement(this ILoggingAdapter logger, Cluster cluster, ActorSelection coordinator, IImmutableSet<Member> membersByAge, int totalBufferSize)
+        internal static void TryingToRregisterToCoordinatorAtButNoAcknowledgement(this ILoggingAdapter logger, Cluster cluster, List<ActorSelection> actorSelections, IImmutableSet<Member> membersByAge, int totalBufferSize)
         {
             var coordinatorMessage = cluster.State.Unreachable.Contains(membersByAge.First()) ? $"Coordinator [{membersByAge.First()}] is unreachable." : $"Coordinator [{membersByAge.First()}] is reachable.";
 
             logger.Warning("Trying to register to coordinator at [{0}], but no acknowledgement. Total [{1}] buffered messages. [{2}]",
-                coordinator != null ? coordinator.PathString : string.Empty, totalBufferSize, coordinatorMessage);
+               string.Join(", ", actorSelections.Select(i => i.PathString)), totalBufferSize, coordinatorMessage);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -535,21 +551,21 @@ namespace Akka.Cluster.Sharding
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void TheShardCoordinatorWasUnableToUpdateADistributedState(this ILoggingAdapter logger, ModifyFailure failure, PersistentShardCoordinator.IDomainEvent e)
+        internal static void TheShardCoordinatorWasUnableToUpdateADistributedState(this ILoggingAdapter logger, ModifyFailure failure, PersistentShardCoordinator.IDomainEvent e, bool terminating)
         {
-            logger.Error("The ShardCoordinator was unable to update a distributed state {0} with error {1} and event {2}.Coordinator will be restarted", failure.Key, failure.Cause, e);
+            logger.Error("The ShardCoordinator was unable to update a distributed state {0} with error {1} and event {2}. {3}", failure.Key, failure.Cause, e, terminating ? "Coordinator will be terminated due to Terminate message received" : "Coordinator will be restarted");
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void TheShardCoordinatorWasUnableToUpdateShardsDistributedState(this ILoggingAdapter logger, IWriteConsistency writeConsistency, PersistentShardCoordinator.IDomainEvent e)
+        internal static void TheShardCoordinatorWasUnableToUpdateShardsDistributedState(this ILoggingAdapter logger, IWriteConsistency writeConsistency, bool terminating, PersistentShardCoordinator.IDomainEvent e)
         {
-            logger.Error("The ShardCoordinator was unable to update shards distributed state within 'updating-state-timeout': {0} (retrying), event={1}", writeConsistency.Timeout, e);
+            logger.Error("The ShardCoordinator was unable to update shards distributed state within 'updating-state-timeout': {0} ({1}), event={2}", writeConsistency.Timeout, terminating ? "terminating" : "retrying", e);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
-        internal static void TheShardCoordinatorWasUnableToUpdateADistributedState(this ILoggingAdapter logger, IWriteConsistency writeConsistency, PersistentShardCoordinator.IDomainEvent e)
+        internal static void TheShardCoordinatorWasUnableToUpdateADistributedState(this ILoggingAdapter logger, IWriteConsistency writeConsistency, bool terminating, PersistentShardCoordinator.IDomainEvent e)
         {
-            logger.Error("The ShardCoordinator was unable to update a distributed state within 'updating-state-timeout': {0} (retrying), event={1}", writeConsistency.Timeout, e);
+            logger.Error("The ShardCoordinator was unable to update a distributed state within 'updating-state-timeout': {0} ({1}), event={2}", writeConsistency.Timeout, terminating ? "terminating" : "retrying", e);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

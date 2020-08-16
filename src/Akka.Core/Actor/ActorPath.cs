@@ -7,13 +7,11 @@
 
 using System;
 using System.Collections.Generic;
-using System.Collections.Immutable;
 using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Runtime.Serialization;
 using Akka.Util;
 using CuteAnt;
-using CuteAnt.Text;
 using MessagePack;
 using static System.String;
 
@@ -114,8 +112,6 @@ namespace Akka.Actor
         internal static readonly char[] ValidSymbols;
 
         internal static readonly string[] EmptyElements;
-        internal static readonly string[] SystemElements;
-        internal static readonly string[] UserElements;
 
         private static readonly HashSet<char> s_validChars;
         private static readonly HashSet<char> s_hexChars;
@@ -124,8 +120,6 @@ namespace Akka.Actor
         {
             ValidSymbols = @"""-_.*$+:@&=,!~';""()".ToCharArray();
             EmptyElements = EmptyArray<string>.Instance;
-            SystemElements = new[] { "system" };
-            UserElements = new[] { "user" };
             s_validChars = new HashSet<char>();
             s_hexChars = new HashSet<char>();
             for (var c = 'a'; c <= 'z'; c++)
@@ -160,7 +154,7 @@ namespace Akka.Actor
         {
             if (IsNullOrEmpty(s)) { return false; }
 
-            return !s.StartsWith("$", StringComparison.Ordinal) && Validate(s.AsSpan(), s.Length);
+            return !s.StartsWith("$", StringComparison.Ordinal) && Validate(s.AsSpan());
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
@@ -169,8 +163,9 @@ namespace Akka.Actor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsHexChar(char c) => s_hexChars.Contains(c);
 
-        private static bool Validate(ReadOnlySpan<char> chars, int len)
+        private static bool Validate(ReadOnlySpan<char> chars)
         {
+            int len = chars.Length;
             var pos = 0;
             while (pos < len)
             {
@@ -280,7 +275,23 @@ namespace Akka.Actor
             if (other == null)
                 return false;
 
-            return Address.Equals(other.Address) && Elements.SequenceEqual(other.Elements);
+            if (!Address.Equals(other.Address))
+                return false;
+
+            ActorPath a = this;
+            ActorPath b = other;
+            for (; ; )
+            {
+                if (ReferenceEquals(a, b))
+                    return true;
+                else if (a == null || b == null)
+                    return false;
+                else if (a.Name != b.Name)
+                    return false;
+
+                a = a.Parent;
+                b = b.Parent;
+            }
         }
 
         /// <inheritdoc/>
@@ -425,7 +436,31 @@ namespace Akka.Actor
         /// <returns> System.String. </returns>
         private string Join()
         {
-            return Elements.JoinWithPrefix("/", "/");
+            if (this is RootActorPath)
+                return "/";
+
+            // Resolve length of final string
+            int totalLength = 0;
+            ActorPath p = this;
+            while (!(p is RootActorPath))
+            {
+                totalLength += p.Name.Length + 1;
+                p = p.Parent;
+            }
+
+            // Concatenate segments (in reverse order) into buffer with '/' prefixes
+            char[] buffer = new char[totalLength];
+            int offset = buffer.Length;
+            p = this;
+            while (!(p is RootActorPath))
+            {
+                offset -= p.Name.Length + 1;
+                buffer[offset] = '/';
+                p.Name.CopyTo(0, buffer, offset + 1, p.Name.Length);
+                p = p.Parent;
+            }
+
+            return new string(buffer);
         }
 
         /// <summary>
@@ -687,6 +722,19 @@ namespace Akka.Actor
             if (uid == Uid)
                 return this;
             return new ChildActorPath(_parent, _name, uid);
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            unchecked
+            {
+                var hash = 17;
+                hash = (hash * 23) ^ Address.GetHashCode();
+                for (ActorPath p = this; p != null; p = p.Parent)
+                    hash = (hash * 23) ^ p.Name.GetHashCode();
+                return hash;
+            }
         }
 
         /// <inheritdoc/>

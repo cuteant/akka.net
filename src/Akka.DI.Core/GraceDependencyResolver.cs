@@ -1,6 +1,4 @@
 ﻿using System;
-using System.Collections.Concurrent;
-using System.Linq;
 using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.DI.Core;
@@ -29,8 +27,8 @@ namespace Akka.DI.Grace
         /// </exception>
         public GraceDependencyResolver(IInjectionScope container, ActorSystem system)
         {
-            if (null == container) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.container); }
-            if (null == system) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.system); }
+            if (container is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.container); }
+            if (system is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.system); }
             _container = container;
             _system = system;
             _system.AddDependencyResolver(this);

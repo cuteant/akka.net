@@ -97,8 +97,10 @@ namespace Akka.Cluster.Sharding
                     // shard. This receive handles the "response" from that message. i.e. Ignores it.
                     return true;
                 case ClusterEvent.ClusterShuttingDown _:
+#if DEBUG
                     var coordinatorLog = coordinator.Log;
                     if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShuttingDownShardCoordinator();
+#endif
                     // can't stop because supervisor will start it again,
                     // it will soon be stopped when singleton is stopped
                     coordinator.Context.Become(ShuttingDown);
@@ -111,6 +113,12 @@ namespace Akka.Cluster.Sharding
                     return true;
                 case ClusterEvent.CurrentClusterState _:
                     /* ignore */
+                    return true;
+                case Terminate _:
+#if DEBUG
+                    if (coordinator.Log.IsDebugEnabled) { coordinator.Log.Debug("Received termination message"); }
+#endif
+                    coordinator.Context.Stop(coordinator.Self);
                     return true;
                 default: return ReceiveTerminated(coordinator, message);
             }
@@ -227,7 +235,16 @@ namespace Akka.Cluster.Sharding
         private static void HandleRebalanceDone<TCoordinator>(this TCoordinator coordinator, string shard, bool ok) where TCoordinator : IShardCoordinator
         {
             var coordinatorLog = coordinator.Log;
-            if (coordinatorLog.IsDebugEnabled) coordinatorLog.RebalanceShardDone(shard, ok);
+            if (ok)
+            {
+#if DEBUG
+                if (coordinatorLog.IsDebugEnabled) { coordinatorLog.Debug("Rebalance shard [{0}] completed successfully", shard); }
+#endif
+            }
+            else
+            {
+                coordinatorLog.Warning("Rebalance shard [{0}] didn't complete within [{1}]", shard, coordinator.Settings.TunningParameters.HandOffTimeout);
+            }
 
             // The shard could have been removed by ShardRegionTerminated
             if (coordinator.CurrentState.Shards.TryGetValue(shard, out var region))
@@ -496,6 +513,11 @@ namespace Akka.Cluster.Sharding
         {
             var coordinatorLog = coordinator.Log;
             var isDebugEnabled = coordinatorLog.IsDebugEnabled;
+            if (coordinatorLog.IsInfoEnabled && ((uint)shards.Count > 0u || !coordinator.RebalanceInProgress.IsEmpty))
+            {
+                coordinatorLog.Starting_rebalance_for_shards(coordinator, shards);
+            }
+
             foreach (var shard in shards)
             {
                 if (!coordinator.RebalanceInProgress.ContainsKey(shard))

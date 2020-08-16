@@ -1,0 +1,27 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\nuget.rs.props" />
+
+  <PropertyGroup>
+    <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
+    <RootNamespace>Reactive.Streams.TCK</RootNamespace>
+    <AssemblyName>Reactive.Streams.TCK</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+  </PropertyGroup>
+
+  <PropertyGroup>
+    <PackageId>Reactive.Streams.TCK.Signed</PackageId>
+    <Title>Reactive.Streams.TCK (Unofficial)</Title>
+    <Description>Reactive Streams Technology Compatibility Kit</Description>
+    <PackageTags>reactive;stream</PackageTags>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NUnit" Version="$(NUnitPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Reactive.Streams\Reactive.Streams.csproj" />
+  </ItemGroup>
+
+  <Import Project="..\..\version.rs.props" />
+</Project>

@@ -16,7 +16,7 @@ namespace Akka.Cluster.Sharding
 {
     internal sealed class DDataShardCoordinator : ActorBase, IShardCoordinator, IWithUnboundedStash
     {
-        internal static Props Props(string typeName, ClusterShardingSettings settings, IShardAllocationStrategy allocationStrategy, IActorRef replicator, int majorityMinCap, bool rememberEntities) => 
+        internal static Props Props(string typeName, ClusterShardingSettings settings, IShardAllocationStrategy allocationStrategy, IActorRef replicator, int majorityMinCap, bool rememberEntities) =>
             Actor.Props.Create(() => new DDataShardCoordinator(typeName, settings, allocationStrategy, replicator, majorityMinCap, rememberEntities)).WithDeploy(Deploy.Local);
 
         public PersistentShardCoordinator.State CurrentState { get; set; }
@@ -47,6 +47,7 @@ namespace Akka.Cluster.Sharding
         private bool _allRegionsRegistered = false;
         private readonly ImmutableHashSet<IKey<IReplicatedData>> _allKeys;
         private IImmutableSet<string> _shards = ImmutableHashSet<string>.Empty;
+        private bool _terminating = false;
 
         public DDataShardCoordinator(string typeName, ClusterShardingSettings settings, IShardAllocationStrategy allocationStrategy, IActorRef replicator, int majorityMinCap, bool rememberEntities)
         {
@@ -60,7 +61,7 @@ namespace Akka.Cluster.Sharding
             RemovalMargin = Cluster.DowningProvider.DownRemovalMargin;
             MinMembers = string.IsNullOrEmpty(settings.Role)
                 ? Cluster.Settings.MinNrOfMembers
-                : (Cluster.Settings.MinNrOfMembersOfRole.TryGetValue(settings.Role, out var min) ? min : Cluster.Settings.MinNrOfMembers);
+                : Cluster.Settings.MinNrOfMembersOfRole.GetValueOrDefault(settings.Role, 1);
             RebalanceTask = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(Settings.TunningParameters.RebalanceInterval, Settings.TunningParameters.RebalanceInterval, Self, RebalanceTick.Instance, Self);
 
             _readConsistency = new ReadMajority(settings.TunningParameters.WaitingForStateTimeout, majorityMinCap);
@@ -156,6 +157,13 @@ namespace Akka.Cluster.Sharding
                             Context.Become(WaitingForState(newRemainingKeys));
                         return true;
                     }
+                case Terminate _:
+#if DEBUG
+                    if (Log.IsDebugEnabled) { Log.Debug("Received termination message while waiting for state"); }
+#endif
+                    Context.Stop(Self);
+                    return true;
+
                 default: return this.ReceiveTerminated(message);
             }
         };
@@ -183,6 +191,12 @@ namespace Akka.Cluster.Sharding
                     this.StateInitialized();
                     Activate();
                     return true;
+                case Terminate _:
+#if DEBUG
+                    if (Log.IsDebugEnabled) { Log.Debug("Received termination message while waiting for state initialized"); }
+#endif
+                    Context.Stop(Self);
+                    return true;
                 default:
                     Stash.Stash();
                     return true;
@@ -198,13 +212,22 @@ namespace Akka.Cluster.Sharding
                         var newRemainingKeys = remainingKeys.Remove(_coordinatorStateKey);
                         if (newRemainingKeys.IsEmpty)
                             UnbecomeAfterUpdate(e, afterUpdateCallback);
-                        else 
+                        else
                             Context.Become(WaitingForUpdate(e, afterUpdateCallback, newRemainingKeys));
                         return true;
 
                     case UpdateTimeout timeout when timeout.Key.Equals(_coordinatorStateKey) && Equals(timeout.Request, e):
-                        Log.TheShardCoordinatorWasUnableToUpdateADistributedState(_writeConsistency, e);
-                        SendCoordinatorStateUpdate(e);
+                        Log.TheShardCoordinatorWasUnableToUpdateADistributedState(_writeConsistency, _terminating, e);
+
+                        if (_terminating)
+                        {
+                            Context.Stop(Self);
+                        }
+                        else
+                        {
+                            // repeat until UpdateSuccess
+                            SendCoordinatorStateUpdate(e);
+                        }
                         return true;
 
                     case UpdateSuccess success when success.Key.Equals(_allShardsKey) && success.Request is string newShard:
@@ -217,18 +240,42 @@ namespace Akka.Cluster.Sharding
                         return true;
 
                     case UpdateTimeout timeout when timeout.Key.Equals(_allShardsKey) && timeout.Request is string newShard:
-                        Log.TheShardCoordinatorWasUnableToUpdateShardsDistributedState(_writeConsistency, e);
-                        SendShardsUpdate(newShard);
+                        Log.TheShardCoordinatorWasUnableToUpdateShardsDistributedState(_writeConsistency, _terminating, e);
+
+                        if (_terminating)
+                        {
+                            Context.Stop(Self);
+                        }
+                        else
+                        {
+                            // repeat until UpdateSuccess
+                            SendShardsUpdate(newShard);
+                        }
                         return true;
 
                     case ModifyFailure failure:
-                        Log.TheShardCoordinatorWasUnableToUpdateADistributedState(failure, e);
-                        ExceptionDispatchInfo.Capture(failure.Cause).Throw();
+                        Log.TheShardCoordinatorWasUnableToUpdateADistributedState(failure, e, _terminating);
+
+                        if (_terminating)
+                        {
+                            Context.Stop(Self);
+                        }
+                        else
+                        {
+                            ExceptionDispatchInfo.Capture(failure.Cause).Throw();
+                        }
                         return true;
 
                     case PersistentShardCoordinator.GetShardHome getShardHome:
-                        if (!this.HandleGetShardHome(getShardHome)) 
-                            Stash.Stash();
+                        if (!this.HandleGetShardHome(getShardHome)) { Stash.Stash(); }
+                        return true;
+
+                    case Terminate _:
+#if DEBUG
+                        if (Log.IsDebugEnabled) { Log.Debug("Received termination message while waiting for update"); }
+#endif
+                        _terminating = true;
+                        Stash.Stash();
                         return true;
 
                     default:

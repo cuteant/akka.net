@@ -314,7 +314,7 @@ namespace Akka.Streams.Tests
             ex.Message.Should().Contain("has terminated unexpectedly");
         }
 
-        [Fact]
+        [Fact(Skip = "Racy")]
         public void SourceRef_must_not_receive_subscription_timeout_when_got_subscribed()
         {
             _remoteActor.Tell("give-subscribe-timeout");
@@ -408,7 +408,7 @@ namespace Akka.Streams.Tests
             probe.ExpectCancellation();
         }
 
-        [Fact]
+        [Fact(Skip = "Racy")]
         public void SinkRef_must_not_receive_timeout_if_subscribing_is_already_done_to_the_sink_ref()
         {
             _remoteActor.Tell("receive-subscribe-timeout");

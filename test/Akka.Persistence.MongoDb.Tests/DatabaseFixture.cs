@@ -5,26 +5,26 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-//using Mongo2Go;
+using Mongo2Go;
 using System;
 
 namespace Akka.Persistence.MongoDb.Tests
 {
     public class DatabaseFixture : IDisposable
     {
-        //private MongoDbRunner _runner;
+        private MongoDbRunner _runner;
 
         public string ConnectionString { get; private set; }
 
         public DatabaseFixture()
         {
-            //_runner = MongoDbRunner.Start();
-            //ConnectionString = _runner.ConnectionString + "akkanet";
+            _runner = MongoDbRunner.Start();
+            ConnectionString = _runner.ConnectionString + "akkanet";
         }
 
         public void Dispose()
         {
-            //_runner.Dispose();
+            _runner.Dispose();
         }
     }
 }

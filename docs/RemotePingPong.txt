@@ -1,0 +1,33 @@
+Akka-Batching
+
+ProcessorCount:                    8
+ClockSpeed:                        0 MHZ
+Actor Count:                       16
+Messages sent/received per client: 200000  (2e5)
+Is Server GC:                      True
+
+Num clients, Total [msg], Msgs/sec, Total [ms]
+         1,  200000,     36860,    5426.80
+         5, 1000000,    114456,    8737.81
+        10, 2000000,    121588,   16449.18
+        15, 3000000,    121483,   24695.15
+        20, 4000000,    122336,   32697.13
+        25, 5000000,    124055,   40305.34
+        30, 6000000,    124237,   48295.32
+Done..
+
+ProcessorCount:                    8
+ClockSpeed:                        0 MHZ
+Actor Count:                       16
+Messages sent/received per client: 200000  (2e5)
+Is Server GC:                      True
+
+Num clients, Total [msg], Msgs/sec, Total [ms]
+         1,  200000,     26203,    7633.62
+         5, 1000000,     42361,   23607.86
+        10, 2000000,     48593,   41159.62
+        15, 3000000,     52396,   57257.63
+        20, 4000000,     54161,   73854.40
+        25, 5000000,     55569,   89979.73
+        30, 6000000,     55511,  108088.06
+Done..

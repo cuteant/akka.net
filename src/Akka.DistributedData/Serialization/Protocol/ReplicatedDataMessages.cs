@@ -1,4 +1,5 @@
 ﻿using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using MessagePack;
 using OtherMessage = Akka.Serialization.Protocol.Payload;
 
@@ -246,7 +247,26 @@ namespace Akka.DistributedData.Serialization.Protocol
             [Key(2)]
             public int ZeroTag { get; set; }
             [Key(3)]
-            public List<MapEntry> EntryData { get; set; }
+            public List<MapEntry> EntryData
+            {
+                [MethodImpl(InlineOptions.AggressiveOptimization)]
+                get => _entryData ?? EnsureEntryDataCreated();
+                set => _entryData = value;
+            }
+
+            private List<MapEntry> _entryData;
+            [MethodImpl(MethodImplOptions.NoInlining)]
+            private List<MapEntry> EnsureEntryDataCreated()
+            {
+                lock (this)
+                {
+                    if (_entryData is null)
+                    {
+                        _entryData = new List<MapEntry>();
+                    }
+                }
+                return _entryData;
+            }
         }
 
         [Key(0)]
@@ -255,6 +275,22 @@ namespace Akka.DistributedData.Serialization.Protocol
         public TypeDescriptor KeyTypeInfo { get; set; }
         [Key(2)]
         public TypeDescriptor ValueTypeInfo { get; set; }
+    }
+
+    [MessagePackObject]
+    public readonly struct ORMultiMapDelta
+    {
+        [Key(0)]
+        public readonly ORMapDeltaGroup Delta;
+        [Key(1)]
+        public readonly bool WithValueDeltas;
+
+        [SerializationConstructor]
+        public ORMultiMapDelta(ORMapDeltaGroup delta, bool withValueDeltas)
+        {
+            Delta = delta;
+            WithValueDeltas = withValueDeltas;
+        }
     }
 
     public enum ORMapDeltaOp

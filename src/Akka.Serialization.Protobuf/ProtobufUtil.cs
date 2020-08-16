@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Buffers;
 using System.Reflection;
-using Akka.Actor;
 using CuteAnt.Buffers;
 using CuteAnt.Reflection;
 using Google.Protobuf;
@@ -11,14 +10,7 @@ namespace Akka.Serialization
 {
     public static class ProtobufUtil
     {
-        private const string c_byteStringUnsafeTypeName = "Google.Protobuf.ByteString+Unsafe, Google.Protobuf";
-        private const string c_getBufferMethodName = "GetBuffer";
-
         private static readonly ArrayPool<byte> s_bufferPool = BufferManager.Shared;
-
-        internal static readonly Type ByteStringUnsafeType;
-        private static readonly MethodInfo s_getBufferMethodInfo;
-        private static readonly MethodCaller<object, byte[]> s_getBufferMethodCaller;
 
         private const string c_attachBytesMethodName = "AttachBytes";
         private static readonly MethodInfo s_attachBytesMethodInfo;
@@ -26,10 +18,6 @@ namespace Akka.Serialization
 
         static ProtobufUtil()
         {
-            ByteStringUnsafeType = TypeUtils.ResolveType(c_byteStringUnsafeTypeName);
-            s_getBufferMethodInfo = ByteStringUnsafeType.GetMethod(c_getBufferMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
-            s_getBufferMethodCaller = s_getBufferMethodInfo.MakeDelegateForCall<object, byte[]>();
-
             s_attachBytesMethodInfo = typeof(ByteString).GetMethod(c_attachBytesMethodName, BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static);
             s_attachBytesMethodCaller = s_attachBytesMethodInfo.MakeDelegateForCall<object, ByteString>();
         }
@@ -40,7 +28,7 @@ namespace Akka.Serialization
 
         /// <summary>Provides direct, unrestricted access to the bytes contained in this instance.
         /// You must not modify or resize the byte array returned by this method.</summary>
-        public static byte[] GetBuffer(ByteString bytes) => s_getBufferMethodCaller(null, new[] { bytes });
+        public static byte[] GetBuffer(ByteString bytes) => bytes.ToByteArray();
 
         /// <summary>Serializes the given object into a <see cref="ByteString"/>.</summary>
         /// <param name="serializer">The serializer.</param>
@@ -70,8 +58,7 @@ namespace Akka.Serialization
         /// <returns>The object contained in the array</returns>
         public static object FromByteString(this Serializer serializer, ByteString byteString, Type type)
         {
-            var bytes = s_getBufferMethodCaller(null, new[] { byteString });
-            return serializer.FromBinary(bytes, type);
+            return serializer.FromBinary(byteString.ToByteArray(), type);
         }
 
         /// <summary>Deserializes a <see cref="ByteString"/> into an object.</summary>

@@ -22,7 +22,7 @@ namespace Akka.MultiNodeTestRunner.TrxReporter.Models
 
         public XElement Serialize()
         {
-            XElement TextElem(string element, List<string> lines) =>
+            static XElement TextElem(string element, List<string> lines) =>
                 lines.Count > 0
                     ? Elem(element, Text(string.Join(Environment.NewLine, lines)))
                     : null;

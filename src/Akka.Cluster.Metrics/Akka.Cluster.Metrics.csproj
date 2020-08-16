@@ -21,12 +21,6 @@
     <PackageTags>$(AkkaPackageTags);network;cluster;Metrics</PackageTags>
   </PropertyGroup>
 
-  <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
-    <Reference Include="System.Core" />
-    <Reference Include="System.Xml.Linq" />
-    <Reference Include="System.Data.DataSetExtensions" />
-  </ItemGroup>
-
   <ItemGroup>
     <EmbeddedResource Include="reference.conf" />
     <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />

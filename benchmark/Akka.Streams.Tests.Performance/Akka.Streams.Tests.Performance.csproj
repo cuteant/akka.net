@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFrameworks>$(CoreBenchmarkTfms)</TargetFrameworks>
+    <RootNamespace>Akka.Streams.Tests.Performance</RootNamespace>
+    <AssemblyName>Akka.Streams.Tests.Performance</AssemblyName>
+    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+    <ServerGarbageCollection>true</ServerGarbageCollection>
+	<OutputType>Exe</OutputType>
+  </PropertyGroup>
+
+  <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">
+    <Reference Include="System.Configuration" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="NBench" Version="$(NBenchPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Streams\Akka.Streams.csproj" />
+    <ProjectReference Include="..\..\test\Akka.Streams.Tests\Akka.Streams.Tests.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Streams.TestKit\Akka.Streams.TestKit.csproj" />
+    <ProjectReference Include="..\..\test\Akka.Streams.TestKit.Tests\Akka.Streams.TestKit.Tests.csproj" />
+  </ItemGroup>
+
+</Project>

@@ -36,8 +36,12 @@ namespace Akka.Configuration
         public Config(HoconRoot root)
         {
             if (root.Value == null)
-                throw new ArgumentNullException(nameof(root), "The root value cannot be null.");
+            {
+                AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.root);
+                //throw new ArgumentNullException(nameof(root), "The root value cannot be null.");
+            }
 
+            Value = root.Value;
             Root = root.Value;
             Substitutions = root.Substitutions;
         }
@@ -51,8 +55,12 @@ namespace Akka.Configuration
         public Config(Config source, Config fallback)
         {
             if (source == null)
-                throw new ArgumentNullException(nameof(source), "The source configuration cannot be null.");
+            {
+                AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.source);
+                //throw new ArgumentNullException(nameof(source), "The source configuration cannot be null.");
+            }
 
+            Value = source.Value;
             Root = source.Root;
             Fallback = fallback;
         }
@@ -69,6 +77,8 @@ namespace Akka.Configuration
         {
             get { return Root == null || Root.IsEmpty; }
         }
+
+        private HoconValue Value { get; set; }
 
         /// <summary>
         /// The root node of this configuration section
@@ -91,6 +101,7 @@ namespace Akka.Configuration
             {
                 Fallback = Fallback != null ? Fallback.Copy(fallback) : fallback,
                 Root = Root,
+                Value = Value,
                 Substitutions = Substitutions
             };
         }
@@ -101,7 +112,7 @@ namespace Akka.Configuration
             HoconValue currentNode = Root;
             if (currentNode == null)
             {
-                throw new InvalidOperationException("Current node should not be null");
+                AkkaThrowHelper.ThrowInvalidOperationException_Current_node_should_not_be_null();
             }
             foreach (string key in parsedPath)
             {
@@ -435,10 +446,10 @@ namespace Akka.Configuration
         /// <returns>A string containing the current configuration.</returns>
         public override string ToString()
         {
-            if (Root == null)
+            if (Value == null)
                 return "";
 
-            return Root.ToString();
+            return Value.ToString();
         }
 
         /// <summary>
@@ -451,20 +462,7 @@ namespace Akka.Configuration
             if (includeFallback == false)
                 return ToString();
 
-            Config current = this;
-
-            if (current.Fallback == null)
-                return current.ToString();
-
-            Config clone = Copy();
-
-            while (current.Fallback != null)
-            {
-                clone.Root.GetObject().Merge(current.Fallback.Root.GetObject());
-                current = current.Fallback;
-            }
-
-            return clone.ToString();
+            return Root.ToString();
         }
 
         /// <summary>
@@ -475,11 +473,11 @@ namespace Akka.Configuration
         /// <returns>The current configuration configured with the specified fallback.</returns>
         public virtual Config WithFallback(Config fallback)
         {
-            if (fallback == this)
-                throw new ArgumentException("Config can not have itself as fallback", nameof(fallback));
-            if (fallback == null)
-                return this;
-            var mergedRoot = Root.GetObject().MergeImmutable(fallback.Root.GetObject());
+            if (fallback == this) { AkkaThrowHelper.ThrowArgumentException_Config_can_not_have_itself_as_fallback(); }
+            if (fallback == null) { return this; }
+            if (IsEmpty) { return fallback; }
+
+            var mergedRoot = fallback.Root.GetObject().MergeImmutable(Root.GetObject());
             var newRoot = new HoconValue();
             newRoot.AppendValue(mergedRoot);
             var mergedConfig = Copy(fallback);

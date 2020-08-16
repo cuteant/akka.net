@@ -1247,7 +1247,7 @@ namespace Akka.Cluster.Sharding
     /// <see cref="PersistentShardCoordinator"/>. If the process takes longer than the `handOffTimeout` it
     /// also sends <see cref="RebalanceDone"/>.
     /// </summary>
-    internal class RebalanceWorker : ActorBase
+    internal class RebalanceWorker : ActorBase, IWithTimers
     {
         /// <summary>
         /// TBD
@@ -1275,6 +1275,8 @@ namespace Akka.Cluster.Sharding
 
         private ILoggingAdapter Log { get { return _log ?? (_log = Context.GetLogger()); } }
 
+        public ITimerScheduler Timers { get; set; }
+
         /// <summary>
         /// TBD
         /// </summary>
@@ -1299,7 +1301,7 @@ namespace Akka.Cluster.Sharding
                 region.Tell(new PersistentShardCoordinator.BeginHandOff(shard));
             }
 
-            Context.System.Scheduler.ScheduleTellOnce(handOffTimeout, Self, ReceiveTimeout.Instance, Self);
+            Timers.StartSingleTimer("hand-off-timeout", ReceiveTimeout.Instance, handOffTimeout);
         }
 
         /// <summary>

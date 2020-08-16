@@ -39,7 +39,8 @@
         private static void ThrowInvalidOperationException()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Invalid Payload formatter.");
             }
@@ -74,7 +75,8 @@
         private static void ThrowInvalidOperationException()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Invalid ReadOnlyActorRefData formatter.");
             }
@@ -113,7 +115,8 @@
         private static void ThrowInvalidOperationException()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Invalid ActorRefData formatter.");
             }
@@ -155,7 +158,8 @@
         private static void ThrowInvalidOperationException()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Invalid AddressData formatter.");
             }
@@ -194,7 +198,8 @@
         private static void ThrowInvalidOperationException()
         {
             throw GetException();
-            InvalidOperationException GetException()
+
+            static InvalidOperationException GetException()
             {
                 return new InvalidOperationException("Invalid ActorIdentity formatter.");
             }

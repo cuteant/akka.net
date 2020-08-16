@@ -1,4 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+  <Import Project="..\..\xunitSettings.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
@@ -14,6 +15,7 @@
     <ProjectReference Include="..\..\src\Akka.Cluster.Sharding\Akka.Cluster.Sharding.csproj" />
     <ProjectReference Include="..\..\src\Akka.Persistence\Akka.Persistence.csproj" />
     <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+    <ProjectReference Include="..\Akka.Cluster.Tools.Tests\Akka.Cluster.Tools.Tests.csproj" />
   </ItemGroup>
 
   <ItemGroup Condition=" '$(ImportLibs)' == 'netfx' ">

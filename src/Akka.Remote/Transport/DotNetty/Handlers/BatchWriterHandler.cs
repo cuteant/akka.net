@@ -22,7 +22,8 @@ namespace Akka.Remote.Transport.DotNetty
     {
         public readonly BatchWriterSettings Settings;
 
-        internal bool CanSchedule { get; private set; } = true;
+        //internal bool CanSchedule { get; private set; } = true;
+        private IScheduledTask _scheduledTask;
 
         public BatchWriterHandler(BatchWriterSettings settings)
         {
@@ -67,16 +68,15 @@ namespace Akka.Remote.Transport.DotNetty
         {
             // flush any pending writes first
             context.Flush();
-            CanSchedule = false;
+            _scheduledTask?.Cancel();
             base.Close(context, promise);
         }
 
         private void ScheduleFlush(IChannelHandlerContext context)
         {
             // Schedule a recurring flush - only fires when there's writable data
-            var task = new FlushTask(context, Settings.FlushInterval, this);
-            context.Executor.Schedule(task, Settings.FlushInterval);
-            //context.Executor.ScheduleWithFixedDelay(task, Settings.FlushInterval);
+            var task = new FlushTask(context, this);
+            _scheduledTask = context.Executor.ScheduleAtFixedRate(task, Settings.FlushInterval, Settings.FlushInterval);
         }
 
         public void Reset()
@@ -88,13 +88,11 @@ namespace Akka.Remote.Transport.DotNetty
         class FlushTask : DotNettyIRunnable
         {
             private readonly IChannelHandlerContext _context;
-            private readonly TimeSpan _interval;
             private readonly BatchWriterHandler _writer;
 
-            public FlushTask(IChannelHandlerContext context, TimeSpan interval, BatchWriterHandler writer)
+            public FlushTask(IChannelHandlerContext context, BatchWriterHandler writer)
             {
                 _context = context;
-                _interval = interval;
                 _writer = writer;
             }
 
@@ -105,11 +103,6 @@ namespace Akka.Remote.Transport.DotNetty
                     // execute a flush operation
                     _context.Flush();
                     _writer.Reset();
-                }
-
-                if (_writer.CanSchedule)
-                {
-                    _context.Executor.Schedule(this, _interval); // reschedule
                 }
             }
         }

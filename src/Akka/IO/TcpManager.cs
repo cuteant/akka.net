@@ -76,12 +76,18 @@ namespace Akka.IO
             switch (message)
             {
                 case Connect c:
-                    Context.ActorOf(Props.Create(() => new TcpOutgoingConnection(_tcp, Sender, c)));
-                    return true;
+                    {
+                        var commander = Sender;
+                        Context.ActorOf(Props.Create<TcpOutgoingConnection>(_tcp, commander, c));
+                        return true;
+                    }
 
                 case Bind b:
-                    Context.ActorOf(Props.Create(() => new TcpListener(_tcp, Sender, b)));
-                    return true;
+                    {
+                        var commander = Sender;
+                        Context.ActorOf(Props.Create<TcpListener>(_tcp, commander, b));
+                        return true;
+                    }
 
                 case DeadLetter dl:
                     var completed = dl.Message as SocketCompleted;
