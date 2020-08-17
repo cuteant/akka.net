@@ -469,7 +469,7 @@ namespace Akka.Cluster.Sharding
         {
             get
             {
-                if (EntityProps != null)
+                if (EntityProps is object)
                     return new PersistentShardCoordinator.Register(Self);
                 return new PersistentShardCoordinator.RegisterProxy(Self);
             }
@@ -738,7 +738,7 @@ namespace Akka.Cluster.Sharding
 
                     if (ShardBuffers.Count != 0) _retryCount++;
 
-                    if (_coordinator == null) Register();
+                    if (_coordinator is null) Register();
                     else
                     {
                         RequestShardBufferHomes();
@@ -764,7 +764,7 @@ namespace Akka.Cluster.Sharding
             switch (query)
             {
                 case GetCurrentRegions _:
-                    if (_coordinator != null) _coordinator.Forward(query);
+                    if (_coordinator is object) _coordinator.Forward(query);
                     else Sender.Tell(new CurrentRegions(ImmutableHashSet<Address>.Empty));
                     break;
                 case GetShardRegionState _:
@@ -774,7 +774,7 @@ namespace Akka.Cluster.Sharding
                     ReplyToRegionStatsQuery(Sender);
                     break;
                 case GetClusterShardingStats _:
-                    if (_coordinator != null)
+                    if (_coordinator is object)
                         _coordinator.Forward(query);
                     else
                         Sender.Tell(new ClusterShardingStats(ImmutableDictionary<Address, ShardRegionStats>.Empty));
@@ -992,7 +992,7 @@ namespace Akka.Cluster.Sharding
             //TODO: change on ConcurrentDictionary.GetOrAdd?
             if (!Shards.TryGetValue(id, out var region))
             {
-                if (EntityProps == null) ThrowHelper.ThrowIllegalStateException_ShardMustNotBeAllocatedToAProxyOnlyShardRegion();
+                if (EntityProps is null) ThrowHelper.ThrowIllegalStateException_ShardMustNotBeAllocatedToAProxyOnlyShardRegion();
 
                 if (ShardsByRef.Values.All(shardId => shardId != id))
                 {
@@ -1078,7 +1078,7 @@ namespace Akka.Cluster.Sharding
 
         private void HandleTerminated(Terminated terminated)
         {
-            if (_coordinator != null && _coordinator.Equals(terminated.ActorRef))
+            if (_coordinator is object && _coordinator.Equals(terminated.ActorRef))
                 _coordinator = null;
             else if (Regions.TryGetValue(terminated.ActorRef, out var shards))
             {

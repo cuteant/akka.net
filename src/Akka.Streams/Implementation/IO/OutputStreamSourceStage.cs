@@ -236,14 +236,14 @@ namespace Akka.Streams.Implementation.IO
 
             private void UnblockUpsteam()
             {
-                if (_flush != null)
+                if (_flush is object)
                 {
                     _flush.TrySetResult(NotUsed.Instance);
                     _flush = null;
                     return;
                 }
 
-                if (_close == null)
+                if (_close is null)
                     return;
 
                 _downstreamStatus.Value = Canceled.Instance;

@@ -99,7 +99,7 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (_log.IsDebugEnabled)
             {
-                _log.Debug("Channel {0} received a message ({1}) of type [{2}]", ctx.Channel, message, message == null ? "NULL" : message.GetType().TypeQualifiedName());
+                _log.Debug("Channel {0} received a message ({1}) of type [{2}]", ctx.Channel, message, message is null ? "NULL" : message.GetType().TypeQualifiedName());
             }
             ctx.FireChannelRead(message);
         }
@@ -108,7 +108,7 @@ namespace Akka.Remote.Transport.DotNetty
         {
             if (_log.IsDebugEnabled)
             {
-                _log.Debug("Channel {0} writing a message ({1}) of type [{2}]", ctx.Channel, message, message == null ? "NULL" : message.GetType().TypeQualifiedName());
+                _log.Debug("Channel {0} writing a message ({1}) of type [{2}]", ctx.Channel, message, message is null ? "NULL" : message.GetType().TypeQualifiedName());
             }
             ctx.WriteAsync(message, promise);
         }
@@ -145,7 +145,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         internal static string Format(IChannelHandlerContext ctx, string eventName, object firstArg, object secondArg)
         {
-            if (secondArg == null)
+            if (secondArg is null)
             {
                 return FormatSimple(ctx, eventName, firstArg);
             }

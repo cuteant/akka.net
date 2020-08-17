@@ -1191,7 +1191,7 @@ namespace Akka.Cluster.Sharding
         {
             ExtractEntityId extractEntityId = msg =>
             {
-                if (self.EntityId(msg) != null)
+                if (self.EntityId(msg) is object)
                     return (self.EntityId(msg), self.EntityMessage(msg));
 
                 return Option<(string, object)>.None;

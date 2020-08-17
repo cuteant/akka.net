@@ -20,9 +20,9 @@ namespace Akka.Util.Internal
 
         public static StringBuilder AppendJoin<T>(this StringBuilder sb, string separator, IEnumerable<T> values, Action<StringBuilder, T, int> valueAppender)
         {
-            if (values == null) return sb;
-            if (separator == null) separator = "";
-            if (valueAppender == null) valueAppender = DefaultAppendValue;
+            if (values is null) return sb;
+            if (separator is null) separator = "";
+            if (valueAppender is null) valueAppender = DefaultAppendValue;
 
             using (var enumerator = values.GetEnumerator())
             {
@@ -32,7 +32,7 @@ namespace Akka.Util.Internal
 
                 // ReSharper disable CompareNonConstrainedGenericWithNull
                 var current = enumerator.Current;
-                if (current != null)
+                if (current is object)
                 // ReSharper restore CompareNonConstrainedGenericWithNull
                 {
                     valueAppender(sb, current, index);
@@ -44,7 +44,7 @@ namespace Akka.Util.Internal
                     sb.Append(separator);
                     // ReSharper disable CompareNonConstrainedGenericWithNull
                     current = enumerator.Current;
-                    if (current != null)
+                    if (current is object)
                     // ReSharper restore CompareNonConstrainedGenericWithNull
                     {
                         valueAppender(sb, current, index);
@@ -57,7 +57,7 @@ namespace Akka.Util.Internal
         private static void DefaultAppendValue<T>(StringBuilder sb, T value, int index)
         {
             var s = value.ToString();
-            if (s != null)
+            if (s is object)
                 sb.Append(value);
         }
     }

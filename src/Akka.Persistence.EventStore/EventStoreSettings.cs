@@ -8,7 +8,7 @@ namespace Akka.Persistence.EventStore
     {
         public EventStoreJournalSettings(Config config)
         {
-            if (config == null)
+            if (config is null)
             {
                 throw new ArgumentNullException(nameof(config),
                     "EventStore journal settings cannot be initialized, because required HOCON section couldn't been found");
@@ -25,7 +25,7 @@ namespace Akka.Persistence.EventStore
     {
         public EventStoreSnapshotSettings(Config config)
         {
-            if (config == null)
+            if (config is null)
             {
                 throw new ArgumentNullException(nameof(config),
                     "EventStore snapshot-store settings cannot be initialized, because required HOCON section couldn't been found");

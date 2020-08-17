@@ -96,7 +96,7 @@ namespace Akka.Persistence
                     {
                         case LoadSnapshotResult res:
                             timeoutCancelable.Cancel();
-                            if (res.Snapshot != null)
+                            if (res.Snapshot is object)
                             {
                                 var offer = new SnapshotOffer(res.Snapshot.Metadata, res.Snapshot.Snapshot);
                                 var seqNr = LastSequenceNr;

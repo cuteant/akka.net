@@ -98,7 +98,7 @@ namespace Akka.Event
             foreach (var strLoggerType in loggerTypes)
             {
                 var loggerType = TypeUtil.ResolveType(strLoggerType);
-                if (loggerType == null)
+                if (loggerType is null)
                 {
                     throw new ConfigurationException($@"Logger specified in config cannot be found: ""{strLoggerType}""");
                 }
@@ -116,7 +116,7 @@ namespace Akka.Event
                         .ContinueWith(t =>
                         {
 #if DEBUG
-                            if (t.Exception != null)
+                            if (t.Exception is object)
                             {
                                 Console.WriteLine($"Logger [{strLoggerType}] specified in config cannot be loaded: {t.Exception}");
                             }

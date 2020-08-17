@@ -116,13 +116,13 @@ namespace Akka.Actor
 
         private bool CompareArguments(Props other)
         {
-            if (other == null)
+            if (other is null)
                 return false;
 
-            if (Arguments == null && other.Arguments == null)
+            if (Arguments is null && other.Arguments is null)
                 return true;
 
-            if (Arguments == null)
+            if (Arguments is null)
                 return false;
 
             if (Arguments.Length != other.Arguments.Length)
@@ -149,10 +149,10 @@ namespace Akka.Actor
         {
             unchecked
             {
-                int hashCode = (Deploy != null ? Deploy.GetHashCode() : 0);
-                //  hashCode = (hashCode*397) ^ (SupervisorStrategy != null ? SupervisorStrategy.GetHashCode() : 0);
-                //  hashCode = (hashCode*397) ^ (Arguments != null ? Arguments.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (inputType != null ? inputType.GetHashCode() : 0);
+                int hashCode = (Deploy is object ? Deploy.GetHashCode() : 0);
+                //  hashCode = (hashCode*397) ^ (SupervisorStrategy is object ? SupervisorStrategy.GetHashCode() : 0);
+                //  hashCode = (hashCode*397) ^ (Arguments is object ? Arguments.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (inputType is object ? inputType.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -207,7 +207,7 @@ namespace Akka.Actor
         public Props(Type type, object[] args)
             : this(defaultDeploy, type, args)
         {
-            if (type == null) ThrowArgumentNullException();
+            if (type is null) ThrowArgumentNullException();
         }
 
         /// <summary>
@@ -225,7 +225,7 @@ namespace Akka.Actor
         public Props(Type type)
             : this(defaultDeploy, type, noArgs)
         {
-            if (type == null) ThrowArgumentNullException();
+            if (type is null) ThrowArgumentNullException();
         }
 
         /// <summary>
@@ -241,7 +241,7 @@ namespace Akka.Actor
         public Props(Type type, SupervisorStrategy supervisorStrategy, IEnumerable<object> args)
             : this(defaultDeploy, type, args.ToArray())
         {
-            if (type == null) ThrowArgumentNullException();
+            if (type is null) ThrowArgumentNullException();
 
             SupervisorStrategy = supervisorStrategy;
         }
@@ -259,7 +259,7 @@ namespace Akka.Actor
         public Props(Type type, SupervisorStrategy supervisorStrategy, params object[] args)
             : this(defaultDeploy, type, args)
         {
-            if (type == null) ThrowArgumentNullException();
+            if (type is null) ThrowArgumentNullException();
 
             SupervisorStrategy = supervisorStrategy;
         }
@@ -277,7 +277,7 @@ namespace Akka.Actor
         public Props(Deploy deploy, Type type, IEnumerable<object> args)
             : this(deploy, type, args.ToArray())
         {
-            if (type == null) ThrowArgumentNullException();
+            if (type is null) ThrowArgumentNullException();
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace Akka.Actor
         {
             get
             {
-                if (outputType == null)
+                if (outputType is null)
                 {
                     outputType = producer.ActorType;
                 }
@@ -396,7 +396,7 @@ namespace Akka.Actor
                 return new DynamicProps<TActor>(factory.Compile());
 
             var newExpression = factory.Body.AsInstanceOf<NewExpression>();
-            if (newExpression == null) { AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_PropsCreate); }
+            if (newExpression is null) { AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_PropsCreate); }
 
             object[] args = newExpression.GetArguments().ToArray();
 
@@ -445,7 +445,7 @@ namespace Akka.Actor
         /// <exception cref="ArgumentNullException">Props must be instantiated with an actor type.</exception>
         public static Props Create(Type type, params object[] args)
         {
-            if (type == null) ThrowArgumentNullException();
+            if (type is null) ThrowArgumentNullException();
 
             return new Props(type, args);
         }
@@ -683,7 +683,7 @@ namespace Akka.Actor
 
         private static IIndirectActorProducer CreateProducer(Type type, object[] args)
         {
-            if (type == null)
+            if (type is null)
             {
                 return defaultProducer;
             }
@@ -707,7 +707,7 @@ namespace Akka.Actor
         {
             try
             {
-                if (this.producer != null) this.producer.Release(actor);
+                if (this.producer is object) this.producer.Release(actor);
             }
             finally
             {

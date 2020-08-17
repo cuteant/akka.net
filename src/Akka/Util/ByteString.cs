@@ -64,7 +64,7 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         public static ByteString CopyFrom(byte[] array, int offset, int count)
         {
-            if (array == null) throw new ArgumentNullException(nameof(array));
+            if (array is null) throw new ArgumentNullException(nameof(array));
 
             if (count == 0) return Empty;
 
@@ -84,7 +84,7 @@ namespace Akka.IO
         /// <returns></returns>
         public static ByteString CopyFrom(IEnumerable<ByteBuffer> buffers)
         {
-            if (buffers == null) throw new ArgumentNullException(nameof(buffers));
+            if (buffers is null) throw new ArgumentNullException(nameof(buffers));
 
             var array = (buffers as ByteBuffer[]) ?? buffers.ToArray();
             var count = 0;
@@ -132,7 +132,7 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         public static ByteString FromBytes(byte[] array, int offset, int count)
         {
-            if (array == null) throw new ArgumentNullException(nameof(array));
+            if (array is null) throw new ArgumentNullException(nameof(array));
             if (offset < 0 || (offset != 0 && offset >= array.Length)) throw new ArgumentOutOfRangeException(nameof(offset), $"Provided offset [{offset}] is outside bounds of an array");
             if (count > array.Length - offset) throw new ArgumentException($"Provided length of array to copy [{count}] doesn't fit array length [{array.Length}] and offset [{offset}].", nameof(count));
 
@@ -149,7 +149,7 @@ namespace Akka.IO
         /// </summary>
         public static ByteString FromBytes(IEnumerable<ByteBuffer> buffers)
         {
-            if (buffers == null) throw new ArgumentNullException(nameof(buffers));
+            if (buffers is null) throw new ArgumentNullException(nameof(buffers));
 
             var array = (buffers as ByteBuffer[]) ?? buffers.ToArray();
             var count = 0;
@@ -455,7 +455,7 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         public ByteString Concat(ByteString other)
         {
-            if (other == null) throw new ArgumentNullException(nameof(other), "Cannot append null to ByteString.");
+            if (other is null) throw new ArgumentNullException(nameof(other), "Cannot append null to ByteString.");
 
             if (other.IsEmpty) return this;
             if (this.IsEmpty) return other;
@@ -478,7 +478,7 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         public int CopyTo(byte[] buffer, int index, int count)
         {
-            if (buffer == null) throw new ArgumentNullException(nameof(buffer));
+            if (buffer is null) throw new ArgumentNullException(nameof(buffer));
             if (index < 0 || index >= buffer.Length) throw new ArgumentOutOfRangeException(nameof(index), "Provided index is outside the bounds of the buffer to copy to.");
             if (count > buffer.Length - index) throw new ArgumentException("Provided number of bytes to copy won't fit into provided buffer", nameof(count));
 
@@ -505,7 +505,7 @@ namespace Akka.IO
         /// <param name="stream"></param>
         public void WriteTo(Stream stream)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (stream is null) throw new ArgumentNullException(nameof(stream));
 
             foreach (var buffer in _buffers)
             {
@@ -520,7 +520,7 @@ namespace Akka.IO
         /// <param name="stream"></param>
         public async Task WriteToAsync(Stream stream)
         {
-            if (stream == null) throw new ArgumentNullException(nameof(stream));
+            if (stream is null) throw new ArgumentNullException(nameof(stream));
 
             foreach (var buffer in _buffers)
             {

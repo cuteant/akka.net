@@ -48,7 +48,7 @@ namespace Akka.Actor
         /// <param name="context">TBD</param>
         public override void AfterIncarnated(ActorBase actor, IActorContext context)
         {
-            if (actor is IActorStash stashed && stashed.Stash == null)
+            if (actor is IActorStash stashed && stashed.Stash is null)
             {
                 stashed.Stash = context.CreateStash(actor.GetType());
             }

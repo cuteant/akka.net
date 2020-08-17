@@ -45,7 +45,7 @@ namespace Akka.Persistence.EventStore.Journal
                 else
                 {
                     var metadata = await _conn.GetStreamMetadataAsync(persistenceId).ConfigureAwait(false);
-                    if (metadata.StreamMetadata.TruncateBefore != null)
+                    if (metadata.StreamMetadata.TruncateBefore is object)
                     {
                         sequence = metadata.StreamMetadata.TruncateBefore.Value;
                     }

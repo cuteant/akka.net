@@ -26,8 +26,8 @@ namespace Akka.DI.Core
         /// </exception>
         public static void AddDependencyResolver(this ActorSystem system, IDependencyResolver dependencyResolver)
         {
-            if (system == null) ThrowHelper.ThrowArgumentNullException_RequiresSystem();
-            if (dependencyResolver == null) ThrowHelper.ThrowArgumentNullException_RequiresDR();
+            if (system is null) ThrowHelper.ThrowArgumentNullException_RequiresSystem();
+            if (dependencyResolver is null) ThrowHelper.ThrowArgumentNullException_RequiresDR();
             system.RegisterExtension(DIExtension.DIExtensionProvider);
             DIExtension.DIExtensionProvider.Get(system).Initialize(dependencyResolver);
         }

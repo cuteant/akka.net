@@ -50,7 +50,7 @@ namespace Akka.Serialization
 
         public static Protocol.ExceptionData ExceptionToProto(ExtendedActorSystem system, Exception exception)
         {
-            if (exception == null) { return null; }
+            if (exception is null) { return null; }
 
             var message = new Protocol.ExceptionData();
 
@@ -86,9 +86,9 @@ namespace Akka.Serialization
 
         public static Exception ExceptionFromProto(ExtendedActorSystem system, Protocol.ExceptionData proto)
         {
-            if (null == proto) { return null; }
+            if (proto is null) { return null; }
             var exceptionType = proto.ExceptionType;
-            if (null == proto.ExceptionType) { return null; }
+            if (proto.ExceptionType is null) { return null; }
 
             var serializationInfo = new SerializationInfo(exceptionType, DefaultFormatterConverter);
 
@@ -104,7 +104,7 @@ namespace Akka.Serialization
             serializationInfo.AddValue("HResult", int.MinValue);
 
             var customFields = proto.CustomFields;
-            if (customFields != null)
+            if (customFields is object)
             {
                 foreach (var field in customFields)
                 {
@@ -119,7 +119,7 @@ namespace Akka.Serialization
                 new[] { typeof(SerializationInfo), typeof(StreamingContext) },
                 null);
 
-            if (constructorInfo != null)
+            if (constructorInfo is object)
             {
                 object[] args = { serializationInfo, new StreamingContext() };
                 obj = constructorInfo.Invoke(args).AsInstanceOf<Exception>();

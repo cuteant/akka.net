@@ -141,9 +141,9 @@ namespace Akka.Remote.Routing
         public override RouterConfig WithFallback(RouterConfig routerConfig)
         {
             var other = routerConfig as RemoteRouterConfig;
-            if (other != null && other.Local is RemoteRouterConfig)
+            if (other is object && other.Local is RemoteRouterConfig)
                 throw new ConfigurationException("RemoteRouterConfig is not allowed to wrap a RemoteRouterConfig");
-            if (other != null && other.Local != null)
+            if (other is object && other.Local is object)
                 return Copy(Local.WithFallback(other.Local).AsInstanceOf<Pool>());
             return Copy(Local.WithFallback(routerConfig).AsInstanceOf<Pool>());
         }
@@ -162,7 +162,7 @@ namespace Akka.Remote.Routing
         {
             if (!base.Equals(other)) return false;
             var otherRemote = other as RemoteRouterConfig;
-            if (otherRemote == null) return false; //should never be true due to the previous check
+            if (otherRemote is null) return false; //should never be true due to the previous check
             return Local.Equals(otherRemote.Local) &&
                    Nodes.Intersect(otherRemote.Nodes).Count() == Nodes.Count;
         }

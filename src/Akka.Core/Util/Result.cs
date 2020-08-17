@@ -73,8 +73,8 @@ namespace Akka.Util
         public override int GetHashCode()
         {
             return IsSuccess
-                ? (Value == null ? 0 : Value.GetHashCode())
-                : (Exception == null ? 0 : Exception.GetHashCode());
+                ? (Value is null ? 0 : Value.GetHashCode())
+                : (Exception is null ? 0 : Exception.GetHashCode());
         }
 
         /// <summary>

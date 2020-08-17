@@ -143,7 +143,7 @@ namespace Akka.Actor
             if (LoggingEnabled)
             {
                 string message;
-                if (cause is ActorInitializationException actorInitializationException && actorInitializationException.InnerException != null)
+                if (cause is ActorInitializationException actorInitializationException && actorInitializationException.InnerException is object)
                     message = actorInitializationException.InnerException.Message;
                 else
                     message = cause.Message;
@@ -469,7 +469,7 @@ namespace Akka.Actor
         {
             unchecked
             {
-                var hashCode = (Decider != null ? Decider.GetHashCode() : 0);
+                var hashCode = (Decider is object ? Decider.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ MaxNumberOfRetries.GetHashCode();
                 hashCode = (hashCode * 397) ^ WithinTimeRangeMilliseconds.GetHashCode();
                 return hashCode;
@@ -735,7 +735,7 @@ namespace Akka.Actor
         {
             unchecked
             {
-                var hashCode = (Decider != null ? Decider.GetHashCode() : 0);
+                var hashCode = (Decider is object ? Decider.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ MaxNumberOfRetries.GetHashCode();
                 hashCode = (hashCode * 397) ^ WithinTimeRangeMilliseconds.GetHashCode();
                 return hashCode;
@@ -958,7 +958,7 @@ namespace Akka.Actor
         /// <returns>The directive used when the given exception is encountered.</returns>
         public Directive Decide(Exception cause)
         {
-            if (Pairs != null)
+            if (Pairs is object)
             {
                 foreach (var kvp in Pairs)
                 {
@@ -994,7 +994,7 @@ namespace Akka.Actor
         {
             unchecked
             {
-                var hashCode = (Pairs != null ? Pairs.GetHashCode() : 0);
+                var hashCode = (Pairs is object ? Pairs.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ ((int)DefaultDirective).GetHashCode();
                 return hashCode;
             }

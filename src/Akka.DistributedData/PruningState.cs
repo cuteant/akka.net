@@ -58,7 +58,7 @@ namespace Akka.DistributedData
             unchecked
             {
                 var seed = 17;
-                if (Seen != null)
+                if (Seen is object)
                 {
                     foreach (var s in Seen)
                     {
@@ -66,7 +66,7 @@ namespace Akka.DistributedData
                     }
                 }
 
-                if (Owner != null)
+                if (Owner is object)
                 {
                     seed = seed *= Owner.GetHashCode() ^ 397;
                 }

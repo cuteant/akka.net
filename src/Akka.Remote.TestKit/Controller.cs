@@ -55,7 +55,7 @@ namespace Akka.Remote.TestKit
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (_name != null ? _name.GetHashCode() : 0);
+                return (_name is object ? _name.GetHashCode() : 0);
             }
 
             /// <summary>
@@ -177,9 +177,9 @@ namespace Akka.Remote.TestKit
             {
                 unchecked
                 {
-                    int hashCode = (Name != null ? Name.GetHashCode() : 0);
-                    hashCode = (hashCode*397) ^ (Addr != null ? Addr.GetHashCode() : 0);
-                    hashCode = (hashCode*397) ^ (FSM != null ? FSM.GetHashCode() : 0);
+                    int hashCode = (Name is object ? Name.GetHashCode() : 0);
+                    hashCode = (hashCode*397) ^ (Addr is object ? Addr.GetHashCode() : 0);
+                    hashCode = (hashCode*397) ^ (FSM is object ? FSM.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -280,7 +280,7 @@ namespace Akka.Remote.TestKit
         protected override void OnReceive(object message)
         {
             var createServerFSM = message as CreateServerFSM;
-            if (createServerFSM != null)
+            if (createServerFSM is object)
             {
                 var channel = createServerFSM.Channel;
                 var host = (IPEndPoint)channel.RemoteAddress;
@@ -292,7 +292,7 @@ namespace Akka.Remote.TestKit
                 return;
             }
             var nodeInfo = message as NodeInfo;
-            if (nodeInfo != null)
+            if (nodeInfo is object)
             {
                 _barrier.Forward(nodeInfo);
                 if (_nodes.ContainsKey(nodeInfo.Name))
@@ -324,7 +324,7 @@ namespace Akka.Remote.TestKit
                 }
             }
             var clientDisconnected = message as ClientDisconnected;
-            if (clientDisconnected != null && clientDisconnected.Name != null)
+            if (clientDisconnected is object && clientDisconnected.Name is object)
             {
                 _nodes = _nodes.Remove(clientDisconnected.Name);
                 _barrier.Forward(clientDisconnected);

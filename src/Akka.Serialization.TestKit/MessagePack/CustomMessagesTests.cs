@@ -85,7 +85,7 @@ namespace Akka.Serialization.Testkit
             {
                 unchecked
                 {
-                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ Age;
+                    return ((Name is object ? Name.GetHashCode() : 0) * 397) ^ Age;
                 }
             }
         }
@@ -112,7 +112,7 @@ namespace Akka.Serialization.Testkit
             {
                 unchecked
                 {
-                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ Age;
+                    return ((Name is object ? Name.GetHashCode() : 0) * 397) ^ Age;
                 }
             }
         }

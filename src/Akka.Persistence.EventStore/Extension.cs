@@ -17,7 +17,7 @@ namespace Akka.Persistence.EventStore
 
         public EventStorePersistence(ExtendedActorSystem system)
         {
-            if (system == null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.system); }
+            if (system is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.system); }
 
             // Initialize fallback configuration defaults
             system.Settings.InjectTopLevelFallback(DefaultConfiguration());

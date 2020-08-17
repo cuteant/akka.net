@@ -20,7 +20,7 @@ namespace Akka.Actor
         /// <summary>
         /// Initializes a new instance of the <see cref="RemoteScope"/> class.
         /// </summary>
-        protected RemoteScope()
+        internal RemoteScope()
         {
         }
 
@@ -60,7 +60,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (Address != null ? Address.GetHashCode() : 0);
+            return (Address is object ? Address.GetHashCode() : 0);
         }
 
         /// <summary>

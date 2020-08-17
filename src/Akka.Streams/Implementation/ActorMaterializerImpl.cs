@@ -178,7 +178,7 @@ namespace Akka.Streams.Implementation
                 var logics = t.Item2;
 
                 var shell = new GraphInterpreterShell(graph.Assembly, connections, logics, graph.Shape, calculatedSettings, _materializer);
-                var impl = _subflowFuser != null && !effectiveAttributes.Contains(Attributes.AsyncBoundary.Instance)
+                var impl = _subflowFuser is object && !effectiveAttributes.Contains(Attributes.AsyncBoundary.Instance)
                     ? _subflowFuser(shell)
                     : _materializer.ActorOf(ActorGraphInterpreter.Props(shell), StageName(effectiveAttributes), calculatedSettings.Dispatcher);
 

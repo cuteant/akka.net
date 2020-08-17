@@ -102,7 +102,7 @@ namespace Akka.Serialization
         /// <inheritdoc />
         protected sealed override string GetManifest(Type type)
         {
-            if (null == type) { return null; }
+            if (type is null) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             throw GetArgumentException_Serializer_D(type);
         }
@@ -131,7 +131,7 @@ namespace Akka.Serialization
         private static ArgumentException GetArgumentException_Serializer_D(object obj)
         {
             var type = obj as Type;
-            var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+            var typeQualifiedName = type is object ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
             return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
         }
     }

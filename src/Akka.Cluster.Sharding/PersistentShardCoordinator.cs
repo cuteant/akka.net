@@ -194,7 +194,7 @@ namespace Akka.Cluster.Sharding
                 IImmutableSet<ShardId> unallocatedShards = null,
                 bool? rememberEntities = null)
             {
-                if (shards == null && regions == null && regionProxies == null && unallocatedShards == null && rememberEntities == null) return this;
+                if (shards is null && regions is null && regionProxies is null && unallocatedShards is null && rememberEntities is null) return this;
 
                 return new State(shards ?? Shards, regions ?? Regions, regionProxies ?? RegionProxies, unallocatedShards ?? UnallocatedShards, rememberEntities ?? RememberEntities);
             }
@@ -1351,7 +1351,7 @@ namespace Akka.Cluster.Sharding
                     CurrentState = state.WithRememberEntities(Settings.RememberEntities);
                     // Old versions of the state object may not have unallocatedShard set,
                     // thus it will be null.
-                    if (state.UnallocatedShards == null)
+                    if (state.UnallocatedShards is null)
                         CurrentState = CurrentState.Copy(unallocatedShards: ImmutableHashSet<ShardId>.Empty);
 
                     return true;

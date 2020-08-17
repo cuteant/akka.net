@@ -475,7 +475,7 @@ namespace Akka.Dispatch
             }
 
             // if we got an interruption while handling system messages, rethrow it
-            if (interruption != null)
+            if (interruption is object)
             {
                 // no need to clear interrupted flag in CLR, unlike JVM
                 throw interruption;
@@ -490,7 +490,7 @@ namespace Akka.Dispatch
         /// </summary>
         public virtual void CleanUp()
         {
-            if (Actor != null)
+            if (Actor is object)
             {
                 var dlm = Actor.Dispatcher.Mailboxes.DeadLetterMailbox;
                 var messageList = SystemDrain(new LatestFirstSystemMessageList(NoMessage.Instance));
@@ -503,7 +503,7 @@ namespace Akka.Dispatch
                     dlm.SystemEnqueue(Actor.Self, msg);
                 }
 
-                if (MessageQueue != null) // needed for CallingThreadDispatcher, which never calls Mailbox.Run
+                if (MessageQueue is object) // needed for CallingThreadDispatcher, which never calls Mailbox.Run
                 {
                     MessageQueue.CleanUp(Actor.Self, dlm.MessageQueue);
                 }
@@ -556,7 +556,7 @@ namespace Akka.Dispatch
             get
             {
                 var head = SystemQueue.Head;
-                return head != null && !(head is NoMessage);
+                return head is object && !(head is NoMessage);
             }
         }
 
@@ -569,7 +569,7 @@ namespace Akka.Dispatch
         [Conditional("MAILBOXDEBUG")]
         public static void DebugPrint(string message, params object[] args)
         {
-            var formattedMessage = null == args || 0u >= (uint)args.Length ? message : string.Format(message, args);
+            var formattedMessage = args is null || 0u >= (uint)args.Length ? message : string.Format(message, args);
             Console.WriteLine("[MAILBOX][{0}][Thread {1:0000}] {2}", DateTime.Now.ToString("o"), Thread.CurrentThread.ManagedThreadId, formattedMessage);
         }
 

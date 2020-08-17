@@ -33,7 +33,7 @@ namespace Akka.TestKit.Internal
         protected override bool IsMatch(LogEvent evt)
         {
             var debug = evt as Debug;
-            if(debug != null)
+            if(debug is object)
             {
                 return InternalDoMatch(debug.LogSource, debug.Message);
             }

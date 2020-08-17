@@ -19,7 +19,7 @@ namespace Akka.MultiNodeTestRunner.TrxReporter.Models
             var items = new List<object>();
             foreach (var item in content ?? Enumerable.Empty<object>())
             {
-                if (item == null)
+                if (item is null)
                 {
                     continue;
                 }
@@ -43,14 +43,14 @@ namespace Akka.MultiNodeTestRunner.TrxReporter.Models
 
         public static XElement Elem(string name, IEnumerable<object> content) => CreateElement(name, content);
 
-        public static XAttribute Attr(string name, object value) => value == null ? null : new XAttribute(name, value);
+        public static XAttribute Attr(string name, object value) => value is null ? null : new XAttribute(name, value);
 
         public static XText Text(string value) => string.IsNullOrWhiteSpace(value) ? null : new XText(value);
 
         private static XElement CreateElementList<T>(string containerElement, IEnumerable<T> items)
         {
             // ReSharper disable once PossibleMultipleEnumeration
-            if (items == null || !items.Any())
+            if (items is null || !items.Any())
             {
                 return null;
             }

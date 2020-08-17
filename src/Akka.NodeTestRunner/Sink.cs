@@ -41,13 +41,13 @@ namespace Akka.NodeTestRunner
         public bool OnMessage(IMessageSinkMessage message)
         {
             var resultMessage = message as ITestResultMessage;
-            if (resultMessage != null)
+            if (resultMessage is object)
             {
                 _logger.Tell(resultMessage.Output);
                 Console.WriteLine(resultMessage.Output);
             }
             var testPassed = message as ITestPassed;
-            if (testPassed != null)
+            if (testPassed is object)
             {
                 //the MultiNodeTestRunner uses 1-based indexing, which is why we have to add 1 to the index.
                 var specPass = new SpecPass(_nodeIndex + 1, _nodeRole, testPassed.TestCase.DisplayName);
@@ -57,7 +57,7 @@ namespace Akka.NodeTestRunner
                 return true;
             }
             var testFailed = message as ITestFailed;
-            if (testFailed != null)
+            if (testFailed is object)
             {
                 //the MultiNodeTestRunner uses 1-based indexing, which is why we have to add 1 to the index.
                 var specFail = new SpecFail(_nodeIndex + 1, _nodeRole, testFailed.TestCase.DisplayName);
@@ -69,7 +69,7 @@ namespace Akka.NodeTestRunner
                 return true;
             }
             var errorMessage = message as ErrorMessage;
-            if (errorMessage != null)
+            if (errorMessage is object)
             {
                 var specFail = new SpecFail(_nodeIndex + 1, _nodeRole, "ERRORED");
                 foreach (var failedMessage in errorMessage.Messages) specFail.FailureMessages.Add(failedMessage);

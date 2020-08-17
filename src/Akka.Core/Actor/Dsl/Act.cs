@@ -334,7 +334,7 @@ namespace Akka.Actor.Dsl
         /// <param name="message">TBD</param>
         protected override void PreRestart(Exception reason, object message)
         {
-            if (OnPreRestart != null)
+            if (OnPreRestart is object)
             {
                 OnPreRestart(reason, message, Context);
             }
@@ -350,7 +350,7 @@ namespace Akka.Actor.Dsl
         /// <param name="reason">TBD</param>
         protected override void PostRestart(Exception reason)
         {
-            if (OnPostRestart != null)
+            if (OnPostRestart is object)
             {
                 OnPostRestart(reason, Context);
             }
@@ -365,7 +365,7 @@ namespace Akka.Actor.Dsl
         /// </summary>
         protected override void PostStop()
         {
-            if (OnPostStop != null)
+            if (OnPostStop is object)
             {
                 OnPostStop(Context);
             }
@@ -380,7 +380,7 @@ namespace Akka.Actor.Dsl
         /// </summary>
         protected override void PreStart()
         {
-            if (OnPreStart != null)
+            if (OnPreStart is object)
             {
                 OnPreStart(Context);
             }

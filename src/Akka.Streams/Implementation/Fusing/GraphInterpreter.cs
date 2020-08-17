@@ -368,7 +368,7 @@ namespace Akka.Streams.Implementation.Fusing
             get
             {
                 var interpreter = CurrentInterpreter.Value[0];
-                if (interpreter == null) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Something_wrong);
+                if (interpreter is null) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Something_wrong);
                 return (GraphInterpreter)interpreter;
             }
         }
@@ -769,7 +769,7 @@ namespace Akka.Streams.Implementation.Fusing
         [MethodImpl(MethodImplOptions.NoInlining)]
         private void ReportStageError(Exception e)
         {
-            if (ActiveStage == null) { throw e; }
+            if (ActiveStage is null) { throw e; }
 
             if (Log.IsErrorEnabled) { Log.ErroInStage(e, Assembly, ActiveStage.StageId); }
 
@@ -958,7 +958,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </summary>
         /// <param name="stage">TBD</param>
         /// <returns>TBD</returns>
-        internal bool IsStageCompleted(GraphStageLogic stage) => stage != null && _shutdownCounter[stage.StageId] == 0;
+        internal bool IsStageCompleted(GraphStageLogic stage) => stage is object && _shutdownCounter[stage.StageId] == 0;
 
         /// <summary>
         ///  Register that a connection in which the given stage participated has been completed and therefore the stage itself might stop, too.

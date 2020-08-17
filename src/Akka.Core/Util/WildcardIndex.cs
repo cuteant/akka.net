@@ -25,7 +25,7 @@ namespace Akka.Util
 
         public WildcardIndex<T> Insert(IEnumerable<string> elems, T data)
         {
-            if (elems == null) return this;
+            if (elems is null) return this;
             
             switch(elems.Last())
             {

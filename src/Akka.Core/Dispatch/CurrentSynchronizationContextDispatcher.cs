@@ -137,7 +137,7 @@ namespace Akka.Dispatch
         internal override void Register(ActorCell actor)
         {
             var current = Owner;
-            if (current != null && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(current);
+            if (current is object && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(current);
             Owner = actor;
             base.Register(actor);
         }

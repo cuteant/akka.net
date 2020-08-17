@@ -31,7 +31,7 @@ namespace Akka.Cluster
         /// <param name="heartbeatInterval">TBD</param>
         /// <param name="unreachableReaperInterval">TBD</param>
         /// <param name="heartbeatExpectedResponseAfter">TBD</param>
-        public static Props Props(
+        public static new Props Props(
             IFailureDetectorRegistry<Address> failureDetector,
             TimeSpan heartbeatInterval,
             TimeSpan unreachableReaperInterval,

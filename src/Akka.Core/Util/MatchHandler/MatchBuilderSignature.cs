@@ -56,9 +56,9 @@ namespace Akka.Tools.MatchHandler
         // in the same order.
         private static bool ListsEqual(IReadOnlyList<object> x, IReadOnlyList<object> y)
         {
-            if (x == null) return y == null || y.Count == 0;
+            if (x is null) return y is null || y.Count == 0;
             var xCount = x.Count;
-            if (y == null) return xCount == 0;
+            if (y is null) return xCount == 0;
             if (xCount != y.Count) return false;
             for (var i = 0; i < xCount; i++)
             {
@@ -70,7 +70,7 @@ namespace Akka.Tools.MatchHandler
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            if (_list == null) return 0;
+            if (_list is null) return 0;
             var count = _list.Count;
             if (count == 0) return 0;
             var hashCode = _list[0].GetHashCode();
@@ -97,7 +97,7 @@ namespace Akka.Tools.MatchHandler
         public bool Equals(MatchBuilderSignature x, MatchBuilderSignature y)
         {
             if (ReferenceEquals(x, y)) { return true; }
-            if (null == x || null == y) { return false; }
+            if (x is null || y is null) { return false; }
             return x.ListsEqual(y);
         }
 

@@ -19,7 +19,7 @@ namespace Akka.Serialization.Formatters
         public DataSet Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
             var bts = reader.ReadBytes();
-            if (null == bts) { return null; }
+            if (bts is null) { return null; }
 
             using (var inputStream = new MemoryStream(bts))
             {
@@ -29,7 +29,7 @@ namespace Akka.Serialization.Formatters
 
         public void Serialize(ref MessagePackWriter writer, ref int idx, DataSet value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             byte[] buffer = null; int bufferSize;
             try
@@ -44,7 +44,7 @@ namespace Akka.Serialization.Formatters
                 }
                 writer.WriteBytes(buffer, 0, bufferSize, ref idx);
             }
-            finally { if (buffer != null) { SharedBufferPool.Return(buffer); } }
+            finally { if (buffer is object) { SharedBufferPool.Return(buffer); } }
         }
     }
 
@@ -59,7 +59,7 @@ namespace Akka.Serialization.Formatters
         public DataTable Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
             var bts = reader.ReadBytes();
-            if (null == bts) { return null; }
+            if (bts is null) { return null; }
 
             using (var inputStream = new MemoryStream(bts))
             {
@@ -69,7 +69,7 @@ namespace Akka.Serialization.Formatters
 
         public void Serialize(ref MessagePackWriter writer, ref int idx, DataTable value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             byte[] buffer = null; int bufferSize;
             try
@@ -84,7 +84,7 @@ namespace Akka.Serialization.Formatters
                 }
                 writer.WriteBytes(buffer, 0, bufferSize, ref idx);
             }
-            finally { if (buffer != null) { SharedBufferPool.Return(buffer); } }
+            finally { if (buffer is object) { SharedBufferPool.Return(buffer); } }
         }
     }
 }

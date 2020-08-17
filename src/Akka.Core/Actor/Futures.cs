@@ -123,7 +123,7 @@ namespace Akka.Actor
             await SynchronizationContextManager.RemoveContext;
 
             IActorRefProvider provider = ResolveProvider(self);
-            if (provider == null) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_Futures_Ask, AkkaExceptionArgument.self);
+            if (provider is null) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_Futures_Ask, AkkaExceptionArgument.self);
 
             return (T)await Ask(self, messageFactory, provider, timeout, cancellationToken);
         }
@@ -135,7 +135,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         internal static IActorRefProvider ResolveProvider(ICanTell self)
         {
-            if (ActorCell.Current != null)
+            if (ActorCell.Current is object)
                 return InternalCurrentActorCellKeeper.Current.SystemImpl.Provider;
 
             switch (self)
@@ -201,7 +201,7 @@ namespace Akka.Actor
                     ctrList[i].Dispose();
                 }
 
-                if (timeoutCancellation != null)
+                if (timeoutCancellation is object)
                 {
                     timeoutCancellation.Dispose();
                 }
@@ -323,7 +323,7 @@ namespace Akka.Actor
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (Path != null ? Path.GetHashCode() : 0);
+                return (Path is object ? Path.GetHashCode() : 0);
             }
 
             #endregion
@@ -416,7 +416,7 @@ namespace Akka.Actor
         private ImmutableHashSet<IActorRef> ClearWatchers()
         {
             //TODO: ActorCell.emptyActorRefSet ?
-            if (WatchedBy == null || WatchedBy.IsEmpty) return ImmutableHashSet<IActorRef>.Empty;
+            if (WatchedBy is null || WatchedBy.IsEmpty) return ImmutableHashSet<IActorRef>.Empty;
             if (!UpdateWatchedBy(WatchedBy, null)) return ClearWatchers();
             else return WatchedBy;
         }
@@ -500,7 +500,7 @@ namespace Akka.Actor
                     break;
 
                 default:
-                    if (message == null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
+                    if (message is null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
                     // @Aaronontheweb note: not using any of the Status stuff here. Seems like it's extraneous in CLR
                     //var wrappedMessage = message;
                     //if (!(message is Status.Success || message is Status.Failure))

@@ -87,7 +87,7 @@ namespace Akka.Util
         /// <returns>TBD</returns>
         public override ActorBase Produce()
         {
-            if (Resolver == null)
+            if (Resolver is null)
             {
                 AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_Resolve_Produce);
             }

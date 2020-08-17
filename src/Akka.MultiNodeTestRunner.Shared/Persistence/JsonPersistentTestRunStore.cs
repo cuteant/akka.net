@@ -30,9 +30,9 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
                 if (!prop.Writable)
                 {
                     var property = member as PropertyInfo;
-                    if (property != null)
+                    if (property is object)
                     {
-                        var hasPrivateSetter = property.GetSetMethod(true) != null;
+                        var hasPrivateSetter = property.GetSetMethod(true) is object;
                         prop.Writable = hasPrivateSetter;
                     }
                 }
@@ -60,7 +60,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
 
         public bool SaveTestRun(string filePath, TestRunTree data)
         {
-            if (data == null) throw new ArgumentNullException(nameof(data));
+            if (data is null) throw new ArgumentNullException(nameof(data));
             if (string.IsNullOrEmpty(filePath)) throw new ArgumentException("filePath must not be null or empty");
 
 

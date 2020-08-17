@@ -419,7 +419,7 @@ namespace Akka.Cluster.Sharding
         /// <returns>TBD</returns>
         public ClusterShardingSettings WithTuningParameters(TunningParameters tunningParameters)
         {
-            if (tunningParameters == null) ThrowHelper.ThrowArgumentNullException_RequiresTunningParametersToBeProvided();
+            if (tunningParameters is null) ThrowHelper.ThrowArgumentNullException_RequiresTunningParametersToBeProvided();
 
             return Copy(tunningParameters: tunningParameters);
         }
@@ -444,7 +444,7 @@ namespace Akka.Cluster.Sharding
         /// <returns>TBD</returns>
         public ClusterShardingSettings WithCoordinatorSingletonSettings(ClusterSingletonManagerSettings coordinatorSingletonSettings)
         {
-            if (coordinatorSingletonSettings == null) ThrowHelper.ThrowArgumentNullException_RequiresCoordinatorSingletonSettingsToBeProvided();
+            if (coordinatorSingletonSettings is null) ThrowHelper.ThrowArgumentNullException_RequiresCoordinatorSingletonSettingsToBeProvided();
 
             return Copy(coordinatorSingletonSettings: coordinatorSingletonSettings);
         }

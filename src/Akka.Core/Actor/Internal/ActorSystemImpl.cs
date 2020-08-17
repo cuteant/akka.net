@@ -289,7 +289,7 @@ namespace Akka.Actor.Internal
             foreach (var extensionFqn in _settings.Config.GetStringList("akka.extensions", EmptyArray<string>.Instance))
             {
                 var extensionType = TypeUtil.ResolveType(extensionFqn);
-                if (extensionType == null || !typeof(IExtensionId).IsAssignableFrom(extensionType) || extensionType.IsAbstract || !extensionType.IsClass)
+                if (extensionType is null || !typeof(IExtensionId).IsAssignableFrom(extensionType) || extensionType.IsAbstract || !extensionType.IsClass)
                 {
                     _log.Error("[{0}] is not an 'ExtensionId', skipping...", extensionFqn);
                     continue;
@@ -325,7 +325,7 @@ namespace Akka.Actor.Internal
         /// <returns>The extension registered with this actor system</returns>
         public override object RegisterExtension(IExtensionId extension)
         {
-            if (extension == null) return null;
+            if (extension is null) return null;
 
             _extensions.GetOrAdd(extension.ExtensionType, t => new Lazy<object>(() => extension.CreateExtension(this), LazyThreadSafetyMode.ExecutionAndPublication));
 
@@ -422,7 +422,7 @@ namespace Akka.Actor.Internal
 
         void ISupportSerializationConfigReload.ReloadSerialization()
         {
-            if (_serialization != null)
+            if (_serialization is object)
                 ConfigureSerialization();
         }
 
@@ -436,7 +436,7 @@ namespace Akka.Actor.Internal
             try
             {
                 Type providerType = TypeUtil.ResolveType(_settings.ProviderClass);
-                global::System.Diagnostics.Debug.Assert(providerType != null, "providerType != null");
+                global::System.Diagnostics.Debug.Assert(providerType is object, "providerType is object");
                 var provider =
                     (IActorRefProvider)Activator.CreateInstance(providerType, _name, _settings, _eventStream);
                 _provider = provider;
@@ -542,7 +542,7 @@ namespace Akka.Actor.Internal
         internal override void FinalTerminate()
         {
             if (Log.IsDebugEnabled) Log.SystemShutdownInitiated();
-            if (!Settings.LogDeadLettersDuringShutdown && _logDeadLetterListener != null)
+            if (!Settings.LogDeadLettersDuringShutdown && _logDeadLetterListener is object)
             {
                 Stop(_logDeadLetterListener);
             }
@@ -615,7 +615,7 @@ namespace Akka.Actor.Internal
         {
             var previous = _atomicRef.Value;
 
-            if (_atomicRef.Value == null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorSystem_AlreadyTerminated);
+            if (_atomicRef.Value is null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorSystem_AlreadyTerminated);
 
             var t = new Task(code);
 
@@ -638,7 +638,7 @@ namespace Akka.Actor.Internal
         {
             var previous = _atomicRef.Value;
 
-            if (_atomicRef.Value == null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorSystem_AlreadyTerminated);
+            if (_atomicRef.Value is null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorSystem_AlreadyTerminated);
 
             var t = new Task(code, state);
 

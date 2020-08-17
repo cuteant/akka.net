@@ -136,7 +136,7 @@ namespace Akka.Cluster
         private void HandleCurrentClusterState(ClusterEvent.CurrentClusterState state)
         {
             Init(state);
-            if (_activePatterns == null) { _activePatterns = ConfigurePatterns(Active); }
+            if (_activePatterns is null) { _activePatterns = ConfigurePatterns(Active); }
             Become(_activePatterns);
         }
 

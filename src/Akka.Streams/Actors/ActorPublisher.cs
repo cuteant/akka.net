@@ -338,7 +338,7 @@ namespace Akka.Streams.Actors
                 case LifecycleState.PreSubscriber:
                     _lifecycleState = LifecycleState.Completed;
                     _onError = null;
-                    if (_subscriber != null)
+                    if (_subscriber is object)
                     {
                         // otherwise onComplete will be called when the subscription arrives
                         try
@@ -382,7 +382,7 @@ namespace Akka.Streams.Actors
                 case LifecycleState.PreSubscriber:
                     _lifecycleState = LifecycleState.CompleteThenStop;
                     _onError = null;
-                    if (_subscriber != null)
+                    if (_subscriber is object)
                     {
                         // otherwise onComplete will be called when the subscription arrives
                         try
@@ -421,7 +421,7 @@ namespace Akka.Streams.Actors
                 case LifecycleState.PreSubscriber:
                     _lifecycleState = LifecycleState.ErrorEmitted;
                     _onError = new OnErrorBlock(cause, false);
-                    if (_subscriber != null)
+                    if (_subscriber is object)
                     {
                         // otherwise onError will be called when the subscription arrives
                         try
@@ -467,7 +467,7 @@ namespace Akka.Streams.Actors
                 case LifecycleState.PreSubscriber:
                     _lifecycleState = LifecycleState.ErrorEmitted;
                     _onError = new OnErrorBlock(cause, stop: true);
-                    if (_subscriber != null)
+                    if (_subscriber is object)
                     {
                         // otherwise onError will be called when the subscription arrives
                         try
@@ -618,7 +618,7 @@ namespace Akka.Streams.Actors
         public override void AroundPostRestart(Exception cause, object message)
         {
             var s = _state.Remove(Self);
-            if (s != null)
+            if (s is object)
             {
                 _subscriber = UntypedSubscriber.ToTyped<T>(s.Subscriber);
                 _demand = s.Demand;
@@ -679,7 +679,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public ActorPublisherImpl(IActorRef actorRef)
         {
-            if (null == actorRef) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.actorRef, ExceptionResource.ArgumentNull_RequiresIActorRef); }
+            if (actorRef is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.actorRef, ExceptionResource.ArgumentNull_RequiresIActorRef); }
             _ref = actorRef;
         }
 
@@ -692,7 +692,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public void Subscribe(ISubscriber<T> subscriber)
         {
-            if (null == subscriber) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscriber, ExceptionResource.ArgumentNull_SubscriberIsNull); }
+            if (subscriber is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscriber, ExceptionResource.ArgumentNull_SubscriberIsNull); }
             _ref.Tell(new Subscribe<T>(subscriber));
         }
     }
@@ -716,7 +716,7 @@ namespace Akka.Streams.Actors
         [SerializationConstructor]
         public ActorPublisherSubscription(IActorRef actorRef)
         {
-            if (null == actorRef) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.actorRef, ExceptionResource.ArgumentNull_RequiresIActorRef_PS); }
+            if (actorRef is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.actorRef, ExceptionResource.ArgumentNull_RequiresIActorRef_PS); }
             _ref = actorRef;
         }
 

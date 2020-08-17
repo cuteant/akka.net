@@ -138,10 +138,10 @@ namespace Akka.Logger.Serilog
         private object[] BuildArgs(IEnumerable<object> args)
         {
             var newArgs = args.ToList();
-            if (_enricherNode != null)
+            if (_enricherNode is object)
             {
                 var currentNode = _enricherNode;
-                while (currentNode != null)
+                while (currentNode is object)
                 {
                     newArgs.Add(currentNode.Enricher);
                     currentNode = currentNode.Next;

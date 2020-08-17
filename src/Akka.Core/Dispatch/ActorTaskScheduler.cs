@@ -200,7 +200,7 @@ namespace Akka.Dispatch
         {
             var context = ActorCell.Current;
 
-            if (context == null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorTaskScheduler_RunTask);
+            if (context is null) AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorTaskScheduler_RunTask);
 
             var dispatcher = context.Dispatcher;
 

@@ -163,7 +163,7 @@ namespace Akka.Routing
         /// <returns>A <see cref="Routee" /> that receives the <paramref name="message" />.</returns>
         public override Routee Select(object message, Routee[] routees)
         {
-            if (message == null || routees == null || 0u >= (uint)routees.Length)
+            if (message is null || routees is null || 0u >= (uint)routees.Length)
                 return Routee.NoRoutee;
 
             ConsistentHash<ConsistentRoutee> UpdateConsistentHash()
@@ -174,7 +174,7 @@ namespace Akka.Routing
                 var oldRoutees = oldConsistHashTuple.Item1;
                 var oldConsistentHash = oldConsistHashTuple.Item2;
 
-                if (oldRoutees == null || !routees.SequenceEqual(oldRoutees))
+                if (oldRoutees is null || !routees.SequenceEqual(oldRoutees))
                 {
                     // when other instance, same content, no need to re-hash, but try to set routees
                     var consistentHash = routees == oldRoutees
@@ -216,7 +216,7 @@ namespace Akka.Routing
             }
 
             var hashMapping = _hashMapping(message);
-            if (hashMapping != null)
+            if (hashMapping is object)
             {
                 return Target(ConsistentHash.ToBytesOrObject(hashMapping));
             }
@@ -246,7 +246,7 @@ namespace Akka.Routing
         /// <returns>A new router logic with the provided <paramref name="mapping"/>.</returns>
         public ConsistentHashingRoutingLogic WithHashMapping(ConsistentHashMapping mapping)
         {
-            if (mapping == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.mapping, AkkaExceptionResource.ArgumentNull_Mapping);
+            if (mapping is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.mapping, AkkaExceptionResource.ArgumentNull_Mapping);
 
             return new ConsistentHashingRoutingLogic(_system, _vnodes, mapping);
         }
@@ -523,7 +523,7 @@ namespace Akka.Routing
             {
                 ConsistentHashingPool wssConf;
 
-                if (SupervisorStrategy != null
+                if (SupervisorStrategy is object
                     && SupervisorStrategy.Equals(DefaultSupervisorStrategy)
                     && !pool.SupervisorStrategy.Equals(DefaultSupervisorStrategy))
                 {
@@ -534,7 +534,7 @@ namespace Akka.Routing
                     wssConf = this;
                 }
 
-                if (wssConf.Resizer == null && pool.Resizer != null)
+                if (wssConf.Resizer is null && pool.Resizer is object)
                     return wssConf.WithResizer(pool.Resizer);
 
                 return wssConf;

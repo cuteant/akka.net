@@ -171,7 +171,7 @@ namespace Akka.TestKit
         /// <param name="name"></param>
         /// <param name="supervisorStrategy"></param>
         /// <returns></returns>
-        public IActorRef ChildActorOf(Props props, String name, SupervisorStrategy supervisorStrategy)
+        public new IActorRef ChildActorOf(Props props, String name, SupervisorStrategy supervisorStrategy)
         {
             return ((TestKitBase)this).ChildActorOf(props, name, supervisorStrategy);
         }
@@ -188,7 +188,7 @@ namespace Akka.TestKit
         /// <param name="props"></param>
         /// <param name="supervisorStrategy"></param>
         /// <returns></returns>
-        public IActorRef ChildActorOf(Props props, SupervisorStrategy supervisorStrategy)
+        public new IActorRef ChildActorOf(Props props, SupervisorStrategy supervisorStrategy)
         {
             return ((TestKitBase)this).ChildActorOf(props, supervisorStrategy);
         }
@@ -205,7 +205,7 @@ namespace Akka.TestKit
         /// <param name="props"></param>
         /// <param name="name"></param>
         /// <returns></returns>
-        public IActorRef ChildActorOf(Props props, String name)
+        public new IActorRef ChildActorOf(Props props, String name)
         {
             return ((TestKitBase)this).ChildActorOf(props, name);
         }
@@ -221,7 +221,7 @@ namespace Akka.TestKit
         /// </summary>
         /// <param name="props"></param>
         /// <returns></returns>
-        public IActorRef ChildActorOf(Props props)
+        public new IActorRef ChildActorOf(Props props)
         {
             return ((TestKitBase)this).ChildActorOf(props);
         }

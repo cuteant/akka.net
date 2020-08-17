@@ -39,7 +39,7 @@ namespace Akka.Cluster.Configuration
 
             using (var stream = assembly.GetManifestResourceStream(resourceName))
             {
-                Debug.Assert(stream != null, "stream != null");
+                Debug.Assert(stream is object, "stream is object");
                 using (var reader = new StreamReader(stream))
                 {
                     var result = reader.ReadToEnd();

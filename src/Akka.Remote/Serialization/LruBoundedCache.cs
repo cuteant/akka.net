@@ -165,7 +165,7 @@ namespace Akka.Remote.Serialization
                 var max = 0;
                 while (i < _hashes.Length)
                 {
-                    if (_values[i] != null)
+                    if (_values[i] is object)
                     {
                         var dist = ProbeDistanceOf(i);
                         sum += dist;
@@ -188,7 +188,7 @@ namespace Akka.Remote.Serialization
             while (true)
             {
                 var otherProbeDistance = ProbeDistanceOf(position);
-                if (_values[position] == null)
+                if (_values[position] is null)
                     return null;
                 if (probeDistance > otherProbeDistance)
                     return null;
@@ -211,7 +211,7 @@ namespace Akka.Remote.Serialization
 
             while (true)
             {
-                if (_values[position] == null)
+                if (_values[position] is null)
                 {
                     var value = Compute(k);
                     if (IsCacheable(value))
@@ -255,7 +255,7 @@ namespace Akka.Remote.Serialization
             while (true)
             {
                 var next = (position + 1) & _mask;
-                if (_values[next] == null || ProbeDistanceOf(next) == 0)
+                if (_values[next] is null || ProbeDistanceOf(next) == 0)
                 {
                     // Next is not movable, just empty this slot
                     _values[position] = null;
@@ -278,7 +278,7 @@ namespace Akka.Remote.Serialization
 
         private void Move(int position, TKey k, int h, TValue value, int elemEpoch, int probeDistance)
         {
-            if (_values[position] == null)
+            if (_values[position] is null)
             {
                 // Found an empty place, done
                 _keys[position] = k;

@@ -103,7 +103,7 @@ namespace Akka.Actor
         /// <param name="sender">The actor that sent the message</param>
         public void Tell(object message, IActorRef sender = null)
         {
-            if (sender == null && ActorCell.Current != null && ActorCell.Current.Self != null)
+            if (sender is null && ActorCell.Current is object && ActorCell.Current.Self is object)
                 sender = ActorCell.Current.Self;
 
             DeliverSelection(Anchor as IInternalActorRef, sender,
@@ -152,7 +152,7 @@ namespace Akka.Actor
             try
             {
                 var identity = await this.Ask<ActorIdentity>(new Identify(null), timeout, ct).ConfigureAwait(false);
-                if (identity.Subject == null) AkkaThrowHelper.ThrowActorNotFoundException(AkkaExceptionResource.ActorNotFound_ActorSel_Sub);
+                if (identity.Subject is null) AkkaThrowHelper.ThrowActorNotFoundException(AkkaExceptionResource.ActorNotFound_ActorSel_Sub);
 
                 return identity.Subject;
             }

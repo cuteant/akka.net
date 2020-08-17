@@ -44,10 +44,10 @@ namespace Akka.IO
         protected override bool Receive(object message)
         {
             var resolve = message as Dns.Resolve;
-            if (resolve != null)
+            if (resolve is object)
             {
                 var answer = _cache.Cached(resolve.Name);
-                if (answer == null)
+                if (answer is null)
                 {
                     try
                     {

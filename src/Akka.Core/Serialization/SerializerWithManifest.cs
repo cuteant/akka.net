@@ -23,7 +23,7 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override object DeepCopy(object source)
         {
-            if (null == source) { return null; }
+            if (source is null) { return null; }
 
             var bts = ToBinary(source, out var manifest);
             return FromBinary(bts, manifest);

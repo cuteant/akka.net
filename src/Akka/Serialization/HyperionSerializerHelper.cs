@@ -52,7 +52,7 @@ namespace Akka.Serialization
                     (parameters[0].ParameterType == typeof(ActorSystem) || parameters[0].ParameterType == typeof(ExtendedActorSystem));
             });
 
-            return ctor == null
+            return ctor is null
                 ? ActivatorUtils.FastCreateInstance<IKnownTypesProvider>(type)
                 : (IKnownTypesProvider)ctor.Invoke(new object[] { system });
         }

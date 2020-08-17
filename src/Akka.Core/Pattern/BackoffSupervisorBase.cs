@@ -46,7 +46,7 @@ namespace Akka.Pattern
 
         private void StartChild()
         {
-            if (Child == null)
+            if (Child is null)
             {
                 Child = Context.Watch(Context.ActorOf(ChildProps, ChildName));
             }
@@ -65,10 +65,10 @@ namespace Akka.Pattern
                         }
                         break;
                     }
-                case BackoffSupervisor.Reset _ when Reset is ManualReset:
+                case BackoffSupervisor.ReSet _ when Reset is ManualReset:
                     RestartCountN = 0;
                     break;
-                case BackoffSupervisor.Reset _:
+                case BackoffSupervisor.ReSet _:
                     Unhandled(message);
                     break;
                 case BackoffSupervisor.ResetRestartCount count:
@@ -87,7 +87,7 @@ namespace Akka.Pattern
                     break;
                 default:
                     {
-                        if (Child != null)
+                        if (Child is object)
                         {
                             if (Child.Equals(Sender))
                             {
@@ -97,7 +97,7 @@ namespace Akka.Pattern
                             else
                             {
                                 Child.Forward(message);
-                                if (!FinalStopMessageReceived && FinalStopMessage != null)
+                                if (!FinalStopMessageReceived && FinalStopMessage is object)
                                 {
                                     FinalStopMessageReceived = FinalStopMessage(message);
                                 }
@@ -105,7 +105,7 @@ namespace Akka.Pattern
                         }
                         else
                         {
-                            if (ReplyWhileStopped != null)
+                            if (ReplyWhileStopped is object)
                             {
                                 Sender.Tell(ReplyWhileStopped);
                             }
@@ -114,7 +114,7 @@ namespace Akka.Pattern
                                 Context.System.DeadLetters.Forward(message);
                             }
 
-                            if (FinalStopMessage != null && FinalStopMessage(message))
+                            if (FinalStopMessage is object && FinalStopMessage(message))
                             {
                                 Context.Stop(Self);
                             }

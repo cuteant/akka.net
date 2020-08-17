@@ -101,7 +101,7 @@ namespace Akka.Remote.Transport
         private static string GetConfigString(Config conf, string name)
         {
             var value = conf.GetString(name, null);
-            if (value == null)
+            if (value is null)
             {
                 throw new ConfigurationException($"Please specify a value for config setting \"{name}\"");
             }
@@ -250,7 +250,7 @@ namespace Akka.Remote.Transport
         {
             var remoteReadHandler = _registry.GetRemoteReadHandlerFor(handle);
 
-            if (remoteReadHandler != null)
+            if (remoteReadHandler is object)
             {
                 //remoteReadHandler.Notify(new InboundPayload(payload));
                 remoteReadHandler.Notify(new InboundPayload(MessagePackSerializer.Deserialize<object>(payload, MsgPackSerializerHelper.DefaultResolver)));

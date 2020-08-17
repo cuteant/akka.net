@@ -89,7 +89,7 @@ namespace Akka.Actor
             HasCluster = ProviderSelectionType.HasCluster;
 
             var providerType = TypeUtil.ResolveType(ProviderClass);
-            if (providerType == null)
+            if (providerType is null)
                 throw new ConfigurationException($"'akka.actor.provider' is not a valid type name : '{ProviderClass}'");
             if (!typeof(IActorRefProvider).IsAssignableFrom(providerType))
                 throw new ConfigurationException($"'akka.actor.provider' is not a valid actor ref provider: '{ProviderClass}'");

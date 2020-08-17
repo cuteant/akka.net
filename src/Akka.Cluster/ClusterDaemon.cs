@@ -79,7 +79,7 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (Address != null ? Address.GetHashCode() : 0);
+                return (Address is object ? Address.GetHashCode() : 0);
             }
         }
 
@@ -337,7 +337,7 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (Address != null ? Address.GetHashCode() : 0);
+                return (Address is object ? Address.GetHashCode() : 0);
             }
         }
 
@@ -377,7 +377,7 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (Address != null ? Address.GetHashCode() : 0);
+                return (Address is object ? Address.GetHashCode() : 0);
             }
         }
 
@@ -814,7 +814,7 @@ namespace Akka.Cluster
 
         private void HandleGetClusterCoreRef(InternalClusterAction.GetClusterCoreRef msg)
         {
-            if (_coreSupervisor == null) { CreateChildren(); }
+            if (_coreSupervisor is null) { CreateChildren(); }
             _coreSupervisor.Forward(msg);
         }
 
@@ -915,7 +915,7 @@ namespace Akka.Cluster
 
         private void HandleGetClusterCoreRef(InternalClusterAction.GetClusterCoreRef cr)
         {
-            if (_coreDaemon == null) { CreateChildren(); }
+            if (_coreDaemon is null) { CreateChildren(); }
             Sender.Tell(_coreDaemon);
         }
 
@@ -1047,7 +1047,7 @@ namespace Akka.Cluster
                     Self);
 
             // start periodic publish of current stats
-            if (settings.PublishStatsInterval != null && settings.PublishStatsInterval > TimeSpan.Zero && settings.PublishStatsInterval != TimeSpan.MaxValue)
+            if (settings.PublishStatsInterval is object && settings.PublishStatsInterval > TimeSpan.Zero && settings.PublishStatsInterval != TimeSpan.MaxValue)
             {
                 _publishStatsTaskTaskCancellable =
                     scheduler.ScheduleTellRepeatedlyCancelable(
@@ -1105,7 +1105,7 @@ namespace Akka.Cluster
         {
             Context.System.EventStream.Subscribe(Self, typeof(QuarantinedEvent));
 
-            if (_cluster.DowningProvider.DowningActorProps != null)
+            if (_cluster.DowningProvider.DowningActorProps is object)
             {
                 var props = _cluster.DowningProvider.DowningActorProps;
                 var propsWithDispatcher = props.Dispatcher == Deploy.NoDispatcherGiven
@@ -1132,7 +1132,7 @@ namespace Akka.Cluster
             _gossipTaskCancellable.Cancel();
             _failureDetectorReaperTaskCancellable.Cancel();
             _leaderActionsTaskCancellable.Cancel();
-            if (_publishStatsTaskTaskCancellable != null) _publishStatsTaskTaskCancellable.Cancel();
+            if (_publishStatsTaskTaskCancellable is object) _publishStatsTaskTaskCancellable.Cancel();
             _selfExiting.TrySetResult(Done.Instance);
         }
 
@@ -1161,14 +1161,14 @@ namespace Akka.Cluster
             var membersWithoutSelf = _latestGossip.Members.Where(m => !m.UniqueAddress.Equals(SelfUniqueAddress))
                 .ToImmutableSortedSet();
             var leader = _latestGossip.LeaderOf(membersWithoutSelf, SelfUniqueAddress);
-            if (leader != null)
+            if (leader is object)
             {
                 ClusterCore(leader.Address).Tell(new InternalClusterAction.ExitingConfirmed(SelfUniqueAddress));
                 var leader2 =
                     _latestGossip.LeaderOf(
                         membersWithoutSelf.Where(x => !x.UniqueAddress.Equals(leader)).ToImmutableSortedSet(),
                         SelfUniqueAddress);
-                if (leader2 != null)
+                if (leader2 is object)
                 {
                     ClusterCore(leader2.Address).Tell(new InternalClusterAction.ExitingConfirmed(SelfUniqueAddress));
                 }
@@ -1227,7 +1227,7 @@ namespace Akka.Cluster
                     break;
 
                 case InternalClusterAction.ITick _:
-                    if (_joinSeedNodesDeadline != null && _joinSeedNodesDeadline.IsOverdue) JoinSeedNodesWasUnsuccessful();
+                    if (_joinSeedNodesDeadline is object && _joinSeedNodesDeadline.IsOverdue) JoinSeedNodesWasUnsuccessful();
                     break;
 
                 default:
@@ -1265,11 +1265,11 @@ namespace Akka.Cluster
                     break;
 
                 case InternalClusterAction.ITick _:
-                    if (_joinSeedNodesDeadline != null && _joinSeedNodesDeadline.IsOverdue)
+                    if (_joinSeedNodesDeadline is object && _joinSeedNodesDeadline.IsOverdue)
                     {
                         JoinSeedNodesWasUnsuccessful();
                     }
-                    else if (deadline != null && deadline.IsOverdue)
+                    else if (deadline is object && deadline.IsOverdue)
                     {
                         // join attempt failed, retry
                         BecomeUninitialized();
@@ -1286,7 +1286,7 @@ namespace Akka.Cluster
 
         private void ResetJoinSeedNodesDeadline()
         {
-            _joinSeedNodesDeadline = _cluster.Settings.ShutdownAfterUnsuccessfulJoinSeedNodes != null
+            _joinSeedNodesDeadline = _cluster.Settings.ShutdownAfterUnsuccessfulJoinSeedNodes is object
                 ? Deadline.Now + _cluster.Settings.ShutdownAfterUnsuccessfulJoinSeedNodes
                 : null;
         }
@@ -1513,7 +1513,7 @@ namespace Akka.Cluster
                 }
                 else
                 {
-                    var joinDeadline = _cluster.Settings.RetryUnsuccessfulJoinAfter == null
+                    var joinDeadline = _cluster.Settings.RetryUnsuccessfulJoinAfter is null
                         ? null
                         : Deadline.Now + _cluster.Settings.RetryUnsuccessfulJoinAfter;
 
@@ -1528,7 +1528,7 @@ namespace Akka.Cluster
         /// </summary>
         public void StopSeedNodeProcess()
         {
-            if (_seedNodeProcess != null)
+            if (_seedNodeProcess is object)
             {
                 // manual join, abort current seedNodeProcess
                 Context.Stop(_seedNodeProcess);
@@ -1570,7 +1570,7 @@ namespace Akka.Cluster
                 // check by address without uid to make sure that node with same host:port is not allowed
                 // to join until previous node with that host:port has been removed from the cluster
                 var localMember = localMembers.FirstOrDefault(m => m.Address.Equals(node.Address));
-                if (localMember != null && localMember.UniqueAddress.Equals(node))
+                if (localMember is object && localMember.UniqueAddress.Equals(node))
                 {
                     // node retried join attempt, probably due to lost Welcome message
                     if (_cluster.IsInfoEnabled) _cluster.ExistingMemberIsJoiningAgain(node);
@@ -1579,7 +1579,7 @@ namespace Akka.Cluster
                         Sender.Tell(new InternalClusterAction.Welcome(SelfUniqueAddress, _latestGossip));
                     }
                 }
-                else if (localMember != null)
+                else if (localMember is object)
                 {
                     // node restarted, same host:port as existing member, but with different uid
                     // safe to down and later remove existing member
@@ -1711,7 +1711,7 @@ namespace Akka.Cluster
 
             // check if the node to DOWN is in the 'members' set
             var member = localMembers.FirstOrDefault(m => m.Address == address);
-            if (member != null && member.Status != MemberStatus.Down)
+            if (member is object && member.Status != MemberStatus.Down)
             {
                 if (_cluster.IsInfoEnabled)
                 {
@@ -1737,7 +1737,7 @@ namespace Akka.Cluster
 
                 Publish(_latestGossip);
             }
-            else if (member != null)
+            else if (member is object)
             {
                 // already down
             }
@@ -2083,7 +2083,7 @@ namespace Akka.Cluster
                                 localGossip.Members.Where(m => ValidNodeForGossip(m.UniqueAddress))
                                     .Select(m => m.UniqueAddress)));
 
-                    if (peer != null)
+                    if (peer is object)
                     {
                         if (localGossip.SeenByNode(peer)) GossipStatusTo(peer);
                         else GossipTo(peer);
@@ -2309,7 +2309,7 @@ namespace Akka.Cluster
                 }
 
                 return null;
-            }).Where(m => m != null).ToImmutableSortedSet();
+            }).Where(m => m is object).ToImmutableSortedSet();
 
             if (!removedUnreachable.IsEmpty || !removedExitingConfirmed.IsEmpty || !changedMembers.IsEmpty)
             {

@@ -358,7 +358,7 @@ namespace Helios.Concurrency
         /// <returns>TBD</returns>
         public bool QueueUserWorkItem(IRunnable runnable)
         {
-            if (runnable == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.runnable);
+            if (runnable is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.runnable);
 
             return _workQueue.TryAdd(runnable);
         }
@@ -370,7 +370,7 @@ namespace Helios.Concurrency
         /// <returns>TBD</returns>
         public bool QueueUserWorkItem(Action callback)
         {
-            if (callback == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.callback);
+            if (callback is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.callback);
 
             return _workQueue.TryAdd(new ActionRunnable(callback));
         }
@@ -382,7 +382,7 @@ namespace Helios.Concurrency
         /// <returns>TBD</returns>
         public bool QueueUserWorkItem(Action<object> callback, object state)
         {
-            if (callback == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.callback);
+            if (callback is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.callback);
 
             return _workQueue.TryAdd(new ActionWithStateRunnable(callback, state));
         }
@@ -438,7 +438,7 @@ namespace Helios.Concurrency
 
                 thread.IsBackground = pool.Settings.ThreadType == ThreadType.Background;
 
-                if (pool.Settings.Name != null)
+                if (pool.Settings.Name is object)
                     thread.Name = string.Format("{0}_{1}", pool.Settings.Name, workerId);
 
 #if UNSAFE_THREADING

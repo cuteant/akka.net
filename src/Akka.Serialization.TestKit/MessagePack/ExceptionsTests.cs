@@ -67,7 +67,7 @@ namespace Akka.Serialization.Testkit
 
         private void AssertException(Exception expected, Exception actual)
         {
-            if (expected == null && actual == null) return;
+            if (expected is null && actual is null) return;
             actual.Should().BeOfType(expected.GetType());
             actual.Message.Should().Be(expected.Message);
             actual.StackTrace.Should().Be(expected.StackTrace);
@@ -142,7 +142,7 @@ namespace Akka.Serialization.Testkit
 
             public override void GetObjectData(SerializationInfo info, StreamingContext context)
             {
-                if (info == null)
+                if (info is null)
                 {
                     throw new ArgumentNullException(nameof(info));
                 }

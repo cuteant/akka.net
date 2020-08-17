@@ -73,7 +73,7 @@ namespace Akka.Serialization
         {
             var converterNames = config.GetStringList("converters", EmptyArray<string>.Instance);
 
-            if (converterNames != null)
+            if (converterNames is object)
                 foreach (var converterName in converterNames)
                 {
                     var type = TypeUtils.ResolveType(converterName);//, true);
@@ -210,7 +210,7 @@ namespace Akka.Serialization
                     return parameters.Length == 1 && parameters[0].ParameterType == typeof(ExtendedActorSystem);
                 });
 
-            return ctor == null
+            return ctor is null
                 ? ActivatorUtils.FastCreateInstance<JsonConverter>(converterType)
                 : (JsonConverter)Activator.CreateInstance(converterType, actorSystem);
         }
@@ -225,7 +225,7 @@ namespace Akka.Serialization
                 {
                     if (member is PropertyInfo property)
                     {
-                        var hasPrivateSetter = property.GetSetMethod(true) != null;
+                        var hasPrivateSetter = property.GetSetMethod(true) is object;
                         prop.Writable = hasPrivateSetter;
                     }
                 }
@@ -260,7 +260,7 @@ namespace Akka.Serialization
             if (deserializedValue is JObject j)
             {
                 //The JObject represents a special akka.net wrapper for primitives (int,float,decimal) to preserve correct type when deserializing
-                if (j["$"] != null)
+                if (j["$"] is object)
                 {
                     var value = j["$"].Value<string>();
                     return GetValue(value);

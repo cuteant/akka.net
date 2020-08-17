@@ -46,7 +46,7 @@ namespace Akka.Persistence.MongoDb
         /// </summary>
         public override void Serialize(BsonSerializationContext context, BsonSerializationArgs args, object value)
         {
-            if (value != null)
+            if (value is object)
             {
                 // auto-register new types with MongoDB on serialization, using their full assembly name
                 RegisterNewTypesToDiscriminator(value.GetType());

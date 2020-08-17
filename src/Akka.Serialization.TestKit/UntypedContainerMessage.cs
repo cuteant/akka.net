@@ -28,7 +28,7 @@ namespace Akka.Tests.Serialization
 
         public override int GetHashCode()
         {
-            return (Contents != null ? Contents.GetHashCode() : 0);
+            return (Contents is object ? Contents.GetHashCode() : 0);
         }
 
         public static bool operator ==(UntypedContainerMessage left, UntypedContainerMessage right)

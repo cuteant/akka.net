@@ -40,32 +40,32 @@ namespace Akka.TestKit.Internal
         {
             global::System.Diagnostics.Debug.WriteLine("TestActor received " + message);
             var setIgnore = message as TestKit.TestActor.SetIgnore;
-            if(setIgnore != null)
+            if(setIgnore is object)
             {
                 _ignore = setIgnore.Ignore;
                 return true;
             }
             var watch = message as TestKit.TestActor.Watch;
-            if(watch != null)
+            if(watch is object)
             {
                 Context.Watch(watch.Actor);
                 return true;
             }
             var unwatch = message as TestKit.TestActor.Unwatch;
-            if(unwatch != null)
+            if(unwatch is object)
             {
                 Context.Unwatch(unwatch.Actor);
                 return true;
             }
             var setAutoPilot = message as TestKit.TestActor.SetAutoPilot;
-            if(setAutoPilot != null)
+            if(setAutoPilot is object)
             {
                 _autoPilot = setAutoPilot.AutoPilot;
                 return true;
             }
 
             var spawn = message as TestKit.TestActor.Spawn;
-            if (spawn != null)
+            if (spawn is object)
             {
                 var actor = spawn.Apply(Context);
                 if (spawn._supervisorStrategy.HasValue)
@@ -77,13 +77,13 @@ namespace Akka.TestKit.Internal
             }
 
             var actorRef = Sender;
-            if(_autoPilot != null)
+            if(_autoPilot is object)
             {
                 var newAutoPilot = _autoPilot.Run(actorRef, message);
                 if(!(newAutoPilot is KeepRunning))
                     _autoPilot = newAutoPilot;
             }
-            if(_ignore == null || !_ignore(message))
+            if(_ignore is null || !_ignore(message))
                 _queue.Enqueue(new RealMessageEnvelope(message, actorRef));
             return true;
         }

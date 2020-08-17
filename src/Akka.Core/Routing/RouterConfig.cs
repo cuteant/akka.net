@@ -335,7 +335,7 @@ namespace Akka.Routing
         {
             get
             {
-                return Resizer == null;
+                return Resizer is null;
             }
         }
 
@@ -345,7 +345,7 @@ namespace Akka.Routing
         /// <returns>TBD</returns>
         internal override RouterActor CreateRouterActor()
         {
-            if (Resizer == null)
+            if (Resizer is null)
                 return new RouterPoolActor(SupervisorStrategy);
 
             return new ResizablePoolActor(SupervisorStrategy);

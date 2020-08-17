@@ -447,7 +447,7 @@ namespace Akka.Persistence.Journal
                     if (kv.Value is HoconValue hoconValue)
                     {
                         var str = hoconValue.GetString();
-                        return str != null ? new[] { str } : hoconValue.GetStringList().ToArray();
+                        return str is object ? new[] { str } : hoconValue.GetStringList().ToArray();
                     }
                     else return new[] { kv.Value.ToString().Trim('"') };
                 }, StringComparer.Ordinal);

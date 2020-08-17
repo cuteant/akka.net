@@ -185,7 +185,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
         {
             get
             {
-                if ((this.generationEnvironmentField == null))
+                if ((this.generationEnvironmentField is null))
                 {
                     this.generationEnvironmentField = new global::System.Text.StringBuilder();
                 }
@@ -203,7 +203,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
         {
             get
             {
-                if ((this.errorsField == null))
+                if ((this.errorsField is null))
                 {
                     this.errorsField = new global::System.CodeDom.Compiler.CompilerErrorCollection();
                 }
@@ -217,7 +217,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
         {
             get
             {
-                if ((this.indentLengthsField == null))
+                if ((this.indentLengthsField is null))
                 {
                     this.indentLengthsField = new global::System.Collections.Generic.List<int>();
                 }
@@ -339,7 +339,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
         /// </summary>
         public void PushIndent(string indent)
         {
-            if ((indent == null))
+            if ((indent is null))
             {
                 throw new global::System.ArgumentNullException("indent");
             }
@@ -391,7 +391,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
                 }
                 set
                 {
-                    if ((value != null))
+                    if ((value is object))
                     {
                         this.formatProviderField  = value;
                     }
@@ -402,14 +402,14 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
             /// </summary>
             public string ToStringWithCulture(object objectToConvert)
             {
-                if ((objectToConvert == null))
+                if ((objectToConvert is null))
                 {
                     throw new global::System.ArgumentNullException("objectToConvert");
                 }
                 System.Type t = objectToConvert.GetType();
                 System.Reflection.MethodInfo method = t.GetMethod("ToString", new System.Type[] {
                             typeof(System.IFormatProvider)});
-                if ((method == null))
+                if ((method is null))
                 {
                     return objectToConvert.ToString();
                 }

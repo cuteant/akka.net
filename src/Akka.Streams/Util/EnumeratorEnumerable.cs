@@ -66,7 +66,7 @@ namespace Akka.Streams.Util
             /// </exception>
             public bool MoveNext()
             {
-                if (_current == null || !_current.MoveNext())
+                if (_current is null || !_current.MoveNext())
                 {
                     _current = _enumeratorFactory();
                     if (!_current.MoveNext()) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_empty_iterator);

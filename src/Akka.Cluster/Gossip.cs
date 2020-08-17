@@ -320,7 +320,7 @@ namespace Akka.Cluster
         /// <returns>TBD</returns>
         public bool IsLeader(UniqueAddress node, UniqueAddress selfUniqueAddress)
         {
-            return Leader(selfUniqueAddress) == node && node != null;
+            return Leader(selfUniqueAddress) == node && node is object;
         }
 
         /// <summary>

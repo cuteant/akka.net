@@ -57,7 +57,7 @@ namespace Akka.Remote.TestKit
         private static IEventLoopGroup _clientPool;
         private static IEventLoopGroup GetClientWorkerPool(int poolSize)
         {
-            if (_clientPool == null)
+            if (_clientPool is null)
             {
                 _clientPool = new MultithreadEventLoopGroup(poolSize);
             }
@@ -67,7 +67,7 @@ namespace Akka.Remote.TestKit
         private static IEventLoopGroup _serverPool;
         private static IEventLoopGroup GetServerPool(int poolSize)
         {
-            if (_serverPool == null)
+            if (_serverPool is null)
             {
                 _serverPool = new MultithreadEventLoopGroup(poolSize);
             }
@@ -78,7 +78,7 @@ namespace Akka.Remote.TestKit
 
         private static IEventLoopGroup GetServerWorkerPool(int poolSize)
         {
-            if (_serverWorkerPool == null)
+            if (_serverWorkerPool is null)
             {
                 _serverWorkerPool = new MultithreadEventLoopGroup(poolSize);
             }

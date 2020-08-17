@@ -16,7 +16,7 @@ namespace Akka.Logger.Serilog
         public static ILoggingAdapter ForContext(this ILoggingAdapter adapter, string propertyName, object value, bool destructureObjects = false)
         {
             var customAdapter = adapter as SerilogLoggingAdapter;
-            return customAdapter == null ? adapter : customAdapter.SetContextProperty(propertyName, value, destructureObjects);
+            return customAdapter is null ? adapter : customAdapter.SetContextProperty(propertyName, value, destructureObjects);
         }
 
         /// <summary>

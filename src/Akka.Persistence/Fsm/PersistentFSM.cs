@@ -94,7 +94,7 @@ namespace Akka.Persistence.Fsm
         protected override void ApplyState(State<TState, TData, TEvent> nextState)
         {
             var eventsToPersist = new List<object>();
-            if (nextState.DomainEvents != null)
+            if (nextState.DomainEvents is object)
             {
                 foreach (var domainEvent in nextState.DomainEvents)
                 {
@@ -279,7 +279,7 @@ namespace Akka.Persistence.Fsm
             {
                 unchecked
                 {
-                    var hashCode = (StateIdentifier != null ? StateIdentifier.GetHashCode() : 0);
+                    var hashCode = (StateIdentifier is object ? StateIdentifier.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ EqualityComparer<TD>.Default.GetHashCode(Data);
                     hashCode = (hashCode * 397) ^ Timeout.GetHashCode();
                     return hashCode;

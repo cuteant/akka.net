@@ -36,7 +36,7 @@ namespace Akka.Remote.TestKit.Protocol
                 //{
                 //    return;
                 //}
-                if (message == null) { return; }
+                if (message is null) { return; }
                 buffer = Unpooled.WrappedBuffer(MessagePackSerializer.Serialize<object>(message, TypelessDefaultResolver.Instance));
                 output.Add(buffer);
                 buffer = null;

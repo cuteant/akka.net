@@ -48,7 +48,7 @@ namespace Akka.Routing
         /// <returns>TBD</returns>
         protected override ActorCell NewCell()
         {
-            ActorCell cell = Props.RouterConfig is Pool pool && pool.Resizer != null
+            ActorCell cell = Props.RouterConfig is Pool pool && pool.Resizer is object
                 ? new ResizablePoolCell(System, this, Props, Dispatcher, _routeeProps, Supervisor, pool)
                 : new RoutedActorCell(System, this, Props, Dispatcher, _routeeProps, Supervisor);
 

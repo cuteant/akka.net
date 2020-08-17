@@ -28,7 +28,7 @@ namespace Akka.Tools.MatchHandler
         /// </exception>
         public TypeHandler(Type handlesType)
         {
-            if(handlesType == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.handlesType, AkkaExceptionResource.ArgumentNull_Type);
+            if(handlesType is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.handlesType, AkkaExceptionResource.ArgumentNull_Type);
             _handlesType = handlesType;
         }
 

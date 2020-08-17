@@ -88,7 +88,7 @@ namespace Akka.Cluster.Sharding
                 ? Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(idleInterval, idleInterval, Self, Shard.PassivateIdleTick.Instance, Self)
                 : null;
 
-            if (settings.LeaseSettings != null)
+            if (settings.LeaseSettings is object)
             {
                 Lease = LeaseProvider.Get(Context.System).GetLease(
                     $"{Context.System.Name}-shard-{typeName}-{shardId}",
@@ -206,7 +206,7 @@ namespace Akka.Cluster.Sharding
             IdByRef = IdByRef.Remove(tref);
             RefById = RefById.Remove(id);
 
-            if (PassivateIdleTask != null)
+            if (PassivateIdleTask is object)
             {
                 LastMessageTimestamp = LastMessageTimestamp.Remove(id);
             }

@@ -102,10 +102,10 @@ namespace Akka.Configuration
         public static Config FromResource(string resourceName, object instanceInAssembly)
         {
             var type = instanceInAssembly as Type;
-            if (type != null)
+            if (type is object)
                 return FromResource(resourceName, type.Assembly);
             var assembly = instanceInAssembly as Assembly;
-            if (assembly != null)
+            if (assembly is object)
                 return FromResource(resourceName, assembly);
             return FromResource(resourceName, instanceInAssembly.GetType().Assembly);
         }
@@ -132,7 +132,7 @@ namespace Akka.Configuration
         {
             using(Stream stream = assembly.GetManifestResourceStream(resourceName))
             {
-                Debug.Assert(stream != null, "stream != null");
+                Debug.Assert(stream is object, "stream is object");
                 using (var reader = new StreamReader(stream))
                 {
                     string result = reader.ReadToEnd();

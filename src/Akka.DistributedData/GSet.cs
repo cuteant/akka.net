@@ -137,7 +137,7 @@ namespace Akka.DistributedData
         /// <returns>TBD</returns>
         public GSet<T> Add(T element)
         {
-            var newDelta = Delta != null
+            var newDelta = Delta is object
                 ? new GSet<T>(Delta.Elements.Add(element))
                 : new GSet<T>(ImmutableHashSet.Create(element));
             return AssignAncestor(new GSet<T>(Elements.Add(element), newDelta));
@@ -199,7 +199,7 @@ namespace Akka.DistributedData
         public GSet<T> Delta => _syncRoot;
         public GSet<T> MergeDelta(GSet<T> delta) => Merge(delta);
 
-        public GSet<T> ResetDelta() => Delta == null ? this : AssignAncestor(new GSet<T>(Elements));
+        public GSet<T> ResetDelta() => Delta is null ? this : AssignAncestor(new GSet<T>(Elements));
         IDeltaReplicatedData IReplicatedDelta.Zero => Empty;
         public Type SetType { get; } = typeof(T);
     }

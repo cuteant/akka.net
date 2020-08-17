@@ -92,7 +92,7 @@ namespace Akka.Persistence.EventStore.Snapshot
 
             var result = await FindSnapshotAsync(streamName, metadata.SequenceNr, timestamp);
 
-            if (result.Snapshot == null) { return; }
+            if (result.Snapshot is null) { return; }
 
             streamMetadata = streamMetadata.SetTruncateBefore(result.EventNumber + 1);
             await _conn.SetStreamMetadataAsync(streamName, ExpectedVersion.Any, streamMetadata.Build()).ConfigureAwait(false);
@@ -112,7 +112,7 @@ namespace Akka.Persistence.EventStore.Snapshot
 
             var result = await FindSnapshotAsync(streamName, criteria.MaxSequenceNr, timestamp);
 
-            if (result.Snapshot == null) { return; }
+            if (result.Snapshot is null) { return; }
 
             streamMetadata = streamMetadata.SetTruncateBefore(result.EventNumber + 1);
             await _conn.SetStreamMetadataAsync(streamName, ExpectedVersion.Any, streamMetadata.Build()).ConfigureAwait(false);
@@ -162,7 +162,7 @@ namespace Akka.Persistence.EventStore.Snapshot
                                 .FirstOrDefault(s =>
                                         (!maxTimeStamp.HasValue || s.Snapshot.Metadata.Timestamp <= maxTimeStamp.Value) &&
                                         s.Snapshot.Metadata.SequenceNr <= maxSequenceNr);
-            } while (snapshotResult == null && slice.Status == SliceReadStatus.Success);
+            } while (snapshotResult is null && slice.Status == SliceReadStatus.Success);
 
             return snapshotResult ?? SelectedSnapshotResult.Empty;
         }

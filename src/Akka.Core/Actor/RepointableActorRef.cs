@@ -119,7 +119,7 @@ namespace Akka.Actor
         public RepointableActorRef Initialize(bool async)
         {
             var underlying = Underlying;
-            if (underlying != null) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_Initialize); }
+            if (underlying is object) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_Initialize); }
 
             var newCell = new UnstartedCell(System, this, Props, Supervisor);
             SwapUnderlying(newCell);
@@ -140,7 +140,7 @@ namespace Akka.Actor
         public void Point()
         {
             var underlying = Underlying;
-            if (underlying == null) AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_Underlying);
+            if (underlying is null) AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_Underlying);
 
             if (underlying is UnstartedCell unstartedCell)
             {
@@ -250,7 +250,7 @@ namespace Akka.Actor
         {
             get
             {
-                if (Underlying == null) AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_IsStarted);
+                if (Underlying is null) AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_RepointableActorRef_IsStarted);
                 return !(Underlying is UnstartedCell);
             }
         }

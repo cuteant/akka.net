@@ -37,7 +37,7 @@ namespace Akka.DistributedData.Serialization
         {
             lock (this)
             {
-                if (_ser == null)
+                if (_ser is null)
                 {
                     _ser = new Akka.Serialization.Serialization(System);
                 }
@@ -51,7 +51,7 @@ namespace Akka.DistributedData.Serialization
         {
             get
             {
-                if (_protocol == null)
+                if (_protocol is null)
                     _protocol = System.Provider.DefaultAddress.Protocol;
                 return _protocol;
             }
@@ -63,7 +63,7 @@ namespace Akka.DistributedData.Serialization
         {
             get
             {
-                if (_transportInfo == null)
+                if (_transportInfo is null)
                 {
                     var address = System.Provider.DefaultAddress;
                     _transportInfo = new Information(address, System);

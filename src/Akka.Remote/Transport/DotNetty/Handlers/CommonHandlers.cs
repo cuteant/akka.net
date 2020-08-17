@@ -64,7 +64,7 @@ namespace Akka.Remote.Transport.DotNetty
         {
             var localAddress = DotNettyTransport.MapSocketToAddress((IPEndPoint)channel.LocalAddress, Transport.SchemeIdentifier, Transport.System.Name, Transport.Settings.Hostname);
 
-            if (localAddress != null)
+            if (localAddress is object)
             {
                 var handle = CreateHandle(channel, localAddress, remoteAddress);
                 handle.ReadHandlerSource.Task.Then(AfterSetupReadHandlerAction, this, channel, remoteSocketAddress, msg,

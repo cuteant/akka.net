@@ -36,7 +36,7 @@ namespace Akka.Actor.Internal
         {
             var actorCell = (ActorCell)context;
             Mailbox = actorCell.Mailbox.MessageQueue as IDequeBasedMessageQueueSemantics;
-            if (Mailbox == null) { AkkaThrowHelper.ThrowNotSupportedException(actorCell); }
+            if (Mailbox is null) { AkkaThrowHelper.ThrowNotSupportedException(actorCell); }
             _theStash = new Deque<Envelope>();
             _actorCell = actorCell;
 

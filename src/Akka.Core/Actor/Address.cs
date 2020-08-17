@@ -36,8 +36,8 @@ namespace Akka.Actor
         {
             public int Compare(Address x, Address y)
             {
-                if (x == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.x);
-                if (y == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.y);
+                if (x is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.x);
+                if (y is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.y);
 
                 if (ReferenceEquals(x, y)) return 0;
 
@@ -167,10 +167,10 @@ namespace Akka.Actor
         {
             unchecked
             {
-                var hashCode = (Host != null ? Host.GetHashCode() : 0);
+                var hashCode = (Host is object ? Host.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Port.GetHashCode();
-                hashCode = (hashCode * 397) ^ (System != null ? System.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Protocol != null ? Protocol.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (System is object ? System.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Protocol is object ? Protocol.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -178,7 +178,7 @@ namespace Akka.Actor
         int IComparable.CompareTo(object obj)
         {
             var address = obj as Address;
-            if (null == address) { AkkaThrowHelper.ThrowArgumentException_AddrCompareTo(obj); }
+            if (address is null) { AkkaThrowHelper.ThrowArgumentException_AddrCompareTo(obj); }
             return CompareTo(address);
         }
 
@@ -364,7 +364,7 @@ namespace Akka.Actor
         public bool Equals(Address x, Address y)
         {
             if (ReferenceEquals(x, y)) { return true; }
-            if (null == x/* || null == y*/) { return false; }
+            if (x is null/* || y is null*/) { return false; }
             return x.Equals(y);
         }
 

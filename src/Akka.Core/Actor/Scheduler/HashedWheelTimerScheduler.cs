@@ -536,9 +536,9 @@ namespace Akka.Actor
             /// <param name="reg">The scheduled task.</param>
             public void AddRegistration(SchedulerRegistration reg)
             {
-                System.Diagnostics.Debug.Assert(reg.Bucket == null);
+                System.Diagnostics.Debug.Assert(reg.Bucket is null);
                 reg.Bucket = this;
-                if (_head == null) // first time the bucket has been used
+                if (_head is null) // first time the bucket has been used
                 {
                     _head = _tail = reg;
                 }
@@ -556,7 +556,7 @@ namespace Akka.Actor
             /// <param name="reg">The registration scheduled for repeating</param>
             public void Reschedule(SchedulerRegistration reg)
             {
-                if (_rescheduleHead == null)
+                if (_rescheduleHead is null)
                 {
                     _rescheduleHead = _rescheduleTail = reg;
                 }
@@ -577,7 +577,7 @@ namespace Akka.Actor
                 for (; ; )
                 {
                     var reg = Poll();
-                    if (reg == null)
+                    if (reg is null)
                         return;
                     if (reg.Cancelled)
                         continue;
@@ -594,7 +594,7 @@ namespace Akka.Actor
                 for (; ; )
                 {
                     var reg = PollReschedule();
-                    if (reg == null)
+                    if (reg is null)
                         return;
                     if (reg.Cancelled)
                         continue;
@@ -613,7 +613,7 @@ namespace Akka.Actor
                 var current = _head;
 
                 // process all registrations
-                while (current != null)
+                while (current is object)
                 {
                     bool remove = false;
                     if (current.Cancelled) // check for cancellation first
@@ -681,11 +681,11 @@ namespace Akka.Actor
 
                 // Remove work that's already been completed or cancelled
                 // Work that is scheduled to repeat will be handled separately
-                if (reg.Prev != null)
+                if (reg.Prev is object)
                 {
                     reg.Prev.Next = next;
                 }
-                if (reg.Next != null)
+                if (reg.Next is object)
                 {
                     reg.Next.Prev = reg.Prev;
                 }
@@ -715,12 +715,12 @@ namespace Akka.Actor
             private SchedulerRegistration Poll()
             {
                 var head = _head;
-                if (head == null)
+                if (head is null)
                 {
                     return null;
                 }
                 var next = head.Next;
-                if (next == null)
+                if (next is null)
                 {
                     _tail = _head = null;
                 }
@@ -737,12 +737,12 @@ namespace Akka.Actor
             private SchedulerRegistration PollReschedule()
             {
                 var head = _rescheduleHead;
-                if (head == null)
+                if (head is null)
                 {
                     return null;
                 }
                 var next = head.Next;
-                if (next == null)
+                if (next is null)
                 {
                     _rescheduleTail = _rescheduleHead = null;
                 }

@@ -55,10 +55,10 @@ namespace Akka.Actor
             {
                 if (tresult.IsSuccessfully())
                 {
-                    _recipient.Tell(_success != null ? _success(tresult.Result) : tresult.Result, _sender);
+                    _recipient.Tell(_success is object ? _success(tresult.Result) : tresult.Result, _sender);
                     return;
                 }
-                _recipient.Tell(_failure != null ? _failure(tresult.Exception) : new Status.Failure(tresult.Exception), _sender);
+                _recipient.Tell(_failure is object ? _failure(tresult.Exception) : new Status.Failure(tresult.Exception), _sender);
             }
         }
 
@@ -98,10 +98,10 @@ namespace Akka.Actor
             {
                 if (tresult.IsSuccessfully())
                 {
-                    if (_success != null) { _recipient.Tell(_success(), _sender); }
+                    if (_success is object) { _recipient.Tell(_success(), _sender); }
                     return;
                 }
-                _recipient.Tell(_failure != null ? _failure(tresult.Exception) : new Status.Failure(tresult.Exception), _sender);
+                _recipient.Tell(_failure is object ? _failure(tresult.Exception) : new Status.Failure(tresult.Exception), _sender);
             }
         }
     }

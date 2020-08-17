@@ -108,7 +108,7 @@ namespace Akka.TestKit
             var stackTrace = new StackTrace(0);
             var name = stackTrace.GetFrames().
                 Select(f => f.GetMethod()).
-                Where(m => m.DeclaringType != null).
+                Where(m => m.DeclaringType is object).
                 SkipWhile(m => m.DeclaringType.Name == "AkkaSpec").
                 Select(m => _nameReplaceRegex.Replace(m.DeclaringType.Name + "-" + systemNumber, "-")).
                 FirstOrDefault() ?? "test";
@@ -126,7 +126,7 @@ namespace Akka.TestKit
             if(!success)
                 Assertions.Fail(string.Format("expected message of type {0} but timed out after {1}", typeof(T), GetTimeoutOrDefault(timeout)));
             var message = envelope.Message;
-            Assertions.AssertTrue(message != null, string.Format("expected {0} but got null message", hint));
+            Assertions.AssertTrue(message is object, string.Format("expected {0} but got null message", hint));
             //TODO: Check next line. 
             Assertions.AssertTrue(function.GetMethodInfo().GetParameters().Any(x => x.ParameterType.IsInstanceOfType(message)), string.Format("expected {0} but got {1} instead", hint, message));
             return function.Invoke(message);

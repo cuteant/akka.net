@@ -53,7 +53,7 @@ namespace Akka.Routing
             Pool pool)
             : base(system, self, routerProps, dispatcher, routeeProps, supervisor)
         {
-            if (pool.Resizer == null) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_ResizablePoolCell_Pool, AkkaExceptionArgument.pool);
+            if (pool.Resizer is null) AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_ResizablePoolCell_Pool, AkkaExceptionArgument.pool);
 
             resizer = pool.Resizer;
             _pool = pool;

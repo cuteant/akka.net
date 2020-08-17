@@ -31,7 +31,7 @@ namespace Akka.Persistence.Snapshot
         protected SnapshotStore()
         {
             var extension = Persistence.Instance.Apply(Context.System);
-            if (extension == null) { ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Init_SnapshotStore); }
+            if (extension is null) { ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Init_SnapshotStore); }
 
             _publish = extension.Settings.Internal.PublishPluginCommands;
             var config = extension.ConfigFor(Self);

@@ -233,7 +233,7 @@ namespace Akka.Actor
                 else
                 {
                     //Current is not a LocalActorRef
-                    if (current != null)
+                    if (current is object)
                     {
                         var rest = name.Skip(index).ToList();
                         return current.AsInstanceOf<IInternalActorRef>().GetChild(rest);

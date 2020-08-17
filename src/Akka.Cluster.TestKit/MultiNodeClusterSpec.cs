@@ -130,7 +130,7 @@ namespace Akka.Cluster.TestKit
             {
                 if (message is SendEnd)
                 {
-                    if (_target != null)
+                    if (_target is object)
                         Context.ActorSelection(new RootActorPath(_target) / Self.Path.Elements).Tell(End.Instance);
                     return;
                 }
@@ -178,7 +178,7 @@ namespace Akka.Cluster.TestKit
 
         void MuteLog(ActorSystem sys = null)
         {
-            if (sys == null) sys = Sys;
+            if (sys is null) sys = Sys;
             if (!sys.Log.IsDebugEnabled)
             {
                 var patterns = new[]
@@ -274,8 +274,8 @@ namespace Akka.Cluster.TestKit
 
         public void JoinWithin(RoleName joinNode, TimeSpan? max = null, TimeSpan? interval = null)
         {
-            if (max == null) max = RemainingOrDefault;
-            if (interval == null) interval = TimeSpan.FromSeconds(1);
+            if (max is null) max = RemainingOrDefault;
+            if (interval is null) interval = TimeSpan.FromSeconds(1);
 
             Cluster.Join(GetAddress(joinNode));
             AwaitCondition(() =>
@@ -354,9 +354,9 @@ namespace Akka.Cluster.TestKit
             ImmutableHashSet<Address> canNotBePartOfMemberRing = null,
             TimeSpan? timeout = null)
         {
-            if (canNotBePartOfMemberRing == null)
+            if (canNotBePartOfMemberRing is null)
                 canNotBePartOfMemberRing = ImmutableHashSet.Create<Address>();
-            if (timeout == null) timeout = TimeSpan.FromSeconds(25);
+            if (timeout is null) timeout = TimeSpan.FromSeconds(25);
             Within(timeout.Value, () =>
             {
                 if (canNotBePartOfMemberRing.Any()) // don't run this on an empty set
@@ -369,7 +369,7 @@ namespace Akka.Cluster.TestKit
                 AwaitAssert(() => _assertions.AssertTrue(ClusterView.Members.All(m => m.Status == MemberStatus.Up), "All members should be up"));
                 // clusterView.leader is updated by LeaderChanged, await that to be updated also
                 var firstMember = ClusterView.Members.FirstOrDefault();
-                var expectedLeader = firstMember == null ? null : firstMember.Address;
+                var expectedLeader = firstMember is null ? null : firstMember.Address;
                 AwaitAssert(() => _assertions.AssertEqual(expectedLeader, ClusterView.Leader));
             });
         }
@@ -394,7 +394,7 @@ namespace Akka.Cluster.TestKit
         /// </summary>
         public RoleName RoleOfLeader(ImmutableList<RoleName> nodesInCluster)
         {
-            if (nodesInCluster == null) nodesInCluster = Roles;
+            if (nodesInCluster is null) nodesInCluster = Roles;
             _assertions.AssertFalse(nodesInCluster.Count == 0);
             return nodesInCluster.Sort(_roleNameComparer).First();
         }
@@ -430,7 +430,7 @@ namespace Akka.Cluster.TestKit
         public void MarkNodeAsAvailable(Address address)
         {
             var puppet = FailureDetectorPuppet(address);
-            if (puppet != null) puppet.MarkNodeAsAvailable();
+            if (puppet is object) puppet.MarkNodeAsAvailable();
         }
 
         /// <summary>
@@ -446,7 +446,7 @@ namespace Akka.Cluster.TestKit
                 // to create the FailureDetectorPuppet in the FailureDetectorRegistry
                 Cluster.FailureDetector.Heartbeat(address);
                 var puppet = FailureDetectorPuppet(address);
-                if (puppet != null) puppet.MarkNodeAsUnavailable();
+                if (puppet is object) puppet.MarkNodeAsUnavailable();
             }
         }
 

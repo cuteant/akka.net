@@ -44,7 +44,7 @@ namespace Akka.Actor
             if (config.IsNullOrEmpty()) { return; }
 
             var rootObj = config.Root.GetObject();
-            //if (rootObj == null) return;
+            //if (rootObj is null) return;
             var unwrapped = rootObj.Unwrapped.Where(d => !string.Equals(defaultKey, d.Key, StringComparison.Ordinal)).ToArray();
             foreach (var d in unwrapped.Select(x => ParseConfig(x.Key, config.GetConfig(x.Key.BetweenDoubleQuotes()))))
             {
@@ -139,7 +139,7 @@ namespace Akka.Actor
             var path = string.Format("akka.actor.router.type-mapping.{0}", routerTypeAlias);
             var routerTypeName = _settings.Config.GetString(path, null);
             var routerType = TypeUtil.ResolveType(routerTypeName);
-            Debug.Assert(routerType != null, "routerType != null");
+            Debug.Assert(routerType is object, "routerType is object");
             var routerConfig = (RouterConfig)Activator.CreateInstance(routerType, deployment);
 
             return routerConfig;

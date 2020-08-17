@@ -18,10 +18,10 @@ namespace Reactive.Streams.Example.Unicast
         public virtual void OnSubscribe(ISubscription subscription)
         {
             // As per rule 2.13, we need to throw a `ArgumentNullException` if the `Subscription` is `null`
-            if (subscription == null)
+            if (subscription is null)
                 throw new ArgumentNullException(nameof(subscription));
 
-            if (_subscription != null)
+            if (_subscription is object)
                 // If someone has made a mistake and added this Subscriber multiple times, let's handle it gracefully
             {
                 try
@@ -63,7 +63,7 @@ namespace Reactive.Streams.Example.Unicast
 
         public virtual void OnNext(T element)
         {
-            if (_subscription == null)
+            if (_subscription is null)
                 // Technically this check is not needed, since we are expecting Publishers to conform to the spec
                 System.Diagnostics.Trace.TraceError(
                     new IllegalStateException(
@@ -72,7 +72,7 @@ namespace Reactive.Streams.Example.Unicast
             else
             {
                 // As per rule 2.13, we need to throw a `ArgumentNullException` if the `element` is `null`
-                if (element == null)
+                if (element is null)
                     throw new ArgumentNullException(nameof(element));
 
                 if (!_done)
@@ -151,7 +151,7 @@ namespace Reactive.Streams.Example.Unicast
 
         public virtual void OnComplete()
         {
-            if (_subscription == null) // Technically this check is not needed, since we are expecting Publishers to conform to the spec
+            if (_subscription is null) // Technically this check is not needed, since we are expecting Publishers to conform to the spec
                 System.Diagnostics.Trace.TraceError(
                     new IllegalStateException(
                         "Publisher violated the Reactive Streams rule 1.09 signalling onNext prior to onSubscribe."
@@ -165,7 +165,7 @@ namespace Reactive.Streams.Example.Unicast
 
         public virtual void OnError(Exception cause)
         {
-            if (_subscription == null) // Technically this check is not needed, since we are expecting Publishers to conform to the spec
+            if (_subscription is null) // Technically this check is not needed, since we are expecting Publishers to conform to the spec
                 System.Diagnostics.Trace.TraceError(
                     new IllegalStateException(
                         "Publisher violated the Reactive Streams rule 1.09 signalling onNext prior to onSubscribe."
@@ -173,7 +173,7 @@ namespace Reactive.Streams.Example.Unicast
             else
             {
                 // As per rule 2.13, we need to throw a `ArgumentNullException` if the `Throwable` is `null`
-                if (cause == null)
+                if (cause is null)
                     throw new ArgumentNullException(nameof(cause));
 
                 // Here we are not allowed to call any methods on the `Subscription` or the `Publisher`, as per rule 2.3

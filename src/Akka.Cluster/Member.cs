@@ -326,7 +326,7 @@ namespace Akka.Cluster
         /// If neither are a valid transition, we return <c>null</c></returns>
         public static Member PickNextTransition(Member a, Member b)
         {
-            if (a == null || b == null || !a.Equals(b))
+            if (a is null || b is null || !a.Equals(b))
                 return null;
 
             // if the member statuses are equal, then it doesn't matter which one we return
@@ -460,7 +460,7 @@ namespace Akka.Cluster
         public bool Equals(Member x, Member y)
         {
             if (ReferenceEquals(x, y)) { return true; }
-            if (null == x/* || null == y*/) { return false; }
+            if (x is null/* || y is null*/) { return false; }
             return x.Equals(y);
         }
 
@@ -537,7 +537,7 @@ namespace Akka.Cluster
 
         internal int CompareTo(UniqueAddress uniqueAddress, IComparer<Address> addresComparer)
         {
-            if (uniqueAddress == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.uniqueAddress);
+            if (uniqueAddress is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.uniqueAddress);
 
             var result = addresComparer.Compare(Address, uniqueAddress.Address);
             return 0u >= (uint)result ? Uid.CompareTo(uniqueAddress.Uid) : result;
@@ -583,7 +583,7 @@ namespace Akka.Cluster
         public bool Equals(UniqueAddress x, UniqueAddress y)
         {
             if (ReferenceEquals(x, y)) { return true; }
-            if (null == x/* || null == y*/) { return false; }
+            if (x is null/* || y is null*/) { return false; }
             return x.Equals(y);
         }
 

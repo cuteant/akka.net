@@ -31,7 +31,7 @@ namespace Akka.Remote.TestKit
         public override bool Equals(object obj) => obj is RoleName role && Equals(role);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => (Name != null ? Name.GetHashCode() : 0);
+        public override int GetHashCode() => (Name is object ? Name.GetHashCode() : 0);
 
         /// <summary>
         /// Compares two specified <see cref="RoleName"/> for equality.
@@ -249,7 +249,7 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ (_address != null ? _address.GetHashCode() : 0);
+                return ((_name is object ? _name.GetHashCode() : 0) * 397) ^ (_address is object ? _address.GetHashCode() : 0);
             }
         }
 
@@ -321,7 +321,7 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ _timeout.GetHashCode();
+                return ((_name is object ? _name.GetHashCode() : 0) * 397) ^ _timeout.GetHashCode();
             }
         }
 
@@ -388,7 +388,7 @@ namespace Akka.Remote.TestKit
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (_name != null ? _name.GetHashCode() : 0);
+            return (_name is object ? _name.GetHashCode() : 0);
         }
 
         /// <summary>
@@ -453,7 +453,7 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                return ((_name != null ? _name.GetHashCode() : 0) * 397) ^ _success.GetHashCode();
+                return ((_name is object ? _name.GetHashCode() : 0) * 397) ^ _success.GetHashCode();
             }
         }
 
@@ -533,8 +533,8 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                int hashCode = (_node != null ? _node.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_target != null ? _target.GetHashCode() : 0);
+                int hashCode = (_node is object ? _node.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_target is object ? _target.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ _direction.GetHashCode();
                 hashCode = (hashCode * 397) ^ _rateMBit.GetHashCode();
                 return hashCode;
@@ -610,7 +610,7 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                var hashCode = (_target != null ? _target.GetHashCode() : 0);
+                var hashCode = (_target is object ? _target.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ _direction.GetHashCode();
                 hashCode = (hashCode * 397) ^ _rateMBit.GetHashCode();
                 return hashCode;
@@ -686,8 +686,8 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                int hashCode = (_node != null ? _node.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (_target != null ? _target.GetHashCode() : 0);
+                int hashCode = (_node is object ? _node.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_target is object ? _target.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ _abort.GetHashCode();
                 return hashCode;
             }
@@ -755,7 +755,7 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                return ((_target != null ? _target.GetHashCode() : 0) * 397) ^ _abort.GetHashCode();
+                return ((_target is object ? _target.GetHashCode() : 0) * 397) ^ _abort.GetHashCode();
             }
         }
 
@@ -821,7 +821,7 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                return ((_node != null ? _node.GetHashCode() : 0) * 397) ^ (_shutdownOrExit != null ? _shutdownOrExit.GetHashCode() : 0);
+                return ((_node is object ? _node.GetHashCode() : 0) * 397) ^ (_shutdownOrExit is object ? _shutdownOrExit.GetHashCode() : 0);
             }
         }
 
@@ -878,7 +878,7 @@ namespace Akka.Remote.TestKit
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (_shutdownOrExit != null ? _shutdownOrExit.GetHashCode() : 0);
+            return (_shutdownOrExit is object ? _shutdownOrExit.GetHashCode() : 0);
         }
 
         /// <summary>
@@ -934,7 +934,7 @@ namespace Akka.Remote.TestKit
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (_node != null ? _node.GetHashCode() : 0);
+            return (_node is object ? _node.GetHashCode() : 0);
         }
 
         /// <summary>
@@ -999,7 +999,7 @@ namespace Akka.Remote.TestKit
         {
             unchecked
             {
-                return ((_node != null ? _node.GetHashCode() : 0) * 397) ^ (_addr != null ? _addr.GetHashCode() : 0);
+                return ((_node is object ? _node.GetHashCode() : 0) * 397) ^ (_addr is object ? _addr.GetHashCode() : 0);
             }
         }
 
@@ -1070,7 +1070,7 @@ namespace Akka.Remote.TestKit
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (_node != null ? _node.GetHashCode() : 0);
+            return (_node is object ? _node.GetHashCode() : 0);
         }
 
         /// <summary>

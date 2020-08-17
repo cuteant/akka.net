@@ -108,10 +108,10 @@ namespace Akka.Cluster
             {
                 unchecked
                 {
-                    var hashCode = (Observer != null ? Observer.GetHashCode() : 0);
+                    var hashCode = (Observer is object ? Observer.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ Version.GetHashCode();
                     hashCode = (hashCode * 397) ^ Status.GetHashCode();
-                    hashCode = (hashCode * 397) ^ (Subject != null ? Subject.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Subject is object ? Subject.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -274,8 +274,8 @@ namespace Akka.Cluster
             var newVersions = Versions.SetItem(observer, v);
             var newRecord = new Record(observer, subject, status, v);
             var oldObserverRows = ObserverRows(observer);
-            if (oldObserverRows == null && status == ReachabilityStatus.Reachable) return this;
-            if (oldObserverRows == null) return new Reachability(Records.Add(newRecord), newVersions);
+            if (oldObserverRows is null && status == ReachabilityStatus.Reachable) return this;
+            if (oldObserverRows is null) return new Reachability(Records.Add(newRecord), newVersions);
 
             if (!oldObserverRows.TryGetValue(subject, out var oldRecord))
             {
@@ -315,19 +315,19 @@ namespace Akka.Cluster
                 var rows1 = ObserverRows(observer);
                 var rows2 = other.ObserverRows(observer);
 
-                if (rows1 != null && rows2 != null)
+                if (rows1 is object && rows2 is object)
                 {
                     var rows = observerVersion1 > observerVersion2 ? rows1 : rows2;
                     foreach (var record in rows.Values.Where(r => allowed.Contains(r.Subject)))
                         recordBuilder.Add(record);
                 }
-                if (rows1 != null && rows2 == null)
+                if (rows1 is object && rows2 is null)
                 {
                     if (observerVersion1 > observerVersion2)
                         foreach (var record in rows1.Values.Where(r => allowed.Contains(r.Subject)))
                             recordBuilder.Add(record);
                 }
-                if (rows1 == null && rows2 != null)
+                if (rows1 is null && rows2 is object)
                 {
                     if (observerVersion2 > observerVersion1)
                         foreach (var record in rows2.Values.Where(r => allowed.Contains(r.Subject)))
@@ -384,7 +384,7 @@ namespace Akka.Cluster
         public ReachabilityStatus Status(UniqueAddress observer, UniqueAddress subject)
         {
             var observerRows = ObserverRows(observer);
-            if (observerRows == null) return ReachabilityStatus.Reachable;
+            if (observerRows is null) return ReachabilityStatus.Reachable;
 
             if (!observerRows.TryGetValue(subject, out var record))
                 return ReachabilityStatus.Reachable;
@@ -465,7 +465,7 @@ namespace Akka.Cluster
         public ImmutableHashSet<UniqueAddress> AllUnreachableFrom(UniqueAddress observer)
         {
             var observerRows = ObserverRows(observer);
-            if (observerRows == null) return ImmutableHashSet.Create<UniqueAddress>(UniqueAddressComparer.Instance);
+            if (observerRows is null) return ImmutableHashSet.Create<UniqueAddress>(UniqueAddressComparer.Instance);
             return
                 ImmutableHashSet.CreateRange(UniqueAddressComparer.Instance,
                     observerRows.Where(p => p.Value.Status == ReachabilityStatus.Unreachable).Select(p => p.Key));
@@ -511,7 +511,7 @@ namespace Akka.Cluster
         public ImmutableList<Record> RecordsFrom(UniqueAddress observer)
         {
             var rows = ObserverRows(observer);
-            if (rows == null) return ImmutableList.Create<Record>();
+            if (rows is null) return ImmutableList.Create<Record>();
             return rows.Values.ToImmutableList();
         }
 
@@ -538,7 +538,7 @@ namespace Akka.Cluster
             foreach (var observer in Versions.Keys)
             {
                 var rows = ObserverRows(observer);
-                if (rows == null) continue;
+                if (rows is null) continue;
 
                 builder.AppendJoin(", ", rows, (b, row, index) =>
                     b.AppendFormat("[{0} -> {1}: {2} [{3}] ({4})]",

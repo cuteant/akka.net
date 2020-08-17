@@ -379,7 +379,7 @@ namespace Akka.Remote.Transport
         {
             unchecked
             {
-                return ((LocalAddress != null ? LocalAddress.GetHashCode() : 0) * 397) ^ (RemoteAddress != null ? RemoteAddress.GetHashCode() : 0);
+                return ((LocalAddress is object ? LocalAddress.GetHashCode() : 0) * 397) ^ (RemoteAddress is object ? RemoteAddress.GetHashCode() : 0);
             }
         }
     }

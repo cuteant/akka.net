@@ -45,7 +45,7 @@ namespace Akka.IO
                 option.BeforeConnect(Socket);
             }
 
-            if (connect.LocalAddress != null)
+            if (connect.LocalAddress is object)
                 Socket.Bind(connect.LocalAddress);
 
             if (connect.Timeout.HasValue)
@@ -54,7 +54,7 @@ namespace Akka.IO
 
         private void ReleaseConnectionSocketArgs()
         {
-            if (_connectArgs != null)
+            if (_connectArgs is object)
             {
                 ReleaseSocketEventArgs(_connectArgs);
                 _connectArgs = null;
@@ -90,7 +90,7 @@ namespace Akka.IO
                 {
                     if (Log.IsDebugEnabled) Log.Debug("Resolving {0} before connecting", remoteAddress.Host);
                     var resolved = Dns.ResolveName(remoteAddress.Host, Context.System, Self);
-                    if (resolved == null)
+                    if (resolved is null)
                         Become(Resolving(remoteAddress));
                     else if (resolved.Ipv4.Any() && resolved.Ipv6.Any()) // one of both families
                         Register(new IPEndPoint(resolved.Ipv4.FirstOrDefault(), remoteAddress.Port), new IPEndPoint(resolved.Ipv6.FirstOrDefault(), remoteAddress.Port));
@@ -175,7 +175,7 @@ namespace Akka.IO
 
                         CompleteConnect(_commander, _connect.Options);
                     }
-                    else if (remainingFinishConnectRetries > 0 && fallbackAddress != null) // used only when we've resolved a DNS endpoint.
+                    else if (remainingFinishConnectRetries > 0 && fallbackAddress is object) // used only when we've resolved a DNS endpoint.
                     {
                         var self = Self;
                         var previousAddress = (IPEndPoint)args.RemoteEndPoint;

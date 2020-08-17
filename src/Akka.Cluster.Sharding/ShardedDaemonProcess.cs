@@ -150,7 +150,7 @@ namespace Akka.Cluster.Sharding
 
             // Defaults in `akka.cluster.sharding` but allow overrides specifically for actor-set   
             var shardingBaseSettings = settings.ShardingSettings;
-            if (shardingBaseSettings == null)
+            if (shardingBaseSettings is null)
             {
                 var shardingConfig = _system.Settings.Config.GetConfig("akka.cluster.sharded-daemon-process.sharding");
                 var coordinatorSingletonConfig = _system.Settings.Config.GetConfig(shardingConfig.GetString("coordinator-singleton"));

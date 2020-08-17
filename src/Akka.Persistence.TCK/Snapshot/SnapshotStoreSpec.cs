@@ -97,24 +97,24 @@ namespace Akka.Persistence.TCK.Snapshot
         public void SnapshotStore_should_not_load_a_snapshot_given_an_invalid_persistence_id()
         {
             SnapshotStore.Tell(new LoadSnapshot("invalid", SnapshotSelectionCriteria.Latest, long.MaxValue), _senderProbe.Ref);
-            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot == null && result.ToSequenceNr == long.MaxValue);
+            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot is null && result.ToSequenceNr == long.MaxValue);
         }
 
         [Fact]
         public void SnapshotStore_should_not_load_a_snapshot_given_non_matching_timestamp_criteria()
         {
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(long.MaxValue, new DateTime(100000)), long.MaxValue), _senderProbe.Ref);
-            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot == null && result.ToSequenceNr == long.MaxValue);
+            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot is null && result.ToSequenceNr == long.MaxValue);
         }
 
         [Fact]
         public void SnapshotStore_should_not_load_a_snapshot_given_non_matching_sequence_number_criteria()
         {
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(7), long.MaxValue), _senderProbe.Ref);
-            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot == null && result.ToSequenceNr == long.MaxValue);
+            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot is null && result.ToSequenceNr == long.MaxValue);
 
             SnapshotStore.Tell(new LoadSnapshot(Pid, SnapshotSelectionCriteria.Latest, 7), _senderProbe.Ref);
-            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot == null && result.ToSequenceNr == 7);
+            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot is null && result.ToSequenceNr == 7);
         }
 
         [Fact]
@@ -123,7 +123,7 @@ namespace Akka.Persistence.TCK.Snapshot
             SnapshotStore.Tell(new LoadSnapshot(Pid, SnapshotSelectionCriteria.Latest, long.MaxValue), _senderProbe.Ref);
             _senderProbe.ExpectMsg<LoadSnapshotResult>(result => 
                 result.ToSequenceNr == long.MaxValue 
-                && result.Snapshot != null 
+                && result.Snapshot is object 
                 && result.Snapshot.Metadata.Equals(Metadata[4])
                 && result.Snapshot.Snapshot.ToString() == "s-5");
         }
@@ -134,14 +134,14 @@ namespace Akka.Persistence.TCK.Snapshot
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(13), long.MaxValue), _senderProbe.Ref);
             _senderProbe.ExpectMsg<LoadSnapshotResult>(result =>
                 result.ToSequenceNr == long.MaxValue
-                && result.Snapshot != null
+                && result.Snapshot is object
                 && result.Snapshot.Metadata.Equals(Metadata[2])
                 && result.Snapshot.Snapshot.ToString() == "s-3");
 
             SnapshotStore.Tell(new LoadSnapshot(Pid, SnapshotSelectionCriteria.Latest, 13), _senderProbe.Ref);
             _senderProbe.ExpectMsg<LoadSnapshotResult>(result =>
                 result.ToSequenceNr == 13
-                && result.Snapshot != null
+                && result.Snapshot is object
                 && result.Snapshot.Metadata.Equals(Metadata[2])
                 && result.Snapshot.Snapshot.ToString() == "s-3");
         }
@@ -152,14 +152,14 @@ namespace Akka.Persistence.TCK.Snapshot
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(13, Metadata[2].Timestamp), long.MaxValue), _senderProbe.Ref);
             _senderProbe.ExpectMsg<LoadSnapshotResult>(result =>
                 result.ToSequenceNr == long.MaxValue
-                && result.Snapshot != null
+                && result.Snapshot is object
                 && result.Snapshot.Metadata.Equals(Metadata[2])
                 && result.Snapshot.Snapshot.ToString() == "s-3");
 
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(long.MaxValue, Metadata[2].Timestamp), 13), _senderProbe.Ref);
             _senderProbe.ExpectMsg<LoadSnapshotResult>(result =>
                 result.ToSequenceNr == 13
-                && result.Snapshot != null
+                && result.Snapshot is object
                 && result.Snapshot.Metadata.Equals(Metadata[2])
                 && result.Snapshot.Snapshot.ToString() == "s-3");
         }
@@ -180,7 +180,7 @@ namespace Akka.Persistence.TCK.Snapshot
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(md.SequenceNr), long.MaxValue), _senderProbe.Ref);
             _senderProbe.ExpectMsg<LoadSnapshotResult>(result =>
                 result.ToSequenceNr == long.MaxValue
-                && result.Snapshot != null
+                && result.Snapshot is object
                 && result.Snapshot.Metadata.Equals(Metadata[1])
                 && result.Snapshot.Snapshot.ToString() == "s-2");
         }
@@ -198,13 +198,13 @@ namespace Akka.Persistence.TCK.Snapshot
             _senderProbe.ExpectMsg<DeleteSnapshotsSuccess>();
 
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(md.SequenceNr, md.Timestamp), long.MaxValue), _senderProbe.Ref);
-            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot == null && result.ToSequenceNr == long.MaxValue);
+            _senderProbe.ExpectMsg<LoadSnapshotResult>(result => result.Snapshot is null && result.ToSequenceNr == long.MaxValue);
 
 
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(Metadata[3].SequenceNr, Metadata[3].Timestamp), long.MaxValue), _senderProbe.Ref);
             _senderProbe.ExpectMsg<LoadSnapshotResult>(result =>
                 result.ToSequenceNr == long.MaxValue
-                && result.Snapshot != null
+                && result.Snapshot is object
                 && result.Snapshot.Metadata.Equals(Metadata[3])
                 && result.Snapshot.Snapshot.ToString() == "s-4");
         }
@@ -225,7 +225,7 @@ namespace Akka.Persistence.TCK.Snapshot
             SnapshotStore.Tell(new LoadSnapshot(Pid, new SnapshotSelectionCriteria(md.SequenceNr, md.Timestamp), long.MaxValue), _senderProbe.Ref);
             _senderProbe.ExpectMsg<LoadSnapshotResult>(result =>
                 result.ToSequenceNr == long.MaxValue
-                && result.Snapshot != null
+                && result.Snapshot is object
                 && result.Snapshot.Metadata.Equals(Metadata[3])
                 && result.Snapshot.Snapshot.ToString() == "s-4");
         }

@@ -159,7 +159,7 @@ namespace Akka.TestKit
         {
             if(timeout == TimeSpan.MaxValue)
                 throw new ArgumentException($"TestLatch does not support waiting for {timeout}");
-            if(_dilate != null)
+            if(_dilate is object)
                 timeout = _dilate(timeout);
             var opened = _latch.Wait(timeout);
             if(!opened)

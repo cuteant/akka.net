@@ -135,7 +135,7 @@ namespace Akka.Streams.Implementation
             var thisN = Attributes.GetNameOrDefault(null);
             var thatN = attrs.GetNameOrDefault(null);
 
-            return (thatN == null) || thisN == thatN
+            return (thatN is null) || thisN == thatN
                 ? _shape
                 : new SinkShape<TIn>(new Inlet<TIn>(thatN + ".in"));
         }
@@ -950,7 +950,7 @@ namespace Akka.Streams.Implementation
                 _decider = new Lazy<Decider>(() =>
                 {
                     var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                    return attr != null ? attr.Decider : Deciders.StoppingDecider;
+                    return attr is object ? attr.Decider : Deciders.StoppingDecider;
                 });
 
                 SetHandler(stage.In, this);

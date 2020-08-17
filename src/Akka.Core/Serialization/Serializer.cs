@@ -72,7 +72,7 @@ namespace Akka.Serialization
         /// <returns>The copy</returns>
         public virtual object DeepCopy(object source)
         {
-            if (null == source) { return null; }
+            if (source is null) { return null; }
             var objType = source.GetType();
             var bts = ToBinary(source);
             return FromBinary(bts, objType);

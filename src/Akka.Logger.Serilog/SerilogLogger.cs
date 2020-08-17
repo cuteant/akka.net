@@ -28,7 +28,7 @@ namespace Akka.Logger.Serilog
         private static string GetFormat(object message)
         {
             var logMessage = message as LogMessage;
-            return logMessage != null ? logMessage.Format : "{Message:l}";
+            return logMessage is object ? logMessage.Format : "{Message:l}";
         }
 
         private static object[] GetArgs(object message)
@@ -46,7 +46,7 @@ namespace Akka.Logger.Serilog
 				.ForContext("Thread", logEvent.Thread.ManagedThreadId.ToString().PadLeft( 4, '0' ));
 
             var logMessage = logEvent.Message as LogMessage;
-            if (logMessage != null)
+            if (logMessage is object)
             {
                 logger = logMessage.Args.OfType<PropertyEnricher>().Aggregate(logger, (current, enricher) => current.ForContext(enricher));
             }

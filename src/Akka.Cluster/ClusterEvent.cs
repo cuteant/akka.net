@@ -175,7 +175,7 @@ namespace Akka.Cluster
                     members ?? Members,
                     unreachable ?? Unreachable,
                     seenBy ?? SeenBy,
-                    leader ?? (Leader != null ? (Address)Leader.Clone() : null),
+                    leader ?? (Leader is object ? (Address)Leader.Clone() : null),
                     roleLeaderMap ?? RoleLeaderMap);
             }
         }
@@ -441,7 +441,7 @@ namespace Akka.Cluster
             {
                 if (obj is LeaderChanged other)
                 {
-                    return (Leader == null && other.Leader == null) || (Leader != null && Leader.Equals(other.Leader));
+                    return (Leader is null && other.Leader is null) || (Leader is object && Leader.Equals(other.Leader));
                 }
                 return false;
             }
@@ -452,7 +452,7 @@ namespace Akka.Cluster
                 unchecked
                 {
                     var hash = 17;
-                    hash = hash * 23 + (Leader == null ? 0 : Leader.GetHashCode());
+                    hash = hash * 23 + (Leader is null ? 0 : Leader.GetHashCode());
                     return hash;
                 }
             }
@@ -502,7 +502,7 @@ namespace Akka.Cluster
                 {
                     var hash = 17;
                     hash = hash * 23 + Role.GetHashCode();
-                    hash = hash * 23 + (Leader == null ? 0 : Leader.GetHashCode());
+                    hash = hash * 23 + (Leader is null ? 0 : Leader.GetHashCode());
                     return hash;
                 }
             }
@@ -513,7 +513,7 @@ namespace Akka.Cluster
                 if (obj is RoleLeaderChanged other)
                 {
                     return Role.Equals(other.Role)
-                        && ((Leader == null && other.Leader == null) || (Leader != null && Leader.Equals(other.Leader)));
+                        && ((Leader is null && other.Leader is null) || (Leader is object && Leader.Equals(other.Leader)));
                 }
                 return false;
             }
@@ -521,9 +521,9 @@ namespace Akka.Cluster
             public bool Equals(RoleLeaderChanged other)
             {
                 if (ReferenceEquals(this, other)) { return true; }
-                if (null == other) { return false; }
+                if (other is null) { return false; }
                 return Role.Equals(other.Role)
-                    && ((Leader == null && other.Leader == null) || (Leader != null && Leader.Equals(other.Leader)));
+                    && ((Leader is null && other.Leader is null) || (Leader is object && Leader.Equals(other.Leader)));
             }
 
             /// <inheritdoc/>
@@ -543,7 +543,7 @@ namespace Akka.Cluster
             public bool Equals(RoleLeaderChanged x, RoleLeaderChanged y)
             {
                 if (ReferenceEquals(x, y)) { return true; }
-                if (null == x/* || null == y*/) { return false; }
+                if (x is null/* || y is null*/) { return false; }
                 return x.Equals(y);
             }
 
@@ -930,11 +930,11 @@ namespace Akka.Cluster
         internal static ImmutableList<LeaderChanged> DiffLeader(Gossip oldGossip, Gossip newGossip, UniqueAddress selfUniqueAddress)
         {
             var newLeader = newGossip.Leader(selfUniqueAddress);
-            if ((newLeader == null && oldGossip.Leader(selfUniqueAddress) == null)
-                || newLeader != null && newLeader.Equals(oldGossip.Leader(selfUniqueAddress)))
+            if ((newLeader is null && oldGossip.Leader(selfUniqueAddress) is null)
+                || newLeader is object && newLeader.Equals(oldGossip.Leader(selfUniqueAddress)))
                 return ImmutableList<LeaderChanged>.Empty;
 
-            return ImmutableList.Create(newLeader == null
+            return ImmutableList.Create(newLeader is null
                 ? new LeaderChanged(null)
                 : new LeaderChanged(newLeader.Address));
         }
@@ -956,9 +956,9 @@ namespace Akka.Cluster
             foreach (var role in oldGossip.AllRoles.Union(newGossip.AllRoles))
             {
                 var newLeader = newGossip.RoleLeader(role, selfUniqueAddress);
-                if (newLeader == null && oldGossip.RoleLeader(role, selfUniqueAddress) != null)
+                if (newLeader is null && oldGossip.RoleLeader(role, selfUniqueAddress) is object)
                     yield return new RoleLeaderChanged(role, null);
-                if (newLeader != null && !newLeader.Equals(oldGossip.RoleLeader(role, selfUniqueAddress)))
+                if (newLeader is object && !newLeader.Equals(oldGossip.RoleLeader(role, selfUniqueAddress)))
                     yield return new RoleLeaderChanged(role, newLeader.Address);
             }
         }
@@ -1120,7 +1120,7 @@ namespace Akka.Cluster
 
         private void Unsubscribe(IActorRef subscriber, Type to)
         {
-            if (to == null) _eventStream.Unsubscribe(subscriber);
+            if (to is null) _eventStream.Unsubscribe(subscriber);
             else _eventStream.Unsubscribe(subscriber, to);
         }
 

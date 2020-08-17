@@ -24,7 +24,7 @@ namespace Akka.Persistence.TCK.Query
             string actorSystemName = null, 
             ITestOutputHelper output = null)
             : base(
-                config == null ? InternalConfig : InternalConfig.WithFallback(config), 
+                config is null ? InternalConfig : InternalConfig.WithFallback(config), 
                 actorSystemName, output)
         {
             Materializer = Sys.Materializer();

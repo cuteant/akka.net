@@ -61,7 +61,7 @@ namespace Reactive.Streams.Example.Unicast
 
         private AsyncIterablePublisher(IEnumerable<T> elements, int batchSize)
         {
-            if(elements == null)
+            if(elements is null)
                 throw new ArgumentNullException(nameof(elements));
             if (batchSize < 1)
                 throw new ArgumentNullException(nameof(batchSize), "batchSize must be greater than zero!");
@@ -103,7 +103,7 @@ namespace Reactive.Streams.Example.Unicast
             public SubscriptionImplementation(IEnumerable<T> elements, int batchSize, ISubscriber<T> subscriber)
             {
                 // As per rule 1.09, we need to throw a `ArgumentNullException` if the `Subscriber` is `null`
-                if (subscriber == null)
+                if (subscriber is null)
                     throw new ArgumentNullException(nameof(subscriber));
 
                 _elements = elements;

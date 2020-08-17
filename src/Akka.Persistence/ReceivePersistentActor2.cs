@@ -82,7 +82,7 @@ namespace Akka.Persistence
 
         private Receive GetBehavior(PatternMatchBuilder patterns)
         {
-            if (null == patterns) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.patterns); }
+            if (patterns is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.patterns); }
 
             if (patterns.Properties.TryGetValue(BehaviorKey, out var behavior))
             {
@@ -161,7 +161,7 @@ namespace Akka.Persistence
         protected void Recover<T>(Action<T> handler, Predicate<T> shouldHandle = null)
         {
             EnsureMayConfigureRecoverHandlers();
-            if (shouldHandle == null)
+            if (shouldHandle is null)
             {
                 _matchRecoverBuilders.Peek().Match<T>(handler);
             }
@@ -253,7 +253,7 @@ namespace Akka.Persistence
         protected void Command<T>(Action<T> handler, Predicate<T> shouldHandle = null)
         {
             EnsureMayConfigureCommandHandlers();
-            if (shouldHandle == null)
+            if (shouldHandle is null)
             {
                 _matchCommandBuilders.Peek().Match<T>(handler);
             }

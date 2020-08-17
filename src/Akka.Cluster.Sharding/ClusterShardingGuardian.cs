@@ -94,7 +94,7 @@ namespace Akka.Cluster.Sharding
                 ExtractEntityId extractEntityId, ExtractShardId extractShardId, IShardAllocationStrategy allocationStrategy, object handOffStopMessage)
             {
                 if (string.IsNullOrEmpty(typeName)) ThrowHelper.ThrowArgumentNullException_StartRrequiresTypeNameToBeProvided();
-                if (entityProps == null) ThrowHelper.ThrowArgumentNullException_StartRequiresPropsForTypeNameToBeProvided(typeName);
+                if (entityProps is null) ThrowHelper.ThrowArgumentNullException_StartRequiresPropsForTypeNameToBeProvided(typeName);
 
                 TypeName = typeName;
                 EntityProps = entityProps;

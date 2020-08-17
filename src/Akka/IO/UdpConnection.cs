@@ -45,7 +45,7 @@ namespace Akka.IO
             if (connect.RemoteAddress is DnsEndPoint remoteAddress)
             {
                 var resolved = Dns.ResolveName(remoteAddress.Host, Context.System, Self);
-                if (resolved != null)
+                if (resolved is object)
                     DoConnect(new IPEndPoint(resolved.Addr, remoteAddress.Port));
                 else
                     Context.Become(Resolving(remoteAddress));
@@ -57,7 +57,7 @@ namespace Akka.IO
         }
 
         private Tuple<Send, IActorRef> _pendingSend = null;
-        private bool WritePending => _pendingSend != null;
+        private bool WritePending => _pendingSend is object;
 
         private Receive Resolving(DnsEndPoint remoteAddress) => message =>
         {
@@ -80,7 +80,7 @@ namespace Akka.IO
                     option.BeforeDatagramBind(_socket);
                 }
 
-                if (_connect.LocalAddress != null)
+                if (_connect.LocalAddress is object)
                     _socket.Bind(_connect.LocalAddress);
 
                 _socket.Connect(_connect.RemoteAddress);
@@ -108,7 +108,7 @@ namespace Akka.IO
                 case ResumeReading _:
                     {
                         _readingSuspended = false;
-                        if (_pendingRead != null)
+                        if (_pendingRead is object)
                         {
                             _connect.Handler.Tell(_pendingRead);
                             _pendingRead = null;

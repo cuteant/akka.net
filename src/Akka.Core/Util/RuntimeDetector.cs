@@ -24,7 +24,7 @@ namespace Akka.Util
         /// <summary>
         /// Is <c>true</c> if we're running on a Mono VM. <c>false</c> otherwise.
         /// </summary>
-        public static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
+        public static readonly bool IsMono = Type.GetType("Mono.Runtime") is object;
 
         /// <summary>
         /// Is <c>true</c> if we've detected Windows as a platform.

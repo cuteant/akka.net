@@ -541,7 +541,7 @@ namespace Akka.DistributedData
 
             if (IsLocalGet(consistency))
             {
-                if (localValue == null) Sender.Tell(new NotFound(key, req));
+                if (localValue is null) Sender.Tell(new NotFound(key, req));
                 else if (localValue.Data is DeletedData) Sender.Tell(new DataDeleted(key, req));
                 else Sender.Tell(new GetSuccess(key, req, localValue.Data));
             }
@@ -578,7 +578,7 @@ namespace Akka.DistributedData
 
                 DataEnvelope envelope;
                 IReplicatedData delta;
-                if (localValue == null)
+                if (localValue is null)
                 {
                     var d = modify(null);
                     if (d is IDeltaReplicatedData withDelta)
@@ -618,7 +618,7 @@ namespace Akka.DistributedData
                 if (_log.IsDebugEnabled) _log.ReceivedUpdateForKey(key);
 
                 // handle the delta
-                if (delta != null)
+                if (delta is object)
                 {
                     _deltaPropagationSelector.Update(key.Id, delta);
                 }
@@ -644,7 +644,7 @@ namespace Akka.DistributedData
                 {
                     DataEnvelope writeEnvelope;
                     Delta writeDelta;
-                    if (delta == null || Equals(delta, DeltaPropagation.NoDeltaPlaceholder))
+                    if (delta is null || Equals(delta, DeltaPropagation.NoDeltaPlaceholder))
                     {
                         writeEnvelope = newEnvelope;
                         writeDelta = null;
@@ -706,7 +706,7 @@ namespace Akka.DistributedData
         private void WriteAndStore(string key, DataEnvelope writeEnvelope, bool reply)
         {
             var newEnvelope = Write(key, writeEnvelope);
-            if (newEnvelope != null)
+            if (newEnvelope is object)
             {
                 if (IsDurable(key))
                 {
@@ -890,7 +890,7 @@ namespace Akka.DistributedData
         {
             var key = _subscriptionKeys[keyId];
             var envelope = GetData(keyId);
-            if (envelope != null)
+            if (envelope is object)
             {
                 var msg = envelope.Data is DeletedData
                     ? (object)new DataDeleted(key, null)
@@ -1016,7 +1016,7 @@ namespace Akka.DistributedData
         private void ReceiveGossipTick(GossipTick gossipTick)
         {
             var node = SelectRandomNode(AllNodes);
-            if (node != null)
+            if (node is object)
             {
                 GossipTo(node);
             }
@@ -1141,7 +1141,7 @@ namespace Akka.DistributedData
                 if (sendBack)
                 {
                     var data = GetData(key);
-                    if (data != null && (hadData || data.Pruning.Count != 0))
+                    if (data is object && (hadData || data.Pruning.Count != 0))
                         replyData[key] = data;
                 }
             }
@@ -1486,7 +1486,7 @@ namespace Akka.DistributedData
                         var key = x.Key;
                         var (data, from, to) = x.Value;
                         var envelope = _replicator.GetData(key);
-                        return envelope != null
+                        return envelope is object
                             ? new KeyValuePair<string, Delta>(key,
                                 new Delta(envelope.WithData(data), from, to))
                             : new KeyValuePair<string, Delta>(key,

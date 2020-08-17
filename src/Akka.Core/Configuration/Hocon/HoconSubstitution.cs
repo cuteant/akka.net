@@ -93,7 +93,7 @@ namespace Akka.Configuration.Hocon
         /// <returns><c>true</c> if this element is a HOCON object; otherwise <c>false</c></returns>
         public bool IsObject()
         {
-            return ResolvedValue != null && ResolvedValue.IsObject();
+            return ResolvedValue is object && ResolvedValue.IsObject();
         }
 
         /// <summary>

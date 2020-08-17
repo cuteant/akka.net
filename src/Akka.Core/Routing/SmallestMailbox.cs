@@ -56,7 +56,7 @@ namespace Akka.Routing
         /// <returns>A <see cref="Routee" /> that receives the <paramref name="message" />.</returns>
         public override Routee Select(object message, Routee[] routees)
         {
-            return routees == null || 0u >= (uint)routees.Length
+            return routees is null || 0u >= (uint)routees.Length
                 ? Routee.NoRoutee
                 : SelectNext(routees);
         }
@@ -73,7 +73,7 @@ namespace Akka.Routing
             {
                 var routee = routees[i];
                 var cell = TryGetActorCell(routee);
-                if (cell != null)
+                if (cell is object)
                 {
                     // routee can be reasoned about it's mailbox size
                     var score = cell.NumberOfMessages;
@@ -230,7 +230,7 @@ namespace Akka.Routing
             {
                 SmallestMailboxPool wssConf;
 
-                if (SupervisorStrategy != null
+                if (SupervisorStrategy is object
                     && SupervisorStrategy.Equals(DefaultSupervisorStrategy)
                     && !pool.SupervisorStrategy.Equals(DefaultSupervisorStrategy))
                 {
@@ -241,7 +241,7 @@ namespace Akka.Routing
                     wssConf = this;
                 }
 
-                if (wssConf.Resizer == null && pool.Resizer != null)
+                if (wssConf.Resizer is null && pool.Resizer is object)
                     return wssConf.WithResizer(pool.Resizer);
 
                 return wssConf;

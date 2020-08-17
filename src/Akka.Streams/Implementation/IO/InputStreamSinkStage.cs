@@ -423,7 +423,7 @@ namespace Akka.Streams.Implementation.IO
             {
                 if (!_isStageAlive) { return 0; }
 
-                if (_detachedChunk != null) { return ReadBytes(buffer, offset, count); }
+                if (_detachedChunk is object) { return ReadBytes(buffer, offset, count); }
 
                 var success = _sharedBuffer.TryTake(out var msg, _readTimeout);
                 if (!success) { ThrowHelper.ThrowIOException_Timeout(); }
@@ -480,7 +480,7 @@ namespace Akka.Streams.Implementation.IO
 
         private int ReadBytes(byte[] buffer, int offset, int count)
         {
-            if (_detachedChunk == null || _detachedChunk.IsEmpty) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Chunk_be_pulled);
+            if (_detachedChunk is null || _detachedChunk.IsEmpty) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Chunk_be_pulled);
 
             var availableInChunk = _detachedChunk.Count;
             var readBytes = GetData(buffer, offset, count, 0);
@@ -494,7 +494,7 @@ namespace Akka.Streams.Implementation.IO
         private int GetData(byte[] buffer, int offset, int count, int gotBytes)
         {
             var chunk = GrabDataChunk();
-            if (chunk == null)
+            if (chunk is null)
                 return gotBytes;
 
             var size = chunk.Count;
@@ -515,7 +515,7 @@ namespace Akka.Streams.Implementation.IO
 
         private ByteString GrabDataChunk()
         {
-            if (_detachedChunk != null)
+            if (_detachedChunk is object)
                 return _detachedChunk;
 
             var chunk = _sharedBuffer.Take();

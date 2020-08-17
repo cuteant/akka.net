@@ -124,7 +124,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public AtomicWrite(IImmutableList<IPersistentRepresentation> payload)
         {
-            if (payload == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.payload, ExceptionResource.ArgumentNull_AtomicWrite);
+            if (payload is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.payload, ExceptionResource.ArgumentNull_AtomicWrite);
 
             if (payload.Count == 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_AtomicWrite, ExceptionArgument.payload);
 
@@ -203,10 +203,10 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                var hashCode = (Payload != null ? Payload.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Sender != null ? Sender.GetHashCode() : 0);
+                var hashCode = (Payload is object ? Payload.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Sender is object ? Sender.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Size;
-                hashCode = (hashCode * 397) ^ (PersistenceId != null ? PersistenceId.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PersistenceId is object ? PersistenceId.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ LowestSequenceNr.GetHashCode();
                 hashCode = (hashCode * 397) ^ HighestSequenceNr.GetHashCode();
                 return hashCode;
@@ -374,7 +374,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public bool Equals(IPersistentRepresentation other)
         {
-            if (other == null) return false;
+            if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
 
             return Equals(Payload, other.Payload)
@@ -409,13 +409,13 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                var hashCode = (Payload != null ? Payload.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Manifest != null ? Manifest.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PersistenceId != null ? PersistenceId.GetHashCode() : 0);
+                var hashCode = (Payload is object ? Payload.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Manifest is object ? Manifest.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PersistenceId is object ? PersistenceId.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ SequenceNr.GetHashCode();
                 hashCode = (hashCode * 397) ^ IsDeleted.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Sender != null ? Sender.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (WriterGuid != null ? WriterGuid.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Sender is object ? Sender.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (WriterGuid is object ? WriterGuid.GetHashCode() : 0);
                 return hashCode;
             }
         }

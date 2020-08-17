@@ -81,7 +81,7 @@ namespace Akka.Streams.Implementation.IO
 
             private void TryUnbind()
             {
-                if (_listener != null && !_unbindStarted)
+                if (_listener is object && !_unbindStarted)
                 {
                     _unbindStarted = true;
                     SetKeepGoing(true);
@@ -432,14 +432,14 @@ namespace Akka.Streams.Implementation.IO
                         if (IsClosed(_bytesOut) || !_role.HalfClose)
                             _connection.Tell(Tcp.Close.Instance, StageActor.Ref);
                         // We still read, so we only close the write side
-                        else if (_connection != null)
+                        else if (_connection is object)
                             _connection.Tell(Tcp.ConfirmedClose.Instance, StageActor.Ref);
                         else
                             CompleteStage();
                     },
                     onUpstreamFailure: ex =>
                     {
-                        if (_connection != null)
+                        if (_connection is object)
                         {
                             var interpreterLog = Interpreter.Log;
                             if (interpreterLog.IsDebugEnabled)
@@ -645,7 +645,7 @@ namespace Akka.Streams.Implementation.IO
     {
         public static BidiFlow<ByteString, ByteString, ByteString, ByteString, NotUsed> Create(TimeSpan idleTimeout, EndPoint remoteAddress = null)
         {
-            var connectionString = remoteAddress == null ? "" : $" on connection to [{remoteAddress}]";
+            var connectionString = remoteAddress is null ? "" : $" on connection to [{remoteAddress}]";
 
             var idleException = new TcpIdleTimeoutException(
                 $"TCP idle-timeout encountered{connectionString}, no bytes passed in the last {idleTimeout}",

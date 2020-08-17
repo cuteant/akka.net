@@ -52,9 +52,9 @@ namespace Akka.Persistence.Query
             unchecked
             {
                 var hashCode = Offset.GetHashCode();
-                hashCode = (hashCode*397) ^ (PersistenceId != null ? PersistenceId.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (PersistenceId is object ? PersistenceId.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ SequenceNr.GetHashCode();
-                hashCode = (hashCode*397) ^ (Event != null ? Event.GetHashCode() : 0);
+                hashCode = (hashCode*397) ^ (Event is object ? Event.GetHashCode() : 0);
                 return hashCode;
             }
         }

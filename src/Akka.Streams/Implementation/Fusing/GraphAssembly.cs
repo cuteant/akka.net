@@ -219,7 +219,7 @@ namespace Akka.Streams.Implementation.Fusing
                 connections[i] = connection;
 
                 var inlet = Inlets[i];
-                if (inlet != null)
+                if (inlet is object)
                 {
                     var owner = InletOwners[i];
                     var logic = logics[owner];
@@ -236,7 +236,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
 
                 var outlet = Outlets[i];
-                if (outlet != null)
+                if (outlet is object)
                 {
                     var owner = OutletOwners[i];
                     var logic = logics[owner];

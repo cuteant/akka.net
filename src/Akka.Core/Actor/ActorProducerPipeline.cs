@@ -303,7 +303,7 @@ namespace Akka.Actor
         private void LogException(ActorBase actor, Exception e, string errorMessageFormat, IActorProducerPlugin plugin)
         {
             var internalActor = (actor as IInternalActor);
-            var actorPath = internalActor != null && internalActor.ActorContext != null
+            var actorPath = internalActor is object && internalActor.ActorContext is object
                 ? internalActor.ActorContext.Self.Path.ToString()
                 : string.Empty;
 

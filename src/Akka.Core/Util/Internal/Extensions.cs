@@ -194,7 +194,7 @@ namespace Akka.Util.Internal
         public static IEnumerable<T> Concat<T>(this IEnumerable<T> enumerable, T item)
         {
             var itemInArray = new[] { item };
-            if (enumerable == null)
+            if (enumerable is null)
                 return itemInArray;
             return enumerable.Concat(itemInArray);
         }

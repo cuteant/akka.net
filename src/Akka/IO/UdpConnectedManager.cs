@@ -45,7 +45,7 @@ namespace Akka.IO
                 case DeadLetter dl when dl.Message is UdpConnected.SocketCompleted completed:
                     {
                         var e = completed.EventArgs;
-                        if (e.Buffer != null)
+                        if (e.Buffer is object)
                         {
                             // no need to check for e.BufferList: release buffer only 
                             // on complete reads, which are always mono-buffered 

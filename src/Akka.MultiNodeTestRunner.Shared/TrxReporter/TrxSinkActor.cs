@@ -134,7 +134,7 @@ namespace Akka.MultiNodeTestRunner.Shared.AzureDevOps
                 result.Output.StdErr.Add(message.Message);
                 
                 var nodeLog = log.NodeLogs.Find(n => n.NodeIndex == message.NodeIndex);
-                if (nodeLog.Log != null)
+                if (nodeLog.Log is object)
                     result.Output.StdErr.AddRange(nodeLog.Log);
                 
                 result.Output.DebugTrace.Add(message.Message);
@@ -187,7 +187,7 @@ namespace Akka.MultiNodeTestRunner.Shared.AzureDevOps
                 Output output;
                 if (nodeResults.TryGetValue(message.NodeIndex, out var result))
                 {
-                    if (result.Output == null)
+                    if (result.Output is null)
                     {
                         result.Output = new Output();
                     }
@@ -196,7 +196,7 @@ namespace Akka.MultiNodeTestRunner.Shared.AzureDevOps
                 }
                 else
                 {
-                    if (specResult.Output == null)
+                    if (specResult.Output is null)
                     {
                         specResult.Output = new Output();
                     }

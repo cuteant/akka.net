@@ -75,7 +75,7 @@ namespace Akka.TestKit.Internal
         protected virtual void OnEventMatched(LogEvent logEvent)
         {
             var delegt = EventMatched;
-            if(delegt != null) delegt(this, logEvent);
+            if(delegt is object) delegt(this, logEvent);
         }
 
         /// <summary>Internal helper.
@@ -86,7 +86,7 @@ namespace Akka.TestKit.Internal
         /// <returns>TBD</returns>
         protected bool InternalDoMatch(string src, object msg)
         {
-            var msgstr = msg == null ? "null" : msg.ToString();
+            var msgstr = msg is null ? "null" : msg.ToString();
             return _sourceMatcher.IsMatch(src) && _messageMatcher.IsMatch(msgstr);
         }
 

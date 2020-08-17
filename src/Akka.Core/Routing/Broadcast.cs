@@ -29,7 +29,7 @@ namespace Akka.Routing
         /// <returns>A <see cref="Routee"/> that contains all the given <paramref name="routees"/> that receives the <paramref name="message"/>.</returns>
         public override Routee Select(object message, Routee[] routees)
         {
-            if (routees == null || 0u >= (uint)routees.Length)
+            if (routees is null || 0u >= (uint)routees.Length)
                 return Routee.NoRoutee;
             return new SeveralRoutees(routees);
         }
@@ -159,7 +159,7 @@ namespace Akka.Routing
             {
                 BroadcastPool wssConf;
 
-                if (SupervisorStrategy != null
+                if (SupervisorStrategy is object
                     && SupervisorStrategy.Equals(DefaultSupervisorStrategy)
                     && !pool.SupervisorStrategy.Equals(DefaultSupervisorStrategy))
                 {
@@ -170,7 +170,7 @@ namespace Akka.Routing
                     wssConf = this;
                 }
 
-                if (wssConf.Resizer == null && pool.Resizer != null)
+                if (wssConf.Resizer is null && pool.Resizer is object)
                     return wssConf.WithResizer(pool.Resizer);
 
                 return wssConf;

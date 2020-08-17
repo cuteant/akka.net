@@ -179,7 +179,7 @@ namespace Akka.Actor
             {
                 var taskScheduler = Volatile.Read(ref _taskScheduler);
 
-                if (taskScheduler != null)
+                if (taskScheduler is object)
                     return taskScheduler;
 
                 taskScheduler = new ActorTaskScheduler(this);
@@ -217,7 +217,7 @@ namespace Akka.Actor
                 if (req.IsInstanceOfType(mailbox.MessageQueue)) createMessage = new Create(null); //success
                 else
                 {
-                    var gotType = mailbox.MessageQueue == null ? "null" : mailbox.MessageQueue.GetType().FullName;
+                    var gotType = mailbox.MessageQueue is null ? "null" : mailbox.MessageQueue.GetType().FullName;
                     createMessage = new Create(new ActorInitializationException(Self, $"Actor [{Self}] requires mailbox type [{req}] got [{gotType}]"));
                 }
             }
@@ -378,7 +378,7 @@ namespace Akka.Actor
             pipeline.AfterActorIncarnated(actor, this);
 
             var initializableActor = actor as IInitializableActor;
-            if (initializableActor != null)
+            if (initializableActor is object)
             {
                 initializableActor.Init();
             }
@@ -473,7 +473,7 @@ namespace Akka.Actor
         /// <param name="message">TBD</param>
         public virtual void SendMessage(in Envelope message)
         {
-            if (Mailbox == null)
+            if (Mailbox is null)
             {
                 return;
                 //stackoverflow if this is the deadletters actorref
@@ -525,7 +525,7 @@ namespace Akka.Actor
         /// <param name="actor">TBD</param>
         protected void ClearActor(ActorBase actor)
         {
-            if (actor != null)
+            if (actor is object)
             {
                 if (actor is IDisposable disposable)
                 {
@@ -590,7 +590,7 @@ namespace Akka.Actor
         public static IActorRef GetCurrentSelfOrNoSender()
         {
             var current = Current;
-            return current != null ? current.Self : ActorRefs.NoSender;
+            return current is object ? current.Self : ActorRefs.NoSender;
         }
 
         /// <summary>
@@ -600,13 +600,13 @@ namespace Akka.Actor
         public static IActorRef GetCurrentSenderOrNoSender()
         {
             var current = Current;
-            return current != null ? current.Sender : ActorRefs.NoSender;
+            return current is object ? current.Sender : ActorRefs.NoSender;
         }
 
         private Envelope SerializeAndDeserialize(in Envelope envelope)
         {
             DeadLetter deadLetter;
-            var unwrapped = (deadLetter = envelope.Message as DeadLetter) != null ? deadLetter.Message : envelope.Message;
+            var unwrapped = (deadLetter = envelope.Message as DeadLetter) is object ? deadLetter.Message : envelope.Message;
 
             if (unwrapped is INoSerializationVerificationNeeded)
             {
@@ -614,7 +614,7 @@ namespace Akka.Actor
             }
             var serializer = _systemImpl.Serialization.FindSerializerFor(unwrapped);
             var deserializedMsg = serializer.DeepCopy(unwrapped);
-            if (deadLetter != null)
+            if (deadLetter is object)
                 return new Envelope(new DeadLetter(deserializedMsg, deadLetter.Sender, deadLetter.Recipient), envelope.Sender);
             return new Envelope(deserializedMsg, envelope.Sender);
         }

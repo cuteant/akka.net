@@ -46,7 +46,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, TException value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = ExceptionSupport.ExceptionToProto(formatterResolver.GetActorSystem(), value);
 
@@ -74,7 +74,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, Create value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.CreateData(ExceptionSupport.ExceptionToProto(
                 formatterResolver.GetActorSystem(),
@@ -104,7 +104,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, Recreate value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.RecreateData(ExceptionSupport.ExceptionToProto(
                 formatterResolver.GetActorSystem(),
@@ -152,7 +152,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, Resume value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.ResumeData(ExceptionSupport.ExceptionToProto(
                 formatterResolver.GetActorSystem(),
@@ -201,7 +201,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, Supervise value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.SuperviseData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Child)),
@@ -234,7 +234,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, Watch value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.WatchData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watchee)),
@@ -267,7 +267,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, Unwatch value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.WatchData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Watchee)),
@@ -301,7 +301,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, Failed value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.FailedData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Child)),
@@ -336,7 +336,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, DeathWatchNotification value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.DeathWatchNotificationData(
                 new Protocol.ReadOnlyActorRefData(Akka.Serialization.Serialization.SerializedActorPath(value.Actor)),

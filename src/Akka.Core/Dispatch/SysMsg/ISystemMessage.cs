@@ -42,7 +42,7 @@ namespace Akka.Dispatch.SysMsg
         {
             while (true)
             {
-                if (head == null) return acc;
+                if (head is null) return acc;
                 head = head.Next;
                 acc = acc + 1;
             }
@@ -58,7 +58,7 @@ namespace Akka.Dispatch.SysMsg
         {
             while (true)
             {
-                if (head == null)
+                if (head is null)
                     return acc;
                 var next = head.Next;
                 head.Next = acc;
@@ -101,12 +101,12 @@ namespace Akka.Dispatch.SysMsg
         /// <summary>
         /// Indicates if the list is empty or not. This operation has constant cost.
         /// </summary>
-        public bool IsEmpty => Head == null;
+        public bool IsEmpty => Head is null;
 
         /// <summary>
         /// Indicates if the list has at least one element. This operation has a constant cost.
         /// </summary>
-        public bool NonEmpty => Head != null;
+        public bool NonEmpty => Head is object;
 
         /// <summary>
         /// Indicates the number of elements contained within this list. O(N) operation time.
@@ -137,7 +137,7 @@ namespace Akka.Dispatch.SysMsg
         /// <returns>A new <see cref="LatestFirstSystemMessageList"/> with <paramref name="msg"/> appended to the front.</returns>
         public static LatestFirstSystemMessageList operator +(LatestFirstSystemMessageList list, SystemMessage msg)
         {
-            Assert.Assert(msg != null);
+            Assert.Assert(msg is object);
             msg.Next = list.Head;
             return new LatestFirstSystemMessageList(msg);
         }
@@ -175,12 +175,12 @@ namespace Akka.Dispatch.SysMsg
         /// <summary>
         /// Indicates if the list is empty or not. This operation has constant cost.
         /// </summary>
-        public bool IsEmpty => Head == null;
+        public bool IsEmpty => Head is null;
 
         /// <summary>
         /// Indicates if the list has at least one element. This operation has a constant cost.
         /// </summary>
-        public bool NonEmpty => Head != null;
+        public bool NonEmpty => Head is object;
 
         /// <summary>
         /// Indicates the number of elements contained within this list. O(N) operation time.
@@ -211,7 +211,7 @@ namespace Akka.Dispatch.SysMsg
         /// <returns>A new <see cref="LatestFirstSystemMessageList"/> with <paramref name="msg"/> appended to the front.</returns>
         public static EarliestFirstSystemMessageList operator +(EarliestFirstSystemMessageList list, SystemMessage msg)
         {
-            Assert.Assert(msg != null);
+            Assert.Assert(msg is object);
             msg.Next = list.Head;
             return new EarliestFirstSystemMessageList(msg);
         }
@@ -298,7 +298,7 @@ namespace Akka.Dispatch.SysMsg
         /// Returns <c>true</c> if we are unlinked.
         /// </summary>
         [IgnoreMember, IgnoreDataMember]
-        public bool Unlinked { get { return Next == null; } }
+        public bool Unlinked { get { return Next is null; } }
     }
 
     /// <summary>
@@ -413,7 +413,7 @@ namespace Akka.Dispatch.SysMsg
         /// <returns>TBD</returns>
         public override string ToString()
         {
-            return "<Failed>: " + Child + " (" + Uid + ") " + (Cause != null ? ", Cause=" + Cause : "");
+            return "<Failed>: " + Child + " (" + Uid + ") " + (Cause is object ? ", Cause=" + Cause : "");
         }
     }
 
@@ -697,7 +697,7 @@ namespace Akka.Dispatch.SysMsg
         /// <returns>TBD</returns>
         public override string ToString()
         {
-            return "<Recreate>" + (Cause == null ? "" : " Cause: " + Cause);
+            return "<Recreate>" + (Cause is null ? "" : " Cause: " + Cause);
         }
     }
 
@@ -730,7 +730,7 @@ namespace Akka.Dispatch.SysMsg
         /// <returns>TBD</returns>
         public override string ToString()
         {
-            return "<Resume>" + (CausedByFailure == null ? "" : " CausedByFailure: " + CausedByFailure);
+            return "<Resume>" + (CausedByFailure is null ? "" : " CausedByFailure: " + CausedByFailure);
         }
     }
 
@@ -834,7 +834,7 @@ namespace Akka.Dispatch.SysMsg
         /// <returns>TBD</returns>
         public override string ToString()
         {
-            return "<Escalate>" + (Reason == null ? "" : " Reason: " + Reason);
+            return "<Escalate>" + (Reason is null ? "" : " Reason: " + Reason);
         }
     }
 
@@ -900,7 +900,7 @@ namespace Akka.Dispatch.SysMsg
         /// <returns>TBD</returns>
         public override string ToString()
         {
-            return $"<Create>{(Failure == null ? "" : " Failure: " + Failure)}";
+            return $"<Create>{(Failure is null ? "" : " Failure: " + Failure)}";
         }
     }
 

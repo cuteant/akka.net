@@ -138,7 +138,7 @@ namespace Akka.Remote
         /// <exception cref="Exception">This exception is thrown when a general error occurs during startup.</exception>
         public override void Start()
         {
-            if (_endpointManager == null)
+            if (_endpointManager is null)
             {
                 if (_log.IsInfoEnabled) _log.StartingRemoting();
                 Interlocked.Exchange(ref _endpointManager, System.SystemActorOf(RARP.For(System).ConfigureDispatcher(
@@ -210,7 +210,7 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         public override Task Shutdown()
         {
-            if (_endpointManager == null)
+            if (_endpointManager is null)
             {
                 if (_log.IsWarningEnabled) _log.RemotingIsNotRunningIgnoringShutdownAttempt();
                 return TaskConstants.BooleanTrue;
@@ -261,7 +261,7 @@ namespace Akka.Remote
         /// <exception cref="RemoteTransportException">TBD</exception>
         public override void Send(object message, IActorRef sender, RemoteActorRef recipient)
         {
-            if (null == _endpointManager) { ThrowHelper.ThrowRemoteTransportException_EndpointManager(); }
+            if (_endpointManager is null) { ThrowHelper.ThrowRemoteTransportException_EndpointManager(); }
 
             _endpointManager.Tell(new EndpointManager.Send(message, recipient, sender), sender ?? ActorRefs.NoSender);
         }
@@ -276,7 +276,7 @@ namespace Akka.Remote
         /// <returns>TBD</returns>
         public override Task<bool> ManagementCommand(object cmd)
         {
-            if (null == _endpointManager) { ThrowHelper.ThrowRemoteTransportException_EndpointManager_Cmd(); }
+            if (_endpointManager is null) { ThrowHelper.ThrowRemoteTransportException_EndpointManager_Cmd(); }
 
             return _endpointManager
                 .Ask<EndpointManager.ManagementCommandAck>(new EndpointManager.ManagementCommand(cmd), Provider.RemoteSettings.CommandAckTimeout)
@@ -315,7 +315,7 @@ namespace Akka.Remote
         /// </exception>
         public override void Quarantine(Address address, int? uid)
         {
-            if (null == _endpointManager) { ThrowHelper.ThrowRemoteTransportException_EndpointManager(address, uid); }
+            if (_endpointManager is null) { ThrowHelper.ThrowRemoteTransportException_EndpointManager(address, uid); }
 
             _endpointManager.Tell(new EndpointManager.Quarantine(address, uid));
         }

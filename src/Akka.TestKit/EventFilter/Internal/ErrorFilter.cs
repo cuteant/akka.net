@@ -56,7 +56,7 @@ namespace Akka.TestKit.Internal
         protected override bool IsMatch(LogEvent evt)
         {
             var error = evt as Error;
-            if(error != null)
+            if(error is object)
             {
                 var logSource = error.LogSource;
                 var errorMessage = error.Message;
@@ -69,8 +69,8 @@ namespace Akka.TestKit.Internal
 
         private bool IsMatch(string logSource, object errorMessage, Exception cause)
         {
-            var hasCause = cause != null;
-            var matchAnyErrorType = _exceptionType == null;
+            var hasCause = cause is object;
+            var matchAnyErrorType = _exceptionType is null;
             if (matchAnyErrorType)
             {
                 if (!hasCause)
@@ -96,7 +96,7 @@ namespace Akka.TestKit.Internal
             //At this stage we have a cause, and it's of the specified type.
             //Check that message matches, if nothing matches, recurse
             var causeMessage = cause.Message;
-            var noMessages = (errorMessage == null && string.IsNullOrEmpty(causeMessage));
+            var noMessages = (errorMessage is null && string.IsNullOrEmpty(causeMessage));
             return noMessages
                    || InternalDoMatch(logSource, errorMessage)
                    || InternalDoMatch(logSource, causeMessage)
@@ -110,7 +110,7 @@ namespace Akka.TestKit.Internal
         {
             get
             {
-                if(_exceptionType == null)
+                if(_exceptionType is null)
                     return "Error";
                 return "Error with Cause <" + _exceptionType + ">";
             }

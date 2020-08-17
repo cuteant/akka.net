@@ -88,7 +88,7 @@ namespace Akka.Streams.Implementation
             SubReceive = new SubReceive(message =>
             {
                 var publisher = message as ExposedPublisher;
-                if (publisher == null) ThrowHelper.ThrowIllegalStateException_FP(message);
+                if (publisher is null) ThrowHelper.ThrowIllegalStateException_FP(message);
 
                 ExposedPublisher = publisher.Publisher;
                 SubReceive.Become(DownstreamRunning);

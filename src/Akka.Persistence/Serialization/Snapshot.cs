@@ -43,7 +43,7 @@ namespace Akka.Persistence.Serialization
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (Data != null ? Data.GetHashCode() : 0);
+            return (Data is object ? Data.GetHashCode() : 0);
         }
     }
 }

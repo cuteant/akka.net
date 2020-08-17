@@ -131,7 +131,7 @@ namespace Akka.DistributedData
 
         public PNCounter ResetDelta()
         {
-            if (Increments.Delta == null && Decrements.Delta == null)
+            if (Increments.Delta is null && Decrements.Delta is null)
                 return this;
 
             return new PNCounter(Increments.ResetDelta(), Decrements.ResetDelta());

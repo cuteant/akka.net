@@ -28,7 +28,7 @@ namespace Akka.Persistence.Internal
         /// <returns>TBD</returns>
         public static T Pop<T>(this LinkedList<T> self)
         {
-            if (self.First != null)
+            if (self.First is object)
             {
                 var first = self.First.Value;
                 self.RemoveFirst();

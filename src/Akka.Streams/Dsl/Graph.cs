@@ -100,7 +100,7 @@ namespace Akka.Streams.Dsl
             private void DequeueAndDispatch()
             {
                 var inlet = _pendingQueue.Dequeue();
-                if (inlet == null)
+                if (inlet is null)
                 {
                     // inlet is null if we reached the end of the queue
                     if(AreUpstreamsClosed)
@@ -529,7 +529,7 @@ namespace Akka.Streams.Dsl
                 Inlet<T> next = null;
                 ix = 0;
 
-                while (ix < _stage.In.Count && next == null)
+                while (ix < _stage.In.Count && next is null)
                 {
                     if (_allBuffers[ix].NonEmpty)
                     {
@@ -1090,7 +1090,7 @@ namespace Akka.Streams.Dsl
 
                     SetHandler(output, onPull: () =>
                     {
-                        if (_outPendingElement != null)
+                        if (_outPendingElement is object)
                         {
                             var element = (T) _outPendingElement;
                             if (index == _outPendingIndex)
@@ -1113,7 +1113,7 @@ namespace Akka.Streams.Dsl
                         downstreamRunning--;
                         if(downstreamRunning == 0)
                             CompleteStage();
-                        else if (_outPendingElement != null)
+                        else if (_outPendingElement is object)
                         {
                             if (index == _outPendingIndex)
                             {
@@ -1154,7 +1154,7 @@ namespace Akka.Streams.Dsl
 
             public override void OnUpstreamFinish()
             {
-                if (_outPendingElement == null)
+                if (_outPendingElement is null)
                     CompleteStage();
             }
         }
@@ -1308,7 +1308,7 @@ namespace Akka.Streams.Dsl
                 // outlet is null if depleted _pendingQueue without reaching
                 // an outlet that is not closed, in which case we just return
 
-                if (outlet != null)
+                if (outlet is object)
                 {
                     if (!IsClosed(outlet))
                     {

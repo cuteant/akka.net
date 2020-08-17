@@ -57,7 +57,7 @@ namespace Akka.Tools.MatchHandler
         /// </exception>
         public MatchBuilder(IMatchCompiler<TItem> compiler)
         {
-            if (null == compiler) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.compiler, AkkaExceptionResource.ArgumentNull_Compiler);
+            if (compiler is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.compiler, AkkaExceptionResource.ArgumentNull_Compiler);
             _compiler = compiler;
         }
 
@@ -80,7 +80,7 @@ namespace Akka.Tools.MatchHandler
             EnsureCanAdd();
             var handlesType = typeof(T);
             AddHandler(handlesType, PredicateAndHandler.CreateAction(handler, shouldHandle));
-            if (handlesType == _itemType && shouldHandle == null)
+            if (handlesType == _itemType && shouldHandle is null)
                 _state = State.MatchAnyAdded;
         }
 
@@ -106,7 +106,7 @@ namespace Akka.Tools.MatchHandler
             EnsureCanAdd();
             EnsureCanHandleType(handlesType);
             AddHandler(handlesType, PredicateAndHandler.CreateAction(handler, shouldHandle, true));
-            if (handlesType == _itemType && shouldHandle == null)
+            if (handlesType == _itemType && shouldHandle is null)
                 _state = State.MatchAnyAdded;
         }
 

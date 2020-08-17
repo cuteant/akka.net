@@ -50,7 +50,7 @@ namespace Akka.Persistence.MongoDb
 
         public MongoDbPersistence(ExtendedActorSystem system)
         {
-            if (system == null)
+            if (system is null)
                 throw new ArgumentNullException(nameof(system));
 
             // Initialize fallback configuration defaults

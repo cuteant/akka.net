@@ -207,7 +207,7 @@ namespace Akka.DistributedData.Serialization
         /// <inheritdoc />
         protected override string GetManifest(Type type)
         {
-            if (null == type) { return null; }
+            if (type is null) { return null; }
             var manifestMap = s_manifestMap;
             if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             foreach (var item in manifestMap)
@@ -754,7 +754,7 @@ namespace Akka.DistributedData.Serialization
         private Protocol.ReadResult ReadResultToProto(ReadResult msg)
         {
             Protocol.DataEnvelope envelope = null;
-            if (msg.Envelope != null)
+            if (msg.Envelope is object)
             {
                 envelope = DataEnvelopeToProto(msg.Envelope);
             }
@@ -818,7 +818,7 @@ namespace Akka.DistributedData.Serialization
         private Write WriteFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.Write>(bytes, s_defaultResolver);
-            var fromNode = proto.FromNode != null ? _ser.UniqueAddressFromProto(proto.FromNode) : null;
+            var fromNode = proto.FromNode is object ? _ser.UniqueAddressFromProto(proto.FromNode) : null;
             return new Write(proto.Key, DataEnvelopeFromProto(proto.Envelope), fromNode);
         }
 
@@ -831,7 +831,7 @@ namespace Akka.DistributedData.Serialization
         private Read ReadFromBinary(in ReadOnlySpan<byte> bytes)
         {
             var proto = MessagePackSerializer.Deserialize<Protocol.Read>(bytes, s_defaultResolver);
-            var fromNode = proto.FromNode != null ? _ser.UniqueAddressFromProto(proto.FromNode) : null;
+            var fromNode = proto.FromNode is object ? _ser.UniqueAddressFromProto(proto.FromNode) : null;
             return new Read(proto.Key, fromNode);
         }
     }

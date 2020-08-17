@@ -126,9 +126,9 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         {
             unchecked
             {
-                var hashCode = (Owner != null ? Owner.GetHashCode() : 0);
+                var hashCode = (Owner is object ? Owner.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Version.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Content != null ? Content.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Content is object ? Content.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -171,7 +171,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// TBD
         /// </summary>
         [IgnoreMember, IgnoreDataMember]
-        public Routee Routee { get { return _routee ?? (_routee = Ref != null ? new ActorRefRoutee(Ref) : null); } }
+        public Routee Routee { get { return _routee ?? (_routee = Ref is object ? new ActorRefRoutee(Ref) : null); } }
 
         /// <inheritdoc/>
         public bool Equals(ValueHolder other)
@@ -194,7 +194,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
             unchecked
             {
                 var hashCode = Version.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Ref != null ? Ref.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Ref is object ? Ref.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -295,7 +295,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return Buckets != null ? Buckets.GetHashCode() : 0;
+            return Buckets is object ? Buckets.GetHashCode() : 0;
         }
     }
 
@@ -444,7 +444,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
 
         public override int GetHashCode()
         {
-            return (Message != null ? Message.GetHashCode() : 0);
+            return (Message is object ? Message.GetHashCode() : 0);
         }
 
         public override string ToString()

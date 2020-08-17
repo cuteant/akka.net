@@ -121,12 +121,12 @@ namespace Akka.MultiNodeTestRunner
         {
             var baseConfigType = typeof(MultiNodeConfig);
             var current = configUser;
-            while (current != null)
+            while (current is object)
             {
                 var ctorWithConfig = current
                     .GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance)
                     .FirstOrDefault(c => null != c.GetParameters().FirstOrDefault(p => p.ParameterType.IsSubclassOf(baseConfigType)));
-                if (ctorWithConfig != null) return ctorWithConfig;
+                if (ctorWithConfig is object) return ctorWithConfig;
 
                 current = current.BaseType;
             }
@@ -139,7 +139,7 @@ namespace Akka.MultiNodeTestRunner
             var ctors = configType.GetConstructors(BindingFlags.NonPublic | BindingFlags.Public | BindingFlags.Instance);
             var empty = ctors.FirstOrDefault(c => !c.GetParameters().Any());
 
-            return empty != null
+            return empty is object
                 ? new object[0]
                 : ctors.First().GetParameters().Select(p => p.ParameterType.IsValueType ? Activator.CreateInstance(p.ParameterType) : null).ToArray();
         }

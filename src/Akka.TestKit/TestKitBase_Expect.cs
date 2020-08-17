@@ -73,7 +73,7 @@ namespace Akka.TestKit
         {
             return InternalExpectMsg<T>(RemainingOrDilated(RemainingOrDilated(timeout)), (m, sender) =>
             {
-                if (isMessage != null)
+                if (isMessage is object)
                     AssertPredicateIsTrueForMessage(isMessage, m, hint);
             }, hint);
         }
@@ -248,7 +248,7 @@ namespace Akka.TestKit
                 ConditionalLog(shouldLog, failMessage2, typeof(T), message.GetType(), message, hint ?? "", sender);
             }
             var tMessage = (T)message;
-            if (assert != null)
+            if (assert is object)
                 assert(tMessage, sender);
             return envelope;
         }
@@ -316,7 +316,7 @@ namespace Akka.TestKit
         private T InternalExpectMsgAnyOf<T>(TimeSpan max, T[] messages)
         {
             var o = ReceiveOne(max);
-            _assertions.AssertTrue(o != null, string.Format("Timeout {0} during waiting for ExpectMsgAnyOf waiting for ({1})", max, StringFormat.SafeJoin(",", messages)));
+            _assertions.AssertTrue(o is object, string.Format("Timeout {0} during waiting for ExpectMsgAnyOf waiting for ({1})", max, StringFormat.SafeJoin(",", messages)));
             _assertions.AssertTrue(messages.Contains((T)o), "ExpectMsgAnyOf found unexpected {0}", o);
 
             return (T)o;

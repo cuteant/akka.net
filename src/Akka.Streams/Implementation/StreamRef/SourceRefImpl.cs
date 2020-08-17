@@ -88,7 +88,7 @@ namespace Akka.Streams.Implementation.StreamRef
             {
                 get
                 {
-                    if (_partnerRef == null) throw new TargetRefNotInitializedYetException();
+                    if (_partnerRef is null) throw new TargetRefNotInitializedYetException();
                     return _partnerRef;
                 }
             }
@@ -122,7 +122,7 @@ namespace Akka.Streams.Implementation.StreamRef
                 Log.Debug("[{0}] Allocated receiver: {1}", StageActorName, Self);
 
                 var initialPartnerRef = _stage._initialPartnerRef;
-                if (initialPartnerRef != null) // this will set the partnerRef
+                if (initialPartnerRef is object) // this will set the partnerRef
                     ObserveAndValidateSender(initialPartnerRef, "<should never happen>");
 
                 _promise.SetResult(new SinkRefImpl<TOut>(Self));
@@ -147,7 +147,7 @@ namespace Akka.Streams.Implementation.StreamRef
             private void TriggerCumulativeDemand()
             {
                 var i = _receiveBuffer.RemainingCapacity - _localRemainingRequested;
-                if (_partnerRef != null && i > 0)
+                if (_partnerRef is object && i > 0)
                 {
                     var addDemand = _requestStrategy.RequestDemand((int)(_receiveBuffer.Used + _localRemainingRequested));
 
@@ -264,7 +264,7 @@ namespace Akka.Streams.Implementation.StreamRef
             /// <exception cref="InvalidPartnerActorException"> Thrown when <paramref name="partner"/> is invalid</exception>
             private void ObserveAndValidateSender(IActorRef partner, string failureMessage)
             {
-                if (_partnerRef == null)
+                if (_partnerRef is null)
                 {
                     Log.Debug("Received first message from {0}, assuming it to be the remote partner for this stage", partner);
                     _partnerRef = partner;

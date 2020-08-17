@@ -11,14 +11,14 @@ namespace Akka.Serialization.Formatters
         public ByteString Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
             var bts = reader.ReadBytes();
-            if (null == bts) { return null; }
+            if (bts is null) { return null; }
 
             return ProtobufUtil.FromBytes(bts);
         }
 
         public void Serialize(ref MessagePackWriter writer, ref int idx, ByteString value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var bts = ProtobufUtil.GetBuffer(value);
             writer.WriteBytes(bts, ref idx);

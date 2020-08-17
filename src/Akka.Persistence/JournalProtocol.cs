@@ -86,7 +86,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public DeleteMessagesFailure(Exception cause, long toSequenceNr)
         {
-            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_DeleteMessagesFailure);; }
+            if (cause is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_DeleteMessagesFailure);; }
             Cause = cause;
             ToSequenceNr = toSequenceNr;
         }
@@ -120,7 +120,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Cause != null ? Cause.GetHashCode() : 0) * 397) ^ ToSequenceNr.GetHashCode();
+                return ((Cause is object ? Cause.GetHashCode() : 0) * 397) ^ ToSequenceNr.GetHashCode();
             }
         }
 
@@ -190,9 +190,9 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                var hashCode = (PersistenceId != null ? PersistenceId.GetHashCode() : 0);
+                var hashCode = (PersistenceId is object ? PersistenceId.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ ToSequenceNr.GetHashCode();
-                hashCode = (hashCode * 397) ^ (PersistentActor != null ? PersistentActor.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PersistentActor is object ? PersistentActor.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -258,8 +258,8 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                var hashCode = (Messages != null ? Messages.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PersistentActor != null ? PersistentActor.GetHashCode() : 0);
+                var hashCode = (Messages is object ? Messages.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PersistentActor is object ? PersistentActor.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ ActorInstanceId;
                 return hashCode;
             }
@@ -300,7 +300,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public WriteMessagesFailed(Exception cause)
         {
-            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessagesFailed); }
+            if (cause is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessagesFailed); }
             Cause = cause;
         }
 
@@ -323,7 +323,7 @@ namespace Akka.Persistence
         public override bool Equals(object obj) => Equals(obj as WriteMessagesFailed);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => Cause != null ? Cause.GetHashCode() : 0;
+        public override int GetHashCode() => Cause is object ? Cause.GetHashCode() : 0;
 
         /// <inheritdoc/>
         public override string ToString() => $"WriteMessagesFailed<cause: {Cause}>";
@@ -378,7 +378,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Persistent != null ? Persistent.GetHashCode() : 0) * 397) ^ ActorInstanceId;
+                return ((Persistent is object ? Persistent.GetHashCode() : 0) * 397) ^ ActorInstanceId;
             }
         }
 
@@ -406,7 +406,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public WriteMessageRejected(IPersistentRepresentation persistent, Exception cause, int actorInstanceId)
         {
-            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessageRejected); }
+            if (cause is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessageRejected); }
             Cause = cause;
             Persistent = persistent;
             ActorInstanceId = actorInstanceId;
@@ -449,9 +449,9 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                var hashCode = (Cause != null ? Cause.GetHashCode() : 0);
+                var hashCode = (Cause is object ? Cause.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ ActorInstanceId;
-                hashCode = (hashCode * 397) ^ (Persistent != null ? Persistent.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Persistent is object ? Persistent.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -479,7 +479,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public WriteMessageFailure(IPersistentRepresentation persistent, Exception cause, int actorInstanceId)
         {
-            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessageFailure); }
+            if (cause is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_WriteMessageFailure); }
             Cause = cause;
             Persistent = persistent;
             ActorInstanceId = actorInstanceId;
@@ -522,9 +522,9 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                var hashCode = (Cause != null ? Cause.GetHashCode() : 0);
+                var hashCode = (Cause is object ? Cause.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ ActorInstanceId;
-                hashCode = (hashCode * 397) ^ (Persistent != null ? Persistent.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Persistent is object ? Persistent.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -581,7 +581,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Message != null ? Message.GetHashCode() : 0) * 397) ^ ActorInstanceId;
+                return ((Message is object ? Message.GetHashCode() : 0) * 397) ^ ActorInstanceId;
             }
         }
 
@@ -667,8 +667,8 @@ namespace Akka.Persistence
                 var hashCode = FromSequenceNr.GetHashCode();
                 hashCode = (hashCode * 397) ^ ToSequenceNr.GetHashCode();
                 hashCode = (hashCode * 397) ^ Max.GetHashCode();
-                hashCode = (hashCode * 397) ^ (PersistenceId != null ? PersistenceId.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (PersistentActor != null ? PersistentActor.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PersistenceId is object ? PersistenceId.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (PersistentActor is object ? PersistentActor.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -712,7 +712,7 @@ namespace Akka.Persistence
         public override bool Equals(object obj) => Equals(obj as ReplayedMessage);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => Persistent != null ? Persistent.GetHashCode() : 0;
+        public override int GetHashCode() => Persistent is object ? Persistent.GetHashCode() : 0;
 
         /// <inheritdoc/>
         public override string ToString() => $"ReplayedMessage<message: {Persistent}>";
@@ -780,7 +780,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public ReplayMessagesFailure(Exception cause)
         {
-            if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_ReplayMessagesFailure); }
+            if (cause is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_ReplayMessagesFailure); }
             Cause = cause;
         }
 

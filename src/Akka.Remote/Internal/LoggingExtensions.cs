@@ -344,7 +344,7 @@ namespace Akka.Remote
         [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void TriedToAssociateWithUnreachableRemoteAddress(this ILoggingAdapter logger, InvalidAssociation ia, RemoteSettings settings)
         {
-            var causedBy = ia.InnerException == null
+            var causedBy = ia.InnerException is null
                 ? ""
                 : $"Caused by: [{ia.InnerException}]";
             logger.Warning("Tried to associate with unreachable remote address [{0}]. Address is now gated for {1} ms, all messages to this address will be delivered to dead letters. Reason: [{2}] {3}",

@@ -171,7 +171,7 @@ namespace Akka.Cluster.Tools.Client
         /// <returns>TBD</returns>
         public static Props Props(ClusterClientSettings settings)
         {
-            if (settings == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.settings);
+            if (settings is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.settings);
 
             return Actor.Props.Create(() => new ClusterClient(settings)).WithDeploy(Deploy.Local);
         }
@@ -230,7 +230,7 @@ namespace Akka.Cluster.Tools.Client
 
         private void ScheduleRefreshContactsTick(TimeSpan interval)
         {
-            if (_refreshContactsCancelable != null)
+            if (_refreshContactsCancelable is object)
             {
                 _refreshContactsCancelable.Cancel();
                 _refreshContactsCancelable = null;
@@ -252,7 +252,7 @@ namespace Akka.Cluster.Tools.Client
             base.PostStop();
             _heartbeatTask.Cancel();
 
-            if (_refreshContactsCancelable != null)
+            if (_refreshContactsCancelable is object)
             {
                 _refreshContactsCancelable.Cancel();
                 _refreshContactsCancelable = null;
@@ -296,7 +296,7 @@ namespace Akka.Cluster.Tools.Client
                 case ActorIdentity actorIdentify:
                     var receptionist = actorIdentify.Subject;
 
-                    if (receptionist != null)
+                    if (receptionist is object)
                     {
                         if (_log.IsInfoEnabled) { _log.ConnectedTo(receptionist); }
                         ScheduleRefreshContactsTick(_settings.RefreshContactsInterval);

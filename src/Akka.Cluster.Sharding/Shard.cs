@@ -471,7 +471,7 @@ namespace Akka.Cluster.Sharding
                 ? Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(idleInterval, idleInterval, Self, PassivateIdleTick.Instance, Self)
                 : null;
 
-            if (settings.LeaseSettings != null)
+            if (settings.LeaseSettings is object)
             {
                 Lease = LeaseProvider.Get(Context.System).GetLease(
                     $"{Context.System.Name}-shard-{typeName}-{shardId}",
@@ -522,7 +522,7 @@ namespace Akka.Cluster.Sharding
         /// <param name="shard"></param>
         public static void AcquireLeaseIfNeeded<TShard>(this TShard shard) where TShard : IShard
         {
-            if (shard.Lease != null)
+            if (shard.Lease is object)
             {
                 shard.TryGetLease(shard.Lease);
                 shard.Context.Become(shard.AwaitingLease());
@@ -533,7 +533,7 @@ namespace Akka.Cluster.Sharding
 
         public static void ReleaseLeaseIfNeeded<TShard>(this TShard shard) where TShard : IShard
         {
-            if (shard.Lease != null)
+            if (shard.Lease is object)
             {
                 shard.Lease.Release().ContinueWith(r =>
                 {
@@ -599,7 +599,7 @@ namespace Akka.Cluster.Sharding
                         shard.OnLeaseAcquired();
                         return true;
 
-                    case Shard.LeaseAcquireResult lar when !lar.Acquired && lar.Reason == null:
+                    case Shard.LeaseAcquireResult lar when !lar.Acquired && lar.Reason is null:
                         shard.Log.Error(
                               "Failed to get lease for shard type [{0}] id [{1}]. Retry in {2}",
                               shard.TypeName,
@@ -608,7 +608,7 @@ namespace Akka.Cluster.Sharding
                         shard.Timers.StartSingleTimer(LeaseRetryTimer, Shard.LeaseRetry.Instance, shard.LeaseRetryInterval);
                         return true;
 
-                    case Shard.LeaseAcquireResult lar when !lar.Acquired && lar.Reason != null:
+                    case Shard.LeaseAcquireResult lar when !lar.Acquired && lar.Reason is object:
                         shard.Log.Error(
                               lar.Reason,
                               "Failed to get lease for shard type [{0}] id [{1}]. Retry in {2}",
@@ -784,7 +784,7 @@ namespace Akka.Cluster.Sharding
         private static void HandOff<TShard>(this TShard shard, IActorRef replyTo) where TShard : IShard
         {
             var shardLog = shard.Log;
-            if (shard.HandOffStopper != null)
+            if (shard.HandOffStopper is object)
             {
                 shardLog.HandOffShardReceivedDuringExistingHandOff(shard);
             }
@@ -832,7 +832,7 @@ namespace Akka.Cluster.Sharding
         {
             if (Equals(shard.HandOffStopper, terminatedRef))
                 shard.Context.Stop(shard.Context.Self);
-            else if (shard.IdByRef.ContainsKey(terminatedRef) && shard.HandOffStopper == null)
+            else if (shard.IdByRef.ContainsKey(terminatedRef) && shard.HandOffStopper is null)
                 shard.EntityTerminated(terminatedRef);
         }
 
@@ -963,7 +963,7 @@ namespace Akka.Cluster.Sharding
             shard.IdByRef = shard.IdByRef.Remove(tref);
             shard.RefById = shard.RefById.Remove(id);
 
-            if (shard.PassivateIdleTask != null)
+            if (shard.PassivateIdleTask is object)
             {
                 shard.LastMessageTimestamp = shard.LastMessageTimestamp.Remove(id);
             }

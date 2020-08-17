@@ -175,7 +175,7 @@ namespace Akka.Persistence.MongoDb.Journal
                 .Limit(1)
                 .SingleOrDefaultAsync();
 
-            if (maxSeqNoEntry == null)
+            if (maxSeqNoEntry is null)
                 return 0L; // recovered nothing
 
             var maxOrderingId = maxSeqNoEntry.Ordering.Value;

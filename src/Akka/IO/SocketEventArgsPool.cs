@@ -55,7 +55,7 @@ namespace Akka.IO
             try
             {
                 e.SetBuffer(null, 0, 0);
-                if (e.BufferList != null)
+                if (e.BufferList is object)
                 {
                     e.BufferList = null;
                 }
@@ -91,7 +91,7 @@ namespace Akka.IO
             if (data.IsCompact)
             {
                 var buffer = data.Buffers[0];
-                if (args.BufferList != null)
+                if (args.BufferList is object)
                 {
                     // BufferList property setter is not simple member association operation, 
                     // but the getter is. Therefore we first check if we need to clear buffer list

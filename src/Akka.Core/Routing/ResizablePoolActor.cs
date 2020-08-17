@@ -35,7 +35,7 @@ namespace Akka.Routing
             {
                 var context = Context;
                 var resizablePoolCell = context as ResizablePoolCell;
-                if (null == resizablePoolCell) { AkkaThrowHelper.ThrowActorInitializationException_ResizablePoolActor(context); }
+                if (resizablePoolCell is null) { AkkaThrowHelper.ThrowActorInitializationException_ResizablePoolActor(context); }
                 return resizablePoolCell;
             }
         }
@@ -47,7 +47,7 @@ namespace Akka.Routing
         /// <returns>TBD</returns>
         protected override void OnReceive(object message)
         {
-            if (message is Resize && ResizerCell != null)
+            if (message is Resize && ResizerCell is object)
             {
                 ResizerCell.Resize(false);
             }

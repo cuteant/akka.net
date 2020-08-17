@@ -40,7 +40,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public AtLeastOnceDeliverySnapshot(long currentDeliveryId, UnconfirmedDelivery[] unconfirmedDeliveries)
         {
-            if (null == unconfirmedDeliveries)
+            if (unconfirmedDeliveries is null)
             {
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.unconfirmedDeliveries, ExceptionResource.ArgumentNull_AtLeastOnceDeliverySnapshot);
             }
@@ -79,7 +79,7 @@ namespace Akka.Persistence
             unchecked
             {
                 int hashCode = CurrentDeliveryId.GetHashCode();
-                hashCode = (hashCode * 397) ^ (UnconfirmedDeliveries != null ? UnconfirmedDeliveries.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (UnconfirmedDeliveries is object ? UnconfirmedDeliveries.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -105,7 +105,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public UnconfirmedWarning(UnconfirmedDelivery[] unconfirmedDeliveries)
         {
-            if (null == unconfirmedDeliveries)
+            if (unconfirmedDeliveries is null)
             {
                 ThrowHelper.ThrowArgumentNullException(ExceptionArgument.unconfirmedDeliveries, ExceptionResource.ArgumentNull_UnconfirmedWarning);
             }
@@ -131,7 +131,7 @@ namespace Akka.Persistence
         public override bool Equals(object obj) => Equals(obj as UnconfirmedWarning);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => UnconfirmedDeliveries != null ? UnconfirmedDeliveries.GetHashCode() : 0;
+        public override int GetHashCode() => UnconfirmedDeliveries is object ? UnconfirmedDeliveries.GetHashCode() : 0;
 
         /// <inheritdoc/>
         public override string ToString() => $"UnconfirmedWarning<unconfirmedDeliveries: {UnconfirmedDeliveries.Length}>";
@@ -196,8 +196,8 @@ namespace Akka.Persistence
             unchecked
             {
                 int hashCode = DeliveryId.GetHashCode();
-                hashCode = (hashCode * 397) ^ (Destination != null ? Destination.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Message != null ? Message.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Destination is object ? Destination.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Message is object ? Message.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -300,8 +300,8 @@ namespace Akka.Persistence
             {
                 unchecked
                 {
-                    int hashCode = (Destination != null ? Destination.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (Message != null ? Message.GetHashCode() : 0);
+                    int hashCode = (Destination is object ? Destination.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Message is object ? Message.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ Timestamp.GetHashCode();
                     hashCode = (hashCode * 397) ^ Attempt;
                     return hashCode;
@@ -392,7 +392,7 @@ namespace Akka.Persistence
 
         private void StartRedeliverTask()
         {
-            if (_redeliverScheduleCancelable != null) { return; }
+            if (_redeliverScheduleCancelable is object) { return; }
             var delay = new TimeSpan(RedeliverInterval.Ticks / 2);
             _redeliverScheduleCancelable = _context.System.Scheduler.ScheduleTellRepeatedlyCancelable(delay, RedeliverInterval, _context.Self,
                 RedeliveryTick.Instance, _context.Self);

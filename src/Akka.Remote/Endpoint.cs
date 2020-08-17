@@ -410,7 +410,7 @@ namespace Akka.Remote
 
             Reset(); // needs to be called at startup
             _writer = CreateWriter(); // need to create writer at startup
-            var uid = handleOrActive != null ? (int?)handleOrActive.HandshakeInfo.Uid : null;
+            var uid = handleOrActive is object ? (int?)handleOrActive.HandshakeInfo.Uid : null;
             Uid = uid;
             UidConfirmed = uid.HasValue && (uid != _refuseUid);
 
@@ -469,11 +469,11 @@ namespace Akka.Remote
 
             if (_log.IsWarningEnabled) _log.AssociationWithRemoteSystemHasFailed(_remoteAddress, _settings, ex);
             UidConfirmed = false; // Need confirmation of UID again
-            if ((_resendBuffer.Nacked.Count > 0 || _resendBuffer.NonAcked.Count > 0) && _bailoutAt == null)
+            if ((_resendBuffer.Nacked.Count > 0 || _resendBuffer.NonAcked.Count > 0) && _bailoutAt is null)
             {
                 _bailoutAt = Deadline.Now + _settings.InitialSysMsgDeliveryTimeout;
             }
-            if (_gatedPatterns == null)
+            if (_gatedPatterns is null)
             {
                 _gatedPatterns = ConfigurePatterns(() => Gated(writerTerminated: false, earlyUngateRequested: false));
             }
@@ -567,7 +567,7 @@ namespace Akka.Remote
             //Trying to serve until our last breath
             ResendAll();
             _writer.Tell(EndpointWriter.FlushAndStop.Instance);
-            if (_flushWaitPatterns == null) { _flushWaitPatterns = ConfigurePatterns(FlushWait); }
+            if (_flushWaitPatterns is null) { _flushWaitPatterns = ConfigurePatterns(FlushWait); }
             Become(_flushWaitPatterns);
         }
 
@@ -642,7 +642,7 @@ namespace Akka.Remote
                         TooLongIdle.Instance, Self);
             }
 
-            if (_idlePatterns == null) { _idlePatterns = ConfigurePatterns(IdleBehavior); }
+            if (_idlePatterns is null) { _idlePatterns = ConfigurePatterns(IdleBehavior); }
             Become(_idlePatterns);
         }
 
@@ -675,7 +675,7 @@ namespace Akka.Remote
                     }
                 }
 
-                if (null == _writerTerminatedGatedPatterns) { _writerTerminatedGatedPatterns = ConfigurePatterns(() => Gated(true, earlyUngateRequested)); }
+                if (_writerTerminatedGatedPatterns is null) { _writerTerminatedGatedPatterns = ConfigurePatterns(() => Gated(true, earlyUngateRequested)); }
                 Become(_writerTerminatedGatedPatterns);
             }
             Receive<Terminated>(LocalHandleTerminated);
@@ -685,7 +685,7 @@ namespace Akka.Remote
                 if (!writerTerminated)
                 {
                     // Ungate was sent from EndpointManager, but we must wait for Terminated first.
-                    if (_earlyUngateRequestedGatedPatterns == null) { _earlyUngateRequestedGatedPatterns = ConfigurePatterns(() => Gated(false, true)); }
+                    if (_earlyUngateRequestedGatedPatterns is null) { _earlyUngateRequestedGatedPatterns = ConfigurePatterns(() => Gated(false, true)); }
                     Become(_earlyUngateRequestedGatedPatterns);
                 }
                 else if (_resendBuffer.NonAcked.Count > 0 || _resendBuffer.Nacked.Count > 0)
@@ -696,7 +696,7 @@ namespace Akka.Remote
                     // EndpointManager level stopping this actor. In case the remote system becomes
                     // reachable again it will be immediately quarantined due to out-of-sync system
                     // message buffer and becomes quarantined. In other words, this action is safe.
-                    if (_bailoutAt != null && _bailoutAt.IsOverdue)
+                    if (_bailoutAt is object && _bailoutAt.IsOverdue)
                     {
                         void ThrowHopelessAssociation()
                         {
@@ -1078,7 +1078,7 @@ namespace Akka.Remote
             _provider = RARP.For(_system).Provider;
             _msgDispatcher = new DefaultMessageDispatcher(_system, _provider, _log);
             _receiveBuffers = receiveBuffers;
-            Inbound = handleOrActive != null;
+            Inbound = handleOrActive is object;
             _ackDeadline = NewAckDeadline();
             _handle = handleOrActive;
             _remoteMetrics = RemoteMetricsExtension.Create(_system.AsInstanceOf<ExtendedActorSystem>());
@@ -1087,7 +1087,7 @@ namespace Akka.Remote
             _writeSendFunc = new Predicate<EndpointManager.Send>(WriteSend);
             _sendSuccessFunc = new Predicate<object>(SendSuccess);
 
-            if (_handle == null)
+            if (_handle is null)
             {
                 Initializing();
             }
@@ -1144,7 +1144,7 @@ namespace Akka.Remote
         {
             get
             {
-                if (null == _bufferingPatterns) { _bufferingPatterns = ConfigurePatterns(Buffering); }
+                if (_bufferingPatterns is null) { _bufferingPatterns = ConfigurePatterns(Buffering); }
                 return _bufferingPatterns;
             }
         }
@@ -1156,7 +1156,7 @@ namespace Akka.Remote
             get
             {
                 if (defaultPatternUseWriting) { return DefaultPatterns; }
-                if (null == _writingPatterns) { _writingPatterns = ConfigurePatterns(Writing); }
+                if (_writingPatterns is null) { _writingPatterns = ConfigurePatterns(Writing); }
                 return _writingPatterns;
             }
         }
@@ -1188,7 +1188,7 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         protected override void PreStart()
         {
-            if (_handle == null)
+            if (_handle is null)
             {
                 var self = Self;
                 AssociateAsync().PipeTo(self);
@@ -1229,7 +1229,7 @@ namespace Akka.Remote
                 _system.DeadLetters.Tell(msg);
             }
 
-            if (_handle != null) _handle.Disassociate(_stopReason);
+            if (_handle is object) _handle.Disassociate(_stopReason);
             EventPublisher.NotifyListeners(new DisassociatedEvent(LocalAddress, RemoteAddress, Inbound));
         }
 
@@ -1269,7 +1269,7 @@ namespace Akka.Remote
         {
             if (!WriteSend(s))
             {
-                if (s.Seq == null) EnqueueInBuffer(s);
+                if (s.Seq is null) EnqueueInBuffer(s);
                 ScheduleBackoffTimer();
                 Become(BufferingPatterns);
             }
@@ -1331,7 +1331,7 @@ namespace Akka.Remote
         {
             if (failure.Cause is InvalidAssociationException)
             {
-                if (failure.Cause.InnerException == null)
+                if (failure.Cause.InnerException is null)
                 {
                     PublishAndThrow(new InvalidAssociation(failure.Cause.Message, LocalAddress, RemoteAddress), LogLevel.WarningLevel);
                 }
@@ -1347,14 +1347,14 @@ namespace Akka.Remote
             switch (message)
             {
                 case Terminated t:
-                    if (_reader == null || t.ActorRef.Equals(_reader))
+                    if (_reader is null || t.ActorRef.Equals(_reader))
                     {
                         PublishAndThrow(ThrowHelper.GetEndpointDisassociatedException_Disassociated(), LogLevel.DebugLevel);
                     }
                     break;
 
                 case StopReading stop:
-                    if (_reader != null)
+                    if (_reader is object)
                     {
                         _reader.Tell(stop, stop.ReplyTo);
                     }
@@ -1370,7 +1370,7 @@ namespace Akka.Remote
                     _handle.Disassociate();
                     _handle = takeover.ProtocolHandle;
                     takeover.ReplyTo.Tell(new TookOver(Self, _handle));
-                    if (null == _handoffPatterns) { _handoffPatterns = ConfigurePatterns(Handoff); }
+                    if (_handoffPatterns is null) { _handoffPatterns = ConfigurePatterns(Handoff); }
                     Become(_handoffPatterns);
                     break;
 
@@ -1508,7 +1508,7 @@ namespace Akka.Remote
 
         private void TrySendPureAck()
         {
-            if (_handle != null && _lastAck != null)
+            if (_handle is object && _lastAck is object)
             {
                 if (_handle.Write(_codec.ConstructPureAck(_lastAck)))
                 {
@@ -1552,7 +1552,7 @@ namespace Akka.Remote
         {
             try
             {
-                if (_handle == null)
+                if (_handle is null)
                 {
                     ThrowHelper.ThrowEndpointException_WriteSend();
                 }
@@ -1987,12 +1987,12 @@ namespace Akka.Remote
             //{
             var ackAndMessage = TryDecodeMessageAndAck(payload);
             var ackOption = ackAndMessage.AckOption;
-            if (ackOption != null && _reliableDeliverySupervisor != null)
+            if (ackOption is object && _reliableDeliverySupervisor is object)
             {
                 _reliableDeliverySupervisor.Tell(ackOption);
             }
             var messageOption = ackAndMessage.MessageOption;
-            if (messageOption != null)
+            if (messageOption is object)
             {
                 if (messageOption.ReliableDeliveryEnabled)
                 {
@@ -2040,7 +2040,7 @@ namespace Akka.Remote
         private void HandleStopReading(EndpointWriter.StopReading stop)
         {
             SaveState();
-            if (null == _notReadingPatterns) { _notReadingPatterns = ConfigurePatterns(NotReading); }
+            if (_notReadingPatterns is null) { _notReadingPatterns = ConfigurePatterns(NotReading); }
             Become(_notReadingPatterns);
             stop.ReplyTo.Tell(new EndpointWriter.StoppedReading(stop.Writer));
         }
@@ -2066,7 +2066,7 @@ namespace Akka.Remote
         {
             var ackAndMessage = TryDecodeMessageAndAck(payload.Payload);
             var ackOption = ackAndMessage.AckOption;
-            if (ackOption != null && _reliableDeliverySupervisor != null)
+            if (ackOption is object && _reliableDeliverySupervisor is object)
             {
                 _reliableDeliverySupervisor.Tell(ackOption);
             }
@@ -2089,7 +2089,7 @@ namespace Akka.Remote
 
             void UpdateSavedState(EndpointManager.Link key, EndpointManager.ResendState expectedState)
             {
-                if (expectedState == null)
+                if (expectedState is null)
                 {
                     if (!_receiveBuffers.TryAdd(key, new EndpointManager.ResendState(_uid, _ackedReceiveBuffer)))
                     {

@@ -38,7 +38,7 @@ namespace Akka.Actor
         /// </exception>
         public static ActorSystem UseAutofac(this ActorSystem system, ILifetimeScope container, out IDependencyResolver dependencyResolver)
         {
-            if (container == null) throw new ArgumentNullException(nameof(container));
+            if (container is null) throw new ArgumentNullException(nameof(container));
 
             dependencyResolver = new AutoFacDependencyResolver(container, system);
             return system;

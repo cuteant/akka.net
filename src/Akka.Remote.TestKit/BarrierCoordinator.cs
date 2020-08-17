@@ -51,9 +51,9 @@ namespace Akka.Remote.TestKit
         public sealed class Data
         {
             public Data(IEnumerable<Controller.NodeInfo> clients, string barrier, IEnumerable<IActorRef> arrived, Deadline deadline) :
-                this(clients == null ? ImmutableHashSet.Create<Controller.NodeInfo>() : ImmutableHashSet.Create(clients.ToArray()),
+                this(clients is null ? ImmutableHashSet.Create<Controller.NodeInfo>() : ImmutableHashSet.Create(clients.ToArray()),
                 barrier,
-                arrived == null ? ImmutableHashSet.Create<IActorRef>() : ImmutableHashSet.Create(arrived.ToArray()),
+                arrived is null ? ImmutableHashSet.Create<IActorRef>() : ImmutableHashSet.Create(arrived.ToArray()),
                 deadline)
             {
             }
@@ -104,10 +104,10 @@ namespace Akka.Remote.TestKit
             {
                 unchecked
                 {
-                    int hashCode = (Clients != null ? Clients.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (Barrier != null ? Barrier.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (Arrived != null ? Arrived.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (Deadline != null ? Deadline.GetHashCode() : 0);
+                    int hashCode = (Clients is object ? Clients.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Barrier is object ? Barrier.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Arrived is object ? Arrived.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Deadline is object ? Deadline.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -161,7 +161,7 @@ namespace Akka.Remote.TestKit
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (BarrierData != null ? BarrierData.GetHashCode() : 0);
+                return (BarrierData is object ? BarrierData.GetHashCode() : 0);
             }
 
             /// <summary>
@@ -213,7 +213,7 @@ namespace Akka.Remote.TestKit
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (BarrierData != null ? BarrierData.GetHashCode() : 0);
+                return (BarrierData is object ? BarrierData.GetHashCode() : 0);
             }
 
             /// <summary>
@@ -270,7 +270,7 @@ namespace Akka.Remote.TestKit
             {
                 unchecked
                 {
-                    return ((BarrierData != null ? BarrierData.GetHashCode() : 0)*397) ^ (Node != null ? Node.GetHashCode() : 0);
+                    return ((BarrierData is object ? BarrierData.GetHashCode() : 0)*397) ^ (Node is object ? Node.GetHashCode() : 0);
                 }
             }
 
@@ -331,9 +331,9 @@ namespace Akka.Remote.TestKit
             {
                 unchecked
                 {
-                    int hashCode = (Barrier != null ? Barrier.GetHashCode() : 0);
-                    hashCode = (hashCode*397) ^ (Client != null ? Client.GetHashCode() : 0);
-                    hashCode = (hashCode*397) ^ (BarrierData != null ? BarrierData.GetHashCode() : 0);
+                    int hashCode = (Barrier is object ? Barrier.GetHashCode() : 0);
+                    hashCode = (hashCode*397) ^ (Client is object ? Client.GetHashCode() : 0);
+                    hashCode = (hashCode*397) ^ (BarrierData is object ? BarrierData.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -387,7 +387,7 @@ namespace Akka.Remote.TestKit
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (BarrierData != null ? BarrierData.GetHashCode() : 0);
+                return (BarrierData is object ? BarrierData.GetHashCode() : 0);
             }
 
             /// <summary>
@@ -444,8 +444,8 @@ namespace Akka.Remote.TestKit
             {
                 unchecked
                 {
-                    return ((BarrierData != null ? BarrierData.GetHashCode() : 0) * 397)
-                        ^ (Client != null ? Client.GetHashCode() : 0);
+                    return ((BarrierData is object ? BarrierData.GetHashCode() : 0) * 397)
+                        ^ (Client is object ? Client.GetHashCode() : 0);
                 }
             }
 
@@ -509,7 +509,7 @@ namespace Akka.Remote.TestKit
                     })
                     .With<Controller.ClientDisconnected>(disconnected =>
                     {
-                        if (arrived == null || arrived.Count == 0)
+                        if (arrived is null || arrived.Count == 0)
                             nextState =
                                 Stay()
                                     .Using(
@@ -517,7 +517,7 @@ namespace Akka.Remote.TestKit
                         else
                         {
                             var client = clients.FirstOrDefault(x => x.Name == disconnected.Name);
-                            if (client == null) nextState = Stay();
+                            if (client is null) nextState = Stay();
                             else
                             {
                                 throw new ClientLostException(@event.StateData.Copy(clients.Remove(client), arrived:arrived.Where(x => x != client.FSM).ToImmutableHashSet()), disconnected.Name);
@@ -593,7 +593,7 @@ namespace Akka.Remote.TestKit
                     .With<RemoveClient>(client =>
                     {
                         var removedClient = clients.FirstOrDefault(x => x.Name == client.Name);
-                        if (removedClient == null) nextState = Stay();
+                        if (removedClient is null) nextState = Stay();
                         else
                         {
                             nextState =

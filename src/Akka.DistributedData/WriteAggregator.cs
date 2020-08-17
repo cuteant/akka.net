@@ -43,7 +43,7 @@ namespace Akka.DistributedData
             _replyTo = replyTo;
             _durable = durable;
             _write = new Write(key.Id, envelope);
-            _delta = delta == null
+            _delta = delta is null
                 ? null
                 : new DeltaPropagation(_selfUniqueAddress, true,
                     ImmutableDictionary<string, Delta>.Empty.Add(key.Id, delta));
@@ -120,7 +120,7 @@ namespace Akka.DistributedData
                     // Deltas must be applied in order and we can't keep track of ordering of
                     // simultaneous updates so there is a chance that the delta could not be applied.
                     // Try again with the full state to the primary nodes that have not acked.
-                    if (_delta != null)
+                    if (_delta is object)
                     {
                         foreach (var address in PrimaryNodes.Intersect(Remaining))
                         {
@@ -178,7 +178,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            return obj != null && obj is WriteLocal;
+            return obj is object && obj is WriteLocal;
         }
 
         private WriteLocal() { }

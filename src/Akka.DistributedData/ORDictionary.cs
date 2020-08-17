@@ -273,7 +273,7 @@ namespace Akka.DistributedData
             {
                 var newValue = modify((TValue)deltaOldValue.ResetDelta());
                 var newValueDelta = ((IDeltaReplicatedData)newValue).Delta;
-                if (newValueDelta != null && hasOldValue)
+                if (newValueDelta is object && hasOldValue)
                 {
                     var op = new UpdateDeltaOperation(newKeys.Delta, ImmutableDictionary.CreateRange(new[] { new KeyValuePair<TKey, IReplicatedData>(key, newValueDelta) }));
                     return new ORDictionary<TKey, TValue>(newKeys, ValueMap.SetItem(key, newValue), NewDelta(op));
@@ -485,7 +485,7 @@ namespace Akka.DistributedData
 
             public PutDeltaOperation(ORSet<TKey>.IDeltaOperation underlying, TKey key, TValue value)
             {
-                if (null == underlying) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
+                if (underlying is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
                 Underlying = underlying;
                 Key = key;
                 Value = value;
@@ -555,7 +555,7 @@ namespace Akka.DistributedData
 
             public UpdateDeltaOperation(ORSet<TKey>.IDeltaOperation underlying, ImmutableDictionary<TKey, IReplicatedData> values)
             {
-                if (null == underlying) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
+                if (underlying is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
 
                 Underlying = underlying;
                 Values = values;
@@ -626,7 +626,7 @@ namespace Akka.DistributedData
         {
             public RemoveDeltaOperation(ORSet<TKey>.IDeltaOperation underlying)
             {
-                if (null == underlying) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
+                if (underlying is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
                 Underlying = underlying;
             }
 
@@ -653,7 +653,7 @@ namespace Akka.DistributedData
 
             public RemoveKeyDeltaOperation(ORSet<TKey>.IDeltaOperation underlying, TKey key)
             {
-                if (null == underlying) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
+                if (underlying is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.underlying);
                 Underlying = underlying;
                 Key = key;
             }
@@ -763,12 +763,12 @@ namespace Akka.DistributedData
 
         public ORDictionary<TKey, TValue> ResetDelta()
         {
-            return _syncRoot == null ? this : new ORDictionary<TKey, TValue>(KeySet.ResetDelta(), ValueMap);
+            return _syncRoot is null ? this : new ORDictionary<TKey, TValue>(KeySet.ResetDelta(), ValueMap);
         }
 
         public ORDictionary<TKey, TValue> MergeDelta(IDeltaOperation delta)
         {
-            if (delta == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.delta);
+            if (delta is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.delta);
 
             var withDeltas = DryMergeDeltas(delta);
             return Merge(withDeltas);
@@ -887,7 +887,7 @@ namespace Akka.DistributedData
         }
 
         private IDeltaOperation NewDelta(IDeltaOperation delta) =>
-            Delta == null ? delta : (IDeltaOperation)Delta.Merge(delta);
+            Delta is null ? delta : (IDeltaOperation)Delta.Merge(delta);
 
         #endregion
 

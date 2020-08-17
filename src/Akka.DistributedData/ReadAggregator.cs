@@ -83,7 +83,7 @@ namespace Akka.DistributedData
             switch (message)
             {
                 case ReadResult x:
-                    if (x.Envelope != null)
+                    if (x.Envelope is object)
                     {
                         _result = _result?.Merge(x.Envelope) ?? x.Envelope;
                     }
@@ -112,12 +112,12 @@ namespace Akka.DistributedData
 
         private void Reply(bool ok)
         {
-            if (ok && _result != null)
+            if (ok && _result is object)
             {
                 Context.Parent.Tell(new ReadRepair(_key.Id, _result));
                 Context.Become(WaitRepairAck(_result));
             }
-            else if (ok && _result == null)
+            else if (ok && _result is null)
             {
                 _replyTo.Tell(new NotFound(_key, _req), Context.Parent);
                 Context.Stop(Self);
@@ -173,7 +173,7 @@ namespace Akka.DistributedData
         private ReadLocal() { }
 
         /// <inheritdoc/>
-        public override bool Equals(object obj) => obj != null && obj is ReadLocal;
+        public override bool Equals(object obj) => obj is object && obj is ReadLocal;
 
         /// <inheritdoc/>
         public override string ToString() => "ReadLocal";

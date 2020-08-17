@@ -29,9 +29,9 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override object DeepCopy(object source)
         {
-            if (null == source) return null;
+            if (source is null) return null;
             var sel = source as ActorSelectionMessage;
-            if (null == sel) { AkkaThrowHelper.ThrowArgumentException_Serializer_ActorSel(source); }
+            if (sel is null) { AkkaThrowHelper.ThrowArgumentException_Serializer_ActorSel(source); }
 
             var pattern = GetPattern(sel);
             var payload = _system.SerializeMessage(sel.Message);

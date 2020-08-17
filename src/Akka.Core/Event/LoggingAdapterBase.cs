@@ -187,7 +187,7 @@ namespace Akka.Event
             if (!IsDebugEnabled)
                 return;
 
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyDebug(format);
             }
@@ -208,7 +208,7 @@ namespace Akka.Event
             if (!IsDebugEnabled)
                 return;
 
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyDebug(cause, format);
             }
@@ -239,7 +239,7 @@ namespace Akka.Event
             if (!IsInfoEnabled)
                 return;
 
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyInfo(cause, format);
             }
@@ -259,7 +259,7 @@ namespace Akka.Event
             if (!IsWarningEnabled)
                 return;
 
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyWarning(format);
             }
@@ -280,7 +280,7 @@ namespace Akka.Event
             if (!IsWarningEnabled)
                 return;
 
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyWarning(cause, format);
             }
@@ -301,7 +301,7 @@ namespace Akka.Event
             if (!IsErrorEnabled)
                 return;
 
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyError(cause, format);
             }
@@ -321,7 +321,7 @@ namespace Akka.Event
             if (!IsErrorEnabled)
                 return;
 
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyError(format);
             }
@@ -341,7 +341,7 @@ namespace Akka.Event
             if (!IsInfoEnabled)
                 return;
 
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyInfo(format);
             }
@@ -359,7 +359,7 @@ namespace Akka.Event
         /// <param name="args">An optional list of items used to format the message.</param>
         public virtual void Log(LogLevel logLevel, string format, params object[] args)
         {
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyLog(logLevel, format);
             }
@@ -378,7 +378,7 @@ namespace Akka.Event
         /// <param name="args">An optional list of items used to format the message.</param>
         public virtual void Log(LogLevel logLevel, Exception cause, string format, params object[] args)
         {
-            if (args == null || 0u >= (uint)args.Length)
+            if (args is null || 0u >= (uint)args.Length)
             {
                 NotifyLog(logLevel, cause, format);
             }

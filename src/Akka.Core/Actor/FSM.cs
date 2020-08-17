@@ -77,7 +77,7 @@ namespace Akka.Actor
             {
                 unchecked
                 {
-                    return ((FsmRef != null ? FsmRef.GetHashCode() : 0) * 397) ^ EqualityComparer<TS>.Default.GetHashCode(State);
+                    return ((FsmRef is object ? FsmRef.GetHashCode() : 0) * 397) ^ EqualityComparer<TS>.Default.GetHashCode(State);
                 }
             }
 
@@ -148,7 +148,7 @@ namespace Akka.Actor
             {
                 unchecked
                 {
-                    var hashCode = (FsmRef != null ? FsmRef.GetHashCode() : 0);
+                    var hashCode = (FsmRef is object ? FsmRef.GetHashCode() : 0);
                     hashCode = (hashCode * 397) ^ EqualityComparer<TS>.Default.GetHashCode(From);
                     hashCode = (hashCode * 397) ^ EqualityComparer<TS>.Default.GetHashCode(To);
                     return hashCode;
@@ -404,7 +404,7 @@ namespace Akka.Actor
             /// </summary>
             public void Cancel()
             {
-                if (_ref != null)
+                if (_ref is object)
                 {
                     _ref.Cancel(false);
                     _ref = null;
@@ -626,8 +626,8 @@ namespace Akka.Actor
                     var hashCode = EqualityComparer<TS>.Default.GetHashCode(StateName);
                     hashCode = (hashCode * 397) ^ EqualityComparer<TD>.Default.GetHashCode(StateData);
                     hashCode = (hashCode * 397) ^ Timeout.GetHashCode();
-                    hashCode = (hashCode * 397) ^ (StopReason != null ? StopReason.GetHashCode() : 0);
-                    hashCode = (hashCode * 397) ^ (Replies != null ? Replies.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (StopReason is object ? StopReason.GetHashCode() : 0);
+                    hashCode = (hashCode * 397) ^ (Replies is object ? Replies.GetHashCode() : 0);
                     return hashCode;
                 }
             }
@@ -943,7 +943,7 @@ namespace Akka.Actor
         }
 
         // Internal API
-        bool IInternalSupportsTestFSMRef<TState, TData>.IsStateTimerActive => _timeoutFuture != null;
+        bool IInternalSupportsTestFSMRef<TState, TData>.IsStateTimerActive => _timeoutFuture is object;
 
         /// <summary>
         /// Set handler which is called upon each state transition
@@ -984,7 +984,7 @@ namespace Akka.Actor
         /// </exception>
         public void Initialize()
         {
-            if (null == _currentState) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_Initialize); }
+            if (_currentState is null) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_Initialize); }
             MakeTransition(_currentState);
         }
 
@@ -998,7 +998,7 @@ namespace Akka.Actor
         {
             get
             {
-                if (null == _currentState) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_StateName); }
+                if (_currentState is null) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_StateName); }
                 return _currentState.StateName;
             }
         }
@@ -1013,7 +1013,7 @@ namespace Akka.Actor
         {
             get
             {
-                if (null == _currentState) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_StateData); }
+                if (_currentState is null) { AkkaThrowHelper.ThrowIllegalStateException(AkkaExceptionResource.IllegalState_FSM_StateData); }
                 return _currentState.StateData;
             }
         }
@@ -1028,7 +1028,7 @@ namespace Akka.Actor
         {
             get
             {
-                if (null == _nextState) { AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_FSM_NextStateData); }
+                if (_nextState is null) { AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_FSM_NextStateData); }
                 return _nextState.StateData;
             }
         }
@@ -1131,7 +1131,7 @@ namespace Akka.Actor
             State<TState, TData> LocalChained(Event<TData> @event)
             {
                 var originalResult = original.Invoke(@event);
-                if (originalResult == null) return fallback.Invoke(@event);
+                if (originalResult is null) return fallback.Invoke(@event);
                 return originalResult;
             }
 
@@ -1157,7 +1157,7 @@ namespace Akka.Actor
                 case Timer timer:
                     if (ReferenceEquals(timer.Owner, this) && _timers.TryGetValue(timer.Name, out var oldTimer) && oldTimer.Generation == timer.Generation)
                     {
-                        if (_timeoutFuture != null)
+                        if (_timeoutFuture is object)
                         {
                             _timeoutFuture.Cancel(false);
                             _timeoutFuture = null;
@@ -1198,7 +1198,7 @@ namespace Akka.Actor
                     break;
             }
 
-            if (_timeoutFuture != null)
+            if (_timeoutFuture is object)
             {
                 _timeoutFuture.Cancel(false);
                 _timeoutFuture = null;
@@ -1228,12 +1228,12 @@ namespace Akka.Actor
 
             State<TState, TData> nextState = null;
 
-            if (stateFunc != null)
+            if (stateFunc is object)
             {
                 nextState = stateFunc(fsmEvent);
             }
 
-            if (nextState == null)
+            if (nextState is null)
             {
                 nextState = HandleEvent(fsmEvent);
             }
@@ -1273,7 +1273,7 @@ namespace Akka.Actor
 
         private void ApplyState(State<TState, TData> nextState)
         {
-            if (nextState.StopReason == null)
+            if (nextState.StopReason is null)
             {
                 MakeTransition(nextState);
             }
@@ -1325,7 +1325,7 @@ namespace Akka.Actor
 
         private void Terminate(State<TState, TData> upcomingState)
         {
-            if (_currentState.StopReason == null)
+            if (_currentState.StopReason is null)
             {
                 var reason = upcomingState.StopReason;
                 LogTermination(reason);

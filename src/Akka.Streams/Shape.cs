@@ -65,7 +65,7 @@ namespace Akka.Streams
         /// </exception>
         protected Inlet(string name)
         {
-            if (null == name) { ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Inletname_IsNull); }
+            if (name is null) { ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Inletname_IsNull); }
             Name = name;
         }
 
@@ -346,7 +346,7 @@ namespace Akka.Streams
         /// <exception cref="ArgumentNullException">TBD</exception>
         public SourceShape(Outlet<TOut> outlet)
         {
-            if (null == outlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlet); }
+            if (outlet is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlet); }
             Outlet = outlet;
             Outlets = ImmutableArray.Create<Outlet>(outlet);
         }
@@ -441,8 +441,8 @@ namespace Akka.Streams
         /// </exception>
         public FlowShape(Inlet<TIn> inlet, Outlet<TOut> outlet)
         {
-            if (null == inlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlet, ExceptionResource.ArgumentNull_FlowShape_Inlet); }
-            if (null == outlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlet, ExceptionResource.ArgumentNull_FlowShape_Outlet); }
+            if (inlet is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlet, ExceptionResource.ArgumentNull_FlowShape_Inlet); }
+            if (outlet is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlet, ExceptionResource.ArgumentNull_FlowShape_Outlet); }
             Inlet = inlet;
             Outlet = outlet;
             Inlets = ImmutableArray.Create<Inlet>(inlet);
@@ -519,7 +519,7 @@ namespace Akka.Streams
         /// </exception>
         public SinkShape(Inlet<TIn> inlet)
         {
-            if (null == inlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlet, ExceptionResource.ArgumentNull_SinkShape_Inlet); }
+            if (inlet is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlet, ExceptionResource.ArgumentNull_SinkShape_Inlet); }
             Inlet = inlet;
             Inlets = ImmutableArray.Create<Inlet>(inlet);
         }
@@ -614,10 +614,10 @@ namespace Akka.Streams
         /// </exception>
         public BidiShape(Inlet<TIn1> in1, Outlet<TOut1> out1, Inlet<TIn2> in2, Outlet<TOut2> out2)
         {
-            if (null == in1) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.in1); }
-            if (null == in2) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.in2); }
-            if (null == out1) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.out1); }
-            if (null == out2) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.out2); }
+            if (in1 is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.in1); }
+            if (in2 is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.in2); }
+            if (out1 is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.out1); }
+            if (out2 is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.out2); }
             Inlet1 = in1;
             Inlet2 = in2;
             Outlet1 = out1;

@@ -324,7 +324,7 @@ namespace Akka.Streams
         private static ActorMaterializerSettings Create(Config config)
         {
             // No need to check for Config.IsEmpty because this function expects empty Config.
-            if (config == null)
+            if (config is null)
             {
                 throw ConfigurationException.NullOrEmptyConfig<ActorMaterializerSettings>();
             }
@@ -543,7 +543,7 @@ namespace Akka.Streams
         public static StreamSubscriptionTimeoutSettings Create(Config config)
         {
             // No need to check for Config.IsEmpty because this function expects empty Config.
-            if (config == null)
+            if (config is null)
             {
                 throw ConfigurationException.NullOrEmptyConfig<StreamSubscriptionTimeoutSettings>();
             }

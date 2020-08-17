@@ -105,7 +105,7 @@
 
         public void Serialize(ref MessagePackWriter writer, ref int idx, Protocol.ActorRefData value, IFormatterResolver formatterResolver)
         {
-            if (null == value) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             writer.WriteFixedArrayHeaderUnsafe(1, ref idx);
             writer.WriteStringWithCache(value.Path, ref idx);

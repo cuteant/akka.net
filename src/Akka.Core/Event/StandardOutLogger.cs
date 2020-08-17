@@ -64,7 +64,7 @@ namespace Akka.Event
         /// </exception>
         protected override void TellInternal(object message, IActorRef sender)
         {
-            if (message == null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.message, AkkaExceptionResource.ArgumentNull_LogMessage); }
+            if (message is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.message, AkkaExceptionResource.ArgumentNull_LogMessage); }
 
             if (message is LogEvent logEvent)
             {

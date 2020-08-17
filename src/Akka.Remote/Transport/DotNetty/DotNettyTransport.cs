@@ -137,7 +137,7 @@ namespace Akka.Remote.Transport.DotNetty
                     hostName: Settings.PublicHostname,
                     publicPort: Settings.PublicPort);
 
-                if (null == addr) { ThrowHelper.ThrowConfigurationException(newServerChannel); }
+                if (addr is null) { ThrowHelper.ThrowConfigurationException(newServerChannel); }
                 Interlocked.Exchange(ref LocalAddress, addr);
 
                 // resume accepting incoming connections
@@ -450,7 +450,7 @@ namespace Akka.Remote.Transport.DotNetty
         {
             var resolved = await Dns.GetHostEntryAsync(address.Host).ConfigureAwait(false);
             var found = resolved.AddressList.LastOrDefault(a => a.AddressFamily == addressFamily);
-            if (found == null)
+            if (found is null)
             {
                 throw new KeyNotFoundException($"Couldn't resolve IP endpoint from provided DNS name '{address}' with address family of '{addressFamily}'");
             }
@@ -464,7 +464,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         public static Address MapSocketToAddress(IPEndPoint socketAddress, string schemeIdentifier, string systemName, string hostName = null, int? publicPort = null)
         {
-            return socketAddress == null
+            return socketAddress is null
                 ? null
                 : new Address(schemeIdentifier, systemName, SafeMapHostName(hostName) ?? SafeMapIPv6(socketAddress.Address), publicPort ?? socketAddress.Port);
         }
@@ -490,7 +490,7 @@ namespace Akka.Remote.Transport.DotNetty
         /// <returns> <see cref="IPEndPoint"/> for IP-based addresses, <see cref="DnsEndPoint"/> for named addresses.</returns>
         public static EndPoint AddressToSocketAddress(Address address)
         {
-            if (address.Port == null) ThrowHelper.ThrowArgumentException_Transport_AddrPortIsNull(address);
+            if (address.Port is null) ThrowHelper.ThrowArgumentException_Transport_AddrPortIsNull(address);
             EndPoint listenAddress;
             if (IPAddress.TryParse(address.Host, out var ip))
             {

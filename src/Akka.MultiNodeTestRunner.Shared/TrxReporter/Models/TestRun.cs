@@ -28,7 +28,7 @@ namespace Akka.MultiNodeTestRunner.TrxReporter.Models
 
         public void Log(string item)
         {
-            if (Output == null)
+            if (Output is null)
             {
                 Output = new Output();
             }

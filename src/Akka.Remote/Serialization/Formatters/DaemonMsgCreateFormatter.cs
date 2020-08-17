@@ -36,7 +36,7 @@ namespace Akka.Remote.Serialization.Formatters
 
         public void Serialize(ref MessagePackWriter writer, ref int idx, DaemonMsgCreate value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var system = formatterResolver.GetActorSystem();
             var protoMessage = new DaemonMsgCreateData(
@@ -65,7 +65,7 @@ namespace Akka.Remote.Serialization.Formatters
         {
             var actorClass = TypeUtils.ResolveType(protoProps.Clazz);
             var propsArgs = protoProps.Args;
-            if (propsArgs != null)
+            if (propsArgs is object)
             {
                 var args = new object[propsArgs.Length];
                 for (int i = 0; i < args.Length; i++)

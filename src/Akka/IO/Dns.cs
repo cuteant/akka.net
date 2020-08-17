@@ -41,7 +41,7 @@ namespace Akka.IO
         public virtual Dns.Resolved Resolve(string name, ActorSystem system, IActorRef sender)
         {
             var ret = Cached(name);
-            if (ret == null)
+            if (ret is null)
                 Dns.Instance.Apply(system).Manager.Tell(new Dns.Resolve(name), sender);
             return ret;
         }
@@ -131,7 +131,7 @@ namespace Akka.IO
                 get
                 {
                     //TODO: Throw better exception
-                    if (_addr == null) throw new Exception("Unknown host");
+                    if (_addr is null) throw new Exception("Unknown host");
                     return _addr;
                 }
             }

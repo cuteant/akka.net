@@ -81,7 +81,7 @@ namespace Akka.Actor
         {
             unchecked
             {
-                var hashCode = (ActorRef != null ? ActorRef.GetHashCode() : 0);
+                var hashCode = (ActorRef is object ? ActorRef.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ AddressTerminated.GetHashCode();
                 hashCode = (hashCode * 397) ^ ExistenceConfirmed.GetHashCode();
                 return hashCode;
@@ -125,7 +125,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (MessageId != null ? MessageId.GetHashCode() : 0);
+            return (MessageId is object ? MessageId.GetHashCode() : 0);
         }
 
         /// <inheritdoc/>
@@ -182,7 +182,7 @@ namespace Akka.Actor
         {
             unchecked
             {
-                return ((MessageId != null ? MessageId.GetHashCode() : 0) * 397) ^ (Subject != null ? Subject.GetHashCode() : 0);
+                return ((MessageId is object ? MessageId.GetHashCode() : 0) * 397) ^ (Subject is object ? Subject.GetHashCode() : 0);
             }
         }
 

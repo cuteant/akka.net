@@ -164,7 +164,7 @@ namespace Akka.Pattern
             {
                 //throw new TimeoutException( string.Format( "Execution did not complete within the time allotted {0} ms", CallTimeout.TotalMilliseconds ) );
             }
-            if (cbTask.Exception != null)
+            if (cbTask.Exception is object)
             {
                 ExceptionDispatchInfo.Capture(cbTask.Exception).Throw();
             }

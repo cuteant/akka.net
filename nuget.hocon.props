@@ -10,9 +10,8 @@
     <Authors>Akka.NET Team</Authors>
     <Product>Akka.NET</Product>
     <Copyright>Copyright © 2013-2017 Akka.NET Team</Copyright>
-    <PackageIconUrl>http://getakka.net/images/akkalogo.png</PackageIconUrl>
     <PackageProjectUrl>https://github.com/akkadotnet/HOCON</PackageProjectUrl>
-    <PackageLicense>https://github.com/akkadotnet/HOCON/blob/master/LICENSE</PackageLicense>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/akkadotnet/HOCON.git</RepositoryUrl>
     <NeutralLanguage>en-US</NeutralLanguage>

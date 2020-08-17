@@ -39,7 +39,7 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public sealed override byte[] ToBinary(object obj)
         {
-            //if (null == obj) { return EmptyArray<byte>.Instance; } // 空对象交由 NullSerializer 处理
+            //if (obj is null) { return EmptyArray<byte>.Instance; } // 空对象交由 NullSerializer 处理
 
             using (var pooledStream = BufferManagerOutputStreamManager.Create())
             {

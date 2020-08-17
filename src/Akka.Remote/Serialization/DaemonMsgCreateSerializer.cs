@@ -40,7 +40,7 @@ namespace Akka.Remote.Serialization
         public override byte[] ToBinary(object obj)
         {
             var msg = obj as DaemonMsgCreate;
-            if (null == msg) { ThrowHelper.ThrowArgumentException_Serializer_DaemonMsg(obj); }
+            if (msg is null) { ThrowHelper.ThrowArgumentException_Serializer_DaemonMsg(obj); }
 
             return MessagePackSerializer.Serialize(
                 new DaemonMsgCreateData(PropsToProto(_system, msg.Props),
@@ -77,7 +77,7 @@ namespace Akka.Remote.Serialization
         {
             var actorClass = TypeUtils.ResolveType(protoProps.Clazz);
             var propsArgs = protoProps.Args;
-            if (propsArgs != null)
+            if (propsArgs is object)
             {
                 var args = new object[propsArgs.Length];
                 for (int i = 0; i < args.Length; i++)

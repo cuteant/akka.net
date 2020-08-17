@@ -50,7 +50,7 @@ namespace Akka.IO
                             if (send.Target is DnsEndPoint dns)
                             {
                                 var resolved = Dns.ResolveName(dns.Host, Context.System, Self);
-                                if (resolved != null)
+                                if (resolved is object)
                                 {
                                     try
                                     {

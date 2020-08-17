@@ -53,7 +53,7 @@ namespace Akka.Configuration.Hocon
                     return true;
 
                 var first = Values[0] as HoconObject;
-                if (first != null)
+                if (first is object)
                 {
                     if (0u >= (uint)first.Items.Count)
                         return true;
@@ -98,8 +98,8 @@ namespace Akka.Configuration.Hocon
             IHoconElement raw = Values.FirstOrDefault();
             var o = raw as HoconObject;
             var sub = raw as IMightBeAHoconObject;
-            if (o != null) return o;
-            if (sub != null && sub.IsObject()) return sub.GetObject();
+            if (o is object) return o;
+            if (sub is object && sub.IsObject()) return sub.GetObject();
             return null;
         }
 
@@ -109,7 +109,7 @@ namespace Akka.Configuration.Hocon
         /// <returns><c>true</c> if this value is a <see cref="HoconObject"/>, <c>false</c> otherwise.</returns>
         public bool IsObject()
         {
-            return GetObject() != null;
+            return GetObject() is object;
         }
 
         /// <summary>
@@ -359,7 +359,7 @@ namespace Akka.Configuration.Hocon
         /// </returns>
         public bool IsArray()
         {
-            return GetArray() != null;
+            return GetArray() is object;
         }
 
         /// <summary>
@@ -535,7 +535,7 @@ namespace Akka.Configuration.Hocon
 
         private string QuoteIfNeeded(string text)
         {
-            if (text == null) return "";
+            if (text is null) return "";
 
             if (EscapeRegex.IsMatch(text))
             {

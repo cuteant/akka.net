@@ -498,7 +498,7 @@ namespace Akka.TestKit.Internal
             {
                 var filters = _filters;
                 _filters = null;
-                if(!_isDisposed && filters != null)
+                if(!_isDisposed && filters is object)
                 {
                     _system.EventStream.Publish(new Unmute(filters));
                 }

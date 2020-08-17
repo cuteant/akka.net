@@ -69,19 +69,18 @@ namespace Akka.DistributedData
     /// </summary>
     public interface IRemovedNodePruning<T> : IRemovedNodePruning, IReplicatedData<T> where T : IReplicatedData
     {
-
         /// <summary>
         /// When the <paramref name="removedNode"/> node has been removed from the cluster the state
         /// changes from that node will be pruned by collapsing the data entries
         /// to another node.
         /// </summary>
-        T Prune(UniqueAddress removedNode, UniqueAddress collapseInto);
+        new T Prune(UniqueAddress removedNode, UniqueAddress collapseInto);
 
         /// <summary>
         /// Remove data entries from a node that has been removed from the cluster
         /// and already been pruned.
         /// </summary>
-        T PruningCleanup(UniqueAddress removedNode);
+        new T PruningCleanup(UniqueAddress removedNode);
     }
 
     /// <summary>
@@ -130,7 +129,7 @@ namespace Akka.DistributedData
         /// `modify` function shall still return the full state in the same way as
         /// <see cref="IReplicatedData{T}"/> without support for deltas.
         /// </summary>
-        TDelta Delta { get; }
+        new TDelta Delta { get; }
 
         /// <summary>
         /// When delta is merged into the full state this method is used.
@@ -149,7 +148,7 @@ namespace Akka.DistributedData
         /// <see cref="Replicator"/> has grabbed the <see cref="Delta"/> it will invoke this method 
         /// to get a clean data instance without the delta.
         /// </summary>
-        T ResetDelta();
+        new T ResetDelta();
     }
 
     /// <summary>

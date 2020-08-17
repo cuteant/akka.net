@@ -205,7 +205,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                 send.LocalAffinity)
             {
                 var routee = valueHolder.Routee;
-                if (routee != null)
+                if (routee is object)
                     routees.Add(routee);
             }
             else
@@ -215,7 +215,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                     if (entry.Value.Content.TryGetValue(send.Path, out valueHolder))
                     {
                         var routee = valueHolder.Routee;
-                        if (routee != null)
+                        if (routee is object)
                             routees.Add(routee);
                     }
                 }
@@ -567,7 +567,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
 
                     if (!(allButSelf && address == _cluster.SelfAddress) && bucket.Content.TryGetValue(path, out var valueHolder))
                     {
-                        if (valueHolder != null && !valueHolder.Ref.IsNobody())
+                        if (valueHolder is object && !valueHolder.Ref.IsNobody())
                             yield return valueHolder.Ref;
                     }
                 }
@@ -576,7 +576,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             var counter = 0;
             foreach (var r in Refs())
             {
-                if (r == null) continue;
+                if (r is null) continue;
                 r.Forward(message);
                 counter++;
             }
@@ -646,7 +646,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         private void HandleGossip(GossipTick _)
         {
             var node = SelectRandomNode(_nodes.Except(new[] { _cluster.SelfAddress }).ToArray());
-            if (node != null)
+            if (node is object)
                 GossipTo(node);
         }
 
@@ -658,7 +658,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
 
         private Address SelectRandomNode(IList<Address> addresses)
         {
-            if (addresses == null || addresses.Count == 0) return null;
+            if (addresses is null || addresses.Count == 0) return null;
             return addresses[ThreadLocalRandom.Current.Next(addresses.Count)];
         }
 

@@ -233,7 +233,7 @@ namespace Akka.Persistence.Fsm
         /// <summary>
         /// INTERNAL API, used for testing.
         /// </summary>
-        internal bool IsStateTimerActive => _timeoutFuture != null;
+        internal bool IsStateTimerActive => _timeoutFuture is object;
 
         /// <summary>
         /// Set handler which is called upon each state transition
@@ -271,7 +271,7 @@ namespace Akka.Persistence.Fsm
         /// </summary>
         internal void Initialize()
         {
-            if (null == _currentState) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_Init); }
+            if (_currentState is null) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_Init); }
             MakeTransition(_currentState);
         }
 
@@ -285,7 +285,7 @@ namespace Akka.Persistence.Fsm
         {
             get
             {
-                if (null == _currentState) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_SN); }
+                if (_currentState is null) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_SN); }
                 return _currentState.StateName;
             }
         }
@@ -300,7 +300,7 @@ namespace Akka.Persistence.Fsm
         {
             get
             {
-                if (null == _currentState) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_SD); }
+                if (_currentState is null) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_call_SW_SD); }
                 return _currentState.StateData;
             }
         }
@@ -320,7 +320,7 @@ namespace Akka.Persistence.Fsm
         {
             get
             {
-                if (null == _nextState) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_NextStateData); }
+                if (_nextState is null) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_NextStateData); }
                 return _nextState.StateData;
             }
         }
@@ -430,7 +430,7 @@ namespace Akka.Persistence.Fsm
                 case FSMBase.Timer t:
                     if (ReferenceEquals(t.Owner, this) && _timers.TryGetValue(t.Name, out var timer) && timer.Generation == t.Generation)
                     {
-                        if (_timeoutFuture != null)
+                        if (_timeoutFuture is object)
                         {
                             _timeoutFuture.Cancel(false);
                             _timeoutFuture = null;
@@ -468,7 +468,7 @@ namespace Akka.Persistence.Fsm
                     return true;
 
                 default:
-                    if (_timeoutFuture != null)
+                    if (_timeoutFuture is object)
                     {
                         _timeoutFuture.Cancel(false);
                         _timeoutFuture = null;
@@ -499,12 +499,12 @@ namespace Akka.Persistence.Fsm
 
             State<TState, TData, TEvent> upcomingState = null;
 
-            if (stateFunc != null)
+            if (stateFunc is object)
             {
                 upcomingState = stateFunc(fsmEvent);
             }
 
-            if (upcomingState == null)
+            if (upcomingState is null)
             {
                 upcomingState = HandleEvent(fsmEvent);
             }
@@ -523,7 +523,7 @@ namespace Akka.Persistence.Fsm
         /// <param name="nextState">TBD</param>
         protected virtual void ApplyState(State<TState, TData, TEvent> nextState)
         {
-            if (nextState.StopReason == null)
+            if (nextState.StopReason is null)
             {
                 MakeTransition(nextState);
             }
@@ -592,7 +592,7 @@ namespace Akka.Persistence.Fsm
 
         private void Terminate(State<TState, TData, TEvent> upcomingState)
         {
-            if (_currentState.StopReason == null)
+            if (_currentState.StopReason is null)
             {
                 var reason = upcomingState.StopReason;
                 LogTermination(reason);
@@ -644,7 +644,7 @@ namespace Akka.Persistence.Fsm
             State<TState, TData, TEvent> LocalChained(FSMBase.Event<TData> @event, State<TState, TData, TEvent> state = null)
             {
                 var originalResult = original.Invoke(@event, state);
-                if (originalResult == null) return fallback.Invoke(@event, state);
+                if (originalResult is null) return fallback.Invoke(@event, state);
                 return originalResult;
             }
 

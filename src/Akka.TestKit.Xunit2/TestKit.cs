@@ -120,7 +120,7 @@ namespace Akka.TestKit.Xunit2
         /// <param name="system">The actor system used to attach the logger</param>
         protected void InitializeLogger(ActorSystem system)
         {
-            if (Output != null)
+            if (Output is object)
             {
                 var extSystem = (ExtendedActorSystem)system;
                 var logger = extSystem.SystemActorOf(Props.Create(() => new TestOutputLogger(Output)), "log-test");

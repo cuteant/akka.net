@@ -58,7 +58,7 @@ namespace Akka.Actor
         /// <exception cref="InvalidMessageException">This exception is thrown if the given <paramref name="message"/> is undefined.</exception>
         protected override void TellInternal(object message, IActorRef sender)
         {
-            if (message == null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
+            if (message is null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
             if (message is DeadLetter d) SpecialHandle(d.Message, d.Sender);
             else if (!SpecialHandle(message, sender))
             {

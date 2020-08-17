@@ -236,7 +236,7 @@ namespace Akka.Routing
                     if (PressureThreshold == 1)
                         return cell.Mailbox.IsScheduled() && cell.Mailbox.HasMessages;
                     if (PressureThreshold < 1)
-                        return cell.Mailbox.IsScheduled() && cell.CurrentMessage != null;
+                        return cell.Mailbox.IsScheduled() && cell.CurrentMessage is object;
 
                     return cell.Mailbox.NumberOfMessages >= PressureThreshold;
                 }

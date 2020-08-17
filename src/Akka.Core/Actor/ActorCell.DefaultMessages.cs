@@ -31,7 +31,7 @@ namespace Akka.Actor
         {
             get
             {
-                if (_actor != null) { return _actor.GetType(); }
+                if (_actor is object) { return _actor.GetType(); }
                 return GetType();
             }
         }
@@ -344,7 +344,7 @@ namespace Akka.Actor
             //set the current message captured in the async operation
             //current message was cleared earlier when the async receive handler completed
             CurrentMessage = m.Message;
-            if (m.Exception != null)
+            if (m.Exception is object)
             {
                 Resume(m.Exception);
                 HandleInvokeFailure(m.Exception);
@@ -391,7 +391,7 @@ namespace Akka.Actor
             if (!IsTerminating)
             {
                 var childRestartStats = InitChild((IInternalActorRef)child);
-                if (childRestartStats != null)
+                if (childRestartStats is object)
                 {
                     HandleSupervise(child, async);
                     if (System.Settings.DebugLifecycle)
@@ -435,7 +435,7 @@ namespace Akka.Actor
 
         private void Create(Exception failure)
         {
-            if (failure != null) { throw failure; }
+            if (failure is object) { throw failure; }
 
             try
             {
@@ -450,7 +450,7 @@ namespace Akka.Actor
             }
             catch (Exception e)
             {
-                if (_actor != null)
+                if (_actor is object)
                 {
                     ClearActor(_actor);
                     _actor = null; // ensure that we know that we failed during creation

@@ -47,7 +47,7 @@ namespace Akka.TestKit
 
             foreach (var t in tickItems)
             {
-                foreach (var si in t.Value.Where(i => i.Cancelable == null || !i.Cancelable.IsCancellationRequested))
+                foreach (var si in t.Value.Where(i => i.Cancelable is null || !i.Cancelable.IsCancellationRequested))
                 {
                     if (si.Type == ScheduledItem.ScheduledItemType.Message)
                         si.Receiver.Tell(si.Message, si.Sender);
@@ -60,7 +60,7 @@ namespace Akka.TestKit
                 ConcurrentQueue<ScheduledItem> removed;
                 _scheduledWork.TryRemove(t.Key, out removed);
 
-                foreach (var i in removed.Where(r => r.Repeating && (r.Cancelable == null || !r.Cancelable.IsCancellationRequested)))
+                foreach (var i in removed.Where(r => r.Repeating && (r.Cancelable is null || !r.Cancelable.IsCancellationRequested)))
                 {
                     InternalSchedule(null, i.Delay, i.Receiver, i.Message, i.Action, i.Sender, i.Cancelable, i.DeliveryCount);
                 }
@@ -94,7 +94,7 @@ namespace Akka.TestKit
                 _scheduledWork.TryAdd(scheduledTime, tickItems);
             }
             
-            var type = message == null ? ScheduledItem.ScheduledItemType.Action : ScheduledItem.ScheduledItemType.Message;
+            var type = message is null ? ScheduledItem.ScheduledItemType.Action : ScheduledItem.ScheduledItemType.Message;
 
             tickItems.Enqueue(new ScheduledItem(initialDelay ?? delay, delay, type, message, action,
                 initialDelay.HasValue || deliveryCount > 0, receiver, sender, cancelable));

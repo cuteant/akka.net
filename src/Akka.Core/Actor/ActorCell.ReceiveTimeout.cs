@@ -40,14 +40,14 @@ namespace Akka.Actor
         /// </summary>
         public void CheckReceiveTimeout(bool reschedule = true)
         {
-            if (_receiveTimeoutDuration != null)
+            if (_receiveTimeoutDuration is object)
             {
                 // The fact that timeout is FiniteDuration and task is emptyCancellable
                 // means that a user called `context.setReceiveTimeout(...)`
                 // while sending the ReceiveTimeout message is not scheduled yet.
                 // We have to handle the case and schedule sending the ReceiveTimeout message
                 // ignoring the reschedule parameter.
-                if (reschedule || _pendingReceiveTimeout == null)
+                if (reschedule || _pendingReceiveTimeout is null)
                 {
                     RescheduleReceiveTimeout(_receiveTimeoutDuration.Value);
                 }
@@ -67,7 +67,7 @@ namespace Akka.Actor
 
         private void CancelReceiveTimeout()
         {
-            if (_pendingReceiveTimeout != null)
+            if (_pendingReceiveTimeout is object)
             {
                 _pendingReceiveTimeout.Cancel();
                 _pendingReceiveTimeout = null;

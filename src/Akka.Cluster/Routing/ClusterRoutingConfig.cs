@@ -75,7 +75,7 @@ namespace Akka.Cluster.Routing
             // validate that all RouteesPaths are relative
             foreach (var path in routeesPaths)
             {
-                if (RelativeActorPath.Unapply(path) == null)
+                if (RelativeActorPath.Unapply(path) is null)
                 {
                     ThrowHelper.ThrowArgumentException_RouteesPathsIsNotAValidRelativeActorPath(path);
                 }
@@ -303,7 +303,7 @@ namespace Akka.Cluster.Routing
             local.RouterDispatcher,
             false)
         {
-            if (local.Resizer != null) { ThrowHelper.ThrowConfigurationException_ResizerCanotBeUsedTogetherWithClusterRouter(); }
+            if (local.Resizer is object) { ThrowHelper.ThrowConfigurationException_ResizerCanotBeUsedTogetherWithClusterRouter(); }
 
             Settings = settings;
             Local = local;
@@ -845,7 +845,7 @@ namespace Akka.Cluster.Routing
         public override void AddRoutees()
         {
             var deploymentTarget = SelectDeploymentTarget();
-            while (deploymentTarget != null)
+            while (deploymentTarget is object)
             {
                 var address = deploymentTarget.Value.Item1;
                 var path = deploymentTarget.Value.Item2;
@@ -957,7 +957,7 @@ namespace Akka.Cluster.Routing
         public override void AddRoutees()
         {
             var deploymentTarget = SelectDeploymentTarget();
-            while (deploymentTarget != null)
+            while (deploymentTarget is object)
             {
                 var routeeProps = Cell.RouteeProps;
                 var deploy = new Deploy(

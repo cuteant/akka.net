@@ -120,9 +120,9 @@ namespace Akka.Cluster.Tests.MultiNode
             public bool CompareAndSet(T expected, T newValue)
             {
                 //special handling for null values
-                if (Value == null)
+                if (Value is null)
                 {
-                    if (expected == null)
+                    if (expected is null)
                     {
                         Value = newValue;
                         return true;

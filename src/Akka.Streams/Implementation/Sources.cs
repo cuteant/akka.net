@@ -121,7 +121,7 @@ namespace Akka.Streams.Implementation
             {
                 if (_stage._maxBuffer == 0)
                 {
-                    if (_pendingOffer != null)
+                    if (_pendingOffer is object)
                     {
                         Push(_stage.Out, _pendingOffer.Element);
                         _pendingOffer.CompletionSource.NonBlockingTrySetResult(QueueOfferResult.Enqueued.Instance);
@@ -136,7 +136,7 @@ namespace Akka.Streams.Implementation
                 else if (_buffer.NonEmpty)
                 {
                     Push(_stage.Out, _buffer.Dequeue());
-                    if (_pendingOffer != null)
+                    if (_pendingOffer is object)
                     {
                         EnqueueAndSuccess(_pendingOffer);
                         _pendingOffer = null;
@@ -152,7 +152,7 @@ namespace Akka.Streams.Implementation
 
             public void OnDownstreamFinish()
             {
-                if (_pendingOffer != null)
+                if (_pendingOffer is object)
                 {
                     _pendingOffer.CompletionSource.NonBlockingTrySetResult(QueueOfferResult.QueueClosed.Instance);
                     _pendingOffer = null;
@@ -217,7 +217,7 @@ namespace Akka.Streams.Implementation
                             FailStage(bufferOverflowException);
                             break;
                         case OverflowStrategy.Backpressure:
-                            if (_pendingOffer != null)
+                            if (_pendingOffer is object)
                                 offer.CompletionSource.NonBlockingTrySetException(
                                     new IllegalStateException(
                                         "You have to wait for previous offer to be resolved to send another request."));
@@ -246,7 +246,7 @@ namespace Akka.Streams.Implementation
                             Push(_stage.Out, offer.Element);
                             offer.CompletionSource.NonBlockingTrySetResult(QueueOfferResult.Enqueued.Instance);
                         }
-                        else if (_pendingOffer == null)
+                        else if (_pendingOffer is null)
                             _pendingOffer = offer;
                         else
                         {
@@ -281,7 +281,7 @@ namespace Akka.Streams.Implementation
                         }
                         break;
                     case Completion _:
-                        if (_stage._maxBuffer != 0 && _buffer.NonEmpty || _pendingOffer != null)
+                        if (_stage._maxBuffer != 0 && _buffer.NonEmpty || _pendingOffer is object)
                         {
                             _terminating = true;
                         }
@@ -411,7 +411,7 @@ namespace Akka.Streams.Implementation
                 _decider = new Lazy<Decider>(() =>
                 {
                     var strategy = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                    return strategy != null ? strategy.Decider : Deciders.StoppingDecider;
+                    return strategy is object ? strategy.Decider : Deciders.StoppingDecider;
                 });
 
                 SetHandler(stage.Out, this);
@@ -569,7 +569,7 @@ namespace Akka.Streams.Implementation
                 Decider CreateDecider()
                 {
                     var strategy = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                    return strategy != null ? strategy.Decider : Deciders.StoppingDecider;
+                    return strategy is object ? strategy.Decider : Deciders.StoppingDecider;
                 }
 
                 _decider = new Lazy<Decider>(CreateDecider);

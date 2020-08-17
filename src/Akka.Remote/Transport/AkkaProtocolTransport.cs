@@ -331,7 +331,7 @@ namespace Akka.Remote.Transport
         {
             unchecked
             {
-                return ((Origin != null ? Origin.GetHashCode() : 0) * 397) ^ Uid.GetHashCode();
+                return ((Origin is object ? Origin.GetHashCode() : 0) * 397) ^ Uid.GetHashCode();
             }
         }
     }
@@ -404,8 +404,8 @@ namespace Akka.Remote.Transport
             unchecked
             {
                 var hashCode = base.GetHashCode();
-                hashCode = (hashCode * 397) ^ (HandshakeInfo != null ? HandshakeInfo.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (StateActor != null ? StateActor.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (HandshakeInfo is object ? HandshakeInfo.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (StateActor is object ? StateActor.GetHashCode() : 0);
                 return hashCode;
             }
         }

@@ -449,7 +449,7 @@ namespace Akka.Remote.Transport.DotNetty
             get => Volatile.Read(ref _defaultSettings);
             internal set
             {
-                if (Interlocked.CompareExchange(ref _defaultSettings, value, null) != null) { return; }
+                if (Interlocked.CompareExchange(ref _defaultSettings, value, null) is object) { return; }
 
                 if (!_defaultSettings.UseDirectBuffer)
                 {

@@ -83,7 +83,7 @@ namespace Akka.Actor
             /// <inheritdoc/>
             public bool Equals(ActorPath other)
             {
-                if (other == null) return false;
+                if (other is null) return false;
                 return Equals(other.ToSurrogate(null)); //TODO: not so sure if this is OK
             }
 
@@ -93,7 +93,7 @@ namespace Akka.Actor
                 if (obj is null) return false;
                 if (ReferenceEquals(this, obj)) return true;
                 var actorPath = obj as ActorPath;
-                if (actorPath != null) return Equals(actorPath);
+                if (actorPath is object) return Equals(actorPath);
                 return Equals(obj as Surrogate);
             }
 
@@ -272,7 +272,7 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public bool Equals(ActorPath other)
         {
-            if (other == null)
+            if (other is null)
                 return false;
 
             if (!Address.Equals(other.Address))
@@ -284,7 +284,7 @@ namespace Akka.Actor
             {
                 if (ReferenceEquals(a, b))
                     return true;
-                else if (a == null || b == null)
+                else if (a is null || b is null)
                     return false;
                 else if (a.Name != b.Name)
                     return false;
@@ -591,7 +591,7 @@ namespace Akka.Actor
         /// <returns> System.String. </returns>
         public string ToStringWithAddress(Address address)
         {
-            if (Address.Host != null && Address.Port.HasValue)
+            if (Address.Host is object && Address.Port.HasValue)
                 return $"{Address}{Join()}";
 
             return $"{address}{Join()}";
@@ -731,7 +731,7 @@ namespace Akka.Actor
             {
                 var hash = 17;
                 hash = (hash * 23) ^ Address.GetHashCode();
-                for (ActorPath p = this; p != null; p = p.Parent)
+                for (ActorPath p = this; p is object; p = p.Parent)
                     hash = (hash * 23) ^ p.Name.GetHashCode();
                 return hash;
             }
@@ -747,10 +747,10 @@ namespace Akka.Actor
         {
             if (ReferenceEquals(left, right)) return 0;
             var leftRoot = left as RootActorPath;
-            if (leftRoot != null)
+            if (leftRoot is object)
                 return leftRoot.CompareTo(right);
             var rightRoot = right as RootActorPath;
-            if (rightRoot != null)
+            if (rightRoot is object)
                 return -rightRoot.CompareTo(left);
             var nameCompareResult = Compare(left.Name, right.Name, StringComparison.Ordinal);
             if (nameCompareResult != 0)
@@ -769,7 +769,7 @@ namespace Akka.Actor
         public bool Equals(ActorPath x, ActorPath y)
         {
             if (ReferenceEquals(x, y)) { return true; }
-            if (null == x/* || null == y*/) { return false; }
+            if (x is null/* || y is null*/) { return false; }
             return x.Equals(y);
         }
 

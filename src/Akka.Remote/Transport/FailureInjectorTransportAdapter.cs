@@ -266,7 +266,7 @@ namespace Akka.Remote.Transport
             }
             else
             {
-                if (_upstreamListener == null)
+                if (_upstreamListener is null)
                 {
                 }
                 else

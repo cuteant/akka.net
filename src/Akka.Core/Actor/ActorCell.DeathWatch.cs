@@ -50,7 +50,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public IActorRef WatchWith(IActorRef subject, object message)
         {
-            if (message == null)
+            if (message is null)
             {
                 AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.message, AkkaExceptionResource.ArgumentNull_WatchWithMsg);
             }
@@ -409,7 +409,7 @@ namespace Akka.Actor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool IsNonLocal(IActorRef @ref)
         {
-            if (@ref == null) { return true; }
+            if (@ref is null) { return true; }
 
             return @ref is IInternalActorRef a && !a.IsLocal;
         }

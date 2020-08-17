@@ -81,7 +81,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, Identify value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoIdentify = new Protocol.Identify(formatterResolver.SerializeMessage(value.MessageId));
 
@@ -113,7 +113,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, ActorIdentity value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoIdentify = new Protocol.ActorIdentity(
                 formatterResolver.SerializeMessage(value.MessageId),
@@ -147,7 +147,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, RemoteScope value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.RemoteScope(AddressMessageBuilder(value.Address));
 
@@ -187,7 +187,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, FromConfig fromConfig, IFormatterResolver formatterResolver)
         {
-            if (fromConfig == FromConfig.Instance || null == fromConfig) { writer.WriteNil(ref idx); return; }
+            if (fromConfig == FromConfig.Instance || fromConfig is null) { writer.WriteNil(ref idx); return; }
 
             var system = formatterResolver.GetActorSystem();
             var protoMessage = new Protocol.FromConfig(
@@ -228,7 +228,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, DefaultResizer defaultResizer, IFormatterResolver formatterResolver)
         {
-            if (defaultResizer == null) { writer.WriteNil(ref idx); return; }
+            if (defaultResizer is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.DefaultResizer(
                 (uint)defaultResizer.LowerBound,
@@ -281,7 +281,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, RoundRobinPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
@@ -325,7 +325,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, BroadcastPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
@@ -370,7 +370,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, RandomPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 
@@ -416,7 +416,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, ScatterGatherFirstCompletedPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.ScatterGatherPool(
                 GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value),
@@ -466,7 +466,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, TailChoppingPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.TailChoppingPool(
                 GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value),
@@ -514,7 +514,7 @@ namespace Akka.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, ConsistentHashingPool value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = GenericRoutingPoolBuilder(formatterResolver.GetActorSystem(), value);
 

@@ -26,7 +26,7 @@ namespace Akka.Dispatch
             Exception exception = GetTaskException(parent);
             var context = (ActorCell)state;
             var actorScheduler = context.TaskScheduler;
-            if (exception == null)
+            if (exception is null)
             {
                 context.Dispatcher.Resume(context);
 
@@ -56,7 +56,7 @@ namespace Akka.Dispatch
 
         private static Exception TryUnwrapAggregateException(AggregateException aggregateException)
         {
-            if (aggregateException == null)
+            if (aggregateException is null)
                 return null;
 
             if (aggregateException.InnerExceptions.Count == 1)

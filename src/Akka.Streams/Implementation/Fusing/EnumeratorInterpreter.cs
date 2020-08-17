@@ -130,7 +130,7 @@ namespace Akka.Streams.Implementation.Fusing
             /// <returns>TBD</returns>
             public bool MoveNext()
             {
-                if (LastFailure != null)
+                if (LastFailure is object)
                 {
                     var e = LastFailure;
                     LastFailure = null;
@@ -163,7 +163,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if(!IsDone)
                     PullIfNeeded();
 
-                return !(IsDone && NeedsPull) || LastFailure != null;
+                return !(IsDone && NeedsPull) || LastFailure is object;
             }
 
             /// <summary>

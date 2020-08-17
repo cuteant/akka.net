@@ -218,7 +218,7 @@ namespace Akka.Serialization
             {
                 var serializerTypeName = kvp.Value.GetString();
                 var serializerType = TypeUtil.ResolveType(serializerTypeName);
-                if (serializerType == null)
+                if (serializerType is null)
                 {
                     if (warnEnabled) systemLog.TheTypeNameForSerializerDidNotResolveToAnActualType(kvp.Key, serializerTypeName);
                     continue;
@@ -251,7 +251,7 @@ namespace Akka.Serialization
                 var serializerName = kvp.Value.GetString();
                 var messageType = TypeUtil.ResolveType(typename);
 
-                if (messageType == null)
+                if (messageType is null)
                 {
                     if (warnEnabled) systemLog.TheTypeNameForMessageAndSerializerBindingDidNotResolveToAnActualType(serializerName, typename);
                     continue;
@@ -368,7 +368,7 @@ namespace Akka.Serialization
 
         private Serializer GetSerializerByName(string name)
         {
-            if (name == null) { return null; }
+            if (name is null) { return null; }
 
             _serializersByName.TryGetValue(name, out Serializer serializer);
             return serializer;

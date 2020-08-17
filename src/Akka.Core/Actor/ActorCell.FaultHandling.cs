@@ -32,7 +32,7 @@ namespace Akka.Actor
 
         // ReSharper disable once InconsistentNaming
         private IActorRef _failed_DoNotUseMeDirectly;
-        private bool IsFailed { get { return _failed_DoNotUseMeDirectly != null; } }
+        private bool IsFailed { get { return _failed_DoNotUseMeDirectly is object; } }
         private void SetFailed(IActorRef perpetrator)
         {
             _failed_DoNotUseMeDirectly = perpetrator;
@@ -46,7 +46,7 @@ namespace Akka.Actor
         /// <summary>Re-create the actor in response to a failure.</summary>
         private void FaultRecreate(Exception cause)
         {
-            if (_actor == null)
+            if (_actor is null)
             {
                 _systemImpl.EventStream.Publish(new Error(null, _self.Path.ToString(), GetType(), "Changing Recreate into Create after " + cause));
                 FaultCreate();
@@ -120,13 +120,13 @@ namespace Akka.Actor
         /// which prompted this action.</param>
         private void FaultResume(Exception causedByFailure)
         {
-            if (_actor == null)
+            if (_actor is null)
             {
                 _systemImpl.EventStream.Publish(new Error(null, _self.Path.ToString(), GetType(), "Changing Resume into Create after " + causedByFailure));
                 FaultCreate();
             }
             //Akka Jvm does the following commented section as well, but we do not store the context inside the actor so it's not applicable
-            //    else if (_actor.context == null && causedByFailure != null)
+            //    else if (_actor.context is null && causedByFailure is object)
             //    {
             //        system.eventStream.publish(Error(self.path.toString, clazz(actor), "changing Resume into Restart after " + causedByFailure))
             //        faultRecreate(causedByFailure)
@@ -142,7 +142,7 @@ namespace Akka.Actor
                 }
                 finally
                 {
-                    if (causedByFailure != null)
+                    if (causedByFailure is object)
                         ClearFailed();
                 }
                 ResumeChildren(causedByFailure, perp);
@@ -294,7 +294,7 @@ namespace Akka.Actor
             var a = _actor;
             try
             {
-                if (a != null)
+                if (a is object)
                 {
                     a.AroundPostStop();
 
@@ -436,7 +436,7 @@ namespace Akka.Actor
             //If this fails, we do nothing in case of terminating/restarting state,
             //otherwise tell the supervisor etc. (in that second case, the match
             //below will hit the empty default case, too)
-            if (_actor != null)
+            if (_actor is object)
             {
                 try
                 {

@@ -25,7 +25,7 @@ namespace Akka.Remote.TestKit
                 var firstArg = args[0];
                 return firstArg.Contains("Akka.MultiNodeTestRunner")
                     || firstArg.Contains("Akka.NodeTestRunner")
-                    || Environment.GetEnvironmentVariable(MultiNodeTestEnvironmentName) != null;
+                    || Environment.GetEnvironmentVariable(MultiNodeTestEnvironmentName) is object;
             });
 
         public override string Skip

@@ -52,7 +52,7 @@ namespace Akka.Actor
         {
             if (IsWalking)
             {
-                if (message == null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
+                if (message is null) AkkaThrowHelper.ThrowInvalidMessageException(AkkaExceptionResource.InvalidMessage_MsgIsNull);
                 _log.ActorReceivedUnexpectedMessage(_path, message);
             }
         }
@@ -98,7 +98,7 @@ namespace Akka.Actor
         public override void Stop()
         {
             var causeOfTermination = CauseOfTermination;
-            var status = causeOfTermination == null ? (Status)new Status.Success(null) : new Status.Failure(causeOfTermination);
+            var status = causeOfTermination is null ? (Status)new Status.Success(null) : new Status.Failure(causeOfTermination);
             _terminationPromise.SetResult(status);
         }
 

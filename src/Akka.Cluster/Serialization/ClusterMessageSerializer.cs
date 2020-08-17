@@ -155,7 +155,7 @@ namespace Akka.Cluster.Serialization
         /// <inheritdoc />
         protected override string GetManifest(Type type)
         {
-            if (null == type) { return null; }
+            if (type is null) { return null; }
             var manifestMap = ManifestMap;
             if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             foreach (var item in manifestMap)
@@ -377,7 +377,7 @@ namespace Akka.Cluster.Serialization
             var members = gossip.Members.Select(MemberFromProto).ToImmutableSortedSet(Member.Ordering);
             var reachability = ReachabilityFromProto(gossip.Overview.ObserverReachability, addressMapping);
             var protoSeen = gossip.Overview.Seen;
-            var seen = protoSeen == null || 0u >= (uint)protoSeen.Length ?
+            var seen = protoSeen is null || 0u >= (uint)protoSeen.Length ?
                 ImmutableHashSet<UniqueAddress>.Empty :
                 protoSeen.Select(x => addressMapping[x]).ToImmutableHashSet(UniqueAddressComparer.Instance);
             var overview = new GossipOverview(seen, reachability);
@@ -413,7 +413,7 @@ namespace Akka.Cluster.Serialization
 
         private static Reachability ReachabilityFromProto(IList<Protocol.ObserverReachability> reachabilityProto, List<UniqueAddress> addressMapping)
         {
-            if (reachabilityProto == null || reachabilityProto.Count == 0)
+            if (reachabilityProto is null || reachabilityProto.Count == 0)
             {
                 return new Reachability(ImmutableList<Reachability.Record>.Empty, ImmutableDictionary<UniqueAddress, long>.Empty);
             }

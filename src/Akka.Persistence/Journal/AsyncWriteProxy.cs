@@ -68,7 +68,7 @@ namespace Akka.Persistence.Journal
         [SerializationConstructor]
         public SetStore(IActorRef store)
         {
-            if (null == store) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.store, ExceptionResource.ArgumentNull_SetStore); }
+            if (store is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.store, ExceptionResource.ArgumentNull_SetStore); }
             Store = store;
         }
 
@@ -101,7 +101,7 @@ namespace Akka.Persistence.Journal
             /// </exception>
             public ReplayFailure(Exception cause)
             {
-                if (null == cause) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_ReplayFailure); }
+                if (cause is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_ReplayFailure); }
                 Cause = cause;
             }
 
@@ -345,7 +345,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         protected override Task<IImmutableList<Exception>> WriteMessagesAsync(IEnumerable<AtomicWrite> messages)
         {
-            if (_store == null)
+            if (_store is null)
                 return StoreNotInitialized<IImmutableList<Exception>>();
 
             return _store.Ask<IImmutableList<Exception>>(new AsyncWriteTarget.WriteMessages(messages), Timeout);
@@ -362,7 +362,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         protected override Task DeleteMessagesToAsync(string persistenceId, long toSequenceNr)
         {
-            if (_store == null)
+            if (_store is null)
                 return StoreNotInitialized<object>();
 
             return _store.Ask(new AsyncWriteTarget.DeleteMessagesTo(persistenceId, toSequenceNr), Timeout);
@@ -383,7 +383,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public override Task ReplayMessagesAsync(IActorContext context, string persistenceId, long fromSequenceNr, long toSequenceNr, long max, Action<IPersistentRepresentation> recoveryCallback)
         {
-            if (_store == null)
+            if (_store is null)
                 return StoreNotInitialized<object>();
 
             var replayCompletionPromise = new TaskCompletionSource<object>();
@@ -405,7 +405,7 @@ namespace Akka.Persistence.Journal
         /// <returns>TBD</returns>
         public override Task<long> ReadHighestSequenceNrAsync(string persistenceId, long fromSequenceNr)
         {
-            if (_store == null)
+            if (_store is null)
                 return StoreNotInitialized<long>();
 
             return _store.Ask<AsyncWriteTarget.ReplaySuccess>(new AsyncWriteTarget.ReplayMessages(persistenceId, 0, 0, 0), Timeout)

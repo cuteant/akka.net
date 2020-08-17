@@ -433,7 +433,7 @@ namespace Akka.Dispatch
                     break;
                 default:
                     TypeUtils.TryResolveType(type, out var dispatcherType);
-                    if (dispatcherType == null)
+                    if (dispatcherType is null)
                     {
                         AkkaThrowHelper.ThrowConfigurationException_Dispatcher_InvalidType(type, id);
                     }

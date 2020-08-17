@@ -11,7 +11,7 @@
     <Product>Reactive Streams</Product>
     <Copyright>CC0 1.0 Universal</Copyright>
     <PackageProjectUrl>https://github.com/reactive-streams/reactive-streams-dotnet</PackageProjectUrl>
-    <PackageLicenseUrl>http://creativecommons.org/publicdomain/zero/1.0/</PackageLicenseUrl>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryType>git</RepositoryType>
     <RepositoryUrl>https://github.com/reactive-streams/reactive-streams-dotnet.git</RepositoryUrl>
     <NeutralLanguage>en-US</NeutralLanguage>

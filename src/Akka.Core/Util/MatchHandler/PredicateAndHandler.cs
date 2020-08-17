@@ -54,7 +54,7 @@ namespace Akka.Tools.MatchHandler
         /// <returns>TBD</returns>
         public static PredicateAndHandler CreateAction(object action, object predicate = null, bool handlerFirstArgumentShouldBeBaseType=false)
         {
-            if(predicate == null)
+            if(predicate is null)
             {
                 var actionHandler = new PredicateAndHandler(HandlerKind.Action, handlerFirstArgumentShouldBeBaseType);
                 actionHandler.Arguments = new[] { new Argument(actionHandler, action, true) };

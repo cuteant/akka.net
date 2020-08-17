@@ -55,7 +55,7 @@ namespace Akka.Event
                     Trace.TraceWarning("Unhandled message!");
                     break;
                 default:
-                    if (message != null) Trace.TraceInformation(message.ToString());
+                    if (message is object) Trace.TraceInformation(message.ToString());
                     break;
             }
         }

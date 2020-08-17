@@ -120,7 +120,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                int hashCode = (PersistenceId != null ? PersistenceId.GetHashCode() : 0);
+                int hashCode = (PersistenceId is object ? PersistenceId.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ SequenceNr.GetHashCode();
                 hashCode = (hashCode * 397) ^ Timestamp.GetHashCode();
                 return hashCode;
@@ -166,7 +166,7 @@ namespace Akka.Persistence
         public override bool Equals(object obj) => Equals(obj as SaveSnapshotSuccess);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => Metadata != null ? Metadata.GetHashCode() : 0;
+        public override int GetHashCode() => Metadata is object ? Metadata.GetHashCode() : 0;
 
         /// <inheritdoc/>
         public override string ToString() => $"SaveSnapshotSuccess<{Metadata}>";
@@ -207,7 +207,7 @@ namespace Akka.Persistence
         public override bool Equals(object obj) => Equals(obj as DeleteSnapshotSuccess);
 
         /// <inheritdoc/>
-        public override int GetHashCode() => Metadata != null ? Metadata.GetHashCode() : 0;
+        public override int GetHashCode() => Metadata is object ? Metadata.GetHashCode() : 0;
 
         /// <inheritdoc/>
         public override string ToString() => $"DeleteSnapshotSuccess<{Metadata}>";
@@ -253,7 +253,7 @@ namespace Akka.Persistence
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (Criteria != null ? Criteria.GetHashCode() : 0);
+            return (Criteria is object ? Criteria.GetHashCode() : 0);
         }
 
         /// <inheritdoc/>
@@ -313,7 +313,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Metadata != null ? Metadata.GetHashCode() : 0) * 397) ^ (Cause != null ? Cause.GetHashCode() : 0);
+                return ((Metadata is object ? Metadata.GetHashCode() : 0) * 397) ^ (Cause is object ? Cause.GetHashCode() : 0);
             }
         }
 
@@ -371,7 +371,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Metadata != null ? Metadata.GetHashCode() : 0) * 397) ^ (Cause != null ? Cause.GetHashCode() : 0);
+                return ((Metadata is object ? Metadata.GetHashCode() : 0) * 397) ^ (Cause is object ? Cause.GetHashCode() : 0);
             }
         }
 
@@ -426,7 +426,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Criteria != null ? Criteria.GetHashCode() : 0) * 397) ^ (Cause != null ? Cause.GetHashCode() : 0);
+                return ((Criteria is object ? Criteria.GetHashCode() : 0) * 397) ^ (Cause is object ? Cause.GetHashCode() : 0);
             }
         }
 
@@ -482,7 +482,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Metadata != null ? Metadata.GetHashCode() : 0) * 397) ^ (Snapshot != null ? Snapshot.GetHashCode() : 0);
+                return ((Metadata is object ? Metadata.GetHashCode() : 0) * 397) ^ (Snapshot is object ? Snapshot.GetHashCode() : 0);
             }
         }
 
@@ -645,7 +645,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Metadata != null ? Metadata.GetHashCode() : 0) * 397) ^ (Snapshot != null ? Snapshot.GetHashCode() : 0);
+                return ((Metadata is object ? Metadata.GetHashCode() : 0) * 397) ^ (Snapshot is object ? Snapshot.GetHashCode() : 0);
             }
         }
 
@@ -710,8 +710,8 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                var hashCode = (PersistenceId != null ? PersistenceId.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Criteria != null ? Criteria.GetHashCode() : 0);
+                var hashCode = (PersistenceId is object ? PersistenceId.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Criteria is object ? Criteria.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ ToSequenceNr.GetHashCode();
                 return hashCode;
             }
@@ -769,7 +769,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Snapshot != null ? Snapshot.GetHashCode() : 0) * 397) ^ ToSequenceNr.GetHashCode();
+                return ((Snapshot is object ? Snapshot.GetHashCode() : 0) * 397) ^ ToSequenceNr.GetHashCode();
             }
         }
 
@@ -830,7 +830,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public SaveSnapshot(SnapshotMetadata metadata, object snapshot)
         {
-            if (null == metadata) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.metadata, ExceptionResource.ArgumentNull_SaveSnapshot); }
+            if (metadata is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.metadata, ExceptionResource.ArgumentNull_SaveSnapshot); }
             Metadata = metadata;
             Snapshot = snapshot;
         }
@@ -864,7 +864,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((Metadata != null ? Metadata.GetHashCode() : 0) * 397) ^ (Snapshot != null ? Snapshot.GetHashCode() : 0);
+                return ((Metadata is object ? Metadata.GetHashCode() : 0) * 397) ^ (Snapshot is object ? Snapshot.GetHashCode() : 0);
             }
         }
 
@@ -888,7 +888,7 @@ namespace Akka.Persistence
         [SerializationConstructor]
         public DeleteSnapshot(SnapshotMetadata metadata)
         {
-            if (null == metadata) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.metadata, ExceptionResource.ArgumentNull_DeleteSnapshot); }
+            if (metadata is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.metadata, ExceptionResource.ArgumentNull_DeleteSnapshot); }
             Metadata = metadata;
         }
 
@@ -965,7 +965,7 @@ namespace Akka.Persistence
         {
             unchecked
             {
-                return ((PersistenceId != null ? PersistenceId.GetHashCode() : 0) * 397) ^ (Criteria != null ? Criteria.GetHashCode() : 0);
+                return ((PersistenceId is object ? PersistenceId.GetHashCode() : 0) * 397) ^ (Criteria is object ? Criteria.GetHashCode() : 0);
             }
         }
 

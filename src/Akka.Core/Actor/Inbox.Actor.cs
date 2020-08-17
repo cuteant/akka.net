@@ -131,7 +131,7 @@ namespace Akka.Actor
                     {
                         _currentSelect = select;
                         var firstMatch = _messages.DequeueFirstOrDefault(_messagePredicate);
-                        if (firstMatch == null)
+                        if (firstMatch is null)
                         {
                             EnqueueQuery(select);
                         }
@@ -144,7 +144,7 @@ namespace Akka.Actor
 
                     break;
                 case StartWatch startWatch:
-                    if (startWatch.Message == null)
+                    if (startWatch.Message is null)
                         Context.Watch(startWatch.Target);
                     else
                         Context.WatchWith(startWatch.Target, startWatch.Message);
@@ -174,7 +174,7 @@ namespace Akka.Actor
                     {
                         _currentMessage = message;
                         var firstMatch = _matched[0] = _clients.DequeueFirstOrDefault(_clientPredicate); //TODO: this should work as DequeueFirstOrDefault
-                        if (firstMatch != null)
+                        if (firstMatch is object)
                         {
                             _clientsByTimeout.ExceptWith(_matched);
                             firstMatch.Client.Tell(message);
@@ -190,7 +190,7 @@ namespace Akka.Actor
 
             if (0u >= (uint)_clients.Count)
             {
-                if (_currentDeadline != null)
+                if (_currentDeadline is object)
                 {
                     _currentDeadline.Value.Item2.Cancel();
                     _currentDeadline = null;
@@ -199,9 +199,9 @@ namespace Akka.Actor
             else
             {
                 var next = _clientsByTimeout.FirstOrDefault();
-                if (next != null)
+                if (next is object)
                 {
-                    if (_currentDeadline != null)
+                    if (_currentDeadline is object)
                     {
                         _currentDeadline.Value.Item2.Cancel();
                         _currentDeadline = null;

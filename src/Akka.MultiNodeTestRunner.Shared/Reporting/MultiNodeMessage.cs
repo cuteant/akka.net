@@ -92,13 +92,13 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
             if (ReferenceEquals(this, obj)) return true;
             if (obj.GetType() != GetType()) return false;
             var msg = obj as MultiNodeMessage;
-            return msg != null && Equals(msg);
+            return msg is object && Equals(msg);
         }
 
         /// <inheritdoc/>
         public virtual bool Equals(MultiNodeMessage other)
         {
-            return other != null &&
+            return other is object &&
                    NodeIndex == other.NodeIndex &&
                    string.Equals(NodeRole, other.NodeRole, StringComparison.Ordinal) &&
                    TimeStamp == other.TimeStamp &&
@@ -150,7 +150,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
         public override bool Equals(MultiNodeMessage other)
         {
             var otherResultMessage = other as MultiNodeResultMessage;
-            return otherResultMessage != null &&
+            return otherResultMessage is object &&
                    base.Equals(other) &&
                    Passed == otherResultMessage.Passed;
         }
@@ -207,7 +207,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
         public override bool Equals(MultiNodeMessage other)
         {
             var otherLogMessage = other as MultiNodeTestRunnerMessage;
-            return otherLogMessage != null &&
+            return otherLogMessage is object &&
                     base.Equals(other) &&
                     LogLevel == otherLogMessage.LogLevel &&
                     string.Equals(ActorPath, otherLogMessage.ActorPath);
@@ -286,7 +286,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
         public override bool Equals(MultiNodeMessage other)
         {
             var otherLogMessage = other as MultiNodeLogMessage;
-            return otherLogMessage != null &&
+            return otherLogMessage is object &&
                     base.Equals(other) &&
                     LogLevel == otherLogMessage.LogLevel &&
                     string.Equals(ActorPath, otherLogMessage.ActorPath);

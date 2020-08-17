@@ -210,7 +210,7 @@ namespace Akka.Persistence
         internal static ArgumentException GetArgumentException_Serializer_D(object obj)
         {
             var type = obj as Type;
-            var typeQualifiedName = type != null ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
+            var typeQualifiedName = type is object ? type.TypeQualifiedName() : obj?.GetType().TypeQualifiedName();
             return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
         }
 

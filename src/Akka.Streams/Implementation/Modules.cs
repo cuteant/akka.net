@@ -123,7 +123,7 @@ namespace Akka.Streams.Implementation
             var thisN = Attributes.GetNameOrDefault(null);
             var thatN = attributes.GetNameOrDefault(null);
 
-            return thatN == null || thatN == thisN
+            return thatN is null || thatN == thisN
                 ? _shape
                 : new SourceShape<TOut>(new Outlet<TOut>(thatN + ".out"));
         }

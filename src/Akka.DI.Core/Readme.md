@@ -32,8 +32,8 @@ private ActorSystem _system;
 
 public WindsorDependencyResolver(IWindsorContainer container, ActorSystem system)
 {
-    if (system == null) throw new ArgumentNullException("system");
-    if (container == null) throw new ArgumentNullException("container");
+    if (system is null) throw new ArgumentNullException("system");
+    if (container is null) throw new ArgumentNullException("container");
     _container = container;
     _typeCache = new ConcurrentDictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
     _system = system;
@@ -104,8 +104,8 @@ public class WindsorDependencyResolver : IDependencyResolver
 
     public WindsorDependencyResolver(IWindsorContainer container, ActorSystem system)
     {
-        if (system == null) throw new ArgumentNullException("system");
-        if (container == null) throw new ArgumentNullException("container");
+        if (system is null) throw new ArgumentNullException("system");
+        if (container is null) throw new ArgumentNullException("container");
         this.container = container;
         typeCache = new ConcurrentDictionary<string, Type>(StringComparer.InvariantCultureIgnoreCase);
         this.system = system;

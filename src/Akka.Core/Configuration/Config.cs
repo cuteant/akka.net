@@ -35,7 +35,7 @@ namespace Akka.Configuration
         /// <exception cref="ArgumentNullException">This exception is thrown if the given <paramref name="root"/> value is undefined.</exception>
         public Config(HoconRoot root)
         {
-            if (root.Value == null)
+            if (root.Value is null)
             {
                 AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.root);
                 //throw new ArgumentNullException(nameof(root), "The root value cannot be null.");
@@ -54,7 +54,7 @@ namespace Akka.Configuration
         /// <exception cref="ArgumentNullException">This exception is thrown if the given <paramref name="source"/> is undefined.</exception>
         public Config(Config source, Config fallback)
         {
-            if (source == null)
+            if (source is null)
             {
                 AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.source);
                 //throw new ArgumentNullException(nameof(source), "The source configuration cannot be null.");
@@ -75,7 +75,7 @@ namespace Akka.Configuration
         /// </summary>
         public virtual bool IsEmpty
         {
-            get { return Root == null || Root.IsEmpty; }
+            get { return Root is null || Root.IsEmpty; }
         }
 
         private HoconValue Value { get; set; }
@@ -99,7 +99,7 @@ namespace Akka.Configuration
             //deep clone
             return new Config
             {
-                Fallback = Fallback != null ? Fallback.Copy(fallback) : fallback,
+                Fallback = Fallback is object ? Fallback.Copy(fallback) : fallback,
                 Root = Root,
                 Value = Value,
                 Substitutions = Substitutions
@@ -110,14 +110,14 @@ namespace Akka.Configuration
         {
             var parsedPath = path.SplitDottedPathHonouringQuotes();
             HoconValue currentNode = Root;
-            if (currentNode == null)
+            if (currentNode is null)
             {
                 AkkaThrowHelper.ThrowInvalidOperationException_Current_node_should_not_be_null();
             }
             foreach (string key in parsedPath)
             {
                 currentNode = currentNode.GetChildObject(key);
-                if (currentNode == null) return null;
+                if (currentNode is null) return null;
             }
             return currentNode;
         }
@@ -132,7 +132,7 @@ namespace Akka.Configuration
         public virtual bool GetBoolean(string path, bool @default = false)
         {
             HoconValue value = GetNode(path);
-            if (value == null)
+            if (value is null)
                 return @default;
 
             return value.GetBoolean();
@@ -159,7 +159,7 @@ namespace Akka.Configuration
         public virtual long? GetByteSize(string path)
         {
             HoconValue value = GetNode(path);
-            if (value == null) { return null; }
+            if (value is null) { return null; }
             return value.GetByteSize();
         }
 
@@ -173,7 +173,7 @@ namespace Akka.Configuration
         public virtual long? GetByteSize(string path, long? def = null)
         {
             HoconValue value = GetNode(path);
-            if (value == null) { return def; }
+            if (value is null) { return def; }
             return value.GetByteSize();
         }
 
@@ -187,7 +187,7 @@ namespace Akka.Configuration
         public virtual int GetInt(string path, int @default = 0)
         {
             HoconValue value = GetNode(path);
-            if (value == null)
+            if (value is null)
                 return @default;
 
             return value.GetInt();
@@ -203,7 +203,7 @@ namespace Akka.Configuration
         public virtual long GetLong(string path, long @default = 0)
         {
             HoconValue value = GetNode(path);
-            if (value == null)
+            if (value is null)
                 return @default;
 
             return value.GetLong();
@@ -219,7 +219,7 @@ namespace Akka.Configuration
         public virtual string GetString(string path, string @default = null)
         {
             HoconValue value = GetNode(path);
-            if (value == null)
+            if (value is null)
                 return @default;
 
             return value.GetString();
@@ -235,7 +235,7 @@ namespace Akka.Configuration
         public virtual float GetFloat(string path, float @default = 0)
         {
             HoconValue value = GetNode(path);
-            if (value == null)
+            if (value is null)
                 return @default;
 
             return value.GetFloat();
@@ -251,7 +251,7 @@ namespace Akka.Configuration
         public virtual decimal GetDecimal(string path, decimal @default = 0)
         {
             HoconValue value = GetNode(path);
-            if (value == null)
+            if (value is null)
                 return @default;
 
             return value.GetDecimal();
@@ -267,7 +267,7 @@ namespace Akka.Configuration
         public virtual double GetDouble(string path, double @default = 0)
         {
             HoconValue value = GetNode(path);
-            if (value == null)
+            if (value is null)
                 return @default;
 
             return value.GetDouble();
@@ -366,7 +366,7 @@ namespace Akka.Configuration
         public virtual IList<string> GetStringList(string path)
         {
             HoconValue value = GetNode(path);
-            if (value == null) return new List<string>();
+            if (value is null) return new List<string>();
             return value.GetStringList();
         }
 
@@ -380,7 +380,7 @@ namespace Akka.Configuration
         public virtual IList<string> GetStringList(string path, string[] defaultPaths)
         {
             HoconValue value = GetNode(path);
-            if (value == null) return defaultPaths;
+            if (value is null) return defaultPaths;
             return value.GetStringList();
         }
 
@@ -394,18 +394,18 @@ namespace Akka.Configuration
         public virtual Config GetConfig(string path)
         {
             HoconValue value = GetNode(path);
-            if (Fallback != null)
+            if (Fallback is object)
             {
                 Config f = Fallback.GetConfig(path);
-                if (value == null && f == null)
+                if (value is null && f is null)
                     return null;
-                if (value == null)
+                if (value is null)
                     return f;
 
                 return new Config(new HoconRoot(value)).WithFallback(f);
             }
 
-            if (value == null)
+            if (value is null)
                 return null;
 
             return new Config(new HoconRoot(value));
@@ -434,7 +434,7 @@ namespace Akka.Configuration
         public virtual TimeSpan GetTimeSpan(string path, TimeSpan? @default = null, bool allowInfinite = true)
         {
             HoconValue value = GetNode(path);
-            if (value == null)
+            if (value is null)
                 return @default.GetValueOrDefault();
 
             return value.GetTimeSpan(allowInfinite);
@@ -446,7 +446,7 @@ namespace Akka.Configuration
         /// <returns>A string containing the current configuration.</returns>
         public override string ToString()
         {
-            if (Value == null)
+            if (Value is null)
                 return "";
 
             return Value.ToString();
@@ -474,7 +474,7 @@ namespace Akka.Configuration
         public virtual Config WithFallback(Config fallback)
         {
             if (fallback == this) { AkkaThrowHelper.ThrowArgumentException_Config_can_not_have_itself_as_fallback(); }
-            if (fallback == null) { return this; }
+            if (fallback is null) { return this; }
             if (IsEmpty) { return fallback; }
 
             var mergedRoot = fallback.Root.GetObject().MergeImmutable(Root.GetObject());
@@ -494,7 +494,7 @@ namespace Akka.Configuration
         public virtual bool HasPath(string path)
         {
             HoconValue value = GetNode(path);
-            return value != null;
+            return value is object;
         }
 
         /// <summary>
@@ -540,7 +540,7 @@ namespace Akka.Configuration
         {
             var used = new HashSet<string>(StringComparer.Ordinal);
             Config current = this;
-            while (current != null)
+            while (current is object)
             {
                 foreach (var kvp in current.Root.GetObject().Items)
                 {
@@ -574,7 +574,7 @@ namespace Akka.Configuration
         /// <returns>The current configuration or the fallback configuration if the current one is null.</returns>
         public static Config SafeWithFallback(this Config config, Config fallback)
         {
-            return config == null
+            return config is null
                 ? fallback
                 : ReferenceEquals(config, fallback)
                     ? config
@@ -588,7 +588,7 @@ namespace Akka.Configuration
         /// <returns><c>true></c> if the <see cref="Config" /> is null or <see cref="Config.IsEmpty" />; otherwise <c>false</c>.</returns>
         public static bool IsNullOrEmpty(this Config config)
         {
-            return config == null || config.IsEmpty;
+            return config is null || config.IsEmpty;
         }
     }
 }

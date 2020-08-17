@@ -387,7 +387,7 @@ namespace Akka.Remote
         {
             get
             {
-                if (RetryGateEnabled && _pruneTimeCancelable == null)
+                if (RetryGateEnabled && _pruneTimeCancelable is null)
                 {
                     return _pruneTimeCancelable = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(PruneInterval, PruneInterval, Self, new Prune(), Self);
                 }
@@ -519,7 +519,7 @@ namespace Akka.Remote
 
         protected override void PreStart()
         {
-            if (PruneTimerCancelleable != null)
+            if (PruneTimerCancelleable is object)
             {
                 if (_log.IsDebugEnabled) _log.StartingPruneTimerForEndpointManager();
             }
@@ -533,7 +533,7 @@ namespace Akka.Remote
 
         protected override void PostStop()
         {
-            if (PruneTimerCancelleable != null)
+            if (PruneTimerCancelleable is object)
             {
                 _pruneTimeCancelable.Cancel();
             }
@@ -717,7 +717,7 @@ namespace Akka.Remote
             //Stop writers
             var policy = _endpoints.WritableEndpointWithPolicyFor(remoteAddr);
             var quarantineUid = quarantine.Uid;
-            if (quarantineUid != null)
+            if (quarantineUid is object)
             {
                 switch (policy)
                 {
@@ -771,12 +771,12 @@ namespace Akka.Remote
 
             // Stop inbound read-only associations
             var readPolicy = _endpoints.ReadOnlyEndpointFor(remoteAddr);
-            if (readPolicy != null)
+            if (readPolicy is object)
             {
                 var readPolicyActor = readPolicy.Value.Item1;
-                if (readPolicyActor != null)
+                if (readPolicyActor is object)
                 {
-                    if (quarantineUid == null)
+                    if (quarantineUid is null)
                     {
                         context.Stop(readPolicyActor);
                     }
@@ -957,7 +957,7 @@ namespace Akka.Remote
             {
                 return result.Result.All(x => x);
             }
-            if (result.Exception != null) { result.Exception.Handle(e => true); }
+            if (result.Exception is object) { result.Exception.Handle(e => true); }
             return false;
         }
 
@@ -975,7 +975,7 @@ namespace Akka.Remote
             {
                 return result.Result.All(x => x) && shutdownStatus;
             }
-            if (result.Exception != null) { result.Exception.Handle(e => true); }
+            if (result.Exception is object) { result.Exception.Handle(e => true); }
             return false;
         }
 
@@ -1017,7 +1017,7 @@ namespace Akka.Remote
             var handle = ((AkkaProtocolHandle)ia.Association);
             var remoteAddr = handle.RemoteAddress;
             var readonlyEndpoint = _endpoints.ReadOnlyEndpointFor(remoteAddr);
-            if (readonlyEndpoint != null)
+            if (readonlyEndpoint is object)
             {
                 var endpoint = readonlyEndpoint.Value.Item1;
                 if (_pendingReadHandoffs.TryGetValue(endpoint, out var protocolHandle))
@@ -1102,7 +1102,7 @@ namespace Akka.Remote
         {
             get
             {
-                if (_listens == null)
+                if (_listens is null)
                 {
                     /*
                      * Constructs chains of adapters on top of each driven given in configuration. The result structure looks like the following:
@@ -1124,7 +1124,7 @@ namespace Akka.Remote
                         try
                         {
                             var driverType = TypeUtil.ResolveType(transportSettings.TransportClass);
-                            if (driverType == null)
+                            if (driverType is null)
                             {
                                 ThrowHelper.ThrowTypeLoadException(transportSettings);
                             }
@@ -1134,7 +1134,7 @@ namespace Akka.Remote
                             }
 
                             var constructorInfo = driverType.GetConstructor(new[] { typeof(ActorSystem), typeof(Config) });
-                            if (constructorInfo == null)
+                            if (constructorInfo is null)
                             {
                                 ThrowHelper.ThrowTypeLoadException_ActorSystem(transportSettings);
                             }

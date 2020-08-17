@@ -20,7 +20,7 @@ namespace Akka.Util
 
         public static string Join(this IEnumerable<string> values, string separator, string prefix, string suffix)
         {
-            if (values == null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.values); }
+            if (values is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.values); }
 
             StringBuilder result = StringBuilderCache.Acquire();
             result.Append(prefix);
@@ -69,7 +69,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static string Join<T>(this IEnumerable<T> values, string separator, string prefix, string suffix)
         {
-            if (values == null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.values); }
+            if (values is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.values); }
 
             StringBuilder result = StringBuilderCache.Acquire();
             result.Append(prefix);
@@ -103,7 +103,7 @@ namespace Akka.Util
                     currentValue = en.Current;
 
                     result.Append(separator);
-                    if (currentValue != null)
+                    if (currentValue is object)
                     {
                         result.Append(currentValue.ToString());
                     }
@@ -159,7 +159,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe string JoinCore0(IEnumerable<string> values, char* separator, int separatorLength, char* prefix, int prefixLength, char* suffix, int suffixLength)
         {
-            if (values == null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.values); }
+            if (values is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.values); }
 
             StringBuilder result = StringBuilderCache.Acquire();
             result.Append(prefix, prefixLength);
@@ -238,7 +238,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static unsafe string JoinCore<T>(char* separator, int separatorLength, IEnumerable<T> values, char* prefix, int prefixLength, char* suffix, int suffixLength)
         {
-            if (values == null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.values); }
+            if (values is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.values); }
 
             StringBuilder result = StringBuilderCache.Acquire();
             result.Append(prefix, prefixLength);
@@ -272,7 +272,7 @@ namespace Akka.Util
                     currentValue = en.Current;
 
                     result.Append(separator, separatorLength);
-                    if (currentValue != null)
+                    if (currentValue is object)
                     {
                         result.Append(currentValue.ToString());
                     }

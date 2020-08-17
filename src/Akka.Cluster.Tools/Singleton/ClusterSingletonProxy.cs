@@ -128,7 +128,7 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void CancelTimer()
         {
-            if (_identityTimer != null)
+            if (_identityTimer is object)
             {
                 _identityTimer.Cancel();
                 _identityTimer = null;
@@ -152,7 +152,7 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void HandleActorIdentity(ActorIdentity identity)
         {
-            if (identity.Subject != null)
+            if (identity.Subject is object)
             {
                 // if the new singleton is defined, deliver all buffered messages
                 var subject = identity.Subject;
@@ -167,7 +167,7 @@ namespace Akka.Cluster.Tools.Singleton
         private void HandleTryToIdentifySingleton(TryToIdentifySingleton _)
         {
             var oldest = _membersByAge.FirstOrDefault();
-            if (oldest != null && _identityTimer != null)
+            if (oldest is object && _identityTimer is object)
             {
                 var singletonAddress = new RootActorPath(oldest.Address) / _singletonPath;
                 if (_log.IsDebugEnabled) Log.TryingToIdentifySingletonAt(singletonAddress);
@@ -186,7 +186,7 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void HandleAny(object msg)
         {
-            if (_singleton != null)
+            if (_singleton is object)
             {
                 if (Log.IsDebugEnabled) { Log.ForwardingMessageOfTypeToCurrentSingletonInstanceAt(msg, _singleton); }
                 _singleton.Forward(msg);

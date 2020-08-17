@@ -27,7 +27,7 @@ namespace Akka.DI.Core
         /// </exception>
         public void Initialize(IDependencyResolver dependencyResolver)
         {
-            if (null == dependencyResolver) { ThrowHelper.ThrowArgumentNullException_DIExt(); }
+            if (dependencyResolver is null) { ThrowHelper.ThrowArgumentNullException_DIExt(); }
             _dependencyResolver = dependencyResolver;
         }
 

@@ -135,7 +135,7 @@ namespace Akka.Routing
         {
             if (routee is ActorRefRoutee actorRefRoutee && TryGetChildStatsByName(actorRefRoutee.Actor.Path.Name, out IChildStats childActorStats))
             {
-                if (childActorStats is ChildRestartStats childRef && childRef.Child != null)
+                if (childActorStats is ChildRestartStats childRef && childRef.Child is object)
                 {
                     // The reason for the delay is to give concurrent
                     // messages a chance to be placed in mailbox before sending PoisonPill,
@@ -166,7 +166,7 @@ namespace Akka.Routing
                     // for binary backwards compatibility reasons
                     var deprecatedPaths = group.Paths;
 
-                    var paths = deprecatedPaths == null
+                    var paths = deprecatedPaths is null
                             ? group.GetPaths(System)?.ToArray()
                             : deprecatedPaths.ToArray();
 

@@ -169,7 +169,7 @@ namespace Akka.Cluster
             }
 
             var deploy = base.ParseConfig(key, config2);
-            if (deploy != null)
+            if (deploy is object)
             {
                 if (deploy.Config.GetBoolean("cluster.enabled", false))
                 {

@@ -88,7 +88,7 @@ namespace Akka.Streams.Implementation.StreamRef
             {
                 get
                 {
-                    if (_partnerRef == null) throw new TargetRefNotInitializedYetException();
+                    if (_partnerRef is null) throw new TargetRefNotInitializedYetException();
                     return _partnerRef;
                 }
             }
@@ -107,7 +107,7 @@ namespace Akka.Streams.Implementation.StreamRef
             {
                 _stageActor = GetStageActor(InitialReceive);
                 var initialPartnerRef = _stage._initialPartnerRef;
-                if (initialPartnerRef != null)
+                if (initialPartnerRef is object)
                 {
                     // this will set the `partnerRef`
                     ObserveAndValidateSender(initialPartnerRef, "Illegal initialPartnerRef! This would be a bug in the SinkRef usage or impl.");
@@ -133,7 +133,7 @@ namespace Akka.Streams.Implementation.StreamRef
                 switch (message)
                 {
                     case Terminated terminated when Equals(terminated.ActorRef, PartnerRef):
-                        if (_failedWithAwaitingPartnerTermination == null)
+                        if (_failedWithAwaitingPartnerTermination is null)
                         {
                             // other side has terminated (in response to a completion message) so we can safely terminate
                             CompleteStage();
@@ -193,7 +193,7 @@ namespace Akka.Streams.Implementation.StreamRef
 
             public void OnUpstreamFailure(Exception cause)
             {
-                if (_partnerRef != null)
+                if (_partnerRef is object)
                 {
                     _partnerRef.Tell(new RemoteStreamFailure(cause.ToString()), Self);
                     _failedWithAwaitingPartnerTermination = cause;
@@ -210,7 +210,7 @@ namespace Akka.Streams.Implementation.StreamRef
 
             public void OnUpstreamFinish()
             {
-                if (_partnerRef != null)
+                if (_partnerRef is object)
                 {
                     _partnerRef.Tell(new RemoteStreamCompleted(_remoteCumulativeDemandConsumed), Self);
                     _failedWithAwaitingPartnerTermination = null;
@@ -226,7 +226,7 @@ namespace Akka.Streams.Implementation.StreamRef
 
             private void ObserveAndValidateSender(IActorRef partner, string failureMessage)
             {
-                if (_partnerRef == null)
+                if (_partnerRef is null)
                 {
                     _partnerRef = partner;
                     partner.Tell(new OnSubscribeHandshake(Self), Self);

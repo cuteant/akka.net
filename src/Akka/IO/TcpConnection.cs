@@ -108,7 +108,7 @@ namespace Akka.IO
 
         protected TcpConnection(TcpExt tcp, Socket socket, bool pullMode, Option<int> writeCommandsBufferMaxSize)
         {
-            if (socket == null) throw new ArgumentNullException(nameof(socket));
+            if (socket is null) throw new ArgumentNullException(nameof(socket));
 
             _pullMode = pullMode;
             _writeCommandsQueue = new PendingSimpleWritesQueue(Log, writeCommandsBufferMaxSize);
@@ -249,7 +249,7 @@ namespace Akka.IO
             {
                 if (handleWrite(message)) return true;
                 var cmd = message as CloseCommand;
-                if (cmd != null)
+                if (cmd is object)
                 {
                     HandleClose(info, Sender, cmd.Event);
                     return true;
@@ -329,7 +329,7 @@ namespace Akka.IO
                         }
 
                         // If message is fully sent, notify sender who sent ResumeWriting command
-                        if (!IsWritePending && _interestedInResume != null)
+                        if (!IsWritePending && _interestedInResume is object)
                         {
                             _interestedInResume.Tell(WritingResumed.Instance);
                             _interestedInResume = null;
@@ -397,7 +397,7 @@ namespace Akka.IO
                         ClearStatus(ConnectionStatus.WritingSuspended);
                         if (IsWritePending)
                         {
-                            if (_interestedInResume == null) _interestedInResume = Sender;
+                            if (_interestedInResume is null) _interestedInResume = Sender;
                             else Sender.Tell(new CommandFailed(ResumeWriting.Instance));
                         }
                         else Sender.Tell(WritingResumed.Instance);
@@ -623,8 +623,8 @@ namespace Akka.IO
             }
 
             var notifications = new HashSet<IActorRef>(ActorRefComparer.Instance);
-            if (info.Handler != null) notifications.Add(info.Handler);
-            if (closeCommander != null) notifications.Add(closeCommander);
+            if (info.Handler is object) notifications.Add(info.Handler);
+            if (closeCommander is object) notifications.Add(closeCommander);
             StopWith(new CloseInformation(notifications, closedEvent));
         }
 
@@ -652,8 +652,8 @@ namespace Akka.IO
 
         protected void AcquireSocketAsyncEventArgs()
         {
-            if (ReceiveArgs != null) throw new InvalidOperationException($"Cannot acquire receive SocketAsyncEventArgs. It's already has been initialized");
-            if (SendArgs != null) throw new InvalidOperationException($"Cannot acquire send SocketAsyncEventArgs. It's already has been initialized");
+            if (ReceiveArgs is object) throw new InvalidOperationException($"Cannot acquire receive SocketAsyncEventArgs. It's already has been initialized");
+            if (SendArgs is object) throw new InvalidOperationException($"Cannot acquire send SocketAsyncEventArgs. It's already has been initialized");
 
             ReceiveArgs = CreateSocketEventArgs(Self);
             var buffer = Tcp.BufferPool.Rent();
@@ -664,7 +664,7 @@ namespace Akka.IO
 
         private void ReleaseSocketAsyncEventArgs()
         {
-            if (ReceiveArgs != null)
+            if (ReceiveArgs is object)
             {
                 var buffer = new ByteBuffer(ReceiveArgs.Buffer, ReceiveArgs.Offset, ReceiveArgs.Count);
                 ReleaseSocketEventArgs(ReceiveArgs);
@@ -674,7 +674,7 @@ namespace Akka.IO
                 ReceiveArgs = null;
             }
 
-            if (SendArgs != null)
+            if (SendArgs is object)
             {
                 ReleaseSocketEventArgs(SendArgs);
                 SendArgs = null;
@@ -724,7 +724,7 @@ namespace Akka.IO
             try
             {
                 e.SetBuffer(null, 0, 0);
-                if (e.BufferList != null)
+                if (e.BufferList is object)
                     e.BufferList = null;
             }
             // it can be that for some reason socket is in use and haven't closed yet
@@ -801,7 +801,7 @@ namespace Akka.IO
             // always try to release SocketAsyncEventArgs to avoid memory leaks
             ReleaseSocketAsyncEventArgs();
 
-            if (_closedMessage != null)
+            if (_closedMessage is object)
             {
                 var interestedInClose = _writeCommandsQueue.TryGetNext(out var pending)
                     ? _closedMessage.NotificationsTo.Union(_writeCommandsQueue.DequeueAll().Select(cmd => cmd.Sender))
@@ -1067,7 +1067,7 @@ namespace Akka.IO
                 first = null;
                 foreach (var writeInfo in ExtractFromCommand(command))
                 {
-                    if (first == null)
+                    if (first is null)
                     {
                         first = writeInfo.Command;
                         continue;

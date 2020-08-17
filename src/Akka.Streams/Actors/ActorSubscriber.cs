@@ -170,7 +170,7 @@ namespace Akka.Streams.Actors
                     break;
 
                 case OnSubscribe onSubscribe:
-                    if (_subscription == null)
+                    if (_subscription is null)
                     {
                         _subscription = onSubscribe.Subscription;
                         if (_canceled)
@@ -226,7 +226,7 @@ namespace Akka.Streams.Actors
         {
             var s = _state.Remove(Self);
             // restore previous state
-            if (s != null)
+            if (s is object)
             {
                 _subscription = s.Subscription;
                 _requested = s.Requested;
@@ -291,7 +291,7 @@ namespace Akka.Streams.Actors
         {
             if (!_canceled)
             {
-                if (_subscription != null)
+                if (_subscription is object)
                 {
                     Context.Stop(Self);
                     _subscription.Cancel();
@@ -330,7 +330,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public ActorSubscriberImpl(IActorRef impl)
         {
-            if (null == impl) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.impl, ExceptionResource.ArgumentNull_RequireActorImpl);
+            if (impl is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.impl, ExceptionResource.ArgumentNull_RequireActorImpl);
             _impl = impl;
         }
 
@@ -343,7 +343,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public void OnSubscribe(ISubscription subscription)
         {
-            if (null == subscription) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscription, ExceptionResource.ArgumentNull_OnSubscribeRequire);
+            if (subscription is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscription, ExceptionResource.ArgumentNull_OnSubscribeRequire);
             _impl.Tell(new OnSubscribe(subscription));
         }
 
@@ -362,7 +362,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public void OnNext(object element)
         {
-            if (null == element) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.element, ExceptionResource.ArgumentNull_OnNextRequire);
+            if (element is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.element, ExceptionResource.ArgumentNull_OnNextRequire);
             _impl.Tell(new OnNext(element));
         }
 
@@ -375,7 +375,7 @@ namespace Akka.Streams.Actors
         /// </exception>
         public void OnError(Exception cause)
         {
-            if (null == cause) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_OnErrorRequire);
+            if (cause is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.cause, ExceptionResource.ArgumentNull_OnErrorRequire);
             _impl.Tell(new OnError(cause));
         }
 

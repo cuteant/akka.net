@@ -91,7 +91,7 @@ namespace Akka.IO
 
                 case DeadLetter dl:
                     var completed = dl.Message as SocketCompleted;
-                    if (completed != null)
+                    if (completed is object)
                     {
                         //TODO: release resources?
                     }

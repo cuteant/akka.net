@@ -384,7 +384,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _decider = new Lazy<Decider>(() =>
                 {
                     var attribute = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                    return attribute != null ? attribute.Decider : Deciders.StoppingDecider;
+                    return attribute is object ? attribute.Decider : Deciders.StoppingDecider;
                 });
 
                 SetHandler(_stage.In, this);
@@ -397,7 +397,7 @@ namespace Akka.Streams.Implementation.Fusing
                 {
                     var element = Grab(_stage.In);
                     var key = _stage._keyFor(element);
-                    if (key == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key, ExceptionResource.ArgumentNull_KeyIsNull);
+                    if (key is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.key, ExceptionResource.ArgumentNull_KeyIsNull);
 
                     if (_activeSubstreams.TryGetValue(key, out var substreamSource))
                     {
@@ -437,7 +437,7 @@ namespace Akka.Streams.Implementation.Fusing
 
             public void OnPull()
             {
-                if (_substreamWaitingToBePushed != null)
+                if (_substreamWaitingToBePushed is object)
                 {
                     Push(_stage.Out, Source.FromGraph(_substreamWaitingToBePushed.Source));
                     ScheduleOnce(_substreamWaitingToBePushed.Key.Value, _timeout);
@@ -896,7 +896,7 @@ namespace Akka.Streams.Implementation.Fusing
 
             public void OnPull()
             {
-                if (_substreamSource == null)
+                if (_substreamSource is null)
                 {
                     //can be already pulled from substream in case split after
                     if (!HasBeenPulled(_stage._in))
@@ -913,7 +913,7 @@ namespace Akka.Streams.Implementation.Fusing
             public void OnDownstreamFinish()
             {
                 // If the substream is already cancelled or it has not been handed out, we can go away
-                if (_substreamSource == null || _substreamWaitingToBePushed || _substreamCancelled)
+                if (_substreamSource is null || _substreamWaitingToBePushed || _substreamCancelled)
                 {
                     CompleteStage();
                 }
@@ -1283,7 +1283,7 @@ namespace Akka.Streams.Implementation.Fusing
             }
 
             var intp = GraphInterpreter.CurrentInterpreterOrNull;
-            if (intp == null) { ThrowHelper.ThrowNotSupportedException(s); }
+            if (intp is null) { ThrowHelper.ThrowNotSupportedException(s); }
             s.RunWith(Sink.Ignore<T>(), intp.SubFusingMaterializer);
         }
     }
@@ -1404,7 +1404,7 @@ namespace Akka.Streams.Implementation.Fusing
         public void PushSubstream(T elem)
         {
             var f = _status.Value as IHandle<IActorSubscriberMessage>;
-            if (null == f) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_uninitialized_substream); }
+            if (f is null) { ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_uninitialized_substream); }
             f.Handle(new OnNext(elem));
         }
 

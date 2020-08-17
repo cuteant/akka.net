@@ -42,7 +42,7 @@ namespace Akka.Util.Internal
     [InternalApi]
     internal class ContextRemover : INotifyCompletion
     {
-        public bool IsCompleted => SynchronizationContext.Current == null;
+        public bool IsCompleted => SynchronizationContext.Current is null;
 
         public void OnCompleted(Action continuation)
         {

@@ -42,13 +42,13 @@ namespace Akka.Remote.TestKit
             _logger.LogDebug("Decoding {0}", message);
 
             var w = message as Protocol.Wrapper;
-            if (w != null)
+            if (w is object)
             {
-                if (w.Hello != null)
+                if (w.Hello is object)
                 {
                     return new Hello(w.Hello.Name, Proto2Address(w.Hello.Address));
                 }
-                else if (w.Barrier != null)
+                else if (w.Barrier is object)
                 {
                     switch (w.Barrier.Op)
                     {
@@ -59,7 +59,7 @@ namespace Akka.Remote.TestKit
                             return new EnterBarrier(w.Barrier.Name, w.Barrier.Timeout > 0 ? (TimeSpan?)TimeSpan.FromTicks(w.Barrier.Timeout) : null);
                     }
                 }
-                else if (w.Failure != null)
+                else if (w.Failure is object)
                 {
                     var f = w.Failure;
                     switch (f.Failure)
@@ -78,10 +78,10 @@ namespace Akka.Remote.TestKit
                             return new TerminateMsg(new Left<bool, int>(true));
                     }
                 }
-                else if (w.Addr != null)
+                else if (w.Addr is object)
                 {
                     var a = w.Addr;
-                    if (a.Addr.System != null)
+                    if (a.Addr.System is object)
                         return new AddressReply(new RoleName(a.Node), Proto2Address(a.Addr));
 
                     return new GetAddress(new RoleName(a.Node));

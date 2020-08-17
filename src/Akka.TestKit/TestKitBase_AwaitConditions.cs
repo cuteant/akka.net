@@ -403,7 +403,7 @@ namespace Akka.TestKit
 
         private static void ConditionalLog(ILoggingAdapter logger, string format, params object[] args)
         {
-            if (logger != null)
+            if (logger is object)
                 logger.Debug(format, args);
         }
     }

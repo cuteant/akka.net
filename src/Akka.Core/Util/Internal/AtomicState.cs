@@ -96,7 +96,7 @@ namespace Akka.Util.Internal
                 capturedException = ExceptionDispatchInfo.Capture(ex);
             }
 
-            bool throwException = capturedException != null;
+            bool throwException = capturedException is object;
             if (throwException || DateTime.UtcNow.CompareTo(deadline) >= 0)
             {
                 CallFails();
@@ -134,7 +134,7 @@ namespace Akka.Util.Internal
                 capturedException = ExceptionDispatchInfo.Capture(ex);
             }
 
-            bool throwException = capturedException != null;
+            bool throwException = capturedException is object;
             if (throwException || DateTime.UtcNow.CompareTo(deadline) >= 0)
             {
                 CallFails();

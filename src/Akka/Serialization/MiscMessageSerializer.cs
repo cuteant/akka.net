@@ -196,7 +196,7 @@ namespace Akka.Serialization
         /// <inheritdoc />
         protected override string GetManifest(Type type)
         {
-            if (null == type) { return null; }
+            if (type is null) { return null; }
             var manifestMap = ManifestMap;
             if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             foreach (var item in manifestMap)

@@ -345,17 +345,17 @@ namespace Akka.Persistence.TCK.Journal
             var writerGuid = WriterGuid;
             probe.ExpectMsg<WriteMessageSuccess>(m => m.Persistent.SequenceNr == 6L &&
                                                       m.Persistent.PersistenceId.Equals(pid) &&
-                                                      m.Persistent.Sender == null &&
+                                                      m.Persistent.Sender is null &&
                                                       m.Persistent.WriterGuid.Equals(writerGuid) &&
                                                       m.Persistent.Payload.Equals("b-6"));
             probe.ExpectMsg<WriteMessageRejected>(m => m.Persistent.SequenceNr == 7L &&
                                                        m.Persistent.PersistenceId.Equals(pid) &&
-                                                       m.Persistent.Sender == null &&
+                                                       m.Persistent.Sender is null &&
                                                        m.Persistent.WriterGuid.Equals(writerGuid) &&
                                                        m.Persistent.Payload is NotSerializableEvent);
             probe.ExpectMsg<WriteMessageSuccess>(m => m.Persistent.SequenceNr == 8L &&
                                                       m.Persistent.PersistenceId.Equals(pid) &&
-                                                      m.Persistent.Sender == null &&
+                                                      m.Persistent.Sender is null &&
                                                       m.Persistent.WriterGuid.Equals(writerGuid) &&
                                                       m.Persistent.Payload.Equals("b-8"));
         }

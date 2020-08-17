@@ -57,7 +57,7 @@ namespace Akka.Configuration.Hocon
                 return Items.ToDictionary(k => k.Key, v =>
                 {
                     HoconObject obj = v.Value.GetObject();
-                    if (obj != null)
+                    if (obj is object)
                         return (object) obj.Unwrapped;
                     return v.Value;
                 });
@@ -169,7 +169,7 @@ namespace Akka.Configuration.Hocon
 
         private string QuoteIfNeeded(string text)
         {
-            if (text == null) return "";
+            if (text is null) return "";
 
             if (EscapeRegex.IsMatch(text))
             {

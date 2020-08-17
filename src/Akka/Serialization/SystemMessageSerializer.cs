@@ -139,7 +139,7 @@ namespace Akka.Serialization
         /// <inheritdoc />
         protected override string GetManifest(Type type)
         {
-            if (null == type) { return null; }
+            if (type is null) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             throw AkkaThrowHelper.GetArgumentException_Serializer_D(type);
         }

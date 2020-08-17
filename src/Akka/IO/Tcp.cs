@@ -409,11 +409,11 @@ namespace Akka.IO
                 return writes.Reverse().Aggregate(this, (b, a) =>
                 {
                     var simple = a as SimpleWriteCommand;
-                    if (simple != null)
+                    if (simple is object)
                         return b.Prepend(simple);
 
                     var compound = a as CompoundWrite;
-                    if (compound != null)
+                    if (compound is object)
                         return b.Prepend(compound);
 
                     throw new ArgumentException("The supplied WriteCommand is invalid. Only SimpleWriteCommand and CompoundWrite WriteCommands are supported.");
@@ -622,17 +622,17 @@ namespace Akka.IO
             private IEnumerable<SimpleWriteCommand> Enumerable()
             {
                 WriteCommand current = this;
-                while (current != null)
+                while (current is object)
                 {
                     var compound = current as CompoundWrite;
-                    if (compound != null)
+                    if (compound is object)
                     {
                         current = compound.TailCommand;
                         yield return compound.Head;
                     }
 
                     var simple = current as SimpleWriteCommand;
-                    if (simple != null)
+                    if (simple is object)
                     {
                         current = null;
                         yield return simple;

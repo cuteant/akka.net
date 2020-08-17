@@ -23,7 +23,7 @@ namespace Akka.Actor
         /// <returns><c>true</c> if the <paramref name="actorRef"/> is valid; otherwise <c>false</c>.</returns>
         public static bool IsNobody(this IActorRef actorRef)
         {
-            //return actorRef == null || actorRef is Nobody || actorRef is DeadLetterActorRef;
+            //return actorRef is null || actorRef is Nobody || actorRef is DeadLetterActorRef;
             switch (actorRef)
             {
                 case null:
@@ -58,7 +58,7 @@ namespace Akka.Actor
         public bool Equals(IActorRef x, IActorRef y)
         {
             if (ReferenceEquals(x, y)) { return true; }
-            if (null == x/* || null == y*/) { return false; }
+            if (x is null/* || y is null*/) { return false; }
             return x.Equals(y);
         }
 

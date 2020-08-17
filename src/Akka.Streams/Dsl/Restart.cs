@@ -409,7 +409,7 @@ namespace Akka.Streams.Dsl
 
                 // We need to ensure that the other end of the sub flow is also completed, so that we don't
                 // receive any callbacks from it.
-                if (_activeOutIn != null)
+                if (_activeOutIn is object)
                 {
                     var sourceOut = _activeOutIn.Item1;
                     var sinkIn = _activeOutIn.Item2;

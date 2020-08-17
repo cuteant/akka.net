@@ -170,7 +170,7 @@ namespace Akka.Util
             {
                 var e = i.Next();
                 var set = e.Value;
-                if (set != null)
+                if (set is object)
                 {
                     if (set.TryRemove(value)) // If we can remove the value
                     {
@@ -217,7 +217,7 @@ namespace Akka.Util
             {
                 var e = i.Next();
                 var set = e.Value;
-                if(set != null) { set.Clear(); _container.TryRemove(e.Key, out _); }
+                if(set is object) { set.Clear(); _container.TryRemove(e.Key, out _); }
             }
         }
     }

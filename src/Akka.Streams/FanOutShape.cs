@@ -87,8 +87,8 @@ namespace Akka.Streams
             /// <exception cref="ArgumentNullException">TBD</exception>
             public InitPorts(Inlet<TIn> inlet, IEnumerable<Outlet> outlets)
             {
-                if (null == inlet) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlet); }
-                if (null == outlets) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlets); }
+                if (inlet is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.inlet); }
+                if (outlets is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.outlets); }
                 Inlet = inlet;
                 Outlets = outlets;
                 Name = "FanOut";

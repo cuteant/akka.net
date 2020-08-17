@@ -52,7 +52,7 @@ namespace Reactive.Streams.TCK
         {
             var environmentMilliseconds =
                 Environment.GetEnvironmentVariable(PublisherReferenceGcTimeoutMillisecondsEnvironment);
-            if (environmentMilliseconds == null)
+            if (environmentMilliseconds is null)
                 return DefaultPublisherReferenceGcTimeoutMilliseconds;
             try
             {
@@ -268,7 +268,7 @@ namespace Reactive.Streams.TCK
                 }
 
                 private bool IsSynchronousSignal() =>
-                    _previousSignal != null &&
+                    _previousSignal is object &&
                     Thread.CurrentThread.ManagedThreadId == _currentlySignallingThread.Value.ManagedThreadId;
             }
 
@@ -956,7 +956,7 @@ namespace Reactive.Streams.TCK
                     subscriber.ExpectNone();
                     var error = _environment.DropAsyncError();
 
-                    if (error == null)
+                    if (error is null)
                         stillbeeingSignalled = false;
                     else
                     {
@@ -1176,7 +1176,7 @@ namespace Reactive.Streams.TCK
 
         public void PotentiallyPendingTest(IPublisher<T> publisher, Action<IPublisher<T>> run, string message)
         {
-            if (publisher != null)
+            if (publisher is object)
                 run(publisher);
             else
                 Assert.Ignore(message);

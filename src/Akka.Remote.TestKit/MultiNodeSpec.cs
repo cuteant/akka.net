@@ -94,7 +94,7 @@ namespace Akka.Remote.TestKit
         {
             _deployments.TryGetValue(role, out var roleDeployments);
             _deployments = _deployments.SetItem(role,
-                roleDeployments == null ? ImmutableList.Create(deployment) : roleDeployments.Add(deployment));
+                roleDeployments is null ? ImmutableList.Create(deployment) : roleDeployments.Add(deployment));
         }
 
         public void DeployOnAll(string deployment)
@@ -165,7 +165,7 @@ namespace Akka.Remote.TestKit
         internal ImmutableList<string> Deployments(RoleName node)
         {
             _deployments.TryGetValue(node, out var deployments);
-            return deployments == null ? _allDeploy : deployments.AddRange(_allDeploy);
+            return deployments is null ? _allDeploy : deployments.AddRange(_allDeploy);
         }
 
         internal ImmutableList<RoleName> Roles
@@ -553,7 +553,7 @@ namespace Akka.Remote.TestKit
 
         public void MuteDeadLetters(ActorSystem system = null, params Type[] messageClasses)
         {
-            if (system == null) system = Sys;
+            if (system is null) system = Sys;
             if (!system.Log.IsDebugEnabled)
             {
                 if (messageClasses.Any())

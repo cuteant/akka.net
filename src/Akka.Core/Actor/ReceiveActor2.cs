@@ -83,7 +83,7 @@ namespace Akka.Actor
 
         private Receive GetBehavior(PatternMatchBuilder patterns)
         {
-            if (null == patterns) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.patterns); }
+            if (patterns is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.patterns); }
 
             if (patterns.Properties.TryGetValue(BehaviorKey, out var behavior))
             {
@@ -145,7 +145,7 @@ namespace Akka.Actor
         protected void Receive<T>(Action<T> handler, Predicate<T> shouldHandle = null)
         {
             EnsureMayConfigureMessageHandlers();
-            if (shouldHandle == null)
+            if (shouldHandle is null)
             {
                 _matchHandlerBuilders.Peek().Match<T>(handler);
             }

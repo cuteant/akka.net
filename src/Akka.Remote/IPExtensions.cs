@@ -39,7 +39,7 @@ namespace Akka.Remote
         {
             ushort[] m_Numbers = GetInstanceField(typeof(IPAddress), ipa, "m_Numbers") as ushort[];
 
-            if (m_Numbers == null) { ThrowHelper.ThrowException_IPAddress_Num(); }
+            if (m_Numbers is null) { ThrowHelper.ThrowException_IPAddress_Num(); }
 
             if (ipa.AddressFamily == AddressFamily.InterNetwork) { return ipa; }
 

@@ -29,7 +29,7 @@ namespace Akka.Remote.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, RemoteWatcher.HeartbeatRsp value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             writer.WriteUInt64((ulong)value.AddressUid, ref idx);
         }
@@ -59,7 +59,7 @@ namespace Akka.Remote.Serialization.Formatters
 
         public override void Serialize(ref MessagePackWriter writer, ref int idx, RemoteRouterConfig value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new ProtocolRemoteRouterConfig(
                 formatterResolver.SerializeMessage(value.Local),

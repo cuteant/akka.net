@@ -256,7 +256,7 @@ namespace Akka.Event
         /// <returns>The log level that matches the specified string.</returns>
         public static LogLevel LogLevelFor(string logLevel)
         {
-            if (null == logLevel) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.logLevel); }
+            if (logLevel is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.logLevel); }
 
             if(!s_logLevelMap.TryGetValue(logLevel, out var v))
             {

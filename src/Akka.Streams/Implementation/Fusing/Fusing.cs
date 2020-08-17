@@ -189,7 +189,7 @@ namespace Akka.Streams.Implementation.Fusing
             while (enumerator.MoveNext())
             {
                 GraphStageModule graphStageModule;
-                if (enumerator.Current is CopiedModule copy && (graphStageModule = copy.CopyOf as GraphStageModule) != null)
+                if (enumerator.Current is CopiedModule copy && (graphStageModule = copy.CopyOf as GraphStageModule) is object)
                 {
                     stages[pos] = graphStageModule.Stage;
                     materializedValueIds[pos] = copy;
@@ -238,7 +238,7 @@ namespace Akka.Streams.Implementation.Fusing
             while (enumerator.MoveNext())
             {
                 GraphStageModule graphStageModule;
-                if (enumerator.Current is CopiedModule copy && (graphStageModule = copy.CopyOf as GraphStageModule) != null)
+                if (enumerator.Current is CopiedModule copy && (graphStageModule = copy.CopyOf as GraphStageModule) is object)
                 {
                     var copyOutlets = copy.Shape.Outlets.GetEnumerator();
                     var originalOutlets = graphStageModule.Shape.Outlets.GetEnumerator();
@@ -296,13 +296,13 @@ namespace Akka.Streams.Implementation.Fusing
 
             var firstModule = group.First();
             var copiedModule = firstModule as CopiedModule;
-            if (null == copiedModule)
+            if (copiedModule is null)
             {
                 ThrowHelper.ThrowArgumentException_UnexpectedModule();
             }
             var asyncAttrs = IsAsync(copiedModule) ? new Attributes(Attributes.AsyncBoundary.Instance) : Attributes.None;
             var dispatcher = GetDispatcher(firstModule);
-            var dispatcherAttrs = dispatcher == null ? Attributes.None : new Attributes(dispatcher);
+            var dispatcherAttrs = dispatcher is null ? Attributes.None : new Attributes(dispatcher);
             var attr = asyncAttrs.And(dispatcherAttrs);
 
             return new GraphModule(new GraphAssembly(stages, attributes, ins, inOwners, outs, outOwners), shape, attr, materializedValueIds);
@@ -778,7 +778,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <returns>TBD</returns>
         public Atomic AddModule(IModule module, ISet<IModule> group, Attributes inheritedAttributes, int indent, Shape oldShape = null)
         {
-            var copy = oldShape == null
+            var copy = oldShape is null
                 ? new CopiedModule(module.Shape.DeepCopy(), inheritedAttributes, GetRealModule(module))
                 : module;
             oldShape = oldShape ?? module.Shape;
@@ -907,7 +907,7 @@ namespace Akka.Streams.Implementation.Fusing
             GraphStageModule graphStageModule;
             Type stageType;
             return module is CopiedModule copiedModule
-                && (graphStageModule = copiedModule.CopyOf as GraphStageModule) != null
+                && (graphStageModule = copiedModule.CopyOf as GraphStageModule) is object
                 && (stageType = graphStageModule.Stage.GetType()).IsGenericType
                 && stageType.GetGenericTypeDefinition() == typeof(MaterializedValueSource<>);
         }

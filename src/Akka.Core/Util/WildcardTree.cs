@@ -83,7 +83,7 @@ namespace Akka.Util
         public WildcardTree<T> FindWithTerminalDoubleWildcard(IEnumerator<string> elements, WildcardTree<T> alt)
         {
             if (!elements.MoveNext()) return this;
-            if (alt == null) alt = Empty;
+            if (alt is null) alt = Empty;
 
             var newAlt = Children.GetOrElse("**", alt);
 
@@ -99,7 +99,7 @@ namespace Akka.Util
         /// <inheritdoc/>
         public override bool Equals(object obj)
         {
-            if (obj == null) return false;
+            if (obj is null) return false;
             return GetHashCode() == obj.GetHashCode();
         }
 
@@ -109,7 +109,7 @@ namespace Akka.Util
             unchecked
             {
                 var hash = 17;
-                hash = hash * 23 + (Data == null ? 0 : Data.GetHashCode());
+                hash = hash * 23 + (Data is null ? 0 : Data.GetHashCode());
                 return Children.Aggregate(hash, (current, child) => current*23 + child.GetHashCode());
             }
         }

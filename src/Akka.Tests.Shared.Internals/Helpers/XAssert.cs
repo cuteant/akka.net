@@ -59,7 +59,7 @@ namespace Akka.TestKit
                 }
                 exception = ex;
             }
-            if(exception != null)
+            if(exception is object)
                 Fail("Expected exception of type " + typeof(T).FullName + ". Received " + exception);
             else
                 Fail("Expected exception of type " + typeof(T).Name + " but no exceptions was thrown.");

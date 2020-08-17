@@ -26,9 +26,9 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public override object DeepCopy(object source)
         {
-            if (null == source) { return null; }
+            if (source is null) { return null; }
             var bts = source as byte[];
-            if (null == bts) { AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_IsNotByteArray); }
+            if (bts is null) { AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_IsNotByteArray); }
             return CopyFrom(bts, 0, bts.Length);
         }
 

@@ -115,7 +115,7 @@ namespace Akka.Cluster.Sharding
             _writeConsistency = new WriteMajority(settings.TunningParameters.UpdatingStateTimeout, majorityCap);
             _stateKeys = Enumerable.Range(0, NrOfKeys).Select(i => new ORSetKey<EntryId>($"shard-{typeName}-{shardId}-{i}")).ToImmutableArray();
 
-            if (settings.LeaseSettings != null)
+            if (settings.LeaseSettings is object)
             {
                 Lease = LeaseProvider.Get(Context.System).GetLease(
                     $"{Context.System.Name}-shard-{typeName}-{shardId}",

@@ -43,7 +43,7 @@ namespace Akka.TestKit
         /// <summary>
         /// TBD 
         /// </summary>
-        public static string Id = "akka.test.calling-thread-dispatcher";
+        public static new string Id = "akka.test.calling-thread-dispatcher";
 
         /// <summary>
         /// TBD

@@ -46,7 +46,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 _stage = stage;
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 SetHandler(stage.In, stage.Out, this);
             }
@@ -139,7 +139,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 _stage = stage;
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 SetHandler(stage.Inlet, this);
                 SetHandler(stage.Outlet, this);
@@ -216,7 +216,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 _stage = stage;
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 SetHandler(stage.Outlet, this);
                 SetHandler(stage.Inlet, this);
@@ -394,7 +394,7 @@ namespace Akka.Streams.Implementation.Fusing
             _decider = new Lazy<Decider>(() =>
             {
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                return attr != null ? attr.Decider : Deciders.StoppingDecider;
+                return attr is object ? attr.Decider : Deciders.StoppingDecider;
             });
         }
 
@@ -862,7 +862,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _stage = stage;
                 _stageAggregate = stage._zero;
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                var decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                var decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 _rest = () =>
                 {
@@ -999,7 +999,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _evemtualCurrent = Task.FromResult(_current);
 
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 _callback = GetAsyncCallback<Result<TOut>>(this);
 
@@ -1019,7 +1019,7 @@ namespace Akka.Streams.Implementation.Fusing
 
             void IHandle<Result<TOut>>.Handle(Result<TOut> result)
             {
-                if (result.IsSuccess && result.Value != null)
+                if (result.IsSuccess && result.Value is object)
                 {
                     _current = result.Value;
                     PushAndPullOrFinish(_current);
@@ -1182,7 +1182,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _aggregator = stage._zero;
 
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 SetHandler(stage.In, stage.Out, this);
             }
@@ -1310,7 +1310,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _aggregating = Task.FromResult(_aggregator);
 
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 _taskCallback = GetAsyncCallback<Result<TOut>>(this);
 
@@ -1319,7 +1319,7 @@ namespace Akka.Streams.Implementation.Fusing
 
             void IHandle<Result<TOut>>.Handle(Result<TOut> result)
             {
-                if (result.IsSuccess && result.Value != null)
+                if (result.IsSuccess && result.Value is object)
                 {
                     var update = result.Value;
                     _aggregator = update;
@@ -2151,7 +2151,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _shape = stage.Shape;
                 _stage = stage;
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
                 _left = stage._max;
 
                 SetHandler(_shape.Inlet, _shape.Outlet, this);
@@ -2508,7 +2508,7 @@ namespace Akka.Streams.Implementation.Fusing
 
                 public void SetElement(in Result<T> result)
                 {
-                    Element = result.IsSuccess && result.Value == null
+                    Element = result.IsSuccess && result.Value is null
                         ? Result.Failure<T>(ReactiveStreamsCompliance.ElementMustNotBeNullException)
                         : result;
                 }
@@ -2531,7 +2531,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 _stage = stage;
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 _taskCallback = GetAsyncCallback<Holder<TOut>>(this);
 
@@ -2689,7 +2689,7 @@ namespace Akka.Streams.Implementation.Fusing
             {
                 _stage = stage;
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 _taskCallback = GetAsyncCallback<Result<TOut>>(this);
 
@@ -2741,7 +2741,7 @@ namespace Akka.Streams.Implementation.Fusing
             public void Handle(Result<TOut> result) // TaskCompleted
             {
                 _inFlight--;
-                if (result.IsSuccess && result.Value != null)
+                if (result.IsSuccess && result.Value is object)
                 {
                     if (IsAvailable(_stage.Out))
                     {
@@ -2905,7 +2905,7 @@ namespace Akka.Streams.Implementation.Fusing
             public override void PreStart()
             {
                 _logLevels = _inheritedAttributes.GetAttribute(DefaultLogLevels);
-                if (_stage._adapter != null)
+                if (_stage._adapter is object)
                     _log = _stage._adapter;
                 else
                 {
@@ -3151,7 +3151,7 @@ namespace Akka.Streams.Implementation.Fusing
             public Logic(Attributes inheritedAttributes, Delay<T> stage) : base(stage.Shape)
             {
                 var inputBuffer = inheritedAttributes.GetAttribute<Attributes.InputBuffer>(null);
-                if (inputBuffer == null) ThrowIllegalStateException(this);
+                if (inputBuffer is null) ThrowIllegalStateException(this);
 
                 _stage = stage;
                 _size = inputBuffer.Max;
@@ -3461,7 +3461,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _stage = stage;
                 
                 var attr = inheritedAttributes.GetAttribute<ActorAttributes.SupervisionStrategy>(null);
-                _decider = attr != null ? attr.Decider : Deciders.StoppingDecider;
+                _decider = attr is object ? attr.Decider : Deciders.StoppingDecider;
 
                 SetInitialInHandler();
                 SetHandler(stage.Outlet, this);
@@ -3579,7 +3579,7 @@ namespace Akka.Streams.Implementation.Fusing
             private void OnFailure(Exception ex)
             {
                 var result = _stage._partialFunction(ex);
-                if (result != null &&
+                if (result is object &&
                     (_stage._maximumRetries == InfiniteRetries || _attempt < _stage._maximumRetries))
                 {
                     SwitchTo(result);
@@ -3739,7 +3739,7 @@ namespace Akka.Streams.Implementation.Fusing
                 _currentIterator = null;
             }
 
-            private bool HasNext => _currentIterator != null && _currentIterator.HasNext();
+            private bool HasNext => _currentIterator is object && _currentIterator.HasNext();
 
             private void PushPull()
             {

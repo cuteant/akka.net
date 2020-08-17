@@ -107,7 +107,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
         {
             Receive<MultiNodeMessage>(message =>
             {
-                if (_currentSpecRunActor == null) return;
+                if (_currentSpecRunActor is null) return;
                 _currentSpecRunActor.Forward(message);
             });
             Receive<BeginNewSpec>(spec => ReceiveBeginSpecRun(spec));
@@ -118,7 +118,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
             ReceiveAsync<EndTestRun>(async run =>
             {
                 //clean up the current spec, if it hasn't been done already
-                if (_currentSpecRunActor != null)
+                if (_currentSpecRunActor is object)
                 {
                     await ReceiveEndSpecRun(new EndSpec());
                 }
@@ -146,7 +146,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
 
         private void ReceiveBeginSpecRun(BeginNewSpec spec)
         {
-            if (_currentSpecRunActor != null) throw new InvalidOperationException("EndSpec has not been called for previous run yet. Cannot begin next run.");
+            if (_currentSpecRunActor is object) throw new InvalidOperationException("EndSpec has not been called for previous run yet. Cannot begin next run.");
 
             //Create the new spec run actor
             _currentSpecRunActor =

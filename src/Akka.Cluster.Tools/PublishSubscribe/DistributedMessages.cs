@@ -53,7 +53,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (Ref != null ? Ref.GetHashCode() : 0);
+            return (Ref is object ? Ref.GetHashCode() : 0);
         }
 
         /// <inheritdoc/>
@@ -102,7 +102,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (Path != null ? Path.GetHashCode() : 0);
+            return (Path is object ? Path.GetHashCode() : 0);
         }
 
         /// <inheritdoc/>
@@ -176,9 +176,9 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         {
             unchecked
             {
-                var hashCode = (Topic != null ? Topic.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Group != null ? Group.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Ref != null ? Ref.GetHashCode() : 0);
+                var hashCode = (Topic is object ? Topic.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Group is object ? Group.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Ref is object ? Ref.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -254,9 +254,9 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         {
             unchecked
             {
-                var hashCode = (Topic != null ? Topic.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Group != null ? Group.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Ref != null ? Ref.GetHashCode() : 0);
+                var hashCode = (Topic is object ? Topic.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Group is object ? Group.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Ref is object ? Ref.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -308,7 +308,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (Subscribe != null ? Subscribe.GetHashCode() : 0);
+            return (Subscribe is object ? Subscribe.GetHashCode() : 0);
         }
 
         /// <inheritdoc/>
@@ -356,7 +356,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (Unsubscribe != null ? Unsubscribe.GetHashCode() : 0);
+            return (Unsubscribe is object ? Unsubscribe.GetHashCode() : 0);
         }
 
         /// <inheritdoc/>
@@ -418,8 +418,8 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         {
             unchecked
             {
-                var hashCode = (Topic != null ? Topic.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Message != null ? Message.GetHashCode() : 0);
+                var hashCode = (Topic is object ? Topic.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Message is object ? Message.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ SendOneMessageToEachGroup.GetHashCode();
                 return hashCode;
             }
@@ -484,8 +484,8 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         {
             unchecked
             {
-                var hashCode = (Path != null ? Path.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Message != null ? Message.GetHashCode() : 0);
+                var hashCode = (Path is object ? Path.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Message is object ? Message.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ LocalAffinity.GetHashCode();
                 return hashCode;
             }
@@ -552,8 +552,8 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         {
             unchecked
             {
-                var hashCode = (Path != null ? Path.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (Message != null ? Message.GetHashCode() : 0);
+                var hashCode = (Path is object ? Path.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (Message is object ? Message.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ ExcludeSelf.GetHashCode();
                 return hashCode;
             }
@@ -618,7 +618,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            return (Topics != null ? Topics.GetHashCode() : 0);
+            return (Topics is object ? Topics.GetHashCode() : 0);
         }
 
         /// <inheritdoc/>

@@ -182,7 +182,7 @@ namespace Akka.Persistence
             var extension = _pluginExtensionIds.Values
                 .FirstOrDefault(e => e.Value.Ref.Equals(journalPluginActor));
 
-            return extension != null ? extension.Value.Adapters : IdentityEventAdapters.Instance;
+            return extension is object ? extension.Value.Adapters : IdentityEventAdapters.Instance;
         }
 
         /// <summary>
@@ -213,7 +213,7 @@ namespace Akka.Persistence
         {
             var extension = _pluginExtensionIds.Values
                 .FirstOrDefault(e => e.Value.Ref.Equals(journalPluginActor));
-            if (extension == null) ThrowHelper.ThrowArgumentException_UnknownPluginActor(journalPluginActor);
+            if (extension is null) ThrowHelper.ThrowArgumentException_UnknownPluginActor(journalPluginActor);
 
             return extension.Value.Config;
         }
@@ -275,7 +275,7 @@ namespace Akka.Persistence
             }
             var pluginType = TypeUtils.ResolveType(pluginTypeName);//, true);
             var pluginDispatcherId = pluginConfig.GetString("plugin-dispatcher", null);
-            object[] pluginActorArgs = pluginType.GetConstructor(new[] { typeof(Config) }) != null ? new object[] { pluginConfig } : null;
+            object[] pluginActorArgs = pluginType.GetConstructor(new[] { typeof(Config) }) is object ? new object[] { pluginConfig } : null;
             var pluginActorProps = new Props(pluginType, pluginActorArgs).WithDispatcher(pluginDispatcherId);
 
             return system.SystemActorOf(pluginActorProps, pluginActorName);

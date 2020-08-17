@@ -309,7 +309,7 @@ namespace Akka.DistributedData
             var newVersionVector = VersionVector.Increment(node);
             var newDot = VersionVector.Create(node, newVersionVector.VersionAt(node));
             IDeltaOperation newDelta = new AddDeltaOperation(new ORSet<T>(element, newDot, newDot, null));
-            if (Delta != null)
+            if (Delta is object)
             {
                 newDelta = (IDeltaOperation)Delta.Merge(newDelta);
             }
@@ -330,7 +330,7 @@ namespace Akka.DistributedData
         {
             var deltaDot = VersionVector.Create(node, VersionVector.VersionAt(node));
             IDeltaOperation newDelta = new RemoveDeltaOperation(new ORSet<T>(element, deltaDot, VersionVector, null));
-            if (Delta != null)
+            if (Delta is object)
             {
                 newDelta = (IDeltaOperation)Delta.Merge(newDelta);
             }
@@ -354,7 +354,7 @@ namespace Akka.DistributedData
         {
             var newFullState = new ORSet<T>(ImmutableDictionary<T, VersionVector>.Empty, VersionVector);
             IDeltaOperation newDelta = new FullStateDeltaOperation(newFullState);
-            if (Delta != null) newDelta = (IDeltaOperation)Delta.Merge(newDelta);
+            if (Delta is object) newDelta = (IDeltaOperation)Delta.Merge(newDelta);
 
             return AssignAncestor(new ORSet<T>(ImmutableDictionary<T, VersionVector>.Empty, VersionVector, newDelta));
         }
@@ -687,7 +687,7 @@ namespace Akka.DistributedData
 
         public ORSet<T> MergeDelta(IDeltaOperation delta)
         {
-            if (delta == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.delta);
+            if (delta is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.delta);
             switch (delta)
             {
                 case AddDeltaOperation op: return DryMerge(op.Underlying, addDeltaOp: true);
@@ -725,14 +725,14 @@ namespace Akka.DistributedData
                 {
                     var curr = deleteDots.Current;
                     deleteDotNodes.Add(curr.Key);
-                    deleteDotsAreGreater &= (thisDot != null && (thisDot.VersionAt(curr.Key) <= curr.Value));
+                    deleteDotsAreGreater &= (thisDot is object && (thisDot.VersionAt(curr.Key) <= curr.Value));
                 }
             }
 
             var newElementsMap = ElementsMap;
             if (deleteDotsAreGreater)
             {
-                if (thisDot != null)
+                if (thisDot is object)
                 {
                     using (var e = thisDot.VersionEnumerator)
                     {
@@ -750,7 +750,7 @@ namespace Akka.DistributedData
 
         public ORSet<T> ResetDelta()
         {
-            return Delta == null ? this : AssignAncestor(new ORSet<T>(ElementsMap, VersionVector));
+            return Delta is null ? this : AssignAncestor(new ORSet<T>(ElementsMap, VersionVector));
         }
 
         #endregion

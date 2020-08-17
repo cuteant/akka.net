@@ -170,7 +170,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <summary>
         /// TBD
         /// </summary>
-        public bool IsInitialized => Self != null;
+        public bool IsInitialized => Self is object;
         /// <summary>
         /// TBD
         /// </summary>
@@ -417,7 +417,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             var asyncInput = new ActorGraphInterpreter.AsyncInput(this, logic, @event, handler);
             var currentInterpreter = CurrentInterpreterOrNull;
-            if (currentInterpreter == null || !Equals(currentInterpreter.Context, Self))
+            if (currentInterpreter is null || !Equals(currentInterpreter.Context, Self))
                 Self.Tell(asyncInput);
             else
                 _enqueueToShortCircuit(asyncInput);
@@ -1025,7 +1025,7 @@ namespace Akka.Streams.Implementation.Fusing
             /// <exception cref="ArgumentException">TBD</exception>
             public void OnSubscribe(ISubscription subscription)
             {
-                if (subscription == null) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Subscription_IsNull);
+                if (subscription is null) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Subscription_IsNull);
                 if (_upstreamCompleted) ReactiveStreamsCompliance.TryCancel(subscription);
                 else if (_downstreamCanceled)
                 {
@@ -1075,7 +1075,7 @@ namespace Akka.Streams.Implementation.Fusing
             private object Dequeue()
             {
                 var element = _inputBuffer[_nextInputElementCursor];
-                if (element == null) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_queue_never_null);
+                if (element is null) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_queue_never_null);
                 _inputBuffer[_nextInputElementCursor] = null;
 
                 _batchRemaining--;
@@ -1249,7 +1249,7 @@ namespace Akka.Streams.Implementation.Fusing
             public void ExposedPublisher(ActorPublisher<T> publisher)
             {
                 _exposedPublisher = publisher;
-                if (_upstreamFailed != null)
+                if (_upstreamFailed is object)
                     publisher.Shutdown(_upstreamFailed);
                 else
                 {
@@ -1348,7 +1348,7 @@ namespace Akka.Streams.Implementation.Fusing
 
         private void EnqueueToShortCircuit(object input)
         {
-            if (_shortCircuitBuffer == null) { _shortCircuitBuffer = new Queue<object>(); }
+            if (_shortCircuitBuffer is null) { _shortCircuitBuffer = new Queue<object>(); }
 
             _shortCircuitBuffer.Enqueue(input);
         }
@@ -1417,7 +1417,7 @@ namespace Akka.Streams.Implementation.Fusing
             TryInit(_initial);
             if (_activeInterpreters.Count == 0)
                 Context.Stop(Self);
-            else if (_shortCircuitBuffer != null)
+            else if (_shortCircuitBuffer is object)
                 ShortCircuitBatch();
         }
 
@@ -1476,11 +1476,11 @@ namespace Akka.Streams.Implementation.Fusing
                 case IBoundaryEvent _:
                     _currentLimit = _eventLimit;
                     ProcessEvent((IBoundaryEvent)message);
-                    if (_shortCircuitBuffer != null) { ShortCircuitBatch(); }
+                    if (_shortCircuitBuffer is object) { ShortCircuitBatch(); }
                     return true;
                 case ShellRegistered _:
                     _currentLimit = _eventLimit;
-                    if (_shortCircuitBuffer != null) { ShortCircuitBatch(); }
+                    if (_shortCircuitBuffer is object) { ShortCircuitBatch(); }
                     return true;
                 case StreamSupervisor.PrintDebugDump _:
                     if (_log.IsDebugEnabled) { PrintDebugDump(); }

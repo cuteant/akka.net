@@ -457,7 +457,7 @@ namespace Akka.Streams.TestKit
             {
                 var deadline = DateTime.UtcNow + atMost;
                 // if no subscription was obtained yet, we expect it
-                if (_subscription == null) ExpectSubscription();
+                if (_subscription is null) ExpectSubscription();
                 _subscription.Request(long.MaxValue);
 
                 var result = new List<T>();

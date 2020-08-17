@@ -51,7 +51,7 @@ namespace Akka.Streams.Dsl
 
                 }, onUpstreamFinish: () =>
                 {
-                    if (_pending == null)
+                    if (_pending is null)
                         CompleteStage();
                 });
 

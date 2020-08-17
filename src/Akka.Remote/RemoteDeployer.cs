@@ -35,7 +35,7 @@ namespace Akka.Remote
         public override Deploy ParseConfig(string key, Config config)
         {
             var deploy = base.ParseConfig(key, config);
-            if (deploy == null) return null;
+            if (deploy is null) return null;
 
             var remote = deploy.Config.GetString("remote", null);
 
@@ -57,7 +57,7 @@ namespace Akka.Remote
         private static Deploy CheckRemoteRouterConfig(Deploy deploy)
         {
             var nodes = deploy.Config.GetStringList("target.nodes", EmptyArray<string>.Instance).Select(Address.Parse).ToList();
-            if (nodes.Count > 0 && deploy.RouterConfig != null)
+            if (nodes.Count > 0 && deploy.RouterConfig is object)
             {
                 if (deploy.RouterConfig is Pool pool)
                 {

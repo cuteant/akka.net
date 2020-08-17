@@ -81,7 +81,7 @@ namespace Akka.Actor
         /// <param name="path">TBD</param>
         public FutureActorRef(TaskCompletionSource<object> result, Action unregister, ActorPath path)
         {
-            if (ActorCell.Current != null)
+            if (ActorCell.Current is object)
             {
                 _actorAwaitingResultSender = ActorCell.Current.Sender;
             }
@@ -161,7 +161,7 @@ namespace Akka.Actor
         public static IActorRef GetSelfOrNoSender()
         {
             var actorCell = ActorCell.Current;
-            return actorCell != null ? actorCell.Self : ActorRefs.NoSender;
+            return actorCell is object ? actorCell.Self : ActorRefs.NoSender;
         }
     }
 
@@ -279,7 +279,7 @@ namespace Akka.Actor
         /// <param name="sender">TBD</param>
         public void Tell(object message, IActorRef sender)
         {
-            if (sender == null)
+            if (sender is null)
             {
                 sender = ActorRefs.NoSender;
             }
@@ -880,7 +880,7 @@ override def getChild(name: Iterator[String]): InternalActorRef = {
 
         public override ActorPath Path { get; }
         public override IActorRefProvider Provider { get; }
-        public override bool IsTerminated => Volatile.Read(ref _watchedBy) == null;
+        public override bool IsTerminated => Volatile.Read(ref _watchedBy) is null;
 
         /// <summary>
         /// Have this FunctionRef watch the given Actor. This method must not be
@@ -938,7 +938,7 @@ override def getChild(name: Iterator[String]): InternalActorRef = {
         private void SendTerminated()
         {
             var watchedBy = Interlocked.Exchange(ref _watchedBy, null);
-            if (watchedBy != null)
+            if (watchedBy is object)
             {
                 if (!watchedBy.IsEmpty)
                 {
@@ -975,7 +975,7 @@ override def getChild(name: Iterator[String]): InternalActorRef = {
             while (true)
             {
                 var watchedBy = Volatile.Read(ref _watchedBy);
-                if (watchedBy == null)
+                if (watchedBy is null)
                     SendTerminated(watcher);
                 else
                 {
@@ -1008,7 +1008,7 @@ override def getChild(name: Iterator[String]): InternalActorRef = {
             while (true)
             {
                 var watchedBy = Volatile.Read(ref _watchedBy);
-                if (watchedBy == null)
+                if (watchedBy is null)
                     SendTerminated(watcher);
                 else
                 {

@@ -21,9 +21,9 @@ namespace Akka.Persistence.Serialization
 
         public override object DeepCopy(object source)
         {
-            if (null == source) { return null; }
+            if (source is null) { return null; }
             var snapShot = source as Snapshot;
-            if (null == snapShot) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(source); }
+            if (snapShot is null) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(source); }
 
             var payload = _system.Serialization.SerializeMessageWithTransport(snapShot.Data);
             return new Snapshot(_system.Deserialize(payload));
@@ -32,7 +32,7 @@ namespace Akka.Persistence.Serialization
         public override byte[] ToBinary(object obj)
         {
             var snapShot = obj as Snapshot;
-            if (null == snapShot) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(obj); }
+            if (snapShot is null) { ThrowHelper.ThrowArgumentException_SnapshotSerializer(obj); }
             return MessagePackSerializer.Serialize(_system.Serialization.SerializeMessageWithTransport(snapShot.Data), s_defaultResolver);
         }
 

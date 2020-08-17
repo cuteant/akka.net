@@ -53,7 +53,7 @@ namespace Akka.Persistence.MongoDb
 
         public MongoDbJournalSettings(Config config) : base(config)
         {
-            if (config == null)
+            if (config is null)
                 throw new ArgumentNullException(nameof(config),
                     "MongoDb journal settings cannot be initialized, because required HOCON section couldn't been found");
 
@@ -68,7 +68,7 @@ namespace Akka.Persistence.MongoDb
     {
         public MongoDbSnapshotSettings(Config config) : base(config)
         {
-            if (config == null)
+            if (config is null)
                 throw new ArgumentNullException(nameof(config),
                     "MongoDb snapshot settings cannot be initialized, because required HOCON section couldn't been found");
         }

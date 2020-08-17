@@ -100,7 +100,7 @@ namespace Akka.Tools.MatchHandler
                     {
                         //For reference type we'll cast the input using the as-operator and then check for null
                         //  var castedVariable = inputVariable as HandlesType;
-                        //  if(castedVariable != null)
+                        //  if(castedVariable is object)
                         //  {
                         //     -Handler code-
                         //  }
@@ -341,7 +341,7 @@ namespace Akka.Tools.MatchHandler
         //      bool Handler(T input, Predicate<string> p1, Action<string> a1, Action<string> a2, Action<int> a3)
         //      {
         //          var s = input as string;
-        //          if(s != null)
+        //          if(s is object)
         //          {
         //              if(p1(s))
         //              {

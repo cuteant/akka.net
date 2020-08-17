@@ -156,7 +156,7 @@ namespace Akka.Remote
         /// <exception cref="InvalidMessageException">TBD</exception>
         protected override void TellInternal(object message, IActorRef sender)
         {
-            if (message == null) { ThrowHelper.ThrowInvalidMessageException(); }
+            if (message is null) { ThrowHelper.ThrowInvalidMessageException(); }
             try { Remote.Send(message, sender, this); } catch (Exception ex) { HandleException(ex); }
         }
 
@@ -171,7 +171,7 @@ namespace Akka.Remote
         /// <summary>Starts this instance.</summary>
         public override void Start()
         {
-            if (_props != null && _deploy != null)
+            if (_props is object && _deploy is object)
             {
                 Remote.Provider.UseActorOnNode(this, _props, _deploy, _parent);
             }

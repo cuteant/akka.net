@@ -55,7 +55,7 @@ namespace Akka.Streams.Util
         /// <returns>TBD</returns>
         public bool HasNext()
         {
-            if (_hasNext == null)
+            if (_hasNext is null)
             {
                 try
                 {
@@ -81,7 +81,7 @@ namespace Akka.Streams.Util
         public T Next()
         {
             if (!HasNext()) ThrowHelper.ThrowInvalidOperationException();
-            if (_exception != null) ThrowHelper.ThrowAggregateException(_exception);
+            if (_exception is object) ThrowHelper.ThrowAggregateException(_exception);
 
             _hasNext = null;
             _exception = null;

@@ -55,7 +55,7 @@ namespace Akka.Remote.Serialization
 
         protected override bool IsCacheable(ActorPath v)
         {
-            return v != null;
+            return v is object;
         }
     }
 }

@@ -162,7 +162,7 @@ namespace Akka.Dispatch
                         try
                         {
                             var configValue = _config.GetValue(path);
-                            if (configValue == null) //empty
+                            if (configValue is null) //empty
                                 pathEntry = EmptyPathEntry;
                             else if (configValue.IsString()) //is a string value
                                 pathEntry = new StringPathEntry(true, true, configValue.AtKey("cached"), configValue.GetString());

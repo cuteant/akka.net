@@ -187,7 +187,7 @@ namespace Akka.Actor
 
         public override void GetObjectData(SerializationInfo info, StreamingContext context)
         {
-            if (info == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.info);
+            if (info is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.info);
             info.AddValue("Actor", Actor);
             base.GetObjectData(info, context);
         }
@@ -206,7 +206,7 @@ namespace Akka.Actor
         /// </returns>
         public override string ToString()
         {
-            if (Actor == null) return base.ToString();
+            if (Actor is null) return base.ToString();
             return Actor + ": " + base.ToString();
         }
     }
@@ -440,7 +440,7 @@ namespace Akka.Actor
         /// <param name="cause">The exception thrown by the <paramref name="actor"/> within <see cref="ActorBase.PostRestart"/>.</param>
         /// <param name="originalCause">The original cause is the exception which caused the restart in the first place.</param>
         public PostRestartException(IActorRef actor, Exception cause, Exception originalCause)
-            :base(actor,"Exception post restart (" + (originalCause == null ?"null" : originalCause.GetType().ToString()) + ")", cause)
+            :base(actor,"Exception post restart (" + (originalCause is null ?"null" : originalCause.GetType().ToString()) + ")", cause)
         {
             _originalCause = originalCause;
         }

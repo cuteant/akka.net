@@ -80,8 +80,8 @@ namespace Akka.Event
         /// </exception>
         public DeadLetter(object message, IActorRef sender, IActorRef recipient) : base(message, sender, recipient)
         {
-            if (sender == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.sender, AkkaExceptionResource.ArgumentNull_DeadLetterS);
-            if (recipient == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.recipient, AkkaExceptionResource.ArgumentNull_DeadLetterR);
+            if (sender is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.sender, AkkaExceptionResource.ArgumentNull_DeadLetterS);
+            if (recipient is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.recipient, AkkaExceptionResource.ArgumentNull_DeadLetterR);
         }
     }
 
@@ -102,8 +102,8 @@ namespace Akka.Event
         /// </exception>
         public SuppressedDeadLetter(IDeadLetterSuppression message, IActorRef sender, IActorRef recipient) : base(message, sender, recipient)
         {
-            if (sender == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.sender, AkkaExceptionResource.ArgumentNull_SuppressedDeadLetterS);
-            if (recipient == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.recipient, AkkaExceptionResource.ArgumentNull_SuppressedDeadLetterR);
+            if (sender is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.sender, AkkaExceptionResource.ArgumentNull_SuppressedDeadLetterS);
+            if (recipient is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.recipient, AkkaExceptionResource.ArgumentNull_SuppressedDeadLetterR);
         }
     }
 }

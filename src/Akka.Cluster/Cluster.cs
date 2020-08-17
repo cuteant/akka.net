@@ -182,7 +182,7 @@ namespace Akka.Cluster
         /// </exception>
         public void Subscribe(IActorRef subscriber, ClusterEvent.SubscriptionInitialStateMode initialStateMode, params Type[] to)
         {
-            if (to == null || 0u >= (uint)to.Length) { ThrowHelper.ThrowArgumentException_AtLeastOneIClusterDomainEventClassIsRequired(); }
+            if (to is null || 0u >= (uint)to.Length) { ThrowHelper.ThrowArgumentException_AtLeastOneIClusterDomainEventClassIsRequired(); }
             if (!to.All(t => typeof(ClusterEvent.IClusterDomainEvent).IsAssignableFrom(t)))
             {
                 ThrowHelper.ThrowArgumentException_SubscribeToIClusterDomainEventOrSubclasses(to);
@@ -384,7 +384,7 @@ namespace Akka.Cluster
 
             // It's assumed here that once the member left the cluster, it won't get back again.
             // So, the member removal event being memoized in TaskCompletionSource and never reset.
-            if (leaveTask != null)
+            if (leaveTask is object)
                 return leaveTask;
 
             // Subscribe to MemberRemoved events
@@ -546,7 +546,7 @@ namespace Akka.Cluster
                 LogInfo("Shutting down...");
                 System.Stop(_clusterDaemons);
 
-                if (_readView != null)
+                if (_readView is object)
                 {
                     _readView.Dispose();
                 }
@@ -565,7 +565,7 @@ namespace Akka.Cluster
         {
             get
             {
-                if (_clusterCore == null)
+                if (_clusterCore is null)
                 {
                     _clusterCore = GetClusterCoreRef().Result;
                 }

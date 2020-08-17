@@ -73,7 +73,7 @@ namespace Akka.TestKit
             return InternalExpectMsg<T>(RemainingOrDilated(timeout), (m, s) =>
             {
                 _assertions.AssertEqual(sender, s, FormatWrongSenderMessage(s, sender.ToString(), hint));
-                if(isMessage != null)
+                if(isMessage is object)
                     AssertPredicateIsTrueForMessage(isMessage, m, hint);
             }, hint);
         }
@@ -98,9 +98,9 @@ namespace Akka.TestKit
         {
             return InternalExpectMsg<T>(RemainingOrDilated(timeout), (m, sender) =>
             {
-                if(isSender != null)
+                if(isSender is object)
                     AssertPredicateIsTrueForSender(isSender, sender, hint, m);
-                if(isMessage != null)
+                if(isMessage is object)
                     AssertPredicateIsTrueForMessage(isMessage, m, hint);
             }, hint);
         }

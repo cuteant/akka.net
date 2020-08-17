@@ -75,7 +75,7 @@ namespace Akka.Tools.MatchHandler
 
         public bool TryMatchAny(Func<TIn, <#= types #>, TOut> handler)
         {
-            if (FinalExpr != null || _state != State.Adding) { return false; }
+            if (FinalExpr is object || _state != State.Adding) { return false; }
             FinalExpr = CreatePredicatedBasedExpr(condition: _ => true, processor: (_, <#= arguments #>) => handler(_, <#= arguments #>));
             _state = State.MatchAnyAdded;
             return true;

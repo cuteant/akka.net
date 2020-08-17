@@ -179,7 +179,7 @@ namespace Akka.Serialization.Testkit
             {
                 unchecked
                 {
-                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ (Data != null ? Data.GetHashCode() : 0);
+                    return ((Name is object ? Name.GetHashCode() : 0) * 397) ^ (Data is object ? Data.GetHashCode() : 0);
                 }
             }
         }
@@ -206,7 +206,7 @@ namespace Akka.Serialization.Testkit
             {
                 unchecked
                 {
-                    return ((Name != null ? Name.GetHashCode() : 0) * 397) ^ EqualityComparer<T>.Default.GetHashCode(Data);
+                    return ((Name is object ? Name.GetHashCode() : 0) * 397) ^ EqualityComparer<T>.Default.GetHashCode(Data);
                 }
             }
         }

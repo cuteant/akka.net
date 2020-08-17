@@ -368,7 +368,7 @@ namespace Akka.Cluster.Tools.Client
             _settings = settings;
             _cluster = Cluster.Get(Context.System);
 
-            if (!(_settings.Role == null || _cluster.SelfRoles.Contains(_settings.Role)))
+            if (!(_settings.Role is null || _cluster.SelfRoles.Contains(_settings.Role)))
             {
                 ThrowHelper.ThrowArgumentException_ThisCusterMemberDoesNotHaveARole(_cluster, _settings);
             }

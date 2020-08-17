@@ -336,7 +336,7 @@ namespace Akka
         internal static ArgumentException GetArgumentException_Serializer_D(object obj)
         {
             var type = obj as Type;
-            var typeQualifiedName = type != null ? type.FullName : obj?.GetType().FullName;
+            var typeQualifiedName = type is object ? type.FullName : obj?.GetType().FullName;
             return new ArgumentException($"Cannot deserialize object of type [{typeQualifiedName}]");
         }
 

@@ -108,7 +108,7 @@ namespace Reactive.Streams.TCK
             {
                 var stack = new StackTrace();
                 var stackFrames = stack.GetFrames();
-                if (stackFrames != null && stackFrames.Any(f => f.GetMethod().Name.Equals(_method)))
+                if (stackFrames is object && stackFrames.Any(f => f.GetMethod().Name.Equals(_method)))
                     _environment.Flop($"Subscription.Request MUST NOT be called from Subscriber.{_method} (Rule 2.3)!" +
                                       $"Caller: {stack}");
             }
@@ -117,7 +117,7 @@ namespace Reactive.Streams.TCK
             {
                 var stack = new StackTrace();
                 var stackFrames = stack.GetFrames();
-                if (stackFrames != null && stackFrames.Any(f => f.GetMethod().Name.Equals(_method)))
+                if (stackFrames is object && stackFrames.Any(f => f.GetMethod().Name.Equals(_method)))
                     _environment.Flop($"Subscription.Cancel MUST NOT be called from Subscriber.{_method} (Rule 2.3)!" +
                                       $"Caller: {stack}");
             }
@@ -311,7 +311,7 @@ namespace Reactive.Streams.TCK
             => BlackboxSubscriberWithoutSetupTest(stage =>
             {
                 var element = default(T);
-                if(element != null)
+                if(element is object)
                     throw new IgnoreException("Can't verify behavior for value types");
 
                 var subscriber = CreateSubscriber();

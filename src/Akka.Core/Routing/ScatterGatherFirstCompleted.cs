@@ -258,7 +258,7 @@ namespace Akka.Routing
             {
                 ScatterGatherFirstCompletedPool wssConf;
 
-                if (SupervisorStrategy != null
+                if (SupervisorStrategy is object
                     && SupervisorStrategy.Equals(DefaultSupervisorStrategy)
                     && !pool.SupervisorStrategy.Equals(DefaultSupervisorStrategy))
                 {
@@ -269,7 +269,7 @@ namespace Akka.Routing
                     wssConf = this;
                 }
 
-                if (wssConf.Resizer == null && pool.Resizer != null)
+                if (wssConf.Resizer is null && pool.Resizer is object)
                     return wssConf.WithResizer(pool.Resizer);
 
                 return wssConf;

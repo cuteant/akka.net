@@ -60,7 +60,7 @@ namespace Akka.Remote.TestKit.Protocol
                 // In this case it is ok because the CodedInputStream does not own the byte data.
                 //
                 IMessage decoded = (IMessage)MessagePackSerializer.Deserialize<object>(inputStream, TypelessDefaultResolver.Instance);
-                if (decoded != null)
+                if (decoded is object)
                 {
                     output.Add(decoded);
                 }

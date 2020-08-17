@@ -48,7 +48,7 @@ namespace Akka.TestKit
             {
                 var left = end - Now;
                 var msg = ReceiveOne(left);
-                _assertions.AssertTrue(msg != null, "Timeout ({0}) during fishForMessage{1}", maxValue, string.IsNullOrEmpty(hint) ? "" : ", hint: " + hint);
+                _assertions.AssertTrue(msg is object, "Timeout ({0}) during fishForMessage{1}", maxValue, string.IsNullOrEmpty(hint) ? "" : ", hint: " + hint);
                 if (msg is T && isMessage((T)msg))
                 {
                     return (T)msg;
@@ -247,7 +247,7 @@ namespace Akka.TestKit
                 }
                 var message = envelope.Message;
                 var result = filter(message);
-                if (result == null)
+                if (result is null)
                 {
                     _testState.Queue.AddFirst(envelope);  //Put the message back in the queue
                     _testState.LastMessage = msg;
@@ -305,7 +305,7 @@ namespace Akka.TestKit
                 var message = envelope.Message;
                 var typedMessage = message as T;
                 var shouldStop = false;
-                if (typedMessage != null)
+                if (typedMessage is object)
                 {
                     if (shouldIgnore(typedMessage))
                     {
@@ -370,7 +370,7 @@ namespace Akka.TestKit
             {
                 var timeout = stop - Now;
                 var o = ReceiveOne(timeout);
-                var condition = o != null;
+                var condition = o is object;
                 if (!condition)
                 {
                     var elapsed = Now - start;

@@ -116,7 +116,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
         {
             unchecked
             {
-                var hashCode = (_specs != null ? _specs.GetHashCode() : 0);
+                var hashCode = (_specs is object ? _specs.GetHashCode() : 0);
                 hashCode = (hashCode*397) ^ StartTime.GetHashCode();
                 hashCode = (hashCode*397) ^ EndTime.GetHashCode();
                 hashCode = (hashCode*397) ^ Passed.GetHashCode();
@@ -161,7 +161,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
         [JsonConstructor]
         public FactData(string factName, long startTime, IEnumerable<NodeData> nodes, IEnumerable<MultiNodeMessage> testRunnerTimeLine, long? endTime, bool? passed)
             : this(factName, startTime, 
-            nodes == null ? new Dictionary<int, NodeData>() : 
+            nodes is null ? new Dictionary<int, NodeData>() : 
             nodes.ToDictionary(key => key.NodeIndex, data => data), 
             testRunnerTimeLine, endTime, passed)
         {

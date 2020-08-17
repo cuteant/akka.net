@@ -72,7 +72,7 @@ namespace Akka.Tests.Pattern
                 ReceiveAny(msg =>
                 {
                     _probe.Tell(msg);
-                    Context.Parent.Tell(BackoffSupervisor.Reset.Instance);
+                    Context.Parent.Tell(BackoffSupervisor.ReSet.Instance);
                 });
             }
 #pragma warning restore CS0162

@@ -66,7 +66,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Sinks
                         {
                             WriteSpecMessage(String.Format(" --> {0}", resultMessage.Message));
                         }
-                        if (node.Value.ResultMessages == null || node.Value.ResultMessages.Count == 0)
+                        if (node.Value.ResultMessages is null || node.Value.ResultMessages.Count == 0)
                             WriteSpecMessage("[received no messages - SILENT FAILURE].");
                         WriteSpecMessage(string.Format("<----------- END NODE {0}:{1} ----------->", node.Key, node.Value.NodeRole));
                     }

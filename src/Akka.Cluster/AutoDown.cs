@@ -70,7 +70,7 @@ namespace Akka.Cluster
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (Node != null ? Node.GetHashCode() : 0);
+                return (Node is object ? Node.GetHashCode() : 0);
             }
         }
 
@@ -195,7 +195,7 @@ namespace Akka.Cluster
             switch (message)
             {
                 case ClusterEvent.CurrentClusterState state:
-                    _leader = state.Leader != null && state.Leader.Equals(SelfAddress);
+                    _leader = state.Leader is object && state.Leader.Equals(SelfAddress);
                     foreach (var m in state.Unreachable) UnreachableMember(m);
                     return;
                 case ClusterEvent.UnreachableMember unreachableMember:
@@ -208,7 +208,7 @@ namespace Akka.Cluster
                     Remove(memberRemoved.Member.UniqueAddress);
                     return;
                 case ClusterEvent.LeaderChanged leaderChanged:
-                    _leader = leaderChanged.Leader != null && leaderChanged.Leader.Equals(SelfAddress);
+                    _leader = leaderChanged.Leader is object && leaderChanged.Leader.Equals(SelfAddress);
                     if (_leader)
                     {
                         foreach (var node in _pendingUnreachable) Down(node.Address);

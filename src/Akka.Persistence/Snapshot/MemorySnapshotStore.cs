@@ -61,7 +61,7 @@ namespace Akka.Persistence.Snapshot
             var snapshotId = snapshotEntry.Id;
             var existingSnapshot = Snapshots.FirstOrDefault(x => string.Equals(x.Id, snapshotId, StringComparison.Ordinal));
 
-            if (existingSnapshot != null)
+            if (existingSnapshot is object)
             {
                 existingSnapshot.Snapshot = snapshotEntry.Snapshot;
                 existingSnapshot.Timestamp = snapshotEntry.Timestamp;

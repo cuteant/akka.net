@@ -31,10 +31,10 @@ namespace Akka.DI.Core
         /// </exception>
         public DIActorSystemAdapter(ActorSystem system)
         {
-            if (null == system) ThrowHelper.ThrowArgumentNullException_DIActorSystemAdapter();
+            if (system is null) ThrowHelper.ThrowArgumentNullException_DIActorSystemAdapter();
             _system = system;
             _producer = system.GetExtension<DIExt>();
-            if (_producer == null) ThrowHelper.ThrowInvalidOperationException_TheDependencyResolverHasNotBeenConfiguredYet();
+            if (_producer is null) ThrowHelper.ThrowInvalidOperationException_TheDependencyResolverHasNotBeenConfiguredYet();
         }
 
         /// <summary>

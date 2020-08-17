@@ -750,9 +750,9 @@ namespace Akka.Remote.Transport
         {
             unchecked
             {
-                var hashCode = (_address != null ? _address.GetHashCode() : 0);
+                var hashCode = (_address is object ? _address.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ (int)_direction;
-                hashCode = (hashCode * 397) ^ (_mode != null ? _mode.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (_mode is object ? _mode.GetHashCode() : 0);
                 return hashCode;
             }
         }
@@ -1010,7 +1010,7 @@ namespace Akka.Remote.Transport
                 var b = inboundPayload.Payload;
                 ThrottledMessages.Enqueue(b);
                 var origin = PeekOrigin(b);
-                if (origin != null)
+                if (origin is object)
                 {
                     Manager.Tell(new ThrottlerManager.Checkin(origin, exposedHandle.Handle));
                     return GoTo(ThrottlerState.WaitMode);
@@ -1153,7 +1153,7 @@ namespace Akka.Remote.Transport
 
                 case FailWith failWith:
                     var reason = failWith.FailReason;
-                    if (UpstreamListener != null) UpstreamListener.Notify(new Disassociated(reason));
+                    if (UpstreamListener is object) UpstreamListener.Notify(new Disassociated(reason));
                     return Stop();
 
                 default:

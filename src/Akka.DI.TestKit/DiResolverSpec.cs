@@ -75,7 +75,7 @@ namespace Akka.DI.TestKit
         {
             public class Restart { }
 
-            public class GetHashCode { }
+            public class GetHashcode { }
 
             private readonly IDiDisposable _di;
 
@@ -83,7 +83,7 @@ namespace Akka.DI.TestKit
             {
                 _di = di;
 
-                Receive<GetHashCode>(g => Sender.Tell(_di.GetHashCode()));
+                Receive<GetHashcode>(g => Sender.Tell(_di.GetHashCode()));
                 Receive<Restart>(r => ForceRestart());
             }
 
@@ -285,10 +285,10 @@ namespace Akka.DI.TestKit
             var disposableActorProps = Sys.DI().Props<DisposableActor>();
             var disposableActor = Sys.ActorOf(disposableActorProps);
 
-            disposableActor.Tell(new DisposableActor.GetHashCode());
+            disposableActor.Tell(new DisposableActor.GetHashcode());
             var originalHashCode = ExpectMsg<int>();
             disposableActor.Tell(new DisposableActor.Restart());
-            disposableActor.Tell(new DisposableActor.GetHashCode());
+            disposableActor.Tell(new DisposableActor.GetHashcode());
             var nextHashCode = ExpectMsg<int>();
             Assert.NotEqual(originalHashCode, nextHashCode);
         }

@@ -19,9 +19,9 @@ namespace Akka.Extension.EventStore
 
         public override EventData Adapt(object message, AkkaEventMetadata eventMeta)
         {
-            //if (eventMeta == null) { ThrowArgumentNullException_EventMeta(); }
+            //if (eventMeta is null) { ThrowArgumentNullException_EventMeta(); }
 
-            if (null == eventMeta) { eventMeta = CreateEventMetadata(); }
+            if (eventMeta is null) { eventMeta = CreateEventMetadata(); }
 
             var payload = _serialization.SerializeExternalMessageWithTransport(message);
             var msgType = payload.MessageType;
@@ -41,7 +41,7 @@ namespace Akka.Extension.EventStore
 
         public override object Adapt(byte[] eventData, AkkaEventMetadata eventMeta)
         {
-            if (null == eventData) { ThrowArgumentNullException_EventData(); }
+            if (eventData is null) { ThrowArgumentNullException_EventData(); }
 
             var payload = new ExternalPayload(eventData, eventMeta.Identifier, eventMeta.ClrEventType, eventMeta.Manifest);
             return _serialization.Deserialize(payload);

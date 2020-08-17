@@ -35,7 +35,7 @@ namespace Akka.IO
 
             _cacheCleanup = _ext.Cache as IPeriodicCacheCleanup;
 
-            if (_cacheCleanup != null)
+            if (_cacheCleanup is object)
             {
                 var interval = ext.Settings.ResolverConfig.GetTimeSpan("cache-cleanup-interval", null);
                 _cleanupTimer = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(interval, interval, Self, CacheCleanup.Instance, Self);
@@ -57,7 +57,7 @@ namespace Akka.IO
             }
             if (message is CacheCleanup)
             {
-                if (_cacheCleanup != null)
+                if (_cacheCleanup is object)
                     _cacheCleanup.CleanUp();
                 return true;
             }
@@ -69,7 +69,7 @@ namespace Akka.IO
         /// </summary>
         protected override void PostStop()
         {
-            if (_cleanupTimer != null)
+            if (_cleanupTimer is object)
                 _cleanupTimer.Cancel();
         }
 

@@ -275,7 +275,7 @@ namespace Akka.Streams.Stage
         /// </exception>
         public void Become(StageState<TIn, TOut> state)
         {
-            if (null == state) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.state); }
+            if (state is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.state); }
             _current = state;
         }
 

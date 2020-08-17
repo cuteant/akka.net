@@ -31,10 +31,10 @@ namespace Akka.DI.Core
         /// </exception>
         public DIActorContextAdapter(IActorContext context)
         {
-            if (null == context) { ThrowHelper.ThrowArgumentNullException_Context(); }
+            if (context is null) { ThrowHelper.ThrowArgumentNullException_Context(); }
             _context = context;
             _producer = context.System.GetExtension<DIExt>();
-            if (_producer == null) ThrowHelper.ThrowInvalidOperationException_TheDependencyResolverHasNotBeenConfiguredYet();
+            if (_producer is null) ThrowHelper.ThrowInvalidOperationException_TheDependencyResolverHasNotBeenConfiguredYet();
         }
 
         /// <summary>

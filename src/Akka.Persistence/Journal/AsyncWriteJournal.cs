@@ -47,7 +47,7 @@ namespace Akka.Persistence.Journal
         protected AsyncWriteJournal()
         {
             var extension = Persistence.Instance.Apply(Context.System);
-            if (extension == null)
+            if (extension is null)
             {
                 ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_Init_SyncWJ);
             }
@@ -407,7 +407,7 @@ namespace Akka.Persistence.Journal
                     if (resequencable is AtomicWrite aw)
                     {
                         Exception exception = null;
-                        if (enumerator != null)
+                        if (enumerator is object)
                         {
                             enumerator.MoveNext();
                             exception = enumerator.Current;
@@ -428,15 +428,15 @@ namespace Akka.Persistence.Journal
                 }
             }
 
-            if (t.IsSuccessfully() && writeMessagesAsyncException == null)
+            if (t.IsSuccessfully() && writeMessagesAsyncException is null)
             {
-                if (t.Result != null && t.Result.Count != atomicWriteCount)
+                if (t.Result is object && t.Result.Count != atomicWriteCount)
                 {
                     ThrowHelper.ThrowIllegalStateException(atomicWriteCount, t.Result.Count);
                 }
 
                 resequencer.Tell(new Desequenced(WriteMessagesSuccessful.Instance, counter, message.PersistentActor, self));
-                resequence((x, exception) => exception == null
+                resequence((x, exception) => exception is null
                     ? (object)new WriteMessageSuccess(x, message.ActorInstanceId)
                     : new WriteMessageRejected(x, exception, message.ActorInstanceId), t.Result);
             }
@@ -488,7 +488,7 @@ namespace Akka.Persistence.Journal
                     do
                     {
                         d = Resequence(d);
-                    } while (d != null);
+                    } while (d is object);
                     return true;
                 }
                 return false;

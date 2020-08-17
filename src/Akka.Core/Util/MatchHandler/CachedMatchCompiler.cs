@@ -56,7 +56,7 @@ namespace Akka.Tools.MatchHandler
             var compiledDelegate = _cache.GetOrAdd(signature, _ => CompileToDelegate(handlers, capturedArguments, out delegateArguments));
 
             //If we got a cached version of the delegate we need to restructure the captured arguments suitable for the delegate
-            if(delegateArguments == null)
+            if(delegateArguments is null)
             {
                 delegateArguments = _expressionBuilder.CreateArgumentValuesArray(capturedArguments);
             }

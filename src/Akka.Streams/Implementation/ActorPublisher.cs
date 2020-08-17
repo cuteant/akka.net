@@ -209,11 +209,11 @@ namespace Akka.Streams.Implementation
         /// <exception cref="ArgumentNullException">TBD</exception>
         public void Subscribe(ISubscriber<TOut> subscriber)
         {
-            if (subscriber == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscriber);
+            if (subscriber is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscriber);
             while (true)
             {
                 var current = _pendingSubscribers.Value;
-                if (current == null)
+                if (current is null)
                 {
                     ReportSubscribeFailure(subscriber);
                     break;
@@ -249,7 +249,7 @@ namespace Akka.Streams.Implementation
         {
             ShutdownReason = reason;
             var pending = _pendingSubscribers.GetAndSet(null);
-            if (pending != null)
+            if (pending is object)
             {
                 foreach (var subscriber in pending.Reverse())
                     ReportSubscribeFailure(subscriber);

@@ -95,7 +95,7 @@ namespace Reactive.Streams.TCK
         public static long EnvironmentDefaultTimeoutMilliseconds()
         {
             var environmentMilliseconds = Environment.GetEnvironmentVariable(DefaultTimeoutMillisEnv);
-            if (environmentMilliseconds == null)
+            if (environmentMilliseconds is null)
                 return DefaultTimeoutMillis;
 
             try
@@ -118,7 +118,7 @@ namespace Reactive.Streams.TCK
         public static long EnvironmentDefaultNoSignalsTimeoutMilliseconds()
         {
             var environmentMilliseconds = Environment.GetEnvironmentVariable(DefaultNoSignalsTimeoutMillisEnv);
-            if (environmentMilliseconds == null)
+            if (environmentMilliseconds is null)
                 return EnvironmentDefaultTimeoutMilliseconds();
 
             try
@@ -304,7 +304,7 @@ namespace Reactive.Streams.TCK
             foreach (var error in AsyncErrors)
             {
                 var exception = error as AssertionException;
-                if (exception != null)
+                if (exception is object)
                     throw exception;
 
                 Assert.Fail($"Async error during test execution: {error.Message}", error);
@@ -894,7 +894,7 @@ namespace Reactive.Streams.TCK
                 throw new Exception("Couldn't dequeue error from the environment");
 
             var error = thrown as E;
-            if (error != null)
+            if (error is object)
                 return error;
 
             return

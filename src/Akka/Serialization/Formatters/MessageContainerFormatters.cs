@@ -29,7 +29,7 @@ namespace Akka.Serialization.Formatters
 
         public void Serialize(ref MessagePackWriter writer, ref int idx, ActorSelectionMessage value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var protoMessage = new Protocol.SelectionEnvelope(
                 formatterResolver.SerializeMessage(value.Message),

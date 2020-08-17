@@ -109,7 +109,7 @@ namespace Akka.DistributedData
             if (n == 0) return this;
 
             var nextValue = State.GetValueOrDefault(node, 0UL) + n;
-            var newDelta = Delta == null
+            var newDelta = Delta is null
                 ? new GCounter(
                     ImmutableDictionary.CreateRange(UniqueAddressComparer.Instance, new[] { new KeyValuePair<UniqueAddress, ulong>(node, nextValue) }))
                 : new GCounter(Delta.State.SetItem(node, nextValue));
@@ -149,7 +149,7 @@ namespace Akka.DistributedData
         IReplicatedData IDeltaReplicatedData.MergeDelta(IReplicatedDelta delta) => MergeDelta((GCounter)delta);
         IReplicatedData IDeltaReplicatedData.ResetDelta() => ResetDelta();
 
-        public GCounter ResetDelta() => Delta == null ? this : AssignAncestor(new GCounter(State));
+        public GCounter ResetDelta() => Delta is null ? this : AssignAncestor(new GCounter(State));
 
         /// <summary>
         /// TBD

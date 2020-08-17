@@ -166,7 +166,7 @@ namespace Akka.Streams.Dsl
                     {
                         if (IsAvailable(retry.Out1) && !_elementInCycle)
                         {
-                            if (_pending != null)
+                            if (_pending is object)
                             {
                                 Push(retry.Out2, _pending.Value);
                                 _pending = null;
@@ -278,7 +278,7 @@ namespace Akka.Streams.Dsl
                         else
                         {
                             var r = retry._retryWith(t.Item2);
-                            if (r == null)
+                            if (r is null)
                                 PushAndCompleteIfLast(t);
                             else
                             {

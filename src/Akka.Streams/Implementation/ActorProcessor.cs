@@ -259,7 +259,7 @@ namespace Akka.Streams.Implementation
         /// </exception>
         protected virtual void OnSubscribe(ISubscription subscription)
         {
-            if (subscription == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscription, ExceptionResource.ArgumentNull_OnSubscribeRequire);
+            if (subscription is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.subscription, ExceptionResource.ArgumentNull_OnSubscribeRequire);
 
             if (_isUpstreamCompleted)
                 subscription.Cancel();
@@ -402,7 +402,7 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public bool IsSubscribed => Subscriber != null;
+        public bool IsSubscribed => Subscriber is object;
 
         /// <summary>
         /// TBD

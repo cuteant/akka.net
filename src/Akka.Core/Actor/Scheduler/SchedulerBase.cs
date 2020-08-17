@@ -68,21 +68,21 @@ namespace Akka.Actor
 
         void IActionScheduler.ScheduleOnce(TimeSpan delay, IRunnable action)
         {
-            if (null == action) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.action); }
+            if (action is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.action); }
             if (delay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(delay);
             InternalScheduleOnce(delay, action, null);
         }
 
         void IActionScheduler.ScheduleOnce(TimeSpan delay, IRunnable action, ICancelable cancelable)
         {
-            if (null == action) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.action); }
+            if (action is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.action); }
             if (delay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(delay);
             InternalScheduleOnce(delay, action, cancelable);
         }
 
         void IActionScheduler.ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action)
         {
-            if (null == action) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.action); }
+            if (action is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.action); }
             if (initialDelay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(initialDelay, AkkaExceptionArgument.initialDelay);
             if (interval <= TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateInterval(interval);
             InternalScheduleRepeatedly(initialDelay, interval, action, null);
@@ -90,7 +90,7 @@ namespace Akka.Actor
 
         void IActionScheduler.ScheduleRepeatedly(TimeSpan initialDelay, TimeSpan interval, IRunnable action, ICancelable cancelable)
         {
-            if (null == action) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.action); }
+            if (action is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.action); }
             if (initialDelay < TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateDelay(initialDelay, AkkaExceptionArgument.initialDelay);
             if (interval <= TimeSpan.Zero) AkkaThrowHelper.ThrowArgumentOutOfRangeException_ValidateInterval(interval);
             InternalScheduleRepeatedly(initialDelay, interval, action, cancelable);

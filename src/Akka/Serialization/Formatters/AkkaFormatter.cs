@@ -15,7 +15,7 @@ namespace Akka.Serialization.Formatters
 
         public void Serialize(ref MessagePackWriter writer, ref int idx, T value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var encodedPath = MessagePackBinary.GetEncodedStringBytes(value is Nobody ? c_nobody : Serialization.SerializedActorPath(value));
             writer.WriteRawBytes(encodedPath, ref idx);
@@ -24,7 +24,7 @@ namespace Akka.Serialization.Formatters
         public T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
             var path = reader.ReadStringWithCache();
-            if (null == path) { return default; }
+            if (path is null) { return default; }
 
             if (string.Equals(path, c_nobody, StringComparison.Ordinal))
             {
@@ -32,7 +32,7 @@ namespace Akka.Serialization.Formatters
             }
 
             var system = formatterResolver.GetActorSystem();
-            //if (system == null) { return default; }
+            //if (system is null) { return default; }
 
             return (T)system.Provider.ResolveActorRef(path);
         }
@@ -47,7 +47,7 @@ namespace Akka.Serialization.Formatters
     {
         public void Serialize(ref MessagePackWriter writer, ref int idx, T value, IFormatterResolver formatterResolver)
         {
-            if (value == null) { writer.WriteNil(ref idx); return; }
+            if (value is null) { writer.WriteNil(ref idx); return; }
 
             var encodedPath = MessagePackBinary.GetEncodedStringBytes(value.ToSerializationFormat());
             writer.WriteRawBytes(encodedPath, ref idx);
@@ -56,7 +56,7 @@ namespace Akka.Serialization.Formatters
         public T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)
         {
             var path = reader.ReadStringWithCache();
-            if (null == path) { return null; }
+            if (path is null) { return null; }
 
             return ActorPath.TryParse(path, out var actorPath) ? (T)actorPath : null;
         }
@@ -75,27 +75,27 @@ namespace Akka.Serialization.Formatters
         {
             var thisType = typeof(T);
             var field = thisType.GetField("_instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (field != null) { s_instance = (T)field.GetValue(null); }
-            if (s_instance != null) { return; }
+            if (field is object) { s_instance = (T)field.GetValue(null); }
+            if (s_instance is object) { return; }
 
             field = thisType.GetField("Instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (field != null) { s_instance = (T)field.GetValue(null); }
-            if (s_instance != null) { return; }
+            if (field is object) { s_instance = (T)field.GetValue(null); }
+            if (s_instance is object) { return; }
 
             field = thisType.GetField("_singleton", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (field != null) { s_instance = (T)field.GetValue(null); }
-            if (s_instance != null) { return; }
+            if (field is object) { s_instance = (T)field.GetValue(null); }
+            if (s_instance is object) { return; }
 
             field = thisType.GetField("Singleton", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (field != null) { s_instance = (T)field.GetValue(null); }
-            if (s_instance != null) { return; }
+            if (field is object) { s_instance = (T)field.GetValue(null); }
+            if (s_instance is object) { return; }
 
             var property = thisType.GetProperty("Instance", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (property != null) { s_instance = (T)property.GetValue(null); }
-            if (s_instance != null) { return; }
+            if (property is object) { s_instance = (T)property.GetValue(null); }
+            if (s_instance is object) { return; }
 
             property = thisType.GetProperty("Singleton", BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static | BindingFlags.DeclaredOnly);
-            if (property != null) { s_instance = (T)property.GetValue(null); }
+            if (property is object) { s_instance = (T)property.GetValue(null); }
         }
 
         public T Deserialize(ref MessagePackReader reader, IFormatterResolver formatterResolver)

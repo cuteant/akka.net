@@ -19,7 +19,7 @@ namespace Akka.Serialization
 
         public static Utf8JsonSerializerSettings Create(Config config)
         {
-            if (config == null) throw new ArgumentNullException(nameof(config), "MsgPackSerializerSettings require a config, default path: `akka.serializers.msgpack`");
+            if (config is null) throw new ArgumentNullException(nameof(config), "MsgPackSerializerSettings require a config, default path: `akka.serializers.msgpack`");
 
             return new Utf8JsonSerializerSettings(
                 initialBufferSize: (int)config.GetByteSize("initial-buffer-size", c_initialBufferSize),

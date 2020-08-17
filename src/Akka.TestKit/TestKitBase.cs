@@ -112,7 +112,7 @@ namespace Akka.TestKit
 
         private TestKitBase(ITestKitAssertions assertions, ActorSystem system, ActorSystemSetup config, string actorSystemName, string testActorName)
         {
-            if (assertions == null) throw new ArgumentNullException(nameof(assertions), "The supplied assertions must not be null.");
+            if (assertions is null) throw new ArgumentNullException(nameof(assertions), "The supplied assertions must not be null.");
 
             _assertions = assertions;
             
@@ -130,7 +130,7 @@ namespace Akka.TestKit
         {
             _testState = new TestState();
 
-            if (system == null)
+            if (system is null)
             {
                 var boostrap = config.Get<BootstrapSetup>();
                 var configWithDefaultFallback = boostrap.HasValue
@@ -169,7 +169,7 @@ namespace Akka.TestKit
             AwaitCondition(() =>
             {
                 var repRef = testActor as IRepointableRef;
-                return repRef == null || repRef.IsStarted;
+                return repRef is null || repRef.IsStarted;
             }, TimeSpan.FromSeconds(5), TimeSpan.FromMilliseconds(10));
 
             if (!(this is INoImplicitSender))
@@ -477,7 +477,7 @@ namespace Akka.TestKit
         /// <exception cref="TimeoutException">TBD</exception>
         protected virtual void Shutdown(ActorSystem system, TimeSpan? duration = null, bool verifySystemShutdown = false)
         {
-            if (system == null) system = _testState.System;
+            if (system is null) system = _testState.System;
 
             var durationValue = duration.GetValueOrDefault(Dilated(TimeSpan.FromSeconds(5)).Min(TimeSpan.FromSeconds(10)));
 

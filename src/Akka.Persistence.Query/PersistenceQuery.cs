@@ -41,7 +41,7 @@ namespace Akka.Persistence.Query
 
         private IReadJournalProvider CreatePlugin(string configPath, Config config)
         {
-            if (config != null)
+            if (config is object)
                 _system.Settings.InjectTopLevelFallback(config);
 
             if (string.IsNullOrEmpty(configPath) || !_system.Settings.Config.HasPath(configPath))
@@ -57,13 +57,13 @@ namespace Akka.Persistence.Query
         private IReadJournalProvider CreateType(Type pluginType, object[] parameters)
         {
             var ctor = pluginType.GetConstructor(new Type[] { typeof(ExtendedActorSystem), typeof(Config) });
-            if (ctor != null) return (IReadJournalProvider)ctor.Invoke(parameters);
+            if (ctor is object) return (IReadJournalProvider)ctor.Invoke(parameters);
 
             ctor = pluginType.GetConstructor(new Type[] { typeof(ExtendedActorSystem) });
-            if (ctor != null) return (IReadJournalProvider)ctor.Invoke(new[] { parameters[0] });
+            if (ctor is object) return (IReadJournalProvider)ctor.Invoke(new[] { parameters[0] });
 
             ctor = pluginType.GetConstructor(new Type[0]);
-            if (ctor != null) return (IReadJournalProvider)ctor.Invoke(new object[0]);
+            if (ctor is object) return (IReadJournalProvider)ctor.Invoke(new object[0]);
 
             throw new ArgumentException($"Unable to create read journal plugin instance type {pluginType}!");
         }

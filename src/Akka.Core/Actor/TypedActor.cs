@@ -24,7 +24,7 @@ namespace Akka.Actor
         protected sealed override bool Receive(object message)
         {
             MethodInfo method = GetType().GetMethod("Handle", new[] { message.GetType() });
-            if (method == null)
+            if (method is null)
             {
                 return false;
             }

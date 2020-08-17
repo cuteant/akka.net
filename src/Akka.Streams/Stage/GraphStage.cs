@@ -386,7 +386,7 @@ namespace Akka.Streams.Stage
             [SerializationConstructor]
             public Scheduled(object timerKey, int timerId, bool isRepeating)
             {
-                if (null == timerKey) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.timerKey, ExceptionResource.ArgumentNull_TimerKeyIsNull); }
+                if (timerKey is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.timerKey, ExceptionResource.ArgumentNull_TimerKeyIsNull); }
                 TimerKey = timerKey;
                 TimerId = timerId;
                 IsRepeating = isRepeating;
@@ -509,7 +509,7 @@ namespace Akka.Streams.Stage
             {
                 Logic.SetHandler(Out, Previous);
                 AndThen();
-                if (FollowUps != null)
+                if (FollowUps is object)
                 {
                     // If (while executing andThen() callback) handler was changed to new emitting,
                     // we should add it to the end of emission queue
@@ -522,7 +522,7 @@ namespace Akka.Streams.Stage
                     {
                         // If next element is emitting completion and there are some elements after it,
                         // we to need pass them before completion
-                        if (completion.FollowUps != null)
+                        if (completion.FollowUps is object)
                             Logic.SetHandler(Out, DequeueHeadAndAddToTail(completion));
                         else
                             Logic.Complete(Out);
@@ -543,7 +543,7 @@ namespace Akka.Streams.Stage
 
             public void AddFollowUp(Emitting e)
             {
-                if (FollowUps == null)
+                if (FollowUps is null)
                 {
                     FollowUps = e;
                     FollowUpsTail = e;
@@ -557,7 +557,7 @@ namespace Akka.Streams.Stage
 
             private void AddFollowUps(Emitting e)
             {
-                if (FollowUps == null)
+                if (FollowUps is null)
                 {
                     FollowUps = e.FollowUps;
                     FollowUpsTail = e.FollowUpsTail;
@@ -690,7 +690,7 @@ namespace Akka.Streams.Stage
             /// </summary>
             public override void OnUpstreamFinish()
             {
-                if (_onUpstreamFinish != null)
+                if (_onUpstreamFinish is object)
                     _onUpstreamFinish();
                 else
                     base.OnUpstreamFinish();
@@ -702,7 +702,7 @@ namespace Akka.Streams.Stage
             /// <param name="e">TBD</param>
             public override void OnUpstreamFailure(Exception e)
             {
-                if (_onUpstreamFailure != null)
+                if (_onUpstreamFailure is object)
                     _onUpstreamFailure(e);
                 else
                     base.OnUpstreamFailure(e);
@@ -738,7 +738,7 @@ namespace Akka.Streams.Stage
             /// </summary>
             public override void OnDownstreamFinish()
             {
-                if (_onDownstreamFinish != null)
+                if (_onDownstreamFinish is object)
                     _onDownstreamFinish();
                 else
                     base.OnDownstreamFinish();
@@ -829,7 +829,7 @@ namespace Akka.Streams.Stage
         {
             get
             {
-                if (_interpreter == null) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Not_yet_init);
+                if (_interpreter is null) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Not_yet_init);
                 return _interpreter;
             }
             set => _interpreter = value;
@@ -900,7 +900,7 @@ namespace Akka.Streams.Stage
             get
             {
                 // only used in StageLogic, i.e. thread safe
-                if (_log == null)
+                if (_log is null)
                 {
                     if (Materializer is IMaterializerLoggingProvider provider)
                         _log = provider.MakeLogger(LogSource);
@@ -935,7 +935,7 @@ namespace Akka.Streams.Stage
         /// </exception>
         protected internal void SetHandler<T>(Inlet<T> inlet, Action onPush, Action onUpstreamFinish = null, Action<Exception> onUpstreamFailure = null)
         {
-            if (onPush == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.onPush, ExceptionResource.ArgumentNull_GraphStageLogic_OnPush);
+            if (onPush is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.onPush, ExceptionResource.ArgumentNull_GraphStageLogic_OnPush);
 
             SetHandler(inlet, new LambdaInHandler(onPush, onUpstreamFinish, onUpstreamFailure));
         }
@@ -976,7 +976,7 @@ namespace Akka.Streams.Stage
         /// </exception>
         protected internal void SetHandler<T>(Outlet<T> outlet, Action onPull, Action onDownstreamFinish = null)
         {
-            if (onPull == null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.onPull, ExceptionResource.ArgumentNull_GraphStageLogic_OnPull);
+            if (onPull is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.onPull, ExceptionResource.ArgumentNull_GraphStageLogic_OnPull);
             SetHandler(outlet, new LambdaOutHandler(onPull, onDownstreamFinish));
         }
 
@@ -1209,7 +1209,7 @@ namespace Akka.Streams.Stage
             var portState = connection.PortState;
 
             connection.PortState = portState ^ PushStartFlip;
-            if ((portState & (OutReady | OutClosed | InClosed)) == OutReady && element != null)
+            if ((portState & (OutReady | OutClosed | InClosed)) == OutReady && element is object)
             {
                 connection.Slot = element;
                 Interpreter.ChasePush(connection);
@@ -1568,7 +1568,7 @@ namespace Akka.Streams.Stage
             where TIn : TOut
         {
             var passHandler = new PassAlongHandler<TOut, TIn>(from, to, this, doFinish, doFail);
-            if (_interpreter != null)
+            if (_interpreter is object)
             {
                 if (IsAvailable(from))
                     Emit(to, Grab(from), passHandler.Apply);
@@ -1736,7 +1736,7 @@ namespace Akka.Streams.Stage
         [ApiMayChange]
         protected StageActor GetStageActor(StageActorRef.Receive receive)
         {
-            if (_stageActor == null)
+            if (_stageActor is null)
             {
                 var actorMaterializer = ActorMaterializerHelper.Downcast(Interpreter.Materializer);
                 _stageActor = new StageActor(
@@ -1773,7 +1773,7 @@ namespace Akka.Streams.Stage
         /// </summary>
         protected internal virtual void AfterPostStop()
         {
-            if (_stageActor != null)
+            if (_stageActor is object)
             {
                 _stageActor.Stop();
                 _stageActor = null;

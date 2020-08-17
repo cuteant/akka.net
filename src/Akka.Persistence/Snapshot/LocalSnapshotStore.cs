@@ -132,7 +132,7 @@ namespace Akka.Persistence.Snapshot
         private SelectedSnapshot Load(ImmutableArray<SnapshotMetadata> metadata)
         {
             var last = metadata.LastOrDefault();
-            if (last == null) { return null; }
+            if (last is null) { return null; }
 
             try
             {
@@ -246,7 +246,7 @@ namespace Akka.Persistence.Snapshot
             var snapshots = GetSnapshotDir()
                 .EnumerateFiles("snapshot-" + Uri.EscapeDataString(persistenceId) + "-*", SearchOption.TopDirectoryOnly)
                 .Select(ExtractSnapshotMetadata)
-                .Where(metadata => metadata != null && criteria.IsMatch(metadata) && !_saving.Contains(metadata)).ToList();
+                .Where(metadata => metadata is object && criteria.IsMatch(metadata) && !_saving.Contains(metadata)).ToList();
 
             snapshots.Sort(SnapshotMetadata.Comparer);
 
@@ -299,7 +299,7 @@ namespace Akka.Persistence.Snapshot
                 {
                     _dir.Refresh();
                 }
-                if (exception != null || ((_dir.Attributes & FileAttributes.Directory) == 0))
+                if (exception is object || ((_dir.Attributes & FileAttributes.Directory) == 0))
                 {
                     ThrowHelper.ThrowIOException(_dir, exception);
                 }

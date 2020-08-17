@@ -203,7 +203,7 @@ namespace Akka.Actor
             //if we have no watchedBy, assign it to our local ref
             //this is a memory footprint optimization, we can have a DefaultActorState object that is watched by _one_ watcher (parent)
             //in every other case, we escalate to FullActorState
-            if (_watchedBy == null)
+            if (_watchedBy is null)
             {
                 _watchedBy = actor;
                 return this;
@@ -216,10 +216,10 @@ namespace Akka.Actor
         private FullActorState GetFullState()
         {
             var res = new FullActorState();
-            if (_receive != null)
+            if (_receive is object)
                 res.Become(_receive);
 
-            if (_watchedBy != null)
+            if (_watchedBy is object)
                 res.AddWatchedBy(_watchedBy);
 
             return res;
@@ -264,7 +264,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public bool ContainsWatchedBy(IActorRef actor)
         {
-            if (_watchedBy == null)
+            if (_watchedBy is null)
                 return false;
 
             return _watchedBy.Equals(actor);
@@ -295,7 +295,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public IEnumerable<IActorRef> GetWatchedBy()
         {
-            if (_watchedBy != null)
+            if (_watchedBy is object)
                 yield return _watchedBy;
         }
 
@@ -343,7 +343,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public IActorState Become(Receive receive)
         {
-            if (_receive == null)
+            if (_receive is null)
             {
                 _receive = receive;
                 return this;
@@ -358,7 +358,7 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public IActorState BecomeStacked(Receive receive)
         {
-            if (_receive == null)
+            if (_receive is null)
             {
                 _receive = receive;
                 return this;

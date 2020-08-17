@@ -76,21 +76,21 @@ namespace Reactive.Streams.Example.Unicast
                         {
                             // Below we simply unpack the `Signal`s and invoke the corresponding methods
                             var next = signal as OnNextSignal;
-                            if (next != null)
+                            if (next is object)
                             {
                                 HandleOnNext(next.Next);
                                 return;
                             }
 
                             var subscribe = signal as OnSubscribeSignal;
-                            if (subscribe != null)
+                            if (subscribe is object)
                             {
                                 HandleOnSubscribe(subscribe.Subscription);
                                 return;
                             }
 
                             var error = signal as OnErrorSignal;
-                            if (error != null)  // We are always able to handle OnError, obeying rule 2.10
+                            if (error is object)  // We are always able to handle OnError, obeying rule 2.10
                             {
                                 HandleOnError(error.Cause);
                                 return;
@@ -118,7 +118,7 @@ namespace Reactive.Streams.Example.Unicast
         {
             //On this line we could add a guard against `!done`, but since rule 3.7 says that `Subscription.cancel()` is idempotent, we don't need to.
             _done = true; // If `whenNext` throws an exception, let's consider ourselves done (not accepting more elements)
-            if (_subscription != null) // If we are bailing out before we got a `Subscription` there's little need for cancelling it.
+            if (_subscription is object) // If we are bailing out before we got a `Subscription` there's little need for cancelling it.
             {
                 try
                 {
@@ -156,11 +156,11 @@ namespace Reactive.Streams.Example.Unicast
 
         private void HandleOnSubscribe(ISubscription subscription)
         {
-            if (subscription == null)
+            if (subscription is null)
             {
                 // Getting a null `Subscription` here is not valid so lets just ignore it.
             }
-            else if (_subscription != null)
+            else if (_subscription is object)
                 // If someone has made a mistake and added this Subscriber multiple times, let's handle it gracefully
             {
                 try
@@ -205,7 +205,7 @@ namespace Reactive.Streams.Example.Unicast
         {
             if (!_done) // If we aren't already done
             {
-                if (_subscription == null) // Technically this check is not needed, since we are expecting Publishers to conform to the spec
+                if (_subscription is null) // Technically this check is not needed, since we are expecting Publishers to conform to the spec
                 {
                     // Check for spec violation of 2.1 and 1.09
                     System.Diagnostics.Trace.TraceError(
@@ -260,7 +260,7 @@ namespace Reactive.Streams.Example.Unicast
         // Here it is important that we do not violate 2.2 and 2.3 by calling methods on the `Subscription` or `Publisher`
         private void HandleOnComplete()
         {
-            if (_subscription == null)
+            if (_subscription is null)
                 // Technically this check is not needed, since we are expecting Publishers to conform to the spec
             {
                 // Publisher is not allowed to signal onComplete before onSubscribe according to rule 1.09
@@ -279,7 +279,7 @@ namespace Reactive.Streams.Example.Unicast
         // Here it is important that we do not violate 2.2 and 2.3 by calling methods on the `Subscription` or `Publisher`
         private void HandleOnError(Exception cause)
         {
-            if (_subscription == null)
+            if (_subscription is null)
             // Technically this check is not needed, since we are expecting Publishers to conform to the spec
             {
                 // Publisher is not allowed to signal onError before onSubscribe according to rule 1.09
@@ -300,7 +300,7 @@ namespace Reactive.Streams.Example.Unicast
         public void OnSubscribe(ISubscription subscription)
         {
             // As per rule 2.13, we need to throw a `ArgumentNullException` if the `Subscription` is `null`
-            if (subscription == null)
+            if (subscription is null)
                 throw new ArgumentNullException(nameof(subscription));
 
             Signal(new OnSubscribeSignal(subscription));
@@ -309,7 +309,7 @@ namespace Reactive.Streams.Example.Unicast
         public void OnNext(T element)
         {
             // As per rule 2.13, we need to throw a `ArgumentNullException` if the `element` is `null`
-            if (element == null)
+            if (element is null)
                 throw new ArgumentNullException(nameof(element));
 
             Signal(new OnNextSignal(element));
@@ -318,7 +318,7 @@ namespace Reactive.Streams.Example.Unicast
         public void OnError(Exception cause)
         {
             // As per rule 2.13, we need to throw a `ArgumentNullException` if the `element` is `null`
-            if (cause == null)
+            if (cause is null)
                 throw new ArgumentNullException(nameof(cause));
 
             Signal(new OnErrorSignal(cause));
@@ -343,7 +343,7 @@ namespace Reactive.Streams.Example.Unicast
         // What `signal` does is that it sends signals to the `Subscription` asynchronously
         private void Signal(ISignal signal)
         {
-            if(signal == null)
+            if(signal is null)
                 throw new ArgumentNullException(nameof(signal));
 
             _inboundSignals.Enqueue(signal);

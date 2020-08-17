@@ -93,7 +93,7 @@ namespace Akka.TestKit
         /// <returns>The new filter</returns>
         public IEventFilterApplier Exception(Type exceptionType, Regex pattern, string source = null, bool checkInnerExceptions=false)
         {
-            var sourceMatcher = source == null ? null : new EqualsStringAndPathMatcher(source);
+            var sourceMatcher = source is null ? null : new EqualsStringAndPathMatcher(source);
             return Exception(exceptionType, new RegexMatcher(pattern), sourceMatcher, checkInnerExceptions);
         }
 
@@ -153,7 +153,7 @@ namespace Akka.TestKit
         public IEventFilterApplier Exception(Type exceptionType, string message = null, string start = null, string contains = null, string source = null, bool checkInnerExceptions=false)
         {
             var messageMatcher = CreateMessageMatcher(message, start, contains);
-            var sourceMatcher = source == null ? null : new EqualsStringAndPathMatcher(source);
+            var sourceMatcher = source is null ? null : new EqualsStringAndPathMatcher(source);
             return Exception(exceptionType, messageMatcher, sourceMatcher, checkInnerExceptions);
         }
 
@@ -309,7 +309,7 @@ namespace Akka.TestKit
 
         private IEventFilterApplier DeadLetter(Predicate<DeadLetter> isMatch, string source = null)
         {
-            var sourceMatcher = source == null ? null : new EqualsStringAndPathMatcher(source);
+            var sourceMatcher = source is null ? null : new EqualsStringAndPathMatcher(source);
             var filter = new DeadLettersFilter(null, sourceMatcher, isMatch);
             return CreateApplier(filter, _system);
         }
@@ -323,9 +323,9 @@ namespace Akka.TestKit
         /// <returns>TBD</returns>
         protected static IStringMatcher CreateMessageMatcher(string message, string start, string contains)
         {
-            if(message != null) return new EqualsString(message);
-            if(start != null) return new StartsWithString(start);
-            if(contains != null) return new ContainsString(contains);
+            if(message is object) return new EqualsString(message);
+            if(start is object) return new StartsWithString(start);
+            if(contains is object) return new ContainsString(contains);
             return MatchesAll.Instance;
         }
 
@@ -338,7 +338,7 @@ namespace Akka.TestKit
         protected IEventFilterApplier CreateApplier(EventFilterBase filter, ActorSystem system)
         {
             EventFilterBase[] allFilters;   //This will contain _filters + filter
-            if(_filters == null || _filters.Count == 0)
+            if(_filters is null || _filters.Count == 0)
             {
                 allFilters = new[] { filter };
             }

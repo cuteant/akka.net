@@ -90,7 +90,7 @@ namespace Akka.Persistence.Serialization
         /// <inheritdoc />
         protected sealed override string GetManifest(Type type)
         {
-            if (null == type) { return null; }
+            if (type is null) { return null; }
             if (ManifestMap.TryGetValue(type, out var manifest)) { return manifest; }
             throw ThrowHelper.GetArgumentException_Serializer_D(type);
         }
@@ -117,10 +117,10 @@ namespace Akka.Persistence.Serialization
         {
             var message = new PersistentMessage();
 
-            if (persistent.PersistenceId != null) message.PersistenceId = persistent.PersistenceId;
-            if (persistent.Manifest != null) message.Manifest = persistent.Manifest;
-            if (persistent.WriterGuid != null) message.WriterGuid = persistent.WriterGuid;
-            if (persistent.Sender != null) message.Sender = Akka.Serialization.Serialization.SerializedActorPath(persistent.Sender);
+            if (persistent.PersistenceId is object) message.PersistenceId = persistent.PersistenceId;
+            if (persistent.Manifest is object) message.Manifest = persistent.Manifest;
+            if (persistent.WriterGuid is object) message.WriterGuid = persistent.WriterGuid;
+            if (persistent.Sender is object) message.Sender = Akka.Serialization.Serialization.SerializedActorPath(persistent.Sender);
 
             message.Payload = _system.Serialization.SerializeMessageWithTransport(persistent.Payload);
             message.SequenceNr = persistent.SequenceNr;
@@ -163,7 +163,7 @@ namespace Akka.Persistence.Serialization
         private static IPersistentRepresentation GetPersistentRepresentation(ExtendedActorSystem system, PersistentMessage message)
         {
             var sender = ActorRefs.NoSender;
-            if (message.Sender != null)
+            if (message.Sender is object)
             {
                 sender = system.Provider.ResolveActorRef(message.Sender);
             }
@@ -194,7 +194,7 @@ namespace Akka.Persistence.Serialization
             var message = MessagePackSerializer.Deserialize<Protocol.AtLeastOnceDeliverySnapshot>(bytes, s_defaultResolver);
 
             var unconfirmedDeliveries = new List<UnconfirmedDelivery>();
-            if (message.UnconfirmedDeliveries != null)
+            if (message.UnconfirmedDeliveries is object)
             {
                 foreach (var unconfirmed in message.UnconfirmedDeliveries)
                 {

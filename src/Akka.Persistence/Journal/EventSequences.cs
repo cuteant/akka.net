@@ -86,7 +86,7 @@ namespace Akka.Persistence.Journal
         /// <inheritdoc/>
         public bool Equals(IEventSequence other)
         {
-            return other != null && _events.SequenceEqual(other.Events);
+            return other is object && _events.SequenceEqual(other.Events);
         }
 
         /// <inheritdoc/>
@@ -123,9 +123,9 @@ namespace Akka.Persistence.Journal
         /// <inheritdoc/>
         public bool Equals(IEventSequence other)
         {
-            if (other == null) return false;
+            if (other is null) return false;
             var e = other.Events.FirstOrDefault();
-            return e != null && e.Equals(_events[0]) && other.Events.Count() == 1;
+            return e is object && e.Equals(_events[0]) && other.Events.Count() == 1;
         }
 
         /// <inheritdoc/>

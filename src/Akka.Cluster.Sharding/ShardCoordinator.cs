@@ -331,7 +331,7 @@ namespace Akka.Cluster.Sharding
 
         private static void HandleAllocateShardResult<TCoordinator>(this TCoordinator coordinator, PersistentShardCoordinator.AllocateShardResult allocateResult) where TCoordinator : IShardCoordinator
         {
-            if (allocateResult.ShardRegion == null)
+            if (allocateResult.ShardRegion is null)
             {
                 var coordinatorLog = coordinator.Log;
                 if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShardAllocationFailed(allocateResult);

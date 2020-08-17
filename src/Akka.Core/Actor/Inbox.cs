@@ -276,7 +276,7 @@ namespace Akka.Actor
             return _inner.RemoveAll(predicate);
             //var i = 0;
             //var node = _inner.First;
-            //while (!(node == null || predicate(node.Value)))
+            //while (!(node is null || predicate(node.Value)))
             //{
             //    var n = node;
             //    node = node.Next;
@@ -315,12 +315,12 @@ namespace Akka.Actor
             return item;
 
             //var node = _inner.First;
-            //while (!(node == null || predicate(node.Value)))
+            //while (!(node is null || predicate(node.Value)))
             //{
             //    node = node.Next;
             //}
 
-            //if (node != null)
+            //if (node is object)
             //{
             //    var item = node.Value;
             //    _inner.Remove(node);

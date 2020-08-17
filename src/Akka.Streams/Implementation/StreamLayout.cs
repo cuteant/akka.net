@@ -1574,7 +1574,7 @@ namespace Akka.Streams.Implementation
         /// <exception cref="Exception">TBD</exception>
         public void Subscribe(ISubscriber<T> subscriber)
         {
-            if (subscriber == null)
+            if (subscriber is null)
             {
                 try
                 {
@@ -1626,7 +1626,7 @@ namespace Akka.Streams.Implementation
         /// <exception cref="Exception">TBD</exception>
         public void OnSubscribe(ISubscription subscription)
         {
-            if (subscription == null)
+            if (subscription is null)
             {
                 try
                 {
@@ -1644,7 +1644,7 @@ namespace Akka.Streams.Implementation
 
         private void TryOnSubscribe(object obj, ISubscription s)
         {
-            if (Value == null)
+            if (Value is null)
             {
                 if (!CompareAndSet(null, obj))
                     TryOnSubscribe(obj, s);
@@ -1716,12 +1716,12 @@ namespace Akka.Streams.Implementation
                 {
                     case null:
                         if (!CompareAndSet(null, new ErrorPublisher<T>(ex, "failed-VirtualProcessor"))) { continue; }
-                        if (cause == null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
+                        if (cause is null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
                         return;
 
                     case ISubscription subscription:
                         if (!CompareAndSet(subscription, new ErrorPublisher<T>(ex, "failed-VirtualProcessor"))) { continue; }
-                        if (cause == null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
+                        if (cause is null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
                         return;
                     case Both both:
                         Value = Inert.Instance;
@@ -1732,7 +1732,7 @@ namespace Akka.Streams.Implementation
                         finally
                         {
                             // must throw ArgumentNullEx, rule 2:13
-                            if (cause == null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
+                            if (cause is null) { ReactiveStreamsCompliance.ThrowExceptionMustNotBeNullException(); }// throw ex; }
                         }
 
                         return;
@@ -1798,7 +1798,7 @@ namespace Akka.Streams.Implementation
         /// <exception cref="IllegalStateException">TBD</exception>
         public void OnNext(T element)
         {
-            if (element == null)
+            if (element is null)
             {
                 var ex = ReactiveStreamsCompliance.ElementMustNotBeNullException;
 

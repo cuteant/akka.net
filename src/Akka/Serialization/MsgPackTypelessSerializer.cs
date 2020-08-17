@@ -37,7 +37,7 @@ namespace Akka.Serialization
         /// <inheritdoc />
         public sealed override object DeepCopy(object source)
         {
-            if (source == null) { return null; }
+            if (source is null) { return null; }
 
             using (var serializedObject = MessagePackSerializer.SerializeUnsafe(source, _resolver))
             {
@@ -47,7 +47,7 @@ namespace Akka.Serialization
 
         public sealed override byte[] ToBinary(object obj)
         {
-            //if (null == obj) { return EmptyArray<byte>.Instance; } // 空对象交由 NullSerializer 处理
+            //if (obj is null) { return EmptyArray<byte>.Instance; } // 空对象交由 NullSerializer 处理
             return MessagePackSerializer.Serialize(obj, _resolver);
         }
 

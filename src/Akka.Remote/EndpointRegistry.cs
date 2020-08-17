@@ -113,7 +113,7 @@ namespace Akka.Remote
             {
                 var address = _writableToAddress[endpoint];
                 _addressToWritable.TryGetValue(address, out var policy);
-                if (policy != null && policy.IsTombstone)
+                if (policy is object && policy.IsTombstone)
                 {
                     //if there is already a tombstone directive, leave it there
                 }

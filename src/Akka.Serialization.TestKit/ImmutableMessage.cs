@@ -36,7 +36,7 @@ namespace Akka.Tests.Serialization
         {
             unchecked
             {
-                return ((Bar != null ? Bar.GetHashCode() : 0) * 397) ^ (Foo != null ? Foo.GetHashCode() : 0);
+                return ((Bar is object ? Bar.GetHashCode() : 0) * 397) ^ (Foo is object ? Foo.GetHashCode() : 0);
             }
         }
 

@@ -109,7 +109,7 @@ namespace Reactive.Streams.TCK
             {
                 var stack = new StackTrace();
                 var stackFrames = stack.GetFrames();
-                if (stackFrames != null && stackFrames.Any(f => f.GetMethod().Name.Equals("OnComplete")))
+                if (stackFrames is object && stackFrames.Any(f => f.GetMethod().Name.Equals("OnComplete")))
                     _environment.Flop(
                         "Subscription.Request MUST NOT be called from Subscriber.OnComplete (Rule 2.3)!" +
                         $"Caller: {stack}");
@@ -119,7 +119,7 @@ namespace Reactive.Streams.TCK
             {
                 var stack = new StackTrace();
                 var stackFrames = stack.GetFrames();
-                if (stackFrames != null && stackFrames.Any(f => f.GetMethod().Name.Equals("OnComplete")))
+                if (stackFrames is object && stackFrames.Any(f => f.GetMethod().Name.Equals("OnComplete")))
                     _environment.Flop(
                         "Subscription.Cancel MUST NOT be called from Subscriber.OnComplete (Rule 2.3)!" +
                         $"Caller: {stack}");
@@ -155,7 +155,7 @@ namespace Reactive.Streams.TCK
             {
                 var stack = new StackTrace();
                 var stackFrames = stack.GetFrames();
-                if (stackFrames != null && stackFrames.Any(f => f.GetMethod().Name.Equals("OnError")))
+                if (stackFrames is object && stackFrames.Any(f => f.GetMethod().Name.Equals("OnError")))
                     _environment.Flop(
                         "Subscription.Request MUST NOT be called from Subscriber.OnError (Rule 2.3)!" +
                         $"Caller: {stack}");
@@ -165,7 +165,7 @@ namespace Reactive.Streams.TCK
             {
                 var stack = new StackTrace();
                 var stackFrames = stack.GetFrames();
-                if (stackFrames != null && stackFrames.Any(f => f.GetMethod().Name.Equals("OnError")))
+                if (stackFrames is object && stackFrames.Any(f => f.GetMethod().Name.Equals("OnError")))
                     _environment.Flop(
                         "Subscription.Cancel MUST NOT be called from Subscriber.OnError (Rule 2.3)!" +
                         $"Caller: {stack}");
@@ -330,7 +330,7 @@ namespace Reactive.Streams.TCK
             => SubscriberTest(stage =>
             {
                 var element = default(T);
-                if (element != null)
+                if (element is object)
                     throw new IgnoreException("Can't verify behavior for value types");
 
                 var subscriber = stage.Sub;
@@ -622,10 +622,10 @@ namespace Reactive.Streams.TCK
         {
             Error.ExpectCompletion(timeoutMilliseconds, $"Subscriber {Sub} did not call `RegisterOnError({typeof(E).Name})`");
 
-            if (Error.Value == null)
+            if (Error.Value is null)
                 return Environment.FlopAndFail<E>($"Subscriber {Sub} did not call `RegisterOnError({typeof(E).Name})`");
             var value = Error.Value as E;
-            if (value != null)
+            if (value is object)
                 return value;
 
             return

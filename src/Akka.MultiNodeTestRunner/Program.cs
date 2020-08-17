@@ -327,7 +327,7 @@ namespace Akka.MultiNodeTestRunner
                                 var fileActor = TestRunSystem.ActorOf(Props.Create(() => new FileSystemAppenderActor(logFilePath)));
                                 process.OutputDataReceived += (sender, eventArgs) =>
                                 {
-                                    if (eventArgs?.Data != null)
+                                    if (eventArgs?.Data is object)
                                     {
                                         fileActor.Tell(eventArgs.Data);
                                         timelineCollector.Tell(new TimelineLogCollectorActor.LogMessage(nodeInfo, eventArgs.Data));
@@ -362,7 +362,7 @@ namespace Akka.MultiNodeTestRunner
                             PublishRunnerMessage("Waiting 3 seconds for all messages from all processes to be collected.");
                             Thread.Sleep(TimeSpan.FromSeconds(3));
                             
-                            if (testOutputDir != null)
+                            if (testOutputDir is object)
                             {
                                 var dumpTasks = new List<Task>()
                                 {

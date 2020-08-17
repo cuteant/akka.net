@@ -99,7 +99,7 @@ namespace Akka.TestKit.Internal
                 if (IsTerminated)
                     throw new IllegalActorStateException("Underlying actor is terminated");
                 var actor = GetTestActorCell().Actor;
-                if (actor == null)
+                if (actor is null)
                 {
                     var timeout = TestKitExtension.For(System).DefaultTimeout;
                     actor = this.Ask(InternalGetActor.Instance, timeout).Result;
@@ -155,10 +155,10 @@ namespace Akka.TestKit.Internal
         /// <returns>TBD</returns>
         public static InternalTestActorRef Create(ActorSystem system, Props props, IActorRef supervisor = null, string name = null)
         {
-            if (name == null)
+            if (name is null)
                 name = CreateUniqueName();
 
-            if (supervisor == null)
+            if (supervisor is null)
             {
                 var systemImpl = (ActorSystemImpl)system;
                 supervisor = systemImpl.Guardian;
@@ -173,20 +173,20 @@ namespace Akka.TestKit.Internal
             var dispatcher = system.Dispatchers.Lookup(props.Deploy.Dispatcher);
 
             var supervisorLocal = supervisor as LocalActorRef;
-            if (supervisorLocal != null)
+            if (supervisorLocal is object)
             {
                 supervisorLocal.Cell.ReserveChild(name);
             }
             else
             {
                 var supervisorRep = supervisor as RepointableActorRef;
-                if (supervisorRep != null)
+                if (supervisorRep is object)
                 {
                     var repUnderlying = supervisorRep.Underlying;
                     if (repUnderlying is UnstartedCell)
                         throw new IllegalStateException("Cannot attach a TestActor to an unstarted top-level actor, ensure that it is started by sending a message and observing the reply");
                     var cellUnderlying = repUnderlying as ActorCell;
-                    if (cellUnderlying != null)
+                    if (cellUnderlying is object)
                     {
                         cellUnderlying.ReserveChild(name);
                     }

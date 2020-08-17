@@ -65,7 +65,7 @@ namespace Akka.Remote
         public static FailureDetector Load(string fqcn, Config config, ActorSystem system)
         {
             var failureDetectorClass = TypeUtil.ResolveType(fqcn);
-            if (failureDetectorClass == null)
+            if (failureDetectorClass is null)
             {
                 ThrowHelper.ThrowConfigurationException_FailureDetector_Load(fqcn);
             }

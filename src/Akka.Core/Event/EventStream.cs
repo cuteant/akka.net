@@ -50,7 +50,7 @@ namespace Akka.Event
         /// <returns><c>true</c> if subscription was successful, <c>false</c> otherwise.</returns>
         public override bool Subscribe(IActorRef subscriber, Type channel)
         {
-            if (null == subscriber) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.subscriber, AkkaExceptionResource.ArgumentNull_EsSubscriber); }
+            if (subscriber is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.subscriber, AkkaExceptionResource.ArgumentNull_EsSubscriber); }
 
             RegisterWithUnsubscriber(subscriber);
             var res = base.Subscribe(subscriber, channel);
@@ -72,7 +72,7 @@ namespace Akka.Event
         /// <returns><c>true</c> if unsubscription was successful, <c>false</c> otherwise.</returns>
         public override bool Unsubscribe(IActorRef subscriber, Type channel)
         {
-            if (null == subscriber) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.subscriber, AkkaExceptionResource.ArgumentNull_EsSubscriber); }
+            if (subscriber is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.subscriber, AkkaExceptionResource.ArgumentNull_EsSubscriber); }
 
             if (_debug)
             {
@@ -92,7 +92,7 @@ namespace Akka.Event
         /// <returns><c>true</c> if unsubscription was successful, <c>false</c> otherwise.</returns>
         public override bool Unsubscribe(IActorRef subscriber)
         {
-            if (null == subscriber) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.subscriber, AkkaExceptionResource.ArgumentNull_EsSubscriber); }
+            if (subscriber is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.subscriber, AkkaExceptionResource.ArgumentNull_EsSubscriber); }
 
             if (_debug)
             {
@@ -119,7 +119,7 @@ namespace Akka.Event
         /// <returns>TBD</returns>
         public bool InitUnsubscriber(IActorRef unsubscriber, ActorSystem system)
         {
-            if (system == null) { return false; }
+            if (system is null) { return false; }
 
             switch ((object)_initiallySubscribedOrUnsubscriber)
             {

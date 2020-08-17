@@ -195,7 +195,7 @@ namespace Akka.Actor
         /// </returns>
         public bool Equals(Deploy other)
         {
-            if (other == null) return false;
+            if (other is null) return false;
             return ((string.IsNullOrEmpty(_mailbox) && string.IsNullOrEmpty(other._mailbox)) ||
                     string.Equals(_mailbox, other._mailbox, StringComparison.Ordinal)) &&
                    string.Equals(_dispatcher, other._dispatcher, StringComparison.Ordinal) &&
@@ -203,7 +203,7 @@ namespace Akka.Actor
                    _routerConfig.Equals(other._routerConfig) &&
                    ((_config.IsNullOrEmpty() && other._config.IsNullOrEmpty()) ||
                     string.Equals(_config.Root.ToString(), other._config.Root.ToString(), StringComparison.Ordinal)) &&
-                   (_scope == null && other._scope == null || (_scope != null && _scope.Equals(other._scope)));
+                   (_scope is null && other._scope is null || (_scope is object && _scope.Equals(other._scope)));
         }
 
         /// <summary>

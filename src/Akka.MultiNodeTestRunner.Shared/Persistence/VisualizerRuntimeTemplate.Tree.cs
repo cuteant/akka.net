@@ -118,7 +118,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
 
         private static string LongestCommonPrefix(IReadOnlyList<string> strings)
         {
-            if (strings == null || strings.Count == 0)
+            if (strings is null || strings.Count == 0)
             {
                 return string.Empty;
             }

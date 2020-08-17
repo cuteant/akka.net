@@ -350,8 +350,8 @@ namespace Akka.Remote
             }
 
             //merge all of the fallbacks together
-            var deployment = new List<Deploy>() { deploy, configDeploy }.Where(x => x != null).Aggregate(Deploy.None, (deploy1, deploy2) => deploy2.WithFallback(deploy1));
-            var propsDeploy = new List<Deploy>() { props.Deploy, deployment }.Where(x => x != null)
+            var deployment = new List<Deploy>() { deploy, configDeploy }.Where(x => x is object).Aggregate(Deploy.None, (deploy1, deploy2) => deploy2.WithFallback(deploy1));
+            var propsDeploy = new List<Deploy>() { props.Deploy, deployment }.Where(x => x is object)
                 .Aggregate(Deploy.None, (deploy1, deploy2) => deploy2.WithFallback(deploy1));
 
             //match for remote scope
@@ -410,7 +410,7 @@ namespace Akka.Remote
         /// <returns></returns>
         public Deploy LookUpRemotes(IEnumerable<string> p)
         {
-            if (p == null || !p.Any()) { return Deploy.None; }
+            if (p is null || !p.Any()) { return Deploy.None; }
             if (string.Equals(p.Head(), "remote", StringComparison.Ordinal)) { return LookUpRemotes(p.Drop(3)); }
             if (string.Equals(p.Head(), "user", StringComparison.Ordinal)) { return Deployer.Lookup(p.Drop(1)); }
             return Deploy.None;
@@ -454,10 +454,10 @@ namespace Akka.Remote
         private bool TryParseCachedPath(string actorPath, out ActorPath path)
         {
             var actorPathThreadLocalCache = _actorPathThreadLocalCache;
-            if (actorPathThreadLocalCache != null)
+            if (actorPathThreadLocalCache is object)
             {
                 path = actorPathThreadLocalCache.Cache.GetOrCompute(actorPath);
-                return path != null;
+                return path is object;
             }
             else // cache not initialized yet
             {
@@ -521,7 +521,7 @@ namespace Akka.Remote
             // using thread local LRU cache, which will call InternalResolveActorRef if the value is
             // not cached
             var actorRefResolveThreadLocalCache = _actorRefResolveThreadLocalCache;
-            if (actorRefResolveThreadLocalCache == null)
+            if (actorRefResolveThreadLocalCache is null)
             {
                 return InternalResolveActorRef(path); // cache not initialized yet
             }
@@ -723,7 +723,7 @@ namespace Akka.Remote
 
             private State<TerminatorState, Internals> HandleWhenIdle(Event<Internals> @event)
             {
-                if (@event.StateData != null && @event.FsmEvent is TerminationHook)
+                if (@event.StateData is object && @event.FsmEvent is TerminationHook)
                 {
                     if (_log.IsInfoEnabled) _log.ShuttingDownRemoteDaemon();
                     @event.StateData.RemoteDaemon.Tell(TerminationHook.Instance);
@@ -734,7 +734,7 @@ namespace Akka.Remote
 
             private State<TerminatorState, Internals> HandleWhenWaitDaemonShutdown(Event<Internals> @event)
             {
-                if (@event.StateData != null && @event.FsmEvent is TerminationHookDone)
+                if (@event.StateData is object && @event.FsmEvent is TerminationHookDone)
                 {
                     if (_log.IsInfoEnabled) _log.RemoteDaemonShutDown();
                     @event.StateData.Transport.Shutdown()
@@ -778,14 +778,14 @@ namespace Akka.Remote
                 switch (message)
                 {
                     case EndpointManager.Send send:
-                        if (send.Seq == null)
+                        if (send.Seq is null)
                         {
                             base.TellInternal(send.Message, send.SenderOption ?? ActorRefs.NoSender);
                         }
                         break;
 
                     case DeadLetter deadLetter when deadLetter.Message is EndpointManager.Send deadSend:
-                        if (deadSend.Seq == null)
+                        if (deadSend.Seq is null)
                         {
                             base.TellInternal(deadSend.Message, deadSend.SenderOption ?? ActorRefs.NoSender);
                         }

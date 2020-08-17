@@ -37,7 +37,7 @@ namespace Akka.Remote.TestKit
         {
             get
             {
-                if(_controller == null) throw new IllegalStateException("TestConductorServer was not started");
+                if(_controller is null) throw new IllegalStateException("TestConductorServer was not started");
                 return _controller;
             }
         }
@@ -64,7 +64,7 @@ namespace Akka.Remote.TestKit
         /// <returns></returns>
         public async Task<IPEndPoint> StartController(int participants, RoleName name, IPEndPoint controllerPort)
         {
-            if(_controller != null) throw new IllegalStateException("TestConductorServer was already started");
+            if(_controller is object) throw new IllegalStateException("TestConductorServer was already started");
             _controller = _system.ActorOf(Props.Create(() => new Controller(participants, controllerPort)),
                "controller");
 
@@ -188,7 +188,7 @@ namespace Akka.Remote.TestKit
             {
                 if(t.Result is Done) return Done.Instance;
                 var failure = t.Result as FSMBase.Failure;
-                if (failure != null && failure.Cause is Controller.ClientDisconnectedException) return Done.Instance;
+                if (failure is object && failure.Cause is Controller.ClientDisconnectedException) return Done.Instance;
 
                 throw new InvalidOperationException($"Expected Done but received {t.Result}");
             });
@@ -211,7 +211,7 @@ namespace Akka.Remote.TestKit
             {
                 if (t.Result is Done) return Done.Instance;
                 var failure = t.Result as FSMBase.Failure;
-                if (failure != null && failure.Cause is Controller.ClientDisconnectedException) return Done.Instance;
+                if (failure is object && failure.Cause is Controller.ClientDisconnectedException) return Done.Instance;
 
                 throw new InvalidOperationException($"Expected Done but received {t.Result}");
             });
@@ -360,9 +360,9 @@ namespace Akka.Remote.TestKit
             WhenUnhandled(@event =>
             {
                 var clientDisconnected = @event.FsmEvent as Controller.ClientDisconnected;
-                if (clientDisconnected != null)
+                if (clientDisconnected is object)
                 {
-                    if(@event.StateData != null)
+                    if(@event.StateData is object)
                         @event.StateData.Tell(new Failure(new Controller.ClientDisconnectedException("client disconnected in state " + StateName + ": " + _channel)));                   
                     return Stop();
                 }
@@ -378,7 +378,7 @@ namespace Akka.Remote.TestKit
             When(State.Initial, @event =>
             {
                 var hello = @event.FsmEvent as Hello;
-                if (hello != null)
+                if (hello is object)
                 {
                     _roleName = new RoleName(hello.Name);
                     _controller.Tell(new Controller.NodeInfo(_roleName, hello.Address, Self));
@@ -406,7 +406,7 @@ namespace Akka.Remote.TestKit
 
             When(State.Ready, @event =>
             {
-                if (@event.FsmEvent is Done && @event.StateData != null)
+                if (@event.FsmEvent is Done && @event.StateData is object)
                 {
                     @event.StateData.Tell(@event.FsmEvent);
                     return Stay().Using(null);
@@ -422,14 +422,14 @@ namespace Akka.Remote.TestKit
                     return Stop();
                 }
                 var toClient = @event.FsmEvent as IToClient;
-                if (toClient != null)
+                if (toClient is object)
                 {
                     if (toClient.Msg is IUnconfirmedClientOp)
                     {
                         _channel.WriteAndFlushAsync(toClient.Msg);
                         return Stay();                        
                     }
-                    if (@event.StateData == null)
+                    if (@event.StateData is null)
                     {
                         _channel.WriteAndFlushAsync(toClient.Msg);
                         return Stay().Using(Sender);

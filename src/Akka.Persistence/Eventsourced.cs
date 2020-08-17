@@ -358,7 +358,7 @@ namespace Akka.Persistence
                 ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
-            if (events == null) return;
+            if (events is null) return;
 
 #pragma warning disable IDE0039 // 使用本地函数
             Action<object> Inv = o => handler((TEvent)o);
@@ -530,7 +530,7 @@ namespace Akka.Persistence
         /// <param name="message">Message that caused a failure</param>
         protected virtual void OnRecoveryFailure(Exception reason, object message = null)
         {
-            if (message != null)
+            if (message is object)
             {
                 Log.Error(reason, "Exception in ReceiveRecover when replaying event type [{0}] with sequence number [{1}] for persistenceId [{2}]",
                     message.GetType(), LastSequenceNr, PersistenceId);

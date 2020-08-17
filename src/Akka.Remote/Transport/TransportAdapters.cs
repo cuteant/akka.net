@@ -89,7 +89,7 @@ namespace Akka.Remote.Transport
 
         private Dictionary<string, ITransportAdapterProvider> GetAdaptersTable()
         {
-            if (_adaptersTable != null) return _adaptersTable;
+            if (_adaptersTable is object) return _adaptersTable;
             _adaptersTable = new Dictionary<string, ITransportAdapterProvider>(StringComparer.Ordinal);
             foreach (var adapter in Settings.Adapters)
             {
@@ -320,9 +320,9 @@ namespace Akka.Remote.Transport
         {
             unchecked
             {
-                var hashCode = base.GetHashCode() + (OriginalLocalAddress != null ? OriginalLocalAddress.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (OriginalRemoteAddress != null ? OriginalRemoteAddress.GetHashCode() : 0);
-                hashCode = (hashCode * 397) ^ (WrappedHandle != null ? WrappedHandle.GetHashCode() : 0);
+                var hashCode = base.GetHashCode() + (OriginalLocalAddress is object ? OriginalLocalAddress.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (OriginalRemoteAddress is object ? OriginalRemoteAddress.GetHashCode() : 0);
+                hashCode = (hashCode * 397) ^ (WrappedHandle is object ? WrappedHandle.GetHashCode() : 0);
                 return hashCode;
             }
         }

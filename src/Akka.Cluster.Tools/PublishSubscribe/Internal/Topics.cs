@@ -90,7 +90,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
                     break;
 
                 case Prune _:
-                    if (PruneDeadline != null && PruneDeadline.IsOverdue)
+                    if (PruneDeadline is object && PruneDeadline.IsOverdue)
                     {
                         PruneDeadline = null;
                         Context.Parent.Tell(NoMoreSubscribers.Instance);
@@ -179,7 +179,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         {
             switch (message)
             {
-                case Subscribe subscribe when subscribe.Group != null:
+                case Subscribe subscribe when subscribe.Group is object:
                     var encodedGroup = Utils.EncodeName(subscribe.Group);
                     _buffer.BufferOr(Utils.MakeKey(Self.Path / encodedGroup), subscribe, Sender, () =>
                     {
@@ -196,7 +196,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
                     PruneDeadline = null;
                     return true;
 
-                case Unsubscribe unsubscribe when unsubscribe.Group != null:
+                case Unsubscribe unsubscribe when unsubscribe.Group is object:
                     var encodedGroup0 = Utils.EncodeName(unsubscribe.Group);
                     _buffer.BufferOr(Utils.MakeKey(Self.Path / encodedGroup0), unsubscribe, Sender, () =>
                     {
@@ -332,7 +332,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         /// <returns>TBD</returns>
         public static string EncodeName(string name)
         {
-            return name == null ? null : Uri.EscapeDataString(name);
+            return name is null ? null : Uri.EscapeDataString(name);
         }
 
         /// <summary>

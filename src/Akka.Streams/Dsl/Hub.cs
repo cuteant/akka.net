@@ -1015,7 +1015,7 @@ namespace Akka.Streams.Dsl
                         var state = _stage._hubLogic.State.Value;
                         if (state is Closed closed)
                         {
-                            if (closed.Failure != null)
+                            if (closed.Failure is object)
                                 FailStage(closed.Failure);
                             else
                                 CompleteStage();
@@ -1028,7 +1028,7 @@ namespace Akka.Streams.Dsl
                             var newRegistrations = open.Registrations.Insert(0, new Consumer(_id, callback));
                             if (_stage._hubLogic.State.CompareAndSet(state, new Open(open.CallbackTask, newRegistrations)))
                             {
-                                if (null == readyCallback)
+                                if (readyCallback is null)
                                 {
                                     readyCallback = GetAsyncCallback<Result<IHandle<IHubEvent>>>(this);
                                 }
@@ -1045,11 +1045,11 @@ namespace Akka.Streams.Dsl
 
                 public override void OnPull()
                 {
-                    if (_offsetInitialized && _hubCallback != null)
+                    if (_offsetInitialized && _hubCallback is object)
                     {
                         var element = _stage._hubLogic.Poll(_offset);
 
-                        if (element == null)
+                        if (element is null)
                         {
                             _hubCallback.Handle(new NeedWakeup(_id, _previousPublishedOffset, _offset));
                             _previousPublishedOffset = _offset;
@@ -1081,7 +1081,7 @@ namespace Akka.Streams.Dsl
                     switch (e)
                     {
                         case HubCompleted completed:
-                            if (completed.Failure != null)
+                            if (completed.Failure is object)
                                 FailStage(completed.Failure);
                             else
                                 CompleteStage();
@@ -1095,7 +1095,7 @@ namespace Akka.Streams.Dsl
                             _offsetInitialized = true;
                             _previousPublishedOffset = intialize.Offset;
                             _offset = intialize.Offset;
-                            if (IsAvailable(_stage.Out) && _hubCallback != null) { OnPull(); }
+                            if (IsAvailable(_stage.Out) && _hubCallback is object) { OnPull(); }
                             break;
                     }
                 }
@@ -1782,7 +1782,7 @@ namespace Akka.Streams.Dsl
                         var s = _source._logic.State.Value;
                         if (s is Closed c)
                         {
-                            if (c.Failure != null)
+                            if (c.Failure is object)
                                 FailStage(c.Failure);
                             else
                                 CompleteStage();
@@ -1804,7 +1804,7 @@ namespace Akka.Streams.Dsl
 
                 public override void OnPull()
                 {
-                    if (_hubCallback == null) return;
+                    if (_hubCallback is null) return;
 
                     var element = _source._logic.Poll(_id, _hubCallback);
                     switch (element)
@@ -1828,7 +1828,7 @@ namespace Akka.Streams.Dsl
                     _callbackCount++;
                     switch (command)
                     {
-                        case HubCompleted c when c.Failure != null:
+                        case HubCompleted c when c.Failure is object:
                             FailStage(c.Failure);
                             break;
                         case HubCompleted _:
@@ -1839,7 +1839,7 @@ namespace Akka.Streams.Dsl
                                 OnPull();
                             break;
                         case Initialize _:
-                            if (IsAvailable(_source._out) && _hubCallback != null)
+                            if (IsAvailable(_source._out) && _hubCallback is object)
                                 OnPull();
                             break;
                     }

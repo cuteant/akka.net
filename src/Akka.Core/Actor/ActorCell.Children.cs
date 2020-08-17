@@ -103,7 +103,7 @@ namespace Akka.Actor
         /// <returns>A reference to the initialized child actor.</returns>
         public virtual IActorRef AttachChild(Props props, bool isSystemService, string name = null)
         {
-            return MakeChild(props, name == null ? GetRandomActorName() : CheckName(name), true, isSystemService);
+            return MakeChild(props, name is null ? GetRandomActorName() : CheckName(name), true, isSystemService);
         }
 
         /// <summary>
@@ -128,7 +128,7 @@ namespace Akka.Actor
 
         private IActorRef ActorOf(Props props, string name, bool isAsync, bool isSystemService)
         {
-            if (name == null)
+            if (name is null)
                 name = GetRandomActorName();
             else
                 CheckName(name);
@@ -152,7 +152,7 @@ namespace Akka.Actor
             if (ChildrenContainer.TryGetByRef(child, out _))
             {
                 var repointableActorRef = child as RepointableActorRef;
-                if (repointableActorRef == null || repointableActorRef.IsStarted)
+                if (repointableActorRef is null || repointableActorRef.IsStarted)
                 {
                     while (true)
                     {
@@ -278,7 +278,7 @@ namespace Akka.Actor
         /// </summary>
         private void SuspendChildren(List<IActorRef> exceptFor = null)
         {
-            if (exceptFor == null)
+            if (exceptFor is null)
             {
                 foreach (var stats in ChildrenContainer.Stats)
                 {
@@ -305,7 +305,7 @@ namespace Akka.Actor
             foreach (var stats in ChildrenContainer.Stats)
             {
                 var child = stats.Child;
-                var cause = (perpetrator != null && child.Equals(perpetrator)) ? causedByFailure : null;
+                var cause = (perpetrator is object && child.Equals(perpetrator)) ? causedByFailure : null;
                 child.Resume(cause);
             }
         }
@@ -331,7 +331,7 @@ namespace Akka.Actor
             if (ChildrenContainer.TryGetByName(name, out var stats))
             {
                 child = stats as ChildRestartStats;
-                if (child != null)
+                if (child is object)
                     return true;
             }
             child = null;
@@ -440,7 +440,7 @@ namespace Akka.Actor
 
         private static string CheckName(string name)
         {
-            if (name == null) AkkaThrowHelper.ThrowInvalidActorNameException(AkkaExceptionResource.InvalidActorName_Null);
+            if (name is null) AkkaThrowHelper.ThrowInvalidActorNameException(AkkaExceptionResource.InvalidActorName_Null);
             if (0u >= (uint)name.Length) AkkaThrowHelper.ThrowInvalidActorNameException(AkkaExceptionResource.InvalidActorName_Empty);
             if (!ActorPath.IsValidPathElement(name))
             {
@@ -464,12 +464,12 @@ namespace Akka.Actor
 
                     var ser = _systemImpl.Serialization;
                     var propsArguments = props.Arguments;
-                    if (propsArguments != null)
+                    if (propsArguments is object)
                     {
                         for (int idx = 0; idx < propsArguments.Length; idx++)
                         {
                             object argument = propsArguments[idx];
-                            if (argument != null && !(argument is INoSerializationVerificationNeeded))
+                            if (argument is object && !(argument is INoSerializationVerificationNeeded))
                             {
                                 var serializer = ser.FindSerializerFor(argument);
                                 var deserializedArgu = serializer.DeepCopy(argument);
@@ -508,7 +508,7 @@ namespace Akka.Actor
                 throw;
             }
 
-            if (Mailbox != null && IsFailed)
+            if (Mailbox is object && IsFailed)
             {
                 for (var i = 1; i <= Mailbox.SuspendCount(); i++)
                     actor.Suspend();

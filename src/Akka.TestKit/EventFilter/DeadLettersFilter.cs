@@ -39,11 +39,11 @@ namespace Akka.TestKit
         protected override bool IsMatch(LogEvent evt)
         {
             var warning = evt as Warning;
-            if(warning != null)
+            if(warning is object)
             {
                 var deadLetter = warning.Message as DeadLetter;
-                if(deadLetter != null)
-                    if(_isMatch == null || _isMatch(deadLetter))
+                if(deadLetter is object)
+                    if(_isMatch is null || _isMatch(deadLetter))
                         return InternalDoMatch(warning.LogSource, deadLetter.Message);
             }
 

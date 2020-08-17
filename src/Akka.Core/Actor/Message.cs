@@ -25,7 +25,7 @@ namespace Akka.Actor
         /// </exception>
         public Envelope(object message, IActorRef sender, ActorSystem system)
         {
-            if (null == message) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.message, AkkaExceptionResource.ArgumentNull_EnvelopeMsg); }
+            if (message is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.message, AkkaExceptionResource.ArgumentNull_EnvelopeMsg); }
             Message = message;
             Sender = sender != ActorRefs.NoSender ? sender : system.DeadLetters;
         }

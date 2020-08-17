@@ -200,7 +200,7 @@ namespace Akka.Actor
 
             _localOnlyDeciderFunc = LocalOnlyDecider;
 
-            if (deadLettersFactory == null)
+            if (deadLettersFactory is null)
                 deadLettersFactory = p => new DeadLetterActorRef(this, p, _eventStream);
             _deadLetters = deadLettersFactory(_rootPath / "deadLetters");
             _tempNumber = new AtomicCounterLong(1);
@@ -495,7 +495,7 @@ namespace Akka.Actor
                 if (Settings.DebugRouterMisconfiguration)
                 {
                     var d = Deployer.Lookup(path);
-                    if (d != null && !(d.RouterConfig is NoRouter) && Log.IsWarningEnabled)
+                    if (d is object && !(d.RouterConfig is NoRouter) && Log.IsWarningEnabled)
                     {
                         Log.ConfigurationSaysThatShouldBeARouterButCodeDisagrees(path);
                     }
@@ -505,7 +505,7 @@ namespace Akka.Actor
 
                 // mailbox and dispatcher defined in deploy should override props
                 var propsDeploy = lookupDeploy ? Deployer.Lookup(path) : deploy;
-                if (propsDeploy != null)
+                if (propsDeploy is object)
                 {
                     var mailbox = propsDeploy.Mailbox;
                     if (!string.Equals(mailbox, Deploy.NoMailboxGiven, StringComparison.Ordinal))
@@ -547,7 +547,7 @@ namespace Akka.Actor
             {
                 var lookup = (lookupDeploy ? Deployer.Lookup(path) : null) ?? Deploy.None;
                 var fromProps = new List<Deploy>() { props.Deploy, deploy, lookup };
-                var d = fromProps.Where(x => x != null).Aggregate((deploy1, deploy2) => deploy2.WithFallback(deploy1));
+                var d = fromProps.Where(x => x is object).Aggregate((deploy1, deploy2) => deploy2.WithFallback(deploy1));
                 var p = props.WithRouter(d.RouterConfig);
 
                 var dispatchers = system.Dispatchers;

@@ -70,7 +70,7 @@ namespace Akka.DistributedData
         /// <inheritdoc/>
         public int CompareTo(object obj) => obj is Flag flag ? CompareTo(flag) : 1;
         /// <inheritdoc/>
-        public int CompareTo(Flag other) => other == null ? 1 : Enabled.CompareTo(other.Enabled);
+        public int CompareTo(Flag other) => other is null ? 1 : Enabled.CompareTo(other.Enabled);
         /// <inheritdoc/>
         public override string ToString() => Enabled.ToString();
 

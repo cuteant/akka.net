@@ -36,7 +36,7 @@ namespace Akka.Util
         /// </exception>
         public FastLazy(Func<T> producer)
         {
-            if (producer == null) { AkkaThrowHelper.ThrowArgumentNullException_ProducerCannotBeNull(); }
+            if (producer is null) { AkkaThrowHelper.ThrowArgumentNullException_ProducerCannotBeNull(); }
             _producer = producer;
         }
 
@@ -110,8 +110,8 @@ namespace Akka.Util
         /// </exception>
         public FastLazy(Func<S, T> producer, S state)
         {
-            if (producer == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.producer, AkkaExceptionResource.ArgumentNull_FastLazyProducer);
-            if (state == null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.state, AkkaExceptionResource.ArgumentNull_FastLazyState);
+            if (producer is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.producer, AkkaExceptionResource.ArgumentNull_FastLazyProducer);
+            if (state is null) AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.state, AkkaExceptionResource.ArgumentNull_FastLazyState);
             _producer = producer;
             _state = state;
         }

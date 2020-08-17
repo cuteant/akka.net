@@ -64,7 +64,7 @@ namespace Akka.Dispatch
             foreach (var kvp in requirements)
             {
                 var type = TypeUtil.ResolveType(kvp.Key);
-                if (type == null)
+                if (type is null)
                 {
                     Warn($"Mailbox Requirement mapping [{kvp.Key}] is not an actual type");
                     continue;
@@ -174,7 +174,7 @@ namespace Akka.Dispatch
                     var mailboxTypeName = conf.GetString("mailbox-type", null);
                     if (string.IsNullOrEmpty(mailboxTypeName)) { AkkaThrowHelper.ThrowConfigurationException_Mailboxes_TypeName(id); }
                     var type = TypeUtil.ResolveType(mailboxTypeName);
-                    if (type == null) AkkaThrowHelper.ThrowConfigurationException_Mailboxes_Type(mailboxTypeName, id);
+                    if (type is null) AkkaThrowHelper.ThrowConfigurationException_Mailboxes_Type(mailboxTypeName, id);
                     var args = new object[] { Settings, conf };
                     try
                     {
@@ -248,7 +248,7 @@ namespace Akka.Dispatch
         private Type GetMailboxRequirement(Config config)
         {
             var mailboxRequirement = config.GetString("mailbox-requirement", null);
-            return mailboxRequirement == null || mailboxRequirement.Equals(NoMailboxRequirement) ? typeof(IMessageQueue) : TypeUtils.ResolveType(mailboxRequirement);//, true);
+            return mailboxRequirement is null || mailboxRequirement.Equals(NoMailboxRequirement) ? typeof(IMessageQueue) : TypeUtils.ResolveType(mailboxRequirement);//, true);
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace Akka.Dispatch
         /// <returns>TBD</returns>
         public MailboxType GetMailboxType(Props props, Config dispatcherConfig)
         {
-            if (dispatcherConfig == null)
+            if (dispatcherConfig is null)
                 dispatcherConfig = ConfigurationFactory.Empty;
             var id = dispatcherConfig.GetString("id", null);
             var deploy = props.Deploy;
@@ -295,7 +295,7 @@ namespace Akka.Dispatch
                 return VerifyRequirements(Lookup(deploy.Mailbox));
             if (!deploy.Dispatcher.Equals(Deploy.NoDispatcherGiven) && hasMailboxType)
                 return VerifyRequirements(Lookup(dispatcherConfig.GetString("id", null)));
-            if (actorRequirement.Value != null)
+            if (actorRequirement.Value is object)
             {
                 try
                 {

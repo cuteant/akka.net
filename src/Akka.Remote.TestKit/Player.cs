@@ -40,7 +40,7 @@ namespace Akka.Remote.TestKit
         {
             get
             {
-                if(_client == null) throw new IllegalStateException("TestConductor client not yet started");
+                if(_client is null) throw new IllegalStateException("TestConductor client not yet started");
                 if(_system.WhenTerminated.IsCompleted) throw new IllegalStateException("TestConductor unavailable because system is terminated; you need to StartNewSystem() before this point");
                 return _client;
             }
@@ -56,7 +56,7 @@ namespace Akka.Remote.TestKit
         /// </summary>
         public Task<Done> StartClient(RoleName name, IPEndPoint controllerAddr)
         {
-            if(_client != null) throw new IllegalStateException("TestConductorClient already started");
+            if(_client is object) throw new IllegalStateException("TestConductorClient already started");
                 _client =
                 _system.ActorOf(Props.Create(() => new ClientFSM(name, controllerAddr)), "TestConductorClient");
 
@@ -73,14 +73,14 @@ namespace Akka.Remote.TestKit
             protected override void OnReceive(object message)
             {
                 var fsm = message as IActorRef;
-                if (fsm != null)
+                if (fsm is object)
                 {
                     _waiting = Sender;
                     fsm.Tell(new FSMBase.SubscribeTransitionCallBack(Self));
                     return;
                 }
                 var transition = message as FSMBase.Transition<ClientFSM.State>;
-                if (transition != null)
+                if (transition is object)
                 {
                     if (transition.From == ClientFSM.State.Connecting && transition.To == ClientFSM.State.AwaitDone)
                         return;
@@ -94,7 +94,7 @@ namespace Akka.Remote.TestKit
                     Context.Stop(Self);
                 }
                 var currentState = message as FSMBase.CurrentState<ClientFSM.State>;
-                if (currentState != null)
+                if (currentState is object)
                 {
                     if (currentState.State == ClientFSM.State.Connected)
                     {
@@ -218,8 +218,8 @@ namespace Akka.Remote.TestKit
             {
                 unchecked
                 {
-                    return ((_channel != null ? _channel.GetHashCode() : 0) * 397) 
-                        ^ (_runningOp != null ? _runningOp.GetHashCode() : 0);
+                    return ((_channel is object ? _channel.GetHashCode() : 0) * 397) 
+                        ^ (_runningOp is object ? _runningOp.GetHashCode() : 0);
                 }
             }
 
@@ -278,7 +278,7 @@ namespace Akka.Remote.TestKit
             /// <inheritdoc/>
             public override int GetHashCode()
             {
-                return (_channel != null ? _channel.GetHashCode() : 0);
+                return (_channel is object ? _channel.GetHashCode() : 0);
             }
 
             /// <summary>
@@ -352,7 +352,7 @@ namespace Akka.Remote.TestKit
                     return Stay().Replying(new Status.Failure(new IllegalStateException("not connected yet")));
                 }
                 var connected = @event.FsmEvent as Connected;
-                if (connected != null)
+                if (connected is object)
                 {
                     connected.Channel.WriteAndFlushAsync(new Hello(_name.Name, TestConductor.Get(Context.System).Address));
                     return GoTo(State.AwaitDone).Using(new Data(connected.Channel, null));
@@ -401,38 +401,38 @@ namespace Akka.Remote.TestKit
                     _log.Info("disconnected from TestConductor");
                     throw new ConnectionFailure("disconnect");
                 }
-                if(@event.FsmEvent is ToServer<Done> && @event.StateData.Channel != null)
+                if(@event.FsmEvent is ToServer<Done> && @event.StateData.Channel is object)
                 {
                     @event.StateData.Channel.WriteAndFlushAsync(Done.Instance);
                     return Stay();
                 }
                 var toServer = @event.FsmEvent as IToServer;
-                if (toServer != null && @event.StateData.Channel != null &&
-                    @event.StateData.RunningOp == null)
+                if (toServer is object && @event.StateData.Channel is object &&
+                    @event.StateData.RunningOp is null)
                 {
                     @event.StateData.Channel.WriteAndFlushAsync(toServer.Msg);
                     string token = null;
                     var enterBarrier = @event.FsmEvent as ToServer<EnterBarrier>;
-                    if (enterBarrier != null) token = enterBarrier.Msg.Name;
+                    if (enterBarrier is object) token = enterBarrier.Msg.Name;
                     else
                     {
                         var getAddress = @event.FsmEvent as ToServer<GetAddress>;
-                        if (getAddress != null) token = getAddress.Msg.Node.Name;
+                        if (getAddress is object) token = getAddress.Msg.Node.Name;
                     }
                     return Stay().Using(@event.StateData.Copy(runningOp: (token, Sender)));
                 }
-                if (toServer != null && @event.StateData.Channel != null &&
-                    @event.StateData.RunningOp != null)
+                if (toServer is object && @event.StateData.Channel is object &&
+                    @event.StateData.RunningOp is object)
                 {
                     _log.Error("cannot write {0} while waiting for {1}", toServer.Msg, @event.StateData.RunningOp);
                     return Stay();
                 }
-                if (@event.FsmEvent is IClientOp && @event.StateData.Channel != null)
+                if (@event.FsmEvent is IClientOp && @event.StateData.Channel is object)
                 {
                     var barrierResult = @event.FsmEvent as BarrierResult;
-                    if (barrierResult != null)
+                    if (barrierResult is object)
                     {
-                        if (@event.StateData.RunningOp == null)
+                        if (@event.StateData.RunningOp is null)
                         {
                             _log.Warning("did not expect {0}", @event.FsmEvent);
                         }
@@ -461,9 +461,9 @@ namespace Akka.Remote.TestKit
                         return Stay().Using(@event.StateData.Copy(runningOp: null));
                     }
                     var addressReply = @event.FsmEvent as AddressReply;
-                    if (addressReply != null)
+                    if (addressReply is object)
                     {
-                        if (@event.StateData.RunningOp == null)
+                        if (@event.StateData.RunningOp is null)
                         {
                             _log.Warning("did not expect {0}", @event.FsmEvent);
                         }
@@ -498,7 +498,7 @@ namespace Akka.Remote.TestKit
                     if (@event.FsmEvent is DisconnectMsg)
                         return Stay(); //FIXME is this the right EC for the future below?
                     var terminateMsg = @event.FsmEvent as TerminateMsg;
-                    if (terminateMsg != null)
+                    if (terminateMsg is object)
                     {
                         _log.Info("Received TerminateMsg - shutting down...");
                         if (terminateMsg.ShutdownOrExit.IsLeft && terminateMsg.ShutdownOrExit.ToLeft().Value == false)
@@ -539,7 +539,7 @@ namespace Akka.Remote.TestKit
             OnTermination(e =>
             {
                 _log.Info("Terminating connection to multi-node test controller due to [{0}]", e.Reason);
-                if (e.StateData.Channel != null)
+                if (e.StateData.Channel is object)
                 {
                     var disconnectTimeout = TimeSpan.FromSeconds(2); //todo: make into setting loaded from HOCON
                     if (!e.StateData.Channel.CloseAsync().Wait(disconnectTimeout))

@@ -218,7 +218,7 @@ namespace Akka.Actor
                     if (disposing)
                     {
                         //Clean up managed resources
-                        if (_source != null)
+                        if (_source is object)
                         {
                             _source.Dispose();
                         }

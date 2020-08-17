@@ -392,7 +392,7 @@ namespace Akka.Actor
         {
             if (_runStarted.CompareAndSet(null, reason))
             {
-                var runningPhases = (fromPhase == null
+                var runningPhases = (fromPhase is null
                     ? OrderedPhases // all
                     : OrderedPhases.From(fromPhase)).ToList();
 
@@ -420,7 +420,7 @@ namespace Akka.Actor
         private static Task<Done> Loop(CoordinatedShutdown owner, List<string> remainingPhases)
         {
             var phase = remainingPhases.FirstOrDefault();
-            if (phase == null) { return TaskEx.Completed; }
+            if (phase is null) { return TaskEx.Completed; }
             var remaining = remainingPhases.Skip(1).ToList();
             Task<Done> phaseResult = null;
             var log = owner.Log;

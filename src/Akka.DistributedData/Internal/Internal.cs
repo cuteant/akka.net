@@ -128,7 +128,7 @@ namespace Akka.DistributedData.Internal
         {
             unchecked
             {
-                return ((Key != null ? Key.GetHashCode() : 0) * 397) ^ (Envelope != null ? Envelope.GetHashCode() : 0);
+                return ((Key is object ? Key.GetHashCode() : 0) * 397) ^ (Envelope is object ? Envelope.GetHashCode() : 0);
             }
         }
 
@@ -222,7 +222,7 @@ namespace Akka.DistributedData.Internal
         /// <inheritdoc/>
         public bool Equals(Read other)
         {
-            return other != null && Key == other.Key;
+            return other is object && Key == other.Key;
         }
 
         /// <inheritdoc/>
@@ -496,7 +496,7 @@ namespace Akka.DistributedData.Internal
             if (cleanedData is IReplicatedDelta d)
             {
                 var delta = Data as IDeltaReplicatedData;
-                if (null == delta)
+                if (delta is null)
                 {
                     ThrowHelper.ThrowArgumentException_ExpectedIDeltaReplicatedDataButGot(Data);
                 }
@@ -572,8 +572,8 @@ namespace Akka.DistributedData.Internal
         {
             unchecked
             {
-                var seed = ((Data != null ? Data.GetHashCode() : 0) * 397)
-                            ^ (DeltaVersions != null ? DeltaVersions.GetHashCode() : 0);
+                var seed = ((Data is object ? Data.GetHashCode() : 0) * 397)
+                            ^ (DeltaVersions is object ? DeltaVersions.GetHashCode() : 0);
 
                 foreach (var p in Pruning)
                 {
@@ -591,7 +591,7 @@ namespace Akka.DistributedData.Internal
         public override string ToString()
         {
             var sb = new StringBuilder("{");
-            if (Pruning != null)
+            if (Pruning is object)
                 foreach (var entry in Pruning)
                 {
                     sb.Append(entry.Key).Append("->").Append(entry.Value).Append(",");
@@ -696,7 +696,7 @@ namespace Akka.DistributedData.Internal
         {
             unchecked
             {
-                var hashCode = (Digests != null ? Digests.GetHashCode() : 0);
+                var hashCode = (Digests is object ? Digests.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ Chunk;
                 hashCode = (hashCode * 397) ^ TotalChunks;
                 return hashCode;
@@ -707,7 +707,7 @@ namespace Akka.DistributedData.Internal
         public override string ToString()
         {
             var sb = new StringBuilder("{");
-            if (Digests != null)
+            if (Digests is object)
                 foreach (var entry in Digests)
                 {
                     sb.Append(entry.Key).Append("->").Append(entry.Value).Append(",");
@@ -795,7 +795,7 @@ namespace Akka.DistributedData.Internal
         {
             unchecked
             {
-                return ((UpdatedData != null ? UpdatedData.GetHashCode() : 0) * 397) ^ SendBack.GetHashCode();
+                return ((UpdatedData is object ? UpdatedData.GetHashCode() : 0) * 397) ^ SendBack.GetHashCode();
             }
         }
 
@@ -803,7 +803,7 @@ namespace Akka.DistributedData.Internal
         public override string ToString()
         {
             var sb = new StringBuilder("{");
-            if (UpdatedData != null)
+            if (UpdatedData is object)
                 foreach (var entry in UpdatedData)
                 {
                     sb.Append(entry.Key).Append("->").Append(entry.Value).Append(",");
@@ -918,7 +918,7 @@ namespace Akka.DistributedData.Internal
         {
             unchecked
             {
-                var hashCode = (FromNode != null ? FromNode.GetHashCode() : 0);
+                var hashCode = (FromNode is object ? FromNode.GetHashCode() : 0);
                 hashCode = (hashCode * 397) ^ ShouldReply.GetHashCode();
                 hashCode = (hashCode * 397) ^ Deltas.GetHashCode();
                 return hashCode;
