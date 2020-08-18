@@ -572,7 +572,7 @@ namespace Akka.Util
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<object>();
-                task.ContinueWith(LinkOutcomeContinuationAction, Tuple.Create(processor, tcs),
+                task.ContinueWith(LinkOutcomeContinuationAction, (processor, tcs),
                     cancellationToken, continuationOptions, scheduler);
 
                 return tcs.Task;
@@ -581,7 +581,7 @@ namespace Akka.Util
             private static readonly Action<Task, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
             private static void LinkOutcomeContinuation(Task task, object state)
             {
-                var wrapped = (Tuple<IOverridingArgumentRunnable<Task>, TaskCompletionSource<object>>)state;
+                var wrapped = ((IOverridingArgumentRunnable<Task>, TaskCompletionSource<object>))state;
                 var tcs = wrapped.Item2;
                 try
                 {
@@ -606,7 +606,7 @@ namespace Akka.Util
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<object>();
-                task.ContinueWith(RunWithResultTaskContinuationAction, Tuple.Create(processor, tcs),
+                task.ContinueWith(RunWithResultTaskContinuationAction, (processor, tcs),
                     cancellationToken, continuationOptions, scheduler);
 
                 return tcs.Task;
@@ -615,7 +615,7 @@ namespace Akka.Util
             private static readonly Action<Task<TResult>, object> RunWithResultTaskContinuationAction = RunWithResultTaskContinuation;
             private static void RunWithResultTaskContinuation(Task<TResult> task, object state)
             {
-                var wrapped = (Tuple<IOverridingArgumentRunnable<Task<TResult>>, TaskCompletionSource<object>>)state;
+                var wrapped = ((IOverridingArgumentRunnable<Task<TResult>>, TaskCompletionSource<object>))state;
                 var tcs = wrapped.Item2;
                 try
                 {
@@ -633,7 +633,7 @@ namespace Akka.Util
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<TResult>();
-                task.ContinueWith(LinkOutcomeContinuationAction, Tuple.Create(processor, tcs),
+                task.ContinueWith(LinkOutcomeContinuationAction, (processor, tcs),
                     cancellationToken, continuationOptions, scheduler);
 
                 return tcs.Task;
@@ -642,7 +642,7 @@ namespace Akka.Util
             private static readonly Action<Task, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
             private static void LinkOutcomeContinuation(Task task, object state)
             {
-                var wrapped = (Tuple<IOverridingArgumentRunnable<Task, TResult>, TaskCompletionSource<TResult>>)state;
+                var wrapped = ((IOverridingArgumentRunnable<Task, TResult>, TaskCompletionSource<TResult>))state;
                 var tcs = wrapped.Item2;
                 try
                 {
@@ -667,7 +667,7 @@ namespace Akka.Util
             {
                 var tcs = new TaskCompletionSource<TNewResult>();
 
-                task.ContinueWith(LinkOutcomeContinuationAction, Tuple.Create(processor, tcs),
+                task.ContinueWith(LinkOutcomeContinuationAction, (processor, tcs),
                     cancellationToken, continuationOptions, scheduler);
 
                 return tcs.Task;
@@ -676,7 +676,7 @@ namespace Akka.Util
             private static readonly Action<Task<TResult>, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
             private static void LinkOutcomeContinuation(Task<TResult> task, object state)
             {
-                var wrapped = (Tuple<IOverridingArgumentRunnable<Task<TResult>, TNewResult>, TaskCompletionSource<TNewResult>>)state;
+                var wrapped = ((IOverridingArgumentRunnable<Task<TResult>, TNewResult>, TaskCompletionSource<TNewResult>))state;
                 var tcs = wrapped.Item2;
                 try
                 {
@@ -1155,7 +1155,7 @@ namespace Akka.Util
             {
                 var tcs = new TaskCompletionSource<object>();
 
-                task.ContinueWith(RunTaskContinuationAction, Tuple.Create(successor, tcs),
+                task.ContinueWith(RunTaskContinuationAction, (successor, tcs),
                     cancellationToken, continuationOptions, scheduler);
 
                 return tcs.Task;
@@ -1164,7 +1164,7 @@ namespace Akka.Util
             private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;
             private static void RunTaskContinuation(Task task, object state)
             {
-                var wrapped = (Tuple<IRunnable, TaskCompletionSource<object>>)state;
+                var wrapped = ((IRunnable, TaskCompletionSource<object>))state;
                 var tcs = wrapped.Item2;
 #if NETCOREAPP || NETSTANDARD_2_0_GREATER
                 if (task.IsCompletedSuccessfully)
@@ -1224,7 +1224,7 @@ namespace Akka.Util
             {
                 var tcs = new TaskCompletionSource<TResult>();
 
-                task.ContinueWith(RunTaskContinuationAction, Tuple.Create(successor, tcs),
+                task.ContinueWith(RunTaskContinuationAction, (successor, tcs),
                     cancellationToken, continuationOptions, scheduler);
 
                 return tcs.Task;
@@ -1233,7 +1233,7 @@ namespace Akka.Util
             private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;
             private static void RunTaskContinuation(Task task, object state)
             {
-                var wrapped = (Tuple<IRunnable<TResult>, TaskCompletionSource<TResult>>)state;
+                var wrapped = ((IRunnable<TResult>, TaskCompletionSource<TResult>))state;
                 var tcs = wrapped.Item2;
 #if NETCOREAPP || NETSTANDARD_2_0_GREATER
                 if (task.IsCompletedSuccessfully)
@@ -1283,7 +1283,7 @@ namespace Akka.Util
                 CancellationToken cancellationToken, TaskContinuationOptions continuationOptions, TaskScheduler scheduler)
             {
                 var tcs = new TaskCompletionSource<object>();
-                task.ContinueWith(RunWithResultTaskContinuationAction, Tuple.Create(successor, tcs),
+                task.ContinueWith(RunWithResultTaskContinuationAction, (successor, tcs),
                     cancellationToken, continuationOptions, scheduler);
 
                 return tcs.Task;
@@ -1292,7 +1292,7 @@ namespace Akka.Util
             private static readonly Action<Task<TResult>, object> RunWithResultTaskContinuationAction = RunWithResultTaskContinuation;
             private static void RunWithResultTaskContinuation(Task<TResult> task, object state)
             {
-                var wrapped = (Tuple<IOverridingArgumentRunnable<TResult>, TaskCompletionSource<object>>)state;
+                var wrapped = ((IOverridingArgumentRunnable<TResult>, TaskCompletionSource<object>))state;
                 var tcs = wrapped.Item2;
 #if NETCOREAPP || NETSTANDARD_2_0_GREATER
                 if (task.IsCompletedSuccessfully)
@@ -1352,7 +1352,7 @@ namespace Akka.Util
             {
                 var tcs = new TaskCompletionSource<TNewResult>();
 
-                task.ContinueWith(RunTaskContinuationAction, Tuple.Create(successor, tcs),
+                task.ContinueWith(RunTaskContinuationAction, (successor, tcs),
                     cancellationToken, continuationOptions, scheduler);
 
                 return tcs.Task;
@@ -1361,7 +1361,7 @@ namespace Akka.Util
             private static readonly Action<Task<TResult>, object> RunTaskContinuationAction = RunTaskContinuation;
             private static void RunTaskContinuation(Task<TResult> task, object state)
             {
-                var wrapped = (Tuple<IOverridingArgumentRunnable<TResult, TNewResult>, TaskCompletionSource<TNewResult>>)state;
+                var wrapped = ((IOverridingArgumentRunnable<TResult, TNewResult>, TaskCompletionSource<TNewResult>))state;
                 var tcs = wrapped.Item2;
 #if NETCOREAPP || NETSTANDARD_2_0_GREATER
                 if (task.IsCompletedSuccessfully)
