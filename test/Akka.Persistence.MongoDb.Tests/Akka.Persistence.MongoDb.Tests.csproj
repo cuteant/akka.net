@@ -1,6 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
+	<Import Project="..\..\xunitSettings.props" />
 
-  <PropertyGroup>    
+	<PropertyGroup>    
     <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
     <RootNamespace>Akka.Persistence.MongoDb.Tests</RootNamespace>
     <AssemblyName>Akka.Persistence.MongoDb.Tests</AssemblyName>

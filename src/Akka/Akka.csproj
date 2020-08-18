@@ -23,7 +23,8 @@
     <PackageReference Include="MessagePack.Unofficial" Version="$(MessagePackUnofficialPackageVersion)" />
     <PackageReference Include="MessagePack.Hyperion" Version="$(MessagePackHyperionPackageVersion)" />
     <PackageReference Include="MessagePack.ImmutableCollection.Unofficial" Version="$(MessagePackImmutableCollectionUnofficialPackageVersion)" />
-    <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
+	<PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
+	<PackageReference Include="SpanJson.Extensions" Version="$(SpanJsonExtensionsPackageVersion)" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,4 +1,5 @@
-﻿using MessagePack;
+﻿using System.Collections.Generic;
+using MessagePack;
 using PersistentPayload = Akka.Serialization.Protocol.Payload;
 
 namespace Akka.Persistence.Serialization.Protocol
@@ -26,6 +27,22 @@ namespace Akka.Persistence.Serialization.Protocol
 
         [Key(6)]
         public string WriterGuid { get; set; }
+    }
+
+    [MessagePackObject]
+    public readonly struct TaggedMessage
+    {
+        [Key(0)]
+        public readonly PersistentPayload Payload;
+        [Key(1)]
+        public readonly IList<string> Tags;
+
+        [SerializationConstructor]
+        public TaggedMessage(PersistentPayload payload, IList<string> tags)
+        {
+            Payload = payload;
+            Tags = tags;
+        }
     }
 
     [MessagePackObject]

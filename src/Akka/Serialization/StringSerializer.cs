@@ -2,15 +2,14 @@
 {
     using System;
     using System.Buffers;
-    using System.Runtime.InteropServices;
     using Akka.Actor;
     using CuteAnt;
     using CuteAnt.Buffers;
-    using MessagePack;
-    using MessagePack.Internal;
+    using SpanJson.Internal;
 
     public sealed class StringSerializer : Serializer
     {
+        private const uint StackallocThreshold = 256u;
         private static readonly ArrayPool<byte> s_bufferPool = BufferManager.Shared;
 
         /// <summary>Initializes a new instance of the <see cref="PrimitiveSerializers" /> class.</summary>
@@ -23,28 +22,27 @@
         /// <inheritdoc />
         public override object DeepCopy(object source) => source;
 
-        public override object FromBinary(byte[] bytes, Type type) => EncodingUtils.ToString(bytes);
+        public override object FromBinary(byte[] bytes, Type type) => TextEncodings.Utf8.GetString(bytes);
 
         public override byte[] ToBinary(object obj)
         {
             var str = (string)obj;
-            var maxSize = EncodingUtils.Utf8MaxBytes(str);
-            if (0u >= (uint)maxSize) { return EmptyArray<byte>.Instance; }
+            var bMaxLength = TextEncodings.Utf8.GetMaxByteCount(str.Length);
+            if (0u >= (uint)bMaxLength) { return EmptyArray<byte>.Instance; }
 
-            var buffer = s_bufferPool.Rent(maxSize);
+            byte[] bBuffer = null;
             try
             {
-                var utf16Source = MemoryMarshal.AsBytes(str.AsSpan());
-                EncodingUtils.ToUtf8(ref MemoryMarshal.GetReference(utf16Source), utf16Source.Length,
-                    ref buffer[0], maxSize, out _, out int written);
-                var utf8Bytes = new byte[written];
-                MessagePackBinary.CopyMemory(buffer, 0, utf8Bytes, 0, written);
-                return utf8Bytes;
+                Span<byte> utf8Span = (uint)bMaxLength <= StackallocThreshold ?
+                    stackalloc byte[bMaxLength] :
+                    (bBuffer = s_bufferPool.Rent(bMaxLength));
+
+                var written = TextEncodings.Utf8.GetBytes(str.AsSpan(), utf8Span);
+                return utf8Span.Slice(0, written).ToArray();
             }
-            catch (Exception ex)
+            finally
             {
-                s_bufferPool.Return(buffer);
-                throw ex;
+                if (bBuffer is object) { s_bufferPool.Return(bBuffer); }
             }
         }
     }

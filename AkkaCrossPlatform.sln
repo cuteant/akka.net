@@ -121,8 +121,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.DistributedData.Lightn
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reactive.Streams.TCK", "src\Reactive.Streams.TCK\Reactive.Streams.TCK.csproj", "{65525B46-6A39-4627-9DA7-D597288A3432}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.Serialization.SpanJson", "src\Akka.Serialization.SpanJson\Akka.Serialization.SpanJson.csproj", "{B927C4C3-AD73-4616-B9B4-DD1EE36E0480}"
-EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -285,10 +283,6 @@ Global
 		{65525B46-6A39-4627-9DA7-D597288A3432}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{65525B46-6A39-4627-9DA7-D597288A3432}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{65525B46-6A39-4627-9DA7-D597288A3432}.Release|Any CPU.Build.0 = Release|Any CPU
-		{B927C4C3-AD73-4616-B9B4-DD1EE36E0480}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{B927C4C3-AD73-4616-B9B4-DD1EE36E0480}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{B927C4C3-AD73-4616-B9B4-DD1EE36E0480}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{B927C4C3-AD73-4616-B9B4-DD1EE36E0480}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -344,7 +338,6 @@ Global
 		{AEA8D563-D7BB-4D04-ADEA-7D0008A55806} = {01167D3C-49C4-4CDE-9787-C176D139ACDD}
 		{ADA3F4BD-6D49-4A9B-9A81-73EFCF249ADB} = {76F58DC4-19F1-43EF-A6E2-EC1CC8395AC5}
 		{65525B46-6A39-4627-9DA7-D597288A3432} = {01167D3C-49C4-4CDE-9787-C176D139ACDD}
-		{B927C4C3-AD73-4616-B9B4-DD1EE36E0480} = {0E55F1F8-E212-43D7-A0C0-ACEA9794B0D7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

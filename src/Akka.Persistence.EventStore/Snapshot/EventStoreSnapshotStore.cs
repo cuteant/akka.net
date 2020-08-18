@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Akka.Event;
 using Akka.Extension.EventStore;
@@ -179,6 +180,7 @@ namespace Akka.Persistence.EventStore.Snapshot
             return new SelectedSnapshot(snapshotMetadata, fullEvent.Value);
         }
 
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         private string GetStreamName(string persistenceId)
         {
             var sb = StringBuilderCache.Acquire();

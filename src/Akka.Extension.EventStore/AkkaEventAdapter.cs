@@ -1,13 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Runtime.CompilerServices;
-using Akka.Serialization;
 using Akka.Serialization.Protocol;
 using CuteAnt.Reflection;
 using EventStore.ClientAPI;
 using SpanJson;
 using SpanJson.Internal;
-using SpanJson.Resolvers;
 
 namespace Akka.Extension.EventStore
 {
@@ -33,7 +31,7 @@ namespace Akka.Extension.EventStore
                 StringMutator.ToCamelCaseWithCache(msgType.Name),
                 payload.IsJson,
                 payload.Message,
-                JsonSerializer.Generic.Utf8.Serialize<AkkaEventMetadata, ExcludeNullsCamelCaseResolver<byte>>(eventMeta));
+                JsonCamelCaseSerializer.Generic.Utf8.Serialize(eventMeta));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -54,7 +52,7 @@ namespace Akka.Extension.EventStore
 
         public override IEventMetadata ToEventMetadata(byte[] metadata)
         {
-            return JsonSerializer.Generic.Utf8.Deserialize<AkkaEventMetadata, ExcludeNullsCamelCaseResolver<byte>>(metadata);
+            return JsonCamelCaseSerializer.Generic.Utf8.Deserialize<AkkaEventMetadata>(metadata);
         }
 
         #region ** ThrowHelper **

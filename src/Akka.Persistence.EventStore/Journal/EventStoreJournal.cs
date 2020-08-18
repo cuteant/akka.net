@@ -17,10 +17,12 @@ namespace Akka.Persistence.EventStore.Journal
         private readonly IEsEventAdapter _eventAdapter;
         private readonly EventStoreJournalSettings _settings;
         private readonly ILoggingAdapter _log;
+        private readonly Akka.Serialization.Serialization _serialization;
 
         public EventStoreJournal()
         {
             var system = Context.System;
+            _serialization = system.Serialization;
             _settings = EventStorePersistence.Get(system).JournalSettings;
             _log = Context.GetLogger();
             _conn = EventStoreConnector.Get(system).Connection;
@@ -39,7 +41,7 @@ namespace Akka.Persistence.EventStore.Journal
                 if (readResult.Status == EventReadStatus.Success)
                 {
                     var resolvedEvent = readResult.Event.Value.Event;
-                    var adapted = Adapt(resolvedEvent);
+                    var adapted = Adapt(resolvedEvent, _serialization.System);
                     sequence = adapted.SequenceNr;
                 }
                 else
@@ -66,7 +68,7 @@ namespace Akka.Persistence.EventStore.Journal
         {
             try
             {
-                if (toSequenceNr < fromSequenceNr || max == 0L) { return; }
+                if (toSequenceNr < fromSequenceNr || 0UL >= (ulong)max) { return; }
 
                 if (fromSequenceNr == toSequenceNr) { max = 1L; }
 
@@ -93,14 +95,10 @@ namespace Akka.Persistence.EventStore.Journal
 
                     slice = await _conn.GetStreamEventsForwardAsync(persistenceId, start, localBatchSize, false).ConfigureAwait(false);
 
-                    foreach (var @event in slice.Events)
+                    var evts = slice.Events;
+                    for (int i = 0; i < evts.Length; i++)
                     {
-                        var representation = Adapt(@event.Event, s =>
-                        {
-                            //TODO: Is this correct?
-                            var selection = context.ActorSelection(s);
-                            return selection.Anchor;
-                        });
+                        var representation = Adapt(evts[i].Event, _serialization.System);
 
                         recoveryCallback(representation);
                         count++;
@@ -170,12 +168,13 @@ namespace Akka.Persistence.EventStore.Journal
                 var persistentMessage = persistentMessages[idx];
 
                 eventDatas[idx] = persistentMessage.Payload;
+                var sender = persistentMessage.Sender;
                 var metadata = new Dictionary<string, object>(7)
                 {
                     [MetadataConstants.PersistenceId] = persistentMessage.PersistenceId,
                     //[MetadataConstants.OccurredOn] = DateTime.UtcNow, // EventStore已有[Created Date]
                     [MetadataConstants.Manifest] = string.IsNullOrEmpty(persistentMessage.Manifest) ? null : persistentMessage.Manifest,
-                    [MetadataConstants.SenderPath] = persistentMessage.Sender?.Path?.ToStringWithoutAddress()/* ?? string.Empty*/,
+                    [MetadataConstants.SenderPath] = sender is object ? Akka.Serialization.Serialization.SerializedActorPath(sender) : null/* ?? string.Empty*/,
                     [MetadataConstants.SequenceNr] = persistentMessage.SequenceNr,
                     [MetadataConstants.WriterGuid] = persistentMessage.WriterGuid,
                     [MetadataConstants.JournalType] = JournalTypes.WriteJournal
@@ -185,7 +184,7 @@ namespace Akka.Persistence.EventStore.Journal
             }
         }
 
-        private static IPersistentRepresentation Adapt(RecordedEvent<object> resolvedEvent, Func<string, IActorRef> actorSelection = null)
+        private static IPersistentRepresentation Adapt(RecordedEvent<object> resolvedEvent, ExtendedActorSystem system)
         {
             var fullEvent = resolvedEvent.FullEvent;
             var eventDescriptor = fullEvent.Descriptor;
@@ -200,14 +199,19 @@ namespace Akka.Persistence.EventStore.Journal
                 // database but $streams projection picked up since it is at position 0
                 return null;
             }
-            var stream = eventDescriptor.GetValue<string>(MetadataConstants.PersistenceId);
+            var persistenceId = eventDescriptor.GetValue<string>(MetadataConstants.PersistenceId);
             var manifest = eventDescriptor.GetValue<string>(MetadataConstants.Manifest, string.Empty);
             var sequenceNr = eventDescriptor.GetValue<long>(MetadataConstants.SequenceNr);
-            var senderPath = eventDescriptor.GetValue<string>(MetadataConstants.SenderPath, string.Empty);
+            var senderPath = eventDescriptor.GetValue<string>(MetadataConstants.SenderPath, null);
+            var writerGuid = eventDescriptor.GetValue<string>(MetadataConstants.WriterGuid, null);
 
-            var sender = actorSelection?.Invoke(senderPath);
+            IActorRef sender = ActorRefs.NoSender;
+            if (senderPath != null)
+            {
+                sender = system.Provider.ResolveActorRef(senderPath);
+            }
 
-            return new Persistent(fullEvent.Value, sequenceNr, stream, manifest, false, sender);
+            return new Persistent(fullEvent.Value, sequenceNr, persistenceId, manifest, false, sender, writerGuid);
         }
     }
 }

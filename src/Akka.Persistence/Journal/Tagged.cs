@@ -19,7 +19,7 @@ namespace Akka.Persistence.Journal
     /// journal implementation for more information.
     /// The journal will unwrap the event and store the <see cref="Payload"/>.
     /// </summary>
-    public readonly struct Tagged
+    public readonly struct Tagged : Serialization.IMessage
     {
         /// <summary>
         /// TBD
@@ -29,7 +29,7 @@ namespace Akka.Persistence.Journal
         public Tagged(object payload, IEnumerable<string> tags)
         {
             Payload = payload;
-            Tags = tags.ToImmutableHashSet(System.StringComparer.Ordinal);
+            Tags = tags?.ToImmutableHashSet(System.StringComparer.Ordinal);
         }
 
         /// <summary>

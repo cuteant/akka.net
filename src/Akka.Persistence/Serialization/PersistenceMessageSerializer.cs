@@ -11,6 +11,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using Akka.Actor;
 using Akka.Persistence.Fsm;
+using Akka.Persistence.Journal;
 using Akka.Persistence.Serialization.Protocol;
 using Akka.Serialization;
 using MessagePack;
@@ -24,6 +25,7 @@ namespace Akka.Persistence.Serialization
         #region manifests
 
         private const string PersistentManifest = "P";
+        private const string TaggedManifest = "PT";
         private const string AtomicWriteManifest = "AW";
         private const string ALODSnapshotManifest = "AS";
         private const string StateChangeEventManifest = "SCE";
@@ -36,6 +38,7 @@ namespace Akka.Persistence.Serialization
             {
                 { typeof(IPersistentRepresentation), PersistentManifest },
                 { typeof(Persistent), PersistentManifest },
+                { typeof(Tagged), TaggedManifest },
                 { typeof(AtomicWrite), AtomicWriteManifest },
                 { typeof(AtLeastOnceDeliverySnapshot), ALODSnapshotManifest },
                 { typeof(PersistentFSM.StateChangeEvent), StateChangeEventManifest },
@@ -55,6 +58,9 @@ namespace Akka.Persistence.Serialization
                 case IPersistentRepresentation repr:
                     manifest = PersistentManifest;
                     return MessagePackSerializer.Serialize(GetPersistentMessage(repr), s_defaultResolver);
+                case Tagged tagged:
+                    manifest = TaggedManifest;
+                    return MessagePackSerializer.Serialize(GetTaggedMessage(tagged), s_defaultResolver);
                 case AtomicWrite aw:
                     manifest = AtomicWriteManifest;
                     return MessagePackSerializer.Serialize(GetAtomicWrite(aw), s_defaultResolver);
@@ -76,6 +82,8 @@ namespace Akka.Persistence.Serialization
             {
                 case PersistentManifest:
                     return GetPersistentRepresentation(_system, MessagePackSerializer.Deserialize<PersistentMessage>(bytes, s_defaultResolver));
+                case TaggedManifest:
+                    return GetTagged(_system, MessagePackSerializer.Deserialize<TaggedMessage>(bytes, s_defaultResolver));
                 case AtomicWriteManifest:
                     return GetAtomicWrite(_system, bytes);
                 case ALODSnapshotManifest:
@@ -102,6 +110,8 @@ namespace Akka.Persistence.Serialization
             {
                 case IPersistentRepresentation _:
                     return PersistentManifest;
+                case Tagged _:
+                    return TaggedManifest;
                 case AtomicWrite _:
                     return AtomicWriteManifest;
                 case AtLeastOnceDeliverySnapshot _:
@@ -127,6 +137,12 @@ namespace Akka.Persistence.Serialization
             message.Deleted = persistent.IsDeleted;
 
             return message;
+        }
+
+        private TaggedMessage GetTaggedMessage(in Tagged tagged)
+        {
+            var payload = _system.Serialization.SerializeMessageWithTransport(tagged.Payload);
+            return new TaggedMessage(payload, tagged.Tags?.ToList());
         }
 
         private Protocol.AtomicWrite GetAtomicWrite(AtomicWrite write)
@@ -176,6 +192,13 @@ namespace Akka.Persistence.Serialization
                 message.Deleted,
                 sender,
                 message.WriterGuid);
+        }
+
+        private static Tagged GetTagged(ExtendedActorSystem system, in TaggedMessage message)
+        {
+            return new Tagged(
+                system.Deserialize(message.Payload),
+                message.Tags);
         }
 
         private static AtomicWrite GetAtomicWrite(ExtendedActorSystem system, in ReadOnlySpan<byte> bytes)

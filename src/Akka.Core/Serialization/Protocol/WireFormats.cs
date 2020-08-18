@@ -96,7 +96,7 @@ namespace Akka.Serialization.Protocol
             Message = message;
             Identifier = identifier;
             TypeName = typeName;
-            Manifest = null;
+            Manifest = manifest;
             IsJson = false;
             MessageType = null;
         }

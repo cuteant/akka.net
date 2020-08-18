@@ -285,16 +285,12 @@ namespace Akka.Persistence.MongoDb.Journal
         private JournalEntry ToJournalEntry(IPersistentRepresentation message)
         {
             object payload = message.Payload;
-            Tagged tagged;
-            if (message.Payload is Tagged t)
+            IList<string> tags = null;
+            if (message.Payload is Tagged tagged)
             {
-                tagged = t;
                 payload = tagged.Payload;
+                tags = tagged.Tags?.ToList();
                 message = message.WithPayload(payload); // need to update the internal payload when working with tags
-            }
-            else
-            {
-                tagged = default;
             }
 
             // per https://github.com/akkadotnet/Akka.Persistence.MongoDB/issues/107
@@ -304,14 +300,14 @@ namespace Akka.Persistence.MongoDb.Journal
                 var manifest = string.IsNullOrEmpty(message.Manifest) ? payload.GetType().TypeQualifiedName() : message.Manifest;
                 return new JournalEntry
                 {
-                    Id = message.PersistenceId + "_" + message.SequenceNr,
+                    Id = $"{message.PersistenceId}_{message.SequenceNr}",
                     Ordering = new BsonTimestamp(0), // Auto-populates with timestamp
                     IsDeleted = message.IsDeleted,
                     Payload = payload,
                     PersistenceId = message.PersistenceId,
                     SequenceNr = message.SequenceNr,
                     Manifest = manifest,
-                    Tags = tagged.Tags?.ToList(),
+                    Tags = tags,
                     SerializerId = null // don't need a serializer ID here either; only for backwards-compat
                 };
             }
@@ -323,14 +319,14 @@ namespace Akka.Persistence.MongoDb.Journal
 
             return new JournalEntry
             {
-                Id = message.PersistenceId + "_" + message.SequenceNr,
+                Id = $"{message.PersistenceId}_{message.SequenceNr}",
                 Ordering = new BsonTimestamp(0), // Auto-populates with timestamp
                 IsDeleted = message.IsDeleted,
                 Payload = binary,
                 PersistenceId = message.PersistenceId,
                 SequenceNr = message.SequenceNr,
                 Manifest = string.Empty, // don't need a manifest here - it's embedded inside the PersistentMessage
-                Tags = tagged.Tags?.ToList(),
+                Tags = tags,
                 SerializerId = null // don't need a serializer ID here either; only for backwards-compat
             };
         }
@@ -368,7 +364,7 @@ namespace Akka.Persistence.MongoDb.Journal
 
             if (entry.Payload is byte[] bytes)
             {
-                object deserialized = null;
+                object deserialized;
                 if (serializerId.HasValue)
                 {
                     deserialized = _serialization.Deserialize(bytes, serializerId.Value, entry.Manifest);
@@ -379,8 +375,7 @@ namespace Akka.Persistence.MongoDb.Journal
                     deserialized = deserializer.FromBinary(bytes, type);
                 }
 
-                if (deserialized is Persistent p)
-                    return p;
+                if (deserialized is Persistent p) { return p; }
 
                 return new Persistent(deserialized, entry.SequenceNr, entry.PersistenceId, entry.Manifest, entry.IsDeleted, sender);
             }
