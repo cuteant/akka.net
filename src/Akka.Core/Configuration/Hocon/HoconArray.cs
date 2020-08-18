@@ -72,7 +72,11 @@ namespace Akka.Configuration.Hocon
         /// <returns>A HOCON string representation of this element.</returns>
         public override string ToString()
         {
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+            return "[" + string.Join(',', this) + "]";
+#else
             return "[" + string.Join(",", this) + "]";
+#endif
         }
     }
 }

@@ -508,12 +508,20 @@ namespace Akka.Actor
                 if (propsDeploy is object)
                 {
                     var mailbox = propsDeploy.Mailbox;
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+                    if (!string.Equals(mailbox, Deploy.NoMailboxGiven))
+#else
                     if (!string.Equals(mailbox, Deploy.NoMailboxGiven, StringComparison.Ordinal))
+#endif
                     {
                         props2 = props2.WithMailbox(mailbox);
                     }
                     var dispatcher = propsDeploy.Dispatcher;
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+                    if (!string.Equals(dispatcher, Deploy.NoDispatcherGiven))
+#else
                     if (!string.Equals(dispatcher, Deploy.NoDispatcherGiven, StringComparison.Ordinal))
+#endif
                     {
                         props2 = props2.WithDispatcher(dispatcher);
                     }

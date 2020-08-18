@@ -432,7 +432,12 @@ namespace Akka.Actor
         public readonly string PatternStr;
 
         /// <inheritdoc/>
-        protected bool Equals(SelectChildPattern other) => string.Equals(PatternStr, other.PatternStr, StringComparison.Ordinal);
+        protected bool Equals(SelectChildPattern other) =>
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+            string.Equals(PatternStr, other.PatternStr);
+#else
+            string.Equals(PatternStr, other.PatternStr, StringComparison.Ordinal);
+#endif
 
         /// <inheritdoc/>
         public override bool Equals(object obj)

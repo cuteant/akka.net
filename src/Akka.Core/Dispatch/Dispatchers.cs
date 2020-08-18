@@ -72,7 +72,7 @@ namespace Akka.Dispatch
     /// </summary>
     internal sealed class PartialTrustThreadPoolExecutorService : ThreadPoolExecutorService
     {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
         static readonly Action<IRunnable> Executor0 = run => run.Run();
 #endif
 
@@ -82,7 +82,7 @@ namespace Akka.Dispatch
         /// <param name="run">TBD</param>
         public override void Execute(IRunnable run)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             ThreadPool.QueueUserWorkItem(Executor0, run, false);
 #else
             ThreadPool.QueueUserWorkItem(Executor, run);

@@ -96,6 +96,19 @@ namespace Akka.Util.Internal
         {
             return string.Join(separator, self);
         }
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+        /// <summary>
+        /// TBD
+        /// </summary>
+        /// <param name="self">TBD</param>
+        /// <param name="separator">TBD</param>
+        /// <returns>TBD</returns>
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
+        public static string Join(this IEnumerable<string> self, char separator)
+        {
+            return string.Join(separator, self);
+        }
+#endif
 
         /// <summary>
         /// TBD

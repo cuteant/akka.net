@@ -77,7 +77,11 @@ namespace Akka.Actor
             {
                 if (other is null) return false;
                 if (ReferenceEquals(this, other)) return true;
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+                return string.Equals(Path, other.Path);
+#else
                 return string.Equals(Path, other.Path, StringComparison.Ordinal);
+#endif
             }
 
             /// <inheritdoc/>
@@ -604,7 +608,11 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         public static string FormatPathElements(IEnumerable<string> pathElements)
         {
-            return String.Join("/", pathElements);
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+            return string.Join('/', pathElements);
+#else
+            return string.Join("/", pathElements);
+#endif
         }
 
         /// <summary>

@@ -156,7 +156,11 @@ namespace Akka.Actor
         {
             if (other is null) return false;
             if (ReferenceEquals(this, other)) return true;
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+            return Port == other.Port && string.Equals(Host, other.Host) && string.Equals(System, other.System) && string.Equals(Protocol, other.Protocol);
+#else
             return Port == other.Port && string.Equals(Host, other.Host, StringComparison.Ordinal) && string.Equals(System, other.System, StringComparison.Ordinal) && string.Equals(Protocol, other.Protocol, StringComparison.Ordinal);
+#endif
         }
 
         /// <inheritdoc/>

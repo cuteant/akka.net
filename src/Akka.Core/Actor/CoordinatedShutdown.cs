@@ -108,7 +108,11 @@ namespace Akka.Actor
         /// <inheritdoc/>
         public override string ToString()
         {
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+            return $"DependsOn=[{string.Join(',', DependsOn)}], Timeout={Timeout}, Recover={Recover}";
+#else
             return $"DependsOn=[{string.Join(",", DependsOn)}], Timeout={Timeout}, Recover={Recover}";
+#endif
         }
     }
 

@@ -92,7 +92,11 @@ namespace Akka.Actor.Setup
 
         public override string ToString()
         {
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+            return $"ActorSystemSetup({string.Join(',', _setups.Keys.Select(x => x.FullName))})";
+#else
             return $"ActorSystemSetup({string.Join(",", _setups.Keys.Select(x => x.FullName))})";
+#endif
         }
     }
 }

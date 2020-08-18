@@ -18,7 +18,7 @@ namespace Akka.Dispatch.MessageQueues
     public class DequeWrapperMessageQueue : IMessageQueue, IDequeBasedMessageQueueSemantics
     {
         // doesn't need to be threadsafe - only called from within actor
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
         private readonly Stack<Envelope> _prependBuffer = new Stack<Envelope>();
 #else
         private readonly CuteAnt.Collections.StackX<Envelope> _prependBuffer = new CuteAnt.Collections.StackX<Envelope>();

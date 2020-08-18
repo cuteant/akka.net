@@ -301,7 +301,11 @@ namespace Akka.Routing
             {
                 return routeeProps
                     .WithDispatcher("akka.actor.deployment." + "/" +
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+                                               context.Self.Path.Elements.Drop(1).Join('/') +
+#else
                                                context.Self.Path.Elements.Drop(1).Join("/") +
+#endif
                                                ".pool-dispatcher");
             }
 

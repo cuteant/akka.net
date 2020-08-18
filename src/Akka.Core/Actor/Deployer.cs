@@ -45,7 +45,11 @@ namespace Akka.Actor
 
             var rootObj = config.Root.GetObject();
             //if (rootObj is null) return;
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+            var unwrapped = rootObj.Unwrapped.Where(d => !string.Equals(defaultKey, d.Key)).ToArray();
+#else
             var unwrapped = rootObj.Unwrapped.Where(d => !string.Equals(defaultKey, d.Key, StringComparison.Ordinal)).ToArray();
+#endif
             foreach (var d in unwrapped.Select(x => ParseConfig(x.Key, config.GetConfig(x.Key.BetweenDoubleQuotes()))))
             {
                 SetDeploy(d);
@@ -62,7 +66,11 @@ namespace Akka.Actor
             const string _user = "user";
 
             var rawElements = path.Elements;
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+            if (!string.Equals(_user, rawElements[0]) || rawElements.Count < 2)
+#else
             if (!string.Equals(_user, rawElements[0], StringComparison.Ordinal) || rawElements.Count < 2)
+#endif
             {
                 return Deploy.None;
             }

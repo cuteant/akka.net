@@ -418,7 +418,11 @@ namespace Akka.Configuration.Hocon
                 }
             }
 
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+            if (allowInfinite && string.Equals("infinite", res))  //Not in Hocon spec
+#else
             if (allowInfinite && string.Equals("infinite", res, StringComparison.OrdinalIgnoreCase))  //Not in Hocon spec
+#endif
             {
                 return Timeout.InfiniteTimeSpan;
             }
@@ -485,8 +489,14 @@ namespace Akka.Configuration.Hocon
                 for (var suffixIndex = 0; suffixIndex < byteSize.Suffixes.Length; suffixIndex++)
                 {
                     var suffix = byteSize.Suffixes[suffixIndex];
+#if NETCOREAPP_2_X_GREATER || NETSTANDARD_2_0_GREATER
+                    if (string.Equals(unit, suffix))
+#else
                     if (string.Equals(unit, suffix, StringComparison.Ordinal))
+#endif
+                    {
                         return byteSize.Factor * long.Parse(value);
+                    }
                 }
             }
 
@@ -528,7 +538,11 @@ namespace Akka.Configuration.Hocon
             }
             if (IsArray())
             {
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+                return string.Format("[{0}]", string.Join(',', GetArray().Select(e => e.ToString(indent + 1))));
+#else
                 return string.Format("[{0}]", string.Join(",", GetArray().Select(e => e.ToString(indent + 1))));
+#endif
             }
             return "<<unknown value>>";
         }

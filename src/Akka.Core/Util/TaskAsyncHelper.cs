@@ -35,7 +35,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsSuccessfully(this Task task)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             return task.IsCompletedSuccessfully;
 #else
             return task.IsCompleted && !task.IsFaulted && !task.IsCanceled;
@@ -46,7 +46,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static bool IsSuccessfully<T>(this Task<T> task)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             return task.IsCompletedSuccessfully;
 #else
             return task.IsCompleted && !task.IsFaulted && !task.IsCanceled;
@@ -711,7 +711,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRunIfCompleted(Task task, IRunnable successor, out Task result)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             if (task.IsCompletedSuccessfully)
             {
                 result = FromRunnable(successor); return true;
@@ -759,7 +759,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRunIfCompleted(Task task, IRunnableTask successor, out Task result)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             if (task.IsCompletedSuccessfully)
             {
                 result = FromRunnable(successor); return true;
@@ -803,7 +803,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRunIfCompleted<TResult>(Task task, IRunnable<TResult> successor, out Task<TResult> result)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             if (task.IsCompletedSuccessfully)
             {
                 result = FromRunnable(successor); return true;
@@ -859,7 +859,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRunIfCompleted<TResult>(Task task, IRunnableTask<TResult> successor, out Task<TResult> result)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             if (task.IsCompletedSuccessfully)
             {
                 result = FromRunnable(successor); return true;
@@ -924,7 +924,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRunIfCompleted<TResult>(Task<TResult> task, IOverridingArgumentRunnable<TResult> successor, out Task result)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             if (task.IsCompletedSuccessfully)
             {
                 result = FromRunnable(successor, task.Result); return true;
@@ -985,7 +985,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRunIfCompleted<TResult>(Task<TResult> task, IOverridingArgumentRunnableTask<TResult> successor, out Task result)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             if (task.IsCompletedSuccessfully)
             {
                 result = FromRunnable(successor, task.Result); return true;
@@ -1044,7 +1044,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRunIfCompleted<TResult, TNewResult>(Task<TResult> task, IOverridingArgumentRunnable<TResult, TNewResult> successor, out Task<TNewResult> result)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             if (task.IsCompletedSuccessfully)
             {
                 result = FromRunnable(successor, task.Result); return true;
@@ -1113,7 +1113,7 @@ namespace Akka.Util
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private static bool TryRunIfCompleted<TResult, TNewResult>(Task<TResult> task, IOverridingArgumentRunnableTask<TResult, TNewResult> successor, out Task<TNewResult> result)
         {
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
             if (task.IsCompletedSuccessfully)
             {
                 result = FromRunnable(successor, task.Result); return true;
@@ -1166,7 +1166,7 @@ namespace Akka.Util
             {
                 var wrapped = (Tuple<IRunnable, TaskCompletionSource<object>>)state;
                 var tcs = wrapped.Item2;
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
                 if (task.IsCompletedSuccessfully)
                 {
                     try
@@ -1235,7 +1235,7 @@ namespace Akka.Util
             {
                 var wrapped = (Tuple<IRunnable<TResult>, TaskCompletionSource<TResult>>)state;
                 var tcs = wrapped.Item2;
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
                 if (task.IsCompletedSuccessfully)
                 {
                     try
@@ -1294,7 +1294,7 @@ namespace Akka.Util
             {
                 var wrapped = (Tuple<IOverridingArgumentRunnable<TResult>, TaskCompletionSource<object>>)state;
                 var tcs = wrapped.Item2;
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
                 if (task.IsCompletedSuccessfully)
                 {
                     try
@@ -1363,7 +1363,7 @@ namespace Akka.Util
             {
                 var wrapped = (Tuple<IOverridingArgumentRunnable<TResult, TNewResult>, TaskCompletionSource<TNewResult>>)state;
                 var tcs = wrapped.Item2;
-#if NETCOREAPP
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
                 if (task.IsCompletedSuccessfully)
                 {
                     try
