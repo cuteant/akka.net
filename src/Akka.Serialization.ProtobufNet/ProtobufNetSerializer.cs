@@ -2,7 +2,6 @@
 using System.Buffers;
 using System.IO;
 using Akka.Actor;
-using CuteAnt;
 using CuteAnt.Buffers;
 using ProtoBuf.Meta;
 
