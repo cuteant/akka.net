@@ -1,0 +1,21 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+  
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>$(CoreBenchmarkTfms)</TargetFramework>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BenchmarkDotNet" Version="$(BenchmarkDotNetPackageVersion)" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\src\Akka.Cluster\Akka.Cluster.csproj" />
+    <ProjectReference Include="..\..\src\Akka.DistributedData\Akka.DistributedData.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Persistence\Akka.Persistence.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Serialization.Json\Akka.Serialization.Json.csproj" />
+    <ProjectReference Include="..\..\src\Akka.Streams\Akka.Streams.csproj" />
+  </ItemGroup>
+
+</Project>
