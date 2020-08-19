@@ -20,10 +20,12 @@ using Akka.Tests.Actor;
 using Akka.Util.Internal;
 using FluentAssertions;
 using FluentAssertions.Extensions;
-using FsCheck;
-using FsCheck.Xunit;
 using Xunit;
 using Config = Akka.Configuration.Config;
+#if FSCHECK
+using FsCheck;
+using FsCheck.Xunit;
+#endif
 
 namespace Akka.Tests.Dispatch
 {

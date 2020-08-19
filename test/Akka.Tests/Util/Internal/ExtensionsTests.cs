@@ -11,9 +11,11 @@ using System.Linq;
 using Akka.TestKit;
 using Akka.Util.Internal;
 using FluentAssertions;
+using Xunit;
+#if FSCHECK
 using FsCheck;
 using FsCheck.Xunit;
-using Xunit;
+#endif
 
 namespace Akka.Tests.Util.Internal
 {
@@ -111,7 +113,6 @@ namespace Akka.Tests.Util.Internal
                     SplitDottedPathHonouringQuotesOracle(s).SequenceEqual(s.SplitDottedPathHonouringQuotes()))
                 .QuickCheckThrowOnFailure();
         }
-#endif
 
         private static IEnumerable<string> SplitDottedPathHonouringQuotesOracle(string path)
         {
@@ -142,6 +143,7 @@ namespace Akka.Tests.Util.Internal
                 return z;
             }
         }
+#endif
 
         /// <summary>
         /// Like selectMany, but alternates between two selectors (starting with even for item 0)

@@ -82,7 +82,8 @@ namespace Akka.Remote.Transport.DotNetty
                 default: throw new ArgumentException($"Unknown byte-order option [{byteOrderString}]. Supported options are: big-endian, little-endian.");
             }
 
-            var batchWriterSettings = new BatchWriterSettings(config.GetConfig("batching"));
+            var batchingConfig = config.GetConfig("batching");
+            var batchWriterSettings = batchingConfig is object ? new BatchWriterSettings(config.GetConfig("batching")) : BatchWriterSettings.Default;
 
             return new DotNettyTransportSettings(
                 transportMode: transportMode == "tcp" ? TransportMode.Tcp : TransportMode.Udp,
@@ -547,11 +548,13 @@ namespace Akka.Remote.Transport.DotNetty
     ///
     /// Configuration object for <see cref="BatchWriterHandler"/>
     /// </summary>
-    public class BatchWriterSettings
+    public sealed class BatchWriterSettings
     {
         public const int DefaultMaxPendingWrites = 30;
         public const long DefaultMaxPendingBytes = 16 * 1024L;
         public static readonly TimeSpan DefaultFlushInterval = TimeSpan.FromMilliseconds(40);
+
+        public static readonly BatchWriterSettings Default = new BatchWriterSettings();
 
         public BatchWriterSettings(Config hocon)
         {

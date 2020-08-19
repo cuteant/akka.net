@@ -5,6 +5,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+#if FSCHECK
 using System;
 using System.Linq;
 using System.Net;
@@ -53,3 +54,4 @@ namespace Akka.Cluster.Tests
         }
     }
 }
+#endif

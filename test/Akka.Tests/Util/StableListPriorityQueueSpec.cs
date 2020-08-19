@@ -5,6 +5,7 @@
 // // </copyright>
 // //-----------------------------------------------------------------------
 
+#if FSCHECK
 using System.Collections.Generic;
 using System.Linq;
 using Akka.Actor;
@@ -53,3 +54,4 @@ namespace Akka.Tests.Util
         }
     }
 }
+#endif

@@ -5,6 +5,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+#if FSCHECK
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
@@ -52,7 +53,7 @@ namespace Akka.Remote.Tests
             {
                 return
                     Arb.Default.PositiveInt()
-                        .Generator.Select(x => (Setup<PhiAccrualState, PhiAccrualModel>) new PhiAccrualSetup(x));
+                        .Generator.Select(x => (Setup<PhiAccrualState, PhiAccrualModel>)new PhiAccrualSetup(x));
             }
 
             private readonly PositiveInt _sampleSize;
@@ -64,7 +65,7 @@ namespace Akka.Remote.Tests
 
             public override PhiAccrualState Actual()
             {
-                return new PhiAccrualState() {History = HeartbeatHistory.Apply(_sampleSize.Get)};
+                return new PhiAccrualState() { History = HeartbeatHistory.Apply(_sampleSize.Get) };
             }
 
             public override PhiAccrualModel Model()
@@ -90,7 +91,7 @@ namespace Akka.Remote.Tests
                 //return Gen.Fresh(producer);
                 return
                     Arb.Default.Int64()
-                        .Generator.Select(x => (Operation<PhiAccrualState, PhiAccrualModel>) new NextInterval(x));
+                        .Generator.Select(x => (Operation<PhiAccrualState, PhiAccrualModel>)new NextInterval(x));
             }
 
             private readonly long _next;
@@ -145,11 +146,11 @@ namespace Akka.Remote.Tests
 
         public long IntervalSum => Intervals.Sum();
 
-        public long SquaredIntervalSum => Intervals.Select(x => (long) Math.Pow(x, 2.0)).Sum();
+        public long SquaredIntervalSum => Intervals.Select(x => (long)Math.Pow(x, 2.0)).Sum();
 
         public double Mean => (double)IntervalSum / Intervals.Count;
 
-        public double Variance => (double) SquaredIntervalSum / Intervals.Count - (Math.Pow(Mean, 2));
+        public double Variance => (double)SquaredIntervalSum / Intervals.Count - (Math.Pow(Mean, 2));
 
         public double StdDeviation => Math.Sqrt(Variance);
 
@@ -164,3 +165,4 @@ namespace Akka.Remote.Tests
         }
     }
 }
+#endif

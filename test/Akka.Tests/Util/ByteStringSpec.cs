@@ -5,6 +5,7 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
+#if FSCHECK
 using System;
 using System.Linq;
 using System.Text;
@@ -191,3 +192,4 @@ namespace Akka.Tests.Util
         }
     }
 }
+#endif

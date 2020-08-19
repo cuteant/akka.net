@@ -77,7 +77,7 @@ namespace Akka.Remote
 
         /// <summary>Obsolete. Use <see cref="Watch"/> or <see cref="ReceiveActor.Receive{T}(Action{T},
         /// Predicate{T})">Receive&lt; <see cref="Akka.Actor.Terminated"/>&gt;</see>.</summary>
-        [Obsolete("Use Context.Watch and Receive<Terminated> [1.1.0]")]
+        //[Obsolete("Use Context.Watch and Receive<Terminated> [1.1.0]")]
         public override bool IsTerminated => false;
 
         /// <summary>Gets the child.</summary>

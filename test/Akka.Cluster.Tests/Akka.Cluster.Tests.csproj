@@ -8,8 +8,17 @@
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <DefineConstants>$(DefineConstants);FSCHECK</DefineConstants>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
   </PropertyGroup>
+
+  <ItemGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+    <PackageReference Include="FsCheck" Version="$(FsCheckPackageVersion)" />
+    <PackageReference Include="FsCheck.Xunit" Version="$(FsCheckXunitPackageVersion)" />
+    <PackageReference Include="FSharp.Core" Version="$(FSharpCorePackageVersion)" />
+  </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\..\src\Akka.Cluster\Akka.Cluster.csproj" />

@@ -1093,7 +1093,7 @@ namespace Akka.Remote
             }
             else
             {
-                defaultPatternUseWriting = true;
+                _defaultPatternUseWriting = true;
                 Writing();
             }
         }
@@ -1149,13 +1149,13 @@ namespace Akka.Remote
             }
         }
 
-        private bool defaultPatternUseWriting;
+        private bool _defaultPatternUseWriting;
         private PatternMatchBuilder _writingPatterns;
         private PatternMatchBuilder WritingPatterns
         {
             get
             {
-                if (defaultPatternUseWriting) { return DefaultPatterns; }
+                if (_defaultPatternUseWriting) { return DefaultPatterns; }
                 if (_writingPatterns is null) { _writingPatterns = ConfigurePatterns(Writing); }
                 return _writingPatterns;
             }

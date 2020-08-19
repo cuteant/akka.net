@@ -16,8 +16,10 @@ using Akka.Util.Internal;
 using Xunit;
 using Xunit.Abstractions;
 using FluentAssertions;
-using FsCheck;
 using FluentAssertions.Extensions;
+#if FSCHECK
+using FsCheck;
+#endif
 
 namespace Akka.Tests.IO
 {
