@@ -64,9 +64,9 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         public static ByteString CopyFrom(byte[] array, int offset, int count)
         {
-            if (array is null) throw new ArgumentNullException(nameof(array));
+            if (array is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.array); }
 
-            if (count == 0) return Empty;
+            if (0u >= (uint)count) return Empty;
 
             if (offset < 0 || offset >= array.Length) throw new ArgumentOutOfRangeException(nameof(offset), $"Provided offset of [{offset}] is outside bounds of an array [{array.Length}]");
             if (count > array.Length - offset) throw new ArgumentException($"Provided length [{count}] of array to copy doesn't fit array length [{array.Length}] within given offset [{offset}]", nameof(count));
@@ -84,17 +84,20 @@ namespace Akka.IO
         /// <returns></returns>
         public static ByteString CopyFrom(IEnumerable<ByteBuffer> buffers)
         {
-            if (buffers is null) throw new ArgumentNullException(nameof(buffers));
+            if (buffers is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.buffers); }
 
             var array = (buffers as ByteBuffer[]) ?? buffers.ToArray();
             var count = 0;
-            foreach (var buffer in array)
-                count += buffer.Count;
+            for (int idx = 0; idx < array.Length; idx++)
+            {
+                count += array[idx].Count;
+            }
 
             var copy = new byte[count];
             var position = 0;
-            foreach (var buffer in array)
+            for (int i = 0; i < array.Length; i++)
             {
+                var buffer = array[i];
                 Array.Copy(buffer.Array, buffer.Offset, copy, position, buffer.Count);
                 position += buffer.Count;
             }
@@ -132,11 +135,11 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         public static ByteString FromBytes(byte[] array, int offset, int count)
         {
-            if (array is null) throw new ArgumentNullException(nameof(array));
+            if (array is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.array); }
             if (offset < 0 || (offset != 0 && offset >= array.Length)) throw new ArgumentOutOfRangeException(nameof(offset), $"Provided offset [{offset}] is outside bounds of an array");
             if (count > array.Length - offset) throw new ArgumentException($"Provided length of array to copy [{count}] doesn't fit array length [{array.Length}] and offset [{offset}].", nameof(count));
 
-            if (count == 0) return Empty;
+            if (0u >= (uint)count) return Empty;
 
             return new ByteString(array, offset, count);
         }
@@ -149,12 +152,14 @@ namespace Akka.IO
         /// </summary>
         public static ByteString FromBytes(IEnumerable<ByteBuffer> buffers)
         {
-            if (buffers is null) throw new ArgumentNullException(nameof(buffers));
+            if (buffers is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.buffers); }
 
             var array = (buffers as ByteBuffer[]) ?? buffers.ToArray();
             var count = 0;
-            foreach (var buffer in array)
-                count += buffer.Count;
+            for (int idx = 0; idx < array.Length; idx++)
+            {
+                count += array[idx].Count;
+            }
 
             return new ByteString(array, count);
         }
@@ -221,12 +226,12 @@ namespace Akka.IO
         /// block of memory.
         /// </summary>
         /// <returns>TBD</returns>
-        public bool IsCompact => 1 == _buffers.Length;
+        public bool IsCompact => 0u >= (uint)(_buffers.Length - 1);
 
         /// <summary>
         /// Determines if current <see cref="ByteString"/> is empty.
         /// </summary>
-        public bool IsEmpty => _count == 0;
+        public bool IsEmpty => 0u >= (uint)_count;
 
         /// <summary>
         /// Gets sequence of the buffers used underneat.
@@ -287,7 +292,7 @@ namespace Akka.IO
             if (count > _count - index) count = _count - index;
             if (count <= 0) return Empty;
 
-            if (index == 0 && count == _count) return this;
+            if (0u >= (uint)index && 0u >= (uint)(count - _count)) return this;
 
             var i = GetBufferFittingIndex(index, out int j);
             var init = _buffers[i];
@@ -324,7 +329,7 @@ namespace Akka.IO
         /// <returns></returns>
         private int GetBufferFittingIndex(int index, out int indexWithinBuffer)
         {
-            if (index == 0)
+            if (0u >= (uint)index)
             {
                 indexWithinBuffer = 0;
                 return 0;
@@ -455,7 +460,7 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         public ByteString Concat(ByteString other)
         {
-            if (other is null) throw new ArgumentNullException(nameof(other), "Cannot append null to ByteString.");
+            if (other is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.other); }
 
             if (other.IsEmpty) return this;
             if (this.IsEmpty) return other;
@@ -478,21 +483,22 @@ namespace Akka.IO
         /// <returns>TBD</returns>
         public int CopyTo(byte[] buffer, int index, int count)
         {
-            if (buffer is null) throw new ArgumentNullException(nameof(buffer));
+            if (buffer is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.buffer); }
             if (index < 0 || index >= buffer.Length) throw new ArgumentOutOfRangeException(nameof(index), "Provided index is outside the bounds of the buffer to copy to.");
             if (count > buffer.Length - index) throw new ArgumentException("Provided number of bytes to copy won't fit into provided buffer", nameof(count));
 
             count = Math.Min(count, _count);
             var remaining = count;
             var position = index;
-            foreach (var b in _buffers)
+            for (int i = 0; i < _buffers.Length; i++)
             {
+                ByteBuffer b = _buffers[i];
                 var toCopy = Math.Min(b.Count, remaining);
                 Array.Copy(b.Array, b.Offset, buffer, position, toCopy);
                 position += toCopy;
                 remaining -= toCopy;
 
-                if (remaining == 0) return count;
+                if (0u >= (uint)remaining) return count;
             }
 
             return 0;
@@ -505,10 +511,11 @@ namespace Akka.IO
         /// <param name="stream"></param>
         public void WriteTo(Stream stream)
         {
-            if (stream is null) throw new ArgumentNullException(nameof(stream));
+            if (stream is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.stream); }
 
-            foreach (var buffer in _buffers)
+            for (int idx = 0; idx < _buffers.Length; idx++)
             {
+                ByteBuffer buffer = _buffers[idx];
                 stream.Write(buffer.Array, buffer.Offset, buffer.Count);
             }
         }
@@ -520,10 +527,11 @@ namespace Akka.IO
         /// <param name="stream"></param>
         public async Task WriteToAsync(Stream stream)
         {
-            if (stream is null) throw new ArgumentNullException(nameof(stream));
+            if (stream is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.stream); }
 
-            foreach (var buffer in _buffers)
+            for (int idx = 0; idx < _buffers.Length; idx++)
             {
+                ByteBuffer buffer = _buffers[idx];
                 await stream.WriteAsync(buffer.Array, buffer.Offset, buffer.Count);
             }
         }
@@ -560,8 +568,9 @@ namespace Akka.IO
 
         public IEnumerator<byte> GetEnumerator()
         {
-            foreach (var buffer in _buffers)
+            for (int idx = 0; idx < _buffers.Length; idx++)
             {
+                var buffer = _buffers[idx];
                 for (int i = buffer.Offset; i < buffer.Offset + buffer.Count; i++)
                 {
                     yield return buffer.Array[i];
@@ -588,7 +597,7 @@ namespace Akka.IO
         public static bool operator !=(ByteString x, ByteString y) => !Equals(x, y);
 
         public static explicit operator ByteString(byte[] bytes) => ByteString.CopyFrom(bytes);
-        public static explicit operator byte[] (ByteString byteString) => byteString.ToArray();
+        public static explicit operator byte[](ByteString byteString) => byteString.ToArray();
         public static ByteString operator +(ByteString x, ByteString y) => x.Concat(y);
     }
 
