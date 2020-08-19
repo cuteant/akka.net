@@ -217,7 +217,8 @@ namespace Akka.Remote.Transport
             return Task.FromResult((IAssociationEventListener)this);
         }
 
-        private static readonly Action<IAssociationEventListener, FailureInjectorTransportAdapter> AfterSetupAssociationEventListenerAction = AfterSetupAssociationEventListener;
+        private static readonly Action<IAssociationEventListener, FailureInjectorTransportAdapter> AfterSetupAssociationEventListenerAction =
+            (l, o) => AfterSetupAssociationEventListener(l, o);
         private static void AfterSetupAssociationEventListener(IAssociationEventListener listener, FailureInjectorTransportAdapter owner)
         {
             // Side effecting: As this class is not an actor, the only way to safely modify state
@@ -248,7 +249,8 @@ namespace Akka.Remote.Transport
             }
         }
 
-        private static readonly Action<AssociationHandle, FailureInjectorTransportAdapter, TaskCompletionSource<AssociationHandle>> AfterConnectionIsOpenedAction = AfterConnectionIsOpened;
+        private static readonly Action<AssociationHandle, FailureInjectorTransportAdapter, TaskCompletionSource<AssociationHandle>> AfterConnectionIsOpenedAction =
+            (h, o, s) => AfterConnectionIsOpened(h, o, s);
         private static void AfterConnectionIsOpened(AssociationHandle handle, FailureInjectorTransportAdapter owner, TaskCompletionSource<AssociationHandle> statusPromise)
         {
             owner.addressChaosTable.AddOrUpdate(NakedAddress(handle.RemoteAddress), address => PassThru.Instance,
@@ -388,7 +390,7 @@ namespace Akka.Remote.Transport
             ReadHandlerSource.Task.Then(AfterSetupReadHandlerAction, this, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
         }
 
-        private static readonly Action<IHandleEventListener, FailureInjectorHandle> AfterSetupReadHandlerAction = AfterSetupReadHandler;
+        private static readonly Action<IHandleEventListener, FailureInjectorHandle> AfterSetupReadHandlerAction = (l, o) => AfterSetupReadHandler(l, o);
         private static void AfterSetupReadHandler(IHandleEventListener listener, FailureInjectorHandle owner)
         {
             Interlocked.Exchange(ref owner._upstreamListener, listener);

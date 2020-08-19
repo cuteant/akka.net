@@ -355,7 +355,7 @@ namespace Akka.DistributedData
             _log = Context.GetLogger();
             _maxDeltaSize = settings.MaxDeltaSize;
 
-            _localOnlyDeciderFunc = LocalOnlyDecider;
+            _localOnlyDeciderFunc = e => LocalOnlyDecider(e);
 
             if (_cluster.IsTerminated) ThrowHelper.ThrowArgumentException_ClusterNodeMustNotBeTerminated();
             if (!string.IsNullOrEmpty(_settings.Role) && !_cluster.SelfRoles.Contains(_settings.Role))
@@ -451,9 +451,9 @@ namespace Akka.DistributedData
 
             NormalReceive();
 
-            Receive<LoadData>(HandleLoadData);
-            Receive<LoadAllCompleted>(HandleLoadAllCompleted);
-            Receive<GetReplicaCount>(HandleGetReplicaCount0);
+            Receive<LoadData>(e => HandleLoadData(e));
+            Receive<LoadAllCompleted>(e => HandleLoadAllCompleted(e));
+            Receive<GetReplicaCount>(e => HandleGetReplicaCount0(e));
 
             // ignore scheduled ticks when loading durable data
             Receive<RemovedNodePruningTick>(Ignore);
@@ -496,31 +496,31 @@ namespace Akka.DistributedData
 
         private void NormalReceive()
         {
-            Receive<Get>(ReceiveGet);
-            Receive<Update>(ReceiveUpdate);
-            Receive<Read>(ReceiveRead);
-            Receive<Write>(ReceiveWrite);
-            Receive<ReadRepair>(ReceiveReadRepair);
-            Receive<DeltaPropagation>(ReceiveDeltaPropagation);
-            Receive<FlushChanges>(ReceiveFlushChanges);
-            Receive<DeltaPropagationTick>(ReceiveDeltaPropagationTick);
-            Receive<GossipTick>(ReceiveGossipTick);
-            Receive<ClockTick>(ReceiveClockTick);
-            Receive<Internal.Status>(ReceiveStatus);
-            Receive<Gossip>(ReceiveGossip);
-            Receive<Subscribe>(ReceiveSubscribe);
-            Receive<Unsubscribe>(ReceiveUnsubscribe);
-            Receive<Terminated>(ReceiveTerminated);
-            Receive<ClusterEvent.MemberWeaklyUp>(ReceiveMemberWeaklyUp);
-            Receive<ClusterEvent.MemberUp>(ReceiveMemberUp);
-            Receive<ClusterEvent.MemberRemoved>(ReceiveMemberRemoved);
+            Receive<Get>(e => ReceiveGet(e));
+            Receive<Update>(e => ReceiveUpdate(e));
+            Receive<Read>(e => ReceiveRead(e));
+            Receive<Write>(e => ReceiveWrite(e));
+            Receive<ReadRepair>(e => ReceiveReadRepair(e));
+            Receive<DeltaPropagation>(e => ReceiveDeltaPropagation(e));
+            Receive<FlushChanges>(e => ReceiveFlushChanges(e));
+            Receive<DeltaPropagationTick>(e => ReceiveDeltaPropagationTick(e));
+            Receive<GossipTick>(e => ReceiveGossipTick(e));
+            Receive<ClockTick>(e => ReceiveClockTick(e));
+            Receive<Internal.Status>(e => ReceiveStatus(e));
+            Receive<Gossip>(e => ReceiveGossip(e));
+            Receive<Subscribe>(e => ReceiveSubscribe(e));
+            Receive<Unsubscribe>(e => ReceiveUnsubscribe(e));
+            Receive<Terminated>(e => ReceiveTerminated(e));
+            Receive<ClusterEvent.MemberWeaklyUp>(e => ReceiveMemberWeaklyUp(e));
+            Receive<ClusterEvent.MemberUp>(e => ReceiveMemberUp(e));
+            Receive<ClusterEvent.MemberRemoved>(e => ReceiveMemberRemoved(e));
             Receive<ClusterEvent.IMemberEvent>(m => ReceiveOtherMemberEvent(m.Member));
-            Receive<ClusterEvent.UnreachableMember>(ReceiveUnreachable);
-            Receive<ClusterEvent.ReachableMember>(ReceiveReachable);
-            Receive<GetKeyIds>(ReceiveGetKeyIds);
-            Receive<Delete>(ReceiveDelete);
-            Receive<RemovedNodePruningTick>(ReceiveRemovedNodePruningTick);
-            Receive<GetReplicaCount>(ReceiveGetReplicaCount);
+            Receive<ClusterEvent.UnreachableMember>(e => ReceiveUnreachable(e));
+            Receive<ClusterEvent.ReachableMember>(e => ReceiveReachable(e));
+            Receive<GetKeyIds>(e => ReceiveGetKeyIds(e));
+            Receive<Delete>(e => ReceiveDelete(e));
+            Receive<RemovedNodePruningTick>(e => ReceiveRemovedNodePruningTick(e));
+            Receive<GetReplicaCount>(e => ReceiveGetReplicaCount(e));
         }
 
         private void IgnoreDebug<T>(T msg)

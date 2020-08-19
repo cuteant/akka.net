@@ -41,7 +41,7 @@ namespace Akka.Cluster
 
         public CoordinatedShutdownLeave()
         {
-            Receive<LeaveReq>(HandleLeaveReq);
+            Receive<LeaveReq>(e => HandleLeaveReq(e));
         }
 
         private void HandleLeaveReq(LeaveReq req)

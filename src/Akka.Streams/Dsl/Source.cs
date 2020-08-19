@@ -186,7 +186,8 @@ namespace Akka.Streams.Dsl
             // if it remain alone in generic params list (no need to provide types that will be infered)
             var askFlow = Flow.Create<TOut>()
                 .Watch(actorRef)
-                .SelectAsync(parallelism, async e => {
+                .SelectAsync(parallelism, async e =>
+                {
                     var reply = await actorRef.Ask(e, timeout: timeout);
                     switch (reply)
                     {
@@ -979,7 +980,7 @@ namespace Akka.Streams.Dsl
 
         static class Helper<T>
         {
-            public static readonly Func<Action<T>, EventHandler<T>> ConversionFunc = Conversion;
+            public static readonly Func<Action<T>, EventHandler<T>> ConversionFunc = e => Conversion(e);
 
             private static EventHandler<T> Conversion(Action<T> onEvent)
             {

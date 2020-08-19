@@ -69,7 +69,7 @@ namespace Akka.Cluster
         /// A snapshot of the current state of the <see cref="Cluster"/>
         /// </summary>
         [MessagePackObject]
-        public sealed class CurrentClusterState: INoSerializationVerificationNeeded
+        public sealed class CurrentClusterState : INoSerializationVerificationNeeded
         {
             /// <summary>
             /// Creates a new instance of the current cluster state.
@@ -1025,14 +1025,14 @@ namespace Akka.Cluster
             _latestGossip = Gossip.Empty;
             _eventStream = Context.System.EventStream;
 
-            _publishAction = Publish;
+            _publishAction = e => Publish(e);
 
-            Receive<InternalClusterAction.PublishChanges>(HandlePublishChanges);
-            Receive<ClusterEvent.CurrentInternalStats>(PublishInternalStats);
-            Receive<InternalClusterAction.SendCurrentClusterState>(HandleSendCurrentClusterState);
-            Receive<InternalClusterAction.Subscribe>(HandleSubscribe);
-            Receive<InternalClusterAction.Unsubscribe>(HandleUnsubscribe);
-            Receive<InternalClusterAction.PublishEvent>(HandlePublishEvent);
+            Receive<InternalClusterAction.PublishChanges>(e => HandlePublishChanges(e));
+            Receive<ClusterEvent.CurrentInternalStats>(e => PublishInternalStats(e));
+            Receive<InternalClusterAction.SendCurrentClusterState>(e => HandleSendCurrentClusterState(e));
+            Receive<InternalClusterAction.Subscribe>(e => HandleSubscribe(e));
+            Receive<InternalClusterAction.Unsubscribe>(e => HandleUnsubscribe(e));
+            Receive<InternalClusterAction.PublishEvent>(e => HandlePublishEvent(e));
         }
 
         private void HandlePublishChanges(InternalClusterAction.PublishChanges newGossip)

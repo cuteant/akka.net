@@ -67,7 +67,7 @@ namespace Akka.Actor
             return promiseRef.Result.LinkOutcome(InvokeGracefulStopFunc, internalTarget, promiseRef, TaskContinuationOptions.ExecuteSynchronously);
         }
 
-        private static readonly Func<Task<object>, IInternalActorRef, PromiseActorRef, bool> InvokeGracefulStopFunc = InvokeGracefulStop;
+        private static readonly Func<Task<object>, IInternalActorRef, PromiseActorRef, bool> InvokeGracefulStopFunc = (t, ar, pr) => InvokeGracefulStop(t, ar, pr);
         private static bool InvokeGracefulStop(Task<object> t, IInternalActorRef internalTarget, PromiseActorRef promiseRef)
         {
             if (t.IsSuccessfully())

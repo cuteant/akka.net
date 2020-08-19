@@ -35,7 +35,7 @@ namespace Akka.Cluster
             _selfHeartbeatRsp = new Lazy<ClusterHeartbeatSender.HeartbeatRsp>(() =>
                 new ClusterHeartbeatSender.HeartbeatRsp(Cluster.Get(Context.System).SelfUniqueAddress));
 
-            Receive<ClusterHeartbeatSender.Heartbeat>(HandleHeartbeat);
+            Receive<ClusterHeartbeatSender.Heartbeat>(e => HandleHeartbeat(e));
         }
 
         private void HandleHeartbeat(ClusterHeartbeatSender.Heartbeat heartbeat)
@@ -126,7 +126,7 @@ namespace Akka.Cluster
 
         private void Initializing()
         {
-            Receive<ClusterEvent.CurrentClusterState>(HandleCurrentClusterState);
+            Receive<ClusterEvent.CurrentClusterState>(e => HandleCurrentClusterState(e));
             Receive<HeartbeatTick>(tick =>
             {
                 _tickTimestamp = DateTime.UtcNow; // start checks when active
@@ -142,13 +142,13 @@ namespace Akka.Cluster
 
         private void Active()
         {
-            Receive<HeartbeatTick>(DoHeartbeat);
-            Receive<HeartbeatRsp>(DoHeartbeatRsp);
-            Receive<ClusterEvent.MemberRemoved>(RemoveMember);
-            Receive<ClusterEvent.IMemberEvent>(AddMember);
-            Receive<ClusterEvent.UnreachableMember>(UnreachableMember);
-            Receive<ClusterEvent.ReachableMember>(ReachableMember);
-            Receive<ExpectedFirstHeartbeat>(TriggerFirstHeart);
+            Receive<HeartbeatTick>(e => DoHeartbeat(e));
+            Receive<HeartbeatRsp>(e => DoHeartbeatRsp(e));
+            Receive<ClusterEvent.MemberRemoved>(e => RemoveMember(e));
+            Receive<ClusterEvent.IMemberEvent>(e => AddMember(e));
+            Receive<ClusterEvent.UnreachableMember>(e => UnreachableMember(e));
+            Receive<ClusterEvent.ReachableMember>(e => ReachableMember(e));
+            Receive<ExpectedFirstHeartbeat>(e => TriggerFirstHeart(e));
         }
 
         private void Init(ClusterEvent.CurrentClusterState snapshot)

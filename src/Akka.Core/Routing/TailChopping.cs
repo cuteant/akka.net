@@ -122,8 +122,8 @@ namespace Akka.Routing
             completion.Task.PipeTo(sender);
         }
 
-        private static readonly Action<Task<object>, Cancelable> InvokeCancelAction = InvokeCancel;
-        private static void InvokeCancel(Task<object> t, Cancelable cancelable) => cancelable.Cancel(false);
+        private static readonly Action<Task<object>, Cancelable> InvokeCancelAction = (t, s) => InvokeCancel(s);
+        private static void InvokeCancel(/*Task<object> t, */Cancelable cancelable) => cancelable.Cancel(false);
 
         sealed class ScheduledRunnable : IRunnable
         {
@@ -153,7 +153,7 @@ namespace Akka.Routing
                 try
                 {
 
-                    _completion.TrySetResult(await(routees[currentIndex].Ask(_message, within)).ConfigureAwait(false));
+                    _completion.TrySetResult(await (routees[currentIndex].Ask(_message, within)).ConfigureAwait(false));
                 }
                 catch (TaskCanceledException)
                 {

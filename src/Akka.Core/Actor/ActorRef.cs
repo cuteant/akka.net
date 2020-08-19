@@ -91,8 +91,8 @@ namespace Akka.Actor
             _result.Task.LinkOutcome(InvokeUnRegisterAction, this);
         }
 
-        private static readonly Action<Task<object>, FutureActorRef> InvokeUnRegisterAction = InvokeUnRegister;
-        private static void InvokeUnRegister(Task<object> t, FutureActorRef owner) => owner._unregister();
+        private static readonly Action<Task<object>, FutureActorRef> InvokeUnRegisterAction = (t, s) => InvokeUnRegister(s);
+        private static void InvokeUnRegister(/*Task<object> t, */FutureActorRef owner) => owner._unregister();
 
         /// <summary>
         /// TBD

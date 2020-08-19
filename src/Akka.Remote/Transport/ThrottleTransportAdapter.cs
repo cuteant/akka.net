@@ -112,13 +112,13 @@ namespace Akka.Remote.Transport
             }
         }
 
-        private static readonly Func<object, bool> AfterSetThrottleFunc = AfterSetThrottle;
+        private static readonly Func<object, bool> AfterSetThrottleFunc = r => AfterSetThrottle(r);
         private static bool AfterSetThrottle(object result)
         {
             return result is SetThrottleAck;
         }
 
-        private static readonly Func<object, bool> AfterForceDisassociateFunc = AfterForceDisassociate;
+        private static readonly Func<object, bool> AfterForceDisassociateFunc = r => AfterForceDisassociate(r);
         private static bool AfterForceDisassociate(object result)
         {
             return result is ForceDisassociateAck;
@@ -396,7 +396,7 @@ namespace Akka.Remote.Transport
             }
         }
 
-        private static readonly Action<Task<AssociationHandle>, IActorRef, AssociateUnderlying> AfterAssociateAction = AfterAssociate;
+        private static readonly Action<Task<AssociationHandle>, IActorRef, AssociateUnderlying> AfterAssociateAction = (t, s, u) => AfterAssociate(t, s, u);
         private static void AfterAssociate(Task<AssociationHandle> tr, IActorRef self, AssociateUnderlying ua)
         {
             if (tr.IsSuccessfully())
@@ -965,19 +965,19 @@ namespace Akka.Remote.Transport
 
         private void InitializeFSM()
         {
-            When(ThrottlerState.WaitExposedHandle, HandleWhenWaitExposedHandle);
+            When(ThrottlerState.WaitExposedHandle, e => HandleWhenWaitExposedHandle(e));
 
-            When(ThrottlerState.WaitOrigin, HandleWhenWaitOrigin);
+            When(ThrottlerState.WaitOrigin, e => HandleWhenWaitOrigin(e));
 
-            When(ThrottlerState.WaitMode, HandleWhenWaitMode);
+            When(ThrottlerState.WaitMode, e => HandleWhenWaitMode(e));
 
-            When(ThrottlerState.WaitUpstreamListener, HandleWhenWaitUpstreamListener);
+            When(ThrottlerState.WaitUpstreamListener, e => HandleWhenWaitUpstreamListener(e));
 
-            When(ThrottlerState.WaitModeAndUpstreamListener, HandleWhenWaitModeAndUpstreamListener);
+            When(ThrottlerState.WaitModeAndUpstreamListener, e => HandleWhenWaitModeAndUpstreamListener(e));
 
-            When(ThrottlerState.Throttling, HandleWhenThrottling);
+            When(ThrottlerState.Throttling, e => HandleWhenThrottling(e));
 
-            WhenUnhandled(HandleWhenUnhandled);
+            WhenUnhandled(e => HandleWhenUnhandled(e));
 
             if (Inbound)
             {

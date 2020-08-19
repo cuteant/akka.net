@@ -163,7 +163,7 @@ namespace Akka.Remote.Transport.DotNetty
             }
         }
 
-        private static readonly Action<Task<IAssociationEventListener>, IChannel> InvokeResumeAcceptingIncomingConnsAction = InvokeResumeAcceptingIncomingConns;
+        private static readonly Action<Task<IAssociationEventListener>, IChannel> InvokeResumeAcceptingIncomingConnsAction = (r, c) => InvokeResumeAcceptingIncomingConns(r, c);
         private static void InvokeResumeAcceptingIncomingConns(Task<IAssociationEventListener> result, IChannel newServerChannel)
             => newServerChannel.Configuration.IsAutoRead = true;
 

@@ -705,7 +705,7 @@ namespace Akka.Cluster.Tools.Singleton
             _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "singleton-exiting-2", InvokeSingletonExitingFunc, this, Self);
         }
 
-        private static readonly Func<ClusterSingletonManager, Task<Done>> InvokeWaitSingletonExitingFunc = InvokeWaitSingletonExiting;
+        private static readonly Func<ClusterSingletonManager, Task<Done>> InvokeWaitSingletonExitingFunc = o => InvokeWaitSingletonExiting(o);
         private static Task<Done> InvokeWaitSingletonExiting(ClusterSingletonManager owner)
         {
             var cluster = owner._cluster;
@@ -715,7 +715,7 @@ namespace Akka.Cluster.Tools.Singleton
                 return owner._memberExitingProgress.Task;
         }
 
-        private static readonly Func<ClusterSingletonManager, IActorRef, Task<Done>> InvokeSingletonExitingFunc = InvokeSingletonExiting;
+        private static readonly Func<ClusterSingletonManager, IActorRef, Task<Done>> InvokeSingletonExitingFunc = (o, s) => InvokeSingletonExiting(o, s);
         private static Task<Done> InvokeSingletonExiting(ClusterSingletonManager owner, IActorRef self)
         {
             var cluster = owner._cluster;
@@ -899,27 +899,27 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void InitializeFSM()
         {
-            When(ClusterSingletonState.Start, HandleWhenStart);
+            When(ClusterSingletonState.Start, e => HandleWhenStart(e));
 
-            When(ClusterSingletonState.Younger, HandleWhenYounger);
+            When(ClusterSingletonState.Younger, e => HandleWhenYounger(e));
 
-            When(ClusterSingletonState.BecomingOldest, HandleWhenBecomingOldest);
+            When(ClusterSingletonState.BecomingOldest, e => HandleWhenBecomingOldest(e));
 
-            When(ClusterSingletonState.AcquiringLease, HandleWhenAcquiringLease);
+            When(ClusterSingletonState.AcquiringLease, e => HandleWhenAcquiringLease(e));
 
-            When(ClusterSingletonState.Oldest, HandleWhenOldest);
+            When(ClusterSingletonState.Oldest, e => HandleWhenOldest(e));
 
-            When(ClusterSingletonState.WasOldest, HandleWhenWasOldest);
+            When(ClusterSingletonState.WasOldest, e => HandleWhenWasOldest(e));
 
-            When(ClusterSingletonState.HandingOver, HandleWhenHandingOver);
+            When(ClusterSingletonState.HandingOver, e => HandleWhenHandingOver(e));
 
-            When(ClusterSingletonState.Stopping, HandleWhenStopping);
+            When(ClusterSingletonState.Stopping, e => HandleWhenStopping(e));
 
-            When(ClusterSingletonState.End, HandleWhenEnd);
+            When(ClusterSingletonState.End, e => HandleWhenEnd(e));
 
-            WhenUnhandled(HandleWhenUnhandled);
+            WhenUnhandled(e => HandleWhenUnhandled(e));
 
-            OnTransition(new TransitionHandler(HandleTransition));
+            OnTransition((s, ns) => HandleTransition(s, ns));
 
             StartWith(ClusterSingletonState.Start, Uninitialized.Instance);
         }

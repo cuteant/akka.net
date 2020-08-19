@@ -406,7 +406,7 @@ namespace Akka.Remote
             _currentHandle = handleOrActive;
             _receiveBuffers = receiveBuffers;
 
-            _localOnlyDeciderFunc = LocalOnlyDecider;
+            _localOnlyDeciderFunc = e => LocalOnlyDecider(e);
 
             Reset(); // needs to be called at startup
             _writer = CreateWriter(); // need to create writer at startup
@@ -551,14 +551,14 @@ namespace Akka.Remote
         /// <exception cref="HopelessAssociation">TBD</exception>
         private void Receiving()
         {
-            Receive<EndpointWriter.FlushAndStop>(HandleEndpointWriterFlushAndStop);
+            Receive<EndpointWriter.FlushAndStop>(e => HandleEndpointWriterFlushAndStop(e));
             Receive<IsIdle>(PatternMatch<IsIdle>.EmptyAction); // Do not reply, we will Terminate soon, or send a GotUid
-            Receive<EndpointManager.Send>(HandleSend);
-            Receive<Ack>(HandleAck);
-            Receive<AttemptSysMsgRedelivery>(HandleAttemptSysMsgRedelivery);
-            Receive<Terminated>(HandleTerminated);
-            Receive<GotUid>(HandleGotUid);
-            Receive<EndpointWriter.StopReading>(HandleEndpointWriterStopReading);
+            Receive<EndpointManager.Send>(e => HandleSend(e));
+            Receive<Ack>(e => HandleAck(e));
+            Receive<AttemptSysMsgRedelivery>(e => HandleAttemptSysMsgRedelivery(e));
+            Receive<Terminated>(e => HandleTerminated(e));
+            Receive<GotUid>(e => HandleGotUid(e));
+            Receive<EndpointWriter.StopReading>(e => HandleEndpointWriterStopReading(e));
             Receive<Ungate>(PatternMatch<Ungate>.EmptyAction); //ok, not gated
         }
 
@@ -678,8 +678,8 @@ namespace Akka.Remote
                 if (_writerTerminatedGatedPatterns is null) { _writerTerminatedGatedPatterns = ConfigurePatterns(() => Gated(true, earlyUngateRequested)); }
                 Become(_writerTerminatedGatedPatterns);
             }
-            Receive<Terminated>(LocalHandleTerminated);
-            Receive<IsIdle>(HandleIsIdle);
+            Receive<Terminated>(e => LocalHandleTerminated(e));
+            Receive<IsIdle>(e => HandleIsIdle(e));
             void LocalHandleUngate(Ungate ungate)
             {
                 if (!writerTerminated)
@@ -719,12 +719,12 @@ namespace Akka.Remote
                     GoToIdle();
                 }
             }
-            Receive<Ungate>(LocalHandleUngate);
+            Receive<Ungate>(e => LocalHandleUngate(e));
             Receive<AttemptSysMsgRedelivery>(PatternMatch<AttemptSysMsgRedelivery>.EmptyAction); // Ignore
             Receive<EndpointManager.Send>(send => send.Message is ISystemMessage, send => TryBuffer(send.Copy(NextSeq())));
             Receive<EndpointManager.Send>(send => Context.System.DeadLetters.Tell(send));
             Receive<EndpointWriter.FlushAndStop>(flush => Context.Stop(Self));
-            Receive<EndpointWriter.StopReading>(HandleEndpointWriterStopReadingGated);
+            Receive<EndpointWriter.StopReading>(e => HandleEndpointWriterStopReadingGated(e));
         }
 
         private void HandleEndpointWriterStopReadingGated(EndpointWriter.StopReading stop)
@@ -740,13 +740,13 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         private void IdleBehavior()
         {
-            Receive<IsIdle>(HandleIsIdle);
-            Receive<EndpointManager.Send>(HandleEndpointManagerSendIdle);
+            Receive<IsIdle>(e => HandleIsIdle(e));
+            Receive<EndpointManager.Send>(e => HandleEndpointManagerSendIdle(e));
 
-            Receive<AttemptSysMsgRedelivery>(HandleAttemptSysMsgRedeliveryIdle);
-            Receive<TooLongIdle>(HandleTooLongIdle);
-            Receive<EndpointWriter.FlushAndStop>(HandleEndpointWriterFlushAndStopIdle);
-            Receive<EndpointWriter.StopReading>(HandleEndpointWriterStopReadingIdle);
+            Receive<AttemptSysMsgRedelivery>(e => HandleAttemptSysMsgRedeliveryIdle(e));
+            Receive<TooLongIdle>(e => HandleTooLongIdle(e));
+            Receive<EndpointWriter.FlushAndStop>(e => HandleEndpointWriterFlushAndStopIdle(e));
+            Receive<EndpointWriter.StopReading>(e => HandleEndpointWriterStopReadingIdle(e));
             Receive<Ungate>(PatternMatch<Ungate>.EmptyAction); //ok, not gated
         }
 
@@ -791,7 +791,7 @@ namespace Akka.Remote
         private void FlushWait()
         {
             Receive<IsIdle>(PatternMatch<IsIdle>.EmptyAction); // Do not reply, we will Terminate soon, which will do the inbound connection unstashing
-            Receive<Terminated>(HandleTerminatedFlushWait);
+            Receive<Terminated>(e => HandleTerminatedFlushWait(e));
             ReceiveAny(PatternMatch<object>.EmptyAction); // ignore
         }
 
@@ -1083,9 +1083,9 @@ namespace Akka.Remote
             _handle = handleOrActive;
             _remoteMetrics = RemoteMetricsExtension.Create(_system.AsInstanceOf<ExtendedActorSystem>());
 
-            _localOnlyDeciderFunc = LocalOnlyDecider;
-            _writeSendFunc = new Predicate<EndpointManager.Send>(WriteSend);
-            _sendSuccessFunc = new Predicate<object>(SendSuccess);
+            _localOnlyDeciderFunc = e => LocalOnlyDecider(e);
+            _writeSendFunc = s => WriteSend(s);
+            _sendSuccessFunc = s => SendSuccess(s);
 
             if (_handle is null)
             {
@@ -1239,30 +1239,30 @@ namespace Akka.Remote
 
         private void Initializing()
         {
-            Receive<EndpointManager.Send>(HandleEndpointManagerSend);
-            Receive<Status.Failure>(HandleStatusFailure);
-            Receive<Handle>(HandleHandle);
+            Receive<EndpointManager.Send>(e => HandleEndpointManagerSend(e));
+            Receive<Status.Failure>(e => HandleStatusFailure(e));
+            Receive<Handle>(e => HandleHandle(e));
         }
 
         private void Buffering()
         {
-            Receive<EndpointManager.Send>(HandleEndpointManagerSend);
-            Receive<BackoffTimer>(HandleBackoffTimer);
-            Receive<FlushAndStop>(HandleFlushAndStopBuffering);
-            Receive<FlushAndStopTimeout>(HandleFlushAndStopTimeout);
+            Receive<EndpointManager.Send>(e => HandleEndpointManagerSend(e));
+            Receive<BackoffTimer>(e => HandleBackoffTimer(e));
+            Receive<FlushAndStop>(e => HandleFlushAndStopBuffering(e));
+            Receive<FlushAndStopTimeout>(e => HandleFlushAndStopTimeout(e));
         }
 
         private void Writing()
         {
-            Receive<EndpointManager.Send>(HandSendWriting);
-            Receive<FlushAndStop>(HandleFlushAndStopWriting);
-            Receive<AckIdleCheckTimer>(HandleAckIdleCheckTimer);
+            Receive<EndpointManager.Send>(e => HandSendWriting(e));
+            Receive<FlushAndStop>(e => HandleFlushAndStopWriting(e));
+            Receive<AckIdleCheckTimer>(e => HandleAckIdleCheckTimer(e));
         }
 
         private void Handoff()
         {
-            Receive<Terminated>(HandleTerminated);
-            Receive<EndpointManager.Send>(HandleEndpointManagerSend);
+            Receive<Terminated>(e => HandleTerminated(e));
+            Receive<EndpointManager.Send>(e => HandleEndpointManagerSend(e));
         }
 
         private void HandSendWriting(EndpointManager.Send s)
@@ -1969,9 +1969,9 @@ namespace Akka.Remote
 
         private void Reading()
         {
-            Receive<InboundPayload>(HandleInboundPayload);
-            Receive<Disassociated>(HandleDisassociated);
-            Receive<EndpointWriter.StopReading>(HandleStopReading);
+            Receive<InboundPayload>(e => HandleInboundPayload(e));
+            Receive<Disassociated>(e => HandleDisassociated(e));
+            Receive<EndpointWriter.StopReading>(e => HandleStopReading(e));
         }
 
         private void HandleInboundPayload(InboundPayload inbound)
@@ -2051,9 +2051,9 @@ namespace Akka.Remote
 
         private void NotReading()
         {
-            Receive<Disassociated>(HandleDisassociated);
-            Receive<EndpointWriter.StopReading>(HandleStopReadingNotReading);
-            Receive<InboundPayload>(HandleInboundPayloadNotReading);
+            Receive<Disassociated>(e => HandleDisassociated(e));
+            Receive<EndpointWriter.StopReading>(e => HandleStopReadingNotReading(e));
+            Receive<InboundPayload>(e => HandleInboundPayloadNotReading(e));
             ReceiveAny(PatternMatch<object>.EmptyAction); // ignore
         }
 

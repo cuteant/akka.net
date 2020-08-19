@@ -198,7 +198,7 @@ namespace Akka.Actor
             _rootPath = new RootActorPath(new Address("akka", systemName));
             _log = Logging.GetLogger(eventStream, "LocalActorRefProvider(" + _rootPath.Address + ")");
 
-            _localOnlyDeciderFunc = LocalOnlyDecider;
+            _localOnlyDeciderFunc = e => LocalOnlyDecider(e);
 
             if (deadLettersFactory is null)
                 deadLettersFactory = p => new DeadLetterActorRef(this, p, _eventStream);

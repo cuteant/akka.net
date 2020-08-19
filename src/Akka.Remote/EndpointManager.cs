@@ -330,7 +330,7 @@ namespace Akka.Remote
             _log = log;
             _eventPublisher = new EventPublisher(Context.System, log, Logging.LogLevelFor(_settings.RemoteLifecycleEventsLogLevel));
 
-            _onlyDeciderStrategyFunc = OnlyDeciderStrategy;
+            _onlyDeciderStrategyFunc = e => OnlyDeciderStrategy(e);
 
             _acceptingPatterns = ConfigurePatterns(Accepting);
             _flushingPatterns = ConfigurePatterns(Flushing);
@@ -570,18 +570,18 @@ namespace Akka.Remote
             * those results will then be piped back to Remoting, who waits for the results of
             * listen.AddressPromise.
             * */
-            Receive<Listen>(HandleListen);
+            Receive<Listen>(e => HandleListen(e));
 
-            Receive<ListensResult>(HandleListensResult);
+            Receive<ListensResult>(e => HandleListensResult(e));
 
-            Receive<ListensFailure>(HandleListensFailure);
+            Receive<ListensFailure>(e => HandleListensFailure(e));
 
             // defer the inbound association until we can enter "Accepting" behavior
 
-            Receive<InboundAssociation>(HandleInboundAssociationDefault);
-            Receive<ManagementCommand>(HandleManagementCommand);
-            Receive<StartupFinished>(HandleStartupFinished);
-            Receive<ShutdownAndFlush>(HandleShutdownAndFlush);
+            Receive<InboundAssociation>(e => HandleInboundAssociationDefault(e));
+            Receive<ManagementCommand>(e => HandleManagementCommand(e));
+            Receive<StartupFinished>(e => HandleStartupFinished(e));
+            Receive<ShutdownAndFlush>(e => HandleShutdownAndFlush(e));
         }
 
         private void HandleListen(Listen listen)
@@ -591,7 +591,8 @@ namespace Akka.Remote
                    .PipeTo(Self);
         }
 
-        private static readonly Func<Task<List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>>, Listen, INoSerializationVerificationNeeded> InvokeHandleListenFunc = InvokeHandleListen;
+        private static readonly Func<Task<List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>>, Listen, INoSerializationVerificationNeeded> InvokeHandleListenFunc =
+            (t, l) => InvokeHandleListen(t, l);
         private static INoSerializationVerificationNeeded InvokeHandleListen(Task<List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>> listens, Listen listen)
         {
             if (listens.IsSuccessfully())
@@ -663,25 +664,25 @@ namespace Akka.Remote
         /// inbound association requests.</summary>
         private void Accepting()
         {
-            Receive<ManagementCommand>(HandleManagementCommandAccepting);
+            Receive<ManagementCommand>(e => HandleManagementCommandAccepting(e));
 
-            Receive<Quarantine>(HandleQuarantine);
+            Receive<Quarantine>(e => HandleQuarantine(e));
 
-            Receive<Send>(HandleSend);
+            Receive<Send>(e => HandleSend(e));
 
-            Receive<InboundAssociation>(HandleInboundAssociation);
-            Receive<EndpointWriter.StoppedReading>(HandleEndpointWriterStoppedReading);
+            Receive<InboundAssociation>(e => HandleInboundAssociation(e));
+            Receive<EndpointWriter.StoppedReading>(e => HandleEndpointWriterStoppedReading(e));
 
-            Receive<Terminated>(HandleTerminated);
+            Receive<Terminated>(e => HandleTerminated(e));
 
-            Receive<EndpointWriter.TookOver>(HandleEndpointWriterTookOver);
+            Receive<EndpointWriter.TookOver>(e => HandleEndpointWriterTookOver(e));
 
-            Receive<ReliableDeliverySupervisor.GotUid>(HandleGotUid);
+            Receive<ReliableDeliverySupervisor.GotUid>(e => HandleGotUid(e));
 
-            Receive<ReliableDeliverySupervisor.Idle>(HandleIdle);
-            Receive<Prune>(HandlePrune);
+            Receive<ReliableDeliverySupervisor.Idle>(e => HandleIdle(e));
+            Receive<Prune>(e => HandlePrune(e));
 
-            Receive<ShutdownAndFlush>(HandleShutdownAndFlushAccepting);
+            Receive<ShutdownAndFlush>(e => HandleShutdownAndFlushAccepting(e));
         }
 
         #region HandleManagementCommand
@@ -700,7 +701,7 @@ namespace Akka.Remote
                 .PipeTo(sender);
         }
 
-        private static readonly Func<Task<bool[]>, ManagementCommandAck> CheckManagementCommandFunc = CheckManagementCommand;
+        private static readonly Func<Task<bool[]>, ManagementCommandAck> CheckManagementCommandFunc = t => CheckManagementCommand(t);
         private static ManagementCommandAck CheckManagementCommand(Task<bool[]> t)
         {
             return new ManagementCommandAck(t.Result.All(y => y));
@@ -950,7 +951,7 @@ namespace Akka.Remote
             Become(_flushingPatterns);
         }
 
-        private static readonly Func<Task<bool[]>, bool> CheckGracefulStopFunc = CheckGracefulStop;
+        private static readonly Func<Task<bool[]>, bool> CheckGracefulStopFunc = t => CheckGracefulStop(t);
         private static bool CheckGracefulStop(Task<bool[]> result)
         {
             if (result.IsSuccessfully())
@@ -961,14 +962,14 @@ namespace Akka.Remote
             return false;
         }
 
-        private static readonly Func<bool, Dictionary<Address, AkkaProtocolTransport>, Task<bool>> AfterGracefulStopFunc = AfterGracefulStop;
+        private static readonly Func<bool, Dictionary<Address, AkkaProtocolTransport>, Task<bool>> AfterGracefulStopFunc = (s, t) => AfterGracefulStop(s, t);
         private static Task<bool> AfterGracefulStop(bool status, Dictionary<Address, AkkaProtocolTransport> transportMapping)
         {
             return Task.WhenAll(transportMapping.Values.Select(x => x.Shutdown()))
                        .LinkOutcome(CheckShutdownFunc, status, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
-        private static readonly Func<Task<bool[]>, bool, bool> CheckShutdownFunc = CheckShutdown;
+        private static readonly Func<Task<bool[]>, bool, bool> CheckShutdownFunc = (t, s) => CheckShutdown(t, s);
         private static bool CheckShutdown(Task<bool[]> result, bool shutdownStatus)
         {
             if (result.IsSuccessfully())
@@ -988,8 +989,8 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         private void Flushing()
         {
-            Receive<Send>(HandleSendFlushing);
-            Receive<InboundAssociation>(HandleInboundAssociationFlushing);
+            Receive<Send>(e => HandleSendFlushing(e));
+            Receive<InboundAssociation>(e => HandleInboundAssociationFlushing(e));
             Receive<Terminated>(PatternMatch<Terminated>.EmptyAction); // why should we care now?
         }
 
@@ -1172,14 +1173,16 @@ namespace Akka.Remote
             }
         }
 
-        private static readonly Func<object, List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>> InvokeOnListenFailFunc = InvokeOnListenFail;
+        private static readonly Func<object, List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)>> InvokeOnListenFailFunc =
+            s => InvokeOnListenFail(s);
         private static List<(ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)> InvokeOnListenFail(object state)
         {
             ((System.Runtime.ExceptionServices.ExceptionDispatchInfo)state).Throw();
             return null;
         }
 
-        private static readonly Func<(Address, TaskCompletionSource<IAssociationEventListener>), AkkaProtocolTransport, (ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)> AfterListenFunc = AfterListen;
+        private static readonly Func<(Address, TaskCompletionSource<IAssociationEventListener>), AkkaProtocolTransport, (ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>)> AfterListenFunc =
+            (s, t) => AfterListen(s, t);
         private static (ProtocolTransportAddressPair, TaskCompletionSource<IAssociationEventListener>) AfterListen(
             (Address, TaskCompletionSource<IAssociationEventListener>) result, AkkaProtocolTransport transport)
         {

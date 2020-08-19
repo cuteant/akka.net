@@ -118,13 +118,13 @@ namespace Akka.Persistence.Snapshot
             return true;
         }
 
-        private static readonly Func<SnapshotStore, LoadSnapshot, Task<SelectedSnapshot>> InvokeLoadSnapshotFunc = InvokeLoadSnapshot;
+        private static readonly Func<SnapshotStore, LoadSnapshot, Task<SelectedSnapshot>> InvokeLoadSnapshotFunc = (o, s) => InvokeLoadSnapshot(o, s);
         private static Task<SelectedSnapshot> InvokeLoadSnapshot(SnapshotStore owner, LoadSnapshot loadSnapshot)
         {
             return owner.LoadAsync(loadSnapshot.PersistenceId, loadSnapshot.Criteria.Limit(loadSnapshot.ToSequenceNr));
         }
 
-        private static readonly Func<Task<SelectedSnapshot>, LoadSnapshot, ISnapshotResponse> AfterLoadSnapshotFunc = AfterLoadSnapshot;
+        private static readonly Func<Task<SelectedSnapshot>, LoadSnapshot, ISnapshotResponse> AfterLoadSnapshotFunc = (t, s) => AfterLoadSnapshot(t, s);
         public static ISnapshotResponse AfterLoadSnapshot(Task<SelectedSnapshot> t, LoadSnapshot loadSnapshot)
         {
             return t.IsSuccessfully()
@@ -134,13 +134,13 @@ namespace Akka.Persistence.Snapshot
                         : new OperationCanceledException("LoadAsync canceled, possibly due to timing out."));
         }
 
-        private static readonly Func<SnapshotStore, SnapshotMetadata, SaveSnapshot, Task> InvokeSaveSnapshotFunc = InvokeSaveSnapshot;
+        private static readonly Func<SnapshotStore, SnapshotMetadata, SaveSnapshot, Task> InvokeSaveSnapshotFunc = (o, m, s) => InvokeSaveSnapshot(o, m, s);
         private static Task InvokeSaveSnapshot(SnapshotStore owner, SnapshotMetadata metadata, SaveSnapshot saveSnapshot)
         {
             return owner.SaveAsync(metadata, saveSnapshot.Snapshot);
         }
 
-        private static readonly Func<Task, SnapshotMetadata, SaveSnapshot, ISnapshotResponse> AfterSaveSnapshotFunc = AfterSaveSnapshot;
+        private static readonly Func<Task, SnapshotMetadata, SaveSnapshot, ISnapshotResponse> AfterSaveSnapshotFunc = (t, m, s) => AfterSaveSnapshot(t, m, s);
         public static ISnapshotResponse AfterSaveSnapshot(Task t, SnapshotMetadata metadata, SaveSnapshot saveSnapshot)
         {
             return t.IsSuccessfully()
@@ -151,19 +151,19 @@ namespace Akka.Persistence.Snapshot
                         : new OperationCanceledException("SaveAsync canceled, possibly due to timing out."));
         }
 
-        private static readonly Func<SnapshotStore, SaveSnapshotFailure, Task> InvokeSaveSnapshotFailureFunc = InvokeSaveSnapshotFailure;
+        private static readonly Func<SnapshotStore, SaveSnapshotFailure, Task> InvokeSaveSnapshotFailureFunc = (o, s) => InvokeSaveSnapshotFailure(o, s);
         private static Task InvokeSaveSnapshotFailure(SnapshotStore owner, SaveSnapshotFailure saveSnapshotFailure)
         {
             return owner.DeleteAsync(saveSnapshotFailure.Metadata);
         }
 
-        private static readonly Func<SnapshotStore, DeleteSnapshot, Task> InvokeDeleteSnapshotFunc = InvokeDeleteSnapshot;
+        private static readonly Func<SnapshotStore, DeleteSnapshot, Task> InvokeDeleteSnapshotFunc = (o, s) => InvokeDeleteSnapshot(o, s);
         private static Task InvokeDeleteSnapshot(SnapshotStore owner, DeleteSnapshot deleteSnapshot)
         {
             return owner.DeleteAsync(deleteSnapshot.Metadata);
         }
 
-        private static readonly Func<Task, DeleteSnapshot, ISnapshotResponse> AfterDeleteSnapshotFunc = AfterDeleteSnapshot;
+        private static readonly Func<Task, DeleteSnapshot, ISnapshotResponse> AfterDeleteSnapshotFunc = (t, s) => AfterDeleteSnapshot(t, s);
         public static ISnapshotResponse AfterDeleteSnapshot(Task t, DeleteSnapshot deleteSnapshot)
         {
             return t.IsSuccessfully()
@@ -174,13 +174,13 @@ namespace Akka.Persistence.Snapshot
                         : new OperationCanceledException("DeleteAsync canceled, possibly due to timing out."));
         }
 
-        private static readonly Func<SnapshotStore, DeleteSnapshots, Task> InvokeDeleteSnapshotsFunc = InvokeDeleteSnapshots;
+        private static readonly Func<SnapshotStore, DeleteSnapshots, Task> InvokeDeleteSnapshotsFunc = (o, s) => InvokeDeleteSnapshots(o, s);
         private static Task InvokeDeleteSnapshots(SnapshotStore owner, DeleteSnapshots deleteSnapshots)
         {
             return owner.DeleteAsync(deleteSnapshots.PersistenceId, deleteSnapshots.Criteria);
         }
 
-        private static readonly Func<Task, DeleteSnapshots, ISnapshotResponse> AfterDeleteSnapshotsFunc = AfterDeleteSnapshots;
+        private static readonly Func<Task, DeleteSnapshots, ISnapshotResponse> AfterDeleteSnapshotsFunc = (t, s) => AfterDeleteSnapshots(t, s);
         public static ISnapshotResponse AfterDeleteSnapshots(Task t, DeleteSnapshots deleteSnapshots)
         {
             return t.IsSuccessfully()
@@ -191,8 +191,8 @@ namespace Akka.Persistence.Snapshot
                         : new OperationCanceledException("DeleteAsync canceled, possibly due to timing out."));
         }
 
-        public static readonly Action<Task, bool, Event.EventStream, object> InvokePublishAction = InvokePublish;
-        public static void InvokePublish(Task t, bool publish, Event.EventStream eventStream, object message)
+        public static readonly Action<Task, bool, Event.EventStream, object> InvokePublishAction = (t, p, es, m) => InvokePublish(p, es, m);
+        public static void InvokePublish(/*Task t, */bool publish, Event.EventStream eventStream, object message)
         {
             if (publish) { eventStream.Publish(message); }
         }

@@ -412,7 +412,7 @@ namespace Akka.Persistence.Journal
                 .ContinueWith(AfterReplaySuccessFunc, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
 
-        private static readonly Func<Task<AsyncWriteTarget.ReplaySuccess>, long> AfterReplaySuccessFunc = AfterReplaySuccess;
+        private static readonly Func<Task<AsyncWriteTarget.ReplaySuccess>, long> AfterReplaySuccessFunc = t => AfterReplaySuccess(t);
         private static long AfterReplaySuccess(Task<AsyncWriteTarget.ReplaySuccess> t) => t.Result.HighestSequenceNr;
 
         private Task<T> StoreNotInitialized<T>()

@@ -20,7 +20,7 @@ namespace Akka.Dispatch
                 context.TaskScheduler);
         }
 
-        static readonly Action<Task, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
+        static readonly Action<Task, object> LinkOutcomeContinuationAction = (t, s) => LinkOutcomeContinuation(t, s);
         private static void LinkOutcomeContinuation(Task parent, object state)
         {
             Exception exception = GetTaskException(parent);

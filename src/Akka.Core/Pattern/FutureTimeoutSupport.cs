@@ -60,7 +60,7 @@ namespace Akka.Pattern
 
         private sealed class Helper<T>
         {
-            public static readonly Action<IRunnableTask<T>, TaskCompletionSource<T>> LinkOutcomeAction = LinkOutcome;
+            public static readonly Action<IRunnableTask<T>, TaskCompletionSource<T>> LinkOutcomeAction = (t, s) => LinkOutcome(t, s);
             private static void LinkOutcome(IRunnableTask<T> task, TaskCompletionSource<T> tcs)
             {
                 try
@@ -74,7 +74,7 @@ namespace Akka.Pattern
                 }
             }
 
-            private static readonly Action<Task<T>, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
+            private static readonly Action<Task<T>, object> LinkOutcomeContinuationAction = (t, s) => LinkOutcomeContinuation(t, s);
             private static void LinkOutcomeContinuation(Task<T> tr, object state)
             {
                 var tcs = (TaskCompletionSource<T>)state;

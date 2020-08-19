@@ -123,7 +123,7 @@ namespace Akka.Streams.Dsl
             }
         }
 
-        private static readonly Func<IEnumerator<byte>, int, int> BigEndianDecoderFunc = BigEndianDecoderInternal;
+        private static readonly Func<IEnumerator<byte>, int, int> BigEndianDecoderFunc = (e, l) => BigEndianDecoderInternal(e, l);
         private static int BigEndianDecoderInternal(IEnumerator<byte> enumerator, int length)
         {
             var count = length;
@@ -139,7 +139,7 @@ namespace Akka.Streams.Dsl
             return decoded;
         }
 
-        private static readonly Func<IEnumerator<byte>, int, int> LittleEndianDecoderFunc = LittleEndianDecoderInternal;
+        private static readonly Func<IEnumerator<byte>, int, int> LittleEndianDecoderFunc = (e, l) => LittleEndianDecoderInternal(e, l);
         private static int LittleEndianDecoderInternal(IEnumerator<byte> enumerator, int length)
         {
             var highestOcted = (length - 1) << 3;
@@ -222,7 +222,7 @@ namespace Akka.Streams.Dsl
                 private ByteString _buffer = ByteString.Empty;
                 private int _nextPossibleMatch;
 
-                public Logic(DelimiterFramingStage stage) : base (stage.Shape)
+                public Logic(DelimiterFramingStage stage) : base(stage.Shape)
                 {
                     _stage = stage;
                     _firstSeparatorByte = stage._separatorBytes[0];

@@ -104,7 +104,7 @@ namespace Akka.Persistence.Journal
         {
             _config = config;
 
-            InitTimedOut = ReceiveWhenTimedOut;
+            InitTimedOut = m => ReceiveWhenTimedOut(m);
 
             var pluginId = Self.Path.Name;
             if (string.Equals(pluginId, "akka.persistence.journal.proxy", StringComparison.Ordinal))

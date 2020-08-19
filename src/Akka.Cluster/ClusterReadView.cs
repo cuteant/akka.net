@@ -106,9 +106,9 @@ namespace Akka.Cluster
                 _cluster = cluster;
                 _readView = readView;
 
-                Receive<ClusterEvent.IClusterDomainEvent>(HandleClusterDomainEvent);
+                Receive<ClusterEvent.IClusterDomainEvent>(e => HandleClusterDomainEvent(e));
 
-                Receive<ClusterEvent.CurrentClusterState>(HandleCurrentClusterState);
+                Receive<ClusterEvent.CurrentClusterState>(e => HandleCurrentClusterState(e));
             }
 
             private void HandleClusterDomainEvent(ClusterEvent.IClusterDomainEvent clusterDomainEvent)

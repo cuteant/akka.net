@@ -56,7 +56,7 @@ namespace Akka.Persistence.Serialization
             ThrowHelper.ThrowSerializationException_FSM(type); return null;
         }
 
-        private static readonly Func<Type, bool> s_isPersistentFSMSnapshotFunc = IsPersistentFSMSnapshot;
+        private static readonly Func<Type, bool> s_isPersistentFSMSnapshotFunc = t => IsPersistentFSMSnapshot(t);
         private static bool IsPersistentFSMSnapshot(Type type)
         {
             return type.IsGenericType && type.GetGenericTypeDefinition() == typeof(PersistentFSM.PersistentFSMSnapshot<>);
@@ -82,7 +82,7 @@ namespace Akka.Persistence.Serialization
             return ctorInvoker(arguments);
         }
 
-        private static readonly Func<Type, CtorInvoker<object>> s_makeDelegateForCtorFunc = MakeDelegateForCtor;
+        private static readonly Func<Type, CtorInvoker<object>> s_makeDelegateForCtorFunc = t => MakeDelegateForCtor(t);
         private static CtorInvoker<object> MakeDelegateForCtor(Type instanceType)
         {
             // use reflection to create the generic type of PersistentFSM.PersistentFSMSnapshot

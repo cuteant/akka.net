@@ -163,9 +163,9 @@ namespace Akka.Cluster.Sharding
         /// </summary>
         public ClusterShardingGuardian()
         {
-            Receive<Start>(HandleStart);
+            Receive<Start>(e => HandleStart(e));
 
-            Receive<StartProxy>(HandleStartProxy);
+            Receive<StartProxy>(e => HandleStartProxy(e));
         }
 
         private void HandleStart(Start start)

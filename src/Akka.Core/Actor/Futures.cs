@@ -368,8 +368,8 @@ namespace Akka.Actor
             return a;
         }
 
-        private static readonly Action<Task<object>, PromiseActorRef> InvokeStopAction = InvokeStop;
-        private static void InvokeStop(Task<object> task, PromiseActorRef a) => a.Stop();
+        private static readonly Action<Task<object>, PromiseActorRef> InvokeStopAction = (t, s) => InvokeStop(s);
+        private static void InvokeStop(/*Task<object> task, */PromiseActorRef a) => a.Stop();
 
         #endregion
 

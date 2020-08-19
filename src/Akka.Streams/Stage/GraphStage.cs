@@ -223,7 +223,7 @@ namespace Akka.Streams.Stage
         /// <param name="shape">TBD</param>
         protected TimerGraphStageLogic(Shape shape) : base(shape)
         {
-            _onInternalTimerAction = OnInternalTimer;
+            _onInternalTimerAction = s => OnInternalTimer(s);
         }
 
         private IHandle<TimerMessages.Scheduled> TimerAsyncCallback
@@ -272,7 +272,7 @@ namespace Akka.Streams.Stage
                 InvokeScheduleRepeatedlyAction, TimerAsyncCallback, timerKey, id);
             _keyToTimers[timerKey] = new TimerMessages.Timer(id, task);
         }
-        private static readonly Action<IHandle<TimerMessages.Scheduled>, object, int> InvokeScheduleRepeatedlyAction = InvokeScheduleRepeatedly;
+        private static readonly Action<IHandle<TimerMessages.Scheduled>, object, int> InvokeScheduleRepeatedlyAction = (h, t, i) => InvokeScheduleRepeatedly(h, t, i);
         private static void InvokeScheduleRepeatedly(IHandle<TimerMessages.Scheduled> handler, object timerKey, int id)
         {
             handler.Handle(new TimerMessages.Scheduled(timerKey, id, isRepeating: true));
@@ -303,7 +303,7 @@ namespace Akka.Streams.Stage
             var task = Interpreter.Materializer.ScheduleOnce(delay, InvokeScheduleOnceAction, TimerAsyncCallback, timerKey, id);
             _keyToTimers[timerKey] = new TimerMessages.Timer(id, task);
         }
-        private static readonly Action<IHandle<TimerMessages.Scheduled>, object, int> InvokeScheduleOnceAction = InvokeScheduleOnce;
+        private static readonly Action<IHandle<TimerMessages.Scheduled>, object, int> InvokeScheduleOnceAction = (h, t, i) => InvokeScheduleOnce(h, t, i);
         private static void InvokeScheduleOnce(IHandle<TimerMessages.Scheduled> handler, object timerKey, int id)
         {
             handler.Handle(new TimerMessages.Scheduled(timerKey, id, isRepeating: false));

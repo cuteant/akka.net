@@ -730,14 +730,14 @@ namespace Akka.Remote.Transport
 
         private void InitializeFSM()
         {
-            When(AssociationState.Closed, HandleWhenClosed);
+            When(AssociationState.Closed, e => HandleWhenClosed(e));
 
             //Transport layer events for outbound associations
-            When(AssociationState.WaitHandshake, HandleWhenWaitHandshake);
+            When(AssociationState.WaitHandshake, e => HandleWhenWaitHandshake(e));
 
-            When(AssociationState.Open, HandleWhenOpen);
+            When(AssociationState.Open, e => HandleWhenOpen(e));
 
-            OnTermination(HandleTermination);
+            OnTermination(e => HandleTermination(e));
 
             /*
              * Set the initial ProtocolStateActor state to CLOSED if OUTBOUND
@@ -1055,13 +1055,13 @@ namespace Akka.Remote.Transport
             }
         }
 
-        private static readonly Action<IHandleEventListener, Disassociated> AfterSetupHandlerListenerAction = AfterSetupHandlerListener;
+        private static readonly Action<IHandleEventListener, Disassociated> AfterSetupHandlerListenerAction = (l, n) => AfterSetupHandlerListener(l, n);
         private static void AfterSetupHandlerListener(IHandleEventListener listener, Disassociated disassociateNotification)
         {
             listener.Notify(disassociateNotification);
         }
 
-        private static readonly Func<AssociationHandle, HandleMsg> AfterConnectionIsOpenedFunc = AfterConnectionIsOpened;
+        private static readonly Func<AssociationHandle, HandleMsg> AfterConnectionIsOpenedFunc = h => AfterConnectionIsOpened(h);
         private static HandleMsg AfterConnectionIsOpened(AssociationHandle handle)
         {
             return new HandleMsg(handle);
@@ -1229,7 +1229,7 @@ namespace Akka.Remote.Transport
             readHandlerSource.Task.Then(AfterSetupHandlerList1enerFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(Self);
         }
 
-        private static readonly Func<IHandleEventListener, HandleListenerRegistered> AfterSetupHandlerList1enerFunc = AfterSetupHandlerListener;
+        private static readonly Func<IHandleEventListener, HandleListenerRegistered> AfterSetupHandlerList1enerFunc = l => AfterSetupHandlerListener(l);
         private static HandleListenerRegistered AfterSetupHandlerListener(IHandleEventListener listener)
         {
             return new HandleListenerRegistered(listener);

@@ -314,7 +314,7 @@ namespace Akka.Cluster.Sharding
             }
         }
 
-        private static readonly Func<Task<IImmutableSet<ShardId>>, Shard.RestartEntities> AfterScheduledRecoveryFunc = AfterScheduledRecovery;
+        private static readonly Func<Task<IImmutableSet<ShardId>>, Shard.RestartEntities> AfterScheduledRecoveryFunc = t => AfterScheduledRecovery(t);
         private static Shard.RestartEntities AfterScheduledRecovery(Task<IImmutableSet<ShardId>> t) => new Shard.RestartEntities(t.Result);
     }
 }

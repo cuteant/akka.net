@@ -139,11 +139,11 @@ namespace Akka.Persistence
             _internalStash = CreateStash();
             Log = Context.GetLogger();
 
-            _recoveryBehaviorFunc = RecoveryBehavior;
-            _onWriteCommandCompleteAction = OnWriteCommandComplete;
-            _receiveCommandsAction = ReceiveCommands;
-            _onWriteEventCompleteAction = OnWriteEventComplete;
-            _receiveEventsAction = ReceiveEvents;
+            _recoveryBehaviorFunc = m => RecoveryBehavior(m);
+            _onWriteCommandCompleteAction = e => OnWriteCommandComplete(e);
+            _receiveCommandsAction = (r, m) => ReceiveCommands(r, m);
+            _onWriteEventCompleteAction = e => OnWriteEventComplete(e);
+            _receiveEventsAction = (r, m) => ReceiveEvents(r, m);
         }
 
         /// <summary>
@@ -619,7 +619,7 @@ namespace Akka.Persistence
 
         sealed class TaskRunners<T>
         {
-            public static readonly Func<object, Task> RunTaskAction = RunTask;
+            public static readonly Func<object, Task> RunTaskAction = s => RunTask(s);
             private static Task RunTask(object state)
             {
                 var wrapped = (Tuple<Eventsourced, Func<Task>>)state;
@@ -630,7 +630,7 @@ namespace Akka.Persistence
                 return LinkOutcome(t, wrapped.Item1);
             }
 
-            public static readonly Func<object, Task> RunTaskFunc = RunTaskWithState;
+            public static readonly Func<object, Task> RunTaskFunc = s => RunTaskWithState(s);
             private static Task RunTaskWithState(object state)
             {
                 var wrapped = (Tuple<Eventsourced, Func<T, Task>, T>)state;
@@ -641,7 +641,7 @@ namespace Akka.Persistence
                 return LinkOutcome(t, wrapped.Item1);
             }
 
-            public static readonly Func<object, Task> RunRunnableTaskFunc = RunRunnableTask;
+            public static readonly Func<object, Task> RunRunnableTaskFunc = s => RunRunnableTask(s);
             private static Task RunRunnableTask(object state)
             {
                 var wrapped = (Tuple<Eventsourced, IRunnableTask>)state;
@@ -661,7 +661,7 @@ namespace Akka.Persistence
                 return tcs.Task;
             }
 
-            private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;
+            private static readonly Action<Task, object> RunTaskContinuationAction = (t, s) => RunTaskContinuation(t, s);
             private static void RunTaskContinuation(Task r, object state)
             {
                 var wrapped = (Tuple<Eventsourced, TaskCompletionSource<object>>)state;

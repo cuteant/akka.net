@@ -176,7 +176,7 @@ namespace Akka.Streams
                     _terminationSignal.LinkOutcome(TerminationSignalContinuationAction, this);
             }
 
-            private static readonly Action<Task, KillableGraphStageLogic> TerminationSignalContinuationAction = TerminationSignalContinuation;
+            private static readonly Action<Task, KillableGraphStageLogic> TerminationSignalContinuationAction = (t, s) => TerminationSignalContinuation(t, s);
             private static void TerminationSignalContinuation(Task t, KillableGraphStageLogic logic)
             {
                 logic.GetAsyncCallback<Task>(logic).Handle(t);

@@ -22,8 +22,8 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         public RemoteDeploymentWatcher()
         {
-            Receive<WatchRemote>(HandleWatchRemote);
-            Receive<Terminated>(HandleTerminated);
+            Receive<WatchRemote>(e => HandleWatchRemote(e));
+            Receive<Terminated>(e => HandleTerminated(e));
         }
 
         private void HandleWatchRemote(WatchRemote w)

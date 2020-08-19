@@ -594,7 +594,7 @@ namespace Akka.Streams.Implementation
                 OnResourceReady(Ready);
             }
 
-            static readonly Action<Task<Option<TOut>>, object> ReadDataContinutionAction = ReadDataContinution;
+            static readonly Action<Task<Option<TOut>>, object> ReadDataContinutionAction = (t, s) => ReadDataContinution(t, s);
             private static void ReadDataContinution(Task<Option<TOut>> t, object state)
             {
                 var createdCallback = (IHandle<Either<Option<TOut>, Exception>>)state;

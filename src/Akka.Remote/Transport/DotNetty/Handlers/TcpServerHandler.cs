@@ -100,7 +100,8 @@ namespace Akka.Remote.Transport.DotNetty
                 this, channel, socketAddress, msg, TaskContinuationOptions.OnlyOnRanToCompletion);
         }
 
-        private static readonly Action<IAssociationEventListener, TcpServerHandler<TAssociationHandleFactory>, IChannel, IPEndPoint, object> AfterSetupAssociationEventListenerAction = AfterSetupAssociationEventListener;
+        private static readonly Action<IAssociationEventListener, TcpServerHandler<TAssociationHandleFactory>, IChannel, IPEndPoint, object> AfterSetupAssociationEventListenerAction =
+            (l, o, c, s, m) => AfterSetupAssociationEventListener(l, o, c, s, m);
         private static void AfterSetupAssociationEventListener(IAssociationEventListener listener,
             TcpServerHandler<TAssociationHandleFactory> owner, IChannel channel, IPEndPoint socketAddress, object msg)
         {

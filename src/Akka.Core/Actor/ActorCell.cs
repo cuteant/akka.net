@@ -81,18 +81,18 @@ namespace Akka.Actor
             Parent = parent;
             Dispatcher = dispatcher;
 
-            _watchAction = InvokeWatch;
-            _unwatchAction = InvokeUnwatch;
-            _unwatchWatchedActorsAciton = InvokeUnwatchWatchedActors;
-            _addWatcherAction = InvokeAddWatcher;
-            _remWatcherAction = InvokeRemWatcher;
-            _addressTerminated = InvokeAddressTerminated;
+            _watchAction = ar => InvokeWatch(ar);
+            _unwatchAction = ar => InvokeUnwatch(ar);
+            _unwatchWatchedActorsAciton = w => InvokeUnwatchWatchedActors(w);
+            _addWatcherAction = w => InvokeAddWatcher(w);
+            _remWatcherAction = w => InvokeRemWatcher(w);
+            _addressTerminated = a => InvokeAddressTerminated(a);
             _publishOnFaultRecreateAction = InvokePublishOnFaultRecreate;
-            _invokeFailureAction = HandleInvokeFailure;
-            _publishOnHandleInvokeFailureAction = InvokePublishOnHandleInvokeFailure;
-            _pulishOnFinishTerminateAction = InvokePulishOnFinishTerminate;
-            _publishOnFinishRecreateAction = InvokePublishOnFinishRecreate;
-            _publishOnHandleChildTerminatedAction = InvokePublishOnHandleChildTerminated;
+            _invokeFailureAction = (c, e) => HandleInvokeFailure(c, e);
+            _publishOnHandleInvokeFailureAction = (c, e) => InvokePublishOnHandleInvokeFailure(c, e);
+            _pulishOnFinishTerminateAction = e => InvokePulishOnFinishTerminate(e);
+            _publishOnFinishRecreateAction = (e, a, c) => InvokePublishOnFinishRecreate(e, a, c);
+            _publishOnHandleChildTerminatedAction = e => InvokePublishOnHandleChildTerminated(e);
         }
 
         /// <summary>

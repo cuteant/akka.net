@@ -699,14 +699,14 @@ namespace Akka.Remote
 
             private void InitFSM()
             {
-                When(TerminatorState.Uninitialized, HandleWhenUninitialized);
+                When(TerminatorState.Uninitialized, e => HandleWhenUninitialized(e));
 
-                When(TerminatorState.Idle, HandleWhenIdle);
+                When(TerminatorState.Idle, e => HandleWhenIdle(e));
 
                 // TODO: state timeout
-                When(TerminatorState.WaitDaemonShutdown, HandleWhenWaitDaemonShutdown);
+                When(TerminatorState.WaitDaemonShutdown, e => HandleWhenWaitDaemonShutdown(e));
 
-                When(TerminatorState.WaitTransportShutdown, HandleWhenWaitTransportShutdown);
+                When(TerminatorState.WaitTransportShutdown, e => HandleWhenWaitTransportShutdown(e));
 
                 StartWith(TerminatorState.Uninitialized, null);
             }

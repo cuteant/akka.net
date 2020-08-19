@@ -225,7 +225,7 @@ namespace Akka.Remote
             }
         }
 
-        private static readonly Action<Task<bool>, Remoting> ShutdownContinuationAction = ShutdownContinuation;
+        private static readonly Action<Task<bool>, Remoting> ShutdownContinuationAction = (t, s) => ShutdownContinuation(t, s);
         private static void ShutdownContinuation(Task<bool> result, Remoting owner)
         {
             void finalize()
@@ -283,7 +283,7 @@ namespace Akka.Remote
                 .ContinueWith(CheckManagementCommandFunc, CancellationToken.None, TaskContinuationOptions.ExecuteSynchronously, TaskScheduler.Default);
         }
 
-        private static readonly Func<Task<EndpointManager.ManagementCommandAck>, bool> CheckManagementCommandFunc = CheckManagementCommand;
+        private static readonly Func<Task<EndpointManager.ManagementCommandAck>, bool> CheckManagementCommandFunc = t => CheckManagementCommand(t);
         private static bool CheckManagementCommand(Task<EndpointManager.ManagementCommandAck> result)
         {
             if (result.IsSuccessfully()) { return result.Result.Status; }
@@ -404,7 +404,7 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         public TransportSupervisor()
         {
-            Receive<RegisterTransportActor>(HandleRegisterTransportActor);
+            Receive<RegisterTransportActor>(e => HandleRegisterTransportActor(e));
         }
 
         private void HandleRegisterTransportActor(RegisterTransportActor r)

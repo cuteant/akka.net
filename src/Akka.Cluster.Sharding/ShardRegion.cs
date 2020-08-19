@@ -226,8 +226,8 @@ namespace Akka.Cluster.Sharding
                 _handoffTimeout = handoffTimeout;
                 _remaining = new HashSet<IActorRef>(entities, ActorRefComparer.Instance);
 
-                Receive<ReceiveTimeout>(HandleReceiveTimeout);
-                Receive<Terminated>(HandleTerminated);
+                Receive<ReceiveTimeout>(e => HandleReceiveTimeout());
+                Receive<Terminated>(e => HandleTerminated(e));
 
                 Context.SetReceiveTimeout(handoffTimeout);
 
@@ -238,7 +238,7 @@ namespace Akka.Cluster.Sharding
                 }
             }
 
-            private void HandleReceiveTimeout(ReceiveTimeout t)
+            private void HandleReceiveTimeout()
             {
                 Log.Warning("HandOffStopMessage[{0}] is not handled by some of the entities of the [{1}] shard after [{2}], " +
                     "stopping the remaining [{3}] entities.", _stopMessage.GetType(), _shard, _handoffTimeout, _remaining.Count);
@@ -410,7 +410,7 @@ namespace Akka.Cluster.Sharding
                 InvokeRegionShutdownFunc, this, Self, Cluster);
         }
 
-        private static readonly Func<ShardRegion, IActorRef, Cluster, Task<Done>> InvokeRegionShutdownFunc = InvokeRegionShutdown;
+        private static readonly Func<ShardRegion, IActorRef, Cluster, Task<Done>> InvokeRegionShutdownFunc = (o, s, c) => InvokeRegionShutdown(o, s, c);
         private static Task<Done> InvokeRegionShutdown(ShardRegion owner, IActorRef self, Cluster cluster)
         {
             if (cluster.IsTerminated || cluster.SelfMember.Status == MemberStatus.Down)
@@ -791,7 +791,8 @@ namespace Akka.Cluster.Sharding
                 .ContinueWith(AskCurrentShardStateContinuationFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
         }
 
-        private static readonly Func<Task<(ShardId, Shard.CurrentShardState)[]>, CurrentShardRegionState> AskCurrentShardStateContinuationFunc = AskCurrentShardStateContinuation;
+        private static readonly Func<Task<(ShardId, Shard.CurrentShardState)[]>, CurrentShardRegionState> AskCurrentShardStateContinuationFunc =
+            t => AskCurrentShardStateContinuation(t);
         private static CurrentShardRegionState AskCurrentShardStateContinuation(Task<(ShardId, Shard.CurrentShardState)[]> shardStates)
         {
             if (shardStates.IsCanceled)
@@ -809,7 +810,7 @@ namespace Akka.Cluster.Sharding
                 .ContinueWith(AskShardStatsContinuationFunc, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
         }
 
-        private static readonly Func<Task<(ShardId, Shard.ShardStats)[]>, ShardRegionStats> AskShardStatsContinuationFunc = AskShardStatsContinuation;
+        private static readonly Func<Task<(ShardId, Shard.ShardStats)[]>, ShardRegionStats> AskShardStatsContinuationFunc = t => AskShardStatsContinuation(t);
         private static ShardRegionStats AskShardStatsContinuation(Task<(ShardId, Shard.ShardStats)[]> shardStats)
         {
             if (shardStats.IsCanceled)

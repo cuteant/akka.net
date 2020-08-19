@@ -458,7 +458,7 @@ namespace Akka.Actor
                 AkkaThrowHelper.ThrowActorInitializationException_ActorCell_CreateEx(_self, e);
             }
         }
-        private static readonly Action<ActorBase> InvokeAroundPreStartAction = InvokeAroundPreStart;
+        private static readonly Action<ActorBase> InvokeAroundPreStartAction = c => InvokeAroundPreStart(c);
         private static void InvokeAroundPreStart(ActorBase created) => created.AroundPreStart();
 
         /// <summary>

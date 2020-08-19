@@ -12,7 +12,7 @@ namespace Akka.Util
         #region -- FastUnwrap --
 
         /// <summary>TBD</summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static Task FastUnwrap(this Task<Task> task)
         {
             if (task.IsSuccessfully()) { return task.Result; }
@@ -20,7 +20,7 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static Task<T> FastUnwrap<T>(this Task<Task<T>> task)
         {
             if (task.IsSuccessfully()) { return task.Result; }
@@ -32,7 +32,7 @@ namespace Akka.Util
         #region -- IsSuccessfully --
 
         /// <summary>TBD</summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool IsSuccessfully(this Task task)
         {
 #if NETCOREAPP || NETSTANDARD_2_0_GREATER
@@ -43,7 +43,7 @@ namespace Akka.Util
         }
 
         /// <summary>TBD</summary>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool IsSuccessfully<T>(this Task<T> task)
         {
 #if NETCOREAPP || NETSTANDARD_2_0_GREATER
@@ -578,7 +578,7 @@ namespace Akka.Util
                 return tcs.Task;
             }
 
-            private static readonly Action<Task, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
+            private static readonly Action<Task, object> LinkOutcomeContinuationAction = (t, s) => LinkOutcomeContinuation(t, s);
             private static void LinkOutcomeContinuation(Task task, object state)
             {
                 var wrapped = ((IOverridingArgumentRunnable<Task>, TaskCompletionSource<object>))state;
@@ -612,7 +612,7 @@ namespace Akka.Util
                 return tcs.Task;
             }
 
-            private static readonly Action<Task<TResult>, object> RunWithResultTaskContinuationAction = RunWithResultTaskContinuation;
+            private static readonly Action<Task<TResult>, object> RunWithResultTaskContinuationAction = (t, s) => RunWithResultTaskContinuation(t, s);
             private static void RunWithResultTaskContinuation(Task<TResult> task, object state)
             {
                 var wrapped = ((IOverridingArgumentRunnable<Task<TResult>>, TaskCompletionSource<object>))state;
@@ -639,7 +639,7 @@ namespace Akka.Util
                 return tcs.Task;
             }
 
-            private static readonly Action<Task, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
+            private static readonly Action<Task, object> LinkOutcomeContinuationAction = (t, s) => LinkOutcomeContinuation(t, s);
             private static void LinkOutcomeContinuation(Task task, object state)
             {
                 var wrapped = ((IOverridingArgumentRunnable<Task, TResult>, TaskCompletionSource<TResult>))state;
@@ -673,7 +673,7 @@ namespace Akka.Util
                 return tcs.Task;
             }
 
-            private static readonly Action<Task<TResult>, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
+            private static readonly Action<Task<TResult>, object> LinkOutcomeContinuationAction = (t, s) => LinkOutcomeContinuation(t, s);
             private static void LinkOutcomeContinuation(Task<TResult> task, object state)
             {
                 var wrapped = ((IOverridingArgumentRunnable<Task<TResult>, TNewResult>, TaskCompletionSource<TNewResult>))state;
@@ -1161,7 +1161,7 @@ namespace Akka.Util
                 return tcs.Task;
             }
 
-            private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;
+            private static readonly Action<Task, object> RunTaskContinuationAction = (t, s) => RunTaskContinuation(t, s);
             private static void RunTaskContinuation(Task task, object state)
             {
                 var wrapped = ((IRunnable, TaskCompletionSource<object>))state;
@@ -1230,7 +1230,7 @@ namespace Akka.Util
                 return tcs.Task;
             }
 
-            private static readonly Action<Task, object> RunTaskContinuationAction = RunTaskContinuation;
+            private static readonly Action<Task, object> RunTaskContinuationAction = (t, s) => RunTaskContinuation(t, s);
             private static void RunTaskContinuation(Task task, object state)
             {
                 var wrapped = ((IRunnable<TResult>, TaskCompletionSource<TResult>))state;
@@ -1289,7 +1289,7 @@ namespace Akka.Util
                 return tcs.Task;
             }
 
-            private static readonly Action<Task<TResult>, object> RunWithResultTaskContinuationAction = RunWithResultTaskContinuation;
+            private static readonly Action<Task<TResult>, object> RunWithResultTaskContinuationAction = (t, s) => RunWithResultTaskContinuation(t, s);
             private static void RunWithResultTaskContinuation(Task<TResult> task, object state)
             {
                 var wrapped = ((IOverridingArgumentRunnable<TResult>, TaskCompletionSource<object>))state;
@@ -1358,7 +1358,7 @@ namespace Akka.Util
                 return tcs.Task;
             }
 
-            private static readonly Action<Task<TResult>, object> RunTaskContinuationAction = RunTaskContinuation;
+            private static readonly Action<Task<TResult>, object> RunTaskContinuationAction = (t, s) => RunTaskContinuation(t, s);
             private static void RunTaskContinuation(Task<TResult> task, object state)
             {
                 var wrapped = ((IOverridingArgumentRunnable<TResult, TNewResult>, TaskCompletionSource<TNewResult>))state;

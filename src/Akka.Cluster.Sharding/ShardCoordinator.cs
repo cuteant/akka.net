@@ -305,7 +305,7 @@ namespace Akka.Cluster.Sharding
             }
         }
 
-        private static readonly Func<Task<IImmutableSet<ShardId>>, PersistentShardCoordinator.RebalanceResult> RebalanceContinuationFunc = RebalanceContinuation;
+        private static readonly Func<Task<IImmutableSet<ShardId>>, PersistentShardCoordinator.RebalanceResult> RebalanceContinuationFunc = t => RebalanceContinuation(t);
         private static PersistentShardCoordinator.RebalanceResult RebalanceContinuation(Task<IImmutableSet<ShardId>> t)
         {
             return t.IsSuccessfully()
@@ -478,12 +478,13 @@ namespace Akka.Cluster.Sharding
                 .LinkOutcome(Helper<TCoordinator>.AfterAskAllShardRegionStatsFunc, coordinator, TaskContinuationOptions.ExecuteSynchronously).PipeTo(sender);
         }
 
-        private static readonly Func<ShardRegionStats, IActorRef, (IActorRef, ShardRegionStats)> AfterAskShardRegionStatsFunc = AfterAskShardRegionStats;
-        private static (IActorRef, ShardRegionStats) AfterAskShardRegionStats(ShardRegionStats result, IActorRef regionActor) => (regionActor, result);
+        private static readonly Func<ShardRegionStats, IActorRef, (IActorRef, ShardRegionStats)> AfterAskShardRegionStatsFunc =
+            (result, regionActor) => (regionActor, result);
 
         sealed class Helper<TCoordinator> where TCoordinator : IShardCoordinator
         {
-            public static readonly Func<Task<(IActorRef, ShardRegionStats)[]>, TCoordinator, ClusterShardingStats> AfterAskAllShardRegionStatsFunc = AfterAskAllShardRegionStats;
+            public static readonly Func<Task<(IActorRef, ShardRegionStats)[]>, TCoordinator, ClusterShardingStats> AfterAskAllShardRegionStatsFunc =
+                (r, c) => AfterAskAllShardRegionStats(r, c);
             private static ClusterShardingStats AfterAskAllShardRegionStats(Task<(IActorRef, ShardRegionStats)[]> allRegionStats, TCoordinator coordinator)
             {
                 if (allRegionStats.IsCanceled)

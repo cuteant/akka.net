@@ -451,7 +451,8 @@ namespace Akka.Remote.Transport
             return RegisterManager().Then(AfterRegisterManagerFunc, this, listenAddress, listenerTask, TaskContinuationOptions.ExecuteSynchronously);
         }
 
-        private static readonly Func<IActorRef, ActorTransportAdapter, Address, Task<IAssociationEventListener>, IAssociationEventListener> AfterRegisterManagerFunc = AfterRegisterManager;
+        private static readonly Func<IActorRef, ActorTransportAdapter, Address, Task<IAssociationEventListener>, IAssociationEventListener> AfterRegisterManagerFunc =
+            (m, o, la, t) => AfterRegisterManager(m, o, la, t);
         private static IAssociationEventListener AfterRegisterManager(IActorRef manager, ActorTransportAdapter owner, Address listenAddress, Task<IAssociationEventListener> listenerTask)
         {
             Interlocked.Exchange(ref owner.manager, manager);
@@ -471,7 +472,7 @@ namespace Akka.Remote.Transport
             return Task.WhenAll(stopTask, transportStopTask).ContinueWith(IsShutdownSuccessFunc, TaskContinuationOptions.ExecuteSynchronously);
         }
 
-        private static readonly Func<Task<bool[]>, bool> IsShutdownSuccessFunc = IsShutdownSuccess;
+        private static readonly Func<Task<bool[]>, bool> IsShutdownSuccessFunc = t => IsShutdownSuccess(t);
         private static bool IsShutdownSuccess(Task<bool[]> x) => x.IsSuccessfully();
     }
 
@@ -528,7 +529,7 @@ namespace Akka.Remote.Transport
             }
         }
 
-        private static readonly Action<IAssociationEventListener, IActorRef> AfterUpstreamListenerRegisteredAction = AfterUpstreamListenerRegistered;
+        private static readonly Action<IAssociationEventListener, IActorRef> AfterUpstreamListenerRegisteredAction = (l, c) => AfterUpstreamListenerRegistered(l, c);
         private static void AfterUpstreamListenerRegistered(IAssociationEventListener listener, IActorRef capturedSelf)
         {
             capturedSelf.Tell(new ListenerRegistered(listener));

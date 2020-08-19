@@ -86,13 +86,13 @@ namespace Akka.Cluster.Sharding
 
         sealed class Helper<T>
         {
-            public static readonly Action<Func<Task<T>>, TaskCompletionSource<T>> LinkOutcomeAction = LinkOutcome;
+            public static readonly Action<Func<Task<T>>, TaskCompletionSource<T>> LinkOutcomeAction = (v, p) => LinkOutcome(v, p);
             private static void LinkOutcome(Func<Task<T>> value, TaskCompletionSource<T> promise)
             {
                 value().ContinueWith(LinkOutcomeContinuationAction, promise);
             }
 
-            private static readonly Action<Task<T>, object> LinkOutcomeContinuationAction = LinkOutcomeContinuation;
+            private static readonly Action<Task<T>, object> LinkOutcomeContinuationAction = (t, s) => LinkOutcomeContinuation(t, s);
             private static void LinkOutcomeContinuation(Task<T> t, object state)
             {
                 var promise = (TaskCompletionSource<T>)state;

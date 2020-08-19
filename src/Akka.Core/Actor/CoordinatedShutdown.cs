@@ -362,7 +362,7 @@ namespace Akka.Actor
 
             return ClrShutdownTask;
         }
-        private static readonly Action<Task<Done[]>, object> AfterRunClrHooksAction = AfterRunClrHooks;
+        private static readonly Action<Task<Done[]>, object> AfterRunClrHooksAction = (t, s) => AfterRunClrHooks(t, s);
         private static void AfterRunClrHooks(Task<Done[]> tr, object state)
         {
             var hooksRunPromise = (TaskCompletionSource<Done>)state;
@@ -407,7 +407,7 @@ namespace Akka.Actor
             return _runPromise.Task;
         }
 
-        private static readonly Action<Task<Done>, TaskCompletionSource<Done>> LoopContinuationAction = LoopContinuation;
+        private static readonly Action<Task<Done>, TaskCompletionSource<Done>> LoopContinuationAction = (t, p) => LoopContinuation(t, p);
         private static void LoopContinuation(Task<Done> tr, TaskCompletionSource<Done> runPromise)
         {
             if (tr.IsSuccessfully())
@@ -495,7 +495,7 @@ namespace Akka.Actor
             return phaseResult.LinkOutcome(InvokeLoopFunc, owner, remaining);
         }
 
-        private static readonly Func<Task<Done>, ILoggingAdapter, string, string, Done> AfterRunPhaseTaskFunc = AfterRunPhaseTask;
+        private static readonly Func<Task<Done>, ILoggingAdapter, string, string, Done> AfterRunPhaseTaskFunc = (t, l, tn, p) => AfterRunPhaseTask(t, l, tn, p);
         private static Done AfterRunPhaseTask(Task<Done> tr, ILoggingAdapter log, string taskName, string phase)
         {
             if (!tr.IsSuccessfully())
@@ -505,7 +505,7 @@ namespace Akka.Actor
             return Done.Instance;
         }
 
-        private static readonly Func<Task<Done[]>, Done> AfterRunPhaseTasksFunc = AfterRunPhaseTasks;
+        private static readonly Func<Task<Done[]>, Done> AfterRunPhaseTasksFunc = t => AfterRunPhaseTasks(t);
         private static Done AfterRunPhaseTasks(Task<Done[]> tr)
         {
             // forces downstream error propagation if recover is disabled
@@ -513,7 +513,7 @@ namespace Akka.Actor
             return Done.Instance;
         }
 
-        private static readonly Func<CoordinatedShutdown, Task<Done>, string, Phase, Task<Done>> InvokeTimeoutFunc = InvokeTimeout;
+        private static readonly Func<CoordinatedShutdown, Task<Done>, string, Phase, Task<Done>> InvokeTimeoutFunc = (o, r, p, pv) => InvokeTimeout(o, r, p, pv);
         private static Task<Done> InvokeTimeout(CoordinatedShutdown owner, Task<Done> result, string phase, Phase phaseValue)
         {
             var timeout = phaseValue.Timeout;
@@ -538,7 +538,7 @@ namespace Akka.Actor
             return TaskEx.FromException<Done>(new TimeoutException($"Coordinated shutdown phase[{phase}] timed out after {timeout}"));
         }
 
-        private static readonly Func<Task<Done>, CoordinatedShutdown, List<string>, Task<Done>> InvokeLoopFunc = InvokeLoop;
+        private static readonly Func<Task<Done>, CoordinatedShutdown, List<string>, Task<Done>> InvokeLoopFunc = (t, o, r) => InvokeLoop(t, o, r);
         private static Task<Done> InvokeLoop(Task<Done> tr, CoordinatedShutdown owner, List<string> remaining)
         {
             // force any exceptions to be rethrown so next phase stops
@@ -657,7 +657,7 @@ namespace Akka.Actor
             }
         }
 
-        private static readonly Func<ActorSystem, CoordinatedShutdown, bool, bool, Task<Done>> InvokeTerminateSystemAction = InvokeTerminateSystem;
+        private static readonly Func<ActorSystem, CoordinatedShutdown, bool, bool, Task<Done>> InvokeTerminateSystemAction = (s, c, t, e) => InvokeTerminateSystem(s, c, t, e);
         private static Task<Done> InvokeTerminateSystem(ActorSystem system, CoordinatedShutdown coord, bool terminateActorSystem, bool exitClr)
         {
             if (exitClr && terminateActorSystem)
@@ -693,7 +693,7 @@ namespace Akka.Actor
             }
         }
 
-        private static readonly Func<Task, bool, bool, Done> AfterSystemTerminateFunc = AfterSystemTerminate;
+        private static readonly Func<Task, bool, bool, Done> AfterSystemTerminateFunc = (t, e, r) => AfterSystemTerminate(t, e, r);
         private static Done AfterSystemTerminate(Task tr, bool exitClr, bool runningClrHook)
         {
             if (exitClr && !runningClrHook)

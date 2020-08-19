@@ -60,7 +60,7 @@ namespace Akka.Util.Internal
             await Task.Factory.StartNew(InvokeNotifyTransitionListeners, _listeners).ConfigureAwait(false);
         }
 
-        private static readonly Action<object> InvokeNotifyTransitionListeners = NotifyTransitionListeners;
+        private static readonly Action<object> InvokeNotifyTransitionListeners = s => NotifyTransitionListeners(s);
         private static void NotifyTransitionListeners(object state)
         {
             var listeners = (ConcurrentQueue<IRunnable>)state;

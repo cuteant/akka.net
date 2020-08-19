@@ -39,7 +39,7 @@ namespace Akka.Pattern
             _maxBackoff = maxBackoff;
             _randomFactor = randomFactor;
             _strategy = strategy;
-            _localOnlyDeciderFunc = LocalOnlyDecider;
+            _localOnlyDeciderFunc = e => LocalOnlyDecider(e);
         }
 
         protected override SupervisorStrategy SupervisorStrategy()

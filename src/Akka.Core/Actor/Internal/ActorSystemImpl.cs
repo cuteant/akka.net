@@ -598,8 +598,8 @@ namespace Akka.Actor.Internal
             upStreamTerminated.LinkOutcome(AfterUpStreamTerminatedAction, this, _atomicRef);
         }
 
-        private static readonly Action<Task, TerminationCallbacks, AtomicReference<Task>> AfterUpStreamTerminatedAction = AfterUpStreamTerminated;
-        private static void AfterUpStreamTerminated(Task t, TerminationCallbacks owner, AtomicReference<Task> atomicRef)
+        private static readonly Action<Task, TerminationCallbacks, AtomicReference<Task>> AfterUpStreamTerminatedAction = (t, o, a) => AfterUpStreamTerminated(o, a);
+        private static void AfterUpStreamTerminated(/*Task t, */TerminationCallbacks owner, AtomicReference<Task> atomicRef)
         {
             var terminationTask = atomicRef.GetAndSet(null);
             owner._terminationTask = terminationTask;
@@ -651,8 +651,8 @@ namespace Akka.Actor.Internal
             Add(code, state);
         }
 
-        private static readonly Action<Task, Task> InvokeTaskStartAction = InvokeTaskStart;
-        private static void InvokeTaskStart(Task t, Task previous)
+        private static readonly Action<Task, Task> InvokeTaskStartAction = (t, s) => InvokeTaskStart(s);
+        private static void InvokeTaskStart(/*Task t, */Task previous)
         {
             previous.Start();
         }

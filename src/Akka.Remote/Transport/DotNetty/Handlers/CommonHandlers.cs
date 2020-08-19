@@ -78,7 +78,8 @@ namespace Akka.Remote.Transport.DotNetty
             }
         }
 
-        private static readonly Action<IHandleEventListener, CommonHandlers, IChannel, IPEndPoint, object> AfterSetupReadHandlerAction = AfterSetupReadHandler;
+        private static readonly Action<IHandleEventListener, CommonHandlers, IChannel, IPEndPoint, object> AfterSetupReadHandlerAction =
+            (l, o, c, r, m) => AfterSetupReadHandler(l, o, c, r, m);
         private static void AfterSetupReadHandler(IHandleEventListener listener, CommonHandlers owner, IChannel channel, IPEndPoint remoteSocketAddress, object msg)
         {
             owner.RegisterListener(channel, listener, msg, remoteSocketAddress);

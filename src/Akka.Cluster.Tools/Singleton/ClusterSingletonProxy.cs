@@ -95,14 +95,14 @@ namespace Akka.Cluster.Tools.Singleton
             _singletonPath = (singletonManagerPath + "/" + settings.SingletonName).Split('/');
             _identityId = CreateIdentifyId(_identityCounter);
 
-            Receive<ClusterEvent.CurrentClusterState>(HandleInitial);
-            Receive<ClusterEvent.MemberUp>(HandleMemberUp);
-            Receive<ClusterEvent.MemberExited>(HandleMemberExited);
-            Receive<ClusterEvent.MemberRemoved>(HandleMemberRemoved);
+            Receive<ClusterEvent.CurrentClusterState>(e => HandleInitial(e));
+            Receive<ClusterEvent.MemberUp>(e => HandleMemberUp(e));
+            Receive<ClusterEvent.MemberExited>(e => HandleMemberExited(e));
+            Receive<ClusterEvent.MemberRemoved>(e => HandleMemberRemoved(e));
             Receive<ClusterEvent.IMemberEvent>(PatternMatch<ClusterEvent.IMemberEvent>.EmptyAction);
-            Receive<ActorIdentity>(HandleActorIdentity);
-            Receive<TryToIdentifySingleton>(HandleTryToIdentifySingleton);
-            Receive<Terminated>(HandleTerminated);
+            Receive<ActorIdentity>(e => HandleActorIdentity(e));
+            Receive<TryToIdentifySingleton>(e => HandleTryToIdentifySingleton(e));
+            Receive<Terminated>(e => HandleTerminated(e));
             ReceiveAny(HandleAny);
         }
 

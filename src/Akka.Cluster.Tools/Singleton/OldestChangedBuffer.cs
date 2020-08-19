@@ -106,7 +106,7 @@ namespace Akka.Cluster.Tools.Singleton
         public OldestChangedBuffer(string role)
         {
             _role = role;
-            _onDeliverNextAction = OnDeliverNext;
+            _onDeliverNextAction = m => OnDeliverNext(m);
 
             SetupCoordinatedShutdown();
         }
@@ -124,7 +124,7 @@ namespace Akka.Cluster.Tools.Singleton
             _coordShutdown.AddTask(CoordinatedShutdown.PhaseClusterExiting, "singleton-exiting-1", InvokeSingletonExiting1Func, this, Self);
         }
 
-        private static readonly Func<OldestChangedBuffer, IActorRef, Task<Done>> InvokeSingletonExiting1Func = InvokeSingletonExiting1;
+        private static readonly Func<OldestChangedBuffer, IActorRef, Task<Done>> InvokeSingletonExiting1Func = (o, s) => InvokeSingletonExiting1(o, s);
         private static Task<Done> InvokeSingletonExiting1(OldestChangedBuffer owner, IActorRef self)
         {
             var cluster = owner._cluster;

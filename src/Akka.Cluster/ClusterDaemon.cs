@@ -803,13 +803,13 @@ namespace Akka.Cluster
 
             AddCoordinatedLeave();
 
-            Receive<InternalClusterAction.GetClusterCoreRef>(HandleGetClusterCoreRef);
+            Receive<InternalClusterAction.GetClusterCoreRef>(e => HandleGetClusterCoreRef(e));
 
-            Receive<InternalClusterAction.AddOnMemberUpListener>(HandleAddOnMemberUpListener);
+            Receive<InternalClusterAction.AddOnMemberUpListener>(e => HandleAddOnMemberUpListener(e));
 
-            Receive<InternalClusterAction.AddOnMemberRemovedListener>(HandleAddOnMemberRemovedListener);
+            Receive<InternalClusterAction.AddOnMemberRemovedListener>(e => HandleAddOnMemberRemovedListener(e));
 
-            Receive<CoordinatedShutdownLeave.LeaveReq>(HandleLeaveReq);
+            Receive<CoordinatedShutdownLeave.LeaveReq>(e => HandleLeaveReq(e));
         }
 
         private void HandleGetClusterCoreRef(InternalClusterAction.GetClusterCoreRef msg)
@@ -849,7 +849,7 @@ namespace Akka.Cluster
                 InvokeWaitShutdownFunc, _clusterPromise);
         }
 
-        private static readonly Func<ActorSystem, IActorRef, CoordinatedShutdown, Task<Done>> InvokeClusterLeaveFunc = InvokeClusterLeave;
+        private static readonly Func<ActorSystem, IActorRef, CoordinatedShutdown, Task<Done>> InvokeClusterLeaveFunc = (s, ar, c) => InvokeClusterLeave(s, ar, c);
         private static Task<Done> InvokeClusterLeave(ActorSystem sys, IActorRef self, CoordinatedShutdown coordShutdown)
         {
             if (Cluster.Get(sys).IsTerminated || Cluster.Get(sys).SelfMember.Status == MemberStatus.Down)
@@ -863,7 +863,7 @@ namespace Akka.Cluster
             }
         }
 
-        private static readonly Func<TaskCompletionSource<Done>, Task<Done>> InvokeWaitShutdownFunc = InvokeWaitShutdown;
+        private static readonly Func<TaskCompletionSource<Done>, Task<Done>> InvokeWaitShutdownFunc = tcs => InvokeWaitShutdown(tcs);
         private static Task<Done> InvokeWaitShutdown(TaskCompletionSource<Done> clusterPromise)
         {
             return clusterPromise.Task;
@@ -903,14 +903,14 @@ namespace Akka.Cluster
         /// </summary>
         public ClusterCoreSupervisor()
         {
-            _localOnlyDeciderFunc = LocalOnlyDecider;
+            _localOnlyDeciderFunc = e => LocalOnlyDecider(e);
 
             // Important - don't use Cluster(Context.System) in constructor because that would
             // cause deadlock. The Cluster extension is currently being created and is waiting
             // for response from GetClusterCoreRef in its constructor.
             // Child actors are therefore created when GetClusterCoreRef is received
 
-            Receive<InternalClusterAction.GetClusterCoreRef>(HandleGetClusterCoreRef);
+            Receive<InternalClusterAction.GetClusterCoreRef>(e => HandleGetClusterCoreRef(e));
         }
 
         private void HandleGetClusterCoreRef(InternalClusterAction.GetClusterCoreRef cr)
@@ -1069,7 +1069,7 @@ namespace Akka.Cluster
                 InvokeExitingCompletedFunc, Context.System, Self, _coordShutdown);
         }
 
-        private static readonly Func<ClusterCoreDaemon, Task<Done>> InvokeWaitExitingFunc = InvokeWaitExiting;
+        private static readonly Func<ClusterCoreDaemon, Task<Done>> InvokeWaitExitingFunc = o => InvokeWaitExiting(o);
         private static Task<Done> InvokeWaitExiting(ClusterCoreDaemon owner)
         {
             if (owner._latestGossip.Members.IsEmpty)
@@ -1078,7 +1078,7 @@ namespace Akka.Cluster
                 return owner._selfExiting.Task;
         }
 
-        private static readonly Func<ActorSystem, IActorRef, CoordinatedShutdown, Task<Done>> InvokeExitingCompletedFunc = InvokeExitingCompleted;
+        private static readonly Func<ActorSystem, IActorRef, CoordinatedShutdown, Task<Done>> InvokeExitingCompletedFunc = (s, ar, c) => InvokeExitingCompleted(s, ar, c);
         private static Task<Done> InvokeExitingCompleted(ActorSystem sys, IActorRef self, CoordinatedShutdown coordShutdown)
         {
             if (Cluster.Get(sys).IsTerminated || Cluster.Get(sys).SelfMember.Status == MemberStatus.Down)
@@ -3046,11 +3046,11 @@ namespace Akka.Cluster
             _status = targetStatus;
             _cluster = Cluster.Get(Context.System);
 
-            Receive<ClusterEvent.CurrentClusterState>(HandleCurrentClusterState);
+            Receive<ClusterEvent.CurrentClusterState>(e => HandleCurrentClusterState(e));
 
-            Receive<ClusterEvent.MemberUp>(HandleMemberUp);
+            Receive<ClusterEvent.MemberUp>(e => HandleMemberUp(e));
 
-            Receive<ClusterEvent.MemberRemoved>(HandleMemberRemoved);
+            Receive<ClusterEvent.MemberRemoved>(e => HandleMemberRemoved(e));
         }
 
         private void HandleCurrentClusterState(ClusterEvent.CurrentClusterState state)

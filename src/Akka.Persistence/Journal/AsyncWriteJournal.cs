@@ -224,13 +224,13 @@ namespace Akka.Persistence.Journal
                 .LinkOutcome(InvokePublishMessagesAction, CanPublish, eventStream, message, _continuationOptions);
         }
 
-        private static readonly Func<AsyncWriteJournal, DeleteMessagesTo, Task> InvokeDeleteMessagesToFunc = InvokeDeleteMessagesTo;
+        private static readonly Func<AsyncWriteJournal, DeleteMessagesTo, Task> InvokeDeleteMessagesToFunc = (o, m) => InvokeDeleteMessagesTo(o, m);
         private static Task InvokeDeleteMessagesTo(AsyncWriteJournal owner, DeleteMessagesTo message)
         {
             return owner.DeleteMessagesToAsync(message.PersistenceId, message.ToSequenceNr);
         }
 
-        private static readonly Func<Task, DeleteMessagesTo, object> AfterDeleteMessagesToFunc = AfterDeleteMessagesTo;
+        private static readonly Func<Task, DeleteMessagesTo, object> AfterDeleteMessagesToFunc = (t, m) => AfterDeleteMessagesTo(t, m);
         private static object AfterDeleteMessagesTo(Task t, DeleteMessagesTo message)
         {
             return t.IsSuccessfully()
@@ -243,7 +243,7 @@ namespace Akka.Persistence.Journal
                     message.ToSequenceNr);
         }
 
-        private static readonly Action<Task, bool, Event.EventStream, object> InvokePublishMessagesAction = InvokePublishMessages;
+        private static readonly Action<Task, bool, Event.EventStream, object> InvokePublishMessagesAction = (t, cp, es, m) => InvokePublishMessages(t, cp, es, m);
         private static void InvokePublishMessages(Task t, bool canPublish, Event.EventStream eventStream, object message)
         {
             if (t.IsSuccessfully() && canPublish)
@@ -269,14 +269,15 @@ namespace Akka.Persistence.Journal
                 .LinkOutcome(InvokePublishMessagesAction, CanPublish, eventStream, message, _continuationOptions);
         }
 
-        private static readonly Func<AsyncWriteJournal, ReplayMessages, Task<long>> InvokeReadHighestSequenceNrFunc = InvokeReadHighestSequenceNr;
+        private static readonly Func<AsyncWriteJournal, ReplayMessages, Task<long>> InvokeReadHighestSequenceNrFunc = (o, m) => InvokeReadHighestSequenceNr(o, m);
         private static Task<long> InvokeReadHighestSequenceNr(AsyncWriteJournal owner, ReplayMessages message)
         {
             var readHighestSequenceNrFrom = Math.Max(0L, message.FromSequenceNr - 1);
             return owner.ReadHighestSequenceNrAsync(message.PersistenceId, readHighestSequenceNrFrom);
         }
 
-        private static readonly Action<Task<long>, AsyncWriteJournal, IActorContext, IActorRef, TaskCompletionSource<long>, ReplayMessages> AfterReadHighestSequenceNrAction = AfterReadHighestSequenceNr;
+        private static readonly Action<Task<long>, AsyncWriteJournal, IActorContext, IActorRef, TaskCompletionSource<long>, ReplayMessages> AfterReadHighestSequenceNrAction =
+            (t, o, c, r, p, m) => AfterReadHighestSequenceNr(t, o, c, r, p, m);
         public static void AfterReadHighestSequenceNr(Task<long> t,
             AsyncWriteJournal owner, IActorContext context, IActorRef replyTo, TaskCompletionSource<long> promise, ReplayMessages message)
         {
@@ -314,7 +315,7 @@ namespace Akka.Persistence.Journal
             }
         }
 
-        private static readonly Action<Task, TaskCompletionSource<long>, long> AfterReplayMessagesAction = AfterReplayMessages;
+        private static readonly Action<Task, TaskCompletionSource<long>, long> AfterReplayMessagesAction = (t, p, sn) => AfterReplayMessages(t, p, sn);
         public static void AfterReplayMessages(Task replayTask, TaskCompletionSource<long> promise, long highSequenceNr)
         {
             if (replayTask.IsSuccessfully())
@@ -325,7 +326,7 @@ namespace Akka.Persistence.Journal
                     : new OperationCanceledException("ReplayMessagesAsync canceled, possibly due to timing out."));
         }
 
-        private static readonly Func<Task<long>, IJournalResponse> GetJournalResponseFunc = GetJournalResponse;
+        private static readonly Func<Task<long>, IJournalResponse> GetJournalResponseFunc = t => GetJournalResponse(t);
         private static IJournalResponse GetJournalResponse(Task<long> t)
         {
             return t.IsSuccessfully()
@@ -386,14 +387,15 @@ namespace Akka.Persistence.Journal
                 .LinkOutcome(AfterWriteMessagesAction, this, self, writeMessagesAsyncException, message, atomicWriteCount, counter, _continuationOptions);
         }
 
-        private static readonly Func<AsyncWriteJournal, WriteMessages, Task<IImmutableList<Exception>>> InvokeWriteMessagesFunc = InvokeWriteMessages;
+        private static readonly Func<AsyncWriteJournal, WriteMessages, Task<IImmutableList<Exception>>> InvokeWriteMessagesFunc = (o, m) => InvokeWriteMessages(o, m);
         private static Task<IImmutableList<Exception>> InvokeWriteMessages(AsyncWriteJournal owner, WriteMessages message)
         {
             var prepared = owner.PreparePersistentBatch(message.Messages).ToArray();
             return owner.WriteMessagesAsync(prepared);
         }
 
-        private static readonly Action<Task<IImmutableList<Exception>>, AsyncWriteJournal, IActorRef, Exception, WriteMessages, int, long> AfterWriteMessagesAction = AfterWriteMessages;
+        private static readonly Action<Task<IImmutableList<Exception>>, AsyncWriteJournal, IActorRef, Exception, WriteMessages, int, long> AfterWriteMessagesAction =
+            (t, o, s, we, m, aw, c) => AfterWriteMessages(t, o, s, we, m, aw, c);
         private static void AfterWriteMessages(Task<IImmutableList<Exception>> t,
             AsyncWriteJournal owner, IActorRef self, Exception writeMessagesAsyncException, WriteMessages message, int atomicWriteCount, long counter)
         {
