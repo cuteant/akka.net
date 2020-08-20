@@ -1,1 +1,1 @@
-dotnet test --framework net471 -- RunConfiguration.TargetPlatform=x64
+..\..\src\Akka.MultiNodeTestRunner\bin\Debug\net471\win7-x64\Akka.MultiNodeTestRunner.exe "E:\CoreProjects\akka.net\test\Akka.Remote.Tests.MultiNode\bin\Debug\net471\Akka.Remote.Tests.MultiNode.dll" -Dmultinode.output-directory=..\..\Artifacts\multinode\remote_fx471\

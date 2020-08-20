@@ -9,12 +9,15 @@ using System;
 using System.Collections.Generic;
 using Akka.Remote.Transport;
 using Akka.Util;
+using MessagePack;
 using Address = Akka.Actor.Address;
 
 namespace Akka.Remote.TestKit
 {
+    [MessagePackObject]
     public sealed class RoleName : IEquatable<RoleName>
     {
+        [SerializationConstructor]
         public RoleName(string name)
         {
             Name = name;
@@ -49,6 +52,7 @@ namespace Akka.Remote.TestKit
         /// <returns><c>true</c> if both <see cref="RoleName"/> are not equal; otherwise <c>false</c></returns>
         public static bool operator !=(RoleName left, RoleName right) => !Equals(left, right);
 
+        [Key(0)]
         public string Name { get; }
 
         /// <inheritdoc/>
@@ -63,10 +67,12 @@ namespace Akka.Remote.TestKit
         object Msg { get; }
     }
 
+    [MessagePackObject]
     class ToClient<T> : IToClient where T : IClientOp, INetworkOp
     {
         private readonly T _msg;
 
+        [SerializationConstructor]
         public ToClient(T msg)
         {
             _msg = msg;
@@ -77,6 +83,7 @@ namespace Akka.Remote.TestKit
             get { return _msg; }
         }
 
+        [Key(0)]
         public T Msg
         {
             get { return _msg; }
@@ -134,15 +141,18 @@ namespace Akka.Remote.TestKit
         object Msg { get; }
     }
 
+    [MessagePackObject]
     class ToServer<T> : IToServer where T : IServerOp, INetworkOp
     {
         readonly T _msg;
 
+        [SerializationConstructor]
         public ToServer(T msg)
         {
             _msg = msg;
         }
 
+        [Key(0)]
         public T Msg
         {
             get { return _msg; }
@@ -226,6 +236,7 @@ namespace Akka.Remote.TestKit
     /// <summary>
     /// First message of connection sets names straight.
     /// </summary>
+    [MessagePackObject]
     sealed class Hello : INetworkOp
     {
         readonly string _name;
@@ -275,28 +286,33 @@ namespace Akka.Remote.TestKit
             return !Equals(left, right);
         }
 
+        [SerializationConstructor]
         public Hello(string name, Address address)
         {
             _name = name;
             _address = address;
         }
 
+        [Key(0)]
         public string Name
         {
             get { return _name; }
         }
 
+        [Key(1)]
         public Address Address
         {
             get { return _address; }
         }
     }
 
+    [MessagePackObject]
     sealed class EnterBarrier : IServerOp, INetworkOp
     {
         readonly string _name;
         readonly TimeSpan? _timeout;
 
+        [SerializationConstructor]
         public EnterBarrier(string name, TimeSpan? timeout)
         {
             _name = name;
@@ -347,26 +363,31 @@ namespace Akka.Remote.TestKit
             return !Equals(left, right);
         }
 
+        [Key(0)]
         public string Name
         {
             get { return _name; }
         }
 
+        [Key(1)]
         public TimeSpan? Timeout
         {
             get { return _timeout; }
         }
     }
 
+    [MessagePackObject]
     sealed class FailBarrier : IServerOp, INetworkOp
     {
         readonly string _name;
 
+        [SerializationConstructor]
         public FailBarrier(string name)
         {
             _name = name;
         }
 
+        [Key(0)]
         public string Name
         {
             get { return _name; }
@@ -414,22 +435,26 @@ namespace Akka.Remote.TestKit
         }
     }
 
+    [MessagePackObject]
     sealed class BarrierResult : IUnconfirmedClientOp, INetworkOp
     {
         readonly string _name;
         readonly bool _success;
 
+        [SerializationConstructor]
         public BarrierResult(string name, bool success)
         {
             _name = name;
             _success = success;
         }
 
+        [Key(0)]
         public string Name
         {
             get { return _name; }
         }
 
+        [Key(1)]
         public bool Success
         {
             get { return _success; }
@@ -480,6 +505,7 @@ namespace Akka.Remote.TestKit
         }
     }
 
+    [MessagePackObject]
     sealed class Throttle : ICommandOp
     {
         readonly RoleName _node;
@@ -487,6 +513,7 @@ namespace Akka.Remote.TestKit
         readonly ThrottleTransportAdapter.Direction _direction;
         readonly float _rateMBit;
 
+        [SerializationConstructor]
         public Throttle(RoleName node, RoleName target, ThrottleTransportAdapter.Direction direction, float rateMBit)
         {
             _node = node;
@@ -495,21 +522,25 @@ namespace Akka.Remote.TestKit
             _rateMBit = rateMBit;
         }
 
+        [Key(0)]
         public RoleName Node
         {
             get { return _node; }
         }
 
+        [Key(1)]
         public RoleName Target
         {
             get { return _target; }
         }
 
+        [Key(2)]
         public ThrottleTransportAdapter.Direction Direction
         {
             get { return _direction; }
         }
 
+        [Key(3)]
         public float RateMBit
         {
             get { return _rateMBit; }
@@ -564,12 +595,14 @@ namespace Akka.Remote.TestKit
         }
     }
 
+    [MessagePackObject]
     sealed class ThrottleMsg : IConfirmedClientOp, INetworkOp
     {
         readonly Address _target;
         readonly ThrottleTransportAdapter.Direction _direction;
         readonly float _rateMBit;
 
+        [SerializationConstructor]
         public ThrottleMsg(Address target, ThrottleTransportAdapter.Direction direction, float rateMBit)
         {
             _target = target;
@@ -577,16 +610,19 @@ namespace Akka.Remote.TestKit
             _rateMBit = rateMBit;
         }
 
+        [Key(0)]
         public Address Target
         {
             get { return _target; }
         }
 
+        [Key(1)]
         public ThrottleTransportAdapter.Direction Direction
         {
             get { return _direction; }
         }
 
+        [Key(2)]
         public float RateMBit
         {
             get { return _rateMBit; }
@@ -640,12 +676,14 @@ namespace Akka.Remote.TestKit
         }
     }
 
+    [MessagePackObject]
     sealed class Disconnect : ICommandOp
     {
         readonly RoleName _node;
         readonly RoleName _target;
         readonly bool _abort;
 
+        [SerializationConstructor]
         public Disconnect(RoleName node, RoleName target, bool abort)
         {
             _node = node;
@@ -653,16 +691,19 @@ namespace Akka.Remote.TestKit
             _abort = abort;
         }
 
+        [Key(0)]
         public RoleName Node
         {
             get { return _node; }
         }
 
+        [Key(1)]
         public RoleName Target
         {
             get { return _target; }
         }
 
+        [Key(2)]
         public bool Abort
         {
             get { return _abort; }
@@ -716,22 +757,26 @@ namespace Akka.Remote.TestKit
         }
     }
 
+    [MessagePackObject]
     sealed class DisconnectMsg : IConfirmedClientOp, INetworkOp
     {
         readonly Address _target;
         readonly bool _abort;
 
+        [SerializationConstructor]
         public DisconnectMsg(Address target, bool abort)
         {
             _target = target;
             _abort = abort;
         }
 
+        [Key(0)]
         public Address Target
         {
             get { return _target; }
         }
 
+        [Key(1)]
         public bool Abort
         {
             get { return _abort; }
@@ -782,11 +827,12 @@ namespace Akka.Remote.TestKit
         }
     }
 
-    sealed class Terminate : ICommandOp
+    sealed class Terminate : ICommandOp, IObjectReferences
     {
         readonly RoleName _node;
         readonly Either<bool, int> _shutdownOrExit;
 
+        [SerializationConstructor]
         public Terminate(RoleName node, Either<bool, int> shutdownOrExit)
         {
             _node = node;
@@ -848,7 +894,7 @@ namespace Akka.Remote.TestKit
         }
     }
 
-    sealed class TerminateMsg : IConfirmedClientOp, INetworkOp
+    sealed class TerminateMsg : IConfirmedClientOp, INetworkOp, IObjectReferences
     {
         readonly Either<bool, int> _shutdownOrExit;
 
@@ -904,15 +950,18 @@ namespace Akka.Remote.TestKit
         }
     }
 
+    [MessagePackObject]
     sealed class GetAddress : IServerOp, INetworkOp
     {
         readonly RoleName _node;
 
+        [SerializationConstructor]
         public GetAddress(RoleName node)
         {
             _node = node;
         }
 
+        [Key(0)]
         public RoleName Node
         {
             get { return _node; }
@@ -960,22 +1009,26 @@ namespace Akka.Remote.TestKit
         }
     }
 
+    [MessagePackObject]
     sealed class AddressReply : IUnconfirmedClientOp, INetworkOp
     {
         readonly RoleName _node;
         readonly Address _addr;
 
+        [SerializationConstructor]
         public AddressReply(RoleName node, Address addr)
         {
             _node = node;
             _addr = addr;
         }
 
+        [Key(0)]
         public RoleName Node
         {
             get { return _node; }
         }
 
+        [Key(1)]
         public Address Addr
         {
             get { return _addr; }
@@ -1026,10 +1079,10 @@ namespace Akka.Remote.TestKit
         }
     }
 
-    public class Done : IServerOp, IUnconfirmedClientOp, INetworkOp
+    public class Done : IServerOp, IUnconfirmedClientOp, INetworkOp, ISingletonMessage
     {
         private Done() { }
-        private static readonly Done _instance = new Done();
+        public static readonly Done _instance = new Done();
 
         public static Done Instance
         {
@@ -1040,15 +1093,18 @@ namespace Akka.Remote.TestKit
         }
     }
 
+    [MessagePackObject]
     sealed class Remove : ICommandOp
     {
         readonly RoleName _node;
 
+        [SerializationConstructor]
         public Remove(RoleName node)
         {
             _node = node;
         }
 
+        [Key(0)]
         public RoleName Node
         {
             get { return _node; }

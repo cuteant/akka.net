@@ -24,7 +24,7 @@ namespace Akka.Tests.Serialization
             var config = ConfigurationFactory.ParseString(@"
                 akka.actor {
                     serializers {
-                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json""
+                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka""
                     }
                     serialization-bindings {
                         ""System.Object"" = json
@@ -48,7 +48,7 @@ namespace Akka.Tests.Serialization
             var config = ConfigurationFactory.ParseString(@"
                 akka.actor {
                     serializers {
-                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json""
+                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka""
                     }
                     serialization-bindings {
                         ""System.Object"" = json
@@ -76,7 +76,7 @@ namespace Akka.Tests.Serialization
             var config = ConfigurationFactory.ParseString(@"
                 akka.actor {
                     serializers {
-                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json""
+                        json = ""Akka.Serialization.NewtonSoftJsonSerializer, Akka""
                     }
                     serialization-bindings {
                         ""System.Object"" = json

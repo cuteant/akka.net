@@ -27,8 +27,8 @@ msgpack                   = "Akka.Serialization.MsgPackSerializer, Akka"        
 lz4-msgpack               = "Akka.Serialization.LZ4MsgPackSerializer, Akka.Serialization.MessagePackLZ4"                               = 102
 lz4-msgpack-typeless      = "Akka.Serialization.LZ4MsgPackTypelessSerializer, Akka.Serialization.MessagePackLZ4"                       = 103
 hyperion                  = "Akka.Serialization.HyperionSerializer, Akka.Serialization.Hyperion"                                       = -5 (104)
-json                      = "Akka.Serialization.NewtonSoftJsonSerializer, Akka.Serialization.Json"                                     = 105
-json-span                 = "Akka.Serialization.SpanJsonSerializer, Akka.Serialization.SpanJson"                                       = 106
+json                      = "Akka.Serialization.NewtonSoftJsonSerializer, Akka"                                                        = 105
+spanjson                  = "Akka.Serialization.SpanJsonSerializer, Akka"                                                              = 106
 protobuf-net              = "Akka.Serialization.ProtobufNetSerializer, Akka.Serialization.ProtobufNet"                                 = 107
 protobuf-data             = "Akka.Serialization.ProtobufDataSerializer, Akka.Serialization.ProtobufNet"                                = 108
 protobuf                  = "Akka.Serialization.ProtobufSerializer, Akka.Serialization.Protobuf"                                       = 109

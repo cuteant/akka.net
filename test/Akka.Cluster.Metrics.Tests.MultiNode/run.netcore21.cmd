@@ -1,0 +1,1 @@
+..\..\src\Akka.MultiNodeTestRunner\bin\Debug\netcoreapp2.1\win7-x64\Akka.MultiNodeTestRunner.exe "E:\CoreProjects\akka.net\test\Akka.Cluster.Metrics.Tests.MultiNode\bin\Debug\netcoreapp2.1\Akka.Cluster.Metrics.Tests.MultiNode.dll" -Dmultinode.output-directory=..\..\Artifacts\multinode\metrics_core21\

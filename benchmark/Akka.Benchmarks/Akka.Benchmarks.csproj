@@ -14,7 +14,6 @@
     <ProjectReference Include="..\..\src\Akka.DistributedData\Akka.DistributedData.csproj" />
     <ProjectReference Include="..\..\src\Akka.Persistence\Akka.Persistence.csproj" />
     <ProjectReference Include="..\..\src\Akka.Remote\Akka.Remote.csproj" />
-    <ProjectReference Include="..\..\src\Akka.Serialization.Json\Akka.Serialization.Json.csproj" />
     <ProjectReference Include="..\..\src\Akka.Streams\Akka.Streams.csproj" />
   </ItemGroup>
 

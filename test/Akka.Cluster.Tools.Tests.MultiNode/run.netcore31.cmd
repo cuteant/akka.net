@@ -1,1 +1,1 @@
-dotnet test --framework netcoreapp3.1 -- RunConfiguration.TargetPlatform=x64
+..\..\src\Akka.MultiNodeTestRunner\bin\Debug\netcoreapp3.1\win7-x64\Akka.MultiNodeTestRunner.exe "E:\CoreProjects\akka.net\test\Akka.Cluster.Tools.Tests.MultiNode\bin\Debug\netcoreapp3.1\Akka.Cluster.Tools.Tests.MultiNode.dll" -Dmultinode.output-directory=..\..\Artifacts\multinode\tools_core31\

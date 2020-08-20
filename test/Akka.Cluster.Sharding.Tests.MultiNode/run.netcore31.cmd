@@ -1,1 +1,1 @@
-dotnet test --framework netcoreapp3.1 -- RunConfiguration.TargetPlatform=x64
+..\..\src\Akka.MultiNodeTestRunner\bin\Debug\netcoreapp3.1\win7-x64\Akka.MultiNodeTestRunner.exe "E:\CoreProjects\akka.net\test\Akka.Cluster.Sharding.Tests.MultiNode\bin\Debug\netcoreapp3.1\Akka.Cluster.Sharding.Tests.MultiNode.dll" -Dmultinode.output-directory=..\..\Artifacts\multinode\sharding_core31\
