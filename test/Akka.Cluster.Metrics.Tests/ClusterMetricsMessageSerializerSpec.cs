@@ -14,6 +14,7 @@ using Akka.Cluster.Tests;
 using Akka.TestKit;
 using Akka.Util;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using Xunit;
 using Address = Akka.Actor.Address;
 
@@ -81,7 +82,7 @@ namespace Akka.Cluster.Metrics.Tests
         {
             var blob = _serializer.ToBinary(obj);
             var @ref = _serializer.FromBinary(blob, _serializer.Manifest(obj));
-            @ref.ShouldBeEquivalentTo(obj);
+            @ref.Should().BeEquivalentTo(obj);
         }
     }
 }

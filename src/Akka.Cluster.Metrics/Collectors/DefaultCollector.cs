@@ -94,6 +94,7 @@ namespace Akka.Cluster.Metrics.Collectors
                 {
                     _firstSample = false;
                     _cpuWatch.Start();
+                    measureStartTime = default;
                     processes = GetProcesses();
                     _lastCpuTimings = GetTotalProcessorTimes(processes);
                     Thread.Sleep(500);

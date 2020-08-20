@@ -14,8 +14,7 @@ using Akka.TestKit;
 using Akka.Util;
 using Xunit;
 using FluentAssertions;
-using FsCheck;
-using Akka.Configuration;
+using FluentAssertions.Extensions;
 using ConfigurationFactory = Akka.Configuration.ConfigurationFactory;
 
 namespace Akka.Cluster.Metrics.Tests
@@ -36,7 +35,7 @@ namespace Akka.Cluster.Metrics.Tests
             // Supervisor.
             settings.SupervisorName.Should().Be("cluster-metrics");
             settings.SupervisorStrategyProvider.Should().BeEquivalentTo(typeof(ClusterMetricsStrategy).TypeQualifiedName());
-            settings.SupervisorStrategyConfiguration.ToString().ShouldBeEquivalentTo(
+            settings.SupervisorStrategyConfiguration.ToString().Should().BeEquivalentTo(
                 ConfigurationFactory.ParseString("loggingEnabled=true,withinTimeRange=3s,maxNrOfRetries=3").ToString());
             
             // Collector.

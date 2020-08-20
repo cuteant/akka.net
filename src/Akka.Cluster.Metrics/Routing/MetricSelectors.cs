@@ -12,14 +12,14 @@ using Akka.Cluster.Metrics.Helpers;
 using Akka.Cluster.Metrics.Serialization;
 using Akka.Configuration;
 using Akka.Util;
-using Akka.Configuration;
+using MessagePack;
 
 namespace Akka.Cluster.Metrics
 {
     /// <summary>
     /// A MetricsSelector is responsible for producing weights from the node metrics.
     /// </summary>
-    public interface IMetricsSelector
+    public interface IMetricsSelector : IObjectReferences
     {
         /// <summary>
         /// The weights per address, based on the nodeMetrics.
@@ -84,7 +84,7 @@ namespace Akka.Cluster.Metrics
             var divisor = Math.Max(0.01, min);
             return capacity.ToImmutableDictionary(pair => pair.Key, pair => (int)Math.Round(pair.Value / divisor, MidpointRounding.AwayFromZero));
         }
-        
+
         /// <inheritdoc />
         public IImmutableDictionary<Actor.Address, int> Weights(IImmutableSet<NodeMetrics> nodeMetrics)
         {
@@ -102,7 +102,7 @@ namespace Akka.Cluster.Metrics
         /// Singleton instance
         /// </summary>
         public static readonly MemoryMetricsSelector Instance = new MemoryMetricsSelector();
-        
+
         /// <inheritdoc />
         public override IImmutableDictionary<Actor.Address, double> Capacity(IImmutableSet<NodeMetrics> nodeMetrics)
         {
@@ -136,7 +136,7 @@ namespace Akka.Cluster.Metrics
         public CpuMetricsSelector()
         {
         }
-        
+
         /// <inheritdoc />
         public override IImmutableDictionary<Actor.Address, double> Capacity(IImmutableSet<NodeMetrics> nodeMetrics)
         {
@@ -194,7 +194,7 @@ namespace Akka.Cluster.Metrics
         public MixMetricsSelector(ImmutableArray<CapacityMetricsSelector> selectors) : base(selectors)
         {
         }
-        
+
         /// <summary>
         /// Singleton instance of the default MixMetricsSelector, which uses <see cref="MemoryMetricsSelector"/> and
         /// <see cref="CpuMetricsSelector"/>

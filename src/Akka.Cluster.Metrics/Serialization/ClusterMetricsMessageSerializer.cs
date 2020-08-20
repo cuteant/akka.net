@@ -25,9 +25,9 @@ namespace Akka.Cluster.Metrics.Serialization
     public class ClusterMetricsMessageSerializer : SerializerWithStringManifest
     {
         private const int BufferSize = 4 * 1024;
-        
+
         #region manifests
-        
+
         private const string MetricsGossipEnvelopeManifest = "a";
         private const string AdaptiveLoadBalancingPoolManifest = "b";
         private const string MixMetricsSelectorManifest = "c";
@@ -35,27 +35,51 @@ namespace Akka.Cluster.Metrics.Serialization
         private const string HeapMetricsSelectorManifest = "e";
         private const string SystemLoadAverageMetricsSelectorManifest = "f";
 
-        private readonly Lazy<Akka.Serialization.Serialization> _serialization; 
-        
+        private static readonly Dictionary<System.Type, string> ManifestMap;
+
+        static ClusterMetricsMessageSerializer()
+        {
+            ManifestMap = new Dictionary<System.Type, string>
+            {
+                { typeof(MetricsGossipEnvelope), MetricsGossipEnvelopeManifest},
+                { typeof(Metrics.AdaptiveLoadBalancingPool), AdaptiveLoadBalancingPoolManifest},
+                { typeof(Metrics.MixMetricsSelector), MixMetricsSelectorManifest},
+                { typeof(CpuMetricsSelector), CpuMetricsSelectorManifest},
+                { typeof(MemoryMetricsSelector), HeapMetricsSelectorManifest},
+            };
+        }
+
         #endregion
-        
+
+        private readonly Lazy<Akka.Serialization.Serialization> _serialization;
+
         /// <inheritdoc />
-        public ClusterMetricsMessageSerializer(ExtendedActorSystem system) 
+        public ClusterMetricsMessageSerializer(ExtendedActorSystem system)
             : base(system)
         {
             _serialization = new Lazy<Akka.Serialization.Serialization>(() => new Akka.Serialization.Serialization(system));
         }
-        
+
         /// <inheritdoc />
-        public override byte[] ToBinary(object obj)
+        public override byte[] ToBinary(object obj, out string manifest)
         {
             switch (obj)
             {
-                case MetricsGossipEnvelope m: return Compress(MetricsGossipEnvelopeToProto(m)); // TODO: Add compression here
-                case Metrics.AdaptiveLoadBalancingPool alb: return AdaptiveLoadBalancingPoolToBinary(alb);
-                case Metrics.MixMetricsSelector mms: return MixMetricsSelectorToBinary(mms);
-                case CpuMetricsSelector _: return new byte[0];
-                case MemoryMetricsSelector _: return new byte[0];
+                case MetricsGossipEnvelope m:
+                    manifest = MetricsGossipEnvelopeManifest;
+                    return Compress(MetricsGossipEnvelopeToProto(m)); // TODO: Add compression here
+                case Metrics.AdaptiveLoadBalancingPool alb:
+                    manifest = AdaptiveLoadBalancingPoolManifest;
+                    return AdaptiveLoadBalancingPoolToBinary(alb);
+                case Metrics.MixMetricsSelector mms:
+                    manifest = MixMetricsSelectorManifest;
+                    return MixMetricsSelectorToBinary(mms);
+                case CpuMetricsSelector _:
+                    manifest = CpuMetricsSelectorManifest;
+                    return Array.Empty<byte>();
+                case MemoryMetricsSelector _:
+                    manifest = HeapMetricsSelectorManifest;
+                    return Array.Empty<byte>();
                 default:
                     throw new ArgumentException($"Can't serialize object of type ${obj.GetType().Name} in [${GetType().Name}]");
             }
@@ -103,7 +127,7 @@ namespace Akka.Cluster.Metrics.Serialization
         {
             switch (manifest)
             {
-                case MetricsGossipEnvelopeManifest: return MetricsGossipEnvelopeFromBinary(bytes); 
+                case MetricsGossipEnvelopeManifest: return MetricsGossipEnvelopeFromBinary(bytes);
                 case AdaptiveLoadBalancingPoolManifest: return AdaptiveLoadBalancingPoolFromBinary(bytes);
                 case MixMetricsSelectorManifest: return MixMetricSelectorFromBinary(bytes);
                 case CpuMetricsSelectorManifest: return CpuMetricsSelector.Instance;
@@ -111,6 +135,19 @@ namespace Akka.Cluster.Metrics.Serialization
                 default:
                     throw new ArgumentException($"Unimplemented deserialization of message with manifest [{manifest}] in [${GetType().Name}");
             }
+        }
+
+        /// <inheritdoc />
+        protected override string GetManifest(System.Type type)
+        {
+            if (type is null) { return null; }
+            var manifestMap = ManifestMap;
+            if (manifestMap.TryGetValue(type, out var manifest)) { return manifest; }
+            foreach (var item in manifestMap)
+            {
+                if (item.Key.IsAssignableFrom(type)) { return item.Value; }
+            }
+            throw new ArgumentException($"Can't serialize object of type {type.Name} in [{GetType().Name}]");
         }
 
         /// <inheritdoc />
@@ -135,7 +172,7 @@ namespace Akka.Cluster.Metrics.Serialization
                 NrOfInstances = (uint)pool.NrOfInstances,
                 UsePoolDispatcher = pool.UsePoolDispatcher
             };
-            
+
             if (!pool.MetricsSelector.Equals(Metrics.MixMetricsSelector.Instance))
                 proto.MetricsSelector = MetricsSelectorToProto(pool.MetricsSelector);
 
@@ -148,7 +185,7 @@ namespace Akka.Cluster.Metrics.Serialization
         private MetricsSelector MetricsSelectorToProto(IMetricsSelector selector)
         {
             var serializer = _serialization.Value.FindSerializerFor(selector);
-            
+
             return new MetricsSelector()
             {
                 Data = ByteString.CopyFrom(serializer.ToBinary(selector)),
@@ -165,7 +202,7 @@ namespace Akka.Cluster.Metrics.Serialization
             };
             return proto.ToByteArray();
         }
-        
+
         /// <summary>
         /// Converts Akka.NET type into Protobuf serializable message
         /// </summary>
@@ -179,7 +216,7 @@ namespace Akka.Cluster.Metrics.Serialization
                 System = address.System,
             };
         }
-        
+
         /// <summary>
         /// Converts Protobuf serializable message to Akka.NET type
         /// </summary>
@@ -212,7 +249,7 @@ namespace Akka.Cluster.Metrics.Serialization
                 ImmutableHashSet<string>.Empty,
                 (set, metrics) => set.Union(metrics.Metrics.Select(m => m.Name))).ToImmutableArray();
             var metricNamesMapping = allMetricNames.Select((a, i) => (Index: i, Value: a)).ToImmutableDictionary(p => p.Value, p => p.Index);
-            
+
             int MapAddress(Actor.Address address) => MapWithErrorMessage(addressMapping, address, "address");
             int MapName(string name) => MapWithErrorMessage(metricNamesMapping, name, "metric name");
 
@@ -251,8 +288,8 @@ namespace Akka.Cluster.Metrics.Serialization
             {
                 var metric = new NodeMetrics.Types.Metric()
                 {
-                     NameIndex = MapName(m.Name),
-                     Number = NumberToProto(m.Value),
+                    NameIndex = MapName(m.Name),
+                    Number = NumberToProto(m.Value),
                 };
 
                 var ewma = EwmaToProto(m.Average);
@@ -273,7 +310,7 @@ namespace Akka.Cluster.Metrics.Serialization
             }
 
             var nodeMetricsProto = allNodeMetrics.Select(NodeMetricsToProto);
-            
+
             return new MetricsGossipEnvelope()
             {
                 From = AddressToProto(envelope.FromAddress),
@@ -292,8 +329,8 @@ namespace Akka.Cluster.Metrics.Serialization
             var gossip = envelope.Gossip;
             var addressMapping = gossip.AllAddresses.Select(AddressFromProto).ToImmutableArray();
             var metricNameMapping = gossip.AllMetricNames.ToImmutableArray();
-            
-            Option<NodeMetrics.Types.EWMA> EwmaFromProto(NodeMetrics.Types.EWMA ewma) 
+
+            Option<NodeMetrics.Types.EWMA> EwmaFromProto(NodeMetrics.Types.EWMA ewma)
                 => new NodeMetrics.Types.EWMA(ewma.Value, ewma.Alpha);
 
             AnyNumber NumberFromProto(NodeMetrics.Types.Number number)
@@ -325,21 +362,21 @@ namespace Akka.Cluster.Metrics.Serialization
             NodeMetrics.Types.Metric MetricFromProto(NodeMetrics.Types.Metric metric)
             {
                 return new NodeMetrics.Types.Metric(
-                    metricNameMapping[metric.NameIndex], 
-                    NumberFromProto(metric.Number), 
+                    metricNameMapping[metric.NameIndex],
+                    NumberFromProto(metric.Number),
                     metric.Ewma != null ? EwmaFromProto(metric.Ewma) : Option<NodeMetrics.Types.EWMA>.None);
             }
 
             NodeMetrics NodeMetricsFromProto(NodeMetrics metrics)
             {
                 return new NodeMetrics(
-                    addressMapping[metrics.AddressIndex], 
-                    metrics.Timestamp, 
+                    addressMapping[metrics.AddressIndex],
+                    metrics.Timestamp,
                     metrics.Metrics.Select(MetricFromProto).ToImmutableArray());
             }
 
             var nodeMetrics = gossip.NodeMetrics.Select(NodeMetricsFromProto).ToImmutableHashSet();
-            
+
             return new MetricsGossipEnvelope(AddressFromProto(envelope.From), new MetricsGossip(nodeMetrics), envelope.Reply);
         }
 
@@ -357,12 +394,12 @@ namespace Akka.Cluster.Metrics.Serialization
             {
                 selector = Metrics.MixMetricsSelector.Instance;
             }
-            
+
             return new Metrics.AdaptiveLoadBalancingPool(
-                metricsSelector: selector, 
-                nrOfInstances: (int)proto.NrOfInstances, 
-                supervisorStrategy: null, 
-                routerDispatcher: !string.IsNullOrEmpty(proto.RouterDispatcher) ? proto.RouterDispatcher : Dispatchers.DefaultDispatcherId, 
+                metricsSelector: selector,
+                nrOfInstances: (int)proto.NrOfInstances,
+                supervisorStrategy: null,
+                routerDispatcher: !string.IsNullOrEmpty(proto.RouterDispatcher) ? proto.RouterDispatcher : Dispatchers.DefaultDispatcherId,
                 usePoolDispatcher: proto.UsePoolDispatcher);
         }
 
@@ -380,6 +417,6 @@ namespace Akka.Cluster.Metrics.Serialization
         {
             return _serialization.Value.Deserialize(selector.Data.ToByteArray(), (int)selector.SerializerId, selector.Manifest) as IMetricsSelector;
         }
-        
+
     }
 }

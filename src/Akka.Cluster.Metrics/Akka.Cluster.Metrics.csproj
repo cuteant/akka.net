@@ -23,7 +23,7 @@
 
   <ItemGroup>
     <EmbeddedResource Include="reference.conf" />
-    <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
+    <PackageReference Include="Google.Protobuf" Version="$(GoogleProtobufPackageVersion)" />
     <ProjectReference Include="..\Akka.Cluster\Akka.Cluster.csproj" />
   </ItemGroup>
 
