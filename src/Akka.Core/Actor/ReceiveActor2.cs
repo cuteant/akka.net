@@ -96,7 +96,7 @@ namespace Akka.Actor
                 newHandler(message);
                 return true;
             }
-            Receive receiveFunc = LocalReceive;
+            Receive receiveFunc = m => LocalReceive(m);
 
             patterns.Properties[BehaviorKey] = receiveFunc;
             return receiveFunc;
@@ -126,11 +126,7 @@ namespace Akka.Actor
 
         private Action<T> WrapAsyncHandler<T>(Func<T, Task> asyncHandler)
         {
-            void WrapRunTask(T m)
-            {
-                ActorTaskScheduler.RunTask(asyncHandler, m);
-            }
-            return WrapRunTask;
+            return m => ActorTaskScheduler.RunTask(asyncHandler, m);
         }
 
         /// <summary>Registers a handler for incoming messages of the specified type <typeparamref name="T"/>.

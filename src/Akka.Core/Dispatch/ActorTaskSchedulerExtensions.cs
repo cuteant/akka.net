@@ -56,11 +56,10 @@ namespace Akka.Dispatch
 
         private static Exception TryUnwrapAggregateException(AggregateException aggregateException)
         {
-            if (aggregateException is null)
-                return null;
+            if (aggregateException is null) { return null; }
 
-            if (aggregateException.InnerExceptions.Count == 1)
-                return aggregateException.InnerExceptions[0];
+            var innerExceptions = aggregateException.InnerExceptions;
+            if (0u >= (uint)(innerExceptions.Count - 1)) { return innerExceptions[0]; }
 
             return aggregateException;
         }

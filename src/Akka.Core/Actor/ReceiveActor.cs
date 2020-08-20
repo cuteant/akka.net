@@ -97,8 +97,7 @@ namespace Akka.Actor
                 if (!wasHandled && _shouldUnhandle)
                     Unhandled(message);
             }
-            UntypedReceive receiveAction = LocalReceive;
-            base.Become(receiveAction);
+            base.Become(m => LocalReceive(m));
         }
 
         /// <summary>
@@ -118,8 +117,7 @@ namespace Akka.Actor
                 if (!wasHandled && _shouldUnhandle)
                     Unhandled(message);
             }
-            UntypedReceive receiveAction = LocalReceive;
-            base.BecomeStacked(receiveAction);
+            base.BecomeStacked(m => LocalReceive(m));
         }
 
         private PartialAction<object> CreateNewHandler(Action configure)
@@ -132,11 +130,7 @@ namespace Akka.Actor
 
         private Action<T> WrapAsyncHandler<T>(Func<T, Task> asyncHandler)
         {
-            void WrapRunTask(T m)
-            {
-                ActorTaskScheduler.RunTask(asyncHandler, m);
-            }
-            return WrapRunTask;
+            return m => ActorTaskScheduler.RunTask(asyncHandler, m);
         }
 
         /// <summary>
