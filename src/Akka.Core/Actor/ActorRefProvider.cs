@@ -396,8 +396,12 @@ namespace Akka.Actor
         public IActorRef ResolveActorRef(string path)
         {
             if (ActorPath.TryParse(path, out var actorPath) && actorPath.Address == _rootPath.Address)
+            {
                 return ResolveActorRef(_rootGuardian, actorPath.Elements);
+            }
+#if DEBUG
             if (_log.IsDebugEnabled) _log.ResolveOfUnknownPathFailed(path);
+#endif
             return _deadLetters;
         }
 
@@ -409,8 +413,12 @@ namespace Akka.Actor
         public IActorRef ResolveActorRef(ActorPath path)
         {
             if (path.Root == _rootPath)
+            {
                 return ResolveActorRef(_rootGuardian, path.Elements);
+            }
+#if DEBUG
             if (_log.IsDebugEnabled) _log.ResolveOfForeignActorPathFailed(path);
+#endif
             return _deadLetters;
 
             //Used to be this, but the code above is what Akka has
@@ -441,15 +449,19 @@ namespace Akka.Actor
         /// <returns>TBD</returns>
         internal IInternalActorRef ResolveActorRef(IInternalActorRef actorRef, IReadOnlyCollection<string> pathElements)
         {
-            if (pathElements.Count == 0)
+            if (0u >= (uint)pathElements.Count)
             {
+#if DEBUG
                 if (_log.IsDebugEnabled) _log.ResolveOfEmptyPathSequenceFailsPerDefinition();
+#endif
                 return _deadLetters;
             }
             var child = actorRef.GetChild(pathElements);
             if (child.IsNobody())
             {
+#if DEBUG
                 if (_log.IsDebugEnabled) _log.ResolveOfPathSequenceFailed(pathElements);
+#endif
                 return new EmptyLocalActorRef(_system.Provider, actorRef.Path / pathElements, _eventStream);
             }
             return (IInternalActorRef)child;

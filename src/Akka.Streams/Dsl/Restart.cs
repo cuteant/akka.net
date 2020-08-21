@@ -487,7 +487,9 @@ namespace Akka.Streams.Dsl
                     }
                     else
                     {
+#if DEBUG
                         if (Log.IsDebugEnabled) { Log.RestartingGraphDueToFinishedUpstream(); }
+#endif
                         ScheduleRestartTimer();
                     }
                 },
@@ -535,7 +537,9 @@ namespace Akka.Streams.Dsl
                     }
                     else
                     {
+#if DEBUG
                         if (Log.IsDebugEnabled) { Log.GraphInFinished(); }
+#endif
                         ScheduleRestartTimer();
                     }
                 }
@@ -565,7 +569,9 @@ namespace Akka.Streams.Dsl
             // Check if the last start attempt was more than the minimum backoff
             if (_resetDeadline.IsOverdue)
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.LastRestartAttemptWasMoreThan(_minBackoff);
+#endif
                 _restartCount = 0;
             }
             return _restartCount == _maxRestarts;
@@ -576,12 +582,16 @@ namespace Akka.Streams.Dsl
             // Check if the last start attempt was more than the minimum backoff
             if (_resetDeadline.IsOverdue)
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.LastRestartAttemptWasMoreThan(_minBackoff);
+#endif
                 _restartCount = 0;
             }
 
             var restartDelay = BackoffSupervisor.CalculateDelay(_restartCount, _minBackoff, _maxBackoff, _randomFactor);
+#if DEBUG
             if (Log.IsDebugEnabled) Log.RestartingGraphIn(restartDelay);
+#endif
             ScheduleOnce("RestartTimer", restartDelay);
             _restartCount += 1;
             // And while we wait, we go into backoff mode

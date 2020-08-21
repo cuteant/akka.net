@@ -88,7 +88,9 @@ namespace Akka.IO
             {
                 if (_connect.RemoteAddress is DnsEndPoint remoteAddress)
                 {
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.Debug("Resolving {0} before connecting", remoteAddress.Host);
+#endif
                     var resolved = Dns.ResolveName(remoteAddress.Host, Context.System, Self);
                     if (resolved is null)
                         Become(Resolving(remoteAddress));
@@ -147,7 +149,9 @@ namespace Akka.IO
         {
             ReportConnectFailure(() =>
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.Debug("Attempting connection to [{0}]", address);
+#endif
 
                 _connectArgs = CreateSocketEventArgs(Self);
                 _connectArgs.RemoteEndPoint = address;
@@ -168,7 +172,9 @@ namespace Akka.IO
                     if (args.SocketError == SocketError.Success)
                     {
                         if (_connect.Timeout.HasValue) Context.SetReceiveTimeout(null);
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.Debug("Connection established to [{0}]", _connect.RemoteAddress);
+#endif
 
                         ReleaseConnectionSocketArgs();
                         AcquireSocketAsyncEventArgs();
@@ -199,7 +205,9 @@ namespace Akka.IO
                     }
                     else
                     {
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.Debug("Could not establish connection because finishConnect never returned true (consider increasing akka.io.tcp.finish-connect-retries)");
+#endif
                         Stop();
                     }
                     return true;

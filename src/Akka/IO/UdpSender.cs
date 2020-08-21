@@ -73,15 +73,21 @@ namespace Akka.IO
         /// </summary>
         protected override void PostStop()
         {
+#if DEBUG
             if (_log.IsDebugEnabled) _log.Debug("Closing Socket after being stopped");
+#endif
             try
             {
                 Socket.Dispose();
             }
+#if DEBUG
             catch (Exception e)
             {
                 _log.Debug("Error closing Socket: {0}", e);
             }
+#else
+            catch (Exception) { }
+#endif
         }
     }
 }

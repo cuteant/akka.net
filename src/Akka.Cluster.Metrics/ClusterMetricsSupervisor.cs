@@ -61,11 +61,15 @@ namespace Akka.Cluster.Metrics
                     Context.GetChildren().ForEach(child => Context.Stop(child));
                     _collectorInstance++;
                     Context.ActorOf(Props.Create<ClusterMetricsCollector>(), CollectorName);
+#if DEBUG
                     _log.Debug("Collection started");
+#endif
                     return true;
                 case ClusterMetricsSupervisorMetadata.CollectionStopMessage stop:
                     Context.GetChildren().ForEach(child => Context.Stop(child));
+#if DEBUG
                     _log.Debug("Collection stopped");
+#endif
                     return true;
             }
 

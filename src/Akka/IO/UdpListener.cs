@@ -39,7 +39,7 @@ namespace Akka.IO
 
             Socket = (bind.Options.OfType<Inet.DatagramChannelCreator>().FirstOrDefault() ?? new Inet.DatagramChannelCreator()).Create();
             Socket.Blocking = false;
-            
+
             try
             {
                 foreach (var option in bind.Options)
@@ -52,7 +52,9 @@ namespace Akka.IO
                 if (ret is null)
                     throw new ArgumentException($"bound to unknown SocketAddress [{Socket.LocalEndPoint}]");
 
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.Debug("Successfully bound to [{0}]", ret);
+#endif
                 bind.Options.OfType<Inet.SocketOptionV2>().ForEach(x => x.AfterBind(Socket));
 
                 ReceiveAsync();
@@ -93,17 +95,21 @@ namespace Akka.IO
                     ReceiveAsync();
                     return true;
                 case SocketReceived _:
-                    var received = (SocketReceived) message;
+                    var received = (SocketReceived)message;
                     DoReceive(received.EventArgs, _bind.Handler);
                     return true;
                 case Unbind _:
+#if DEBUG
                     var debugEnabled = Log.IsDebugEnabled;
                     if (debugEnabled) Log.Debug("Unbinding endpoint [{0}]", _bind.LocalAddress);
+#endif
                     try
                     {
                         Socket.Dispose();
                         Sender.Tell(Unbound.Instance);
+#if DEBUG
                         if (debugEnabled) Log.Debug("Unbound endpoint [{0}], stopping listener", _bind.LocalAddress);
+#endif
                     }
                     finally
                     {
@@ -137,19 +143,25 @@ namespace Akka.IO
         {
             if (Socket.Connected)
             {
+#if DEBUG
                 var debugEnabled = Log.IsDebugEnabled;
                 if (debugEnabled) Log.Debug("Closing DatagramChannel after being stopped");
+#endif
                 try
                 {
                     Socket.Dispose();
                 }
+#if DEBUG
                 catch (Exception e)
                 {
                     if (debugEnabled) Log.Debug("Error closing DatagramChannel: {0}", e);
                 }
+#else
+                catch (Exception) { }
+#endif
             }
         }
-        
+
         private void ReceiveAsync()
         {
             var e = Udp.SocketEventArgsPool.Acquire(Self);

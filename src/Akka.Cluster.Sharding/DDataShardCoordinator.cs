@@ -208,7 +208,9 @@ namespace Akka.Cluster.Sharding
                 switch (message)
                 {
                     case UpdateSuccess success when success.Key.Equals(_coordinatorStateKey) && Equals(success.Request, e):
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.TheCoordinatorStateWasSuccessfullyUpdatedWith(e);
+#endif
                         var newRemainingKeys = remainingKeys.Remove(_coordinatorStateKey);
                         if (newRemainingKeys.IsEmpty)
                             UnbecomeAfterUpdate(e, afterUpdateCallback);
@@ -231,7 +233,9 @@ namespace Akka.Cluster.Sharding
                         return true;
 
                     case UpdateSuccess success when success.Key.Equals(_allShardsKey) && success.Request is string newShard:
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.TheCoordinatorShardsStateWasSuccessfullyUpdatedWith(newShard);
+#endif
                         var newRemaining = remainingKeys.Remove(_allShardsKey);
                         if (newRemaining.IsEmpty)
                             UnbecomeAfterUpdate(e, afterUpdateCallback);

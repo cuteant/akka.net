@@ -504,7 +504,9 @@ namespace Akka.Cluster.Sharding
 
             if (Settings.RememberEntities)
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) { Log.Debug("Idle entities will not be passivated because 'rememberEntities' is enabled."); }
+#endif
             }
         }
 
@@ -525,7 +527,9 @@ namespace Akka.Cluster.Sharding
             MembersByAge = newMembers;
             if (!Equals(before, after))
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) { Log.CoordinatorMoved(before, after); }
+#endif
 
                 _coordinator = null;
                 Register();
@@ -575,7 +579,9 @@ namespace Akka.Cluster.Sharding
 
         private void InitializeShard(ShardId id, IActorRef shardRef)
         {
+#if DEBUG
             if (Log.IsDebugEnabled) Log.ShardWasInitialized(id);
+#endif
             StartingShards = StartingShards.Remove(id);
             DeliverBufferedMessage(id, shardRef);
         }
@@ -632,11 +638,15 @@ namespace Akka.Cluster.Sharding
                     if (!ShardBuffers.TryGetValue(shardId, out var buffer))
                     {
                         buffer = ImmutableList<KeyValuePair<object, IActorRef>>.Empty;
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.RequestShard(shardId);
+#endif
                         _coordinator?.Tell(new PersistentShardCoordinator.GetShardHome(shardId));
                     }
 
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.BufferMessageForShard(shardId, buffer.Count);
+#endif
                     ShardBuffers = ShardBuffers.SetItem(shardId, buffer.Add(new KeyValuePair<object, IActorRef>(message, sender)));
                 }
             }
@@ -664,7 +674,9 @@ namespace Akka.Cluster.Sharding
                     }
                     else
                     {
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.ForwardingRequestForShard(shardId, region);
+#endif
                         region.Tell(message, sender);
                     }
                 }
@@ -679,7 +691,9 @@ namespace Akka.Cluster.Sharding
                     {
                         if (!ShardBuffers.ContainsKey(shardId))
                         {
+#if DEBUG
                             if (Log.IsDebugEnabled) Log.RequestShard(shardId);
+#endif
                             _coordinator?.Tell(new PersistentShardCoordinator.GetShardHome(shardId));
                         }
 
@@ -696,7 +710,9 @@ namespace Akka.Cluster.Sharding
             {
                 if (_loggedFullBufferWarning)
                 {
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.BufferIsFullDroppingMessageForShard(shardId, true);
+#endif
                 }
                 else
                 {
@@ -747,7 +763,9 @@ namespace Akka.Cluster.Sharding
                     break;
 
                 case GracefulShutdown _:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.StartingGracefulShutdownOfRegionAndAllItsShards();
+#endif
                     GracefulShutdownInProgress = true;
                     SendGracefulShutdownToCoordinator();
                     TryCompleteGracefulShutdown();
@@ -852,7 +870,9 @@ namespace Akka.Cluster.Sharding
                 case PersistentShardCoordinator.HostShard hs:
                     {
                         var shard = hs.Shard;
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.HostShard(shard);
+#endif
                         RegionByShard = RegionByShard.SetItem(shard, Self);
                         UpdateRegionShards(Self, shard);
 
@@ -863,7 +883,9 @@ namespace Akka.Cluster.Sharding
                     }
                     break;
                 case PersistentShardCoordinator.ShardHome home:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.ShardLocatedAt(home);
+#endif
 
                     if (RegionByShard.TryGetValue(home.Shard, out var region))
                     {
@@ -897,7 +919,9 @@ namespace Akka.Cluster.Sharding
                 case PersistentShardCoordinator.BeginHandOff bho:
                     {
                         var shard = bho.Shard;
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.BeginHandOffShard(shard);
+#endif
                         if (RegionByShard.TryGetValue(shard, out var regionRef))
                         {
                             if (!Regions.TryGetValue(regionRef, out var updatedShards))
@@ -918,7 +942,9 @@ namespace Akka.Cluster.Sharding
                 case PersistentShardCoordinator.HandOff ho:
                     {
                         var shard = ho.Shard;
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.HandOffShard(shard);
+#endif
 
                         // must drop requests that came in between the BeginHandOff and now,
                         // because they might be forwarded from other regions and there
@@ -953,17 +979,21 @@ namespace Akka.Cluster.Sharding
 
         private void RequestShardBufferHomes()
         {
+#if DEBUG
             var isDebugEnabled = Log.IsDebugEnabled;
+#endif
             foreach (var buffer in ShardBuffers)
             {
                 if (_retryCount >= RetryCountThreshold)
                 {
                     Log.RetryRequestForShardHomesFromCoordinator2(buffer.Key, _coordinator, buffer.Value.Count);
                 }
+#if DEBUG
                 else
                 {
                     if (isDebugEnabled) Log.RetryRequestForShardHomesFromCoordinator(buffer.Key, _coordinator, buffer.Value.Count);
                 }
+#endif
 
                 _coordinator.Tell(new PersistentShardCoordinator.GetShardHome(buffer.Key));
             }
@@ -973,7 +1003,9 @@ namespace Akka.Cluster.Sharding
         {
             if (ShardBuffers.TryGetValue(shardId, out var buffer))
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.DeliverBufferedMessagesForShard(buffer.Count, shardId);
+#endif
 
                 foreach (var m in buffer)
                     receiver.Tell(m.Key, m.Value);
@@ -997,7 +1029,9 @@ namespace Akka.Cluster.Sharding
 
                 if (ShardsByRef.Values.All(shardId => shardId != id))
                 {
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.StartingShardInRegion(id);
+#endif
 
                     var name = Uri.EscapeDataString(id);
                     var shardRef = Context.Watch(Context.ActorOf(Sharding.Shards.Props(
@@ -1086,7 +1120,9 @@ namespace Akka.Cluster.Sharding
                 RegionByShard = RegionByShard.RemoveRange(shards);
                 Regions = Regions.Remove(terminated.ActorRef);
 
+#if DEBUG
                 if (Log.IsDebugEnabled) { Log.RegionWithShardsTerminated(terminated, shards); }
+#endif
             }
             else if (ShardsByRef.TryGetValue(terminated.ActorRef, out var shard))
             {
@@ -1096,14 +1132,20 @@ namespace Akka.Cluster.Sharding
                 if (HandingOff.Contains(terminated.ActorRef))
                 {
                     HandingOff = HandingOff.Remove(terminated.ActorRef);
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.ShardHandoffComplete(shard);
+#endif
                 }
                 else
                 {
                     // if persist fails it will stop
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.ShardTerminatedWhileNotBeingHandedOff(shard);
+#endif
                     if (Settings.RememberEntities)
+                    {
                         Context.System.Scheduler.ScheduleTellOnce(Settings.TunningParameters.ShardFailureBackoff, Self, new RestartShard(shard), Self);
+                    }
                 }
 
                 TryCompleteGracefulShutdown();

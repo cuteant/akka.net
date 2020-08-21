@@ -154,7 +154,9 @@ namespace Akka.Cluster
         {
             if (WatchingNodes.Contains(address))
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.ClusterIsTakingOverResponsibilityOfNode(address);
+#endif
                 UnwatchNode(address);
             }
         }

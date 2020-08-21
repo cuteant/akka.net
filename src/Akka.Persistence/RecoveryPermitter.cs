@@ -62,10 +62,12 @@ namespace Akka.Persistence
                     Context.Watch(Sender);
                     if (_usedPermits >= MaxPermits)
                     {
-                        if (pending.Count == 0 && Log.IsDebugEnabled)
+#if DEBUG
+                        if (0u >= (uint)pending.Count && Log.IsDebugEnabled)
                         {
                             Log.ExceededMaxConcurrentRecoveries(MaxPermits, Sender);
                         }
+#endif
                         pending.AddToBack(Sender);
                         _maxPendingStats = Math.Max(_maxPendingStats, pending.Count);
                     }
@@ -105,7 +107,9 @@ namespace Akka.Persistence
             if (pending.Count != 0 || _maxPendingStats <= 0)
                 return;
 
+#if DEBUG
             if (Log.IsDebugEnabled) Log.DrainedPendingRecoveryPermitRequests(_usedPermits, _maxPendingStats);
+#endif
             _maxPendingStats = 0;
         }
 

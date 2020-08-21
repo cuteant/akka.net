@@ -105,7 +105,9 @@ namespace Akka.Remote
             {
                 //note: RemoteDaemon does not handle ActorSelection messages - those are handled directly by the RemoteActorRefProvider.
                 case IDaemonMsg _:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.ReceivedCommandToRemoteSystemDaemonOn(message, Path);
+#endif
                     if (message is DaemonMsgCreate daemon) HandleDaemonMsgCreate(daemon);
                     break;
 
@@ -269,10 +271,12 @@ namespace Akka.Remote
                     Log.SkippingToRemoteSystemDaemonOnWhileTerminating(message, p);
                 }
             }
+#if DEBUG
             else
             {
                 if (Log.IsDebugEnabled) Log.RemotePathDoesNotMatchPathFromMessage(message);
             }
+#endif
         }
 
         /// <summary>Find the longest matching path which we know about and return that <see

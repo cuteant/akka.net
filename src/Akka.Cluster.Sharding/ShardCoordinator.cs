@@ -224,8 +224,10 @@ namespace Akka.Cluster.Sharding
             {
                 if (coordinator.CurrentState.Regions.TryGetValue(request.ShardRegion, out var shards))
                 {
+#if DEBUG
                     var coordinatorLog = coordinator.Log;
                     if (coordinatorLog.IsDebugEnabled) coordinatorLog.GracefulShutdownOfRegion(request, shards);
+#endif
                     coordinator.GracefullShutdownInProgress = coordinator.GracefullShutdownInProgress.Add(request.ShardRegion);
                     ContinueRebalance(coordinator, shards.ToImmutableHashSet(StringComparer.Ordinal));
                 }
@@ -284,8 +286,10 @@ namespace Akka.Cluster.Sharding
 
         private static void DeferGetShardHomeRequest<TCoordinator>(this TCoordinator coordinator, string shard, IActorRef from) where TCoordinator : IShardCoordinator
         {
+#if DEBUG
             var logger = coordinator.Log;
             if (logger.IsDebugEnabled) { logger.GetShardHomeRequestFromDeferred(shard, from); }
+#endif
             var pending = coordinator.RebalanceInProgress.TryGetValue(shard, out var prev)
                 ? prev
                 : ImmutableHashSet<IActorRef>.Empty;
@@ -333,8 +337,10 @@ namespace Akka.Cluster.Sharding
         {
             if (allocateResult.ShardRegion is null)
             {
+#if DEBUG
                 var coordinatorLog = coordinator.Log;
                 if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShardAllocationFailed(allocateResult);
+#endif
             }
             else
             {
@@ -353,8 +359,10 @@ namespace Akka.Cluster.Sharding
             }
             else if (!coordinator.HasAllRegionsRegistered())
             {
+#if DEBUG
                 var coordinatorLog = coordinator.Log;
                 if (coordinatorLog.IsDebugEnabled) coordinatorLog.GetShardHomeRequestIgnored(shard);
+#endif
                 return true;
             }
             else
@@ -363,8 +371,10 @@ namespace Akka.Cluster.Sharding
                 {
                     if (coordinator.RegionTerminationInProgress.Contains(region))
                     {
+#if DEBUG
                         var coordinatorLog = coordinator.Log;
                         if (coordinatorLog.IsDebugEnabled) coordinatorLog.GetShardHomeRequestIgnored(shard, region);
+#endif
                     }
                     else
                     {
@@ -384,8 +394,10 @@ namespace Akka.Cluster.Sharding
         {
             if (coordinator.CurrentState.Regions.TryGetValue(terminatedRef, out var shards))
             {
+#if DEBUG
                 var coordinatorLog = coordinator.Log;
                 if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShardRegionTerminated(terminatedRef);
+#endif
                 coordinator.RegionTerminationInProgress = coordinator.RegionTerminationInProgress.Add(terminatedRef);
 
                 foreach (var shard in shards)
@@ -406,8 +418,10 @@ namespace Akka.Cluster.Sharding
         {
             if (coordinator.CurrentState.RegionProxies.Contains(proxyRef))
             {
+#if DEBUG
                 var coordinatorLog = coordinator.Log;
                 if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShardRegionProxyTerminated(proxyRef);
+#endif
                 coordinator.Update(new PersistentShardCoordinator.ShardRegionProxyTerminated(proxyRef), e => coordinator.CurrentState = coordinator.CurrentState.Updated(e));
             }
         }
@@ -415,8 +429,10 @@ namespace Akka.Cluster.Sharding
         private static void HandleRegisterProxy<TCoordinator>(this TCoordinator coordinator, PersistentShardCoordinator.RegisterProxy registerProxy) where TCoordinator : IShardCoordinator
         {
             var proxy = registerProxy.ShardRegionProxy;
+#if DEBUG
             var coordinatorLog = coordinator.Log;
             if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShardRegionProxyRegistered(proxy);
+#endif
             if (coordinator.CurrentState.RegionProxies.Contains(proxy))
                 proxy.Tell(new PersistentShardCoordinator.RegisterAck(coordinator.Self));
             else
@@ -435,10 +451,14 @@ namespace Akka.Cluster.Sharding
         private static void HandleRegister<TCoordinator>(this TCoordinator coordinator, PersistentShardCoordinator.Register message) where TCoordinator : IShardCoordinator
         {
             var region = message.ShardRegion;
+#if DEBUG
             var coordinatorLog = coordinator.Log;
+#endif
             if (IsMember(coordinator, region))
             {
+#if DEBUG
                 if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShardRegionRegistered(region);
+#endif
                 coordinator.AliveRegions = coordinator.AliveRegions.Add(region);
 
                 if (coordinator.CurrentState.Regions.ContainsKey(region))
@@ -462,10 +482,12 @@ namespace Akka.Cluster.Sharding
                     });
                 }
             }
+#if DEBUG
             else
             {
                 if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShardRegionWasNotRegistered(region);
             }
+#endif
         }
 
         private static void HandleGetClusterShardingStats<TCoordinator>(this TCoordinator coordinator, GetClusterShardingStats message) where TCoordinator : IShardCoordinator
@@ -513,7 +535,9 @@ namespace Akka.Cluster.Sharding
         private static void ContinueRebalance<TCoordinator>(this TCoordinator coordinator, IImmutableSet<ShardId> shards) where TCoordinator : IShardCoordinator
         {
             var coordinatorLog = coordinator.Log;
+#if DEBUG
             var isDebugEnabled = coordinatorLog.IsDebugEnabled;
+#endif
             if (coordinatorLog.IsInfoEnabled && ((uint)shards.Count > 0u || !coordinator.RebalanceInProgress.IsEmpty))
             {
                 coordinatorLog.Starting_rebalance_for_shards(coordinator, shards);
@@ -526,16 +550,20 @@ namespace Akka.Cluster.Sharding
                     if (coordinator.CurrentState.Shards.TryGetValue(shard, out var rebalanceFromRegion))
                     {
                         coordinator.RebalanceInProgress = coordinator.RebalanceInProgress.SetItem(shard, ImmutableHashSet<IActorRef>.Empty);
+#if DEBUG
                         if (isDebugEnabled) coordinatorLog.RebalanceShardFrom(shard, rebalanceFromRegion);
+#endif
 
                         var regions = coordinator.CurrentState.Regions.Keys.Union(coordinator.CurrentState.RegionProxies);
                         coordinator.Context.ActorOf(RebalanceWorker.Props(shard, rebalanceFromRegion, coordinator.Settings.TunningParameters.HandOffTimeout, regions, coordinator.GracefullShutdownInProgress)
                             .WithDispatcher(coordinator.Context.Props.Dispatcher));
                     }
+#if DEBUG
                     else
                     {
                         if (isDebugEnabled) coordinatorLog.RebalanceOfNonExistingShardIsIgnored(shard);
                     }
+#endif
                 }
             }
         }
@@ -550,22 +578,28 @@ namespace Akka.Cluster.Sharding
                 }
                 else
                 {
+#if DEBUG
                     var coordinatorLog = coordinator.Log;
+#endif
                     if (coordinator.CurrentState.Regions.ContainsKey(region) && !coordinator.GracefullShutdownInProgress.Contains(region))
                     {
                         coordinator.Update(new PersistentShardCoordinator.ShardHomeAllocated(shard, region), e =>
                         {
                             coordinator.CurrentState = coordinator.CurrentState.Updated(e);
+#if DEBUG
                             if (coordinatorLog.IsDebugEnabled) coordinatorLog.ShardAllocatedAt(e);
+#endif
 
                             SendHostShardMessage(coordinator, e.Shard, e.Region);
                             getShardHomeSender.Tell(new PersistentShardCoordinator.ShardHome(e.Shard, e.Region));
                         });
                     }
+#if DEBUG
                     else
                     {
                         if (coordinatorLog.IsDebugEnabled) coordinatorLog.AllocatedRegionForShardIsNotOneOfTheRegisteredRegions(region, shard);
                     }
+#endif
                 }
             }
             else

@@ -119,7 +119,9 @@ namespace Akka.Streams.Implementation.StreamRef
 
                 _stageActor = GetStageActor(InitialReceive);
 
+#if DEBUG
                 Log.Debug("[{0}] Allocated receiver: {1}", StageActorName, Self);
+#endif
 
                 var initialPartnerRef = _stage._initialPartnerRef;
                 if (initialPartnerRef is object) // this will set the partnerRef
@@ -159,7 +161,9 @@ namespace Akka.Streams.Implementation.StreamRef
                         _localRemainingRequested += addDemand;
                         var demand = new CumulativeDemand(_localCumulativeDemand);
 
+#if DEBUG
                         Log.Debug("[{0}] Demanding until [{1}] (+{2})", _stageActorName, _localCumulativeDemand, addDemand);
+#endif
                         PartnerRef.Tell(demand, Self);
                         ScheduleDemandRedelivery();
                     }
@@ -180,7 +184,9 @@ namespace Akka.Streams.Implementation.StreamRef
                             $"within subscription timeout: {SubscriptionTimeout.Timeout}!");
                         throw ex;
                     case DemandRedeliveryTimerKey:
+#if DEBUG
                         Log.Debug("[{0}] Scheduled re-delivery of demand until [{1}]", StageActorName, _localCumulativeDemand);
+#endif
                         PartnerRef.Tell(new CumulativeDemand(_localCumulativeDemand), Self);
                         ScheduleDemandRedelivery();
                         break;
@@ -202,20 +208,26 @@ namespace Akka.Streams.Implementation.StreamRef
                     case OnSubscribeHandshake _:
                         CancelTimer(SubscriptionTimeoutKey);
                         ObserveAndValidateSender(sender, "Illegal sender in OnSubscribeHandshake");
+#if DEBUG
                         Log.Debug("[{0}] Received handshake {1} from {2}", StageActorName, message, sender);
+#endif
                         TriggerCumulativeDemand();
                         break;
                     case SequencedOnNext onNext:
                         ObserveAndValidateSender(sender, "Illegal sender in SequencedOnNext");
                         ObserveAndValidateSequenceNr(onNext.SeqNr, "Illegal sequence nr in SequencedOnNext");
+#if DEBUG
                         Log.Debug("[{0}] Received seq {1} from {2}", StageActorName, message, sender);
+#endif
                         OnReceiveElement(onNext.Payload);
                         TriggerCumulativeDemand();
                         break;
                     case RemoteStreamCompleted completed:
                         ObserveAndValidateSender(sender, "Illegal sender in RemoteStreamCompleted");
                         ObserveAndValidateSequenceNr(completed.SeqNr, "Illegal sequence nr in RemoteStreamCompleted");
+#if DEBUG
                         Log.Debug("[{0}] The remote stream has completed, completing as well...", StageActorName);
+#endif
                         _stageActor.Unwatch(sender);
                         _completed = true;
                         TryPush();
@@ -266,7 +278,9 @@ namespace Akka.Streams.Implementation.StreamRef
             {
                 if (_partnerRef is null)
                 {
+#if DEBUG
                     Log.Debug("Received first message from {0}, assuming it to be the remote partner for this stage", partner);
+#endif
                     _partnerRef = partner;
                     _stageActor.Watch(partner);
                 }

@@ -113,7 +113,9 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case SaveSnapshotSuccess m:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.PersistentShardSnapshotSavedSuccessfully();
+#endif
                     InternalDeleteMessagesBeforeSnapshot(m, Settings.TunningParameters.KeepNrOfBatches, Settings.TunningParameters.SnapshotAfter);
                     break;
                 case SaveSnapshotFailure m:
@@ -122,7 +124,9 @@ namespace Akka.Cluster.Sharding
                 case DeleteMessagesSuccess m:
                     var deleteTo = m.ToSequenceNr - 1;
                     var deleteFrom = Math.Max(0, deleteTo - Settings.TunningParameters.KeepNrOfBatches * Settings.TunningParameters.SnapshotAfter);
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.PersistentShardMessagesToDeletedSuccessfully(m, deleteFrom, deleteTo);
+#endif
                     DeleteSnapshots(new SnapshotSelectionCriteria(deleteTo, DateTime.MaxValue, deleteFrom));
                     break;
 
@@ -130,7 +134,9 @@ namespace Akka.Cluster.Sharding
                     if (Log.IsWarningEnabled) Log.PersistentShardMessagesToDeletionFailure(m);
                     break;
                 case DeleteSnapshotsSuccess m:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.PersistentShardSnapshotsMatchingDeletedSuccessfully(m);
+#endif
                     break;
                 case DeleteSnapshotsFailure m:
                     if (Log.IsWarningEnabled) Log.PersistentShardSnapshotsMatchingDeletionFailure(m);
@@ -190,7 +196,9 @@ namespace Akka.Cluster.Sharding
         {
             if (LastSequenceNr % Settings.TunningParameters.SnapshotAfter == 0 && LastSequenceNr != 0)
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.SavingSnapshotSequenceNumber(SnapshotSequenceNr);
+#endif
                 SaveSnapshot(State);
             }
         }
@@ -215,14 +223,18 @@ namespace Akka.Cluster.Sharding
             {
                 //Note; because we're not persisting the EntityStopped, we don't need
                 // to persist the EntityStarted either.
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.StartingEntityAgainThereAreBufferedMessagesForIt(id);
+#endif
                 this.SendMessageBuffer(new Shard.EntityStarted(id));
             }
             else
             {
                 if (!Passivating.Contains(tref))
                 {
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.EntityStoppedWithoutPassivatingWillRestartAfterBackoff(id);
+#endif
                     Context.System.Scheduler.ScheduleTellOnce(Settings.TunningParameters.EntityRestartBackoff, Self, new Shard.RestartEntity(id), ActorRefs.NoSender);
                 }
                 else

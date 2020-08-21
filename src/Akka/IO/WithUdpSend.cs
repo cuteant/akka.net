@@ -35,7 +35,9 @@ namespace Akka.IO
             {
                 case Send send when HasWritePending:
                     {
+#if DEBUG
                         if (Udp.Setting.TraceLogging) _log.Debug("Dropping write because queue is full");
+#endif
                         Sender.Tell(new CommandFailed(send));
                         return true;
                     }
@@ -60,8 +62,10 @@ namespace Akka.IO
                                     catch (Exception ex)
                                     {
                                         Sender.Tell(new CommandFailed(send));
+#if DEBUG
                                         _log.Debug("Failure while sending UDP datagram to remote address [{0}]: {1}",
                                             send.Target, ex);
+#endif
                                         _retriedSend = false;
                                         _pendingSend = null;
                                         _pendingCommander = null;
@@ -85,8 +89,10 @@ namespace Akka.IO
                     {
                         if (sent.EventArgs.SocketError == SocketError.Success)
                         {
+#if DEBUG
                             if (Udp.Setting.TraceLogging)
                                 _log.Debug("Wrote [{0}] bytes to channel", sent.EventArgs.BytesTransferred);
+#endif
 
                             if (_pendingSend.WantsAck) _pendingCommander.Tell(_pendingSend.Ack);
 
@@ -120,8 +126,10 @@ namespace Akka.IO
                 var data = _pendingSend.Payload;
 
                 var bytesWritten = Socket.SendTo(data.ToArray(), _pendingSend.Target);
+#if DEBUG
                 if (Udp.Setting.TraceLogging)
                     _log.Debug("Wrote [{0}] bytes to socket", bytesWritten);
+#endif
 
                 // Datagram channel either sends the whole message or nothing
                 if (bytesWritten == 0) _pendingCommander.Tell(new CommandFailed(_pendingSend));

@@ -872,7 +872,9 @@ namespace Akka.Remote.Transport
                                 return Stop(new Failure(d.Reason));
                             default:
                                 //Expect handshake to be finished, dropping connection
+#if DEBUG
                                 if (_log.IsDebugEnabled) _log.ExpectedMessageOfTypeAssociate(fsmEvent);
+#endif
 
                                 SendDisassociate(wrappedHandle, DisassociateInfo.Unknown);
                                 return Stop();
@@ -911,19 +913,25 @@ namespace Akka.Remote.Transport
 
                             // Got a stray message -- explicitly reset the association (force remote endpoint to reassociate)
                             default:
+#if DEBUG
                                 if (_log.IsDebugEnabled) _log.SendingDisassociateToBecauseUnexpectedMessageOfTypeWasReceivedUnassociated(wrappedHandle, fsmEvent);
+#endif
                                 SendDisassociate(wrappedHandle, DisassociateInfo.Unknown);
                                 return Stop();
                         }
                     }
 
                 case HandshakeTimer _ when evtStateData is OutboundUnderlyingAssociated oua:
+#if DEBUG
                     if (_log.IsDebugEnabled) _log.SendingDisassociateToBecauseHandshakeTimedOutForOutboundAssociationAfter(oua, _settings);
+#endif
                     SendDisassociate(oua.WrappedHandle, DisassociateInfo.Unknown);
                     return Stop(new Failure(GetTimeoutReasonForOutboundAssociation()));
 
                 case HandshakeTimer _ when evtStateData is InboundUnassociated iu:
+#if DEBUG
                     if (_log.IsDebugEnabled) _log.SendingDisassociateToBecauseHandshakeTimedOutForInboundAssociationAfter(iu, _settings);
+#endif
                     SendDisassociate(iu.WrappedHandle, DisassociateInfo.Unknown);
                     return Stop(new Failure(GetTimeoutReasonForInboundAssociation()));
 
@@ -1193,10 +1201,12 @@ namespace Akka.Remote.Transport
             else
             {
                 var stateName = StateName;
+#if DEBUG
                 if (_log.IsDebugEnabled)
                 {
                     _log.SendingDisassociateToBecauseFailureDetectorTriggeredInState(wrappedHandle, stateName);
                 }
+#endif
 
                 // send disassociate just to be sure
                 SendDisassociate(wrappedHandle, DisassociateInfo.Unknown);

@@ -95,7 +95,9 @@ namespace Akka.IO
                 ReceiveAsync();
                 Context.Become(Connected);
             });
+#if DEBUG
             if (Log.IsDebugEnabled) Log.Debug("Successfully connected to [{0}]", _connect.RemoteAddress);
+#endif
         }
 
         protected override bool Receive(object message) => throw new NotSupportedException();
@@ -119,12 +121,16 @@ namespace Akka.IO
                 case SocketReceived socketReceived: DoRead(socketReceived, _connect.Handler); return true;
                 case Disconnect _:
                     {
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.Debug("Closing UDP connection to [{0}]", _connect.RemoteAddress);
+#endif
 
                         _socket.Dispose();
 
                         Sender.Tell(Disconnected.Instance);
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.Debug("Connection closed to [{0}], stopping listener", _connect.RemoteAddress);
+#endif
                         Context.Stop(Self);
                         return true;
                     }
@@ -132,7 +138,9 @@ namespace Akka.IO
                     {
                         if (WritePending)
                         {
+#if DEBUG
                             if (Udp.Settings.TraceLogging) Log.Debug("Dropping write because queue is full");
+#endif
                             Sender.Tell(new CommandFailed(send));
                         }
                         else
@@ -154,8 +162,10 @@ namespace Akka.IO
                     {
                         if (_pendingSend.Item1.WantsAck)
                             _pendingSend.Item2.Tell(_pendingSend.Item1.Ack);
+#if DEBUG
                         if (Udp.Settings.TraceLogging)
                             Log.Debug("Wrote [{0}] bytes to socket", sent.EventArgs.BytesTransferred);
+#endif
                         _pendingSend = null;
                         Udp.SocketEventArgsPool.Release(sent.EventArgs);
                         return true;
@@ -189,8 +199,10 @@ namespace Akka.IO
                 var data = send.Payload;
 
                 var bytesWritten = _socket.Send(data.Buffers);
+#if DEBUG
                 if (Udp.Settings.TraceLogging)
                     Log.Debug("Wrote [{0}] bytes to socket", bytesWritten);
+#endif
 
                 // Datagram channel either sends the whole message or nothing
                 if (bytesWritten == 0) _commander.Tell(new CommandFailed(send));
@@ -207,15 +219,21 @@ namespace Akka.IO
         /// </summary>
         protected override void PostStop()
         {
+#if DEBUG
             if (Log.IsDebugEnabled) Log.Debug("Closing DatagramChannel after being stopped");
+#endif
             try
             {
                 _socket.Dispose();
             }
+#if DEBUG
             catch (Exception ex)
             {
                 if (Log.IsDebugEnabled) Log.Debug("Error closing DatagramChannel: {0}", ex);
             }
+#else
+            catch (Exception) { }
+#endif
         }
 
         [MethodImpl(MethodImplOptions.AggressiveInlining)]

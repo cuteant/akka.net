@@ -1280,8 +1280,12 @@ namespace Akka.Cluster.Tools.Singleton
                         {
                             if (Log.IsInfoEnabled) { Log.RetrySendingTakeOverFromMeTo(takeOverRetry.Count, wasOldestData); }
                         }
+#if DEBUG
                         else
+                        {
                             Log.Debug("Retry [{0}], sending TakeOverFromMe to [{1}]", takeOverRetry.Count, wasOldestData.NewOldest?.Address);
+                        }
+#endif
 
                         if (wasOldestData.NewOldest is object)
                             Peer(wasOldestData.NewOldest.Address).Tell(TakeOverFromMe.Instance);
@@ -1427,7 +1431,9 @@ namespace Akka.Cluster.Tools.Singleton
                     return Stay();
 
                 case TakeOverFromMe _:
+#if DEBUG
                     if (Log.IsDebugEnabled) { Log.IgnoringTakeOverRequest(StateName, Sender); }
+#endif
                     return Stay();
 
                 case Cleanup _:
@@ -1514,7 +1520,9 @@ namespace Akka.Cluster.Tools.Singleton
         {
             if (_removalMargin > TimeSpan.Zero)
             {
+#if DEBUG
                 if (_log.IsDebugEnabled) Log.ScheduleDelayedMemberRemovedFor(member);
+#endif
                 Context.System.Scheduler.ScheduleTellOnce(_removalMargin, Self, new DelayedMemberRemoved(member), Self);
             }
             else Self.Tell(new DelayedMemberRemoved(member));

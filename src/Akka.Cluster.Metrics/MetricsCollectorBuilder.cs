@@ -27,7 +27,9 @@ namespace Akka.Cluster.Metrics
     {
         public IMetricsCollector Build(ActorSystem system)
         {
+#if DEBUG
             var log = Logging.GetLogger(system, GetType());
+#endif
             var settings = ClusterMetricsSettings.Create(system.Settings.Config);
 
             var collectorCustom = settings.CollectorProvider;
@@ -38,7 +40,9 @@ namespace Akka.Cluster.Metrics
             
             Try<IMetricsCollector> Create(string provider)
             {
+#if DEBUG
                 log.Debug("Trying {0}", provider);
+#endif
                 return DynamicAccess.CreateInstanceFor<IMetricsCollector>(provider, system);
             }
 

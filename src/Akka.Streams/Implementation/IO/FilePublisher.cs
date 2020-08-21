@@ -173,11 +173,13 @@ namespace Akka.Streams.Implementation.IO
                 {
                     var readBytes = _chan.Read(_buffer, 0, _chunkSize);
 
-                    if (readBytes == 0)
+                    if (0u >= (uint)readBytes)
                     {
                         //EOF
+#if DEBUG
                         _eofReachedAtOffset = _chan.Position;
                         if (_log.IsDebugEnabled) _log.NoMoreBytesAvailableToRead(_eofReachedAtOffset);
+#endif
                         return chunks;
                     }
 

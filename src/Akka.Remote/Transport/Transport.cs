@@ -352,10 +352,12 @@ namespace Akka.Remote.Transport
         /// </summary>
         public void Disassociate(string reason, ILoggingAdapter log)
         {
+#if DEBUG
             if (log.IsDebugEnabled)
             {
                 log.AssociationBetweenLocalAndRemoteWasDisassociatedBecause(this, reason);
             }
+#endif
 
 #pragma warning disable 618
             Disassociate();

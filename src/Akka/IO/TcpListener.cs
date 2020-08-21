@@ -104,11 +104,15 @@ namespace Akka.IO
             }
             if (message is Tcp.Unbind)
             {
+#if DEBUG
                 var debugEnabled = _log.IsDebugEnabled;
                 if (debugEnabled) _log.Debug("Unbinding endpoint {0}", _bind.LocalAddress);
+#endif
                 _socket.Dispose();
                 Sender.Tell(Tcp.Unbound.Instance);
+#if DEBUG
                 if (debugEnabled) _log.Debug("Unbound endpoint {0}, stopping listener", _bind.LocalAddress);
+#endif
                 Context.Stop(Self);
                 return true;
             }
@@ -125,10 +129,14 @@ namespace Akka.IO
                 _socket.Dispose();
                 _saeas?.ForEach(x => x.Dispose());
             }
+#if DEBUG
             catch (Exception e)
             {
                 _log.Debug("Error closing ServerSocketChannel: {0}", e);
             }
+#else
+            catch (Exception) { }
+#endif
         }
     }
 }

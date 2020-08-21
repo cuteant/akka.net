@@ -117,10 +117,12 @@ namespace Akka.Remote
                                         || sel.Message is IPossiblyHarmful
                                         || !recipient.Equals(_provider.RootGuardian)))
                                 {
+#if DEBUG
                                     if (_log.IsDebugEnabled)
                                     {
                                         _log.OperatingInUntrustedMode1(sel);
                                     }
+#endif
                                 }
                                 else
                                 {
@@ -130,10 +132,12 @@ namespace Akka.Remote
                                 break;
 
                             case IPossiblyHarmful _ when _settings.UntrustedMode:
+#if DEBUG
                                 if (_log.IsDebugEnabled)
                                 {
                                     _log.OperatingInUntrustedMode(payload);
                                 }
+#endif
                                 break;
 
                             case ISystemMessage sysMsg:
@@ -1676,10 +1680,12 @@ namespace Akka.Remote
             if (_buffer.IsEmpty && _prioBuffer.IsEmpty)
             {
                 // FIXME remove this when testing/tuning is completed
+#if DEBUG
                 if (_log.IsDebugEnabled)
                 {
                     _log.DrainedBufferWithMaxWriteCount(_maxWriteCount, _fullBackoffCount, _smallBackoffCount, _noBackoffCount, _adaptiveBackoffNanos);
                 }
+#endif
                 _fullBackoffCount = 1;
                 _smallBackoffCount = 0;
                 _noBackoffCount = 0;

@@ -409,7 +409,9 @@ namespace Akka.Actor
                 {
                     if (disposing)
                     {
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.DisposingSystem();
+#endif
                         Terminate().Wait(); // System needs to be disposed before method returns
                     }
                     //Clean up unmanaged resources

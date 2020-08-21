@@ -440,7 +440,9 @@ namespace Akka.Cluster.Tools.Client
             else
                 sendTo = _contacts;
 
+#if DEBUG
             if (_log.IsDebugEnabled) { _log.SendingGetContactsTo(sendTo); }
+#endif
 
             sendTo.ForEach(c => c.Tell(ClusterReceptionist.GetContacts.Instance));
         }
@@ -459,17 +461,21 @@ namespace Akka.Cluster.Tools.Client
             }
             else
             {
+#if DEBUG
                 if (_log.IsDebugEnabled) // don't invoke reflection call on message type if we don't have to
                 {
                     _log.ReceptionistNotAvailableBufferingMessageType(message);
                 }
+#endif
                 _buffer.Enqueue((message, Sender));
             }
         }
 
         private void SendBuffered(IActorRef receptionist)
         {
+#if DEBUG
             if (_log.IsDebugEnabled) { _log.SendingBufferedMessagesToReceptionist(); }
+#endif
             while (_buffer.Count != 0)
             {
                 var t = _buffer.Dequeue();

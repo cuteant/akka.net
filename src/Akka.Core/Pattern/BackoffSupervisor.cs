@@ -165,8 +165,10 @@ namespace Akka.Pattern
                     }
                     else
                     {
+#if DEBUG
                         var log = Log;
                         if (log.IsDebugEnabled) log.TerminatingOnRestartWhichExceedsMaxAllowedRestarts(nextRestartCount, maxNrOfRetries);
+#endif
                         Context.Stop(Self);
                     }
                 }

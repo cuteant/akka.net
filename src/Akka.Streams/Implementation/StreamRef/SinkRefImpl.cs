@@ -120,7 +120,9 @@ namespace Akka.Streams.Implementation.StreamRef
                     ScheduleOnce(SubscriptionTimeoutKey, SubscriptionTimeout.Timeout);
                 }
 
+#if DEBUG
                 Log.Debug("Created SinkRef, pointing to remote Sink receiver: {0}, local worker: {1}", initialPartnerRef, Self);
+#endif
 
                 _promise.SetResult(new SourceRefImpl<TIn>(Self));
             }
@@ -149,7 +151,9 @@ namespace Akka.Streams.Implementation.StreamRef
                         if (_remoteCumulativeDemandReceived < demand.SeqNr)
                         {
                             _remoteCumulativeDemandReceived = demand.SeqNr;
+#if DEBUG
                             Log.Debug("Received cumulative demand [{0}], consumable demand: [{1}]", demand.SeqNr, _remoteCumulativeDemandReceived - _remoteCumulativeDemandConsumed);
+#endif
                         }
                         TryPull();
                         break;
@@ -160,7 +164,9 @@ namespace Akka.Streams.Implementation.StreamRef
             {
                 var element = GrabSequenced(_stage.Inlet);
                 PartnerRef.Tell(element, Self);
+#if DEBUG
                 Log.Debug("Sending sequenced: {0} to {1}", element, PartnerRef);
+#endif
                 TryPull();
             }
 

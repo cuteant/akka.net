@@ -1483,7 +1483,9 @@ namespace Akka.Streams.Implementation.Fusing
                     if (_shortCircuitBuffer is object) { ShortCircuitBatch(); }
                     return true;
                 case StreamSupervisor.PrintDebugDump _:
+#if DEBUG
                     if (_log.IsDebugEnabled) { PrintDebugDump(); }
+#endif
                     return true;
                 default: return false;
             }
@@ -1508,7 +1510,9 @@ namespace Akka.Streams.Implementation.Fusing
                 sb.Append(shell.Interpreter);
             }, builder);
 
+#if DEBUG
             _log.Debug(StringBuilderManager.ReturnAndFree(builder));
+#endif
         }
 
         /// <summary>

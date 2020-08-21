@@ -491,7 +491,9 @@ namespace Akka.Remote
 
                 return CreateRemoteRef(new RootActorPath(actorPath.Address) / actorPath.ElementsWithUid, localAddress);
             }
+#if DEBUG
             if (_log.IsDebugEnabled) _log.ResolveOfUnknownPathFailed(path);
+#endif
             return InternalDeadLetters;
         }
 
@@ -542,7 +544,9 @@ namespace Akka.Remote
 
             if (ActorPath.TryParse(path, out ActorPath actorPath)) { return ResolveActorRef(actorPath); }
 
+#if DEBUG
             if (_log.IsDebugEnabled) _log.ResolveOfUnknownPathFailed(path);
+#endif
             return DeadLetters;
         }
 
@@ -611,7 +615,9 @@ namespace Akka.Remote
         /// <param name="supervisor">TBD</param>
         public void UseActorOnNode(RemoteActorRef actor, Props props, Deploy deploy, IInternalActorRef supervisor)
         {
+#if DEBUG
             if (_log.IsDebugEnabled) _log.InstantiatingRemoteActor(RootPath, actor);
+#endif
             IActorRef remoteNode = ResolveActorRef(new RootActorPath(actor.Path.Address) / "remote");
             remoteNode.Tell(new DaemonMsgCreate(props, deploy, actor.Path.ToSerializationFormat(), supervisor));
             _remoteDeploymentWatcher.Tell(new RemoteDeploymentWatcher.WatchRemote(actor, supervisor));

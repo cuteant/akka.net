@@ -428,15 +428,21 @@ namespace Akka.Actor
             var remaining = remainingPhases.Skip(1).ToList();
             Task<Done> phaseResult = null;
             var log = owner.Log;
+#if DEBUG
             var debugEnabled = log.IsDebugEnabled;
+#endif
             if (!owner._tasks.TryGetValue(phase, out var phaseTasks))
             {
+#if DEBUG
                 if (debugEnabled) { log.PerformingPhaseWithTasks(phase); }
+#endif
                 phaseResult = TaskEx.Completed;
             }
             else
             {
+#if DEBUG
                 if (debugEnabled) { log.PerformingPhaseWithTasks(phase, phaseTasks); }
+#endif
 
                 // note that tasks within same phase are performed in parallel
                 var phaseValue = owner.Phases[phase];

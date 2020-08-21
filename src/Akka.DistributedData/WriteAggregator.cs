@@ -149,7 +149,9 @@ namespace Akka.DistributedData
             var isDelete = _envelope.Data is DeletedData;
             var done = DoneWhenRemainingSize;
             var isSuccess = Remaining.Count <= DoneWhenRemainingSize && !notEnoughNodes;
+#if DEBUG
             if (Log.IsDebugEnabled) Log.WriteAcksRemainingDoneWhen(Remaining.Count, done);
+#endif
             var isTimeoutOrNotEnoughNodes = isTimeout || notEnoughNodes || _gotNackFrom.IsEmpty;
 
             object reply;

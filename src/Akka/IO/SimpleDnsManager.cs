@@ -17,10 +17,12 @@ namespace Akka.IO
     public class SimpleDnsManager : ActorBase, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private readonly DnsExt _ext;
-        private readonly ILoggingAdapter _log = Context.GetLogger();
         private readonly IActorRef _resolver;
         private IPeriodicCacheCleanup _cacheCleanup;
         private ICancelable _cleanupTimer;
+#if DEBUG
+        private readonly ILoggingAdapter _log = Context.GetLogger();
+#endif
 
         /// <summary>
         /// TBD
@@ -51,7 +53,9 @@ namespace Akka.IO
         {
             if (message is Dns.Resolve r)
             {
+#if DEBUG
                 if (_log.IsDebugEnabled) _log.Debug("Resolution request for {0} from {1}", r.Name, Sender);
+#endif
                 _resolver.Forward(r);
                 return true;
             }

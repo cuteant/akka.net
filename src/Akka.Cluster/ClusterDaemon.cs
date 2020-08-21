@@ -1836,10 +1836,14 @@ namespace Akka.Cluster
             var remoteGossip = envelope.Gossip;
             var localGossip = _latestGossip;
 
+#if DEBUG
             var debugEnabled = _log.IsDebugEnabled;
+#endif
             if (remoteGossip.Equals(Gossip.Empty))
             {
+#if DEBUG
                 if (debugEnabled) _log.ClusterNodeIgnoringReceivedGossip(_cluster, from);
+#endif
                 return ReceiveGossipType.Ignored;
             }
             if (!envelope.To.Equals(SelfUniqueAddress))
@@ -1899,7 +1903,9 @@ namespace Akka.Cluster
                     {
                         if (Gossip.RemoveUnreachableWithMemberStatus.Contains(m.Status) && !remoteGossip.Members.Contains(m))
                         {
-                            if (_log.IsDebugEnabled) _log.ClusterNodePrunedConflictingLocalGossip(_cluster, m);
+#if DEBUG
+                            if (debugEnabled) _log.ClusterNodePrunedConflictingLocalGossip(_cluster, m);
+#endif
                             return g.Prune(VectorClock.Node.Create(VclockName(m.UniqueAddress)));
                         }
                         return g;
@@ -1909,7 +1915,9 @@ namespace Akka.Cluster
                     {
                         if (Gossip.RemoveUnreachableWithMemberStatus.Contains(m.Status) && !localGossip.Members.Contains(m))
                         {
-                            if (_log.IsDebugEnabled) _log.ClusterNodePrunedConflictingRemoteGossip(_cluster, m);
+#if DEBUG
+                            if (debugEnabled) _log.ClusterNodePrunedConflictingRemoteGossip(_cluster, m);
+#endif
                             return g.Prune(VectorClock.Node.Create(VclockName(m.UniqueAddress)));
                         }
                         return g;
@@ -1945,6 +1953,7 @@ namespace Akka.Cluster
                 }
             }
 
+#if DEBUG
             if (debugEnabled)
             {
                 _log.ClusterNodeReceivingGossipFrom(_cluster, from);
@@ -1954,6 +1963,7 @@ namespace Akka.Cluster
                     _log.CouldNotEstablishACausalRelationship(remoteGossip, localGossip, winningGossip);
                 }
             }
+#endif
 
             if (_statsEnabled)
             {
@@ -2393,10 +2403,12 @@ namespace Akka.Cluster
             var targets = GossipTargetsForExitingMembers(_latestGossip, exitingMembers);
             if (targets is object && targets.Any())
             {
+#if DEBUG
                 if (_log.IsDebugEnabled)
                 {
                     _log.Cluster_Node_Gossip_exiting_members_to_the_two_oldest(SelfUniqueAddress, exitingMembers, targets);
                 }
+#endif
 
                 foreach (var m in targets)
                 {

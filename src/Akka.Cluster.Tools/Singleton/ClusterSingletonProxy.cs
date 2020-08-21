@@ -170,7 +170,9 @@ namespace Akka.Cluster.Tools.Singleton
             if (oldest is object && _identityTimer is object)
             {
                 var singletonAddress = new RootActorPath(oldest.Address) / _singletonPath;
+#if DEBUG
                 if (_log.IsDebugEnabled) Log.TryingToIdentifySingletonAt(singletonAddress);
+#endif
                 Context.ActorSelection(singletonAddress).Tell(new Identify(_identityId));
             }
         }
@@ -188,7 +190,9 @@ namespace Akka.Cluster.Tools.Singleton
         {
             if (_singleton is object)
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) { Log.ForwardingMessageOfTypeToCurrentSingletonInstanceAt(msg, _singleton); }
+#endif
                 _singleton.Forward(msg);
             }
             else
@@ -198,7 +202,9 @@ namespace Akka.Cluster.Tools.Singleton
         // Discard old singleton ActorRef and send a periodic message to self to identify the singleton.
         private void IdentifySingleton()
         {
+#if DEBUG
             if (Log.IsDebugEnabled) Log.CreatingSingletonIdentificationTimer();
+#endif
             _identityCounter++;
             _identityId = CreateIdentifyId(_identityCounter);
             _singleton = null;
@@ -258,26 +264,34 @@ namespace Akka.Cluster.Tools.Singleton
 
         private void Buffer(object message)
         {
-            if (_settings.BufferSize == 0)
+            if (0u >= (uint)_settings.BufferSize)
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.SingletonNotAvailableAndBufferingIsDisabled(message);
+#endif
             }
             else if (_buffer.Count == _settings.BufferSize)
             {
                 var first = _buffer.Dequeue();
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.SingletonNotAvailableBufferIsFull(first.Key);
+#endif
                 _buffer.Enqueue(new KeyValuePair<object, IActorRef>(message, Sender));
             }
             else
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.SingletonNotAvailableBufferingMessageType(message);
+#endif
                 _buffer.Enqueue(new KeyValuePair<object, IActorRef>(message, Sender));
             }
         }
 
         private void SendBuffered()
         {
+#if DEBUG
             if (Log.IsDebugEnabled) Log.SendingBufferedMessagesToCurrentSingletonInstance();
+#endif
             while (_buffer.Count != 0)
             {
                 var pair = _buffer.Dequeue();

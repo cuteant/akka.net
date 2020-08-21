@@ -125,7 +125,9 @@ namespace Akka.Streams.Implementation.IO
                 if (readBytes == 0)
                 {
                     //had nothing to read into this chunk
+#if DEBUG
                     if (_log.IsDebugEnabled) _log.NoMoreBytesAvailableToRead();
+#endif
                     OnCompleteThenStop();
                 }
                 else

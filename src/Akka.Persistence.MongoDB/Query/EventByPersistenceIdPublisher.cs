@@ -114,7 +114,9 @@ namespace Akka.Persistence.MongoDb.Query
         protected void Replay()
         {
             var limit = MaxBufferSize - Buffer.Length;
+#if DEBUG
             Log.Debug("request replay for persistenceId [{0}] from [{1}] to [{2}] limit [{3}]", PersistenceId, CurrentSequenceNr, ToSequenceNr, limit);
+#endif
             JournalRef.Tell(new ReplayMessages(CurrentSequenceNr, ToSequenceNr, limit, PersistenceId, Self));
             Context.Become(Replaying(limit));
         }
@@ -136,11 +138,15 @@ namespace Akka.Persistence.MongoDb.Query
                         Buffer.DeliverBuffer(TotalDemand);
                         break;
                     case RecoverySuccess success:
+#if DEBUG
                         Log.Debug("replay completed for persistenceId [{0}], currSeqNo [{1}]", PersistenceId, CurrentSequenceNr);
+#endif
                         ReceiveRecoverySuccess(success.HighestSequenceNr);
                         break;
                     case ReplayMessagesFailure failure:
+#if DEBUG
                         Log.Debug("replay failed for persistenceId [{0}], due to [{1}]", PersistenceId, failure.Cause.Message);
+#endif
                         Buffer.DeliverBuffer(TotalDemand);
                         OnErrorThenStop(failure.Cause);
                         break;

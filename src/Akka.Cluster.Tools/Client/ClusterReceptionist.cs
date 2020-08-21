@@ -457,7 +457,9 @@ namespace Akka.Cluster.Tools.Client
                     if (_settings.NumberOfContacts >= _nodes.Count)
                     {
                         var contacts = new Contacts(_nodes.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());
+#if DEBUG
                         if (_log.IsDebugEnabled) { _log.ClientGetsContactPointsAllNodes(Sender, contacts); }
+#endif
 
                         Sender.Tell(contacts);
                     }
@@ -473,7 +475,9 @@ namespace Akka.Cluster.Tools.Client
                             : first.Union(_nodes.Take(_settings.NumberOfContacts - first.Length)).ToArray();
                         var contacts = new Contacts(slice.Select(a => Self.Path.ToStringWithAddress(a)).ToImmutableList());
 
+#if DEBUG
                         if (_log.IsDebugEnabled) { _log.ClientGetsContactPoints(Sender, contacts); }
+#endif
 
                         Sender.Tell(contacts);
                     }
@@ -551,7 +555,9 @@ namespace Akka.Cluster.Tools.Client
                 failureDetector = new DeadlineFailureDetector(_settings.AcceptableHeartbeatPause, _settings.HeartbeatInterval);
                 failureDetector.HeartBeat();
                 _clientInteractions = _clientInteractions.Add(client, failureDetector);
+#if DEBUG
                 if (_log.IsDebugEnabled) _log.ReceivedNewContactFrom(client);
+#endif
                 var clusterClientUp = new ClusterClientUp(client);
                 _subscribers.ForEach(s => s.Tell(clusterClientUp));
                 _clientsPublished = _clientInteractions.Keys.ToImmutableHashSet(ActorRefComparer.Instance);
@@ -565,7 +571,9 @@ namespace Akka.Cluster.Tools.Client
             {
                 if (!publishableClients.Contains(c))
                 {
+#if DEBUG
                     if (_log.IsDebugEnabled) _log.LostContactWith(c);
+#endif
                     var clusterClientUnreachable = new ClusterClientUnreachable(c);
                     _subscribers.ForEach(s => s.Tell(clusterClientUnreachable));
                 }
@@ -608,7 +616,9 @@ namespace Akka.Cluster.Tools.Client
                     break;
 
                 case ReceiveTimeout _:
+#if DEBUG
                     if (_log.IsDebugEnabled) _log.ClientResponseTunnelForClientStoppedDueToInactivity(_client);
+#endif
                     Context.Stop(Self);
                     break;
 

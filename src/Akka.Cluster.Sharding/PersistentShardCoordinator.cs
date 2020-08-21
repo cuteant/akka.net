@@ -1313,7 +1313,9 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case IDomainEvent evt:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.ReceiveRecover(evt);
+#endif
 
                     switch (evt)
                     {
@@ -1328,10 +1330,12 @@ namespace Akka.Cluster.Sharding
                             {
                                 CurrentState = CurrentState.Updated(evt);
                             }
+#if DEBUG
                             else
                             {
                                 if (Log.IsDebugEnabled) Log.ShardRegionTerminatedButRegionWasNotRegistered(regionTerminated);
                             }
+#endif
 
                             return true;
                         case ShardRegionProxyTerminated proxyTerminated:
@@ -1347,7 +1351,9 @@ namespace Akka.Cluster.Sharding
                     }
                     return false;
                 case SnapshotOffer offer when offer.Snapshot is State state:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.ReceiveRecoverSnapshotOffer(state);
+#endif
                     CurrentState = state.WithRememberEntities(Settings.RememberEntities);
                     // Old versions of the state object may not have unallocatedShard set,
                     // thus it will be null.
@@ -1465,7 +1471,9 @@ namespace Akka.Cluster.Sharding
         {
             if (LastSequenceNr % Settings.TunningParameters.SnapshotAfter == 0 && LastSequenceNr != 0)
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.SavingSnapshotSequenceNumber(SnapshotSequenceNr);
+#endif
                 SaveSnapshot(CurrentState);
             }
         }

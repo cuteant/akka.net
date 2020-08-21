@@ -441,11 +441,13 @@ namespace Akka.Streams.Implementation.IO
                     {
                         if (_connection is object)
                         {
+#if DEBUG
                             var interpreterLog = Interpreter.Log;
                             if (interpreterLog.IsDebugEnabled)
                             {
                                 interpreterLog.AbortingTcpConnectionToBecauseOfUpstreamFailure(_remoteAddress, ex);
                             }
+#endif
                             _connection.Tell(Tcp.Abort.Instance, StageActor.Ref);
                         }
                         else

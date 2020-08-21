@@ -489,7 +489,9 @@ namespace Akka.Remote
                 case ShutDownAssociation shutdown:
                     KeepQuarantinedOr(shutdown.RemoteAddress, () =>
                     {
+#if DEBUG
                         if (_log.IsDebugEnabled) _log.RemoteSystemWithAddressHasShutDown(shutdown, _settings);
+#endif
                         _endpoints.MarkAsFailed(Sender, Deadline.Now + _settings.RetryGateClosedFor);
                     });
                     return Directive.Stop;
@@ -521,7 +523,9 @@ namespace Akka.Remote
         {
             if (PruneTimerCancelleable is object)
             {
+#if DEBUG
                 if (_log.IsDebugEnabled) _log.StartingPruneTimerForEndpointManager();
+#endif
             }
 
             base.PreStart();

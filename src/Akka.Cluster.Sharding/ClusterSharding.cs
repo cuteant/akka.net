@@ -345,8 +345,10 @@ namespace Akka.Cluster.Sharding
             }
             else
             {
+#if DEBUG
                 var sysLog = _cluster.System.Log;
                 if (sysLog.IsDebugEnabled) sysLog.StartingShardRegionProxy(typeName);
+#endif
                 return StartProxy(typeName, settings.Role, extractEntityId, extractShardId);
             }
         }
@@ -414,8 +416,10 @@ namespace Akka.Cluster.Sharding
             }
             else
             {
+#if DEBUG
                 var sysLog = _cluster.System.Log;
                 if (sysLog.IsDebugEnabled) sysLog.StartingShardRegionProxy(typeName);
+#endif
                 return await StartProxyAsync(typeName, settings.Role, extractEntityId, extractShardId);
             }
         }
@@ -674,8 +678,10 @@ namespace Akka.Cluster.Sharding
             }
             else
             {
+#if DEBUG
                 var sysLog = _cluster.System.Log;
                 if (sysLog.IsDebugEnabled) sysLog.StartingShardRegionProxy(typeName);
+#endif
                 return StartProxy(typeName, settings.Role, extractEntityId, extractShardId);
             }
         }
@@ -743,8 +749,10 @@ namespace Akka.Cluster.Sharding
             }
             else
             {
+#if DEBUG
                 var sysLog = _cluster.System.Log;
                 if (sysLog.IsDebugEnabled) sysLog.StartingShardRegionProxy(typeName);
+#endif
                 return StartProxy(typeName, settings.Role, extractEntityId, extractShardId);
             }
         }
@@ -1314,11 +1322,15 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case PersistentShardCoordinator.BeginHandOffAck hoa when _shard == hoa.Shard:
+#if DEBUG
                     if (Log.IsDebugEnabled) { Log.Debug("BeginHandOffAck for shard [{0}] received from {1}.", _shard, Sender); }
+#endif
                     Acked(Sender);
                     return true;
                 case Terminated t:
+#if DEBUG
                     if (Log.IsDebugEnabled) { Log.Debug("ShardRegion {0} terminated while waiting for BeginHandOffAck for shard [{1}].", t.ActorRef, _shard); }
+#endif
                     Acked(t.ActorRef);
                     return true;
                 case ReceiveTimeout _:
@@ -1334,7 +1346,9 @@ namespace Akka.Cluster.Sharding
             _remaining.Remove(Sender);
             if (0u >= (uint)_remaining.Count)
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) { Log.Debug("All shard regions acked, handing off shard [{0}].", _shard); }
+#endif
                 _from.Tell(new PersistentShardCoordinator.HandOff(_shard));
                 Context.Become(StoppingShard);
             }

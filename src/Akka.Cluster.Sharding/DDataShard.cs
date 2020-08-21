@@ -218,7 +218,9 @@ namespace Akka.Cluster.Sharding
                     ReceiveOne((int)notFound.Request);
                     break;
                 default:
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.StashingWhileWaitingForDdatashardInitialState();
+#endif
                     Stash.Stash();
                     break;
             }
@@ -267,7 +269,9 @@ namespace Akka.Cluster.Sharding
             switch (message)
             {
                 case UpdateSuccess success when Equals((((Shard.StateChange, int))success.Request).Item1, e):
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.TheDDataShardStateWasSuccessfullyUpdatedWith(e);
+#endif
                     Context.UnbecomeStacked();
                     afterUpdateCallback(e);
                     Stash.UnstashAll();
@@ -298,8 +302,10 @@ namespace Akka.Cluster.Sharding
                     this.DeliverMessage(message, Context.Sender);
                     break;
                 default:
+#if DEBUG
                     Log.Debug("Stashing unexpected message [{0}] while waiting for DDataShard update of {0}",
                         message.GetType(), e);
+#endif
                     Stash.Stash();
                     break;
             }

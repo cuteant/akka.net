@@ -64,11 +64,15 @@ namespace Akka.DistributedData
 
         protected override void PreStart()
         {
+#if DEBUG
             var debugEnabled = Log.IsDebugEnabled;
+#endif
             foreach (var n in PrimaryNodes)
             {
                 var replica = Replica(n);
+#if DEBUG
                 if (debugEnabled) Log.SendingToPrimaryReplica(_read, replica);
+#endif
                 replica.Tell(_read);
             }
 
@@ -90,7 +94,9 @@ namespace Akka.DistributedData
 
                     Remaining = Remaining.Remove(Sender.Path.Address);
                     var done = DoneWhenRemainingSize;
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.ReadAcksRemainingDoneWhenCurrentState(Remaining.Count, done, _result);
+#endif
                     if (Remaining.Count == done) Reply(true);
                     return true;
 

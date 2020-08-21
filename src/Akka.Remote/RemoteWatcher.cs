@@ -525,7 +525,9 @@ namespace Akka.Remote
         {
             // TODO: replace with Code Contracts assertion
             if (watcher.Equals(Self)) { ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Watcher); }
+#if DEBUG
             if (Log.IsDebugEnabled) { Log.Watching(watcher, watchee); }
+#endif
 
             if (Watching.TryGetValue(watchee, out var watching))
             {
@@ -579,14 +581,18 @@ namespace Akka.Remote
         protected void RemoveWatch(IInternalActorRef watchee, IInternalActorRef watcher)
         {
             if (watcher.Equals(Self)) { ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Watcher); }
+#if DEBUG
             if (Log.IsDebugEnabled) { Log.Unwatching(watcher, watchee); }
+#endif
             if (Watching.TryGetValue(watchee, out var watchers))
             {
                 watchers.Remove(watcher);
                 if (watchers.Count <= 0)
                 {
                     // clean up self watch when no more watchers of this watchee
+#if DEBUG
                     if (Log.IsDebugEnabled) { Log.CleanupSelfWatchOf(watchee); }
+#endif
                     Context.Unwatch(watchee);
                     RemoveWatchee(watchee);
                 }
@@ -609,7 +615,9 @@ namespace Akka.Remote
                 if (watchees.Count <= 0)
                 {
                     // unwatched last watchee on that node
+#if DEBUG
                     if (Log.IsDebugEnabled) Log.UnwatchedLastWatcheeOfNode(watcheeAddress);
+#endif
                     UnwatchNode(watcheeAddress);
                 }
             }
@@ -634,7 +642,9 @@ namespace Akka.Remote
 
         private void ProcessTerminated(IInternalActorRef watchee, bool existenceConfirmed, bool addressTerminated)
         {
+#if DEBUG
             if (Log.IsDebugEnabled) Log.WatcheeTerminated(watchee);
+#endif
 
             // When watchee is stopped it sends DeathWatchNotification to this RemoteWatcher, which
             // will propagate it to all watchers of this watchee. addressTerminated case is already
@@ -667,11 +677,15 @@ namespace Akka.Remote
                 {
                     if (_failureDetector.IsMonitoring(a))
                     {
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.SendingHeartbeatToAddr(a);
+#endif
                     }
                     else
                     {
+#if DEBUG
                         if (Log.IsDebugEnabled) Log.SendingFirstHeartbeatToAddr(a);
+#endif
                         // schedule the expected first heartbeat for later, which will give the other
                         // side a chance to reply, and also trigger some resends if needed
                         _scheduler.ScheduleTellOnce(_heartbeatExpectedResponseAfter, Self, new ExpectedFirstHeartbeat(a), Self);
@@ -689,7 +703,9 @@ namespace Akka.Remote
         {
             if (WatcheeByNodes.ContainsKey(address) && !_failureDetector.IsMonitoring(address))
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.TriggerExtraExpectedHeartbeatFromAddr(address);
+#endif
                 _failureDetector.Heartbeat(address);
             }
         }
@@ -708,7 +724,9 @@ namespace Akka.Remote
             var watcher = Self.AsInstanceOf<IInternalActorRef>();
             foreach (var watchee in WatcheeByNodes[address])
             {
+#if DEBUG
                 if (Log.IsDebugEnabled) Log.ReWatch(watcher, watchee);
+#endif
                 watchee.SendSystemMessage(new Watch(watchee, watcher)); // ➡➡➡ NEVER SEND THE SAME SYSTEM MESSAGE OBJECT TO TWO ACTORS ⬅⬅⬅
             }
         }

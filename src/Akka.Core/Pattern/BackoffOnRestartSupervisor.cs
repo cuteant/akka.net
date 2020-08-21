@@ -68,7 +68,9 @@ namespace Akka.Pattern
                 if (_strategy.MaxNumberOfRetries >= 0 && nextRestartCount > _strategy.MaxNumberOfRetries)
                 {
                     // If we've exceeded the maximum # of retries allowed by the Strategy, die.
+#if DEBUG
                     if (_log.IsDebugEnabled) _log.TerminatingOnRestartWhichExceedsMaxAllowedRestarts(nextRestartCount, _strategy.MaxNumberOfRetries);
+#endif
                     Become(Receive);
                     Context.Stop(Self);
                 }
@@ -120,7 +122,9 @@ namespace Akka.Pattern
             var child = Child;
             if (message is Terminated terminated && terminated.ActorRef.Equals(child))
             {
+#if DEBUG
                 if (_log.IsDebugEnabled) _log.TerminatingBecauseChildTerminatedItself(child);
+#endif
                 Context.Stop(Self);
                 return true;
             }

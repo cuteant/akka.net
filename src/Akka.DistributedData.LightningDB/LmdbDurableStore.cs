@@ -78,7 +78,7 @@ namespace Akka.DistributedData.LightningDB
                 var mapSize = _config.GetByteSize("map-size", 100 * 1024 * 1024);
                 var env = new LightningEnvironment(_dir)
                 {
-                    MapSize = mapSize.Value,
+                    MapSize = mapSize,
                     MaxDatabases = 1
                 };
                 env.Open(EnvironmentOpenFlags.NoLock);
@@ -92,8 +92,10 @@ namespace Akka.DistributedData.LightningDB
                     tx.Commit();
 
                     t0.Stop();
+#if DEBUG
                     if (_log.IsDebugEnabled)
                         _log.Debug($"Init of LMDB in directory [{_dir}] took [{t0.ElapsedMilliseconds} ms]");
+#endif
 
                     _lmdb = (env, db, true);
                     return _lmdb;
@@ -221,8 +223,10 @@ namespace Akka.DistributedData.LightningDB
                         Sender.Tell(LoadAllCompleted.Instance);
 
                         t0.Stop();
+#if DEBUG
                         if (_log.IsDebugEnabled)
                             _log.Debug($"Load all of [{data.Count}] entries took [{t0.ElapsedMilliseconds}]");
+#endif
 
                         Become(Active);
                     }
@@ -261,10 +265,12 @@ namespace Akka.DistributedData.LightningDB
                         tx.Commit();
 
                         t0.Stop();
+#if DEBUG
                         if (_log.IsDebugEnabled)
                         {
                             _log.Debug($"store and commit of [{_pending.Count}] entries took {t0.ElapsedMilliseconds} ms");
                         }
+#endif
                     }
                     catch (Exception cause)
                     {

@@ -541,7 +541,9 @@ namespace Akka.Actor.Internal
 
         internal override void FinalTerminate()
         {
+#if DEBUG
             if (Log.IsDebugEnabled) Log.SystemShutdownInitiated();
+#endif
             if (!Settings.LogDeadLettersDuringShutdown && _logDeadLetterListener is object)
             {
                 Stop(_logDeadLetterListener);
