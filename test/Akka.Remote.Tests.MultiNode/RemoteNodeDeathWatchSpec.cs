@@ -13,6 +13,7 @@ using Akka.Configuration;
 using Akka.Remote.TestKit;
 using Akka.Remote.Transport;
 using Akka.TestKit;
+using MessagePack;
 using static Akka.Remote.Tests.MultiNode.RemoteNodeDeathWatchMultiNetSpec;
 
 namespace Akka.Remote.Tests.MultiNode
@@ -39,27 +40,33 @@ namespace Akka.Remote.Tests.MultiNode
         public RoleName Second { get; }
         public RoleName Third { get; }
 
+        [MessagePackObject]
         public sealed class WatchIt
         {
+            [SerializationConstructor]
             public WatchIt(IActorRef watchee)
             {
                 Watchee = watchee;
             }
 
+            [Key(0)]
             public IActorRef Watchee { get; }
         }
 
+        [MessagePackObject]
         public sealed class UnwatchIt
         {
+            [SerializationConstructor]
             public UnwatchIt(IActorRef watchee)
             {
                 Watchee = watchee;
             }
 
+            [Key(0)]
             public IActorRef Watchee { get; }
         }
 
-        public sealed class Ack
+        public sealed class Ack : ISingletonMessage
         {
             public static Ack Instance { get; } = new Ack();
 
@@ -72,13 +79,16 @@ namespace Akka.Remote.Tests.MultiNode
         /// Forwarding <see cref="Terminated"/> to non-watching testActor is not possible,
         /// and therefore the <see cref="Terminated"/> message is wrapped.
         /// </summary>
+        [MessagePackObject]
         public sealed class WrappedTerminated
         {
+            [SerializationConstructor]
             public WrappedTerminated(Terminated t)
             {
                 T = t;
             }
 
+            [Key(0)]
             public Terminated T { get; }
         }
 

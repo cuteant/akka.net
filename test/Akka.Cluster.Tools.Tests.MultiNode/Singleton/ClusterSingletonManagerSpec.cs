@@ -66,7 +66,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
     {
         #region messages
 
-        public sealed class UnregisterConsumer
+        public sealed class UnregisterConsumer : ISingletonMessage
         {
             public static readonly UnregisterConsumer Instance = new UnregisterConsumer();
 
@@ -75,7 +75,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class RegisterConsumer
+        public sealed class RegisterConsumer : ISingletonMessage
         {
             public static readonly RegisterConsumer Instance = new RegisterConsumer();
 
@@ -84,7 +84,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class RegistrationOk
+        public sealed class RegistrationOk : ISingletonMessage
         {
             public static readonly RegistrationOk Instance = new RegistrationOk();
 
@@ -93,7 +93,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class UnexpectedRegistration
+        public sealed class UnexpectedRegistration : ISingletonMessage
         {
             public static readonly UnexpectedRegistration Instance = new UnexpectedRegistration();
 
@@ -102,7 +102,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class UnregistrationOk
+        public sealed class UnregistrationOk : ISingletonMessage
         {
             public static readonly UnregistrationOk Instance = new UnregistrationOk();
 
@@ -111,7 +111,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class UnexpectedUnregistration
+        public sealed class UnexpectedUnregistration : ISingletonMessage
         {
             public static readonly UnexpectedUnregistration Instance = new UnexpectedUnregistration();
 
@@ -120,7 +120,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class Reset
+        public sealed class Reset : ISingletonMessage
         {
             public static readonly Reset Instance = new Reset();
 
@@ -129,7 +129,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class ResetOk
+        public sealed class ResetOk : ISingletonMessage
         {
             public static readonly ResetOk Instance = new ResetOk();
 
@@ -212,7 +212,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
 
         #region messages
 
-        public sealed class Ping
+        public sealed class Ping : ISingletonMessage
         {
             public static readonly Ping Instance = new Ping();
 
@@ -221,7 +221,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class Pong
+        public sealed class Pong : ISingletonMessage
         {
             public static readonly Pong Instance = new Pong();
 
@@ -230,7 +230,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class End
+        public sealed class End : ISingletonMessage
         {
             public static readonly End Instance = new End();
 
@@ -239,7 +239,7 @@ namespace Akka.Cluster.Tools.Tests.MultiNode.Singleton
             }
         }
 
-        public sealed class GetCurrent
+        public sealed class GetCurrent : ISingletonMessage
         {
             public static readonly GetCurrent Instance = new GetCurrent();
 

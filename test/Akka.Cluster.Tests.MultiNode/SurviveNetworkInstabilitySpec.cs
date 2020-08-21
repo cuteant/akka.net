@@ -77,7 +77,7 @@ namespace Akka.Cluster.Tests.MultiNode
             }
         }
 
-        public class TargetsRegistered
+        public class TargetsRegistered : ISingletonMessage
         {
             public static readonly TargetsRegistered Instance = new TargetsRegistered();
             private TargetsRegistered() { }

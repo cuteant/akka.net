@@ -11,6 +11,7 @@ using Akka.Configuration;
 using Akka.Event;
 using Akka.Remote.TestKit;
 using Akka.Remote.Transport;
+using MessagePack;
 
 namespace Akka.Remote.Tests.MultiNode
 {
@@ -215,15 +216,19 @@ namespace Akka.Remote.Tests.MultiNode
             }
         }
 
-        private sealed class ParentMessage
+        [MessagePackObject]
+        public sealed class ParentMessage
         {
+            [SerializationConstructor]
             public ParentMessage(Props props, string name)
             {
                 Props = props;
                 Name = name;
             }
 
+            [Key(0)]
             public Props Props { get; }
+            [Key(1)]
             public string Name { get; }
         }
     }

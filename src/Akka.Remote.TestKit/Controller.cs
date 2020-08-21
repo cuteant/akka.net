@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using DotNetty.Transport.Channels;
+using MessagePack;
 
 namespace Akka.Remote.TestKit
 {
@@ -25,15 +26,18 @@ namespace Akka.Remote.TestKit
     /// </summary>
     internal class Controller : UntypedActor, ILogReceive
     {
+        [MessagePackObject]
         public sealed class ClientDisconnected : IDeadLetterSuppression
         {
             private readonly RoleName _name;
 
+            [SerializationConstructor]
             public ClientDisconnected(RoleName name)
             {
                 _name = name;
             }
 
+            [Key(0)]
             public RoleName Name
             {
                 get { return _name; }
@@ -111,7 +115,7 @@ namespace Akka.Remote.TestKit
 #endif
         }
 
-        public class GetNodes
+        public class GetNodes : ISingletonMessage
         {
             private GetNodes() { }
             private static readonly GetNodes _instance = new GetNodes();
@@ -125,7 +129,7 @@ namespace Akka.Remote.TestKit
             }
         }
 
-        public class GetSockAddr
+        public class GetSockAddr : ISingletonMessage
         {
             private GetSockAddr() { }
             private static readonly GetSockAddr _instance = new GetSockAddr();
@@ -147,8 +151,10 @@ namespace Akka.Remote.TestKit
             NodeInfo Node { get; }
         }
 
+        [MessagePackObject]
         internal sealed class NodeInfo : IEquatable<NodeInfo>
         {
+            [SerializationConstructor]
             public NodeInfo(RoleName name, Address addr, IActorRef fsm)
             {
                 Name = name;
@@ -156,10 +162,13 @@ namespace Akka.Remote.TestKit
                 FSM = fsm;
             }
 
+            [Key(0)]
             public RoleName Name { get; }
 
+            [Key(1)]
             public Address Addr { get; }
 
+            [Key(2)]
             public IActorRef FSM { get; }
 
             public bool Equals(NodeInfo other)

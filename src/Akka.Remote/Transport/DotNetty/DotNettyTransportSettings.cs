@@ -550,16 +550,17 @@ namespace Akka.Remote.Transport.DotNetty
     /// </summary>
     public sealed class BatchWriterSettings
     {
+        public const int DefaultTransferBatchSize = 200;
         public const int DefaultMaxPendingWrites = 30;
         public const long DefaultMaxPendingBytes = 16 * 1024L;
         public static readonly TimeSpan DefaultFlushInterval = TimeSpan.FromMilliseconds(40);
 
-        public static readonly BatchWriterSettings Default = new BatchWriterSettings();
+        public static readonly BatchWriterSettings Default = new BatchWriterSettings(DefaultTransferBatchSize);
 
         public BatchWriterSettings(Config hocon)
         {
             EnableBatching = hocon.GetBoolean("enabled", true);
-            TransferBatchSize = hocon.GetInt("transfer-batch-size", 1);
+            TransferBatchSize = hocon.GetInt("transfer-batch-size", DefaultTransferBatchSize);
             MaxPendingWrites = hocon.GetInt("max-pending-writes", DefaultMaxPendingWrites);
             MaxPendingBytes = hocon.GetByteSize("max-pending-bytes", null) ?? DefaultMaxPendingBytes;
             FlushInterval = hocon.GetTimeSpan("flush-interval", DefaultFlushInterval, false);
@@ -579,7 +580,7 @@ namespace Akka.Remote.Transport.DotNetty
             TransferBatchSize = transferBatchSize;
 
             EnableBatching = true;
-            MaxPendingWrites = 0;
+            MaxPendingWrites = DefaultMaxPendingWrites;
             FlushInterval = DefaultFlushInterval;
             MaxPendingBytes = DefaultMaxPendingBytes;
         }

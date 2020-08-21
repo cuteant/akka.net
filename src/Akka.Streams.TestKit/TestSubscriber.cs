@@ -47,7 +47,7 @@ namespace Akka.Streams.TestKit
             public override string ToString() => $"TestSubscriber.OnNext({Element})";
         }
 
-        public sealed class OnComplete: ISubscriberEvent
+        public sealed class OnComplete : ISubscriberEvent
         {
             public static readonly OnComplete Instance = new OnComplete();
             private OnComplete() { }
@@ -201,7 +201,7 @@ namespace Akka.Streams.TestKit
                 var e = ExpectNextN(len).ToArray();
                 AssertEquals(e.Length, len, "expected to get {0} events, but got {1}", len, e.Length);
 
-                var expectedSet = new HashSet<T>(elems) {e1, e2};
+                var expectedSet = new HashSet<T>(elems) { e1, e2 };
                 expectedSet.ExceptWith(e);
 
                 Assert(expectedSet.Count == 0, "unexpected elements [{0}] found in the result", string.Join(", ", expectedSet));
@@ -286,7 +286,7 @@ namespace Akka.Streams.TestKit
             public Exception ExpectSubscriptionAndError(bool signalDemand)
             {
                 var sub = ExpectSubscription();
-                if(signalDemand)
+                if (signalDemand)
                     sub.Request(1);
 
                 return ExpectError();
@@ -321,7 +321,7 @@ namespace Akka.Streams.TestKit
                 var message = _probe.FishForMessage(m => m is OnNext<T> || m is OnError, hint: "OnNext(_) or error");
                 if (message is OnNext<T> next)
                     return next.Element;
-                return ((OnError) message).Cause;
+                return ((OnError)message).Cause;
             }
 
             /// <summary>
@@ -386,7 +386,7 @@ namespace Akka.Streams.TestKit
             /// <param name="predicate">The <see cref="Predicate{T}"/> that is applied to the message</param>
             /// <returns>The next element</returns>
             public TOther ExpectNext<TOther>(Predicate<TOther> predicate) => _probe.ExpectMsg<OnNext<TOther>>(x => predicate(x.Element)).Element;
-            
+
             /// <summary>
             /// Expect next element and test it with the <paramref name="predicate"/>
             /// </summary>

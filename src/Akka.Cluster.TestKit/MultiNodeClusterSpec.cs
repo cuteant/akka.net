@@ -73,7 +73,7 @@ namespace Akka.Cluster.TestKit
         {
 
             // sometimes we need to coordinate test shutdown with messages instead of barriers
-            public sealed class SendEnd
+            public sealed class SendEnd : ISingletonMessage
             {
                 private SendEnd() { }
                 private static readonly SendEnd _instance = new SendEnd();
@@ -86,7 +86,7 @@ namespace Akka.Cluster.TestKit
                 }
             }
 
-            public sealed class End
+            public sealed class End : ISingletonMessage
             {
                 private End() { }
                 private static readonly End _instance = new End();
@@ -99,7 +99,7 @@ namespace Akka.Cluster.TestKit
                 }
             }
 
-            public sealed class EndAck
+            public sealed class EndAck : ISingletonMessage
             {
                 private EndAck() { }
                 private static readonly EndAck _instance = new EndAck();

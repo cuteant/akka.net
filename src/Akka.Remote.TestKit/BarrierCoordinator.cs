@@ -12,6 +12,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Util.Internal;
 using Akka.Event;
+using MessagePack;
 
 namespace Akka.Remote.TestKit
 {
@@ -38,13 +39,16 @@ namespace Akka.Remote.TestKit
             Waiting
         };
 
+        [MessagePackObject]
         public sealed class RemoveClient
         {
+            [SerializationConstructor]
             public RemoveClient(RoleName name)
             {
                 Name = name;
             }
 
+            [Key(0)]
             public RoleName Name { get; private set; }
         }
 
