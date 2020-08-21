@@ -20,23 +20,34 @@ namespace Akka.Util.Internal
         /// <summary>
         /// Determines if an array is null or empty.
         /// </summary>
-        /// <param name="obj">The array to check.</param>
+        /// <param name="source">The array to check.</param>
         /// <returns>True if null or empty, false otherwise.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool IsNullOrEmpty(this Array obj)
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
+        public static bool IsNullOrEmpty<T>(this T[] source)
         {
-            return obj is null || 0u >= (uint)obj.Length;
+            return source is null || 0u >= (uint)source.Length;
+        }
+
+        /// <summary>
+        /// Determines if an array is empty.
+        /// </summary>
+        /// <param name="source">The array to check.</param>
+        /// <returns>True if empty, false otherwise.</returns>
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
+        public static bool IsEmpty<T>(this T[] source)
+        {
+            return 0u >= (uint)source.Length;
         }
 
         /// <summary>
         /// Determines if an array is not null or empty.
         /// </summary>
-        /// <param name="obj">The array to check.</param>
+        /// <param name="source">The array to check.</param>
         /// <returns>True if not null or empty, false otherwise.</returns>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        public static bool NonEmpty(this Array obj)
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
+        public static bool NonEmpty<T>(this T[] source)
         {
-            return obj is object && 0u < (uint)obj.Length;
+            return (0u >= (uint)source.Length) ? false : true;
         }
 
         /// <summary>

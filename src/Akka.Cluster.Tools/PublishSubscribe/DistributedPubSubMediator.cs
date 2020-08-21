@@ -339,7 +339,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             {
                 // gossip chat starts with a Status message, containing the bucket versions of the other node
                 var delta = CollectDelta(status.Versions).ToArray();
-                if (delta.Length != 0)
+                if (delta.NonEmpty())
                     Sender.Tell(new Delta(delta));
 
                 if (!status.IsReplyToStatus && OtherHasNewerVersions(status.Versions))
@@ -592,7 +592,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
             var groups = ExtractGroups(prefix, lastKey).GroupBy(kv => kv.Key).ToList();
             var wrappedMessage = new SendToOneSubscriber(message);
 
-            if (groups.Count == 0)
+            if (groups.IsEmpty())
             {
                 SendToDeadLetters(message);
             }
@@ -601,7 +601,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
                 foreach (var g in groups)
                 {
                     var routees = g.Select(r => r.Value).ToArray();
-                    if (routees.Length != 0)
+                    if (routees.NonEmpty())
                         new Router(_settings.RoutingLogic, routees).Route(wrappedMessage, Sender);
                 }
             }
@@ -658,7 +658,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
 
         private Address SelectRandomNode(IList<Address> addresses)
         {
-            if (addresses is null || addresses.Count == 0) return null;
+            if (addresses.IsNullOrEmpty()) return null;
             return addresses[ThreadLocalRandom.Current.Next(addresses.Count)];
         }
 

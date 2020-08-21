@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using Akka.Dispatch;
 using Akka.Dispatch.SysMsg;
 using Akka.Event;
+using Akka.Util.Internal;
 
 namespace Akka.Actor
 {
@@ -161,7 +162,7 @@ namespace Akka.Actor
 
         private void StopWhenAllTerminationHooksDone()
         {
-            if(_terminationHooks.Count == 0)
+            if(_terminationHooks.IsEmpty())
             {
                 var actorSystem = Context.System;
                 actorSystem.EventStream.StopDefaultLoggers(actorSystem);

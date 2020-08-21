@@ -11,6 +11,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Persistence.Serialization;
+using Akka.Util.Internal;
 using MessagePack;
 using static Akka.Persistence.Fsm.PersistentFSM;
 
@@ -108,7 +109,7 @@ namespace Akka.Persistence.Fsm
                 eventsToPersist.Add(new StateChangeEvent(nextState.StateName.Identifier, nextState.Timeout));
             }
 
-            if (eventsToPersist.Count == 0)
+            if (eventsToPersist.IsEmpty())
             {
                 // If there are no events to persist, just apply the state
                 base.ApplyState(nextState);

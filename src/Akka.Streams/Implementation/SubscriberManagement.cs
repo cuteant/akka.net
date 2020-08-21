@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using System.Linq;
 using Akka.Pattern;
 using Akka.Streams.Actors;
+using Akka.Util.Internal;
 using Reactive.Streams;
 
 namespace Akka.Streams.Implementation
@@ -350,7 +351,7 @@ namespace Akka.Streams.Implementation
             {
                 _endOfStream = SubscriberManagement.Completed.Instance;
                 _subscriptions = CompleteDoneSubscriptions(_subscriptions);
-                if (_subscriptions.Count == 0)
+                if (_subscriptions.IsEmpty())
                     Shutdown(true);
             }
             // else ignore, we need to be idempotent
@@ -446,7 +447,7 @@ namespace Akka.Streams.Implementation
                 _subscriptions.Remove(subscription);
                 _buffer.Value.OnCursorRemoved(subscription);
                 subscription.IsActive = false;
-                if (_subscriptions.Count == 0)
+                if (_subscriptions.IsEmpty())
                 {
                     if (_endOfStream is SubscriberManagement.NotReached)
                     {

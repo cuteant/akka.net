@@ -38,9 +38,9 @@ namespace Akka.Persistence.MongoDb.Journal
         private readonly HashSet<string> _allPersistenceIds = new HashSet<string>();
         private readonly HashSet<IActorRef> _allPersistenceIdSubscribers = new HashSet<IActorRef>();
         private readonly Dictionary<string, ISet<IActorRef>> _tagSubscribers =
-            new Dictionary<string, ISet<IActorRef>>();
+            new Dictionary<string, ISet<IActorRef>>(StringComparer.Ordinal);
         private readonly Dictionary<string, ISet<IActorRef>> _persistenceIdSubscribers
-            = new Dictionary<string, ISet<IActorRef>>();
+            = new Dictionary<string, ISet<IActorRef>>(StringComparer.Ordinal);
 
         private readonly Akka.Serialization.Serialization _serialization;
 

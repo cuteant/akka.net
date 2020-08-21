@@ -577,17 +577,17 @@ namespace Akka.Streams.Implementation
         /// <summary>
         /// TBD
         /// </summary>
-        public virtual bool IsRunnable => InPorts.Count == 0 && OutPorts.Count == 0;
+        public virtual bool IsRunnable => 0U >= (uint)InPorts.Count && 0U >= (uint)OutPorts.Count;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public virtual bool IsSink => InPorts.Count == 1 && OutPorts.Count == 0;
+        public virtual bool IsSink => InPorts.Count == 1 && 0U >= (uint)OutPorts.Count;
 
         /// <summary>
         /// TBD
         /// </summary>
-        public virtual bool IsSource => InPorts.Count == 0 && OutPorts.Count == 1;
+        public virtual bool IsSource => 0U >= (uint)InPorts.Count && OutPorts.Count == 1;
 
         /// <summary>
         /// TBD

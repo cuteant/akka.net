@@ -11,6 +11,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Persistence;
+using Akka.Util.Internal;
 using MessagePack;
 
 namespace Akka.Cluster.Sharding
@@ -96,7 +97,7 @@ namespace Akka.Cluster.Sharding
             {
                 get
                 {
-                    return Shards.Count == 0 && Regions.Count == 0 && RegionProxies.Count == 0;
+                    return Shards.IsEmptyR() && Regions.IsEmptyR() && 0U >= (uint)RegionProxies.Count;
                 }
             }
 

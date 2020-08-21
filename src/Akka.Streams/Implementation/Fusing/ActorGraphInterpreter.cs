@@ -14,6 +14,7 @@ using Akka.Annotations;
 using Akka.Event;
 using Akka.Pattern;
 using Akka.Streams.Stage;
+using Akka.Util.Internal;
 using CuteAnt.Collections;
 using CuteAnt.Pool;
 using Reactive.Streams;
@@ -1390,7 +1391,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             if (_newShells.IsEmpty)
             {
-                if (_activeInterpreters.Count == 0)
+                if (_activeInterpreters.IsEmpty())
                     Context.Stop(Self);
             }
             else
@@ -1403,7 +1404,7 @@ namespace Akka.Streams.Implementation.Fusing
                 }
                 else if (!TryInit(shell))
                 {
-                    if (_activeInterpreters.Count == 0)
+                    if (_activeInterpreters.IsEmpty())
                         FinishShellRegistration();
                 }
             }
@@ -1415,7 +1416,7 @@ namespace Akka.Streams.Implementation.Fusing
         protected override void PreStart()
         {
             TryInit(_initial);
-            if (_activeInterpreters.Count == 0)
+            if (_activeInterpreters.IsEmpty())
                 Context.Stop(Self);
             else if (_shortCircuitBuffer is object)
                 ShortCircuitBatch();
@@ -1458,7 +1459,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if (shell.IsTerminated)
                 {
                     _activeInterpreters.Remove(shell);
-                    if (_activeInterpreters.Count == 0 && _newShells.IsEmpty)
+                    if (_activeInterpreters.IsEmpty() && _newShells.IsEmpty)
                         Context.Stop(Self);
                 }
             }

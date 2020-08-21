@@ -76,7 +76,7 @@ namespace Akka.Cluster.Metrics
         /// </summary>
         public IImmutableDictionary<Actor.Address, int> Weights(IImmutableDictionary<Actor.Address, double> capacity)
         {
-            if (capacity.Count == 0)
+            if (0U >= (uint)capacity.Count)
                 return ImmutableDictionary<Actor.Address, int>.Empty;
 
             var min = capacity.Min(c => c.Value);

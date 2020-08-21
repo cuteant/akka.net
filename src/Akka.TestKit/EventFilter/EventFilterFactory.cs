@@ -13,6 +13,7 @@ using Akka.Actor;
 using Akka.Event;
 using Akka.TestKit.Internal;
 using Akka.TestKit.Internal.StringMatcher;
+using Akka.Util.Internal;
 
 namespace Akka.TestKit
 {
@@ -338,7 +339,7 @@ namespace Akka.TestKit
         protected IEventFilterApplier CreateApplier(EventFilterBase filter, ActorSystem system)
         {
             EventFilterBase[] allFilters;   //This will contain _filters + filter
-            if(_filters is null || _filters.Count == 0)
+            if(_filters.IsNullOrEmptyR())
             {
                 allFilters = new[] { filter };
             }

@@ -254,7 +254,7 @@ namespace Akka.Streams.Implementation.IO
 
             private void SendResponseIfNeeded()
             {
-                if (_downstreamStatus.Value is Canceled || _dataQueue.Count == 0)
+                if (_downstreamStatus.Value is Canceled || 0U >= (uint)_dataQueue.Count)
                     UnblockUpsteam();
             }
         }

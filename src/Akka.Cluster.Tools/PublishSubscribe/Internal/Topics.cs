@@ -12,6 +12,7 @@ using System.Runtime.CompilerServices;
 using Akka.Actor;
 using Akka.Remote;
 using Akka.Routing;
+using Akka.Util.Internal;
 
 namespace Akka.Cluster.Tools.PublishSubscribe.Internal
 {
@@ -98,7 +99,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
                     break;
 
                 case TerminateRequest _:
-                    if (Subscribers.Count == 0 && !Context.GetChildren().Any())
+                    if (Subscribers.IsEmpty() && !Context.GetChildren().Any())
                     {
                         Context.Stop(Self);
                     }
@@ -144,7 +145,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe.Internal
         {
             Subscribers.Remove(actorRef);
 
-            if (Subscribers.Count == 0 && !Context.GetChildren().Any())
+            if (Subscribers.IsEmpty() && !Context.GetChildren().Any())
             {
                 PruneDeadline = Deadline.Now + EmptyTimeToLive;
             }

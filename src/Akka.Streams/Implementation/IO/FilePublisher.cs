@@ -158,7 +158,7 @@ namespace Akka.Streams.Implementation.IO
                 return SignalOnNexts(chunks.RemoveAt(0));
             }
 
-            if (chunks.Count == 0 && EofEncountered)
+            if (0U >= (uint)chunks.Count && EofEncountered)
                 OnCompleteThenStop();
 
             return chunks;

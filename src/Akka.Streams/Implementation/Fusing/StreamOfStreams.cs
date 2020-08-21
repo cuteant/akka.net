@@ -469,7 +469,7 @@ namespace Akka.Streams.Implementation.Fusing
 
             public void OnDownstreamFinish()
             {
-                if (_activeSubstreams.Count == 0)
+                if (_activeSubstreams.IsEmpty())
                     CompleteStage();
                 else
                     SetKeepGoing(true);
@@ -487,7 +487,7 @@ namespace Akka.Streams.Implementation.Fusing
 
             private bool TryCompleteAll()
             {
-                if (_activeSubstreams.Count == 0 || (!HasNextElement && _firstPushCounter == 0))
+                if (_activeSubstreams.IsEmpty() || (!HasNextElement && 0U >= (uint)_firstPushCounter))
                 {
                     foreach (var value in _activeSubstreams.Values)
                         value.Complete();
@@ -591,7 +591,7 @@ namespace Akka.Streams.Implementation.Fusing
                         Push(_firstElement.Value);
                         _firstElement = Option<T>.None;
                         _logic._substreamsJustStarted.Remove(this);
-                        if (_logic._substreamsJustStarted.Count == 0)
+                        if (0U >= (uint)_logic._substreamsJustStarted.Count)
                             _logic.SetKeepGoing(false);
                     }
                     else if (HasNextForSubSource)

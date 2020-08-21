@@ -21,6 +21,7 @@ using Akka.Util;
 using CuteAnt;
 using Gossip = Akka.DistributedData.Internal.Gossip;
 using Status = Akka.DistributedData.Internal.Status;
+using Akka.Util.Internal;
 
 namespace Akka.DistributedData
 {
@@ -560,7 +561,7 @@ namespace Akka.DistributedData
         private bool IsLocalGet(IReadConsistency consistency)
         {
             if (consistency is ReadLocal) return true;
-            if (consistency is ReadAll || consistency is ReadMajority) return _nodes.Count == 0;
+            if (consistency is ReadAll || consistency is ReadMajority) return _nodes.IsEmpty;
             return false;
         }
 
@@ -1199,10 +1200,10 @@ namespace Akka.DistributedData
         {
             var key = u.Key;
             var subscriber = u.Subscriber;
-            if (_subscribers.TryGetValue(key.Id, out var set) && set.Remove(subscriber) && set.Count == 0)
+            if (_subscribers.TryGetValue(key.Id, out var set) && set.Remove(subscriber) && set.IsEmpty())
                 _subscribers.Remove(key.Id);
 
-            if (_newSubscribers.TryGetValue(key.Id, out set) && set.Remove(subscriber) && set.Count == 0)
+            if (_newSubscribers.TryGetValue(key.Id, out set) && set.Remove(subscriber) && set.IsEmpty())
                 _newSubscribers.Remove(key.Id);
 
             if (!HasSubscriber(subscriber))
@@ -1234,7 +1235,7 @@ namespace Akka.DistributedData
 
                 foreach (var k in keys1)
                 {
-                    if (_subscribers.TryGetValue(k, out var set) && set.Remove(terminated) && set.Count == 0)
+                    if (_subscribers.TryGetValue(k, out var set) && set.Remove(terminated) && set.IsEmpty())
                         _subscribers.Remove(k);
                 }
 
@@ -1244,7 +1245,7 @@ namespace Akka.DistributedData
 
                 foreach (var k in keys2)
                 {
-                    if (_newSubscribers.TryGetValue(k, out var set) && set.Remove(terminated) && set.Count == 0)
+                    if (_newSubscribers.TryGetValue(k, out var set) && set.Remove(terminated) && set.IsEmpty())
                         _newSubscribers.Remove(k);
                 }
 
@@ -1327,7 +1328,7 @@ namespace Akka.DistributedData
         private void ReceiveClockTick(ClockTick clockTick)
         {
             var now = DateTime.UtcNow.Ticks * TimeSpan.TicksPerMillisecond / 100; // we need ticks per nanosec.
-            if (_unreachable.Count == 0)
+            if (_unreachable.IsEmpty)
                 _allReachableClockTime += (now - _previousClockTime);
             _previousClockTime = now;
         }

@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using Akka.Actor;
+using Akka.Util.Internal;
 
 namespace Akka.Util
 {
@@ -122,7 +123,7 @@ namespace Akka.Util
         public bool IsConsistent()
         {
             // is the heap property true for all data?
-            if (_data.Count == 0) return true;
+            if (_data.IsEmpty()) return true;
             var li = _data.Count - 1; // last index
             for (var pi = 0; pi < _data.Count; ++pi) // each parent index
             {

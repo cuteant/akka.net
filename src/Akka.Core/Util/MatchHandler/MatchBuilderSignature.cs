@@ -8,6 +8,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Akka.Util.Internal;
 
 namespace Akka.Tools.MatchHandler
 {
@@ -56,7 +57,7 @@ namespace Akka.Tools.MatchHandler
         // in the same order.
         private static bool ListsEqual(IReadOnlyList<object> x, IReadOnlyList<object> y)
         {
-            if (x is null) return y is null || y.Count == 0;
+            if (x is null) return y.IsNullOrEmptyR();
             var xCount = x.Count;
             if (y is null) return xCount == 0;
             if (xCount != y.Count) return false;

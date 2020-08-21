@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Akka.Event;
+using Akka.Util.Internal;
 
 namespace Akka.Actor
 {
@@ -113,7 +114,7 @@ namespace Akka.Actor
             switch (message)
             {
                 case Get get:
-                    if (_messages.Count == 0)
+                    if (_messages.IsEmpty())
                     {
                         EnqueueQuery(get);
                     }
@@ -123,7 +124,7 @@ namespace Akka.Actor
                     }
                     break;
                 case Select select:
-                    if (_messages.Count == 0)
+                    if (_messages.IsEmpty())
                     {
                         EnqueueQuery(select);
                     }
@@ -166,7 +167,7 @@ namespace Akka.Actor
                     _clientsByTimeout.IntersectWith(afterDeadline);
                     break;
                 default:
-                    if (_clients.Count == 0)
+                    if (_clients.IsEmpty())
                     {
                         EnqueueMessage(message);
                     }
@@ -188,7 +189,7 @@ namespace Akka.Actor
                     break;
             }
 
-            if (0u >= (uint)_clients.Count)
+            if (_clients.IsEmpty())
             {
                 if (_currentDeadline is object)
                 {

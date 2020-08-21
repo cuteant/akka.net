@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Akka.Actor;
 using Akka.Event;
 using Akka.Util;
+using Akka.Util.Internal;
 using MessagePack;
 
 namespace Akka.Cluster.Sharding
@@ -929,7 +930,7 @@ namespace Akka.Cluster.Sharding
 
                             updatedShards = updatedShards.Remove(shard);
 
-                            Regions = updatedShards.Count == 0
+                            Regions = updatedShards.IsEmptyR()
                                 ? Regions.Remove(regionRef)
                                 : Regions.SetItem(regionRef, updatedShards);
 

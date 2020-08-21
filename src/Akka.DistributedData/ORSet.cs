@@ -213,7 +213,7 @@ namespace Akka.DistributedData
                                         .Where(kv => lhsDots.Version == kv.Value && lhsDots.Node == kv.Key)
                                         .ToImmutableDictionary(UniqueAddressComparer.Instance);
                                     var commonDotKeys = commonDots.Keys.ToImmutableArray();
-                                    var lhsUnique = commonDotKeys.Length != 0 ? VersionVector.Empty : lhsDots;
+                                    var lhsUnique = commonDotKeys.NonEmpty() ? VersionVector.Empty : lhsDots;
                                     var rhsUniqueDots = rhsDots.Versions.RemoveRange(commonDotKeys);
                                     var lhsKeep = ORSet.SubtractDots(lhsUnique, rhs.VersionVector);
                                     var rhsKeep = ORSet.SubtractDots(new MultiVersionVector(rhsUniqueDots), lhs.VersionVector);
@@ -292,7 +292,7 @@ namespace Akka.DistributedData
 
         public bool Contains(T elem) => ElementsMap.ContainsKey(elem);
 
-        public bool IsEmpty => ElementsMap.Count == 0;
+        public bool IsEmpty => ElementsMap.IsEmptyR();
 
         public int Count => ElementsMap.Count;
 

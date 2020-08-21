@@ -12,6 +12,7 @@ using System.Threading;
 using Akka.Actor;
 using Akka.TestKit.Internal;
 using Akka.Util;
+using Akka.Util.Internal;
 
 namespace Akka.TestKit
 {
@@ -384,8 +385,8 @@ namespace Akka.TestKit
 
         private void CheckMissingAndUnexpected<TMissing, TUnexpected>(IReadOnlyCollection<TMissing> missing, IReadOnlyCollection<TUnexpected> unexpected, string missingMessage, string unexpectedMessage, bool shouldLog, string hint)
         {
-            var missingIsEmpty = missing.Count == 0;
-            var unexpectedIsEmpty = unexpected.Count == 0;
+            var missingIsEmpty = missing.IsEmptyR();
+            var unexpectedIsEmpty = unexpected.IsEmptyR();
             var bothEmpty = missingIsEmpty && unexpectedIsEmpty;
             if(!bothEmpty)
             {

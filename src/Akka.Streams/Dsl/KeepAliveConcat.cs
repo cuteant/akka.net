@@ -74,7 +74,7 @@ namespace Akka.Streams.Dsl
 
             public void OnUpstreamFinish()
             {
-                if (_buffer.Count == 0)
+                if (0U >= (uint)_buffer.Count)
                     CompleteStage();
             }
 
@@ -84,7 +84,7 @@ namespace Akka.Streams.Dsl
             {
                 if (IsClosed(_keepAliveConcat.In))
                 {
-                    if (_buffer.Count == 0)
+                    if (0U >= (uint)_buffer.Count)
                         CompleteStage();
                     else
                         Push(_keepAliveConcat.Out, _buffer.Dequeue());

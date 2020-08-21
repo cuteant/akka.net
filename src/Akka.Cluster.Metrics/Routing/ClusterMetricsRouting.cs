@@ -18,7 +18,7 @@ using Akka.Dispatch;
 using Akka.Routing;
 using Akka.Util;
 using Akka.Util.Extensions;
-using Akka.Configuration;
+using Akka.Util.Internal;
 
 namespace Akka.Cluster.Metrics
 {
@@ -73,7 +73,7 @@ namespace Akka.Cluster.Metrics
         /// <inheritdoc />
         public override Routee Select(object message, Routee[] routees)
         {
-            if (routees.Length == 0)
+            if (routees.IsEmpty())
                 return Routee.NoRoutee;
 
             Option<WeightedRoutees> UpdateWeightedRoutees()

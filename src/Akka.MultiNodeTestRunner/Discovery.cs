@@ -15,6 +15,7 @@ using System.Threading;
 using Akka.MultiNodeTestRunner.Shared;
 using Akka.Remote.TestKit;
 using Akka.Util;
+using Akka.Util.Internal;
 using Xunit.Abstractions;
 using Xunit.Sdk;
 
@@ -28,7 +29,7 @@ namespace Akka.MultiNodeTestRunner
     {
         public Dictionary<string, List<NodeTest>> Tests { get; set; }
         public List<ErrorMessage> Errors { get; } = new List<ErrorMessage>();
-        public bool WasSuccessful => Errors.Count == 0;
+        public bool WasSuccessful => Errors.IsEmpty();
         
         /// <summary>
         /// Initializes a new instance of the <see cref="Discovery"/> class.

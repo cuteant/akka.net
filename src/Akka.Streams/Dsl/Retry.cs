@@ -243,13 +243,13 @@ namespace Akka.Streams.Dsl
                             _queue.Enqueue(item);
                     }, onUpstreamFinish: () =>
                     {
-                        if (!_elementInCycle && _queue.Count == 0)
+                        if (!_elementInCycle && 0U >= (uint)_queue.Count)
                             CompleteStage();
                     });
 
                     SetHandler(retry.Out1, onPull: () =>
                     {
-                        if (_queue.Count == 0)
+                        if (0U >= (uint)_queue.Count)
                         {
                             if (IsAvailable(retry.Out2))
                                 Pull(retry.In1);
@@ -290,7 +290,7 @@ namespace Akka.Streams.Dsl
                                     foreach (var i in items)
                                         _queue.Enqueue(i);
 
-                                    if (_queue.Count == 0)
+                                    if (0U >= (uint)_queue.Count)
                                     {
                                         if (IsClosed(retry.In1))
                                             CompleteStage();
@@ -316,7 +316,7 @@ namespace Akka.Streams.Dsl
                     {
                         if (!_elementInCycle && IsAvailable(retry.Out1))
                         {
-                            if (_queue.Count == 0)
+                            if (0U >= (uint)_queue.Count)
                                 Pull(_retry.In1);
                             else
                             {
@@ -335,7 +335,7 @@ namespace Akka.Streams.Dsl
                 private void PushAndCompleteIfLast((Result<TOut>, TState) item)
                 {
                     Push(_retry.Out1, item);
-                    if (IsClosed(_retry.In1) && _queue.Count == 0)
+                    if (IsClosed(_retry.In1) && 0U >= (uint)_queue.Count)
                         CompleteStage();
                 }
             }

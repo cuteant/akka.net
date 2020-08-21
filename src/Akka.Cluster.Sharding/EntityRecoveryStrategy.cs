@@ -31,7 +31,7 @@ namespace Akka.Cluster.Sharding
     {
         public override IImmutableSet<Task<IImmutableSet<EntityId>>> RecoverEntities(IImmutableSet<EntityId> entities)
         {
-            return entities.Count == 0
+            return 0U >= (uint)entities.Count
                 ? ImmutableHashSet<Task<IImmutableSet<EntityId>>>.Empty
                 : ImmutableHashSet.Create(Task.FromResult(entities));
         }

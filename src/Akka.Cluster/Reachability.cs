@@ -363,7 +363,7 @@ namespace Akka.Cluster
         /// <returns>TBD</returns>
         public Reachability RemoveObservers(ImmutableHashSet<UniqueAddress> nodes)
         {
-            if (nodes.Count == 0)
+            if (0U >= (uint)nodes.Count)
             {
                 return this;
             }

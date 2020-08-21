@@ -136,7 +136,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             return info.Groups.SelectMany(group =>
             {
-                if (group.Count == 0) return Enumerable.Empty<IModule>();
+                if (group.IsEmpty()) return Enumerable.Empty<IModule>();
                 if (group.Count == 1) return new[] { group.First() };
                 return new[] { FuseGroup(info, group) };
             }).ToImmutableArray();
@@ -441,7 +441,7 @@ namespace Akka.Streams.Implementation.Fusing
                 if (module is CopiedModule copied)
                 {
                     var result = Descend<T>(copied.CopyOf, allAttributes, structInfo, localGroup, indent + 1);
-                    if (result.Count == 0) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Descend_EmptyResult);
+                    if (result.IsEmpty) ThrowHelper.ThrowIllegalStateException(ExceptionResource.IllegalState_Descend_EmptyResult);
 
                     result.AddToFront(new KeyValuePair<IModule, IMaterializedValueNode>(copied, result.PeekFromFront().Value));
 
@@ -647,7 +647,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// <returns>TBD</returns>
         public IImmutableList<CopiedModule> ExitMaterializationContext()
         {
-            if (_materializedSources.Count == 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_EMC_with_empty_stack);
+            if (_materializedSources.IsEmpty) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_EMC_with_empty_stack);
             var x = _materializedSources.RemoveFromFront();
             return x.ToImmutableList();
         }
@@ -661,7 +661,7 @@ namespace Akka.Streams.Implementation.Fusing
         /// </exception>
         public void PushMaterializationSource(CopiedModule module)
         {
-            if (_materializedSources.Count == 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_PMS_without_context);
+            if (_materializedSources.IsEmpty) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_PMS_without_context);
             _materializedSources.PeekFromFront().AddToFront(module);
         }
 
@@ -924,7 +924,7 @@ namespace Akka.Streams.Implementation.Fusing
         {
             if (map.TryGetValue(orig, out var values))
             {
-                if (values.Count == 0)
+                if (values.IsEmpty)
                     map.Remove(orig);
                 else
                 {

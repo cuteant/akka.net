@@ -11,6 +11,7 @@ using System;
 using System.Collections.Immutable;
 using Akka.Cluster;
 using Akka.Event;
+using Akka.Util.Internal;
 
 namespace Akka.DistributedData
 {
@@ -52,7 +53,7 @@ namespace Akka.DistributedData
             DoneWhenRemainingSize = GetDoneWhenRemainingSize();
         }
 
-        protected bool IsDone => _gotLocalStoreReply && (Remaining.Count <= DoneWhenRemainingSize || (Remaining.Except(_gotNackFrom).Count == 0) || NotEnoughNodes);
+        protected bool IsDone => _gotLocalStoreReply && (Remaining.Count <= DoneWhenRemainingSize || (Remaining.Except(_gotNackFrom).IsEmptyR()) || NotEnoughNodes);
 
         protected bool NotEnoughNodes => DoneWhenRemainingSize < 0 || Nodes.Count < DoneWhenRemainingSize;
 

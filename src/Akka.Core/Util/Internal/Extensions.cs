@@ -218,11 +218,79 @@ namespace Akka.Util.Internal
         /// <typeparam name="T">The type of the elements of <paramref name="source" />.</typeparam>
         /// <param name="source">An <see cref="IEnumerable{T}" /> to iterate.</param>
         /// <param name="action">The function that is applied for its side-effect to every element. The result of function <paramref name="action" /> is discarded.</param>
-        [MethodImpl(MethodImplOptions.AggressiveInlining)]
         public static void ForEach<T>(this IEnumerable<T> source, Action<T> action)
         {
-            foreach (var item in source)
-                action(item);
+            switch (source)
+            {
+                case null:
+                    return;
+
+                case List<T> list:
+                    list.ForEach(action);
+                    return;
+
+                case IList<T> list:
+                    if (list.IsEmpty()) { return; }
+                    for (var idx = 0; idx < list.Count; idx++)
+                    {
+                        action(list[idx]);
+                    }
+                    return;
+
+                case IReadOnlyList<T> list:
+                    if (list.IsEmptyR()) { return; }
+                    for (var idx = 0; idx < list.Count; idx++)
+                    {
+                        action(list[idx]);
+                    }
+                    return;
+
+                default:
+                    foreach (var item in source)
+                    {
+                        action(item);
+                    }
+                    return;
+            }
+        }
+
+        /// <summary>
+        /// Applies a delegate <paramref name="action" /> to all elements of this enumerable.
+        /// </summary>
+        /// <typeparam name="T">The type of the elements of <paramref name="source" />.</typeparam>
+        /// <param name="source">An <see cref="IEnumerable{T}" /> to iterate.</param>
+        /// <param name="action">The function that is applied for its side-effect to every element. The result of function <paramref name="action" /> is discarded.</param>
+        public static void ForEach<T>(this IEnumerable<T> source, Action<T, int> action)
+        {
+            switch (source)
+            {
+                case null:
+                    return;
+
+                case IList<T> list:
+                    if (list.IsEmpty()) { return; }
+                    for (var idx = 0; idx < list.Count; idx++)
+                    {
+                        action(list[idx], idx);
+                    }
+                    return;
+
+                case IReadOnlyList<T> list:
+                    if (list.IsEmptyR()) { return; }
+                    for (var idx = 0; idx < list.Count; idx++)
+                    {
+                        action(list[idx], idx);
+                    }
+                    return;
+
+                default:
+                    var i = 0;
+                    foreach (var item in source)
+                    {
+                        action(item, checked(i++));
+                    }
+                    return;
+            }
         }
 
         /// <summary>

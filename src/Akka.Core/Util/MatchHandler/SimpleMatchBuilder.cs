@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
 using System.Runtime.CompilerServices;
+using Akka.Util.Internal;
 using CuteAnt;
 
 // TODO Expression.SwitchCase with C# 7 pattern matching, 
@@ -273,7 +274,7 @@ namespace Akka.Tools.MatchHandler
                     {
                         Expression.Assign(bindResult, Expression.TypeAs(Parameter, ctxType))
                     };
-                    if (processor is object && predicatedHandlers.Count == 0)
+                    if (processor is object && predicatedHandlers.IsEmpty())
                     {
                         exprList.Add(
                             Expression.IfThen(

@@ -8,7 +8,6 @@
 using System.Collections.Immutable;
 using System.Text;
 using Akka.Util.Internal;
-using Akka.Util.Internal.Collections;
 
 namespace Akka.Actor.Internal
 {
@@ -31,7 +30,7 @@ namespace Akka.Actor.Internal
         /// <returns>TBD</returns>
         public static IChildrenContainer Create(IImmutableDictionary<string, IChildStats> children)
         {
-            if (children.Count == 0) return EmptyChildrenContainer.Instance;
+            if (children.IsEmptyR()) return EmptyChildrenContainer.Instance;
             return new NormalChildrenContainer(children);
         }
 

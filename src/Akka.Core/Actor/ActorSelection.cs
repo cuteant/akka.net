@@ -227,7 +227,7 @@ namespace Akka.Actor
 
                                 if (iter.IsEmpty())
                                 {
-                                    if (matchingChildren.Count == 0 && !sel.WildCardFanOut)
+                                    if (matchingChildren.IsEmpty() && !sel.WildCardFanOut)
                                         emptyRef.Tell(sel, sender);
                                     else
                                     {
@@ -238,7 +238,7 @@ namespace Akka.Actor
                                 else
                                 {
                                     // don't send to emptyRef after wildcard fan-out 
-                                    if (matchingChildren.Count == 0 && !sel.WildCardFanOut)
+                                    if (matchingChildren.IsEmpty() && !sel.WildCardFanOut)
                                         emptyRef.Tell(sel, sender);
                                     else
                                     {

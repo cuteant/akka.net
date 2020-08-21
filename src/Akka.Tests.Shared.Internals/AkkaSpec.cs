@@ -202,7 +202,7 @@ namespace Akka.TestKit
                             new PredicateMatcher(_ => true),
                             letter => clazz == typeof(object) || letter.Message.GetType() == clazz)));
 
-            if (messageClasses.Length == 0)
+            if (messageClasses.IsEmpty())
                 mute(typeof(object));
             else
                 messageClasses.ForEach(mute);

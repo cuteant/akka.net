@@ -1094,7 +1094,7 @@ namespace Akka.IO
             /// </summary>
             public (SimpleWriteCommand, IActorRef Sender) Dequeue()
             {
-                if (_queue.Count == 0)
+                if (0U >= (uint)_queue.Count)
                     throw new InvalidOperationException("Write commands queue is empty");
 
                 var (command, sender, size) = _queue.Dequeue();
@@ -1118,7 +1118,7 @@ namespace Akka.IO
             public bool TryGetNext(out (SimpleWriteCommand Command, IActorRef Sender) command)
             {
                 command = default;
-                if (_queue.Count == 0)
+                if (0U >= (uint)_queue.Count)
                     return false;
 
                 command = Dequeue();

@@ -13,6 +13,7 @@ using System.Text;
 using Akka.Actor;
 using Akka.Cluster;
 using Akka.Event;
+using Akka.Util.Internal;
 
 namespace Akka.DistributedData.Internal
 {
@@ -458,7 +459,7 @@ namespace Akka.DistributedData.Internal
             }
 
             var currentTime = DateTime.UtcNow;
-            var filteredMergedPruning = mergedPrunning.Count == 0
+            var filteredMergedPruning = mergedPrunning.IsEmpty()
                 ? mergedPrunning.ToImmutable()
                 : mergedPrunning
                     .Where(entry =>

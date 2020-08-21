@@ -19,6 +19,7 @@ using Akka.Streams.Implementation.Stages;
 using Akka.Streams.Util;
 using Akka.Util;
 using Akka.Util.Extensions;
+using Akka.Util.Internal;
 using Reactive.Streams;
 
 namespace Akka.Streams.Dsl
@@ -406,7 +407,7 @@ namespace Akka.Streams.Dsl
             var s = sources.ToList();
             Source<TOut2, NotUsed> source;
 
-            if (s.Count == 0)
+            if (s.IsEmpty())
                 source = Source.Empty<TOut2>();
             else if (s.Count == 1)
                 source = s[0].Select(t => zipper(ImmutableList<T>.Empty.Add(t)));
@@ -813,7 +814,7 @@ namespace Akka.Streams.Dsl
             var s = sources.ToList();
             Source<TOut2, NotUsed> source;
 
-            if (s.Count == 0)
+            if (s.IsEmpty())
                 source = Empty<TOut2>();
             else if (s.Count == 1)
                 source = s[0].Select(t => zipper(ImmutableList<T>.Empty.Add(t)));

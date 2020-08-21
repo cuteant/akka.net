@@ -9,6 +9,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Akka.MultiNodeTestRunner.Shared.Reporting;
+using Akka.Util.Internal;
 
 namespace Akka.MultiNodeTestRunner.Shared.Persistence
 {
@@ -118,7 +119,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Persistence
 
         private static string LongestCommonPrefix(IReadOnlyList<string> strings)
         {
-            if (strings is null || strings.Count == 0)
+            if (strings.IsNullOrEmptyR())
             {
                 return string.Empty;
             }

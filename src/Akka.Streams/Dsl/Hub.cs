@@ -1589,7 +1589,7 @@ namespace Akka.Streams.Dsl
 
             private void Publish(T element)
             {
-                if (!_initialized || _consumerInfo.Consumers.Count == 0)
+                if (!_initialized || _consumerInfo.Consumers.IsEmptyR())
                 {
                     // will be published when first consumers are registered
                     _pending.Add(element);
@@ -1613,7 +1613,7 @@ namespace Akka.Streams.Dsl
 
             public override void OnUpstreamFinish()
             {
-                if (_consumerInfo.Consumers.Count == 0)
+                if (_consumerInfo.Consumers.IsEmptyR())
                     CompleteStage();
                 else
                 {

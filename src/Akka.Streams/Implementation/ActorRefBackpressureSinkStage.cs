@@ -10,6 +10,7 @@ using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Streams.Implementation.Stages;
 using Akka.Streams.Stage;
+using Akka.Util.Internal;
 
 namespace Akka.Streams.Implementation
 {
@@ -58,7 +59,7 @@ namespace Akka.Streams.Implementation
 
             public override void OnUpstreamFinish()
             {
-                if (_buffer.Count == 0)
+                if (_buffer.IsEmpty())
                     Finish();
                 else
                     _completeReceived = true;
@@ -77,7 +78,7 @@ namespace Akka.Streams.Implementation
 
                 if (msg.GetType() == _ackType)
                 {
-                    if (_buffer.Count == 0)
+                    if (_buffer.IsEmpty())
                         _acknowledgementReceived = true;
                     else
                     {
@@ -110,7 +111,7 @@ namespace Akka.Streams.Implementation
                 var msg = _buffer[0];
                 _buffer.RemoveAt(0);
                 _stage._actorRef.Tell(msg, Self);
-                if (_buffer.Count == 0 && _completeReceived)
+                if (_buffer.IsEmpty() && _completeReceived)
                     Finish();
             }
 

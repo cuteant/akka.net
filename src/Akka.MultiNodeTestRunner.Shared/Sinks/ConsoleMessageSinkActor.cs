@@ -13,6 +13,7 @@ using Akka.Event;
 using Akka.MultiNodeTestRunner.Shared.Extensions;
 #endif
 using Akka.MultiNodeTestRunner.Shared.Reporting;
+using Akka.Util.Internal;
 
 namespace Akka.MultiNodeTestRunner.Shared.Sinks
 {
@@ -66,7 +67,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Sinks
                         {
                             WriteSpecMessage(String.Format(" --> {0}", resultMessage.Message));
                         }
-                        if (node.Value.ResultMessages is null || node.Value.ResultMessages.Count == 0)
+                        if (node.Value.ResultMessages.IsNullOrEmptyR())
                             WriteSpecMessage("[received no messages - SILENT FAILURE].");
                         WriteSpecMessage(string.Format("<----------- END NODE {0}:{1} ----------->", node.Key, node.Value.NodeRole));
                     }

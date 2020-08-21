@@ -13,6 +13,7 @@ using Akka.Actor;
 using Akka.Annotations;
 using Akka.Persistence.Journal;
 using Akka.Persistence.Serialization;
+using Akka.Util.Internal;
 using MessagePack;
 
 namespace Akka.Persistence
@@ -126,7 +127,7 @@ namespace Akka.Persistence
         {
             if (payload is null) ThrowHelper.ThrowArgumentNullException(ExceptionArgument.payload, ExceptionResource.ArgumentNull_AtomicWrite);
 
-            if (payload.Count == 0) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_AtomicWrite, ExceptionArgument.payload);
+            if (payload.IsEmptyR()) ThrowHelper.ThrowArgumentException(ExceptionResource.Argument_AtomicWrite, ExceptionArgument.payload);
 
             var firstMessage = payload[0];
             if (payload.Count > 1 && !payload.Skip(1).All(m => m.PersistenceId.Equals(firstMessage.PersistenceId)))

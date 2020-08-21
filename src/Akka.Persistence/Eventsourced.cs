@@ -473,7 +473,7 @@ namespace Akka.Persistence
                 ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Cannot_persist_during_replay);
             }
 
-            if (_pendingInvocations.Count == 0)
+            if (_pendingInvocations.IsEmpty)
             {
                 handler(evt);
             }

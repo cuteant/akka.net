@@ -155,7 +155,7 @@ namespace Akka.Remote
 
                     addressPromise.Task.Wait(Provider.RemoteSettings.StartupTimeout);
                     var akkaProtocolTransports = addressPromise.Task.Result;
-                    if (akkaProtocolTransports.Count == 0)
+                    if (akkaProtocolTransports.IsEmpty())
                     {
                         ThrowHelper.ThrowConfigurationException();
                     }

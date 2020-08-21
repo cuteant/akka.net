@@ -197,7 +197,7 @@ namespace Akka.Cluster.Tools.Client
         /// </exception>
         public ClusterClient(ClusterClientSettings settings)
         {
-            if (settings.InitialContacts.Count == 0)
+            if (settings.InitialContacts.IsEmptyR())
             {
                 ThrowHelper.ThrowArgumentException_InitialContactsForClusterClientCannotBeEmpty();
             }

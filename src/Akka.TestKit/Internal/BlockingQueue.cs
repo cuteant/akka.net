@@ -11,6 +11,7 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading;
+using Akka.Util.Internal;
 
 namespace Akka.TestKit.Internal
 {
@@ -171,7 +172,7 @@ namespace Akka.TestKit.Internal
             public bool TryTake(out Positioned item)
             {
                 var result = false;
-                if(_list.Count == 0)
+                if(_list.IsEmpty())
                 {
                     item = null;
                 }
@@ -179,7 +180,7 @@ namespace Akka.TestKit.Internal
                 {
                     lock(_lock)
                     {
-                        if(_list.Count == 0)
+                        if(0U >= (uint)_list.Count)
                         {
                             item = null;
                         }

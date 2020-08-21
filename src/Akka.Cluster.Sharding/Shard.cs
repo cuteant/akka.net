@@ -11,6 +11,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Coordination;
 using Akka.Event;
+using Akka.Util.Internal;
 using MessagePack;
 
 namespace Akka.Cluster.Sharding
@@ -1129,7 +1130,7 @@ namespace Akka.Cluster.Sharding
                     _waitingForAck = _waitingForAck.Remove(ack.EntityId);
                     // inform whoever requested the start that it happened
                     _requestor.Tell(ack);
-                    if (_waitingForAck.Count == 0) Context.Stop(Self);
+                    if (_waitingForAck.IsEmptyR()) Context.Stop(Self);
                     return true;
                 case Tick _:
                     SendStart(_waitingForAck);

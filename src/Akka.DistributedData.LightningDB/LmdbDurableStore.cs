@@ -8,17 +8,17 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
+using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Text;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.DistributedData.Durable;
 using Akka.Event;
 using Akka.Serialization;
-using Akka.DistributedData.Internal;
+using Akka.Util.Internal;
 using LightningDB;
-using System.Diagnostics;
-using System.Linq;
 
 namespace Akka.DistributedData.LightningDB
 {
@@ -191,7 +191,7 @@ namespace Akka.DistributedData.LightningDB
         {
             Receive<LoadAll>(loadAll =>
             {
-                if(_dir.Length == 0 || !Directory.Exists(_dir))
+                if(_dir.IsEmpty() || !Directory.Exists(_dir))
                 {
                     // no files to load
                     Sender.Tell(LoadAllCompleted.Instance);

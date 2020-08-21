@@ -18,6 +18,7 @@ using System.Linq;
 using Akka.Annotations;
 using Akka.Pattern;
 using Akka.Routing;
+using Akka.Util.Internal;
 
 namespace Akka.Cluster.Metrics
 {
@@ -46,7 +47,7 @@ namespace Akka.Cluster.Metrics
             _buckets = InitBuckets();
         }
 
-        public bool IsEmpty => _buckets.Length == 0 || _buckets.Last() == 0;
+        public bool IsEmpty => _buckets.IsEmpty() || 0U >= (uint)_buckets.Last();
 
         public int Total
         {
@@ -111,7 +112,7 @@ namespace Akka.Cluster.Metrics
             }
 
             var buckets = new int[_routees.Length];
-            var meanWeight = _weights.Count == 0 ? 1 : _weights.Values.Sum() / _weights.Count;
+            var meanWeight = 0U >= (uint)_weights.Count ? 1 : _weights.Values.Sum() / _weights.Count;
             var i = 0;
             var sum = 0;
             foreach (var routee in _routees)

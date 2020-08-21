@@ -142,7 +142,7 @@ namespace Akka.Actor.Internal
         /// <returns>Previously stashed messages.</returns>
         public IEnumerable<Envelope> ClearStash()
         {
-            if (_theStash.Count == 0) { return Enumerable.Empty<Envelope>(); }
+            if (_theStash.IsEmpty) { return Enumerable.Empty<Envelope>(); }
 
             var stashed = _theStash;
             _theStash = new Deque<Envelope>();

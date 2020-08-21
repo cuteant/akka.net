@@ -513,7 +513,7 @@ namespace Akka.Remote.TestKit
                     })
                     .With<Controller.ClientDisconnected>(disconnected =>
                     {
-                        if (arrived is null || arrived.Count == 0)
+                        if (arrived.IsNullOrEmptyR())
                             nextState =
                                 Stay()
                                     .Using(
@@ -559,7 +559,7 @@ namespace Akka.Remote.TestKit
                     })
                     .With<RemoveClient>(client =>
                     {
-                        if (clients.Count == 0)
+                        if (clients.IsEmpty)
                             throw new BarrierEmptyException(@event.StateData, $"cannot remove {client.Name}: no client to remove");
                         nextState =
                             Stay().Using(@event.StateData.Copy(clients.Where(x => x.Name != client.Name).ToImmutableHashSet()));
@@ -630,11 +630,11 @@ namespace Akka.Remote.TestKit
         public State<State,Data> HandleBarrier(Data data)
         {
             _log.Debug("handleBarrier({0})", data.Barrier);
-            if (data.Arrived.Count == 0)
+            if (data.Arrived.IsEmpty)
             {
                 return GoTo(State.Idle).Using(data.Copy(barrier: string.Empty));
             }
-            else if (data.Clients.Select(x => x.FSM).ToImmutableHashSet().Except(data.Arrived).Count == 0)
+            else if (data.Clients.Select(x => x.FSM).ToImmutableHashSet().Except(data.Arrived).IsEmpty)
             {
                 foreach (var arrived in data.Arrived)
                 {

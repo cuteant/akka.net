@@ -12,6 +12,7 @@ using System.Linq;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Remote;
+using Akka.Util.Internal;
 
 namespace Akka.Cluster.Tools.Client
 {
@@ -154,7 +155,7 @@ namespace Akka.Cluster.Tools.Client
         /// <returns>TBD</returns>
         public ClusterClientSettings WithInitialContacts(IImmutableSet<ActorPath> initialContacts)
         {
-            if (initialContacts.Count == 0)
+            if (initialContacts.IsEmptyR())
             {
                 ThrowHelper.ThrowArgumentException_InitialContactsMustBeDefined();
             }

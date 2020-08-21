@@ -123,7 +123,7 @@ namespace Akka.DistributedData
         /// <summary>
         /// TBD
         /// </summary>
-        public bool IsEmpty => Elements.Count == 0;
+        public bool IsEmpty => Elements.IsEmptyR();
 
         /// <summary>
         /// TBD

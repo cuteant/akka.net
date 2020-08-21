@@ -15,6 +15,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch;
 using Akka.Util;
+using Akka.Util.Internal;
 using CuteAnt;
 using DotNetty.Buffers;
 
@@ -363,7 +364,7 @@ namespace Akka.Remote.Transport.DotNetty
 
 
                 var find = store.Certificates.Find(X509FindType.FindByThumbprint, certificateThumbprint, !suppressValidation);
-                if (find.Count == 0)
+                if (find.IsEmptyX())
                 {
                     throw new ArgumentException(
                         "Could not find Valid certificate for thumbprint (by default it can be found under `akka.remote.dot-netty.tcp.ssl.certificate.thumpbrint`. Also check akka.remote.dot-netty.tcp.ssl.certificate.store-name and akka.remote.dot-netty.tcp.ssl.certificate.store-location)");

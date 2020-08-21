@@ -12,6 +12,7 @@ using System.Collections.Immutable;
 using System.Linq;
 using System.Text;
 using Akka.Cluster;
+using Akka.Util.Internal;
 
 namespace Akka.DistributedData
 {
@@ -184,7 +185,7 @@ namespace Akka.DistributedData
         /// <summary>
         /// Determines if current <see cref="ORDictionary{TKey,TValue}"/> doesn't contain any value.
         /// </summary>
-        public bool IsEmpty => ValueMap.Count == 0;
+        public bool IsEmpty => ValueMap.IsEmptyR();
 
         /// <summary>
         /// Returns number of entries stored within current <see cref="ORDictionary{TKey,TValue}"/>

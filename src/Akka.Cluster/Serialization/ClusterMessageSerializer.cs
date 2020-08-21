@@ -413,7 +413,7 @@ namespace Akka.Cluster.Serialization
 
         private static Reachability ReachabilityFromProto(IList<Protocol.ObserverReachability> reachabilityProto, List<UniqueAddress> addressMapping)
         {
-            if (reachabilityProto is null || reachabilityProto.Count == 0)
+            if (reachabilityProto.IsNullOrEmpty())
             {
                 return new Reachability(ImmutableList<Reachability.Record>.Empty, ImmutableDictionary<UniqueAddress, long>.Empty);
             }
