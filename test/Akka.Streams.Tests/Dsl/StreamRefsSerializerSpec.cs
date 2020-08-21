@@ -14,6 +14,7 @@ using Akka.Event;
 using Akka.Streams.Dsl;
 using Akka.Streams.TestKit;
 using Akka.TestKit;
+using MessagePack;
 using Xunit;
 using Xunit.Abstractions;
 
@@ -45,12 +46,12 @@ namespace Akka.Streams.Tests
     }
 
     [Serializable]
-    public sealed class StartListening
+    public sealed class StartListening : IObjectReferences
     {
     }
 
     [Serializable]
-    public sealed class RequestStream
+    public sealed class RequestStream : IObjectReferences
     {
         public IActorRef ActorRef { get; }
 
@@ -61,7 +62,7 @@ namespace Akka.Streams.Tests
     }
 
     [Serializable]
-    public sealed class EnvelopedStream
+    public sealed class EnvelopedStream : IObjectReferences
     {
         public ISourceRef<string> SourceRef { get; }
 

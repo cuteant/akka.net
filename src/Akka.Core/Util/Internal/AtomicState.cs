@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Concurrent;
+using System.Runtime.CompilerServices;
 using System.Runtime.ExceptionServices;
 using System.Threading.Tasks;
 
@@ -96,11 +97,15 @@ namespace Akka.Util.Internal
                 capturedException = ExceptionDispatchInfo.Capture(ex);
             }
 
-            bool throwException = capturedException is object;
-            if (throwException || DateTime.UtcNow.CompareTo(deadline) >= 0)
+            // Need to make sure that timeouts are reported as timeouts
+            if (capturedException != null)
             {
-                CallFails();
-                if (throwException) { capturedException.Throw(); }
+                CallFails(capturedException.SourceException);
+                capturedException.Throw();
+            }
+            else if (DateTime.UtcNow.CompareTo(deadline) >= 0)
+            {
+                CallFails(GetTimeoutException(_callTimeout));
             }
             else
             {
@@ -134,16 +139,26 @@ namespace Akka.Util.Internal
                 capturedException = ExceptionDispatchInfo.Capture(ex);
             }
 
-            bool throwException = capturedException is object;
-            if (throwException || DateTime.UtcNow.CompareTo(deadline) >= 0)
+            // Need to make sure that timeouts are reported as timeouts
+            if (capturedException != null)
             {
-                CallFails();
-                if (throwException) { capturedException.Throw(); }
+                CallFails(capturedException?.SourceException);
+                capturedException.Throw();
+            }
+            else if (DateTime.UtcNow.CompareTo(deadline) >= 0)
+            {
+                CallFails(GetTimeoutException(_callTimeout));
             }
             else
             {
                 CallSucceeds();
             }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private static TimeoutException GetTimeoutException(TimeSpan callTimeout)
+        {
+            return new TimeoutException($"Execution did not complete within the time allotted {callTimeout.TotalMilliseconds} ms");
         }
 
         /// <summary>
@@ -164,7 +179,7 @@ namespace Akka.Util.Internal
         /// <summary>
         /// Invoked when call fails
         /// </summary>
-        protected internal abstract void CallFails();
+        protected internal abstract void CallFails(Exception cause);
 
         /// <summary>
         /// Invoked when call succeeds

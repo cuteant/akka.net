@@ -24,7 +24,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="LightningDB" Version="0.12.0" />
+    <PackageReference Include="LightningDB" Version="$(LightningDBPackageVersion)" />
   </ItemGroup>
 
   <Import Project="..\..\version.props" />

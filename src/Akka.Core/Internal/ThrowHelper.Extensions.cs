@@ -891,6 +891,12 @@ An (unbounded) deque-based mailbox can be configured as follows:
         #region -- Akka Execptions --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static UserCalledFailException GetUserCalledFailException()
+        {
+            return new UserCalledFailException();
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowRejectedExecutionException()
         {
             throw GetException();

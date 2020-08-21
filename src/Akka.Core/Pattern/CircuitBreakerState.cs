@@ -6,7 +6,9 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Diagnostics;
 using System.Globalization;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Akka.Util;
 using Akka.Util.Internal;
@@ -39,7 +41,7 @@ namespace Akka.Pattern
         /// <returns>N/A</returns>
         public override Task<T> Invoke<T>(IRunnableTask<T> body)
         {
-            throw new OpenCircuitException();
+            throw new OpenCircuitException(_breaker.LastCaughtException);
         }
 
         /// <summary>
@@ -50,14 +52,17 @@ namespace Akka.Pattern
         /// <returns>N/A</returns>
         public override Task Invoke(IRunnableTask body)
         {
-            throw new OpenCircuitException();
+            throw new OpenCircuitException(_breaker.LastCaughtException);
         }
 
         /// <summary>
         /// No-op for open, calls are never executed so cannot succeed or fail
         /// </summary>
-        protected internal override void CallFails()
+        protected internal override void CallFails(Exception cause)
         {
+            // This is a no-op, but CallFails() can be called from CircuitBreaker
+            // (The function summary is a lie)
+            Debug.WriteLine($"Ignoring calls to [CallFails()] because {nameof(CircuitBreaker)} is in open state. Exception cause was: {cause}");
         }
 
         /// <summary>
@@ -65,6 +70,9 @@ namespace Akka.Pattern
         /// </summary>
         protected internal override void CallSucceeds()
         {
+            // This is a no-op, but CallSucceeds() can be called from CircuitBreaker
+            // (The function summary is a lie)
+            Debug.WriteLine($"Ignoring calls to [CallSucceeds()] because {nameof(CircuitBreaker)} is in open state.");
         }
 
         /// <summary>
@@ -115,7 +123,7 @@ namespace Akka.Pattern
         {
             if (!_lock.CompareAndSet(true, false))
             {
-                throw new OpenCircuitException();
+                ThrowOpenCircuitException();
             }
             return await CallThrough(body);
         }
@@ -131,16 +139,28 @@ namespace Akka.Pattern
         {
             if (!_lock.CompareAndSet(true, false))
             {
-                throw new OpenCircuitException();
+                ThrowOpenCircuitException();
             }
             await CallThrough(body);
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private OpenCircuitException ThrowOpenCircuitException()
+        {
+            throw GetOpenCircuitException();
+        }
+
+        private OpenCircuitException GetOpenCircuitException()
+        {
+            return new OpenCircuitException("Circuit breaker is half open, only one call is allowed; this call is failing fast.", _breaker.LastCaughtException);
         }
 
         /// <summary>
         /// Reopen breaker on failed call.
         /// </summary>
-        protected internal override void CallFails()
+        protected internal override void CallFails(Exception cause)
         {
+            _breaker.OnFail(cause);
             _breaker.TripBreaker(this);
         }
 
@@ -149,6 +169,7 @@ namespace Akka.Pattern
         /// </summary>
         protected internal override void CallSucceeds()
         {
+            _breaker.OnSuccess();
             _breaker.ResetBreaker();
         }
 
@@ -212,8 +233,9 @@ namespace Akka.Pattern
         /// On failed call, the failure count is incremented.  The count is checked against the configured maxFailures, and
         /// the breaker is tripped if we have reached maxFailures.
         /// </summary>
-        protected internal override void CallFails()
+        protected internal override void CallFails(Exception cause)
         {
+            _breaker.OnFail(cause);
             if (IncrementAndGet() == _breaker.MaxFailures)
             {
                 _breaker.TripBreaker(this);
@@ -225,6 +247,7 @@ namespace Akka.Pattern
         /// </summary>
         protected internal override void CallSucceeds()
         {
+            _breaker.OnSuccess();
             Reset();
         }
 

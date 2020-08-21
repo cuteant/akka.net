@@ -263,6 +263,16 @@ namespace Akka.Streams
         #region -- ArgumentException --
 
         [MethodImpl(MethodImplOptions.NoInlining)]
+        internal static void ThrowArgumentException_initialSize_must_be_a_power_of_2_that_is_great_than_zero()
+        {
+            throw GetArgumentException();
+            static ArgumentException GetArgumentException()
+            {
+                return new ArgumentException("initialSize must be a power of 2 that is > 0");
+            }
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
         internal static void ThrowArgumentException_Timeout_must_be_finite()
         {
             throw GetArgumentException();
