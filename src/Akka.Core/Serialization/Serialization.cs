@@ -700,11 +700,8 @@ namespace Akka.Serialization
         /// <returns>The serializer configured for the given object type</returns>
         public Serializer FindSerializerFor(object obj)
         {
-            if (obj is object)
-            {
-                return FindSerializerForTypeImpl(obj.GetType(), null);
-            }
-            return _nullSerializer;
+            if (obj is null) { return _nullSerializer; }
+            return FindSerializerForTypeImpl(obj.GetType(), null);
         }
 
         /// <summary>Returns the Serializer configured for the given object, returns the NullSerializer if it's null.</summary>
@@ -713,11 +710,8 @@ namespace Akka.Serialization
         /// <returns>The serializer configured for the given object type</returns>
         public Serializer FindSerializerFor(object obj, string defaultSerializerName)
         {
-            if (obj is object)
-            {
-                return FindSerializerForTypeImpl(obj.GetType(), defaultSerializerName);
-            }
-            return _nullSerializer;
+            if (obj is null) { return _nullSerializer; }
+            return FindSerializerForTypeImpl(obj.GetType(), defaultSerializerName);
         }
 
         /// <summary>Returns the configured Serializer for the given Class. The configured Serializer is used
