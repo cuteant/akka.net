@@ -127,7 +127,7 @@ namespace Akka.Serialization
 
     /// <summary>This is a special <see cref="Serializer"/> that serializes and deserializes javascript objects only.
     /// These objects need to be in the JavaScript Object Notation (JSON) format.</summary>
-    public class NewtonSoftJsonSerializer : Serializer
+    public sealed class NewtonSoftJsonSerializer : Serializer
     {
         private readonly JsonSerializer _serializer;
         private readonly JsonSerializerSettings _serializerSettings;

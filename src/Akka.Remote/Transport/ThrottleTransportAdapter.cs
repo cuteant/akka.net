@@ -130,13 +130,16 @@ namespace Akka.Remote.Transport
     #region == class ForceDisassociate ==
 
     /// <summary>Management command to force disassociation of an address</summary>
+    [MessagePackObject]
     internal sealed class ForceDisassociate
     {
         /// <summary>TBD</summary>
         /// <param name="address">TBD</param>
+        [SerializationConstructor]
         public ForceDisassociate(Address address) => Address = address;
 
         /// <summary>TBD</summary>
+        [Key(0)]
         public Address Address { get; }
     }
 
@@ -145,11 +148,13 @@ namespace Akka.Remote.Transport
     #region == class ForceDisassociateExplicitly ==
 
     /// <summary>Management command to force disassociation of an address with an explicit error.</summary>
+    [MessagePackObject]
     internal sealed class ForceDisassociateExplicitly
     {
         /// <summary>TBD</summary>
         /// <param name="address">TBD</param>
         /// <param name="reason">TBD</param>
+        [SerializationConstructor]
         public ForceDisassociateExplicitly(Address address, DisassociateInfo reason)
         {
             Reason = reason;
@@ -157,9 +162,11 @@ namespace Akka.Remote.Transport
         }
 
         /// <summary>TBD</summary>
+        [Key(0)]
         public Address Address { get; }
 
         /// <summary>TBD</summary>
+        [Key(1)]
         public DisassociateInfo Reason { get; }
     }
 
@@ -168,7 +175,7 @@ namespace Akka.Remote.Transport
     #region == class ForceDisassociateAck ==
 
     /// <summary>INTERNAL API</summary>
-    internal sealed class ForceDisassociateAck
+    internal sealed class ForceDisassociateAck : ISingletonMessage
     {
         private ForceDisassociateAck() { }
 
@@ -706,7 +713,7 @@ namespace Akka.Remote.Transport
     #region == class SetThrottle ==
 
     /// <summary>Applies a throttle to the underlying conneciton</summary>
-    public sealed class SetThrottle
+    public sealed class SetThrottle : IJson
     {
         private readonly Address _address;
 

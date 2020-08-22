@@ -36,6 +36,12 @@ namespace Akka.Actor
             }
         }
 
+        private Action<object> BuildNewReceiveHandler(PatternMatchBuilder matchBuilder)
+        {
+            matchBuilder.TryMatchAny(m => Unhandled(m));
+            return matchBuilder.Build();
+        }
+
         /// <inheritdoc />
         protected sealed override bool Receive(object message)
         {
@@ -81,31 +87,28 @@ namespace Akka.Actor
             base.BecomeStacked(receiveFunc);
         }
 
+        private bool ExecuteMessageHandler(object message, Action<object> handler)
+        {
+            handler(message);
+            return true;
+        }
+
         private Receive GetBehavior(PatternMatchBuilder patterns)
         {
             if (patterns is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.patterns); }
 
-            if (patterns.Properties.TryGetValue(BehaviorKey, out var behavior))
+            Action<object> behavior;
+            if (patterns.Properties.TryGetValue(BehaviorKey, out var objBehavior))
             {
-                return (Receive)behavior;
+                behavior = (Action<object>)objBehavior;
+            }
+            else
+            {
+                behavior = BuildNewReceiveHandler(patterns);
+                patterns.Properties[BehaviorKey] = behavior;
             }
 
-            var newHandler = BuildNewReceiveHandler(patterns);
-            bool LocalReceive(object message)
-            {
-                newHandler(message);
-                return true;
-            }
-            Receive receiveFunc = m => LocalReceive(m);
-
-            patterns.Properties[BehaviorKey] = receiveFunc;
-            return receiveFunc;
-        }
-
-        private Action<object> BuildNewReceiveHandler(PatternMatchBuilder matchBuilder)
-        {
-            matchBuilder.TryMatchAny(Unhandled);
-            return matchBuilder.Build();
+            return m => ExecuteMessageHandler(m, behavior);
         }
 
         /// <summary>TBD</summary>

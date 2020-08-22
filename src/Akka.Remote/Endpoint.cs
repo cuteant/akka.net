@@ -375,7 +375,7 @@ namespace Akka.Remote
         private readonly ConcurrentDictionary<EndpointManager.Link, EndpointManager.ResendState> _receiveBuffers;
 
         private PatternMatchBuilder _gatedPatterns;
-        private PatternMatchBuilder _writerTerminatedGatedPatterns;
+        //private PatternMatchBuilder _writerTerminatedGatedPatterns;
         private PatternMatchBuilder _earlyUngateRequestedGatedPatterns;
         private PatternMatchBuilder _flushWaitPatterns;
         private PatternMatchBuilder _idlePatterns;
@@ -425,7 +425,7 @@ namespace Akka.Remote
 
             Receiving();
             _autoResendTimer = Context.System.Scheduler.ScheduleTellRepeatedlyCancelable(
-                _settings.SysResendTimeout, _settings.SysResendTimeout, Self, new AttemptSysMsgRedelivery(), Self);
+                _settings.SysResendTimeout, _settings.SysResendTimeout, Self, AttemptSysMsgRedelivery.Instance, Self);
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -555,18 +555,18 @@ namespace Akka.Remote
         /// <exception cref="HopelessAssociation">TBD</exception>
         private void Receiving()
         {
-            Receive<EndpointWriter.FlushAndStop>(e => HandleEndpointWriterFlushAndStop(e));
+            Receive<EndpointWriter.FlushAndStop>(e => HandleEndpointWriterFlushAndStop());
             Receive<IsIdle>(PatternMatch<IsIdle>.EmptyAction); // Do not reply, we will Terminate soon, or send a GotUid
             Receive<EndpointManager.Send>(e => HandleSend(e));
             Receive<Ack>(e => HandleAck(e));
-            Receive<AttemptSysMsgRedelivery>(e => HandleAttemptSysMsgRedelivery(e));
-            Receive<Terminated>(e => HandleTerminated(e));
+            Receive<AttemptSysMsgRedelivery>(e => HandleAttemptSysMsgRedelivery());
+            Receive<Terminated>(e => HandleTerminated());
             Receive<GotUid>(e => HandleGotUid(e));
             Receive<EndpointWriter.StopReading>(e => HandleEndpointWriterStopReading(e));
             Receive<Ungate>(PatternMatch<Ungate>.EmptyAction); //ok, not gated
         }
 
-        private void HandleEndpointWriterFlushAndStop(EndpointWriter.FlushAndStop flush)
+        private void HandleEndpointWriterFlushAndStop()
         {
             //Trying to serve until our last breath
             ResendAll();
@@ -604,18 +604,18 @@ namespace Akka.Remote
             }
         }
 
-        private void HandleAttemptSysMsgRedelivery(AttemptSysMsgRedelivery sysmsg)
+        private void HandleAttemptSysMsgRedelivery()
         {
             if (UidConfirmed) ResendAll();
         }
 
-        private void HandleTerminated(Terminated terminated)
+        private void HandleTerminated()
         {
             _currentHandle = null;
             Context.Parent.Tell(new EndpointWriter.StoppedReading(Self));
             if (_resendBuffer.NonAcked.Count > 0 || _resendBuffer.Nacked.Count > 0)
                 Context.System.Scheduler.ScheduleTellOnce(_settings.SysResendTimeout, Self,
-                    new AttemptSysMsgRedelivery(), Self);
+                    AttemptSysMsgRedelivery.Instance, Self);
             GoToIdle();
         }
 
@@ -671,19 +671,20 @@ namespace Akka.Remote
                 {
                     if (earlyUngateRequested)
                     {
-                        Self.Tell(new Ungate());
+                        Self.Tell(Ungate.Instance);
                     }
                     else
                     {
-                        Context.System.Scheduler.ScheduleTellOnce(_settings.RetryGateClosedFor, Self, new Ungate(), Self);
+                        Context.System.Scheduler.ScheduleTellOnce(_settings.RetryGateClosedFor, Self, Ungate.Instance, Self);
                     }
                 }
 
-                if (_writerTerminatedGatedPatterns is null) { _writerTerminatedGatedPatterns = ConfigurePatterns(() => Gated(true, earlyUngateRequested)); }
-                Become(_writerTerminatedGatedPatterns);
+                //if (_writerTerminatedGatedPatterns is null) { _writerTerminatedGatedPatterns = ConfigurePatterns(() => Gated(true, earlyUngateRequested)); }
+                //Become(_writerTerminatedGatedPatterns);
+                Become(() => Gated(true, earlyUngateRequested));
             }
             Receive<Terminated>(e => LocalHandleTerminated(e));
-            Receive<IsIdle>(e => HandleIsIdle(e));
+            Receive<IsIdle>(e => HandleIsIdle());
             void LocalHandleUngate(Ungate ungate)
             {
                 if (!writerTerminated)
@@ -744,17 +745,17 @@ namespace Akka.Remote
         /// <summary>TBD</summary>
         private void IdleBehavior()
         {
-            Receive<IsIdle>(e => HandleIsIdle(e));
+            Receive<IsIdle>(e => HandleIsIdle());
             Receive<EndpointManager.Send>(e => HandleEndpointManagerSendIdle(e));
 
-            Receive<AttemptSysMsgRedelivery>(e => HandleAttemptSysMsgRedeliveryIdle(e));
-            Receive<TooLongIdle>(e => HandleTooLongIdle(e));
-            Receive<EndpointWriter.FlushAndStop>(e => HandleEndpointWriterFlushAndStopIdle(e));
+            Receive<AttemptSysMsgRedelivery>(e => HandleAttemptSysMsgRedeliveryIdle());
+            Receive<TooLongIdle>(e => HandleTooLongIdle());
+            Receive<EndpointWriter.FlushAndStop>(e => HandleEndpointWriterFlushAndStopIdle());
             Receive<EndpointWriter.StopReading>(e => HandleEndpointWriterStopReadingIdle(e));
             Receive<Ungate>(PatternMatch<Ungate>.EmptyAction); //ok, not gated
         }
 
-        private void HandleIsIdle(IsIdle idle)
+        private void HandleIsIdle()
         {
             Sender.Tell(Idle.Instance);
         }
@@ -767,7 +768,7 @@ namespace Akka.Remote
             GoToActive();
         }
 
-        private void HandleAttemptSysMsgRedeliveryIdle(AttemptSysMsgRedelivery sys)
+        private void HandleAttemptSysMsgRedeliveryIdle()
         {
             if (_resendBuffer.Nacked.Count > 0 || _resendBuffer.NonAcked.Count > 0)
             {
@@ -777,7 +778,7 @@ namespace Akka.Remote
             }
         }
 
-        private void HandleEndpointWriterFlushAndStopIdle(EndpointWriter.FlushAndStop stop)
+        private void HandleEndpointWriterFlushAndStopIdle()
         {
             Context.Stop(Self);
         }
@@ -814,17 +815,27 @@ namespace Akka.Remote
         #region - Static methods and Internal Message Types -
 
         /// <summary>TBD</summary>
-        public class AttemptSysMsgRedelivery { }
+        public class AttemptSysMsgRedelivery : ISingletonMessage
+        {
+            public static readonly AttemptSysMsgRedelivery Instance = new AttemptSysMsgRedelivery();
+            private AttemptSysMsgRedelivery() { }
+        }
 
         /// <summary>TBD</summary>
-        public class Ungate { }
+        public class Ungate : ISingletonMessage
+        {
+            public static readonly Ungate Instance = new Ungate();
+            private Ungate() { }
+        }
 
         /// <summary>TBD</summary>
+        [MessagePackObject]
         public sealed class GotUid
         {
             /// <summary>TBD</summary>
             /// <param name="uid">TBD</param>
             /// <param name="remoteAddress">TBD</param>
+            [SerializationConstructor]
             public GotUid(int uid, Address remoteAddress)
             {
                 Uid = uid;
@@ -832,9 +843,11 @@ namespace Akka.Remote
             }
 
             /// <summary>TBD</summary>
+            [Key(0)]
             public int Uid { get; }
 
             /// <summary>TBD</summary>
+            [Key(1)]
             public Address RemoteAddress { get; }
         }
 
@@ -873,7 +886,8 @@ namespace Akka.Remote
         #region * HandleTooLongIdle *
 
         // Extracted this method to solve a compiler issue with `Receive<TooLongIdle>`
-        private void HandleTooLongIdle(TooLongIdle idle)
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void HandleTooLongIdle()
         {
             throw GetHopelessAssociation();
             HopelessAssociation GetHopelessAssociation()
@@ -1153,7 +1167,7 @@ namespace Akka.Remote
             }
         }
 
-        private bool _defaultPatternUseWriting;
+        private readonly bool _defaultPatternUseWriting;
         private PatternMatchBuilder _writingPatterns;
         private PatternMatchBuilder WritingPatterns
         {
@@ -1251,21 +1265,25 @@ namespace Akka.Remote
         private void Buffering()
         {
             Receive<EndpointManager.Send>(e => HandleEndpointManagerSend(e));
-            Receive<BackoffTimer>(e => HandleBackoffTimer(e));
+            Receive<BackoffTimer>(e => SendBufferedMessages());
             Receive<FlushAndStop>(e => HandleFlushAndStopBuffering(e));
-            Receive<FlushAndStopTimeout>(e => HandleFlushAndStopTimeout(e));
+            Receive<FlushAndStopTimeout>(timeout =>
+            {
+                // enough, ready to flush
+                DoFlushAndStop();
+            });
         }
 
         private void Writing()
         {
             Receive<EndpointManager.Send>(e => HandSendWriting(e));
-            Receive<FlushAndStop>(e => HandleFlushAndStopWriting(e));
-            Receive<AckIdleCheckTimer>(e => HandleAckIdleCheckTimer(e));
+            Receive<FlushAndStop>(e => DoFlushAndStop());
+            Receive<AckIdleCheckTimer>(e => HandleAckIdleCheckTimer());
         }
 
         private void Handoff()
         {
-            Receive<Terminated>(e => HandleTerminated(e));
+            Receive<Terminated>(e => HandleTerminated());
             Receive<EndpointManager.Send>(e => HandleEndpointManagerSend(e));
         }
 
@@ -1279,7 +1297,7 @@ namespace Akka.Remote
             }
         }
 
-        private void HandleAckIdleCheckTimer(AckIdleCheckTimer ack)
+        private void HandleAckIdleCheckTimer()
         {
             if (_ackDeadline.IsOverdue)
             {
@@ -1287,26 +1305,10 @@ namespace Akka.Remote
             }
         }
 
-        private void HandleFlushAndStopWriting(FlushAndStop flush)
-        {
-            DoFlushAndStop();
-        }
-
-        private void HandleFlushAndStopTimeout(FlushAndStopTimeout timeout)
-        {
-            // enough, ready to flush
-            DoFlushAndStop();
-        }
-
         private void HandleFlushAndStopBuffering(FlushAndStop stop)
         {
             _buffer.AddToBack(stop); //Flushing is postponed after the pending writes
             Context.System.Scheduler.ScheduleTellOnce(Settings.FlushWait, Self, FlushAndStopTimeout.Instance, Self);
-        }
-
-        private void HandleBackoffTimer(BackoffTimer backoff)
-        {
-            SendBufferedMessages();
         }
 
         private void HandleHandle(Handle handle)
@@ -1320,7 +1322,7 @@ namespace Akka.Remote
             BecomeWritingOrSendBufferedMessages();
         }
 
-        private void HandleTerminated(Terminated terminated)
+        private void HandleTerminated()
         {
             _reader = StartReadEndpoint(_handle);
             BecomeWritingOrSendBufferedMessages();

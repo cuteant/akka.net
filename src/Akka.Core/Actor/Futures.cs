@@ -15,6 +15,7 @@ using Akka.Actor.Internal;
 using Akka.Dispatch.SysMsg;
 using Akka.Util;
 using Akka.Util.Internal;
+using MessagePack;
 using Microsoft.Extensions.Logging;
 
 namespace Akka.Actor
@@ -286,12 +287,14 @@ namespace Akka.Actor
         /// <summary>
         /// TBD
         /// </summary>
+        [MessagePackObject]
         internal sealed class StoppedWithPath : IEquatable<StoppedWithPath>
         {
             /// <summary>
             /// TBD
             /// </summary>
             /// <param name="path">TBD</param>
+            [SerializationConstructor]
             public StoppedWithPath(ActorPath path)
             {
                 Path = path;
@@ -300,6 +303,7 @@ namespace Akka.Actor
             /// <summary>
             /// TBD
             /// </summary>
+            [Key(0)]
             public ActorPath Path { get; private set; }
 
             #region Equality

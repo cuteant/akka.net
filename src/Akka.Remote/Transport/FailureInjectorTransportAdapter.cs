@@ -75,7 +75,7 @@ namespace Akka.Remote.Transport
 
         /// <summary>TBD</summary>
         [MessagePackObject]
-        public sealed class All
+        public sealed class All : IJson
         {
             /// <summary>TBD</summary>
             /// <param name="mode">TBD</param>
@@ -89,7 +89,7 @@ namespace Akka.Remote.Transport
 
         /// <summary>TBD</summary>
         [MessagePackObject]
-        public sealed class One
+        public sealed class One : IJson
         {
             /// <summary>TBD</summary>
             /// <param name="remoteAddress">TBD</param>
@@ -111,7 +111,7 @@ namespace Akka.Remote.Transport
         }
 
         /// <summary>TBD</summary>
-        public interface IGremlinMode { }
+        public interface IGremlinMode : IJson { }
 
         /// <summary>TBD</summary>
         public sealed class PassThru : IGremlinMode, ISingletonMessage
@@ -298,11 +298,12 @@ namespace Akka.Remote.Transport
                 case Drop drop:
                     if (Rng.NextDouble() <= drop.InboundDropP)
                     {
+#if DEBUG
                         if (_shouldDebugLog)
                         {
                             _log.DroppingInbound(instance, remoteAddress, debugMessage);
                         }
-
+#endif
                         return true;
                     }
                     return false;
@@ -328,10 +329,12 @@ namespace Akka.Remote.Transport
                 case Drop drop:
                     if (Rng.NextDouble() <= drop.OutboundDropP)
                     {
+#if DEBUG
                         if (_shouldDebugLog)
                         {
                             _log.DroppingOutbound(instance, remoteAddress, debugMessage);
                         }
+#endif
                         return true;
                     }
                     return false;

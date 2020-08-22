@@ -32,6 +32,7 @@ namespace Akka.Actor
         /// <param name="actorRef">the watched actor that terminated</param>
         /// <param name="existenceConfirmed">is false when the Terminated message was not sent directly from the watched actor, but derived from another source, such as when watching a non-local ActorRef, which might not have been resolved</param>
         /// <param name="addressTerminated">the Terminated message was derived from that the remote node hosting the watched actor was detected as unreachable</param>
+        [SerializationConstructor]
         public Terminated(IActorRef actorRef, bool existenceConfirmed, bool addressTerminated)
         {
             ActorRef = actorRef;
@@ -92,7 +93,7 @@ namespace Akka.Actor
     /// <summary>
     /// Request to an <see cref="ICanTell"/> to get back the identity of the underlying actors.
     /// </summary>
-    public sealed class Identify : IAutoReceivedMessage, INotInfluenceReceiveTimeout, IObjectReferences
+    public sealed class Identify : IAutoReceivedMessage, INotInfluenceReceiveTimeout
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="Identify" /> class.
@@ -139,7 +140,7 @@ namespace Akka.Actor
     /// <summary>
     /// Response to the <see cref="Identify"/> message, get identity by Sender
     /// </summary>
-    public sealed class ActorIdentity : IObjectReferences
+    public sealed class ActorIdentity
     {
         /// <summary>
         /// Initializes a new instance of the <see cref="ActorIdentity" /> class.
@@ -258,6 +259,7 @@ namespace Akka.Actor
         /// Initializes a new instance of the <see cref="AddressTerminated" /> class.
         /// </summary>
         /// <param name="address">TBD</param>
+        [SerializationConstructor]
         public AddressTerminated(Address address)
         {
             Address = address;

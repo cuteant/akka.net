@@ -244,7 +244,7 @@ namespace Akka.TestKit.Internal
         /// <summary>
         /// TBD
         /// </summary>
-        public class InternalGetActor : IAutoReceivedMessage, IPossiblyHarmful
+        public class InternalGetActor : IAutoReceivedMessage, IPossiblyHarmful, ISingletonMessage
         {
             /// <summary>
             /// TBD

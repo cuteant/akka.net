@@ -18,6 +18,7 @@ using Akka.Event;
 using Akka.Remote.Transport;
 using Akka.Util;
 using Akka.Util.Internal;
+using MessagePack;
 
 namespace Akka.Remote
 {
@@ -27,21 +28,28 @@ namespace Akka.Remote
         #region -- Policy definitions --
 
         /// <summary>Defines how we're going to treat incoming and outgoing connections for specific endpoints</summary>
+        [Union(0, typeof(Pass))]
+        [Union(1, typeof(Gated))]
+        [Union(2, typeof(Quarantined))]
+        [MessagePackObject]
         public abstract class EndpointPolicy
         {
             /// <summary>Indicates that the policy does not contain an active endpoint, but it is a tombstone
             /// of a previous failure.</summary>
+            [Key(0)]
             public readonly bool IsTombstone;
 
             protected EndpointPolicy(bool isTombstone) => IsTombstone = isTombstone;
         }
 
         /// <summary>We will always accept a connection from this remote node.</summary>
+        [MessagePackObject]
         public sealed class Pass : EndpointPolicy
         {
             /// <summary>TBD</summary>
             /// <param name="endpoint">TBD</param>
             /// <param name="uid">TBD</param>
+            [SerializationConstructor]
             public Pass(IActorRef endpoint, int? uid)
                 : base(false)
             {
@@ -50,28 +58,35 @@ namespace Akka.Remote
             }
 
             /// <summary>The actor who owns the current endpoint.</summary>
+            [Key(1)]
             public readonly IActorRef Endpoint;
 
             /// <summary>The endpoint UID, if it's currently known.</summary>
+            [Key(2)]
             public readonly int? Uid;
         }
 
         /// <summary>A Gated node can't be connected to from this process for <see cref="TimeOfRelease"/>, but
         /// we may accept an inbound connection from it if the remote node recovers on its own.</summary>
+        [MessagePackObject]
         public sealed class Gated : EndpointPolicy
         {
+            [SerializationConstructor]
             public Gated(Deadline deadline)
                 : base(true)
             {
                 TimeOfRelease = deadline;
             }
 
+            [Key(1)]
             public readonly Deadline TimeOfRelease;
         }
 
         /// <summary>We do not accept connection attempts for a quarantined node until it restarts and resets its UID.</summary>
+        [MessagePackObject]
         public sealed class Quarantined : EndpointPolicy
         {
+            [SerializationConstructor]
             public Quarantined(int uid, Deadline deadline)
                 : base(true)
             {
@@ -79,8 +94,10 @@ namespace Akka.Remote
                 Deadline = deadline;
             }
 
+            [Key(1)]
             public readonly int Uid;
 
+            [Key(2)]
             public readonly Deadline Deadline;
         }
 
@@ -178,13 +195,15 @@ namespace Akka.Remote
         }
 
         /// <summary>TBD</summary>
+        [MessagePackObject]
         public sealed class ManagementCommandAck
         {
             /// <summary>TBD</summary>
             /// <param name="status">TBD</param>
+            [SerializationConstructor]
             public ManagementCommandAck(bool status) => Status = status;
 
-            /// <summary>TBD</summary>
+            [Key(0)]
             public readonly bool Status;
         }
 
@@ -234,21 +253,22 @@ namespace Akka.Remote
         }
 
         /// <summary>Helper class to store address pairs</summary>
+        [MessagePackObject]
         public sealed class Link
         {
             /// <summary>TBD</summary>
             /// <param name="localAddress">TBD</param>
             /// <param name="remoteAddress">TBD</param>
+            [SerializationConstructor]
             public Link(Address localAddress, Address remoteAddress)
             {
                 RemoteAddress = remoteAddress;
                 LocalAddress = localAddress;
             }
 
-            /// <summary>TBD</summary>
+            [Key(0)]
             public readonly Address LocalAddress;
-
-            /// <summary>TBD</summary>
+            [Key(1)]
             public readonly Address RemoteAddress;
 
             /// <summary>
@@ -583,9 +603,9 @@ namespace Akka.Remote
             // defer the inbound association until we can enter "Accepting" behavior
 
             Receive<InboundAssociation>(e => HandleInboundAssociationDefault(e));
-            Receive<ManagementCommand>(e => HandleManagementCommand(e));
-            Receive<StartupFinished>(e => HandleStartupFinished(e));
-            Receive<ShutdownAndFlush>(e => HandleShutdownAndFlush(e));
+            Receive<ManagementCommand>(e => HandleManagementCommand());
+            Receive<StartupFinished>(e => HandleStartupFinished());
+            Receive<ShutdownAndFlush>(e => HandleShutdownAndFlush());
         }
 
         private void HandleListen(Listen listen)
@@ -644,17 +664,17 @@ namespace Akka.Remote
             Context.System.Scheduler.ScheduleTellOnce(TimeSpan.FromMilliseconds(10), Self, ia, Self);
         }
 
-        private void HandleManagementCommand(ManagementCommand mc)
+        private void HandleManagementCommand()
         {
             Sender.Tell(new ManagementCommandAck(status: false));
         }
 
-        private void HandleStartupFinished(StartupFinished sf)
+        private void HandleStartupFinished()
         {
             Become(_acceptingPatterns);
         }
 
-        private void HandleShutdownAndFlush(ShutdownAndFlush sf)
+        private void HandleShutdownAndFlush()
         {
             Sender.Tell(true);
             Context.Stop(Self);
@@ -717,87 +737,64 @@ namespace Akka.Remote
 
         private void HandleQuarantine(Quarantine quarantine)
         {
-            var context = Context;
-            var remoteAddr = quarantine.RemoteAddress;
             //Stop writers
-            var policy = _endpoints.WritableEndpointWithPolicyFor(remoteAddr);
-            var quarantineUid = quarantine.Uid;
-            if (quarantineUid is object)
+            var policy =
+            (_endpoints.WritableEndpointWithPolicyFor(quarantine.RemoteAddress), quarantine.Uid);
+            if (policy.Item1 is Pass pass && policy.Item2 == null)
             {
-                switch (policy)
-                {
-                    case Pass pass:
-                        var uidOption = pass.Uid;
-                        if (uidOption == quarantineUid)
-                        {
-                            _endpoints.MarkAsQuarantined(remoteAddr, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
-                            _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, quarantineUid.Value));
-                            context.Stop(pass.Endpoint);
-                        }
-                        // or it does not match with the UID to be quarantined
-                        else if (!uidOption.HasValue && _endpoints.RefuseUid(quarantine.RemoteAddress) != quarantineUid)
-                        {
-                            // the quarantine uid may be got fresh by cluster gossip, so update refuseUid
-                            // for late handle when the writer got uid
-                            _endpoints.RegisterWritableEndpointRefuseUid(quarantine.RemoteAddress, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
-                        }
-                        else
-                        {
-                            //the quarantine uid has lost the race with some failure, do nothing
-                        }
-                        break;
-
-                    case Quarantined quarantined when quarantined.Uid == quarantineUid.Value:
-                        // the UID to be quarantined already exists, do nothing
-                        break;
-
-                    default:
-                        // the current state is gated or quarantined, and we know the UID, update
-                        _endpoints.MarkAsQuarantined(remoteAddr, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
-                        _eventPublisher.NotifyListeners(new QuarantinedEvent(remoteAddr, quarantineUid.Value));
-                        break;
-                }
+                var endpoint = pass.Endpoint;
+                Context.Stop(endpoint);
+                if (_log.IsWarningEnabled) _log.AssociationToWithUnknownUIDIsReportedAsQuarantined(quarantine.RemoteAddress, _settings);
+                _endpoints.MarkAsFailed(endpoint, Deadline.Now + _settings.RetryGateClosedFor);
             }
-            else
+            else if (policy.Item1 is Pass p && policy.Item2 != null)
             {
-                if (policy is Pass pass)
+                var uidOption = p.Uid;
+                var quarantineUid = policy.Item2;
+                if (uidOption == quarantineUid)
                 {
-                    var endpoint = pass.Endpoint;
-                    context.Stop(endpoint);
-                    if (_log.IsWarningEnabled) _log.AssociationToWithUnknownUIDIsReportedAsQuarantined(remoteAddr, _settings);
-                    _endpoints.MarkAsFailed(endpoint, Deadline.Now + _settings.RetryGateClosedFor);
+                    _endpoints.MarkAsQuarantined(quarantine.RemoteAddress, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
+                    _eventPublisher.NotifyListeners(new QuarantinedEvent(quarantine.RemoteAddress, quarantineUid.Value));
+                    Context.Stop(p.Endpoint);
+                }
+                // or it does not match with the UID to be quarantined
+                else if (!uidOption.HasValue && _endpoints.RefuseUid(quarantine.RemoteAddress) != quarantineUid)
+                {
+                    // the quarantine uid may be got fresh by cluster gossip, so update refuseUid for late handle when the writer got uid
+                    _endpoints.RegisterWritableEndpointRefuseUid(quarantine.RemoteAddress, quarantineUid.Value, Deadline.Now + _settings.QuarantineDuration);
                 }
                 else
                 {
-                    // the current state is Gated, WasGated, or Quarantined and we don't know the
-                    // UID, do nothing.
+                    //the quarantine uid has lost the race with some failure, do nothing
                 }
+            }
+            else if (policy.Item1 is Quarantined && policy.Item2 != null && policy.Item1.AsInstanceOf<Quarantined>().Uid == policy.Item2.Value)
+            {
+                // the UID to be quarantined already exists, do nothing
+            }
+            else if (policy.Item2 != null)
+            {
+                // the current state is gated or quarantined, and we know the UID, update
+                _endpoints.MarkAsQuarantined(quarantine.RemoteAddress, policy.Item2.Value, Deadline.Now + _settings.QuarantineDuration);
+                _eventPublisher.NotifyListeners(new QuarantinedEvent(quarantine.RemoteAddress, policy.Item2.Value));
+            }
+            else
+            {
+                // the current state is Gated, WasGated, or Quarantined and we don't know the UID, do nothing.
             }
 
             // Stop inbound read-only associations
-            var readPolicy = _endpoints.ReadOnlyEndpointFor(remoteAddr);
-            if (readPolicy is object)
-            {
-                var readPolicyActor = readPolicy.Value.Item1;
-                if (readPolicyActor is object)
-                {
-                    if (quarantineUid is null)
-                    {
-                        context.Stop(readPolicyActor);
-                    }
-                    else if (readPolicy.Value.Item2 == quarantineUid)
-                    {
-                        context.Stop(readPolicyActor);
-                    }
-                    else { } // nothing to stop
-                }
-            }
+            var readPolicy = (_endpoints.ReadOnlyEndpointFor(quarantine.RemoteAddress), quarantine.Uid);
+            if (readPolicy.Item1?.Item1 != null && quarantine.Uid == null)
+                Context.Stop(readPolicy.Item1.Value.Item1);
+            else if (readPolicy.Item1?.Item1 != null && quarantine.Uid != null && readPolicy.Item1?.Item2 == quarantine.Uid) { Context.Stop(readPolicy.Item1.Value.Item1); }
+            else { } // nothing to stop
 
             bool MatchesQuarantine(AkkaProtocolHandle handle)
             {
 
-                return handle.RemoteAddress.Equals(remoteAddr) &&
-                       quarantineUid == handle.HandshakeInfo.Uid;
+                return handle.RemoteAddress.Equals(quarantine.RemoteAddress) &&
+                       quarantine.Uid == handle.HandshakeInfo.Uid;
             }
 
             // Stop all matching pending read handoffs
@@ -808,7 +805,7 @@ namespace Akka.Remote
                 if (drop)
                 {
                     x.Value.Disassociate();
-                    context.Stop(x.Key);
+                    Context.Stop(x.Key);
                 }
                 return !drop;
             }).ToDictionary(key => key.Key, value => value.Value, ActorRefComparer.Instance);
@@ -1035,7 +1032,7 @@ namespace Akka.Remote
                 var policy = _endpoints.WritableEndpointWithPolicyFor(remoteAddr);
                 if (policy is Pass pass)
                 {
-                    pass.Endpoint.Tell(new ReliableDeliverySupervisor.Ungate());
+                    pass.Endpoint.Tell(ReliableDeliverySupervisor.Ungate.Instance);
                 }
             }
             else
@@ -1077,7 +1074,7 @@ namespace Akka.Remote
                                 _pendingReadHandoffs.GetOrElse(endpoint, null)?.Disassociate("the existing writable association was replaced by a new incoming one", _log);
                                 _pendingReadHandoffs.AddOrSet(endpoint, handle);
                                 endpoint.Tell(new EndpointWriter.StopReading(endpoint, Self));
-                                endpoint.Tell(new ReliableDeliverySupervisor.Ungate());
+                                endpoint.Tell(ReliableDeliverySupervisor.Ungate.Instance);
                             }
                             else
                             {

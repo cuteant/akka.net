@@ -53,25 +53,25 @@ namespace Akka.IO
 
         internal abstract class SocketCompleted { }
 
-        internal sealed class SocketSent : SocketCompleted
+        internal sealed class SocketSent : SocketCompleted, ISingletonMessage
         {
             public static readonly SocketSent Instance = new SocketSent();
             private SocketSent() { }
         }
 
-        internal sealed class SocketReceived : SocketCompleted
+        internal sealed class SocketReceived : SocketCompleted, ISingletonMessage
         {
             public static readonly SocketReceived Instance = new SocketReceived();
             private SocketReceived() { }
         }
 
-        internal sealed class SocketAccepted : SocketCompleted
+        internal sealed class SocketAccepted : SocketCompleted, ISingletonMessage
         {
             public static readonly SocketAccepted Instance = new SocketAccepted();
             private SocketAccepted() { }
         }
 
-        internal sealed class SocketConnected : SocketCompleted
+        internal sealed class SocketConnected : SocketCompleted, ISingletonMessage
         {
             public static readonly SocketConnected Instance = new SocketConnected();
             private SocketConnected() { }

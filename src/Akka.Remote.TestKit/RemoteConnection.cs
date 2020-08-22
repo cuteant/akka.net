@@ -126,8 +126,8 @@ namespace Akka.Remote.TestKit
 
         public static async Task ReleaseAll()
         {
-            Task tc = _clientPool?.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)) ?? TaskUtil.Completed;
-            Task ts = _serverPool?.ShutdownGracefullyAsync(TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)) ?? TaskUtil.Completed;
+            Task tc = _clientPool?.ShutdownGracefullyAsync(/*TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)*/) ?? TaskUtil.Completed;
+            Task ts = _serverPool?.ShutdownGracefullyAsync(/*TimeSpan.FromMilliseconds(100), TimeSpan.FromSeconds(5)*/) ?? TaskUtil.Completed;
             await Task.WhenAll(tc, ts).ConfigureAwait(false);
         }
 

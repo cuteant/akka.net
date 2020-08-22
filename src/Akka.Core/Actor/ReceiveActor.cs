@@ -7,6 +7,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Runtime.CompilerServices;
 using System.Threading.Tasks;
 using Akka.Actor.Internal;
 using Akka.Dispatch;
@@ -70,18 +71,16 @@ namespace Akka.Actor
         {
             //Seal the method so that implementors cannot use it. They should only use Receive and Become
 
-            //ExecutePartialMessageHandler(message, _partialReceive);
-            var wasHandled = _partialReceive(message);
+            ExecutePartialMessageHandler(message, _partialReceive);
+        }
+
+        [MethodImpl(InlineOptions.AggressiveOptimization)]
+        private void ExecutePartialMessageHandler(object message, PartialAction<object> partialAction)
+        {
+            var wasHandled = partialAction(message);
             if (!wasHandled && _shouldUnhandle)
                 Unhandled(message);
         }
-
-        //private void ExecutePartialMessageHandler(object message, PartialAction<object> partialAction)
-        //{
-        //    var wasHandled = partialAction(message);
-        //    if (!wasHandled && _shouldUnhandle)
-        //        Unhandled(message);
-        //}
 
         /// <summary>
         /// Changes the actor's behavior and replaces the current receive handler with the specified handler.
@@ -90,14 +89,7 @@ namespace Akka.Actor
         protected void Become(Action configure)
         {
             var newHandler = CreateNewHandler(configure);
-            //base.Become(m => ExecutePartialMessageHandler(m, newHandler));
-            void LocalReceive(object message)
-            {
-                var wasHandled = newHandler(message);
-                if (!wasHandled && _shouldUnhandle)
-                    Unhandled(message);
-            }
-            base.Become(m => LocalReceive(m));
+            base.Become(m => ExecutePartialMessageHandler(m, newHandler));
         }
 
         /// <summary>
@@ -110,14 +102,7 @@ namespace Akka.Actor
         protected void BecomeStacked(Action configure)
         {
             var newHandler = CreateNewHandler(configure);
-            //base.BecomeStacked(m => ExecutePartialMessageHandler(m, newHandler));
-            void LocalReceive(object message)
-            {
-                var wasHandled = newHandler(message);
-                if (!wasHandled && _shouldUnhandle)
-                    Unhandled(message);
-            }
-            base.BecomeStacked(m => LocalReceive(m));
+            base.BecomeStacked(m => ExecutePartialMessageHandler(m, newHandler));
         }
 
         private PartialAction<object> CreateNewHandler(Action configure)
