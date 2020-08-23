@@ -36,7 +36,7 @@ namespace Akka.Cluster.Tools.Singleton
     /// Note that this is a best effort implementation: messages can always be lost due to the distributed nature of the actors involved.
     /// </remarks>
     /// </summary>
-    public sealed class ClusterSingletonProxy : ReceiveActor2
+    public sealed class ClusterSingletonProxy : ReceiveActorSlim
     {
         /// <summary>
         /// TBD

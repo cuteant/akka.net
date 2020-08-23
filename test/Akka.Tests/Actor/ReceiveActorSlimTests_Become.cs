@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Akka.Tests.Actor
 {
-    public partial class ReceiveActor2Tests
+    public partial class ReceiveActorSlimTests
     {
         [Fact]
         public void Given_actor_When_it_calls_Become_Then_it_switches_handler()
@@ -257,7 +257,7 @@ namespace Akka.Tests.Actor
             ExpectMsg((object)"string8:hello");
         }
 
-        private class BecomeActor : ReceiveActor2
+        private class BecomeActor : ReceiveActorSlim
         {
             public BecomeActor()
             {
@@ -281,7 +281,7 @@ namespace Akka.Tests.Actor
             }
         }
 
-        private class BecomeActor2 : ReceiveActor2
+        private class BecomeActor2 : ReceiveActorSlim
         {
             private readonly PatternMatchBuilder _state2;
             private readonly PatternMatchBuilder _state3;
@@ -314,7 +314,7 @@ namespace Akka.Tests.Actor
             }
         }
 
-        private class BecomeDirectlyInConstructorActor : ReceiveActor2
+        private class BecomeDirectlyInConstructorActor : ReceiveActorSlim
         {
             public BecomeDirectlyInConstructorActor()
             {
@@ -339,7 +339,7 @@ namespace Akka.Tests.Actor
                 Receive<string>(s => Sender.Tell("string3:" + s, Self));
             }
         }
-        private class BecomeDirectlyInConstructorActor2 : ReceiveActor2
+        private class BecomeDirectlyInConstructorActor2 : ReceiveActorSlim
         {
             private readonly PatternMatchBuilder _state2;
             private readonly PatternMatchBuilder _state3;
@@ -374,7 +374,7 @@ namespace Akka.Tests.Actor
                 Receive<string>(s => Sender.Tell("string3:" + s, Self));
             }
         }
-        private class BecomeDirectlyInConstructorActor3 : ReceiveActor2
+        private class BecomeDirectlyInConstructorActor3 : ReceiveActorSlim
         {
             private readonly PatternMatchBuilder _state2;
             private readonly PatternMatchBuilder _state3;
@@ -407,7 +407,7 @@ namespace Akka.Tests.Actor
                 Receive<string>(s => Sender.Tell("string3:" + s, Self));
             }
         }
-        private class BecomeDirectlyInConstructorActor4 : ReceiveActor2
+        private class BecomeDirectlyInConstructorActor4 : ReceiveActorSlim
         {
             private readonly PatternMatchBuilder _state2;
             private readonly PatternMatchBuilder _state3;
@@ -442,7 +442,7 @@ namespace Akka.Tests.Actor
                 Receive<string>(s => { _counter += 3; Sender.Tell($"string{_counter}:" + s, Self); });
             }
         }
-        private class BecomeDirectlyInConstructorActor5 : ReceiveActor2
+        private class BecomeDirectlyInConstructorActor5 : ReceiveActorSlim
         {
             private readonly PatternMatchBuilder _state2;
             private readonly PatternMatchBuilder _state3;

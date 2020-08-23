@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Akka.Tests.Actor
 {
-    public partial class ReceiveActor2Tests
+    public partial class ReceiveActorSlimTests
     {
         [Fact]
         public void Given_actor_When_it_restarts_Then_uses_the_handler()
@@ -61,7 +61,7 @@ namespace Akka.Tests.Actor
             ExpectMsg((object)"1:hello");
         }
 
-        private class CrashActor : ReceiveActor2
+        private class CrashActor : ReceiveActorSlim
         {
             private readonly PatternMatchBuilder _builder2;
 

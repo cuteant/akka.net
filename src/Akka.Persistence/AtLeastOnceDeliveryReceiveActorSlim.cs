@@ -6,23 +6,23 @@ namespace Akka.Persistence
     /// <summary>
     /// Receive persistent actor type, that sends messages with at-least-once delivery semantics to it's destinations.
     /// </summary>
-    public abstract class AtLeastOnceDeliveryReceiveActor2 : ReceivePersistentActor2
+    public abstract class AtLeastOnceDeliveryReceiveActorSlim : ReceivePersistentActorSlim
     {
         private readonly AtLeastOnceDeliverySemantic _atLeastOnceDeliverySemantic;
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AtLeastOnceDeliveryReceiveActor2"/> class.
+        /// Initializes a new instance of the <see cref="AtLeastOnceDeliveryReceiveActorSlim"/> class.
         /// </summary>
-        protected AtLeastOnceDeliveryReceiveActor2()
+        protected AtLeastOnceDeliveryReceiveActorSlim()
         {
             _atLeastOnceDeliverySemantic = new AtLeastOnceDeliverySemantic(Context, Extension.Settings.AtLeastOnceDelivery);
         }
 
         /// <summary>
-        /// Initializes a new instance of the <see cref="AtLeastOnceDeliveryReceiveActor2"/> class.
+        /// Initializes a new instance of the <see cref="AtLeastOnceDeliveryReceiveActorSlim"/> class.
         /// </summary>
         /// <param name="settings">TBD</param>
-        protected AtLeastOnceDeliveryReceiveActor2(PersistenceSettings.AtLeastOnceDeliverySettings settings)
+        protected AtLeastOnceDeliveryReceiveActorSlim(PersistenceSettings.AtLeastOnceDeliverySettings settings)
         {
             _atLeastOnceDeliverySemantic = new AtLeastOnceDeliverySemantic(Context, settings);
         }
@@ -31,7 +31,7 @@ namespace Akka.Persistence
         /// Initializes a new instance of the <see cref="AtLeastOnceDeliveryReceiveActor"/> class.
         /// </summary>
         /// <param name="overrideSettings">A lambda to tweak the default AtLeastOnceDelivery settings.</param>
-        protected AtLeastOnceDeliveryReceiveActor2(Func<PersistenceSettings.AtLeastOnceDeliverySettings, PersistenceSettings.AtLeastOnceDeliverySettings> overrideSettings)
+        protected AtLeastOnceDeliveryReceiveActorSlim(Func<PersistenceSettings.AtLeastOnceDeliverySettings, PersistenceSettings.AtLeastOnceDeliverySettings> overrideSettings)
         {
             var settings = overrideSettings(Extension.Settings.AtLeastOnceDelivery);
             _atLeastOnceDeliverySemantic = new AtLeastOnceDeliverySemantic(Context, settings);

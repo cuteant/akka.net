@@ -393,7 +393,7 @@ namespace Akka.Remote
     #region == class TransportSupervisor ==
 
     /// <summary>Actor responsible for supervising the creation of all transport actors</summary>
-    internal sealed class TransportSupervisor : ReceiveActor2
+    internal sealed class TransportSupervisor : ReceiveActorSlim
     {
         private readonly SupervisorStrategy _strategy = new OneForOneStrategy(exception => Directive.Restart);
 

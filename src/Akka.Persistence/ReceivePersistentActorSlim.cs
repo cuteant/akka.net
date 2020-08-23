@@ -8,7 +8,7 @@ using Akka.Actor.Internal;
 namespace Akka.Persistence
 {
     /// <summary>Persistent actor - can be used to implement command or eventsourcing.</summary>
-    public abstract class ReceivePersistentActor2 : Eventsourced, IInitializableActor
+    public abstract class ReceivePersistentActorSlim : Eventsourced, IInitializableActor
     {
         private const string BehaviorKey = "RECEIVE";
 
@@ -22,7 +22,7 @@ namespace Akka.Persistence
         protected readonly PatternMatchBuilder DefaultRecoverPatterns;
 
         /// <summary>TBD</summary>
-        protected ReceivePersistentActor2()
+        protected ReceivePersistentActorSlim()
         {
             DefaultCommandPatterns = new PatternMatchBuilder();
             _matchCommandBuilders.Push(DefaultCommandPatterns);
@@ -40,6 +40,12 @@ namespace Akka.Persistence
                 _partialReceiveRecover = BuildNewReceiveHandler(_matchRecoverBuilders.Pop());
                 _hasBeenInitialized = true;
             }
+        }
+
+        private Action<object> BuildNewReceiveHandler(PatternMatchBuilder matchBuilder)
+        {
+            matchBuilder.TryMatchAny(Unhandled);
+            return matchBuilder.Build();
         }
 
         /// <summary>Changes the actor's behavior and replaces the current receive handler with the specified handler.</summary>
@@ -80,31 +86,28 @@ namespace Akka.Persistence
             base.BecomeStacked(receiveFunc);
         }
 
+        private bool ExecuteMessageHandler(object message, Action<object> handler)
+        {
+            handler(message);
+            return true;
+        }
+
         private Receive GetBehavior(PatternMatchBuilder patterns)
         {
             if (patterns is null) { AkkaThrowHelper.ThrowArgumentNullException(AkkaExceptionArgument.patterns); }
 
-            if (patterns.Properties.TryGetValue(BehaviorKey, out var behavior))
+            Action<object> behavior;
+            if (patterns.Properties.TryGetValue(BehaviorKey, out var objBehavior))
             {
-                return (Receive)behavior;
+                behavior = (Action<object>)objBehavior;
+            }
+            else
+            {
+                behavior = BuildNewReceiveHandler(patterns);
+                patterns.Properties[BehaviorKey] = behavior;
             }
 
-            var newHandler = BuildNewReceiveHandler(patterns);
-            bool LocalReceive(object message)
-            {
-                newHandler(message);
-                return true;
-            }
-            Receive receiveFunc = LocalReceive;
-
-            patterns.Properties[BehaviorKey] = receiveFunc;
-            return receiveFunc;
-        }
-
-        private Action<object> BuildNewReceiveHandler(PatternMatchBuilder matchBuilder)
-        {
-            matchBuilder.TryMatchAny(Unhandled);
-            return matchBuilder.Build();
+            return m => ExecuteMessageHandler(m, behavior);
         }
 
         /// <summary>TBD</summary>
@@ -151,7 +154,7 @@ namespace Akka.Persistence
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureMayConfigureRecoverHandlers()
         {
-            if (_matchRecoverBuilders.Count <= 0) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Recover_methods);
+            if (0u >= (uint)_matchRecoverBuilders.Count) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Recover_methods);
         }
 
         /// <summary>TBD</summary>
@@ -195,7 +198,7 @@ namespace Akka.Persistence
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureMayConfigureCommandHandlers()
         {
-            if (_matchCommandBuilders.Count <= 0) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Command_methods);
+            if (0u >= (uint)_matchCommandBuilders.Count) ThrowHelper.ThrowInvalidOperationException(ExceptionResource.InvalidOperation_Command_methods);
         }
 
         /// <summary>

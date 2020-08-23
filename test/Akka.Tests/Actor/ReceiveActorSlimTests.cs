@@ -15,7 +15,7 @@ using Xunit;
 namespace Akka.Tests.Actor
 {
 
-    public partial class ReceiveActor2Tests : AkkaSpec
+    public partial class ReceiveActorSlimTests : AkkaSpec
     {
         [Fact]
         public void Given_actor_with_no_receive_specified_When_receiving_message_Then_it_should_be_unhandled()
@@ -116,11 +116,11 @@ namespace Akka.Tests.Actor
             ExpectMsg(4711);
         }
 
-        private class NoReceiveActor : ReceiveActor2
+        private class NoReceiveActor : ReceiveActorSlim
         {
         }
 
-        private class EchoReceiveActor : ReceiveActor2
+        private class EchoReceiveActor : ReceiveActorSlim
         {
             public EchoReceiveActor()
             {
@@ -129,7 +129,7 @@ namespace Akka.Tests.Actor
         }
 
 
-        private class PreStartEchoReceiveActor : ReceiveActor2
+        private class PreStartEchoReceiveActor : ReceiveActorSlim
         {
             public PreStartEchoReceiveActor()
             {
@@ -142,7 +142,7 @@ namespace Akka.Tests.Actor
             }
         }
 
-        private class CallReceiveWhenHandlingMessageActor : ReceiveActor2
+        private class CallReceiveWhenHandlingMessageActor : ReceiveActorSlim
         {
             public CallReceiveWhenHandlingMessageActor()
             {
@@ -161,7 +161,7 @@ namespace Akka.Tests.Actor
             }
         }
 
-        private class IntPredicatesActor : ReceiveActor2
+        private class IntPredicatesActor : ReceiveActorSlim
         {
             public IntPredicatesActor()
             {
@@ -174,7 +174,7 @@ namespace Akka.Tests.Actor
             }
         }
 
-        private class ReceiveAnyActor : ReceiveActor2
+        private class ReceiveAnyActor : ReceiveActorSlim
         {
             public ReceiveAnyActor()
             {

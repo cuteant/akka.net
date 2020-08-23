@@ -90,7 +90,7 @@ namespace Akka.Cluster
         /// <summary>
         /// actor that subscribers to cluster eventBus to update current read view state
         /// </summary>
-        private class EventBusListener : ReceiveActor2
+        private class EventBusListener : ReceiveActorSlim
         {
             readonly Cluster _cluster;
             private readonly ClusterReadView _readView;

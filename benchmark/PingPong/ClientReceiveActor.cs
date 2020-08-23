@@ -11,7 +11,7 @@ using Akka.Actor;
 
 namespace PingPong
 {
-    public class ClientReceiveActor : ReceiveActor2
+    public class ClientReceiveActor : ReceiveActorSlim
     {
         public ClientReceiveActor(IActorRef actor, long repeat, TaskCompletionSource<bool> latch)
         {

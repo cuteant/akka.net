@@ -17,8 +17,8 @@ using Xunit;
 
 namespace Akka.Persistence.Tests
 {
-    [Collection(nameof(AtLeastOnceDeliveryReceiveActor2Spec))]
-    public class AtLeastOnceDeliveryReceiveActor2Spec : PersistenceSpec
+    [Collection(nameof(AtLeastOnceDeliveryReceiveActorSlimSpec))]
+    public class AtLeastOnceDeliveryReceiveActorSlimSpec : PersistenceSpec
     {
         #region internal test classes
 
@@ -138,7 +138,7 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        internal class Receiver : AtLeastOnceDeliveryReceiveActor2
+        internal class Receiver : AtLeastOnceDeliveryReceiveActorSlim
         {
             private readonly IDictionary<string, ActorPath> _destinations;
             private readonly bool _isAsync;
@@ -336,7 +336,7 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        private class DeliverToStarSelection : AtLeastOnceDeliveryReceiveActor2
+        private class DeliverToStarSelection : AtLeastOnceDeliveryReceiveActorSlim
         {
             private readonly string _name;
 
@@ -367,8 +367,8 @@ namespace Akka.Persistence.Tests
 
         #endregion
 
-        public AtLeastOnceDeliveryReceiveActor2Spec()
-            : base(Configuration("AtLeastOnceDeliveryReceiveActor2Spec"))
+        public AtLeastOnceDeliveryReceiveActorSlimSpec()
+            : base(Configuration("AtLeastOnceDeliveryReceiveActorSlimSpec"))
         {
         }
 

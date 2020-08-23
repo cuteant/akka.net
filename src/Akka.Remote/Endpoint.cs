@@ -330,7 +330,7 @@ namespace Akka.Remote
     #region == class ReliableDeliverySupervisor ==
 
     /// <summary>INTERNAL API</summary>
-    internal sealed class ReliableDeliverySupervisor : ReceiveActor2
+    internal sealed class ReliableDeliverySupervisor : ReceiveActorSlim
     {
         #region - Internal message classes -
 
@@ -994,7 +994,7 @@ namespace Akka.Remote
     #region == class EndpointActor ==
 
     /// <summary>Abstract base class for <see cref="EndpointReader"/> classes</summary>
-    internal abstract class EndpointActor : ReceiveActor2
+    internal abstract class EndpointActor : ReceiveActorSlim
     {
         /// <summary>TBD</summary>
         protected readonly Address LocalAddress;

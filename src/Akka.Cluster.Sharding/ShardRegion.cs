@@ -182,7 +182,7 @@ namespace Akka.Cluster.Sharding
         /// <summary>
         /// INTERNAL API. Sends stopMessage (e.g. <see cref="PoisonPill"/>) to the entities and when all of them have terminated it replies with `ShardStopped`.
         /// </summary>
-        internal class HandOffStopper : ReceiveActor2
+        internal class HandOffStopper : ReceiveActorSlim
         {
             private ILoggingAdapter _log;
             /// <summary>

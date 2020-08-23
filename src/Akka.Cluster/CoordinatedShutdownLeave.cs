@@ -17,7 +17,7 @@ namespace Akka.Cluster
     /// Used for executing <see cref="CoordinatedShutdown"/> phases for graceful
     /// <see cref="Cluster.Leave"/> behaviors.
     /// </summary>
-    internal sealed class CoordinatedShutdownLeave : ReceiveActor2
+    internal sealed class CoordinatedShutdownLeave : ReceiveActorSlim
     {
         /// <summary>
         /// A leave request for beginning the exit process from the <see cref="Cluster"/>

@@ -21,7 +21,7 @@ namespace Akka.Cluster
     /// 
     /// Receives <see cref="ClusterHeartbeatSender.Heartbeat"/> messages and replies.
     /// </summary>
-    internal sealed class ClusterHeartbeatReceiver : ReceiveActor2
+    internal sealed class ClusterHeartbeatReceiver : ReceiveActorSlim
     {
         private readonly Lazy<ClusterHeartbeatSender.HeartbeatRsp> _selfHeartbeatRsp;
 
@@ -47,7 +47,7 @@ namespace Akka.Cluster
     /// <summary>
     /// INTERNAL API
     /// </summary>
-    internal sealed class ClusterHeartbeatSender : ReceiveActor2
+    internal sealed class ClusterHeartbeatSender : ReceiveActorSlim
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
         private readonly Cluster _cluster;

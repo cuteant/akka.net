@@ -261,7 +261,7 @@ namespace Akka.DistributedData
     /// </list>
     /// </para>
     /// </summary>
-    internal sealed class Replicator : ReceiveActor2
+    internal sealed class Replicator : ReceiveActorSlim
     {
         public static Props Props(ReplicatorSettings settings) =>
             Actor.Props.Create(() => new Replicator(settings)).WithDeploy(Deploy.Local).WithDispatcher(settings.Dispatcher);

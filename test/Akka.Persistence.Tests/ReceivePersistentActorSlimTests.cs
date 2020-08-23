@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------
-// <copyright file="ReceivePersistentActor2Tests.cs" company="Akka.NET Project">
+// <copyright file="ReceivePersistentActorSlimTests.cs" company="Akka.NET Project">
 //     Copyright (C) 2009-2018 Lightbend Inc. <http://www.lightbend.com>
 //     Copyright (C) 2013-2018 .NET Foundation <https://github.com/akkadotnet/akka.net>
 // </copyright>
@@ -18,9 +18,9 @@ using Xunit.Abstractions;
 namespace Akka.Persistence.Tests
 {
 
-    public partial class ReceivePersistentActor2Tests : AkkaSpec
+    public partial class ReceivePersistentActorSlimTests : AkkaSpec
     {
-        public ReceivePersistentActor2Tests(ITestOutputHelper output = null)
+        public ReceivePersistentActorSlimTests(ITestOutputHelper output = null)
             : base("akka.persistence.journal.plugin = \"akka.persistence.journal.inmem\"", output)
         {
         }
@@ -130,7 +130,7 @@ namespace Akka.Persistence.Tests
                 ExpectMsg(new WriteMessageSuccess(p, 1));
         }
 
-        private abstract class TestReceivePersistentActor : ReceivePersistentActor2
+        private abstract class TestReceivePersistentActor : ReceivePersistentActorSlim
         {
             public readonly LinkedList<object> State = new LinkedList<object>();
             private readonly string _persistenceId;

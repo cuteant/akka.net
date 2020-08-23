@@ -779,7 +779,7 @@ namespace Akka.Cluster
     /// <summary>
     /// Supervisor managing the different Cluster daemons.
     /// </summary>
-    internal sealed class ClusterDaemon : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal sealed class ClusterDaemon : ReceiveActorSlim, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private IActorRef _coreSupervisor;
         private readonly ClusterSettings _settings;
@@ -891,7 +891,7 @@ namespace Akka.Cluster
     /// ClusterCoreDaemon and ClusterDomainEventPublisher can't be restarted because the state
     /// would be obsolete. Shutdown the member if any those actors crashed.
     /// </summary>
-    internal class ClusterCoreSupervisor : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal class ClusterCoreSupervisor : ReceiveActorSlim, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private IActorRef _publisher;
         private IActorRef _coreDaemon;
@@ -3020,7 +3020,7 @@ namespace Akka.Cluster
     ///
     /// The supplied callback will be run once when the current cluster member has the same status.
     /// </summary>
-    internal sealed class OnMemberStatusChangedListener : ReceiveActor2
+    internal sealed class OnMemberStatusChangedListener : ReceiveActorSlim
     {
         private readonly Action _callback;
         private readonly MemberStatus _status;

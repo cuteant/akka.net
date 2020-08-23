@@ -99,7 +99,7 @@ namespace Akka.Cluster.Tools.PublishSubscribe
     /// replies.
     /// </para>
     /// </summary>
-    public class DistributedPubSubMediator : ReceiveActor2
+    public class DistributedPubSubMediator : ReceiveActorSlim
     {
         /// <summary>
         /// TBD

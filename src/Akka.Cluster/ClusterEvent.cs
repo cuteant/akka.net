@@ -1012,7 +1012,7 @@ namespace Akka.Cluster
     /// 
     /// Publishes <see cref="ClusterEvent"/>s out to all subscribers.
     /// </summary>
-    internal sealed class ClusterDomainEventPublisher : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal sealed class ClusterDomainEventPublisher : ReceiveActorSlim, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         private Gossip _latestGossip;
         private readonly UniqueAddress _selfUniqueAddress = Cluster.Get(Context.System).SelfUniqueAddress;

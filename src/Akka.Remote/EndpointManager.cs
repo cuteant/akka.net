@@ -23,7 +23,7 @@ using MessagePack;
 namespace Akka.Remote
 {
     /// <summary>INTERNAL API</summary>
-    internal sealed class EndpointManager : ReceiveActor2, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
+    internal sealed class EndpointManager : ReceiveActorSlim, IRequiresMessageQueue<IUnboundedMessageQueueSemantics>
     {
         #region -- Policy definitions --
 

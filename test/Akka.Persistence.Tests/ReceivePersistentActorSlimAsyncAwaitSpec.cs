@@ -15,7 +15,7 @@ using Xunit.Abstractions;
 
 namespace Akka.Persistence.Tests
 {
-    class ReceiveTimeoutAsyncActor2 : ReceivePersistentActor2
+    class ReceiveTimeoutAsyncActor2 : ReceivePersistentActorSlim
     {
         private IActorRef _replyTo;
 
@@ -40,7 +40,7 @@ namespace Akka.Persistence.Tests
             });
         }
     }
-    class AsyncActor2 : ReceivePersistentActor2
+    class AsyncActor2 : ReceivePersistentActorSlim
     {
         public override string PersistenceId { get; }
 
@@ -62,7 +62,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    public class SuspendActor2 : ReceivePersistentActor2
+    public class SuspendActor2 : ReceivePersistentActorSlim
     {
         public override string PersistenceId { get; }
 
@@ -91,7 +91,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    public class AsyncAwaitActor2 : ReceivePersistentActor2
+    public class AsyncAwaitActor2 : ReceivePersistentActorSlim
     {
         public override string PersistenceId { get; }
 
@@ -166,7 +166,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    public class Asker2 : ReceivePersistentActor2
+    public class Asker2 : ReceivePersistentActorSlim
     {
         public override string PersistenceId { get; }
 
@@ -224,7 +224,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    public class BlockingAsker2 : ReceivePersistentActor2
+    public class BlockingAsker2 : ReceivePersistentActorSlim
     {
         public override string PersistenceId { get; }
 
@@ -243,7 +243,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    public class BlockingAskSelf2 : ReceivePersistentActor2
+    public class BlockingAskSelf2 : ReceivePersistentActorSlim
     {
         public override string PersistenceId { get; }
 
@@ -268,7 +268,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    public class AsyncExceptionActor2 : ReceivePersistentActor2
+    public class AsyncExceptionActor2 : ReceivePersistentActorSlim
     {
         private readonly IActorRef _callback;
         public override string PersistenceId { get; }
@@ -299,7 +299,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    public class AsyncTplActor2 : ReceivePersistentActor2
+    public class AsyncTplActor2 : ReceivePersistentActorSlim
     {
         public override string PersistenceId { get; }
 
@@ -321,7 +321,7 @@ namespace Akka.Persistence.Tests
         }
     }
 
-    public class AsyncTplExceptionActor2 : ReceivePersistentActor2
+    public class AsyncTplExceptionActor2 : ReceivePersistentActorSlim
     {
         private readonly IActorRef _callback;
 
@@ -361,9 +361,9 @@ namespace Akka.Persistence.Tests
     //    }
     //}
 
-    public class ReceivePersistentActor2AsyncAwaitSpec : AkkaSpec
+    public class ReceivePersistentActorSlimAsyncAwaitSpec : AkkaSpec
     {
-        public ReceivePersistentActor2AsyncAwaitSpec(ITestOutputHelper output = null)
+        public ReceivePersistentActorSlimAsyncAwaitSpec(ITestOutputHelper output = null)
             : base("akka.persistence.journal.plugin = \"akka.persistence.journal.inmem\"", output)
         {
         }
@@ -479,7 +479,7 @@ namespace Akka.Persistence.Tests
             ExpectMsg<string>(m => m == "GotIt");
         }
 
-        public class AsyncExceptionCatcherActor2 : ReceivePersistentActor2
+        public class AsyncExceptionCatcherActor2 : ReceivePersistentActorSlim
         {
             private string _lastMessage;
 
@@ -523,7 +523,7 @@ namespace Akka.Persistence.Tests
             lastMessage.ShouldBe("hello");
         }
 
-        public class AsyncFailingActor2 : ReceivePersistentActor2
+        public class AsyncFailingActor2 : ReceivePersistentActorSlim
         {
             public override string PersistenceId { get; }
 
@@ -562,7 +562,7 @@ namespace Akka.Persistence.Tests
             ExpectMsg<RestartMessage>(m => "hello".Equals(m.Message));
         }
 
-        public class AsyncPipeToDelayActor2 : ReceivePersistentActor2
+        public class AsyncPipeToDelayActor2 : ReceivePersistentActorSlim
         {
             public override string PersistenceId { get; }
 
@@ -587,7 +587,7 @@ namespace Akka.Persistence.Tests
             }
         }
 
-        public class AsyncReentrantActor2 : ReceivePersistentActor2
+        public class AsyncReentrantActor2 : ReceivePersistentActorSlim
         {
             public override string PersistenceId { get; }
 

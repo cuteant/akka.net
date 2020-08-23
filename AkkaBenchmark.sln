@@ -67,6 +67,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.DistributedData", "src
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Akka.TestKit.Xunit2", "src\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj", "{0E8F0D55-BAD1-4704-8A9A-ECFDBDA56432}"
 EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Reactive.Streams", "src\Reactive.Streams\Reactive.Streams.csproj", "{8E30FB93-7C89-4C35-94F8-C47151D75C4B}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -157,6 +159,10 @@ Global
 		{0E8F0D55-BAD1-4704-8A9A-ECFDBDA56432}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{0E8F0D55-BAD1-4704-8A9A-ECFDBDA56432}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{0E8F0D55-BAD1-4704-8A9A-ECFDBDA56432}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8E30FB93-7C89-4C35-94F8-C47151D75C4B}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8E30FB93-7C89-4C35-94F8-C47151D75C4B}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8E30FB93-7C89-4C35-94F8-C47151D75C4B}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8E30FB93-7C89-4C35-94F8-C47151D75C4B}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -183,6 +189,7 @@ Global
 		{AC9FDE36-413B-4202-9D7B-58CA075A06B8} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
 		{2365F8FC-88FF-43B3-B94D-072FDAC028EB} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
 		{0E8F0D55-BAD1-4704-8A9A-ECFDBDA56432} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
+		{8E30FB93-7C89-4C35-94F8-C47151D75C4B} = {40B47CC9-EAE8-4E7A-A53D-C1F750E29FB7}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {03AD8E21-7507-4E68-A4E9-F4A7E7273164}

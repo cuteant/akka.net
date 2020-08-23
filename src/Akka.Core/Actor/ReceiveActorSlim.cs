@@ -8,7 +8,7 @@ using Akka.Dispatch;
 namespace Akka.Actor
 {
     /// <summary>TBD</summary>
-    public abstract class ReceiveActor2 : ActorBase, IInitializableActor
+    public abstract class ReceiveActorSlim : ActorBase, IInitializableActor
     {
         private const string BehaviorKey = "RECEIVE";
 
@@ -19,7 +19,7 @@ namespace Akka.Actor
         protected readonly PatternMatchBuilder DefaultPatterns;
 
         /// <summary>TBD</summary>
-        protected ReceiveActor2()
+        protected ReceiveActorSlim()
         {
             DefaultPatterns = new PatternMatchBuilder();
             PrepareConfigureMessageHandlers(DefaultPatterns);
@@ -183,7 +183,7 @@ namespace Akka.Actor
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void EnsureMayConfigureMessageHandlers()
         {
-            if (_matchHandlerBuilders.Count <= 0) { AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ReceiveActor_Ensure); }
+            if (0u >= (uint)_matchHandlerBuilders.Count) { AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ReceiveActor_Ensure); }
         }
 
         /// <summary>

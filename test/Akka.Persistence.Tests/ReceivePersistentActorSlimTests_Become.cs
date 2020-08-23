@@ -11,7 +11,7 @@ using Xunit;
 
 namespace Akka.Persistence.Tests
 {
-    public partial class ReceivePersistentActor2Tests
+    public partial class ReceivePersistentActorSlimTests
     {
         [Fact]
         public void Given_persistent_actor_When_it_calls_Become_Then_it_switches_command_handler()
