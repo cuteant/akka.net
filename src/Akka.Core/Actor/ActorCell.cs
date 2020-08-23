@@ -374,7 +374,9 @@ namespace Akka.Actor
             var actor = _props.NewActor();
 
             // Apply default of custom behaviors to actor.
+#pragma warning disable CS0618 // 类型或成员已过时
             var pipeline = _systemImpl.ActorPipelineResolver.ResolvePipeline(actor.GetType());
+#pragma warning restore CS0618 // 类型或成员已过时
             pipeline.AfterActorIncarnated(actor, this);
 
             var initializableActor = actor as IInitializableActor;

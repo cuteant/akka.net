@@ -22,7 +22,7 @@ namespace Reactive.Streams.TCK
         /// Warning: This method may be called concurrently by the helper publisher, thus it should be implemented in a
         /// thread-safe manner.
         /// </summary>
-        /// <returns>element of the matching type <see cref="T"/> that will be delivered to the tested Subscriber</returns>
+        /// <returns>element of the matching type <typeparamref name="T"/> that will be delivered to the tested Subscriber</returns>
         public abstract T CreateElement(int element);
 
         /// <summary>
@@ -40,7 +40,7 @@ namespace Reactive.Streams.TCK
         /// </para>
         ///  
         /// <para>
-        /// If <paramref name="elements"/> is 0 the <see cref="IPublisher{T}"/> should signal <see cref="ISubscriber.OnComplete"/> immediatly.
+        /// If <paramref name="elements"/> is 0 the <see cref="IPublisher{T}"/> should signal <see cref="ISubscriber{T}.OnComplete()"/> immediatly.
         /// In other words, it should represent a "completed stream".
         /// </para>
         /// </summary>

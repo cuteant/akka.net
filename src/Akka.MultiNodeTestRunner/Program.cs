@@ -63,7 +63,7 @@ namespace Akka.MultiNodeTestRunner
         protected static bool MultiPlatform;
 
         /// <summary>
-        /// MultiNodeTestRunner takes the following <see cref="args"/>:
+        /// MultiNodeTestRunner takes the following <paramref name="args"/>:
         /// 
         /// C:\> Akka.MultiNodeTestRunner.exe [assembly name] [-Dmultinode.enable-filesink=on] [-Dmultinode.output-directory={dir path}] [-Dmultinode.spec={spec name}]
         /// 
@@ -202,7 +202,7 @@ namespace Akka.MultiNodeTestRunner
                     {
                         AssemblyLoadContext.Default.LoadFromAssemblyPath(path);
                     }
-                    catch (Exception e)
+                    catch (Exception)
                     {
                         Console.Out.WriteLine($"Failed to load dll: {path}");
                     }
@@ -245,7 +245,7 @@ namespace Akka.MultiNodeTestRunner
 #if CORECLR
                             var ntrNetPath = Path.Combine(AppContext.BaseDirectory, "Akka.NodeTestRunner.exe");
                             var ntrNetCorePath = Path.Combine(AppContext.BaseDirectory, "Akka.NodeTestRunner.dll");
-                            var alternateIndex = 0;
+                            //var alternateIndex = 0;
 #endif
                             var timelineCollector = TestRunSystem.ActorOf(Props.Create(() => new TimelineLogCollectorActor()));
                             string testOutputDir = null;

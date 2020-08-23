@@ -310,14 +310,14 @@ namespace Akka.Streams
         /// <param name="attributes">TBD</param>
         public Attributes(params IAttribute[] attributes)
         {
-            _attributes = attributes ?? new IAttribute[0];
+            _attributes = attributes ?? CuteAnt.EmptyArray<IAttribute>.Instance;
         }
 
         /// <summary>
         /// The list is ordered with the most specific attribute first, least specific last.
         /// 
         /// Note that operators in general should not inspect the whole hierarchy but instead use
-        /// <see cref="GetAttribute{TAttr}"/> to get the most specific attribute value.
+        /// <see cref="GetAttribute{TAttr}()"/> to get the most specific attribute value.
         /// </summary>
         public IEnumerable<IAttribute> AttributeList => _attributes;
 
@@ -337,7 +337,7 @@ namespace Akka.Streams
         /// Get all attributes of a given type (or subtypes thereof).
         /// 
         /// Note that operators in general should not inspect the whole hierarchy but instead use
-        /// <see cref="GetAttribute{TAttr}"/> to get the most specific attribute value.
+        /// <see cref="GetAttribute{TAttr}()"/> to get the most specific attribute value.
         /// 
         /// The list is ordered with the most specific attribute first, least specific last.
         /// </summary>

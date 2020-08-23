@@ -60,7 +60,7 @@ namespace Akka.Dispatch
 #endif
 
         /// <summary>
-        /// Default settings for <see cref="SingleThreadDispatcher"/> instances.
+        /// Default settings for <see cref="T:SingleThreadDispatcher"/> instances.
         /// </summary>
         internal static readonly DedicatedThreadPoolSettings DefaultSingleThreadPoolSettings = new DedicatedThreadPoolSettings(1, "DefaultSingleThreadPool");
     }

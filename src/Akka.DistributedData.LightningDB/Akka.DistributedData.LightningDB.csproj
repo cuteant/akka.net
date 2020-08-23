@@ -2,7 +2,7 @@
   <Import Project="..\..\nuget.props" />
 
   <PropertyGroup>
-    <TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
+    <TargetFrameworks>netstandard2.0</TargetFrameworks>
     <RootNamespace>Akka.DistributedData.LightningDB</RootNamespace>
     <AssemblyName>Akka.DistributedData.LightningDB</AssemblyName>
     <AllowUnsafeBlocks>false</AllowUnsafeBlocks>

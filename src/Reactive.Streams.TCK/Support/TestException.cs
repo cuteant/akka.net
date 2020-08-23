@@ -4,7 +4,7 @@ namespace Reactive.Streams.TCK.Support
 {
     /// <summary>
     /// Exception used by the TCK to signal failures.
-    /// May be thrown or signalled through <see cref="ISubscriber.OnError"/>
+    /// May be thrown or signalled through <see cref="ISubscriber{T}.OnError"/>
     /// </summary>
     public sealed class TestException : Exception
     {

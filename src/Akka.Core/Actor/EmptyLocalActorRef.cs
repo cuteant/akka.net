@@ -48,7 +48,9 @@ namespace Akka.Actor
         /// TBD
         /// </summary>
         [Obsolete("Use Context.Watch and Receive<Terminated> [1.1.0]")]
+#pragma warning disable CS0809 // 过时成员重写未过时成员
         public override bool IsTerminated { get { return true; } }
+#pragma warning restore CS0809 // 过时成员重写未过时成员
 
         /// <summary>
         /// TBD

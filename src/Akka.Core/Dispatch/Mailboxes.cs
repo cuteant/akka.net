@@ -155,7 +155,7 @@ namespace Akka.Dispatch
 
         // don't care if these happen twice
         private bool _mailboxSizeWarningIssued = false;
-        private bool _mailboxNonZeroPushTimeoutWarningIssued = false;
+        //private bool _mailboxNonZeroPushTimeoutWarningIssued = false;
 
         private MailboxType LookupConfigurator(string id)
         {

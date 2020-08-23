@@ -5,14 +5,11 @@
 // </copyright>
 //-----------------------------------------------------------------------
 
-using Akka.Actor;
-using Akka.Event;
 using System;
 using System.Collections.Generic;
 using System.Collections.Immutable;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using Akka.Actor;
+using Akka.Event;
 
 namespace Akka.Persistence.MongoDb.Query
 {
@@ -24,7 +21,7 @@ namespace Akka.Persistence.MongoDb.Query
     /// <summary>
     /// Subscribe the `sender` to changes (appended events) for a specific `persistenceId`.
     /// Used by query-side. The journal will send <see cref="EventAppended"/> messages to
-    /// the subscriber when <see cref="AsyncWriteJournal.WriteMessagesAsync"/> has been called.
+    /// the subscriber when <see cref="Akka.Persistence.Journal.AsyncWriteJournal.WriteMessagesAsync"/> has been called.
     /// </summary>
     public sealed class SubscribePersistenceId : ISubscriptionCommand
     {
@@ -123,8 +120,8 @@ namespace Akka.Persistence.MongoDb.Query
     /// Subscribe the `sender` to changes (appended events) for a specific `tag`.
     /// Used by query-side. The journal will send <see cref="TaggedEventAppended"/> messages to
     /// the subscriber when `asyncWriteMessages` has been called.
-    /// Events are tagged by wrapping in <see cref="Tagged"/>
-    /// via an <see cref="IEventAdapter"/>.
+    /// Events are tagged by wrapping in <see cref="Akka.Persistence.Journal.Tagged"/>
+    /// via an <see cref="Akka.Persistence.Journal.IEventAdapter"/>.
     /// </summary>
     public sealed class SubscribeTag : ISubscriptionCommand
     {

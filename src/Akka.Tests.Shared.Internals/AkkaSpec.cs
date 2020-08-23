@@ -48,7 +48,9 @@ namespace Akka.TestKit
           # use random ports to avoid race conditions with binding contention
           akka.remote.dot-netty.tcp.port = 0");
 
+#if !CORECLR
         private static int _systemNumber = 0;
+#endif
 
         public AkkaSpec(string config, ITestOutputHelper output = null)
             : this(ConfigurationFactory.ParseString(config).WithFallback(_akkaSpecConfig), output)

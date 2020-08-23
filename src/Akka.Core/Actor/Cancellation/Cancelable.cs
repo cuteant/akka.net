@@ -72,7 +72,9 @@ namespace Akka.Actor
         /// </summary>
         /// <param name="scheduler">TBD</param>
         public Cancelable(IActionScheduler scheduler)
+#pragma warning disable CS0618 // 类型或成员已过时
             : this(scheduler, new CancellationTokenSource())
+#pragma warning restore CS0618 // 类型或成员已过时
         {
             //Intentionally left blank
         }
@@ -157,7 +159,9 @@ namespace Akka.Actor
         {
             var cancellationTokens = cancelables.Select(c => c.Token).ToArray();
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens);
+#pragma warning disable CS0618 // 类型或成员已过时
             return new Cancelable(scheduler.Advanced, cts);
+#pragma warning restore CS0618 // 类型或成员已过时
         }
 
         /// <summary>
@@ -171,7 +175,9 @@ namespace Akka.Actor
         {
             var cancellationTokens = cancelables.Select(c => c.Token).ToArray();
             var cts = CancellationTokenSource.CreateLinkedTokenSource(cancellationTokens);
+#pragma warning disable CS0618 // 类型或成员已过时
             return new Cancelable(scheduler, cts);
+#pragma warning restore CS0618 // 类型或成员已过时
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]

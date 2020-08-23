@@ -352,8 +352,6 @@ namespace Akka.Remote
 
             _onlyDeciderStrategyFunc = e => OnlyDeciderStrategy(e);
 
-            _acceptingPatterns = ConfigurePatterns(Accepting);
-            _flushingPatterns = ConfigurePatterns(Flushing);
             Receiving();
         }
 
@@ -361,8 +359,30 @@ namespace Akka.Remote
 
         #region @@ Private members @@
 
-        private readonly PatternMatchBuilder _acceptingPatterns;
-        private readonly PatternMatchBuilder _flushingPatterns;
+        private PatternMatchBuilder _acceptingPatterns;
+        private PatternMatchBuilder AcceptingPatterns
+        {
+            get
+            {
+                if (_acceptingPatterns is null)
+                {
+                    _acceptingPatterns = ConfigurePatterns(Accepting);
+                }
+                return _acceptingPatterns;
+            }
+        }
+        private PatternMatchBuilder _flushingPatterns;
+        private PatternMatchBuilder FlushingPatterns
+        {
+            get
+            {
+                if (_flushingPatterns is null)
+                {
+                    _flushingPatterns = ConfigurePatterns(Flushing);
+                }
+                return _flushingPatterns;
+            }
+        }
 
         /// <summary>Mapping between addresses and endpoint actors. If passive connections are turned off,
         /// incoming connections will not be part of this map!</summary>
@@ -671,7 +691,7 @@ namespace Akka.Remote
 
         private void HandleStartupFinished()
         {
-            Become(_acceptingPatterns);
+            Become(AcceptingPatterns);
         }
 
         private void HandleShutdownAndFlush()
@@ -949,7 +969,7 @@ namespace Akka.Remote
 
             //Ignore all other writes
             _normalShutdown = true;
-            Become(_flushingPatterns);
+            Become(FlushingPatterns);
         }
 
         private static readonly Func<Task<bool[]>, bool> CheckGracefulStopFunc = t => CheckGracefulStop(t);

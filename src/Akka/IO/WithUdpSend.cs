@@ -59,7 +59,11 @@ namespace Akka.IO
                                         _pendingSend = new Send(_pendingSend.Payload, new IPEndPoint(resolved.Addr, dns.Port), _pendingSend.Ack);
                                         DoSend();
                                     }
+#if DEBUG
                                     catch (Exception ex)
+#else
+                                    catch (Exception)
+#endif
                                     {
                                         Sender.Tell(new CommandFailed(send));
 #if DEBUG

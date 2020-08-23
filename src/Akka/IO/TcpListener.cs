@@ -27,7 +27,7 @@ namespace Akka.IO
         private int _acceptLimit;
         private SocketAsyncEventArgs[] _saeas;
 
-        private int acceptLimit;
+        //private int acceptLimit;
 
         /// <summary>
         /// TBD

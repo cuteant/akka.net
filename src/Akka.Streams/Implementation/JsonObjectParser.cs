@@ -48,7 +48,7 @@ namespace Akka.Streams.Implementation
         private int _pos; // latest position of pointer while scanning for json object end
         private int _trimFront;
         private int _depth;
-        private int _charsInObject;
+        //private int _charsInObject;
         private bool _completedObject;
         private bool _inStringExpression;
         private bool _isStartOfEscapeSequence;
@@ -167,7 +167,7 @@ namespace Akka.Streams.Implementation
                     _pos++;
                     if (_depth == 0)
                     {
-                        _charsInObject = 0;
+                        //_charsInObject = 0;
                         _completedObject = true;
                     }
                     break;

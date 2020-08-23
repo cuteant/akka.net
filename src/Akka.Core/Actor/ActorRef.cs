@@ -569,7 +569,9 @@ namespace Akka.Actor
 
         /// <inheritdoc cref="InternalActorRefBase"/>
         [Obsolete("Use Context.Watch and Receive<Terminated> [1.1.0]")]
+#pragma warning disable CS0809 // 过时成员重写未过时成员
         public override bool IsTerminated { get { return false; } }
+#pragma warning restore CS0809 // 过时成员重写未过时成员
     }
 
     /// <summary> This is an internal look-up failure token, not useful for anything else.</summary>

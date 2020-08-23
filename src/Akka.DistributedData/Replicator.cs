@@ -149,7 +149,7 @@ namespace Akka.DistributedData
     /// 
     /// In the <see cref="Update"/> message you can pass an optional request context, which the <see cref="Replicator"/>
     /// does not care about, but is included in the reply messages. This is a convenient
-    /// way to pass contextual information (e.g. original sender) without having to use <see cref="Ask"/>
+    /// way to pass contextual information (e.g. original sender) without having to use <see cref="T:Ask"/>
     /// or local correlation data structures.
     /// </para>
     /// <para>
@@ -220,7 +220,7 @@ namespace Akka.DistributedData
     /// A deleted key cannot be reused again, but it is still recommended to delete unused
     /// data entries because that reduces the replication overhead when new nodes join the cluster.
     /// Subsequent <see cref="Delete"/>, <see cref="Update"/> and <see cref="Get"/> requests will be replied with <see cref="DataDeleted"/>.
-    /// Subscribers will receive <see cref="Deleted"/>.
+    /// Subscribers will receive <see cref="Delete"/>.
     /// 
     /// In the <see cref="Delete"/> message you can pass an optional request context in the same way as for the
     /// <see cref="Update"/> message, described above. For example the original sender can be passed and replied

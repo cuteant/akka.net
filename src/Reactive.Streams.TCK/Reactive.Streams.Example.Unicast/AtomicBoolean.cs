@@ -24,7 +24,7 @@ namespace Reactive.Streams.Example.Unicast
         }
 
         /// <summary>
-        /// The current value of this <see cref="AtomicReference{T}"/>
+        /// The current value of this <see cref="T:AtomicReference{T}"/>
         /// </summary>
         public bool Value
         {

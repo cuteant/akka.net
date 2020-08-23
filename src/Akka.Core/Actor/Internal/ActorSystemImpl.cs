@@ -46,7 +46,9 @@ namespace Akka.Actor.Internal
         private Dispatchers _dispatchers;
         private Mailboxes _mailboxes;
         private IScheduler _scheduler;
+#pragma warning disable CS0618 // 类型或成员已过时
         private ActorProducerPipelineResolver _actorProducerPipelineResolver;
+#pragma warning restore CS0618 // 类型或成员已过时
         private TerminationCallbacks _terminationCallbacks;
 
         /// <summary>
@@ -127,6 +129,7 @@ namespace Akka.Actor.Internal
         public override ILoggingAdapter Log { get { return _log; } }
 
         /// <inheritdoc cref="ActorSystem"/>
+        [Obsolete("Actor producer pipeline API will be removed in v1.5.")]
         public override ActorProducerPipelineResolver ActorPipelineResolver { get { return _actorProducerPipelineResolver; } }
 
         /// <inheritdoc cref="ActorSystem"/>

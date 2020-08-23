@@ -71,7 +71,9 @@ namespace Akka.Actor
                         failedActor.AroundPreRestart(cause, optionalMessage);
 
                         // run actor pre-incarnation plugin pipeline
+#pragma warning disable CS0618 // 类型或成员已过时
                         var pipeline = _systemImpl.ActorPipelineResolver.ResolvePipeline(failedActor.GetType());
+#pragma warning restore CS0618 // 类型或成员已过时
                         pipeline.BeforeActorIncarnated(failedActor, this);
                     }
                     catch (Exception e)
@@ -299,7 +301,9 @@ namespace Akka.Actor
                     a.AroundPostStop();
 
                     // run actor pre-incarnation plugin pipeline
+#pragma warning disable CS0618 // 类型或成员已过时
                     var pipeline = _systemImpl.ActorPipelineResolver.ResolvePipeline(a.GetType());
+#pragma warning restore CS0618 // 类型或成员已过时
                     pipeline.BeforeActorIncarnated(a, this);
                 }
             }

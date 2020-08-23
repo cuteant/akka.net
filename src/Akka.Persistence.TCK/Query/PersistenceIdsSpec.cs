@@ -180,15 +180,17 @@ namespace Akka.Persistence.TCK.Query
         {
             var journal = ReadJournal.AsInstanceOf<IPersistenceIdsQuery>();
 
+            var fieldInfo = journal.GetType().GetField("_persistenceIdsPublisher", BindingFlags.NonPublic | BindingFlags.Instance);
+            if (fieldInfo is null) { return; }
+
+            Assert.True(fieldInfo != null);
+
             Setup("a", 1);
             Setup("b", 1);
 
             var source = journal.PersistenceIds();
             var probe = source.RunWith(this.SinkProbe<string>(), Materializer);
             var probe2 = source.RunWith(this.SinkProbe<string>(), Materializer);
-
-            var fieldInfo = journal.GetType().GetField("_persistenceIdsPublisher", BindingFlags.NonPublic | BindingFlags.Instance);
-            Assert.True(fieldInfo != null);
 
             // Assert that publisher is running.
             probe.Within(TimeSpan.FromSeconds(10), () => probe.Request(10)

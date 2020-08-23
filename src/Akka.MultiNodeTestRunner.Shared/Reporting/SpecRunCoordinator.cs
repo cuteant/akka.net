@@ -86,7 +86,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Reporting
         /// Wait for all child <see cref="NodeDataActor"/> instances to finish processing
         /// and report their results
         /// </summary>
-        /// <returns>An awaitable task, since this operation uses the <see cref="Futures.Ask"/> pattern</returns>
+        /// <returns>An awaitable task, since this operation uses the <see cref="Futures.Ask{T}(ICanTell, object, TimeSpan?)"/> pattern</returns>
         private void HandleEndSpec(EndSpec endSpec)
         {
             var futures = new Task<NodeData>[Nodes.Count];

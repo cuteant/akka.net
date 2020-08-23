@@ -80,7 +80,7 @@ namespace Akka.MultiNodeTestRunner.Shared.Sinks
         /// </summary>
         /// <param name="message">A string message included with the notification.</param>
         /// <param name="logSource">The source of a log message.</param>
-        /// <param name="level">The <see cref="LogLevel"/> of this message.</param>
+        /// <param name="level">The <see cref="Akka.Event.LogLevel"/> of this message.</param>
         void LogRunnerMessage(string message, string logSource, LogLevel level);
 
         /// <summary>
