@@ -1,12 +1,11 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-# Visual Studio 15
-VisualStudioVersion = 15.0.27004.2010
+# Visual Studio Version 16
+VisualStudioVersion = 16.0.30413.136
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution Items", "{A21675C8-61E0-413F-99FF-CF26BABF2E85}"
 	ProjectSection(SolutionItems) = preProject
 		clean.cmd = clean.cmd
-		Dependencies.Akka.props = Dependencies.Akka.props
 		Directory.Build.props = Directory.Build.props
 		Directory.Build.targets = Directory.Build.targets
 		LICENSE = LICENSE
@@ -14,10 +13,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Solution Items", "Solution 
 		nuget.props = nuget.props
 		version.props = version.props
 	EndProjectSection
-EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Shared", "Shared", "{F56F2926-46FD-4F02-A4A1-FB45C52C7571}"
-EndProject
-Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "CuteAnt.Extensions.Logging.Sources", "..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.shproj", "{8DBB7DC8-2B90-4A8C-A60D-D41466174BDE}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "src", "src", "{36581280-0A63-463A-AA6A-42371BCCE965}"
 EndProject
@@ -28,8 +23,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ChatClient", "examples\ChatClient\ChatClient.csproj", "{E6ADC274-C067-4019-BAF8-861A32779FD0}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Chat", "Chat", "{07C250DE-2934-424C-B70C-42F45307A9E7}"
-EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "PersistenceExample", "examples\PersistenceExample\PersistenceExample.csproj", "{FEDCCB5B-5446-4F9A-8A49-F487E2546B45}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Routing", "examples\Routing\Routing.csproj", "{BC0F0AA1-AC5A-40CB-A155-7E0ADC486BFE}"
 EndProject
@@ -76,9 +69,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "ClusterToolsExample.Node", "examples\ClusterToolsExample.Node\ClusterToolsExample.Node.csproj", "{5FC50DDC-BF72-4FA2-BA7D-62AF39FBBC60}"
 EndProject
 Global
-	GlobalSection(SharedMSBuildProjectFiles) = preSolution
-		..\CuteAnt.Extensions.Common\src\CuteAnt.Extensions.Logging.Sources\CuteAnt.Extensions.Logging.Sources.projitems*{8dbb7dc8-2b90-4a8c-a60d-d41466174bde}*SharedItemsImports = 13
-	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -96,10 +86,6 @@ Global
 		{E6ADC274-C067-4019-BAF8-861A32779FD0}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{E6ADC274-C067-4019-BAF8-861A32779FD0}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{E6ADC274-C067-4019-BAF8-861A32779FD0}.Release|Any CPU.Build.0 = Release|Any CPU
-		{FEDCCB5B-5446-4F9A-8A49-F487E2546B45}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{FEDCCB5B-5446-4F9A-8A49-F487E2546B45}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{FEDCCB5B-5446-4F9A-8A49-F487E2546B45}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{FEDCCB5B-5446-4F9A-8A49-F487E2546B45}.Release|Any CPU.Build.0 = Release|Any CPU
 		{BC0F0AA1-AC5A-40CB-A155-7E0ADC486BFE}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{BC0F0AA1-AC5A-40CB-A155-7E0ADC486BFE}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{BC0F0AA1-AC5A-40CB-A155-7E0ADC486BFE}.Release|Any CPU.ActiveCfg = Release|Any CPU
@@ -169,12 +155,10 @@ Global
 		HideSolutionNode = FALSE
 	EndGlobalSection
 	GlobalSection(NestedProjects) = preSolution
-		{8DBB7DC8-2B90-4A8C-A60D-D41466174BDE} = {F56F2926-46FD-4F02-A4A1-FB45C52C7571}
 		{459FC958-AA88-4B0F-99AF-310DD6EF4189} = {07C250DE-2934-424C-B70C-42F45307A9E7}
 		{9A7E39BF-0150-4CE2-B745-948250515A8A} = {07C250DE-2934-424C-B70C-42F45307A9E7}
 		{E6ADC274-C067-4019-BAF8-861A32779FD0} = {07C250DE-2934-424C-B70C-42F45307A9E7}
 		{07C250DE-2934-424C-B70C-42F45307A9E7} = {36581280-0A63-463A-AA6A-42371BCCE965}
-		{FEDCCB5B-5446-4F9A-8A49-F487E2546B45} = {36581280-0A63-463A-AA6A-42371BCCE965}
 		{BC0F0AA1-AC5A-40CB-A155-7E0ADC486BFE} = {36581280-0A63-463A-AA6A-42371BCCE965}
 		{63010DF2-69EA-4451-9A3C-4082E2F37300} = {36581280-0A63-463A-AA6A-42371BCCE965}
 		{7632EF0E-1F36-4150-8495-6725A55D1504} = {63010DF2-69EA-4451-9A3C-4082E2F37300}
