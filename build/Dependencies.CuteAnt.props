@@ -9,8 +9,6 @@
 
     <LinqOptimizerCSharpStrongNamePackageVersion>0.7.0-rtm-1912022030</LinqOptimizerCSharpStrongNamePackageVersion>
 
-    <ReactiveStreamsSignedPackageVersion>1.0.2008.2320</ReactiveStreamsSignedPackageVersion>
-
     <EasyEventStoreAbstractionsPackageVersion>5.0.2008.521</EasyEventStoreAbstractionsPackageVersion>
     <EasyEventStoreAutoSubscribingPackageVersion>5.0.2008.521</EasyEventStoreAutoSubscribingPackageVersion>
     <EasyEventStoreCorePackageVersion>5.0.2008.521</EasyEventStoreCorePackageVersion>
@@ -90,49 +88,52 @@
     <SerilogExtensionsLoggingUnofficialPackageVersion>2.2.0-rtm-190222-01</SerilogExtensionsLoggingUnofficialPackageVersion>
 
     <!-- Network related packages -->
-    <AkkaCoreUnofficialPackageVersion>1.4.2008.2320</AkkaCoreUnofficialPackageVersion>
-    <AkkaUnofficialPackageVersion>1.4.2008.2320</AkkaUnofficialPackageVersion>
-    <AkkaTestKitUnofficialPackageVersion>1.4.2008.2320</AkkaTestKitUnofficialPackageVersion>
-    <AkkaTestKitXunit2UnofficialPackageVersion>1.4.2008.2320</AkkaTestKitXunit2UnofficialPackageVersion>
-    <AkkaTestsSharedUnofficialPackageVersion>1.4.2008.2320</AkkaTestsSharedUnofficialPackageVersion>
+    <AkkaCoreUnofficialPackageVersion>1.4.2008.2415</AkkaCoreUnofficialPackageVersion>
+    <AkkaUnofficialPackageVersion>1.4.2008.2415</AkkaUnofficialPackageVersion>
+    <AkkaTestKitUnofficialPackageVersion>1.4.2008.2415</AkkaTestKitUnofficialPackageVersion>
+    <AkkaTestKitXunit2UnofficialPackageVersion>1.4.2008.2415</AkkaTestKitXunit2UnofficialPackageVersion>
+    <AkkaTestsSharedUnofficialPackageVersion>1.4.2008.2415</AkkaTestsSharedUnofficialPackageVersion>
 
-    <AkkaCoordinationUnofficialPackageVersion>1.4.2008.2320</AkkaCoordinationUnofficialPackageVersion>
-    <AkkaDistributedDataUnofficialPackageVersion>1.4.2008.2320</AkkaDistributedDataUnofficialPackageVersion>
-    <AkkaDistributedDataLightningDBUnofficialPackageVersion>1.4.2008.2320</AkkaDistributedDataLightningDBUnofficialPackageVersion>
-    <AkkaClusterUnofficialPackageVersion>1.4.2008.2320</AkkaClusterUnofficialPackageVersion>
-    <AkkaClusterMetricsUnofficialPackageVersion>1.4.2008.2320</AkkaClusterMetricsUnofficialPackageVersion>
-    <AkkaClusterShardingUnofficialPackageVersion>1.4.2008.2320</AkkaClusterShardingUnofficialPackageVersion>
-    <AkkaClusterToolsUnofficialPackageVersion>1.4.2008.2320</AkkaClusterToolsUnofficialPackageVersion>
-    <AkkaClusterTestKitUnofficialPackageVersion>1.4.2008.2320</AkkaClusterTestKitUnofficialPackageVersion>
-    <AkkaRemoteUnofficialPackageVersion>1.4.2008.2320</AkkaRemoteUnofficialPackageVersion>
-    <AkkaRemoteTestKitUnofficialPackageVersion>1.4.2008.2320</AkkaRemoteTestKitUnofficialPackageVersion>
+    <AkkaCoordinationUnofficialPackageVersion>1.4.2008.2415</AkkaCoordinationUnofficialPackageVersion>
+    <AkkaDistributedDataUnofficialPackageVersion>1.4.2008.2415</AkkaDistributedDataUnofficialPackageVersion>
+    <AkkaDistributedDataLightningDBUnofficialPackageVersion>1.4.2008.2415</AkkaDistributedDataLightningDBUnofficialPackageVersion>
+    <AkkaClusterUnofficialPackageVersion>1.4.2008.2415</AkkaClusterUnofficialPackageVersion>
+    <AkkaClusterMetricsUnofficialPackageVersion>1.4.2008.2415</AkkaClusterMetricsUnofficialPackageVersion>
+    <AkkaClusterShardingUnofficialPackageVersion>1.4.2008.2415</AkkaClusterShardingUnofficialPackageVersion>
+    <AkkaClusterToolsUnofficialPackageVersion>1.4.2008.2415</AkkaClusterToolsUnofficialPackageVersion>
+    <AkkaClusterTestKitUnofficialPackageVersion>1.4.2008.2415</AkkaClusterTestKitUnofficialPackageVersion>
+    <AkkaRemoteUnofficialPackageVersion>1.4.2008.2415</AkkaRemoteUnofficialPackageVersion>
+    <AkkaRemoteTestKitUnofficialPackageVersion>1.4.2008.2415</AkkaRemoteTestKitUnofficialPackageVersion>
 
-    <AkkaDICoreUnofficialPackageVersion>1.4.2008.2320</AkkaDICoreUnofficialPackageVersion>
-    <AkkaDIAutoFacUnofficialPackageVersion>1.4.2008.2320</AkkaDIAutoFacUnofficialPackageVersion>
-    <AkkaDITestKitUnofficialPackageVersion>1.4.2008.2320</AkkaDITestKitUnofficialPackageVersion>
+    <AkkaDICoreUnofficialPackageVersion>1.4.2008.2415</AkkaDICoreUnofficialPackageVersion>
+    <AkkaDIAutoFacUnofficialPackageVersion>1.4.2008.2415</AkkaDIAutoFacUnofficialPackageVersion>
+    <AkkaDITestKitUnofficialPackageVersion>1.4.2008.2415</AkkaDITestKitUnofficialPackageVersion>
 
-    <AkkaLoggerNLogUnofficialPackageVersion>1.4.2008.2320</AkkaLoggerNLogUnofficialPackageVersion>
-    <AkkaLoggerSerilogUnofficialPackageVersion>1.4.2008.2320</AkkaLoggerSerilogUnofficialPackageVersion>
+    <AkkaLoggerNLogUnofficialPackageVersion>1.4.2008.2415</AkkaLoggerNLogUnofficialPackageVersion>
+    <AkkaLoggerSerilogUnofficialPackageVersion>1.4.2008.2415</AkkaLoggerSerilogUnofficialPackageVersion>
 
-    <AkkaExtensionEventStorePackageVersion>1.4.2008.2320</AkkaExtensionEventStorePackageVersion>
+    <AkkaExtensionEventStorePackageVersion>1.4.2008.2415</AkkaExtensionEventStorePackageVersion>
 
-    <AkkaPersistenceUnofficialPackageVersion>1.4.2008.2320</AkkaPersistenceUnofficialPackageVersion>
-    <AkkaPersistenceQueryUnofficialPackageVersion>1.4.2008.2320</AkkaPersistenceQueryUnofficialPackageVersion>
-    <AkkaPersistenceTCKUnofficialPackageVersion>1.4.2008.2320</AkkaPersistenceTCKUnofficialPackageVersion>
-    <AkkaPersistenceTestKitUnofficialPackageVersion>1.4.2008.2320</AkkaPersistenceTestKitUnofficialPackageVersion>
-    <AkkaPersistenceTestKitXunit2UnofficialPackageVersion>1.4.2008.2320</AkkaPersistenceTestKitXunit2UnofficialPackageVersion>
-    <AkkaPersistenceEventStoreUnofficialPackageVersion>1.4.2008.2320</AkkaPersistenceEventStoreUnofficialPackageVersion>
-    <AkkaPersistenceMongoDbUnofficialPackageVersion>1.4.2008.2320</AkkaPersistenceMongoDbUnofficialPackageVersion>
+    <AkkaPersistenceUnofficialPackageVersion>1.4.2008.2415</AkkaPersistenceUnofficialPackageVersion>
+    <AkkaPersistenceQueryUnofficialPackageVersion>1.4.2008.2415</AkkaPersistenceQueryUnofficialPackageVersion>
+    <AkkaPersistenceTCKUnofficialPackageVersion>1.4.2008.2415</AkkaPersistenceTCKUnofficialPackageVersion>
+    <AkkaPersistenceTestKitUnofficialPackageVersion>1.4.2008.2415</AkkaPersistenceTestKitUnofficialPackageVersion>
+    <AkkaPersistenceTestKitXunit2UnofficialPackageVersion>1.4.2008.2415</AkkaPersistenceTestKitXunit2UnofficialPackageVersion>
+    <AkkaPersistenceEventStoreUnofficialPackageVersion>1.4.2008.2415</AkkaPersistenceEventStoreUnofficialPackageVersion>
+    <AkkaPersistenceMongoDbUnofficialPackageVersion>1.4.2008.2415</AkkaPersistenceMongoDbUnofficialPackageVersion>
 
-    <AkkaSerializationHyperionUnofficialPackageVersion>1.4.2008.2320</AkkaSerializationHyperionUnofficialPackageVersion>
-    <AkkaSerializationMessagePackLZ4PackageVersion>1.4.2008.2320</AkkaSerializationMessagePackLZ4PackageVersion>
-    <AkkaSerializationProtobufPackageVersion>1.4.2008.2320</AkkaSerializationProtobufPackageVersion>
-    <AkkaSerializationProtobufNetPackageVersion>1.4.2008.2320</AkkaSerializationProtobufNetPackageVersion>
-    <AkkaSerializationTestKitUnofficialPackageVersion>1.4.2008.2320</AkkaSerializationTestKitUnofficialPackageVersion>
+    <AkkaSerializationHyperionUnofficialPackageVersion>1.4.2008.2415</AkkaSerializationHyperionUnofficialPackageVersion>
+    <AkkaSerializationMessagePackLZ4PackageVersion>1.4.2008.2415</AkkaSerializationMessagePackLZ4PackageVersion>
+    <AkkaSerializationProtobufPackageVersion>1.4.2008.2415</AkkaSerializationProtobufPackageVersion>
+    <AkkaSerializationProtobufNetPackageVersion>1.4.2008.2415</AkkaSerializationProtobufNetPackageVersion>
+    <AkkaSerializationTestKitUnofficialPackageVersion>1.4.2008.2415</AkkaSerializationTestKitUnofficialPackageVersion>
 
-    <AkkaStreamsUnofficialPackageVersion>1.4.2008.2320</AkkaStreamsUnofficialPackageVersion>
-    <AkkaStreamsEventStorePackageVersion>1.4.2008.2320</AkkaStreamsEventStorePackageVersion>
-    <AkkaStreamsTestKitUnofficialPackageVersion>1.4.2008.2320</AkkaStreamsTestKitUnofficialPackageVersion>
+    <AkkaStreamsUnofficialPackageVersion>1.4.2008.2415</AkkaStreamsUnofficialPackageVersion>
+    <AkkaStreamsEventStorePackageVersion>1.4.2008.2415</AkkaStreamsEventStorePackageVersion>
+    <AkkaStreamsTestKitUnofficialPackageVersion>1.4.2008.2415</AkkaStreamsTestKitUnofficialPackageVersion>
+
+    <ReactiveStreamsSignedPackageVersion>1.0.2008.2320</ReactiveStreamsSignedPackageVersion>
+    <ReactiveStreamsTCKSignedPackageVersion>1.0.2008.2320</ReactiveStreamsTCKSignedPackageVersion>
 
     <SpanNettyBuffersPackageVersion>0.7.2008.2000</SpanNettyBuffersPackageVersion>
     <SpanNettyCodecsHttpPackageVersion>0.7.2008.2000</SpanNettyCodecsHttpPackageVersion>
