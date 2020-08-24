@@ -36,7 +36,7 @@ namespace Akka.TestKit
             public ActorSystem System { get; set; }
             public TestKitSettings TestKitSettings { get; set; }
             public BlockingQueue<MessageEnvelope> Queue { get; set; }
-            public MessageEnvelope LastMessage  { get; set; }
+            public MessageEnvelope LastMessage { get; set; }
             public IActorRef TestActor { get; set; }
             public TimeSpan? End { get; set; }
             public bool LastWasNoMsg { get; set; } //if last assertion was expectNoMsg, disable timing failure upon within() block end.
@@ -115,7 +115,7 @@ namespace Akka.TestKit
             if (assertions is null) throw new ArgumentNullException(nameof(assertions), "The supplied assertions must not be null.");
 
             _assertions = assertions;
-            
+
             InitializeTest(system, config, actorSystemName, testActorName);
         }
 
@@ -133,8 +133,12 @@ namespace Akka.TestKit
             if (system is null)
             {
                 var boostrap = config.Get<BootstrapSetup>();
-                var configWithDefaultFallback = boostrap.HasValue
-                    ? boostrap.Value.Config.Select(c => c == _defaultConfig ? c : c.WithFallback(_defaultConfig))
+                var configWithDefaultFallback = boostrap.HasValue && boostrap.Value.Config.HasValue
+                    ? boostrap.Value.Config.Select(c =>
+                    {
+                        if (c is null) { return _defaultConfig; }
+                        return c == _defaultConfig ? c : c.WithFallback(_defaultConfig);
+                    })
                     : _defaultConfig;
 
                 var newBootstrap = BootstrapSetup.Create().WithConfig(configWithDefaultFallback.Value);
@@ -292,7 +296,7 @@ namespace Akka.TestKit
         {
             _testState.TestActor.Tell(new TestActor.SetIgnore(m => shouldIgnoreMessage(m)));
         }
-        
+
         /// <summary>
         /// Ignore all messages in the test actor of the given TMsg type for which the given function 
         /// returns <c>true</c>.
@@ -313,7 +317,7 @@ namespace Akka.TestKit
         {
             IgnoreMessages<TMsg>(_ => true);
         }
-        
+
         /// <summary>Stop ignoring messages in the test actor.</summary>
         public void IgnoreNoMessages()
         {
@@ -422,8 +426,8 @@ namespace Akka.TestKit
         /// <exception cref="ArgumentException">Thrown if <paramref name="duration"/> is infinite</exception>
         public TimeSpan RemainingOrDilated(TimeSpan? duration)
         {
-            if(!duration.HasValue) return RemainingOrDefault;
-            if(duration.IsInfinite()) throw new ArgumentException("max duration cannot be infinite");
+            if (!duration.HasValue) return RemainingOrDefault;
+            if (duration.IsInfinite()) throw new ArgumentException("max duration cannot be infinite");
             return Dilated(duration.Value);
         }
 
@@ -436,7 +440,7 @@ namespace Akka.TestKit
         /// <returns>TBD</returns>
         public TimeSpan Dilated(TimeSpan duration)
         {
-            if(duration.IsPositiveFinite())
+            if (duration.IsPositiveFinite())
                 return new TimeSpan((long)(duration.Ticks * _testState.TestKitSettings.TestTimeFactor));
             //Else: 0 or infinite (negative)
             return duration;
@@ -482,10 +486,10 @@ namespace Akka.TestKit
             var durationValue = duration.GetValueOrDefault(Dilated(TimeSpan.FromSeconds(5)).Min(TimeSpan.FromSeconds(10)));
 
             var wasShutdownDuringWait = system.Terminate().Wait(durationValue);
-            if(!wasShutdownDuringWait)
+            if (!wasShutdownDuringWait)
             {
                 const string msg = "Failed to stop [{0}] within [{1}] \n{2}";
-                if(verifySystemShutdown)
+                if (verifySystemShutdown)
                     throw new TimeoutException(string.Format(msg, system.Name, durationValue, ""));
                 //TODO: replace "" with system.PrintTree()
                 system.Log.Warning(msg, system.Name, durationValue, ""); //TODO: replace "" with system.PrintTree()
@@ -569,7 +573,7 @@ namespace Akka.TestKit
         /// </summary>
         /// <param name="name">Optional: The name of the probe.</param>
         /// <returns>A new <see cref="TestProbe"/> instance.</returns>
-        public virtual TestProbe CreateTestProbe(string name=null)
+        public virtual TestProbe CreateTestProbe(string name = null)
         {
             return CreateTestProbe(Sys, name);
         }
@@ -594,7 +598,7 @@ namespace Akka.TestKit
         /// </summary>
         /// <param name="count">Optional. The count. Default: 1</param>
         /// <returns>A new <see cref="TestLatch"/></returns>
-        public virtual TestLatch CreateTestLatch(int count=1)
+        public virtual TestLatch CreateTestLatch(int count = 1)
         {
             return new TestLatch(Dilated, count, _testState.TestKitSettings.DefaultTimeout);
         }

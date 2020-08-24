@@ -26,7 +26,7 @@ namespace Akka.Event
     /// * providing a <see cref="string"/> as source will append "(ActorSystem address)" and use the result.
     /// * providing a <see cref="Type"/> will extract its simple name,  append "(ActorSystem address)", and use the result.
     /// </summary>
-    public struct LogSource
+    public readonly struct LogSource
     {
         private LogSource(string source, Type type)
         {
