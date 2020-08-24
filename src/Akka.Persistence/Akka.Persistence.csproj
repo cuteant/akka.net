@@ -23,12 +23,11 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="MessagePack.Unofficial" Version="$(MessagePackUnofficialPackageVersion)" />
     <PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Akka.Core\Akka.Core.csproj" />
+    <ProjectReference Include="..\Akka\Akka.csproj" />
   </ItemGroup>
 
   <ItemGroup>

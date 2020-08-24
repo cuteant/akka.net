@@ -6,12 +6,11 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Linq;
+using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Annotations;
 using Akka.Serialization.Protocol;
 using Akka.Util;
-using CuteAnt.Reflection;
 
 namespace Akka.Serialization
 {
@@ -185,8 +184,15 @@ namespace Akka.Serialization
         public static int GetSerializerIdentifierFromConfig(Type type, ExtendedActorSystem system)
         {
             var config = system.Settings.Config.GetConfig(SerializationIdentifiers);
-            var identifiers = config.AsEnumerable()
-                .ToDictionary(pair => TypeUtils.ResolveType(pair.Key), pair => pair.Value.GetInt()); // Type.GetType(pair.Key, true)
+
+            var identifiers = new Dictionary<Type, int>();
+            foreach (var item in config.AsEnumerable())
+            {
+                var serializerType = TypeUtil.ResolveType(item.Key);
+                if (serializerType is null) { continue; }
+
+                identifiers[serializerType] = item.Value.GetInt();
+            }
 
             if (!identifiers.TryGetValue(type, out int value))
                 throw new ArgumentException($"Couldn't find serializer id for [{type}] under [{SerializationIdentifiers}] HOCON path", nameof(type));

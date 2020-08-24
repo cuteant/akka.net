@@ -1,35 +1,36 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\nuget.props" />
+	<Import Project="..\..\nuget.props" />
 
-  <PropertyGroup>
-    <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
-    <RootNamespace>Akka</RootNamespace>
-    <AssemblyName>Akka</AssemblyName>
-    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);CLONEABLE;CONFIGURATION;SERIALIZATION;UNSAFE_THREADING;APPDOMAIN</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
+		<RootNamespace>Akka</RootNamespace>
+		<AssemblyName>Akka</AssemblyName>
+		<AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+		<DefineConstants>$(DefineConstants);CLONEABLE;CONFIGURATION;SERIALIZATION;UNSAFE_THREADING;APPDOMAIN</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net451' ">
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <PackageId>Akka.Unofficial</PackageId>
-    <Title>Akka (Unofficial)</Title>
-    <Description>Akka.NET is a port of the popular Java/Scala framework Akka to .NET</Description>
-    <PackageTags>$(AkkaPackageTags)</PackageTags>
-  </PropertyGroup>
+	<PropertyGroup>
+		<PackageId>Akka.Unofficial</PackageId>
+		<Title>Akka (Unofficial)</Title>
+		<Description>Akka.NET is a port of the popular Java/Scala framework Akka to .NET</Description>
+		<PackageTags>$(AkkaPackageTags)</PackageTags>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <PackageReference Include="CuteAnt.Runtime" Version="$(CuteAntRuntimePackageVersion)" />
-    <PackageReference Include="MessagePack.Unofficial" Version="$(MessagePackUnofficialPackageVersion)" />
-    <PackageReference Include="MessagePack.Hyperion" Version="$(MessagePackHyperionPackageVersion)" />
-    <PackageReference Include="MessagePack.ImmutableCollection.Unofficial" Version="$(MessagePackImmutableCollectionUnofficialPackageVersion)" />
-	<PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
-	<PackageReference Include="SpanJson.Extensions" Version="$(SpanJsonExtensionsPackageVersion)" />
-  </ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="CuteAnt.Runtime" Version="$(CuteAntRuntimePackageVersion)" />
+		<PackageReference Include="Hyperion.Unofficial" Version="$(HyperionUnofficialPackageVersion)" />
+		<PackageReference Include="MessagePack.Unofficial" Version="$(MessagePackUnofficialPackageVersion)" />
+		<PackageReference Include="MessagePack.Hyperion" Version="$(MessagePackHyperionPackageVersion)" />
+		<PackageReference Include="MessagePack.ImmutableCollection.Unofficial" Version="$(MessagePackImmutableCollectionUnofficialPackageVersion)" />
+		<PackageReference Include="MessagePackAnalyzer" Version="$(MessagePackAnalyzerPackageVersion)" PrivateAssets="All" />
+		<PackageReference Include="SpanJson.Extensions" Version="$(SpanJsonExtensionsPackageVersion)" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Akka.Core\Akka.Core.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Akka.Core\Akka.Core.csproj" />
+	</ItemGroup>
 
-  <Import Project="..\..\version.props" />
+	<Import Project="..\..\version.props" />
 </Project>

@@ -201,9 +201,20 @@ namespace Akka.Serialization
             var effective = config.GetBoolean("akka.actor.serialization", true);
             if (!effective) { return; }
 
+            var systemLog = system.Log;
             var initializerType = config.GetString("akka.actor.serialization-initializer", "Akka.Serialization.SerializationInitializer, Akka");
-            var serializationInitializer = ActivatorUtils.FastCreateInstance<ISerializationInitializer>(TypeUtil.ResolveType(initializerType));
-            serializationInitializer.InitActorSystem(system);
+            try
+            {
+                var serializationInitializer = ActivatorUtils.FastCreateInstance<ISerializationInitializer>(TypeUtil.ResolveType(initializerType));
+                serializationInitializer.InitActorSystem(system);
+            }
+            catch (Exception ex)
+            {
+                if (systemLog.IsInfoEnabled)
+                {
+                    systemLog.Info(ex, "The type name for serialization-initializer '{0}' did not resolve to an actual Type", initializerType);
+                }
+            }
 
             var serializersConfig = config.GetConfig("akka.actor.serializers").AsEnumerable().ToList();
             var serializerBindingConfig = config.GetConfig("akka.actor.serialization-bindings").AsEnumerable().ToList();
@@ -212,7 +223,6 @@ namespace Akka.Serialization
             _serializerDetails = system.Settings.Setup.Get<SerializationSetup>()
                 .Select(x => x.CreateSerializers(system)).GetOrElse(ImmutableHashSet<SerializerDetails>.Empty);
 
-            var systemLog = system.Log;
             var warnEnabled = systemLog.IsWarningEnabled;
             foreach (var kvp in serializersConfig)
             {

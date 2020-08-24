@@ -1,33 +1,32 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\nuget.props" />
+	<Import Project="..\..\nuget.props" />
 
-  <PropertyGroup>
-    <TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
-    <RootNamespace>Akka.Persistence.TestKit</RootNamespace>
-    <AssemblyName>Akka.Persistence.TestKit</AssemblyName>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
-  </PropertyGroup>
-  <PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
-  </PropertyGroup>
+	<PropertyGroup>
+		<TargetFrameworks>$(ClusterTestTfms)</TargetFrameworks>
+		<RootNamespace>Akka.Persistence.TestKit</RootNamespace>
+		<AssemblyName>Akka.Persistence.TestKit</AssemblyName>
+		<AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+		<DefineConstants>$(DefineConstants);SERIALIZATION</DefineConstants>
+	</PropertyGroup>
+	<PropertyGroup Condition=" '$(TargetFramework)' == 'net471' or '$(TargetFramework)' == 'net452' ">
+	</PropertyGroup>
 
-  <PropertyGroup>
-    <PackageId>Akka.Persistence.TestKit.Unofficial</PackageId>
-    <Title>Akka.Persistence.TestKit (Unofficial)</Title>
-    <Description>TestKit for writing tests for Akka.NET Persistance module.</Description>
-    <PackageTags>$(AkkaPackageTags);testkit;persistance</PackageTags>
-  </PropertyGroup>
+	<PropertyGroup>
+		<PackageId>Akka.Persistence.TestKit.Unofficial</PackageId>
+		<Title>Akka.Persistence.TestKit (Unofficial)</Title>
+		<Description>TestKit for writing tests for Akka.NET Persistance module.</Description>
+		<PackageTags>$(AkkaPackageTags);testkit;persistance</PackageTags>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <EmbeddedResource Include="config.conf" />
-  </ItemGroup>
+	<ItemGroup>
+		<EmbeddedResource Include="config.conf" />
+	</ItemGroup>
 
-  <ItemGroup>
-    <ProjectReference Include="..\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
-  <ProjectReference Include="..\Akka\Akka.csproj" />
-  <ProjectReference Include="..\Akka.Persistence\Akka.Persistence.csproj" />
-    <ProjectReference Include="..\Akka.TestKit\Akka.TestKit.csproj" />
-  </ItemGroup>
+	<ItemGroup>
+		<ProjectReference Include="..\Akka.TestKit.Xunit2\Akka.TestKit.Xunit2.csproj" />
+		<ProjectReference Include="..\Akka.Persistence\Akka.Persistence.csproj" />
+		<ProjectReference Include="..\Akka.TestKit\Akka.TestKit.csproj" />
+	</ItemGroup>
 
-  <Import Project="..\..\version.props" />
+	<Import Project="..\..\version.props" />
 </Project>

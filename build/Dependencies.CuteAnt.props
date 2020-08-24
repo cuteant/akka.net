@@ -147,7 +147,7 @@
     <SpanNettyTransportPackageVersion>0.7.2008.2000</SpanNettyTransportPackageVersion>
 
     <!-- Serialization related packages -->
-    <HyperionUnofficialPackageVersion>0.9.15-rtm-200401-01</HyperionUnofficialPackageVersion>
+    <HyperionUnofficialPackageVersion>0.9.16-rtm-200824-01</HyperionUnofficialPackageVersion>
     <MessagePackSpanAbstractionsPackageVersion>1.0.0</MessagePackSpanAbstractionsPackageVersion>
     <MessagePackHyperionPackageVersion>1.1.0-rtm-200401-01</MessagePackHyperionPackageVersion>
     <MessagePackImmutableCollectionUnofficialPackageVersion>1.1.0-rtm-200401-01</MessagePackImmutableCollectionUnofficialPackageVersion>

@@ -51,8 +51,11 @@ namespace Akka.Util
     {
         public static Type ResolveType(string qualifiedTypeName, bool throwOnError = false)
         {
-            if (TypeUtils.TryResolveType(qualifiedTypeName, out var result)) { return result; }
-
+            try
+            {
+                if (TypeUtils.TryResolveType(qualifiedTypeName, out var result)) { return result; }
+            }
+            catch { }
             if (throwOnError)
             {
                 AkkaThrowHelper.ThrowTypeLoadException_UnableToFindATypeNamed(qualifiedTypeName);
