@@ -1,24 +1,25 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\xunitSettings.props" />
+	<Import Project="..\..\xunitSettings.props" />
 
-  <PropertyGroup>
-    <TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
-    <RootNamespace>Akka.Streams.Tests.TCK</RootNamespace>
-    <AssemblyName>Akka.Streams.Tests.TCK</AssemblyName>
-    <AllowUnsafeBlocks>false</AllowUnsafeBlocks>
-    <DefineConstants>$(DefineConstants);SERIALIZATION;</DefineConstants>
-  </PropertyGroup>
-  
-  <ItemGroup>
-    <PackageReference Include="NUnit" Version="$(NUnitPackageVersion)" />
-    <PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapterPackageVersion)" />
-    <ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
-    <ProjectReference Include="..\..\src\Reactive.Streams.TCK\Reactive.Streams.TCK.csproj" />
-    <ProjectReference Include="..\Akka.Streams.TestKit.Tests\Akka.Streams.TestKit.Tests.csproj" />
-  </ItemGroup>
+	<PropertyGroup>
+		<TargetFrameworks>$(StandardTestTfms)</TargetFrameworks>
+		<RootNamespace>Akka.Streams.Tests.TCK</RootNamespace>
+		<AssemblyName>Akka.Streams.Tests.TCK</AssemblyName>
+		<AllowUnsafeBlocks>false</AllowUnsafeBlocks>
+		<DefineConstants>$(DefineConstants);SERIALIZATION;</DefineConstants>
+	</PropertyGroup>
 
-  <ItemGroup>
-    <Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
-  </ItemGroup>
+	<ItemGroup>
+		<!--<PackageReference Include="NUnit" Version="$(NUnitPackageVersion)" />-->
+		<PackageReference Include="NUnit" Version="3.7.1" />
+		<PackageReference Include="NUnit3TestAdapter" Version="$(NUnit3TestAdapterPackageVersion)" />
+		<ProjectReference Include="..\..\src\Akka.Tests.Shared.Internals\Akka.Tests.Shared.Internals.csproj" />
+		<ProjectReference Include="..\..\src\Reactive.Streams.TCK\Reactive.Streams.TCK.csproj" />
+		<ProjectReference Include="..\Akka.Streams.TestKit.Tests\Akka.Streams.TestKit.Tests.csproj" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<Service Include="{82a7f48d-3b50-4b1e-b82e-3ada8210c358}" />
+	</ItemGroup>
 
 </Project>
