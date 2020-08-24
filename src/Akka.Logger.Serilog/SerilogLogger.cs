@@ -21,7 +21,7 @@ namespace Akka.Logger.Serilog
     /// recognized: <see cref="Debug"/>, <see cref="Info"/>,
     /// <see cref="Warning"/> and <see cref="Error"/>.
     /// </summary>
-    public class SerilogLogger : ReceiveActor, IRequiresMessageQueue<ILoggerMessageQueueSemantics>
+    public class SerilogLogger : ReceiveActorSlim, IRequiresMessageQueue<ILoggerMessageQueueSemantics>
     {
         private readonly ILoggingAdapter _log = Context.GetLogger();
 
