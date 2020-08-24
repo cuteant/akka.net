@@ -17,7 +17,7 @@ namespace Akka.DI.Core
         /// <summary>
         /// A static reference to the current provider.
         /// </summary>
-        public static DIExtension DIExtensionProvider = new DIExtension();
+        public static readonly DIExtension DIExtensionProvider = new DIExtension();
 
         /// <summary>
         /// Creates the dependency injection extension using a given actor system.

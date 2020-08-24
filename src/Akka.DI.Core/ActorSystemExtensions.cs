@@ -1,18 +1,17 @@
 ﻿using System;
-using Akka.DI.AutoFac;
 using Akka.DI.Core;
-using Autofac;
+using Akka.DI.Grace;
+using Grace.DependencyInjection;
 
-// ReSharper disable once CheckNamespace
 namespace Akka.Actor
 {
     /// <summary>
     /// Extension methods for <see cref="ActorSystem"/> to configure Autofac
     /// </summary>
-    public static class AutofacActorSystemExtensions
+    public static class GraceActorSystemExtensions
     {
         /// <summary>
-        /// Creates a new instance of the <see cref="AutoFacDependencyResolver"/> class
+        /// Creates a new instance of the <see cref="GraceDependencyResolver"/> class
         /// associated with the <see cref="ActorSystem"/>
         /// </summary>
         /// <param name="system">The actor system to plug into</param>
@@ -20,14 +19,14 @@ namespace Akka.Actor
         /// <exception cref="ArgumentNullException">
         /// If the <paramref name="container"/> parameter is null.
         /// </exception>
-        public static ActorSystem UseAutofac(this ActorSystem system, ILifetimeScope container)
+        public static ActorSystem UseGrace(this ActorSystem system, IInjectionScope container)
         {
-            UseAutofac(system, container, out _);
+            UseGrace(system, container, out _);
             return system;
         }
 
         /// <summary>
-        /// Creates a new instance of the <see cref="AutoFacDependencyResolver"/> class
+        /// Creates a new instance of the <see cref="GraceDependencyResolver"/> class
         /// associated with the <see cref="ActorSystem"/>
         /// </summary>
         /// <param name="system">The actor system to plug into</param>
@@ -36,11 +35,11 @@ namespace Akka.Actor
         /// <exception cref="ArgumentNullException">
         /// If the <paramref name="container"/> parameter is null.
         /// </exception>
-        public static ActorSystem UseAutofac(this ActorSystem system, ILifetimeScope container, out IDependencyResolver dependencyResolver)
+        public static ActorSystem UseGrace(this ActorSystem system, IInjectionScope container, out IDependencyResolver dependencyResolver)
         {
-            if (container is null) throw new ArgumentNullException(nameof(container));
+            if (container is null) { ThrowHelper.ThrowArgumentNullException(ExceptionArgument.container); }
 
-            dependencyResolver = new AutoFacDependencyResolver(container, system);
+            dependencyResolver = new GraceDependencyResolver(container, system);
             return system;
         }
     }
