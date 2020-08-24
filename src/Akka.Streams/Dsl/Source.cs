@@ -985,11 +985,7 @@ namespace Akka.Streams.Dsl
 
             private static EventHandler<T> Conversion(Action<T> onEvent)
             {
-                void LocalHandle(object sender, T e)
-                {
-                    onEvent(e);
-                }
-                return new EventHandler<T>(LocalHandle);
+                return new EventHandler<T>((sender, e) => onEvent(e));
             }
         }
 

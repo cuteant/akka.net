@@ -288,12 +288,7 @@ namespace Akka.Actor.Dsl
         /// <param name="handler">TBD</param>
         public void Become(Action<object, IActorContext> handler)
         {
-            void LocalReceive(object msg)
-            {
-                handler(msg, Context);
-            }
-            UntypedReceive receiveAction = LocalReceive;
-            Become(receiveAction);
+            Become(msg => handler(msg, Context));
         }
 
         /// <summary>
@@ -302,12 +297,7 @@ namespace Akka.Actor.Dsl
         /// <param name="handler">TBD</param>
         public void BecomeStacked(Action<object, IActorContext> handler)
         {
-            void LocalReceive(object msg)
-            {
-                handler(msg, Context);
-            }
-            UntypedReceive receiveAction = LocalReceive;
-            BecomeStacked(receiveAction);
+            BecomeStacked(msg => handler(msg, Context));
         }
 
         void IActorDsl.UnbecomeStacked()

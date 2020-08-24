@@ -161,7 +161,7 @@ namespace Akka.Persistence
                 }
             }
 
-            return new EventsourcedState("recovery started - replay max: " + maxReplays, s_trueIsRecoveryRunning, LocalStateReceive);
+            return new EventsourcedState("recovery started - replay max: " + maxReplays, s_trueIsRecoveryRunning, (r, m) => LocalStateReceive(r, m));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
@@ -275,7 +275,7 @@ namespace Akka.Persistence
                 }
             }
 
-            return new EventsourcedState("replay started", () => recoveryRunning, LocalStateReceive);
+            return new EventsourcedState("replay started", () => recoveryRunning, (r, m) => LocalStateReceive(r, m));
         }
 
         [MethodImpl(MethodImplOptions.NoInlining)]
