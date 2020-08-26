@@ -271,7 +271,7 @@ namespace Akka.Persistence.Journal
                         return Init(message); ;
                 }
             }
-            return LocalReceive;
+            return m => LocalReceive(m);
         }
 
         private Receive Active(IActorRef targetJournal, bool targetAtThisNode)
@@ -299,7 +299,7 @@ namespace Akka.Persistence.Journal
                 }
                 return true;
             }
-            return LocalReceive;
+            return m => LocalReceive(m);
         }
 
         private readonly Receive InitTimedOut;

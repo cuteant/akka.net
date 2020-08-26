@@ -340,7 +340,7 @@ namespace Akka.Cluster.Tools.Client
 
         private Receive Active(IActorRef receptionist)
         {
-            bool LocalReceive(object message)
+            bool LocalHandleMessage(object message)
             {
                 switch (message)
                 {
@@ -394,7 +394,7 @@ namespace Akka.Cluster.Tools.Client
                         return ContactPointMessages(message);
                 }
             }
-            return LocalReceive;
+            return m => LocalHandleMessage(m);
         }
 
         private void Reestablish()

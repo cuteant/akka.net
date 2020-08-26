@@ -648,7 +648,7 @@ namespace Akka.Persistence.Fsm
                 return originalResult;
             }
 
-            return LocalChained;
+            return (e, s) => LocalChained(e, s);
         }
     }
 }

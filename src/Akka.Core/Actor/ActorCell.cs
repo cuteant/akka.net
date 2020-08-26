@@ -318,24 +318,22 @@ namespace Akka.Actor
 
         void IUntypedActorContext.Become(UntypedReceive receive)
         {
-            bool LocalReceive(object m)
+            bool LocalHandleMessage(object m)
             {
                 receive(m);
                 return true;
             }
-            Receive receiveFunc = LocalReceive;
-            Become(receiveFunc);
+            Become(m => LocalHandleMessage(m));
         }
 
         void IUntypedActorContext.BecomeStacked(UntypedReceive receive)
         {
-            bool LocalReceive(object m)
+            bool LocalHandleMessage(object m)
             {
                 receive(m);
                 return true;
             }
-            Receive receiveFunc = LocalReceive;
-            BecomeStacked(receiveFunc);
+            BecomeStacked(m => LocalHandleMessage(m));
         }
 
         private long NewUid()
