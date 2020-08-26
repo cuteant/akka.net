@@ -9,6 +9,7 @@ using System;
 using Akka.Actor;
 using Akka.Dispatch;
 using Akka.Event;
+using Akka.Util.Internal;
 using NLog;
 using NLogger = global::NLog.Logger;
 using NLogLevel = global::NLog.LogLevel;
@@ -54,7 +55,7 @@ namespace Akka.Logger.NLog
         {
             if (logger.IsEnabled(level))
             {
-                var logEventInfo = (logEvent.Message is LogMessage logMessage && logMessage.Args?.Length > 0) ?
+                var logEventInfo = (logEvent.Message is LogMessage logMessage && !logMessage.Args.IsNullOrEmpty()) ?
                     new LogEventInfo(level, logger.Name, null, logMessage.Format, logMessage.Args, exception) :
                     new LogEventInfo(level, logger.Name, null, "{0}", new[] { logEvent.Message.ToString() }, exception);
                 if (logEventInfo.TimeStamp.Kind == logEvent.Timestamp.Kind)

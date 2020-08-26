@@ -1,8 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
+using CuteAnt.Collections;
 using Serilog.Events;
 using Serilog.Parsing;
-using CuteAnt.Collections;
 
 namespace Akka.Logger.Serilog
 {
@@ -15,7 +14,7 @@ namespace Akka.Logger.Serilog
         private readonly MessageTemplateParser _innerParser;
         private readonly CachedReadConcurrentDictionary<string, MessageTemplate> _templates = new CachedReadConcurrentDictionary<string, MessageTemplate>(StringComparer.Ordinal);
 
-        const int MaxCacheItems = 1000;
+        const uint MaxCacheItems = 1000u;
 
         public MessageTemplateCache(MessageTemplateParser innerParser)
         {
@@ -35,7 +34,7 @@ namespace Akka.Logger.Serilog
             // conditions when the library is used incorrectly. Correct use (templates, rather than
             // direct message strings) should barely, if ever, overflow this cache.
 
-            if ((uint)_templates.Count <= (uint)MaxCacheItems)
+            if (MaxCacheItems >= (uint)_templates.Count)
             {
                 _templates[messageTemplate] = result;
             }

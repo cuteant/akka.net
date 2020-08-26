@@ -135,18 +135,17 @@ namespace Akka.Logger.Serilog
             return new SerilogLoggingAdapter(_bus, _logSource, _logClass, contextNode);
         }
 
-        private object[] BuildArgs(IEnumerable<object> args)
+        private object[] BuildArgs(object[] args)
         {
+            if (_enricherNode is null) { return args; }
+
             var newArgs = args.ToList();
-            if (_enricherNode is object)
+            var currentNode = _enricherNode;
+            do
             {
-                var currentNode = _enricherNode;
-                while (currentNode is object)
-                {
-                    newArgs.Add(currentNode.Enricher);
-                    currentNode = currentNode.Next;
-                }
-            }
+                newArgs.Add(currentNode.Enricher);
+                currentNode = currentNode.Next;
+            } while (currentNode is object);
             return newArgs.ToArray();
         }
     }

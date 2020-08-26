@@ -24,11 +24,8 @@ namespace Akka.Logger.NLog
         /// </returns>
         public string Format(string format, params object[] args)
         {
-            if (args.NonEmpty())
-            {
-                return LogEventInfo.Create(NLogLevel.Info, string.Empty, null, format, args).FormattedMessage;
-            }
-            return format;
+            if (args.IsEmpty()) { return format; }
+            return LogEventInfo.Create(NLogLevel.Info, string.Empty, null, format, args).FormattedMessage;
         }
     }
 }

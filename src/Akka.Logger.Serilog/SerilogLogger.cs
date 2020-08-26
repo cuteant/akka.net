@@ -45,8 +45,7 @@ namespace Akka.Logger.Serilog
 				.ForContext("LogSource", logEvent.LogSource)
 				.ForContext("Thread", logEvent.Thread.ManagedThreadId.ToString().PadLeft( 4, '0' ));
 
-            var logMessage = logEvent.Message as LogMessage;
-            if (logMessage is object)
+            if (logEvent.Message is LogMessage logMessage)
             {
                 logger = logMessage.Args.OfType<PropertyEnricher>().Aggregate(logger, (current, enricher) => current.ForContext(enricher));
             }
