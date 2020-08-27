@@ -103,7 +103,7 @@ namespace Akka.Remote.Transport.DotNetty
             base.HandlerAdded(context);
         }
 
-        public override Task WriteAsync(IChannelHandlerContext context, object message)
+        public override void Write(IChannelHandlerContext context, object message, IPromise promise)
         {
             /*
              * Need to add the write to the rest of the pipeline first before we
@@ -113,7 +113,8 @@ namespace Akka.Remote.Transport.DotNetty
              * this can lead to "dangling writes" that never actually get transmitted
              * across the network.
              */
-            var write = base.WriteAsync(context, message);
+            base.Write(context, message, promise);
+
             if (Settings.EnableBatching)
             {
                 _currentPendingBytes += ((IByteBuffer)message).ReadableBytes;
@@ -129,17 +130,14 @@ namespace Akka.Remote.Transport.DotNetty
             {
                 context.Flush();
             }
-           
-
-            return write;
         }
 
-        public override Task CloseAsync(IChannelHandlerContext context)
+        public override void Close(IChannelHandlerContext context, IPromise promise)
         {
             // flush any pending writes first
             context.Flush();
             CanSchedule = false;
-            return base.CloseAsync(context);
+            base.Close(context, promise);
         }
 
         private void ScheduleFlush(IChannelHandlerContext context)

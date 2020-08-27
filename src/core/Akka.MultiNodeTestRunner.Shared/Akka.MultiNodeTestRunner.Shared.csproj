@@ -3,7 +3,6 @@
   <PropertyGroup>
     <AssemblyTitle>Akka.MultiNodeTestRunner.Shared</AssemblyTitle>
     <TargetFrameworks>$(NetStandardLibVersion)</TargetFrameworks>
-    <EnableDefaultCompileItems>false</EnableDefaultCompileItems>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
   </PropertyGroup>
 
@@ -18,7 +17,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <Compile Include="**\*.cs" Exclude="Persistence\VisualizerRuntimeTemplate.cs" />
+      <Compile Remove="Persistence\VisualizerRuntimeTemplate.cs" />
     <Compile Include="Persistence\VisualizerRuntimeTemplate.cs">
       <AutoGen>True</AutoGen>
       <DesignTime>True</DesignTime>

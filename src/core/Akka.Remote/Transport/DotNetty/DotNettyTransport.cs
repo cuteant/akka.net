@@ -81,7 +81,7 @@ namespace Akka.Remote.Transport.DotNetty
                 {
                     var listener = s.Result;
                     RegisterListener(channel, listener, msg, remoteSocketAddress);
-                    channel.Configuration.AutoRead = true; // turn reads back on
+                    channel.Configuration.IsAutoRead = true; // turn reads back on
                 }, TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.NotOnCanceled | TaskContinuationOptions.NotOnFaulted);
                 op = handle;
             }
@@ -118,6 +118,13 @@ namespace Akka.Remote.Transport.DotNetty
 
     internal abstract class DotNettyTransport : Transport
     {
+        static DotNettyTransport()
+        {
+            Environment.SetEnvironmentVariable("io.netty.transport.outboundBufferEntrySizeOverhead", "0");
+            Environment.SetEnvironmentVariable("io.netty.buffer.checkAccessible", "false");
+            Environment.SetEnvironmentVariable("io.netty.buffer.checkBounds", "false");
+        }
+
         internal readonly ConcurrentSet<IChannel> ConnectionGroup;
 
         protected readonly TaskCompletionSource<IAssociationEventListener> AssociationListenerPromise;
@@ -185,7 +192,7 @@ namespace Akka.Remote.Transport.DotNetty
                 // Block reads until a handler actor is registered
                 // no incoming connections will be accepted until this value is reset
                 // it's possible that the first incoming association might come in though
-                newServerChannel.Configuration.AutoRead = false;
+                newServerChannel.Configuration.IsAutoRead = false;
                 ConnectionGroup.TryAdd(newServerChannel);
                 ServerChannel = newServerChannel;
 
@@ -201,7 +208,7 @@ namespace Akka.Remote.Transport.DotNetty
                 LocalAddress = addr;
                 // resume accepting incoming connections
 #pragma warning disable 4014 // we WANT this task to run without waiting
-                AssociationListenerPromise.Task.ContinueWith(result => newServerChannel.Configuration.AutoRead = true,
+                AssociationListenerPromise.Task.ContinueWith(result => newServerChannel.Configuration.IsAutoRead = true,
                     TaskContinuationOptions.ExecuteSynchronously | TaskContinuationOptions.OnlyOnRanToCompletion);
 #pragma warning restore 4014
 
@@ -225,7 +232,7 @@ namespace Akka.Remote.Transport.DotNetty
 
         public override async Task<AssociationHandle> Associate(Address remoteAddress)
         {
-            if (!ServerChannel.Open)
+            if (!ServerChannel.IsOpen)
                 throw new ChannelException("Transport is not open");
 
             return await AssociateInternal(remoteAddress).ConfigureAwait(false);
@@ -245,7 +252,7 @@ namespace Akka.Remote.Transport.DotNetty
                 var all = Task.WhenAll(tasks);
                 await all.ConfigureAwait(false);
 
-                var server = ServerChannel?.CloseAsync() ?? TaskEx.Completed;
+                var server = ServerChannel?.CloseAsync() ?? TaskUtil.Completed;
                 await server.ConfigureAwait(false);
 
                 return all.IsCompleted && server.IsCompleted;

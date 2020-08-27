@@ -10,6 +10,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Akka.Remote\Akka.Remote.csproj" />
+      <PackageReference Include="Akka.MultiNodeTestRunner" Version="1.4.10" PrivateAssets="All" />
   </ItemGroup>
 
   <ItemGroup>

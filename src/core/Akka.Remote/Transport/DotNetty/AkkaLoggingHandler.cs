@@ -81,23 +81,23 @@ namespace Akka.Remote.Transport.DotNetty
             return ctx.ConnectAsync(remoteAddress, localAddress);
         }
 
-        public override Task DisconnectAsync(IChannelHandlerContext ctx)
-        {
-            _log.Info("Channel {0} disconnect", ctx.Channel);
-            return ctx.DisconnectAsync();
-        }
+        //public override Task DisconnectAsync(IChannelHandlerContext ctx)
+        //{
+        //    _log.Info("Channel {0} disconnect", ctx.Channel);
+        //    return ctx.DisconnectAsync();
+        //}
 
-        public override Task CloseAsync(IChannelHandlerContext ctx)
-        {
-            _log.Info("Channel {0} close", ctx.Channel);
-            return ctx.CloseAsync();
-        }
+        //public override Task CloseAsync(IChannelHandlerContext ctx)
+        //{
+        //    _log.Info("Channel {0} close", ctx.Channel);
+        //    return ctx.CloseAsync();
+        //}
 
-        public override Task DeregisterAsync(IChannelHandlerContext ctx)
-        {
-            _log.Debug("Channel {0} deregister", ctx.Channel);
-            return ctx.DeregisterAsync();
-        }
+        //public override Task DeregisterAsync(IChannelHandlerContext ctx)
+        //{
+        //    _log.Debug("Channel {0} deregister", ctx.Channel);
+        //    return ctx.DeregisterAsync();
+        //}
 
         public override void ChannelRead(IChannelHandlerContext ctx, object message)
         {
@@ -108,14 +108,14 @@ namespace Akka.Remote.Transport.DotNetty
             ctx.FireChannelRead(message);
         }
 
-        public override Task WriteAsync(IChannelHandlerContext ctx, object message)
-        {
-            if (_log.IsDebugEnabled)
-            {
-                _log.Debug("Channel {0} writing a message ({1}) of type [{2}]", ctx.Channel, message, message == null ? "NULL" : message.GetType().TypeQualifiedName());
-            }
-            return ctx.WriteAsync(message);
-        }
+        //public override Task WriteAsync(IChannelHandlerContext ctx, object message)
+        //{
+        //    if (_log.IsDebugEnabled)
+        //    {
+        //        _log.Debug("Channel {0} writing a message ({1}) of type [{2}]", ctx.Channel, message, message == null ? "NULL" : message.GetType().TypeQualifiedName());
+        //    }
+        //    return ctx.WriteAsync(message);
+        //}
 
         public override void Flush(IChannelHandlerContext ctx)
         {

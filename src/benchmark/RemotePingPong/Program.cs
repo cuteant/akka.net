@@ -43,22 +43,23 @@ namespace RemotePingPong
 
         public static Config CreateActorSystemConfig(string actorSystemName, string ipOrHostname, int port)
         {
-            var baseConfig = ConfigurationFactory.ParseString(@"
-                akka {
-              actor.provider = remote
-              loglevel = ERROR
-              suppress-json-serializer-warning = on
-              log-dead-letters = off
+            //var baseConfig = ConfigurationFactory.ParseString(@"
+            //    akka {
+            //  actor.provider = remote
+            //  loglevel = ERROR
+            //  suppress-json-serializer-warning = on
+            //  log-dead-letters = off
 
-              remote {
-                log-remote-lifecycle-events = off
+            //  remote {
+            //    log-remote-lifecycle-events = off
 
-                dot-netty.tcp {
-                    port = 0
-                    hostname = ""localhost""
-                }
-              }
-            }");
+            //    dot-netty.tcp {
+            //        port = 0
+            //        hostname = ""localhost""
+            //    }
+            //  }
+            //}");
+            var baseConfig = ConfigurationFactory.Load();
 
             var bindingConfig =
                 ConfigurationFactory.ParseString(@"akka.remote.dot-netty.tcp.hostname = """ + ipOrHostname + @"""")
