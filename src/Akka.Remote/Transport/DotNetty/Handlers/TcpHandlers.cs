@@ -35,7 +35,7 @@ namespace Akka.Remote.Transport.DotNetty
         }
 
         protected override void RegisterListener(IChannel channel, IHandleEventListener listener, object msg, IPEndPoint remoteAddress)
-            => this._listener = listener;
+            => _listener = listener;
 
         protected override AssociationHandle CreateHandle(IChannel channel, Address localAddress, Address remoteAddress)
             => _associationHandleFactory.Create(localAddress, remoteAddress, Transport, channel);

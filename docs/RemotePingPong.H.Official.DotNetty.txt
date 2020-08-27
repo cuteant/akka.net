@@ -1,0 +1,31 @@
+ProcessorCount:                    4
+ClockSpeed:                        0 MHZ
+Actor Count:                       8
+Messages sent/received per client: 200000  (2e5)
+Is Server GC:                      True
+
+Num clients, Total [msg], Msgs/sec, Total [ms]
+         1,  200000,     60133,    3326.44
+         5, 1000000,    126727,    7891.82
+        10, 2000000,    128891,   15517.49
+        15, 3000000,    119100,   25189.71
+        20, 4000000,    113779,   35156.78
+        25, 5000000,    102481,   48790.57
+        30, 6000000,     93057,   64477.04
+Done..
+
+ProcessorCount:                    4
+ClockSpeed:                        0 MHZ
+Actor Count:                       8
+Messages sent/received per client: 200000  (2e5)
+Is Server GC:                      True
+
+Num clients, Total [msg], Msgs/sec, Total [ms]
+         1,  200000,     30535,    6550.90
+         5, 1000000,     52335,   19108.85
+        10, 2000000,     55061,   36324.32
+        15, 3000000,     52325,   57335.37
+        20, 4000000,     48392,   82659.34
+        25, 5000000,     43851,  114025.56
+        30, 6000000,     40530,  148042.39
+Done..

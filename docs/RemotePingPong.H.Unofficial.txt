@@ -1,0 +1,51 @@
+Message-Batching-----------------------------------
+
+ProcessorCount:                    4
+ClockSpeed:                        0 MHZ
+Actor Count:                       8
+Messages sent/received per client: 200000  (2e5)
+Is Server GC:                      True
+
+Num clients, Total [msg], Msgs/sec, Total [ms]
+         1,  200000,     74075,    2700.29
+         5, 1000000,    167281,    5978.33
+        10, 2000000,    196406,   10183.36
+        15, 3000000,    209805,   14299.36
+        20, 4000000,    210096,   19039.21
+        25, 5000000,    210678,   23733.14
+        30, 6000000,    203985,   29414.13
+Done..
+
+Flush-Batching-----------------------------------
+
+ProcessorCount:                    4
+ClockSpeed:                        0 MHZ
+Actor Count:                       8
+Messages sent/received per client: 200000  (2e5)
+Is Server GC:                      True
+
+Num clients, Total [msg], Msgs/sec, Total [ms]
+         1,  200000,     64893,    3082.78
+         5, 1000000,    145181,    6888.77
+        10, 2000000,    162761,   12288.34
+        15, 3000000,    160231,   18723.05
+        20, 4000000,    148242,   26983.94
+        25, 5000000,    132269,   37802.50
+        30, 6000000,    123597,   48545.25
+Done..
+
+None-Batching-----------------------------------
+
+ProcessorCount:                    4
+ClockSpeed:                        0 MHZ
+Actor Count:                       8
+Messages sent/received per client: 200000  (2e5)
+Is Server GC:                      True
+
+Num clients, Total [msg], Msgs/sec, Total [ms]
+         1,  200000,     31348,    6380.59
+         5, 1000000,     53698,   18623.22
+        10, 2000000,     62066,   32224.90
+        15, 3000000,     60902,   49260.73
+        20, 4000000,     56694,   70555.15
+        25, 5000000,     15152,  330000.86
