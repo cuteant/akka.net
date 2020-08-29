@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\nuget.props" />
+  <Import Project="..\nuget.props" />
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
@@ -27,5 +27,5 @@
     <PackageReference Include="LightningDB" Version="$(LightningDBPackageVersion)" />
   </ItemGroup>
 
-  <Import Project="..\..\version.props" />
+  <Import Project="..\version.props" />
 </Project>

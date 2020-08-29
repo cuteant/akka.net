@@ -1,1 +1,1 @@
-..\..\src\Akka.MultiNodeTestRunner\bin\Debug\net471\win7-x64\Akka.MultiNodeTestRunner.exe "E:\CoreProjects\akka.net\test\Akka.Cluster.Metrics.Tests.MultiNode\bin\Debug\net471\Akka.Cluster.Metrics.Tests.MultiNode.dll" -Dmultinode.output-directory=..\..\Artifacts\multinode\metrics_fx471\
+..\..\src\Akka.MultiNodeTestRunner\bin\Debug\net471\win7-x64\Akka.MultiNodeTestRunner.exe "E:\AkkaProjects\akka.net\test\Akka.Cluster.Metrics.Tests.MultiNode\bin\Debug\net471\Akka.Cluster.Metrics.Tests.MultiNode.dll" -Dmultinode.output-directory=..\..\Artifacts\multinode\metrics_fx471\

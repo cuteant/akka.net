@@ -1,13 +1,8 @@
 <Project>
   <!-- Set common properties regarding assembly information and nuget packages -->
-  <PropertyGroup>
-    <AkkaPackageTags>akka;actors;actor model;Akka;concurrency</AkkaPackageTags>
-  </PropertyGroup>
 
   <PropertyGroup>
-    <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
+    <AkkaPackageTags>akka;actors;actor model;Akka;concurrency</AkkaPackageTags>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -22,4 +17,5 @@
     <IncludeSymbols>false</IncludeSymbols>
     <IncludeSource>false</IncludeSource>
   </PropertyGroup>
+
 </Project>

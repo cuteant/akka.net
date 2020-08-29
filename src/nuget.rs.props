@@ -1,10 +1,5 @@
 <Project>
   <!-- Set common properties regarding assembly information and nuget packages -->
-  <PropertyGroup>
-    <IsPackable>true</IsPackable>
-    <GeneratePackageOnBuild>True</GeneratePackageOnBuild>
-    <PackageRequireLicenseAcceptance>False</PackageRequireLicenseAcceptance>
-  </PropertyGroup>
 
   <PropertyGroup>
     <Authors>Reactive Streams</Authors>
@@ -18,4 +13,5 @@
     <IncludeSymbols>false</IncludeSymbols>
     <IncludeSource>false</IncludeSource>
   </PropertyGroup>
+
 </Project>

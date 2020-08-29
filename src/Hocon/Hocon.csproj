@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\nuget.hocon.props" />
+  <Import Project="..\nuget.hocon.props" />
 
   <PropertyGroup>
     <TargetFrameworks>$(StandardDevTfms)</TargetFrameworks>
@@ -15,5 +15,5 @@
     <PackageTags>Hocon</PackageTags>
   </PropertyGroup>
 
-  <Import Project="..\..\version.hocon.props" />
+  <Import Project="..\version.hocon.props" />
 </Project>

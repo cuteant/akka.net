@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-  <Import Project="..\..\nuget.rs.props" />
+  <Import Project="..\nuget.rs.props" />
 
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0;net452</TargetFrameworks>
@@ -23,5 +23,5 @@
     <ProjectReference Include="..\Reactive.Streams\Reactive.Streams.csproj" />
   </ItemGroup>
 
-  <Import Project="..\..\version.rs.props" />
+  <Import Project="..\version.rs.props" />
 </Project>

@@ -1,5 +1,5 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-	<Import Project="..\..\nuget.props" />
+	<Import Project="..\nuget.props" />
 
 	<PropertyGroup>
 		<TargetFrameworks>$(ClusterDevTfms)</TargetFrameworks>
@@ -48,5 +48,5 @@
 		</EmbeddedResource>
 	</ItemGroup>
 
-	<Import Project="..\..\version.props" />
+	<Import Project="..\version.props" />
 </Project>
