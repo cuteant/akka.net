@@ -40,11 +40,11 @@ namespace Akka.Dispatch.MessageQueues
         public BoundedMessageQueue(int boundedCapacity, TimeSpan pushTimeOut)
         {
             PushTimeOut = pushTimeOut;
-            if (boundedCapacity < 0)
+            if ((uint)boundedCapacity > Constants.TooBigOrNegative)
             {
                 AkkaThrowHelper.ThrowArgumentException(AkkaExceptionResource.Argument_BoundedMessageQueue, AkkaExceptionArgument.boundedCapacity);
             }
-            else if (boundedCapacity == 0)
+            if (0u >= (uint)boundedCapacity)
             {
                 _queue = new BlockingCollection<Envelope>();
             }
@@ -55,7 +55,7 @@ namespace Akka.Dispatch.MessageQueues
         }
 
         /// <inheritdoc cref="IMessageQueue"/>
-        public bool HasMessages => _queue.Count > 0;
+        public bool HasMessages => (uint)_queue.Count > 0u;
 
         /// <inheritdoc cref="IMessageQueue"/>
         public int Count => _queue.Count;
@@ -78,8 +78,7 @@ namespace Akka.Dispatch.MessageQueues
         /// <inheritdoc cref="IMessageQueue"/>
         public void CleanUp(IActorRef owner, IMessageQueue deadletters)
         {
-            Envelope msg;
-            while (TryDequeue(out msg))
+            while (TryDequeue(out Envelope msg))
             {
                 deadletters.Enqueue(owner, msg);
             }

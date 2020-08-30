@@ -6,6 +6,7 @@
 //-----------------------------------------------------------------------
 
 using System;
+using System.Threading;
 using Akka.Actor;
 using Akka.Configuration;
 using Akka.Dispatch.MessageQueues;
@@ -81,20 +82,20 @@ namespace Akka.Dispatch
         {
         }
 
-        private volatile ActorCell _owner;
+        private volatile ActorCell v_owner;
 
         /// <summary>
         /// TBD
         /// </summary>
         /// <param name="actor">TBD</param>
         /// <exception cref="InvalidOperationException">
-        /// This exception is thrown if the registering <paramref name="actor"/> is not the <see cref="_owner">owner</see>.
+        /// This exception is thrown if the registering <paramref name="actor"/> is not the <see cref="v_owner">owner</see>.
         /// </exception>
         internal override void Register(ActorCell actor)
         {
-            var current = _owner;
-            if (current is object && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(_owner);
-            _owner = actor;
+            var current = v_owner;
+            if (current is object && actor != current) AkkaThrowHelper.ThrowInvalidOperationException_Dispatcher_Reg(current);
+            Interlocked.Exchange(ref v_owner, actor);
             base.Register(actor);
         }
 
@@ -105,7 +106,7 @@ namespace Akka.Dispatch
         internal override void Unregister(ActorCell actor)
         {
             base.Unregister(actor);
-            _owner = null;
+            Interlocked.Exchange(ref v_owner, null);
         }
     }
 }

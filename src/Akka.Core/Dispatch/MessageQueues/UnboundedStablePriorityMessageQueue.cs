@@ -6,9 +6,11 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Util;
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+using System.Collections.Generic;
+#endif
 
 namespace Akka.Dispatch.MessageQueues
 {
@@ -74,12 +76,12 @@ namespace Akka.Dispatch.MessageQueues
                 return true;
             }
 
-            if (_prioQueue.Count() > 0)
+            if ((uint)_prioQueue.Count() > 0u)
             {
                 envelope = _prioQueue.Dequeue();
                 return true;
             }
-            envelope = default(Envelope);
+            envelope = default;
             return false;
         }
 

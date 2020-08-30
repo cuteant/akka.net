@@ -6,9 +6,11 @@
 //-----------------------------------------------------------------------
 
 using System;
-using System.Collections.Generic;
 using Akka.Actor;
 using Akka.Util;
+#if NETCOREAPP || NETSTANDARD_2_0_GREATER
+using System.Collections.Generic;
+#endif
 
 namespace Akka.Dispatch.MessageQueues
 {
@@ -80,7 +82,7 @@ namespace Akka.Dispatch.MessageQueues
         {
             if (_prependBuffer.TryPop(out envelope)) { return true; }
 
-            if (_prioQueue.Count() > 0)
+            if ((uint)_prioQueue.Count() > 0u)
             {
                 envelope = _prioQueue.Dequeue();
                 return true;

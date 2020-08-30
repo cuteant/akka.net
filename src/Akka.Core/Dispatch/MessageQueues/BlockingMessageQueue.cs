@@ -33,7 +33,7 @@ namespace Akka.Dispatch.MessageQueues
         /// </summary>
         public bool HasMessages
         {
-            get { return Count > 0; }
+            get { return (uint)Count > 0u; }
         }
 
         /// <summary>

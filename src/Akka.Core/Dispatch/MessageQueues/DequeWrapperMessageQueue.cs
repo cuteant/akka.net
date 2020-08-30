@@ -44,7 +44,7 @@ namespace Akka.Dispatch.MessageQueues
         /// </summary>
         public bool HasMessages
         {
-            get { return Count > 0; }
+            get { return (uint)Count > 0u; }
         }
 
         /// <summary>
@@ -80,8 +80,7 @@ namespace Akka.Dispatch.MessageQueues
         /// <inheritdoc cref="IMessageQueue"/>
         public void CleanUp(IActorRef owner, IMessageQueue deadletters)
         {
-            Envelope msg;
-            while (TryDequeue(out msg))
+            while (TryDequeue(out Envelope msg))
             {
                 deadletters.Enqueue(owner, msg);
             }

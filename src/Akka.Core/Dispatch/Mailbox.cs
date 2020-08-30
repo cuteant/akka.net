@@ -84,20 +84,14 @@ namespace Akka.Dispatch
          * of the constructor, so safe publication requires that THIS WRITE BELOW
          * stay as it is.
          */
-        private ActorCell __actor;
-        private ActorCell InternalActor
-        {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => Volatile.Read(ref __actor);
-            set => Interlocked.Exchange(ref __actor, value);
-        }
-        private /*volatile*/ SystemMessage _systemQueueDoNotCallMeDirectly = null; // null by default
-        private /*volatile*/ int _statusDotNotCallMeDirectly; //0 by default
+        private volatile ActorCell v_actor;
+        private SystemMessage v_systemQueueDoNotCallMeDirectly = null; // null by default
+        private volatile int v_statusDotNotCallMeDirectly; //0 by default
 
         /// <summary>
         /// The queue used for user-defined messages inside this mailbox
         /// </summary>
-        public IMessageQueue MessageQueue { get; }
+        public readonly IMessageQueue MessageQueue;
 
         /// <summary>
         /// Creates a new mailbox
@@ -149,7 +143,7 @@ namespace Akka.Dispatch
             {
                 // Note: contrary how it looks, there is no allocation here, as SystemMessageList is a value class and as such
                 // it just exists as a typed view during compile-time. The actual return type is still SystemMessage.
-                return new LatestFirstSystemMessageList(Volatile.Read(ref _systemQueueDoNotCallMeDirectly));
+                return new LatestFirstSystemMessageList(Volatile.Read(ref v_systemQueueDoNotCallMeDirectly));
             }
         }
 
@@ -165,7 +159,7 @@ namespace Akka.Dispatch
             // are SystemMessage instances hidden during compile time behind the SystemMessageList value class.
             // Without calling .head the parameters would be boxed in SystemMessageList wrapper.
             var prev = old.Head;
-            return Interlocked.CompareExchange(ref _systemQueueDoNotCallMeDirectly, newQueue.Head, old.Head) == prev;
+            return Interlocked.CompareExchange(ref v_systemQueueDoNotCallMeDirectly, newQueue.Head, prev) == prev;
         }
 
         /// <summary>
@@ -176,24 +170,32 @@ namespace Akka.Dispatch
         /// <returns>TBD</returns>
         internal bool CanBeScheduledForExecution(bool hasMessageHint, bool hasSystemMessageHint)
         {
-            var currentStatus = CurrentStatus();
-            if (currentStatus == MailboxStatus.Open || currentStatus == MailboxStatus.Scheduled)
-                return hasMessageHint || hasSystemMessageHint || HasSystemMessages || HasMessages;
-            if (currentStatus == MailboxStatus.Closed) return false;
-            return hasSystemMessageHint || HasSystemMessages;
+            var currentStatus = v_statusDotNotCallMeDirectly;
+            switch (currentStatus)
+            {
+                case MailboxStatus.Open:
+                case MailboxStatus.Scheduled:
+                    return hasMessageHint || hasSystemMessageHint || HasSystemMessages || HasMessages;
+
+                case MailboxStatus.Closed:
+                    return false;
+
+                default:
+                    return hasSystemMessageHint || HasSystemMessages;
+            }
         }
 
         /// <summary>
         /// The <see cref="MessageDispatcher"/> for the underlying mailbox.
         /// </summary>
-        public MessageDispatcher Dispatcher => InternalActor.Dispatcher;
+        public MessageDispatcher Dispatcher => v_actor.Dispatcher;
 
         /// <summary>
         /// INTERNAL API
         /// 
         /// <see cref="Actor"/> must not be visible to user-defined implementations
         /// </summary>
-        internal ActorCell Actor => InternalActor;
+        internal ActorCell Actor => v_actor;
 
         /// <summary>
         ///     Attaches an ActorCell to the Mailbox.
@@ -201,38 +203,38 @@ namespace Akka.Dispatch
         /// <param name="actorCell">TBD</param>
         public virtual void SetActor(ActorCell actorCell)
         {
-            InternalActor = actorCell;
+            Interlocked.Exchange(ref v_actor, actorCell);
         }
 
         /// <summary>
         /// TBD
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal int CurrentStatus() { return Volatile.Read(ref _statusDotNotCallMeDirectly); }
+        internal int CurrentStatus() { return v_statusDotNotCallMeDirectly; }
 
         /// <summary>
         /// TBD
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal bool ShouldProcessMessage() { return (CurrentStatus() & MailboxStatus.ShouldNotProcessMask) == 0; }
+        internal bool ShouldProcessMessage() { return 0u >= (uint)(v_statusDotNotCallMeDirectly & MailboxStatus.ShouldNotProcessMask); }
 
         /// <summary>
         /// Returns the number of times this mailbox is currently suspended.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal int SuspendCount() { return CurrentStatus() / MailboxStatus.SuspendUnit; }
+        internal int SuspendCount() { return v_statusDotNotCallMeDirectly / MailboxStatus.SuspendUnit; }
 
         /// <summary>
         /// Returns <c>true</c> if the mailbox is currently suspended from processing. <c>false</c> otherwise.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining), System.ComponentModel.EditorBrowsable(System.ComponentModel.EditorBrowsableState.Never)]
-        public bool IsSuspended() { return (CurrentStatus() & MailboxStatus.SuspendMask) != 0; } // public for Akka.Tests.FsCheck
+        public bool IsSuspended() { return (uint)(v_statusDotNotCallMeDirectly & MailboxStatus.SuspendMask) > 0u; } // public for Akka.Tests.FsCheck
 
         /// <summary>
         /// Returns <c>true</c> if the mailbox is closed. <c>false</c> otherwise.
         /// </summary>
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
-        internal bool IsClosed() { return (CurrentStatus() == MailboxStatus.Closed); }
+        internal bool IsClosed() { return 0u >= (uint)(v_statusDotNotCallMeDirectly - MailboxStatus.Closed); }
 
         /// <summary>
         /// Returns <c>true</c> if the mailbox is scheduled for execution on a <see cref="Dispatcher"/>. <c>false</c> otherwise.
@@ -240,7 +242,7 @@ namespace Akka.Dispatch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         internal bool IsScheduled()
         {
-            return (CurrentStatus() & MailboxStatus.Scheduled) != 0;
+            return (uint)(v_statusDotNotCallMeDirectly & MailboxStatus.Scheduled) > 0u;
         }
 
         /// <summary>
@@ -249,7 +251,7 @@ namespace Akka.Dispatch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private bool UpdateStatus(int oldStatus, int newStatus)
         {
-            return Interlocked.CompareExchange(ref _statusDotNotCallMeDirectly, newStatus, oldStatus) == oldStatus;
+            return 0u >= (uint)(Interlocked.CompareExchange(ref v_statusDotNotCallMeDirectly, newStatus, oldStatus) - oldStatus);
         }
 
         /// <summary>
@@ -258,7 +260,7 @@ namespace Akka.Dispatch
         [MethodImpl(MethodImplOptions.AggressiveInlining)]
         private void SetStatus(int newStatus)
         {
-            Interlocked.Exchange(ref _statusDotNotCallMeDirectly, newStatus);
+            Interlocked.Exchange(ref v_statusDotNotCallMeDirectly, newStatus);
         }
 
         /// <summary>
@@ -268,7 +270,7 @@ namespace Akka.Dispatch
         /// <returns><c>true</c> if the suspend count reached zero.</returns>
         internal bool Resume()
         {
-            var status = CurrentStatus();
+            var status = v_statusDotNotCallMeDirectly;
             if (status == MailboxStatus.Closed)
             {
                 SetStatus(MailboxStatus.Closed);
@@ -289,7 +291,7 @@ namespace Akka.Dispatch
         /// <returns><c>true</c> if the previous suspend count was zero.</returns>
         internal bool Suspend()
         {
-            var status = CurrentStatus();
+            var status = v_statusDotNotCallMeDirectly;
             if (status == MailboxStatus.Closed)
             {
                 SetStatus(MailboxStatus.Closed);
@@ -308,7 +310,7 @@ namespace Akka.Dispatch
         /// <returns><c>true</c> if we were able to successfully close the mailbox. <c>false</c> otherwise.</returns>
         internal bool BecomeClosed()
         {
-            var status = CurrentStatus();
+            var status = v_statusDotNotCallMeDirectly;
             if (status == MailboxStatus.Closed)
             {
                 SetStatus(MailboxStatus.Closed);
@@ -325,14 +327,13 @@ namespace Akka.Dispatch
         {
             while (true)
             {
-                var s = CurrentStatus();
+                var s = v_statusDotNotCallMeDirectly;
                 /*
                  * Only try to add Scheduled bit if pure Open/Suspended, not Closed or with
                  * Scheduled bit already set.
                  */
-                if ((s & MailboxStatus.ShouldScheduleMask) != MailboxStatus.Open) return false;
-                if (UpdateStatus(s, s | MailboxStatus.Scheduled))
-                    return true;
+                if ((s & MailboxStatus.ShouldScheduleMask) != MailboxStatus.Open) { return false; }
+                if (UpdateStatus(s, s | MailboxStatus.Scheduled)) { return true; }
             }
         }
 
@@ -344,9 +345,8 @@ namespace Akka.Dispatch
         {
             while (true)
             {
-                var s = CurrentStatus();
-                if (UpdateStatus(s, s & ~MailboxStatus.Scheduled))
-                    return true;
+                var s = v_statusDotNotCallMeDirectly;
+                if (UpdateStatus(s, s & ~MailboxStatus.Scheduled)) { return true; }
             }
         }
 
@@ -394,7 +394,7 @@ namespace Akka.Dispatch
                 ProcessAllSystemMessages();
                 if (left > 1 && (Dispatcher.ThroughputDeadlineTime.HasValue == false || (MonotonicClock.GetTicks() - deadlineTicks) < 0))
                 {
-                    left = left - 1;
+                    left -= 1;
                     continue;
                 }
                 break;

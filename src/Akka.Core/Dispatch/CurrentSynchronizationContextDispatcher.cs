@@ -119,12 +119,12 @@ namespace Akka.Dispatch
             }
         }
 
-        private ActorCell __owner;
+        private ActorCell v_owner;
         private ActorCell Owner
         {
-            [MethodImpl(MethodImplOptions.AggressiveInlining)]
-            get => Volatile.Read(ref __owner);
-            set => Interlocked.Exchange(ref __owner, value);
+            [MethodImpl(InlineOptions.AggressiveOptimization)]
+            get => Volatile.Read(ref v_owner);
+            set => Interlocked.Exchange(ref v_owner, value);
         }
 
         /// <summary>

@@ -9,12 +9,11 @@ using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Linq;
-using System.Reflection;
 using Akka.Actor;
 using Akka.Configuration;
-using Akka.Util;
 using Akka.Dispatch.MessageQueues;
 using Akka.Event;
+using Akka.Util;
 using CuteAnt.Reflection;
 
 namespace Akka.Dispatch
