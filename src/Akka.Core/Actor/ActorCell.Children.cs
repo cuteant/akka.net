@@ -451,37 +451,9 @@ namespace Akka.Actor
 
         private IInternalActorRef MakeChild(Props props, string name, bool async, bool systemService)
         {
-            if (_systemImpl.Settings.SerializeAllCreators && !systemService && !(props.Deploy.Scope is LocalScope))
+            if (_serializeAllCreators && !systemService && !(props.Deploy.Scope is LocalScope))
             {
-                var oldInfo = Serialization.Serialization.CurrentTransportInformation;
-                try
-                {
-                    if (oldInfo is null)
-                    {
-                        Serialization.Serialization.CurrentTransportInformation =
-                            SystemImpl.Provider.SerializationInformation;
-                    }
-
-                    var ser = _systemImpl.Serialization;
-                    var propsArguments = props.Arguments;
-                    if (propsArguments is object)
-                    {
-                        for (int idx = 0; idx < propsArguments.Length; idx++)
-                        {
-                            object argument = propsArguments[idx];
-                            if (argument is object && !(argument is INoSerializationVerificationNeeded))
-                            {
-                                var serializer = ser.FindSerializerFor(argument);
-                                var deserializedArgu = serializer.DeepCopy(argument);
-                                if (deserializedArgu is null) { AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name); }
-                            }
-                        }
-                    }
-                }
-                finally
-                {
-                    Serialization.Serialization.CurrentTransportInformation = oldInfo;
-                }
+                CheckPropsArguments(props, name);
             }
 
             // In case we are currently terminating, fail external attachChild requests
@@ -490,8 +462,7 @@ namespace Akka.Actor
             {
                 AkkaThrowHelper.ThrowInvalidOperationException(AkkaExceptionResource.InvalidOperation_ActorCell_IsTerminating);
             }
-            //else
-            //{
+
             // this name will either be unreserved or overwritten with a real child below
             ReserveChild(name);
             IInternalActorRef actor;
@@ -511,14 +482,49 @@ namespace Akka.Actor
             if (Mailbox is object && IsFailed)
             {
                 for (var i = 1; i <= Mailbox.SuspendCount(); i++)
+                {
                     actor.Suspend();
+                }
             }
 
             //replace the reservation with the real actor
             InitChild(actor);
             actor.Start();
             return actor;
-            //}
+        }
+
+        [MethodImpl(MethodImplOptions.NoInlining)]
+        private void CheckPropsArguments(Props props, string name)
+        {
+            var oldInfo = Serialization.Serialization.CurrentTransportInformation;
+            try
+            {
+                if (oldInfo is null)
+                {
+                    Serialization.Serialization.CurrentTransportInformation =
+                        SystemImpl.Provider.SerializationInformation;
+                }
+
+                var ser = _systemImpl.Serialization;
+                var propsArguments = props.Arguments;
+                if (propsArguments is object)
+                {
+                    for (int idx = 0; idx < propsArguments.Length; idx++)
+                    {
+                        object argument = propsArguments[idx];
+                        if (argument is object && !(argument is INoSerializationVerificationNeeded))
+                        {
+                            var serializer = ser.FindSerializerFor(argument);
+                            var deserializedArgu = serializer.DeepCopy(argument);
+                            if (deserializedArgu is null) { AkkaThrowHelper.ThrowArgumentException_ActorCellMakeChild(_self, name); }
+                        }
+                    }
+                }
+            }
+            finally
+            {
+                Serialization.Serialization.CurrentTransportInformation = oldInfo;
+            }
         }
     }
 }

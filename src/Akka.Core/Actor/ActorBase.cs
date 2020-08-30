@@ -91,7 +91,7 @@ namespace Akka.Actor
     public abstract partial class ActorBase : IInternalActor
     {
         private IActorRef _clearedSelf;
-        private bool HasBeenCleared => _clearedSelf is object;
+        //private bool HasBeenCleared => _clearedSelf is object;
 
         /// <summary>
         ///     Initializes a new instance of the <see cref="ActorBase" /> class.
@@ -108,7 +108,7 @@ namespace Akka.Actor
                 withTimers.Timers = new Scheduler.TimerScheduler(Context);
             }
 
-            Context.Become(Receive);
+            Context.Become(m => Receive(m));
         }
 
         /// <summary>
@@ -121,7 +121,14 @@ namespace Akka.Actor
         ///     Gets the self ActorRef
         /// </summary>
         /// <value>Self ActorRef</value>
-        protected IActorRef Self => HasBeenCleared ? _clearedSelf : Context.Self;
+        protected IActorRef Self
+        {
+            get
+            {
+                if (_clearedSelf is object) { return _clearedSelf; }
+                return Context.Self;
+            }
+        }
 
         /// <summary>
         ///     Gets the context.
@@ -146,7 +153,8 @@ namespace Akka.Actor
                 var context = InternalCurrentActorCellKeeper.Current;
                 if (context is null) { AkkaThrowHelper.ThrowNotSupportedException(AkkaExceptionResource.NotSupported_Actor_Context); }
 
-                return context.ActorHasBeenCleared ? null : context;
+                if (context.ActorHasBeenCleared) { return null; }
+                return context;
             }
         }
 

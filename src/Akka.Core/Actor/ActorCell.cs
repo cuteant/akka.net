@@ -43,6 +43,8 @@ namespace Akka.Actor
         private bool _actorHasBeenCleared;
         private Mailbox _mailboxDoNotCallMeDirectly;
         private readonly ActorSystemImpl _systemImpl;
+        private readonly bool _serializeAllMessages;
+        private readonly bool _serializeAllCreators;
         private ActorTaskScheduler _taskScheduler;
 
         // special system message stash, used when we aren't able to handle other system messages just yet
@@ -80,6 +82,8 @@ namespace Akka.Actor
             _systemImpl = system;
             Parent = parent;
             Dispatcher = dispatcher;
+            _serializeAllMessages = system.Settings.SerializeAllMessages;
+            _serializeAllCreators = system.Settings.SerializeAllCreators;
 
             _watchAction = ar => InvokeWatch(ar);
             _unwatchAction = ar => InvokeUnwatch(ar);
@@ -482,11 +486,15 @@ namespace Akka.Actor
 
             try
             {
-                var messageToDispatch = _systemImpl.Settings.SerializeAllMessages
-                    ? SerializeAndDeserialize(message)
-                    : message;
-
-                Dispatcher.Dispatch(this, messageToDispatch);
+                if (!_serializeAllMessages)
+                {
+                    Dispatcher.Dispatch(this, message);
+                }
+                else
+                {
+                    var messageToDispatch = SerializeAndDeserialize(message);
+                    Dispatcher.Dispatch(this, messageToDispatch);
+                }
             }
             catch (Exception e)
             {
