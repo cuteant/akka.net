@@ -87,8 +87,8 @@ eight
 ## Delayed restarts with a backoff stage
 
 Just as Akka provides the [backoff supervision pattern for actors](xref:supervision#delayed-restarts-with-the-backoffsupervisor-pattern), Akka streams
-also provides a `RestartSource`, `RestartSink` and `RestartFlow` for implementing the so-called *exponential backoff 
-supervision strategy*, starting a stage again when it fails, each time with a growing time delay between restarts.
+also provides a `RestartSource`, `RestartSink` and `RestartFlow` for implementing the so-called *exponential backoff
+supervision strategy*, starting a stage again when it fails or completes, each time with a growing time delay between restarts.
 
 This pattern is useful when the stage fails or completes because some external resource is not available
 and we need to give it some time to start-up again. One of the prime examples when this is useful is
@@ -102,7 +102,7 @@ which will supervise the given `Source`. The `Source` in this case is a
 be made again, in increasing intervals of 3, 6, 12, 24 and finally 30 seconds (at which point it will remain capped due
 to the `maxBackoff` parameter):
 
-[!code-csharp[RestartDocTests.cs](../../examples/DocsExamples/Streams/RestartDocTests.cs?name=restart-with-backoff-source)]
+[!code-csharp[RestartDocTests.cs](../../../src/core/Akka.Docs.Tests/Streams/RestartDocTests.cs?name=restart-with-backoff-source)]
 
 Using a `randomFactor` to add a little bit of additional variance to the backoff intervals
 is highly recommended, in order to avoid multiple streams re-start at the exact same point in time,
@@ -114,7 +114,7 @@ large spikes of traffic hitting the recovering server or other resource that the
 The above `RestartSource` will never terminate unless the `Sink` it's fed into cancels. It will often be handy to use
 it in combination with a `KillSwitch`, so that you can terminate it when needed:
 
-[!code-csharp[RestartDocTests.cs](../../examples/DocsExamples/Streams/RestartDocTests.cs?name=with-kill-switch)]
+[!code-csharp[RestartDocTests.cs](../../../src/core/Akka.Docs.Tests/Streams/RestartDocTests.cs?name=with-kill-switch)]
 
 Sinks and flows can also be supervised, using `Akka.Streams.Dsl.RestartSink` and `Akka.Streams.Dsl.RestartFlow`.
 The `RestartSink` is restarted when it cancels, while the `RestartFlow` is restarted when either the in port cancels,
