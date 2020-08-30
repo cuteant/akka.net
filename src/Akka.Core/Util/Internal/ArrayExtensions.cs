@@ -47,7 +47,7 @@ namespace Akka.Util.Internal
         [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool NonEmpty<T>(this T[] source)
         {
-            return (0u >= (uint)source.Length) ? false : true;
+            return 0u < (uint)source.Length;
         }
 
         /// <summary>

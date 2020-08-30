@@ -98,7 +98,7 @@ namespace Akka.Util.Internal
         [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool IsEmptyX(this ICollection source)
         {
-            return 0u >= (uint)source.Count ? true : false;
+            return 0u >= (uint)source.Count;
         }
 
         /// <summary>Checks whether or not collection is empty. Assumes colleciton can be safely enumerated multiple times.</summary>
@@ -106,8 +106,8 @@ namespace Akka.Util.Internal
         {
             return source switch
             {
-                ICollection<T> col => (0u >= (uint)col.Count) ? true : false,
-                IReadOnlyCollection<T> col => (0u >= (uint)col.Count) ? true : false,
+                ICollection<T> col => 0u >= (uint)col.Count,
+                IReadOnlyCollection<T> col => 0u >= (uint)col.Count,
                 _ => false == source.Any() ? true : false,
             };
         }
@@ -116,14 +116,14 @@ namespace Akka.Util.Internal
         [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool IsEmpty<T>(this ICollection<T> source)
         {
-            return 0u >= (uint)source.Count ? true : false;
+            return 0u >= (uint)source.Count;
         }
 
         /// <summary>Checks whatever given collection object has no item.</summary>
         [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool IsEmptyR<T>(this IReadOnlyCollection<T> source)
         {
-            return 0u >= (uint)source.Count ? true : false;
+            return 0u >= (uint)source.Count;
         }
 
         #endregion
@@ -134,7 +134,7 @@ namespace Akka.Util.Internal
         [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool NonEmptyX(this ICollection source)
         {
-            return (0u >= (uint)source.Count) ? false : true;
+            return 0u < (uint)source.Count;
         }
 
         /// <summary>Checks whatever given collection object has item.</summary>
@@ -142,9 +142,9 @@ namespace Akka.Util.Internal
         {
             return source switch
             {
-                ICollection<T> col => (0u >= (uint)col.Count) ? false : true,
-                IReadOnlyCollection<T> col => (0u >= (uint)col.Count) ? false : true,
-                _ => source.Any() ? true : false,
+                ICollection<T> col => 0u < (uint)col.Count,
+                IReadOnlyCollection<T> col => 0u < (uint)col.Count,
+                _ => source.Any(),
             };
         }
 
@@ -152,14 +152,14 @@ namespace Akka.Util.Internal
         [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool NonEmpty<T>(this ICollection<T> source)
         {
-            return (0u >= (uint)source.Count) ? false : true;
+            return 0u < (uint)source.Count;
         }
 
         /// <summary>Checks whatever given collection object has item.</summary>
         [MethodImpl(InlineOptions.AggressiveOptimization)]
         public static bool NonEmptyR<T>(this IReadOnlyCollection<T> source)
         {
-            return (0u >= (uint)source.Count) ? false : true;
+            return 0u < (uint)source.Count;
         }
 
         #endregion

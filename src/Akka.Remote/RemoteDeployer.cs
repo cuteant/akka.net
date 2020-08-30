@@ -10,6 +10,7 @@ using Akka.Actor;
 using Akka.Configuration;
 using Akka.Remote.Routing;
 using Akka.Routing;
+using Akka.Util.Internal;
 using CuteAnt;
 
 namespace Akka.Remote
@@ -57,7 +58,7 @@ namespace Akka.Remote
         private static Deploy CheckRemoteRouterConfig(Deploy deploy)
         {
             var nodes = deploy.Config.GetStringList("target.nodes", EmptyArray<string>.Instance).Select(Address.Parse).ToList();
-            if (nodes.Count > 0 && deploy.RouterConfig is object)
+            if (nodes.NonEmpty() && deploy.RouterConfig is object)
             {
                 if (deploy.RouterConfig is Pool pool)
                 {
