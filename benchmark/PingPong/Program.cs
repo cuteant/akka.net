@@ -83,7 +83,9 @@ namespace PingPong
             Console.WriteLine();
 
             //Warm up
-            ActorSystem.Create("WarmupSystem").Terminate();
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
+            ActorSystem.Create("WarmupSystem", ConfigurationFactory.ParseString("akka.actor.serialization = off")).Terminate();
+#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
             Console.Write("ActorBase    first start time: ");
             await Benchmark<ClientActorBase>(1, 1, 1, PrintStats.StartTimeOnly, -1, -1);
             Console.WriteLine(" ms");
@@ -171,7 +173,10 @@ namespace PingPong
             long repeatsPerClient = numberOfRepeats / numberOfClients;
             var totalWatch = Stopwatch.StartNew();
 
-            var system = ActorSystem.Create("PingPong", ConfigurationFactory.ParseString("akka.loglevel = ERROR"));
+            var system = ActorSystem.Create("PingPong", ConfigurationFactory.ParseString(@"
+akka.loglevel = ERROR
+akka.actor.serialization = off
+"));
 
             var countdown = new CountdownEvent(numberOfClients * 2);
             var waitForStartsActor = system.ActorOf(Props.Create(() => new WaitForStarts(countdown)), "wait-for-starts");
@@ -207,7 +212,9 @@ namespace PingPong
             await Task.WhenAll(tasks.ToArray());
             sw.Stop();
 
+#pragma warning disable CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
             system.Terminate();
+#pragma warning restore CS4014 // 由于此调用不会等待，因此在调用完成前将继续执行当前方法
             totalWatch.Stop();
 
             var elapsedMilliseconds = sw.ElapsedMilliseconds;
